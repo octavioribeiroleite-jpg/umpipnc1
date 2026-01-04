@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Loader2, AlertTriangle, Lock } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, Lock, RotateCcw, Edit, Trash2 } from 'lucide-react';
 import { PautaEditor } from '@/components/reunioes/PautaEditor';
 import { ContribuicoesSection } from '@/components/reunioes/ContribuicoesSection';
 import { IASection } from '@/components/reunioes/IASection';
@@ -165,6 +165,99 @@ export default function ReuniaoDetalhe() {
     }
   };
 
+  const handleReopenMeeting = async () => {
+    if (!meeting || !id) return;
+
+    const confirmed = window.confirm(
+      'Deseja reabrir esta reunião?\n\nA ata será preservada, mas a reunião voltará ao status aberta.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('meetings')
+        .update({ status: 'aberta' })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setMeeting({ ...meeting, status: 'aberta' });
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Reunião reaberta com sucesso!',
+      });
+    } catch (err) {
+      console.error('Error reopening meeting:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao reabrir reunião.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateMinutes = async (newMinutes: string) => {
+    if (!meeting || !id) return;
+
+    try {
+      const { error } = await supabase
+        .from('meetings')
+        .update({ final_minutes: newMinutes })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setMeeting({ ...meeting, final_minutes: newMinutes });
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Ata atualizada com sucesso!',
+      });
+    } catch (err) {
+      console.error('Error updating minutes:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar ata.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteMinutes = async () => {
+    if (!meeting || !id) return;
+
+    const confirmed = window.confirm(
+      'ATENÇÃO: Deseja excluir a ata desta reunião?\n\nEsta ação não pode ser desfeita.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('meetings')
+        .update({ final_minutes: null, status: 'aberta' })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setMeeting({ ...meeting, final_minutes: null, status: 'aberta' });
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Ata excluída. Reunião reaberta.',
+      });
+    } catch (err) {
+      console.error('Error deleting minutes:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao excluir ata.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -219,14 +312,33 @@ export default function ReuniaoDetalhe() {
       {isClosed && (
         <Alert className="mb-6 border-muted">
           <Lock className="h-4 w-4" />
-          <AlertDescription>
-            Reunião encerrada. Conteúdo somente para consulta.
+          <AlertDescription className="flex items-center justify-between">
+            <span>Reunião encerrada. Conteúdo somente para consulta.</span>
+            {canManage && (
+              <div className="flex gap-2 ml-4">
+                <Button variant="outline" size="sm" onClick={handleReopenMeeting}>
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Reabrir
+                </Button>
+                {meeting.final_minutes && (
+                  <Button variant="outline" size="sm" className="text-destructive" onClick={handleDeleteMinutes}>
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Excluir Ata
+                  </Button>
+                )}
+              </div>
+            )}
           </AlertDescription>
         </Alert>
       )}
 
       {isClosed ? (
-        <AtaViewer meeting={meeting} agendaItems={agendaItems} />
+        <AtaViewer 
+          meeting={meeting} 
+          agendaItems={agendaItems}
+          canManage={canManage}
+          onUpdateMinutes={handleUpdateMinutes}
+        />
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">

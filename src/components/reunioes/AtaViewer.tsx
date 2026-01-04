@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Calendar, Users, Loader2 } from 'lucide-react';
+import { FileText, Calendar, Users, Loader2, Edit, Save, X } from 'lucide-react';
 
 interface Meeting {
   id: string;
@@ -30,7 +30,9 @@ interface AtaViewerProps {
   meeting: Meeting;
   agendaItems: AgendaItem[];
   editable?: boolean;
+  canManage?: boolean;
   onClose?: (finalMinutes: string) => void;
+  onUpdateMinutes?: (newMinutes: string) => void;
 }
 
 interface AISuggestion {
@@ -49,7 +51,7 @@ interface Contribution {
   userName?: string;
 }
 
-export function AtaViewer({ meeting, agendaItems, editable, onClose }: AtaViewerProps) {
+export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, onUpdateMinutes }: AtaViewerProps) {
   const [acceptedSuggestions, setAcceptedSuggestions] = useState<AISuggestion[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [moderatorName, setModeratorName] = useState('');
@@ -57,6 +59,8 @@ export function AtaViewer({ meeting, agendaItems, editable, onClose }: AtaViewer
   const [loading, setLoading] = useState(true);
   const [finalMinutes, setFinalMinutes] = useState(meeting.final_minutes || '');
   const [generating, setGenerating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedMinutes, setEditedMinutes] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -150,13 +154,12 @@ export function AtaViewer({ meeting, agendaItems, editable, onClose }: AtaViewer
     }, {} as Record<string, AISuggestion[]>);
 
     const categoryTitles: Record<string, string> = {
-      'decisao': 'DECISÕES',
-      'tarefa': 'TAREFAS',
-      'ponto_discutido': 'PONTOS DISCUTIDOS',
-      'pendencia': 'PENDÊNCIAS',
-      'divergencia': 'DIVERGÊNCIAS',
-      'observacao': 'OBSERVAÇÕES',
-      'evento': 'EVENTOS AGENDADOS',
+      'pauta': 'PAUTA',
+      'decisoes': 'DECISÕES',
+      'tarefas': 'TAREFAS',
+      'pendencias': 'PENDÊNCIAS',
+      'datas_prazos': 'DATAS E PRAZOS',
+      'observacoes': 'OBSERVAÇÕES',
     };
 
     Object.entries(grouped).forEach(([category, items]) => {
@@ -207,12 +210,37 @@ export function AtaViewer({ meeting, agendaItems, editable, onClose }: AtaViewer
 
   // Read-only mode (closed meeting)
   if (meeting.status === 'fechada' && meeting.final_minutes) {
+    const handleStartEdit = () => {
+      setEditedMinutes(meeting.final_minutes || '');
+      setIsEditing(true);
+    };
+
+    const handleSaveEdit = () => {
+      if (onUpdateMinutes && editedMinutes.trim()) {
+        onUpdateMinutes(editedMinutes);
+        setIsEditing(false);
+      }
+    };
+
+    const handleCancelEdit = () => {
+      setIsEditing(false);
+      setEditedMinutes('');
+    };
+
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Ata da Reunião
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Ata da Reunião
+            </span>
+            {canManage && !isEditing && (
+              <Button variant="outline" size="sm" onClick={handleStartEdit}>
+                <Edit className="h-4 w-4 mr-2" />
+                Editar Ata
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -227,9 +255,31 @@ export function AtaViewer({ meeting, agendaItems, editable, onClose }: AtaViewer
             </span>
           </div>
           <Separator className="my-4" />
-          <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
-            {meeting.final_minutes}
-          </div>
+          
+          {isEditing ? (
+            <div className="space-y-4">
+              <Textarea
+                value={editedMinutes}
+                onChange={(e) => setEditedMinutes(e.target.value)}
+                rows={20}
+                className="font-mono text-sm"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveEdit}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar Alterações
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
+              {meeting.final_minutes}
+            </div>
+          )}
         </CardContent>
       </Card>
     );
