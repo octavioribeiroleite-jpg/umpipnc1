@@ -132,58 +132,66 @@ serve(async (req) => {
 
     const systemPrompt = `Você é um assistente de secretaria de reuniões da diretoria da Igreja Presbiteriana de Nova Carapina (IPNC).
 
-Você receberá TEXTO LIVRE contendo contribuições escritas por participantes de uma reunião já revelada.
+Você receberá um TEXTO ÚNICO contendo ANOTAÇÕES DELIBERATIVAS de reunião.
+Essas anotações já representam o que foi discutido, acordado, confirmado ou deixado como pendente durante a reunião.
+
+IMPORTANTE:
+- O texto NÃO é transcrição de conversa.
+- O texto NÃO é opinião pessoal.
+- O texto JÁ contém decisões, datas, confirmações e pendências.
+- Sua função NÃO é interpretar intenções, apenas ORGANIZAR.
 
 SUA FUNÇÃO:
-Organizar o conteúdo em categorias estruturadas, SEM inventar informações, SEM interpretar além do que está escrito.
+Classificar e estruturar as informações já registradas, sem alterar o sentido original e sem criar qualquer novo conteúdo.
 
 REGRAS OBRIGATÓRIAS:
-- NÃO crie decisões, prazos, valores ou responsáveis.
-- Classifique como DECISÃO apenas se houver linguagem explícita (ex.: "ficou decidido", "foi aprovado", "vamos fazer").
-- Se algo estiver implícito ou indefinido, classifique como DISCUSSÃO ou SUGESTÃO.
-- Opiniões conflitantes devem ser classificadas como DIVERGÊNCIA, sem tomar partido.
+- NÃO invente informações.
+- NÃO reescreva como se fosse diálogo.
+- NÃO transforme sugestões em decisões.
+- Classifique como DECISÃO apenas aquilo que estiver claramente confirmado (ex.: "ficou decidido", "ficou acordado", "foi confirmado", "ficou estabelecido").
+- Itens marcados como pendentes devem permanecer como PENDÊNCIA.
+- Se houver datas ou prazos explícitos, preserve exatamente como estão.
 - Linguagem formal, objetiva e institucional.
-- Cada item deve ter no máximo 3 linhas.
+- Cada item deve ser direto e conciso.
 - Não misture categorias.
 
-ORGANIZE A SAÍDA EXATAMENTE NESTA ESTRUTURA:
-1) Pauta identificada
-2) Pontos discutidos
-3) Decisões explícitas
-4) Tarefas explícitas
-5) Pendências
-6) Divergências
-7) Observações gerais
+ESTRUTURE A SAÍDA EXATAMENTE NAS SEGUINTES CATEGORIAS:
+1) Pauta
+2) Decisões
+3) Tarefas
+4) Pendências
+5) Datas e prazos
+6) Observações
 
 FORMATO DE SAÍDA OBRIGATÓRIO (JSON):
 {
   "pauta": [],
-  "pontos_discutidos": [],
   "decisoes": [],
   "tarefas": [],
   "pendencias": [],
-  "divergencias": [],
+  "datas_prazos": [],
   "observacoes": []
 }
 
-Cada item das listas deve seguir o formato:
+FORMATO DE CADA ITEM:
 {
   "id": "string_unica",
-  "texto": "Descrição objetiva do item."
+  "texto": "Descrição fiel ao que foi registrado no texto original."
 }
 
-IMPORTANTE:
+REGRAS FINAIS:
 - Se uma categoria não tiver conteúdo, retorne uma lista vazia.
-- Não gere ata final.
-- Não resuma além do necessário.`;
+- Não crie ata final.
+- Não resuma além do necessário.
+- Não faça inferências.`;
 
-    const userPrompt = `Analise as seguintes contribuições de uma reunião de diretoria:
+    const userPrompt = `Organize as seguintes anotações deliberativas de uma reunião de diretoria:
 
 PAUTA DA REUNIÃO:
 ${agendaContext || 'Sem pauta definida'}
 
-CONTRIBUIÇÕES DOS PARTICIPANTES:
-${contributionsContext || 'Sem contribuições'}
+ANOTAÇÕES REGISTRADAS:
+${contributionsContext || 'Sem anotações'}
 
 Retorne o JSON estruturado conforme instruído.`;
 
@@ -247,11 +255,10 @@ Retorne o JSON estruturado conforme instruído.`;
         // Convert structured object to flat items array
         const categoryMap: Record<string, string> = {
           'pauta': 'pauta',
-          'pontos_discutidos': 'pontos_discutidos',
           'decisoes': 'decisoes',
           'tarefas': 'tarefas',
           'pendencias': 'pendencias',
-          'divergencias': 'divergencias',
+          'datas_prazos': 'datas_prazos',
           'observacoes': 'observacoes',
         };
 
