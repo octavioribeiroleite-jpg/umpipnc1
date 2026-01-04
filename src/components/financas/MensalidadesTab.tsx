@@ -180,7 +180,7 @@ export function MensalidadesTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Mensalidades - {competence}</CardTitle>
+          <CardTitle className="text-lg">Contribuições - {competence}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
