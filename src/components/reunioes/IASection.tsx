@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Brain, Check, X, Edit, Loader2, Info, FileText } from 'lucide-react';
+import { Brain, Loader2, Info, FileText, CheckCircle } from 'lucide-react';
 
 interface AISuggestion {
   id: string;
@@ -40,8 +39,6 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
   const [summarizing, setSummarizing] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
 
@@ -77,7 +74,6 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
       });
 
       if (response.error) {
-        // Check for specific error types
         const errorData = response.error as any;
         if (errorData?.context?.status === 429) {
           throw new Error('RATE_LIMIT');
@@ -88,7 +84,6 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
         throw response.error;
       }
 
-      // Check if response contains an error message
       if (response.data?.error) {
         if (response.data.error.includes('Limite') || response.data.error.includes('rate')) {
           throw new Error('RATE_LIMIT');
@@ -99,7 +94,6 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
         throw new Error(response.data.error);
       }
 
-      // Update meeting
       await supabase
         .from('meetings')
         .update({ ai_organized: true })
@@ -110,7 +104,7 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
       
       toast({
         title: 'Sucesso',
-        description: 'Contribuições organizadas pela IA com sucesso!',
+        description: 'Contribuições organizadas! Os itens já estão prontos para a ata.',
       });
     } catch (err: any) {
       console.error('Error generating AI:', err);
@@ -166,70 +160,6 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
     }
   };
 
-  const handleAccept = async (suggestionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('ai_suggestions')
-        .update({ status: 'accepted' })
-        .eq('id', suggestionId);
-
-      if (error) throw error;
-      await fetchSuggestions();
-    } catch (err) {
-      console.error('Error accepting:', err);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao aceitar sugestão.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleReject = async (suggestionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('ai_suggestions')
-        .update({ status: 'rejected' })
-        .eq('id', suggestionId);
-
-      if (error) throw error;
-      await fetchSuggestions();
-    } catch (err) {
-      console.error('Error rejecting:', err);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao rejeitar sugestão.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleEdit = (suggestion: AISuggestion) => {
-    setEditingId(suggestion.id);
-    setEditContent(suggestion.edited_content || suggestion.original_content);
-  };
-
-  const handleSaveEdit = async (suggestionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('ai_suggestions')
-        .update({ edited_content: editContent, status: 'accepted' })
-        .eq('id', suggestionId);
-
-      if (error) throw error;
-      setEditingId(null);
-      await fetchSuggestions();
-      toast({ title: 'Sucesso', description: 'Sugestão editada e aceita.' });
-    } catch (err) {
-      console.error('Error saving edit:', err);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao salvar edição.',
-        variant: 'destructive',
-      });
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -244,15 +174,14 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
     return acc;
   }, {} as Record<string, AISuggestion[]>);
 
-  const pendingCount = suggestions.filter(s => s.status === 'pending').length;
-  const acceptedCount = suggestions.filter(s => s.status === 'accepted').length;
+  const totalCount = suggestions.length;
 
   return (
     <div className="space-y-4">
       <Alert className="border-primary/50 bg-primary/5">
         <Info className="h-4 w-4" />
         <AlertDescription>
-          A organização realizada pela IA é apenas uma sugestão. Somente os itens aceitos pelo moderador comporão a ata final.
+          A IA organiza automaticamente as contribuições. Os itens já estão prontos para compor a ata final. Você pode revisar e editar na aba "Gerar Ata".
         </AlertDescription>
       </Alert>
 
@@ -285,7 +214,7 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
             <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h3 className="font-semibold mb-2">Organizar com IA</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              A IA irá analisar todas as contribuições reveladas e extrair automaticamente pautas, decisões, tarefas e mais.
+              A IA irá analisar todas as contribuições e organizar automaticamente em categorias como decisões, tarefas, pendências e mais.
             </p>
             {canManage && (
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
@@ -312,13 +241,11 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
       ) : (
         <>
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-4">
-              <Badge variant="outline">
-                {pendingCount} pendentes
-              </Badge>
-              <Badge variant="default" className="bg-success">
-                {acceptedCount} aceitas
-              </Badge>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-success" />
+              <span className="text-sm text-muted-foreground">
+                {totalCount} itens organizados e prontos para a ata
+              </span>
             </div>
             {canManage && (
               <div className="flex gap-2">
@@ -337,72 +264,25 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
           {Object.entries(groupedSuggestions).map(([category, items]) => (
             <Card key={category}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">
+                <CardTitle className="text-base flex items-center gap-2">
                   {CATEGORY_LABELS[category] || category}
+                  <Badge variant="secondary" className="ml-2">{items.length}</Badge>
                 </CardTitle>
-                <CardDescription>
-                  {items.length} item(ns)
-                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2">
                 {items.map((suggestion) => (
                   <div
                     key={suggestion.id}
-                    className={`p-3 rounded-lg border ${
-                      suggestion.status === 'accepted' ? 'border-success bg-success/5' :
-                      suggestion.status === 'rejected' ? 'border-destructive/50 bg-destructive/5 opacity-50' :
-                      'border-border'
-                    }`}
+                    className="p-3 rounded-lg border border-success/30 bg-success/5"
                   >
-                    {editingId === suggestion.id ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          rows={3}
-                        />
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleSaveEdit(suggestion.id)}>
-                            Salvar
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                            Cancelar
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-sm">
-                          {suggestion.edited_content || suggestion.original_content}
-                        </p>
-                        {suggestion.suggested_event_title && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Evento sugerido: {suggestion.suggested_event_title}
-                            {suggestion.suggested_event_date && ` - ${new Date(suggestion.suggested_event_date).toLocaleDateString('pt-BR')}`}
-                          </p>
-                        )}
-                        {canManage && suggestion.status === 'pending' && (
-                          <div className="flex gap-2 mt-3">
-                            <Button size="sm" variant="outline" className="text-success border-success hover:bg-success/10" onClick={() => handleAccept(suggestion.id)}>
-                              <Check className="h-3 w-3 mr-1" />
-                              Aceitar
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleEdit(suggestion)}>
-                              <Edit className="h-3 w-3 mr-1" />
-                              Editar
-                            </Button>
-                            <Button size="sm" variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => handleReject(suggestion.id)}>
-                              <X className="h-3 w-3 mr-1" />
-                              Rejeitar
-                            </Button>
-                          </div>
-                        )}
-                        {suggestion.status !== 'pending' && (
-                          <Badge className="mt-2" variant={suggestion.status === 'accepted' ? 'default' : 'secondary'}>
-                            {suggestion.status === 'accepted' ? 'Aceita' : 'Rejeitada'}
-                          </Badge>
-                        )}
-                      </>
+                    <p className="text-sm">
+                      {suggestion.edited_content || suggestion.original_content}
+                    </p>
+                    {suggestion.suggested_event_title && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Evento sugerido: {suggestion.suggested_event_title}
+                        {suggestion.suggested_event_date && ` - ${new Date(suggestion.suggested_event_date).toLocaleDateString('pt-BR')}`}
+                      </p>
                     )}
                   </div>
                 ))}

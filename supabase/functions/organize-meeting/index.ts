@@ -299,12 +299,12 @@ Retorne o JSON estruturado conforme instruído.`;
       .delete()
       .eq('meeting_id', meetingId);
 
-    // Insert new suggestions
+    // Insert new suggestions - auto-accept all
     const suggestions = items.map(item => ({
       meeting_id: meetingId,
       category: item.category || 'observacoes',
       original_content: item.content,
-      status: 'pending',
+      status: 'accepted',
       suggested_event_title: null,
       suggested_event_date: null,
     }));
