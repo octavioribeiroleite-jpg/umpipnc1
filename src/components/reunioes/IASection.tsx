@@ -27,14 +27,12 @@ interface IASectionProps {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  'pauta': 'Pauta Identificada',
-  'pontos_discutidos': 'Pontos Discutidos',
-  'decisoes': 'Decisões Explícitas',
-  'tarefas': 'Tarefas Explícitas',
+  'pauta': 'Pauta',
+  'decisoes': 'Decisões',
+  'tarefas': 'Tarefas',
   'pendencias': 'Pendências',
-  'divergencias': 'Divergências',
-  'observacoes': 'Observações Gerais',
-  'evento': 'Evento Sugerido',
+  'datas_prazos': 'Datas e Prazos',
+  'observacoes': 'Observações',
 };
 
 export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASectionProps) {
