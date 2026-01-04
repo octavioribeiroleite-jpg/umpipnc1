@@ -86,7 +86,7 @@ serve(async (req) => {
     // Fetch revealed contributions
     const { data: contributions, error: contribError } = await supabase
       .from('contributions')
-      .select('*, profiles:user_id(full_name)')
+      .select('*')
       .eq('meeting_id', meetingId)
       .eq('status', 'revealed');
 
@@ -99,17 +99,36 @@ serve(async (req) => {
       .eq('meeting_id', meetingId)
       .order('order_index');
 
+    // Fetch participant names (profiles) without relying on FK relationships
+    const uniqueUserIds = Array.from(
+      new Set((contributions || []).map((c: any) => c.user_id).filter(Boolean))
+    );
+
+    const { data: profiles, error: profilesError } = uniqueUserIds.length
+      ? await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', uniqueUserIds)
+      : { data: [], error: null };
+
+    if (profilesError) throw profilesError;
+
+    const nameByUserId = new Map(
+      (profiles || []).map((p: any) => [p.user_id, p.full_name] as const)
+    );
+
     // Build context for AI
-    const agendaContext = (agendaItems || []).map((item, i) => 
+    const agendaContext = (agendaItems || []).map((item, i) =>
       `${i + 1}. ${item.title}${item.description ? `: ${item.description}` : ''}`
     ).join('\n');
 
-    const contributionsContext = (contributions || []).map(c => {
-      const userName = c.profiles?.full_name || 'Anônimo';
-      const agendaItem = agendaItems?.find(a => a.id === c.agenda_item_id);
+    const contributionsContext = (contributions || []).map((c: any) => {
+      const userName = nameByUserId.get(c.user_id) || 'Anônimo';
+      const agendaItem = (agendaItems || []).find((a: any) => a.id === c.agenda_item_id);
       const context = agendaItem ? ` (sobre: ${agendaItem.title})` : ' (contribuição geral)';
       return `- ${userName}${context}: ${c.content}`;
     }).join('\n');
+
 
     const systemPrompt = `Você é um assistente de secretaria de reuniões da diretoria da Igreja Presbiteriana de Nova Carapina (IPNC).
 
