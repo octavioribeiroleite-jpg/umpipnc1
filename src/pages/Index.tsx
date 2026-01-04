@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -16,6 +17,13 @@ import {
   Plus,
   TrendingUp,
 } from 'lucide-react';
+
+interface Stats {
+  saldo: number;
+  mensalidadesMes: number;
+  membrosAtivos: number;
+  tarefasPendentes: number;
+}
 
 function StatCard({
   title,
@@ -92,12 +100,59 @@ function QuickAction({
 export default function Index() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState<Stats>({
+    saldo: 0,
+    mensalidadesMes: 0,
+    membrosAtivos: 0,
+    tarefasPendentes: 0,
+  });
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+
+      const months = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      const competence = `${months[currentMonth]}/${currentYear}`;
+
+      const [paymentsRes, transactionsRes, membersRes, tasksRes] = await Promise.all([
+        supabase.from('membership_payments').select('amount, competence').eq('status', 'pago'),
+        supabase.from('transactions').select('amount, type'),
+        supabase.from('members').select('id').eq('active', true),
+        supabase.from('tasks').select('id').neq('status', 'done'),
+      ]);
+
+      const allPayments = paymentsRes.data || [];
+      const totalEntradas = allPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+      const mensalidadesMes = allPayments
+        .filter((p) => p.competence === competence)
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+
+      const totalSaidas = (transactionsRes.data || [])
+        .filter((t) => t.type === 'saida')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      setStats({
+        saldo: totalEntradas - totalSaidas,
+        mensalidadesMes,
+        membrosAtivos: membersRes.data?.length || 0,
+        tarefasPendentes: tasksRes.data?.length || 0,
+      });
+    };
+
+    if (user) {
+      fetchStats();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -129,29 +184,22 @@ export default function Index() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           title="Saldo do Caixa"
-          value="R$ 2.450,00"
-          trend="+12%"
-          trendUp={true}
-          description="vs mês anterior"
+          value={`R$ ${stats.saldo.toFixed(2).replace('.', ',')}`}
           icon={DollarSign}
         />
         <StatCard
-          title="Mensalidades"
-          value="R$ 850,00"
-          description="de R$ 1.000,00 esperado"
+          title="Mensalidades (mês)"
+          value={`R$ ${stats.mensalidadesMes.toFixed(2).replace('.', ',')}`}
           icon={TrendingUp}
         />
         <StatCard
-          title="Próxima Reunião"
-          value="15 Jan"
-          description="Reunião Ordinária"
+          title="Membros Ativos"
+          value={stats.membrosAtivos.toString()}
           icon={Users}
         />
         <StatCard
           title="Tarefas Pendentes"
-          value="5"
-          trend="2 vencendo"
-          trendUp={false}
+          value={stats.tarefasPendentes.toString()}
           icon={CheckSquare}
         />
       </div>
@@ -163,7 +211,7 @@ export default function Index() {
           <QuickAction
             label="Nova Reunião"
             icon={Users}
-            onClick={() => navigate('/reunioes/nova')}
+            onClick={() => navigate('/reunioes')}
           />
           <QuickAction
             label="Novo Evento"
@@ -171,7 +219,7 @@ export default function Index() {
             onClick={() => navigate('/calendario')}
           />
           <QuickAction
-            label="Nova Transação"
+            label="Finanças"
             icon={DollarSign}
             onClick={() => navigate('/financas')}
           />
@@ -191,59 +239,41 @@ export default function Index() {
             <CardTitle className="text-lg">Próximos Eventos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { title: 'Reunião da Diretoria', date: '15 Jan, 19:00' },
-                { title: 'Culto de Jovens', date: '18 Jan, 19:30' },
-                { title: 'Retiro Espiritual', date: '25 Jan, 08:00' },
-              ].map((event, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between py-2 border-b last:border-0"
-                >
-                  <div>
-                    <p className="font-medium">{event.title}</p>
-                    <p className="text-sm text-muted-foreground">{event.date}</p>
-                  </div>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </div>
-              ))}
-            </div>
+            <p className="text-muted-foreground text-center py-4">
+              Nenhum evento cadastrado ainda.
+            </p>
             <Button variant="ghost" className="w-full mt-4" onClick={() => navigate('/calendario')}>
-              Ver todos os eventos
+              Ver calendário
             </Button>
           </CardContent>
         </Card>
 
-        {/* Recent Transactions */}
+        {/* Financial Summary */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Últimas Transações</CardTitle>
+            <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { title: 'Ofertas', amount: '+R$ 350,00', type: 'entrada' },
-                { title: 'Alimentação - Reunião', amount: '-R$ 120,00', type: 'saida' },
-                { title: 'Dízimos', amount: '+R$ 500,00', type: 'entrada' },
-              ].map((tx, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between py-2 border-b last:border-0"
-                >
-                  <p className="font-medium">{tx.title}</p>
-                  <span
-                    className={`font-medium ${
-                      tx.type === 'entrada' ? 'text-success' : 'text-destructive'
-                    }`}
-                  >
-                    {tx.amount}
-                  </span>
-                </div>
-              ))}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Saldo atual</span>
+                <span className={`font-semibold ${stats.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  R$ {stats.saldo.toFixed(2).replace('.', ',')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Mensalidades do mês</span>
+                <span className="font-semibold text-success">
+                  R$ {stats.mensalidadesMes.toFixed(2).replace('.', ',')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-muted-foreground">Membros ativos</span>
+                <span className="font-semibold">{stats.membrosAtivos}</span>
+              </div>
             </div>
             <Button variant="ghost" className="w-full mt-4" onClick={() => navigate('/financas')}>
-              Ver todas as transações
+              Ver finanças completas
             </Button>
           </CardContent>
         </Card>
