@@ -309,6 +309,7 @@ export type Database = {
           status: Database["public"]["Enums"]["meeting_status"]
           title: string
           updated_at: string
+          whatsapp_message: string | null
         }
         Insert: {
           ai_organized?: boolean
@@ -321,6 +322,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["meeting_status"]
           title: string
           updated_at?: string
+          whatsapp_message?: string | null
         }
         Update: {
           ai_organized?: boolean
@@ -333,6 +335,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["meeting_status"]
           title?: string
           updated_at?: string
+          whatsapp_message?: string | null
         }
         Relationships: []
       }

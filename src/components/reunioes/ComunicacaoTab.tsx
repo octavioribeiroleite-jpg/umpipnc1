@@ -1,25 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Loader2, Copy, Check, Info } from 'lucide-react';
+import { MessageSquare, Loader2, Copy, Check, Info, RefreshCw } from 'lucide-react';
 
 interface ComunicacaoTabProps {
   meetingId: string;
   canManage: boolean;
+  whatsappMessage: string | null;
   hasFinalMinutes: boolean;
+  onRegenerate?: () => void;
 }
 
-export function ComunicacaoTab({ meetingId, canManage, hasFinalMinutes }: ComunicacaoTabProps) {
+export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinalMinutes, onRegenerate }: ComunicacaoTabProps) {
   const { toast } = useToast();
-  const [message, setMessage] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
-  const handleGenerate = async () => {
-    setGenerating(true);
+  const handleCopy = async () => {
+    if (!whatsappMessage) return;
+
+    try {
+      await navigator.clipboard.writeText(whatsappMessage);
+      setCopied(true);
+      toast({
+        title: 'Copiado!',
+        description: 'Mensagem copiada para a área de transferência.',
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Error copying:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível copiar. Selecione e copie manualmente.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
     try {
       const response = await supabase.functions.invoke('generate-whatsapp-message', {
         body: { meetingId },
@@ -40,41 +62,27 @@ export function ComunicacaoTab({ meetingId, canManage, hasFinalMinutes }: Comuni
         throw new Error(response.data.error);
       }
 
-      setMessage(response.data.message);
+      // Update in database
+      await supabase
+        .from('meetings')
+        .update({ whatsapp_message: response.data.message })
+        .eq('id', meetingId);
+
       toast({
         title: 'Sucesso',
-        description: 'Mensagem gerada com sucesso!',
+        description: 'Mensagem regenerada com sucesso!',
       });
+
+      if (onRegenerate) onRegenerate();
     } catch (err: any) {
-      console.error('Error generating WhatsApp message:', err);
+      console.error('Error regenerating WhatsApp message:', err);
       toast({
         title: 'Erro',
-        description: err.message || 'Erro ao gerar mensagem.',
+        description: err.message || 'Erro ao regenerar mensagem.',
         variant: 'destructive',
       });
     } finally {
-      setGenerating(false);
-    }
-  };
-
-  const handleCopy = async () => {
-    if (!message) return;
-
-    try {
-      await navigator.clipboard.writeText(message);
-      setCopied(true);
-      toast({
-        title: 'Copiado!',
-        description: 'Mensagem copiada para a área de transferência.',
-      });
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Error copying:', err);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível copiar. Selecione e copie manualmente.',
-        variant: 'destructive',
-      });
+      setRegenerating(false);
     }
   };
 
@@ -83,9 +91,33 @@ export function ComunicacaoTab({ meetingId, canManage, hasFinalMinutes }: Comuni
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          A ata final precisa ser gerada antes de criar a mensagem para os membros. Vá para a aba "Gerar Ata" primeiro.
+          A ata final precisa ser gerada antes de criar a mensagem para os membros. Revele as contribuições primeiro.
         </AlertDescription>
       </Alert>
+    );
+  }
+
+  if (!whatsappMessage) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center">
+          <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-semibold mb-2">Mensagem não disponível</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            A mensagem de WhatsApp ainda não foi gerada ou ocorreu um erro.
+          </p>
+          {canManage && (
+            <Button onClick={handleRegenerate} disabled={regenerating}>
+              {regenerating ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              {regenerating ? 'Gerando...' : 'Gerar Mensagem'}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 
@@ -94,65 +126,44 @@ export function ComunicacaoTab({ meetingId, canManage, hasFinalMinutes }: Comuni
       <Alert className="border-primary/50 bg-primary/5">
         <MessageSquare className="h-4 w-4" />
         <AlertDescription>
-          Gere uma mensagem formatada para WhatsApp baseada na ata final. A mensagem será adaptada para comunicar as principais informações aos membros da igreja.
+          Mensagem gerada automaticamente com base na ata. Clique em "Copiar" e cole no WhatsApp.
         </AlertDescription>
       </Alert>
 
-      {!message ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-semibold mb-2">Gerar Mensagem para WhatsApp</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              A IA irá transformar a ata em uma mensagem clara e acolhedora para enviar aos membros.
-            </p>
-            {canManage && (
-              <Button onClick={handleGenerate} disabled={generating}>
-                {generating ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Mensagem para WhatsApp
+            </span>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleCopy}>
+                {copied ? (
+                  <Check className="h-4 w-4 mr-1 text-green-600" />
                 ) : (
-                  <MessageSquare className="h-4 w-4 mr-2" />
+                  <Copy className="h-4 w-4 mr-1" />
                 )}
-                {generating ? 'Gerando...' : 'Gerar Mensagem'}
+                {copied ? 'Copiado!' : 'Copiar'}
               </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Mensagem para WhatsApp
-              </span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleCopy}>
-                  {copied ? (
-                    <Check className="h-4 w-4 mr-1 text-success" />
-                  ) : (
-                    <Copy className="h-4 w-4 mr-1" />
-                  )}
-                  {copied ? 'Copiado!' : 'Copiar'}
+              {canManage && (
+                <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={regenerating}>
+                  {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+                  Regerar
                 </Button>
-                {canManage && (
-                  <Button variant="outline" size="sm" onClick={handleGenerate} disabled={generating}>
-                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Regerar'}
-                  </Button>
-                )}
-              </div>
-            </CardTitle>
-            <CardDescription>
-              Clique em "Copiar" e cole no WhatsApp
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-muted/50 rounded-lg p-4 border">
-              <p className="text-sm whitespace-pre-wrap font-mono">{message}</p>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </CardTitle>
+          <CardDescription>
+            Pronta para copiar e enviar
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-muted/50 rounded-lg p-4 border">
+            <p className="text-sm whitespace-pre-wrap font-mono">{whatsappMessage}</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

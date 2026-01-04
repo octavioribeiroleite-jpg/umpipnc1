@@ -26,6 +26,7 @@ interface Meeting {
   contributions_revealed: boolean;
   ai_organized: boolean;
   final_minutes: string | null;
+  whatsapp_message: string | null;
 }
 
 interface AgendaItem {
@@ -45,6 +46,7 @@ export default function ReuniaoDetalhe() {
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
   const [activeTab, setActiveTab] = useState('pauta');
 
@@ -97,13 +99,15 @@ export default function ReuniaoDetalhe() {
     if (!meeting || !id) return;
 
     const confirmed = window.confirm(
-      'ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\nApós revelar, todas as contribuições ficarão visíveis para todos os participantes.\n\nDeseja continuar?'
+      'ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\nApós revelar, a IA irá organizar as contribuições, gerar a ata e a mensagem de WhatsApp automaticamente.\n\nDeseja continuar?'
     );
 
     if (!confirmed) return;
 
+    setProcessing(true);
+
     try {
-      // Update meeting
+      // Update meeting to revealed
       const { error: meetingError } = await supabase
         .from('meetings')
         .update({ contributions_revealed: true })
@@ -120,12 +124,28 @@ export default function ReuniaoDetalhe() {
 
       if (contribError) throw contribError;
 
-      setMeeting({ ...meeting, contributions_revealed: true });
-      
-      toast({
-        title: 'Sucesso',
-        description: 'Contribuições reveladas com sucesso!',
+      // Call auto-process function
+      const { error: processError } = await supabase.functions.invoke('auto-process-meeting', {
+        body: { meetingId: id },
       });
+
+      if (processError) {
+        console.error('Auto-process error:', processError);
+        toast({
+          title: 'Aviso',
+          description: 'Contribuições reveladas, mas houve erro no processamento automático.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Sucesso',
+          description: 'Reunião processada! Ata e mensagem WhatsApp geradas.',
+        });
+      }
+
+      // Refresh data
+      await fetchMeeting();
+      setActiveTab('ata');
     } catch (err) {
       console.error('Error revealing contributions:', err);
       toast({
@@ -133,6 +153,8 @@ export default function ReuniaoDetalhe() {
         description: 'Erro ao revelar contribuições.',
         variant: 'destructive',
       });
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -370,6 +392,7 @@ export default function ReuniaoDetalhe() {
               agendaItems={agendaItems}
               contributionsRevealed={meeting.contributions_revealed}
               isModerator={isModerator}
+              isProcessing={processing}
               onReveal={handleRevealContributions}
             />
           </TabsContent>
@@ -417,7 +440,9 @@ export default function ReuniaoDetalhe() {
               <ComunicacaoTab
                 meetingId={meeting.id}
                 canManage={canManage}
+                whatsappMessage={meeting.whatsapp_message}
                 hasFinalMinutes={!!meeting.final_minutes}
+                onRegenerate={fetchMeeting}
               />
             </TabsContent>
           )}

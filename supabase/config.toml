@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.generate-whatsapp-message]
 verify_jwt = false
+
+[functions.auto-process-meeting]
+verify_jwt = false
