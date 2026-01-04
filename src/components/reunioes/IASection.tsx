@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Brain, Check, X, Edit, Loader2, AlertTriangle, Info } from 'lucide-react';
+import { Brain, Check, X, Edit, Loader2, Info, FileText } from 'lucide-react';
 
 interface AISuggestion {
   id: string;
@@ -42,6 +42,8 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
   const [generating, setGenerating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [summarizing, setSummarizing] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
 
   const fetchSuggestions = async () => {
     try {
@@ -129,6 +131,38 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
       });
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleSummarize = async () => {
+    setSummarizing(true);
+    try {
+      const response = await supabase.functions.invoke('summarize-contributions', {
+        body: { meetingId },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      setSummary(response.data.summary);
+      toast({
+        title: 'Sucesso',
+        description: 'Resumo gerado com sucesso!',
+      });
+    } catch (err: any) {
+      console.error('Error summarizing:', err);
+      toast({
+        title: 'Erro',
+        description: err.message || 'Erro ao gerar resumo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSummarizing(false);
     }
   };
 
@@ -222,6 +256,29 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
         </AlertDescription>
       </Alert>
 
+      {/* Summary Card */}
+      {summary && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Resumo Consolidado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm whitespace-pre-wrap">{summary}</p>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-3" 
+              onClick={() => setSummary(null)}
+            >
+              Fechar resumo
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {!aiOrganized && suggestions.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center">
@@ -231,20 +288,30 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
               A IA irá analisar todas as contribuições reveladas e extrair automaticamente pautas, decisões, tarefas e mais.
             </p>
             {canManage && (
-              <Button onClick={handleGenerateAI} disabled={generating}>
-                {generating ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Brain className="h-4 w-4 mr-2" />
-                )}
-                {generating ? 'Processando...' : 'Organizar Contribuições'}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button variant="outline" onClick={handleSummarize} disabled={summarizing}>
+                  {summarizing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4 mr-2" />
+                  )}
+                  {summarizing ? 'Resumindo...' : 'Resumir Ideias'}
+                </Button>
+                <Button onClick={handleGenerateAI} disabled={generating}>
+                  {generating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Brain className="h-4 w-4 mr-2" />
+                  )}
+                  {generating ? 'Processando...' : 'Organizar Contribuições'}
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
       ) : (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-4">
               <Badge variant="outline">
                 {pendingCount} pendentes
@@ -254,10 +321,16 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
               </Badge>
             </div>
             {canManage && (
-              <Button variant="outline" size="sm" onClick={handleGenerateAI} disabled={generating}>
-                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4 mr-2" />}
-                Reorganizar
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleSummarize} disabled={summarizing}>
+                  {summarizing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                  Resumir
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleGenerateAI} disabled={generating}>
+                  {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4 mr-2" />}
+                  Reorganizar
+                </Button>
+              </div>
             )}
           </div>
 
