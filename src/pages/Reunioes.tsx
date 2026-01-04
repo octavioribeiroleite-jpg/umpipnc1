@@ -1,40 +1,58 @@
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Calendar, Eye } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-
-const mockMeetings = [
-  {
-    id: '1',
-    title: 'Reunião Ordinária - Janeiro',
-    date: '2024-01-15T19:00:00',
-    moderator: 'João Silva',
-    status: 'aberta',
-    participants: 5,
-  },
-  {
-    id: '2',
-    title: 'Planejamento Retiro 2024',
-    date: '2024-01-08T19:00:00',
-    moderator: 'Maria Santos',
-    status: 'fechada',
-    participants: 4,
-  },
-  {
-    id: '3',
-    title: 'Reunião Extraordinária',
-    date: '2024-01-02T19:00:00',
-    moderator: 'Pedro Oliveira',
-    status: 'fechada',
-    participants: 6,
-  },
-];
+import { Skeleton } from '@/components/ui/skeleton';
+import { Plus } from 'lucide-react';
+import { useMeetings } from '@/hooks/useMeetings';
+import { ReuniaoFilters } from '@/components/reunioes/ReuniaoFilters';
+import { ReuniaoCard } from '@/components/reunioes/ReuniaoCard';
 
 export default function Reunioes() {
   const navigate = useNavigate();
+  const { meetings, loading } = useMeetings();
+  
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('all');
+  const [searchFilter, setSearchFilter] = useState('');
+
+  const filteredMeetings = useMemo(() => {
+    return meetings.filter(meeting => {
+      // Status filter
+      if (statusFilter !== 'all' && meeting.status !== statusFilter) {
+        return false;
+      }
+
+      // Month filter
+      if (monthFilter !== 'all') {
+        const meetingMonth = meeting.date.substring(0, 7); // YYYY-MM
+        if (meetingMonth !== monthFilter) {
+          return false;
+        }
+      }
+
+      // Search filter
+      if (searchFilter) {
+        const searchLower = searchFilter.toLowerCase();
+        if (!meeting.title.toLowerCase().includes(searchLower)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [meetings, statusFilter, monthFilter, searchFilter]);
+
+  const getAiStatus = (meeting: typeof meetings[0]) => {
+    if (meeting.aiValidatedCount > 0 && meeting.aiValidatedCount === meeting.aiSuggestionsCount) {
+      return 'validated' as const;
+    }
+    if (meeting.aiSuggestionsCount > 0) {
+      return 'pending' as const;
+    }
+    return 'not_generated' as const;
+  };
 
   return (
     <AppLayout>
@@ -49,50 +67,57 @@ export default function Reunioes() {
         }
       />
 
+      <ReuniaoFilters
+        onStatusChange={setStatusFilter}
+        onMonthChange={setMonthFilter}
+        onSearchChange={setSearchFilter}
+      />
+
       <div className="space-y-4">
-        {mockMeetings.map((meeting) => (
-          <Card key={meeting.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold">{meeting.title}</h3>
-                    <Badge
-                      variant={meeting.status === 'aberta' ? 'default' : 'secondary'}
-                    >
-                      {meeting.status === 'aberta' ? 'Aberta' : 'Fechada'}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(meeting.date).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      {meeting.participants} participantes
-                    </span>
-                    <span>Moderador: {meeting.moderator}</span>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/reunioes/${meeting.id}`)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  {meeting.status === 'aberta' ? 'Acessar' : 'Ver ata'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {loading ? (
+          <>
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </>
+        ) : filteredMeetings.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">
+              {meetings.length === 0
+                ? 'Nenhuma reunião cadastrada.'
+                : 'Nenhuma reunião encontrada com os filtros selecionados.'}
+            </p>
+            {meetings.length === 0 && (
+              <Button
+                variant="outline"
+                onClick={() => navigate('/reunioes/nova')}
+                className="mt-4"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeira Reunião
+              </Button>
+            )}
+          </div>
+        ) : (
+          filteredMeetings.map((meeting) => (
+            <ReuniaoCard
+              key={meeting.id}
+              id={meeting.id}
+              title={meeting.title}
+              date={meeting.date}
+              moderatorName={meeting.moderatorName}
+              status={meeting.status}
+              participantsCount={meeting.participantsCount}
+              progress={{
+                pautaComplete: meeting.agendaItemsCount > 0,
+                totalContributions: meeting.totalContributions,
+                finalizedContributions: meeting.finalizedContributions,
+                contributionsRevealed: meeting.contributions_revealed,
+                aiStatus: getAiStatus(meeting),
+              }}
+            />
+          ))
+        )}
       </div>
     </AppLayout>
   );
