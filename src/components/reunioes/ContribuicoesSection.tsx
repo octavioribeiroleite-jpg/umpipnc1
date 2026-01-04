@@ -32,6 +32,7 @@ interface ContribuicoesSectionProps {
   agendaItems: AgendaItem[];
   contributionsRevealed: boolean;
   isModerator: boolean;
+  isProcessing?: boolean;
   onReveal: () => void;
 }
 
@@ -40,6 +41,7 @@ export function ContribuicoesSection({
   agendaItems,
   contributionsRevealed,
   isModerator,
+  isProcessing,
   onReveal,
 }: ContribuicoesSectionProps) {
   const { toast } = useToast();
@@ -311,9 +313,13 @@ export function ContribuicoesSection({
             <span>
               {totalFinal} contribuição(ões) finalizada(s) de {totalContributions} total.
             </span>
-            <Button size="sm" onClick={onReveal} className="ml-4">
-              <Eye className="h-4 w-4 mr-2" />
-              Revelar Contribuições
+            <Button size="sm" onClick={onReveal} className="ml-4" disabled={isProcessing}>
+              {isProcessing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Eye className="h-4 w-4 mr-2" />
+              )}
+              {isProcessing ? 'Processando...' : 'Revelar e Processar'}
             </Button>
           </AlertDescription>
         </Alert>
