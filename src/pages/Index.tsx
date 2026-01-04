@@ -188,7 +188,7 @@ export default function Index() {
           icon={DollarSign}
         />
         <StatCard
-          title="Mensalidades (mês)"
+          title="Contribuições (mês)"
           value={`R$ ${stats.mensalidadesMes.toFixed(2).replace('.', ',')}`}
           icon={TrendingUp}
         />
@@ -262,7 +262,7 @@ export default function Index() {
                 </span>
               </div>
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Mensalidades do mês</span>
+                <span className="text-muted-foreground">Contribuições do mês</span>
                 <span className="font-semibold text-success">
                   R$ {stats.mensalidadesMes.toFixed(2).replace('.', ',')}
                 </span>

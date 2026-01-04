@@ -82,12 +82,12 @@ export default function Configuracoes() {
               <DollarSign className="h-5 w-5" />
               Financeiro
             </CardTitle>
-            <CardDescription>Configurações de finanças e mensalidades</CardDescription>
+            <CardDescription>Configurações de finanças e contribuições</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="membership-value">Valor padrão da mensalidade</Label>
+                <Label htmlFor="membership-value">Valor padrão da contribuição</Label>
                 <Input id="membership-value" type="number" defaultValue="50.00" />
               </div>
             </div>

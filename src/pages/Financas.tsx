@@ -134,7 +134,7 @@ export default function Financas() {
           variant={stats.saldo >= 0 ? 'success' : 'destructive'}
         />
         <StatCard
-          title="Mensalidades (mês)"
+          title="Contribuições (mês)"
           value={`R$ ${stats.mensalidadesMes.toFixed(2).replace('.', ',')}`}
           icon={TrendingUp}
           variant="success"
@@ -150,7 +150,7 @@ export default function Financas() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="membros">Membros</TabsTrigger>
-          <TabsTrigger value="mensalidades">Mensalidades</TabsTrigger>
+          <TabsTrigger value="mensalidades">Contribuições</TabsTrigger>
           <TabsTrigger value="gastos">Gastos</TabsTrigger>
         </TabsList>
 
