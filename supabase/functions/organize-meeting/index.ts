@@ -68,28 +68,54 @@ serve(async (req) => {
       return `- ${userName}${context}: ${c.content}`;
     }).join('\n');
 
-    const systemPrompt = `Você é um assistente especializado em analisar atas de reuniões de diretoria de igrejas. 
-Sua tarefa é organizar as contribuições dos participantes em categorias estruturadas.
+    const systemPrompt = `Você é um assistente de secretaria de reuniões da diretoria da Igreja Presbiteriana de Nova Carapina (IPNC).
 
-Para cada item identificado, retorne um objeto JSON com:
-- category: uma das categorias abaixo
-- content: o texto extraído/resumido
-- event_title: (opcional) se for um evento, o título sugerido
-- event_date: (opcional) se uma data foi mencionada, no formato YYYY-MM-DD
+Você receberá TEXTO LIVRE contendo contribuições escritas por participantes de uma reunião já revelada.
 
-Categorias válidas:
-- "pauta": Temas da pauta identificados
-- "ponto_discutido": Pontos importantes discutidos
-- "decisao": Decisões tomadas pelo grupo
-- "tarefa": Tarefas definidas para membros
-- "pendencia": Assuntos pendentes para próximas reuniões
-- "divergencia": Pontos de discordância ou debate
-- "observacao": Observações gerais
-- "evento": Eventos ou datas mencionadas
+SUA FUNÇÃO:
+Organizar o conteúdo em categorias estruturadas, SEM inventar informações, SEM interpretar além do que está escrito.
 
-Retorne APENAS um array JSON válido com os itens identificados. Não inclua markdown, explicações ou texto adicional.`;
+REGRAS OBRIGATÓRIAS:
+- NÃO crie decisões, prazos, valores ou responsáveis.
+- Classifique como DECISÃO apenas se houver linguagem explícita (ex.: "ficou decidido", "foi aprovado", "vamos fazer").
+- Se algo estiver implícito ou indefinido, classifique como DISCUSSÃO ou SUGESTÃO.
+- Opiniões conflitantes devem ser classificadas como DIVERGÊNCIA, sem tomar partido.
+- Linguagem formal, objetiva e institucional.
+- Cada item deve ter no máximo 3 linhas.
+- Não misture categorias.
 
-    const userPrompt = `Analise as seguintes contribuições de uma reunião de diretoria e extraia os itens relevantes:
+ORGANIZE A SAÍDA EXATAMENTE NESTA ESTRUTURA:
+1) Pauta identificada
+2) Pontos discutidos
+3) Decisões explícitas
+4) Tarefas explícitas
+5) Pendências
+6) Divergências
+7) Observações gerais
+
+FORMATO DE SAÍDA OBRIGATÓRIO (JSON):
+{
+  "pauta": [],
+  "pontos_discutidos": [],
+  "decisoes": [],
+  "tarefas": [],
+  "pendencias": [],
+  "divergencias": [],
+  "observacoes": []
+}
+
+Cada item das listas deve seguir o formato:
+{
+  "id": "string_unica",
+  "texto": "Descrição objetiva do item."
+}
+
+IMPORTANTE:
+- Se uma categoria não tiver conteúdo, retorne uma lista vazia.
+- Não gere ata final.
+- Não resuma além do necessário.`;
+
+    const userPrompt = `Analise as seguintes contribuições de uma reunião de diretoria:
 
 PAUTA DA REUNIÃO:
 ${agendaContext || 'Sem pauta definida'}
@@ -97,7 +123,7 @@ ${agendaContext || 'Sem pauta definida'}
 CONTRIBUIÇÕES DOS PARTICIPANTES:
 ${contributionsContext || 'Sem contribuições'}
 
-Retorne um array JSON com os itens identificados.`;
+Retorne o JSON estruturado conforme instruído.`;
 
     console.log('Calling Lovable AI Gateway...');
     
@@ -108,7 +134,7 @@ Retorne um array JSON com os itens identificados.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'openai/gpt-5-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -144,30 +170,59 @@ Retorne um array JSON com os itens identificados.`;
       throw new Error('Empty AI response');
     }
 
-    // Parse AI response
+    // Parse AI response - expecting structured JSON object
     let items: Array<{
       category: string;
       content: string;
-      event_title?: string;
-      event_date?: string;
     }> = [];
 
     try {
-      // Try to extract JSON from the response
-      const jsonMatch = aiContent.match(/\[[\s\S]*\]/);
+      // Try to extract JSON object from the response
+      const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        items = JSON.parse(jsonMatch[0]);
+        const parsed = JSON.parse(jsonMatch[0]);
+        
+        // Convert structured object to flat items array
+        const categoryMap: Record<string, string> = {
+          'pauta': 'pauta',
+          'pontos_discutidos': 'pontos_discutidos',
+          'decisoes': 'decisoes',
+          'tarefas': 'tarefas',
+          'pendencias': 'pendencias',
+          'divergencias': 'divergencias',
+          'observacoes': 'observacoes',
+        };
+
+        for (const [key, category] of Object.entries(categoryMap)) {
+          if (parsed[key] && Array.isArray(parsed[key])) {
+            for (const item of parsed[key]) {
+              items.push({
+                category,
+                content: item.texto || item.content || String(item),
+              });
+            }
+          }
+        }
       } else {
-        items = JSON.parse(aiContent);
+        // Fallback: try parsing as array
+        const arrayMatch = aiContent.match(/\[[\s\S]*\]/);
+        if (arrayMatch) {
+          const arr = JSON.parse(arrayMatch[0]);
+          items = arr.map((item: any) => ({
+            category: item.category || 'observacoes',
+            content: item.texto || item.content || String(item),
+          }));
+        }
       }
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
-      // Create a single observation with the raw content
       items = [{
-        category: 'observacao',
+        category: 'observacoes',
         content: 'Não foi possível processar automaticamente. Conteúdo bruto: ' + aiContent.substring(0, 500)
       }];
     }
+
+    console.log(`Parsed ${items.length} items from AI response`);
 
     // Delete existing suggestions for this meeting
     await supabase
@@ -178,11 +233,11 @@ Retorne um array JSON com os itens identificados.`;
     // Insert new suggestions
     const suggestions = items.map(item => ({
       meeting_id: meetingId,
-      category: item.category || 'observacao',
+      category: item.category || 'observacoes',
       original_content: item.content,
       status: 'pending',
-      suggested_event_title: item.event_title || null,
-      suggested_event_date: item.event_date || null,
+      suggested_event_title: null,
+      suggested_event_date: null,
     }));
 
     if (suggestions.length > 0) {
