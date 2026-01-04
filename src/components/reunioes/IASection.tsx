@@ -28,12 +28,12 @@ interface IASectionProps {
 
 const CATEGORY_LABELS: Record<string, string> = {
   'pauta': 'Pauta Identificada',
-  'ponto_discutido': 'Ponto Discutido',
-  'decisao': 'Decisão',
-  'tarefa': 'Tarefa',
-  'pendencia': 'Pendência',
-  'divergencia': 'Divergência',
-  'observacao': 'Observação',
+  'pontos_discutidos': 'Pontos Discutidos',
+  'decisoes': 'Decisões Explícitas',
+  'tarefas': 'Tarefas Explícitas',
+  'pendencias': 'Pendências',
+  'divergencias': 'Divergências',
+  'observacoes': 'Observações Gerais',
   'evento': 'Evento Sugerido',
 };
 
@@ -76,7 +76,28 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
         body: { meetingId },
       });
 
-      if (response.error) throw response.error;
+      if (response.error) {
+        // Check for specific error types
+        const errorData = response.error as any;
+        if (errorData?.context?.status === 429) {
+          throw new Error('RATE_LIMIT');
+        }
+        if (errorData?.context?.status === 402) {
+          throw new Error('CREDITS');
+        }
+        throw response.error;
+      }
+
+      // Check if response contains an error message
+      if (response.data?.error) {
+        if (response.data.error.includes('Limite') || response.data.error.includes('rate')) {
+          throw new Error('RATE_LIMIT');
+        }
+        if (response.data.error.includes('Créditos') || response.data.error.includes('credit')) {
+          throw new Error('CREDITS');
+        }
+        throw new Error(response.data.error);
+      }
 
       // Update meeting
       await supabase
@@ -91,11 +112,21 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
         title: 'Sucesso',
         description: 'Contribuições organizadas pela IA com sucesso!',
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error generating AI:', err);
+      
+      let errorMessage = 'Erro ao processar com IA. Tente novamente.';
+      if (err.message === 'RATE_LIMIT') {
+        errorMessage = 'Limite de requisições excedido. Aguarde alguns minutos e tente novamente.';
+      } else if (err.message === 'CREDITS') {
+        errorMessage = 'Créditos de IA insuficientes. Entre em contato com o administrador.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       toast({
         title: 'Erro',
-        description: 'Erro ao processar com IA. Tente novamente.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
