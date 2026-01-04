@@ -25,8 +25,51 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const authHeader = req.headers.get('Authorization') ?? '';
+
+    // Use the caller's auth context (RLS enforced)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
+    });
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userData?.user;
+
+    if (userError || !user) {
+      console.warn('Unauthorized request to organize-meeting:', userError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Não autenticado. Faça login novamente.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Only management (admin/diretoria) can run AI organization
+    const { data: roles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+
+    if (rolesError) {
+      console.error('Error checking roles:', rolesError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao validar permissões.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const isManagement = (roles || []).some((r: any) => r.role === 'admin' || r.role === 'diretoria');
+    if (!isManagement) {
+      return new Response(
+        JSON.stringify({ error: 'Sem permissão para organizar contribuições com IA.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
 
     // Fetch meeting
     const { data: meeting, error: meetingError } = await supabase

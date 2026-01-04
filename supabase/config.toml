@@ -1,4 +1,4 @@
 project_id = "dceldfybzabjlgudbzah"
 
 [functions.organize-meeting]
-verify_jwt = true
+verify_jwt = false
