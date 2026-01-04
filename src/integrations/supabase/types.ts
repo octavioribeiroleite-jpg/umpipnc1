@@ -609,6 +609,7 @@ export type Database = {
         | "divergencias"
         | "observacoes"
         | "eventos_sugeridos"
+        | "datas_prazos"
       suggestion_status: "pending" | "accepted" | "rejected" | "edited"
       task_priority: "low" | "medium" | "high"
       task_status: "todo" | "in_progress" | "done"
@@ -751,6 +752,7 @@ export const Constants = {
         "divergencias",
         "observacoes",
         "eventos_sugeridos",
+        "datas_prazos",
       ],
       suggestion_status: ["pending", "accepted", "rejected", "edited"],
       task_priority: ["low", "medium", "high"],

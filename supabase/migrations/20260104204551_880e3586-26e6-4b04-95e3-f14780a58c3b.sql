@@ -1,0 +1,1 @@
+ALTER TYPE suggestion_category ADD VALUE 'datas_prazos';

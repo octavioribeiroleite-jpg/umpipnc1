@@ -15,6 +15,7 @@ import { PautaEditor } from '@/components/reunioes/PautaEditor';
 import { ContribuicoesSection } from '@/components/reunioes/ContribuicoesSection';
 import { IASection } from '@/components/reunioes/IASection';
 import { AtaViewer } from '@/components/reunioes/AtaViewer';
+import { ComunicacaoTab } from '@/components/reunioes/ComunicacaoTab';
 
 interface Meeting {
   id: string;
@@ -348,6 +349,9 @@ export default function ReuniaoDetalhe() {
               <TabsTrigger value="ia">Organização IA</TabsTrigger>
             )}
             <TabsTrigger value="ata">Gerar Ata</TabsTrigger>
+            {meeting.contributions_revealed && (
+              <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="pauta">
@@ -407,6 +411,16 @@ export default function ReuniaoDetalhe() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {meeting.contributions_revealed && (
+            <TabsContent value="comunicacao">
+              <ComunicacaoTab
+                meetingId={meeting.id}
+                canManage={canManage}
+                hasFinalMinutes={!!meeting.final_minutes}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       )}
     </AppLayout>
