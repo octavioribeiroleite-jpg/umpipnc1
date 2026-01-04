@@ -1,0 +1,314 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Brain, Check, X, Edit, Loader2, AlertTriangle, Info } from 'lucide-react';
+
+interface AISuggestion {
+  id: string;
+  meeting_id: string;
+  category: string;
+  original_content: string;
+  edited_content: string | null;
+  status: 'pending' | 'accepted' | 'rejected';
+  suggested_event_title: string | null;
+  suggested_event_date: string | null;
+}
+
+interface IASectionProps {
+  meetingId: string;
+  canManage: boolean;
+  aiOrganized: boolean;
+  onUpdate: () => void;
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  'pauta': 'Pauta Identificada',
+  'ponto_discutido': 'Ponto Discutido',
+  'decisao': 'Decisão',
+  'tarefa': 'Tarefa',
+  'pendencia': 'Pendência',
+  'divergencia': 'Divergência',
+  'observacao': 'Observação',
+  'evento': 'Evento Sugerido',
+};
+
+export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASectionProps) {
+  const { toast } = useToast();
+  const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+
+  const fetchSuggestions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ai_suggestions')
+        .select('*')
+        .eq('meeting_id', meetingId)
+        .order('category');
+
+      if (error) throw error;
+      setSuggestions((data || []).map(s => ({
+        ...s,
+        status: s.status as 'pending' | 'accepted' | 'rejected'
+      })));
+    } catch (err) {
+      console.error('Error fetching suggestions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSuggestions();
+  }, [meetingId]);
+
+  const handleGenerateAI = async () => {
+    setGenerating(true);
+    try {
+      const response = await supabase.functions.invoke('organize-meeting', {
+        body: { meetingId },
+      });
+
+      if (response.error) throw response.error;
+
+      // Update meeting
+      await supabase
+        .from('meetings')
+        .update({ ai_organized: true })
+        .eq('id', meetingId);
+
+      await fetchSuggestions();
+      onUpdate();
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Contribuições organizadas pela IA com sucesso!',
+      });
+    } catch (err) {
+      console.error('Error generating AI:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao processar com IA. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleAccept = async (suggestionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('ai_suggestions')
+        .update({ status: 'accepted' })
+        .eq('id', suggestionId);
+
+      if (error) throw error;
+      await fetchSuggestions();
+    } catch (err) {
+      console.error('Error accepting:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao aceitar sugestão.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleReject = async (suggestionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('ai_suggestions')
+        .update({ status: 'rejected' })
+        .eq('id', suggestionId);
+
+      if (error) throw error;
+      await fetchSuggestions();
+    } catch (err) {
+      console.error('Error rejecting:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao rejeitar sugestão.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleEdit = (suggestion: AISuggestion) => {
+    setEditingId(suggestion.id);
+    setEditContent(suggestion.edited_content || suggestion.original_content);
+  };
+
+  const handleSaveEdit = async (suggestionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('ai_suggestions')
+        .update({ edited_content: editContent, status: 'accepted' })
+        .eq('id', suggestionId);
+
+      if (error) throw error;
+      setEditingId(null);
+      await fetchSuggestions();
+      toast({ title: 'Sucesso', description: 'Sugestão editada e aceita.' });
+    } catch (err) {
+      console.error('Error saving edit:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao salvar edição.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const groupedSuggestions = suggestions.reduce((acc, s) => {
+    if (!acc[s.category]) acc[s.category] = [];
+    acc[s.category].push(s);
+    return acc;
+  }, {} as Record<string, AISuggestion[]>);
+
+  const pendingCount = suggestions.filter(s => s.status === 'pending').length;
+  const acceptedCount = suggestions.filter(s => s.status === 'accepted').length;
+
+  return (
+    <div className="space-y-4">
+      <Alert className="border-primary/50 bg-primary/5">
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          A organização realizada pela IA é apenas uma sugestão. Somente os itens aceitos pelo moderador comporão a ata final.
+        </AlertDescription>
+      </Alert>
+
+      {!aiOrganized && suggestions.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="font-semibold mb-2">Organizar com IA</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              A IA irá analisar todas as contribuições reveladas e extrair automaticamente pautas, decisões, tarefas e mais.
+            </p>
+            {canManage && (
+              <Button onClick={handleGenerateAI} disabled={generating}>
+                {generating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Brain className="h-4 w-4 mr-2" />
+                )}
+                {generating ? 'Processando...' : 'Organizar Contribuições'}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Badge variant="outline">
+                {pendingCount} pendentes
+              </Badge>
+              <Badge variant="default" className="bg-success">
+                {acceptedCount} aceitas
+              </Badge>
+            </div>
+            {canManage && (
+              <Button variant="outline" size="sm" onClick={handleGenerateAI} disabled={generating}>
+                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4 mr-2" />}
+                Reorganizar
+              </Button>
+            )}
+          </div>
+
+          {Object.entries(groupedSuggestions).map(([category, items]) => (
+            <Card key={category}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">
+                  {CATEGORY_LABELS[category] || category}
+                </CardTitle>
+                <CardDescription>
+                  {items.length} item(ns)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {items.map((suggestion) => (
+                  <div
+                    key={suggestion.id}
+                    className={`p-3 rounded-lg border ${
+                      suggestion.status === 'accepted' ? 'border-success bg-success/5' :
+                      suggestion.status === 'rejected' ? 'border-destructive/50 bg-destructive/5 opacity-50' :
+                      'border-border'
+                    }`}
+                  >
+                    {editingId === suggestion.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleSaveEdit(suggestion.id)}>
+                            Salvar
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm">
+                          {suggestion.edited_content || suggestion.original_content}
+                        </p>
+                        {suggestion.suggested_event_title && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Evento sugerido: {suggestion.suggested_event_title}
+                            {suggestion.suggested_event_date && ` - ${new Date(suggestion.suggested_event_date).toLocaleDateString('pt-BR')}`}
+                          </p>
+                        )}
+                        {canManage && suggestion.status === 'pending' && (
+                          <div className="flex gap-2 mt-3">
+                            <Button size="sm" variant="outline" className="text-success border-success hover:bg-success/10" onClick={() => handleAccept(suggestion.id)}>
+                              <Check className="h-3 w-3 mr-1" />
+                              Aceitar
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(suggestion)}>
+                              <Edit className="h-3 w-3 mr-1" />
+                              Editar
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => handleReject(suggestion.id)}>
+                              <X className="h-3 w-3 mr-1" />
+                              Rejeitar
+                            </Button>
+                          </div>
+                        )}
+                        {suggestion.status !== 'pending' && (
+                          <Badge className="mt-2" variant={suggestion.status === 'accepted' ? 'default' : 'secondary'}>
+                            {suggestion.status === 'accepted' ? 'Aceita' : 'Rejeitada'}
+                          </Badge>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
