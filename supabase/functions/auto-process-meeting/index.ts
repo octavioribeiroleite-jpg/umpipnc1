@@ -206,26 +206,26 @@ Retorne um JSON assim:
     // Mark as AI organized
     await supabaseAdmin.from('meetings').update({ ai_organized: true }).eq('id', meetingId);
 
-    // ===== STEP 3: Generate Final Minutes =====
-    const categoryTitles: Record<string, string> = {
-      'decisoes': 'DECISÕES',
-      'tarefas': 'TAREFAS',
+    // ===== STEP 3: Generate Final Minutes with AI Formatting =====
+    const categoryMapping: Record<string, string> = {
+      'decisoes': 'DELIBERAÇÕES',
+      'tarefas': 'ENCAMINHAMENTOS',
       'pendencias': 'PENDÊNCIAS',
-      'datas_prazos': 'DATAS E PRAZOS',
+      'datas_prazos': 'ENCAMINHAMENTOS',
       'observacoes': 'OBSERVAÇÕES',
     };
 
     const grouped = organizedItems.reduce((acc, item) => {
-      if (!acc[item.category]) acc[item.category] = [];
-      acc[item.category].push(item.content);
+      const mappedCategory = categoryMapping[item.category] || 'OBSERVAÇÕES';
+      if (!acc[mappedCategory]) acc[mappedCategory] = [];
+      acc[mappedCategory].push(item.content);
       return acc;
     }, {} as Record<string, string[]>);
 
-    const lines: string[] = [
-      '# ATA DE REUNIÃO',
-      '',
-      `**Reunião:** ${meeting.title}`,
-      `**Data:** ${new Date(meeting.date).toLocaleDateString('pt-BR', {
+    // Build raw content for formatting
+    const rawLines: string[] = [
+      `Reunião: ${meeting.title}`,
+      `Data: ${new Date(meeting.date).toLocaleDateString('pt-BR', {
         weekday: 'long',
         day: '2-digit',
         month: 'long',
@@ -233,39 +233,94 @@ Retorne um JSON assim:
         hour: '2-digit',
         minute: '2-digit',
       })}`,
-      `**Moderador:** ${moderatorName}`,
-      `**Participantes:** ${participantNames.join(', ')}`,
-      '',
-      '---',
+      `Moderador: ${moderatorName}`,
+      `Participantes: ${participantNames.join(', ')}`,
       '',
     ];
 
     if (agendaItems && agendaItems.length > 0) {
-      lines.push('## PAUTA');
-      lines.push('');
+      rawLines.push('PAUTA:');
       agendaItems.forEach((item, i) => {
-        lines.push(`${i + 1}. ${item.title}`);
-        if (item.description) lines.push(`   ${item.description}`);
+        rawLines.push(`${item.title}${item.description ? ' - ' + item.description : ''}`);
       });
-      lines.push('');
+      rawLines.push('');
     }
 
-    Object.entries(grouped).forEach(([category, items]) => {
-      const title = categoryTitles[category] || category.toUpperCase();
-      lines.push(`## ${title}`);
-      lines.push('');
-      items.forEach((item, i) => {
-        lines.push(`${i + 1}. ${item}`);
-      });
-      lines.push('');
+    // Add organized items by mapped category
+    const categoryOrder = ['DELIBERAÇÕES', 'ENCAMINHAMENTOS', 'PENDÊNCIAS', 'OBSERVAÇÕES'];
+    categoryOrder.forEach(cat => {
+      if (grouped[cat] && grouped[cat].length > 0) {
+        rawLines.push(`${cat}:`);
+        grouped[cat].forEach(item => {
+          rawLines.push(item);
+        });
+        rawLines.push('');
+      }
     });
 
-    lines.push('---');
-    lines.push('');
-    lines.push('*Ata gerada automaticamente pelo sistema.*');
+    const rawContent = rawLines.join('\n');
 
-    const finalMinutes = lines.join('\n');
-    console.log('Final minutes generated');
+    // Format with AI
+    const formatSystemPrompt = `Organize o conteúdo recebido em formato de ATA FORMAL, mantendo exatamente as informações apresentadas, sem alterar, interpretar ou acrescentar conteúdo.
+
+OBJETIVO:
+Apenas FORMATAR o texto de forma clara, organizada e institucional.
+
+REGRAS GERAIS:
+- NÃO alterar o conteúdo.
+- NÃO criar, remover ou reinterpretar informações.
+- NÃO resumir.
+- Apenas reorganizar visualmente.
+
+ESTRUTURA FIXA DA ATA (NESTA ORDEM):
+PAUTA
+DELIBERAÇÕES
+ENCAMINHAMENTOS
+PENDÊNCIAS
+OBSERVAÇÕES
+
+REGRAS DE FORMATAÇÃO (OBRIGATÓRIAS):
+- Gerar a ata em TEXTO LIMPO.
+- NÃO utilizar markdown técnico (#, listas com traços, blocos de código).
+- NÃO utilizar asteriscos soltos ou símbolos decorativos.
+- Os títulos das seções devem estar em **NEGRITO**.
+- O conteúdo de cada seção deve ser apresentado em parágrafos separados.
+- Usar frases curtas e objetivas.
+- Separar seções apenas com linhas em branco.
+- Não numerar itens, exceto quando absolutamente necessário.
+- Manter linguagem formal e institucional.
+
+FORMATO DE SAÍDA:
+- Retornar apenas o texto final da ata.
+- Não incluir comentários, explicações ou observações adicionais.`;
+
+    console.log('Calling AI to format minutes...');
+
+    const formatResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: formatSystemPrompt },
+          { role: "user", content: rawContent }
+        ],
+      }),
+    });
+
+    let finalMinutes = '';
+    if (formatResponse.ok) {
+      const formatData = await formatResponse.json();
+      finalMinutes = formatData.choices?.[0]?.message?.content || '';
+      console.log('Minutes formatted by AI');
+    } else {
+      // Fallback: use raw content if formatting fails
+      console.error('Formatting failed, using raw content');
+      finalMinutes = `**ATA DE REUNIÃO**\n\n${rawContent}\n\n*Ata gerada automaticamente pelo sistema.*`;
+    }
 
     // ===== STEP 4: Generate WhatsApp Message =====
     const whatsappSystemPrompt = `Você é um assistente de comunicação de uma igreja evangélica.
