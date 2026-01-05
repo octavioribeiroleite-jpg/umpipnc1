@@ -567,7 +567,159 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
     
     console.log(`Total events created: ${eventsCreated}`);
 
-    // ===== STEP 6: Save everything =====
+    // ===== STEP 6: Extract and create tasks =====
+    console.log('Extracting tasks from meeting content...');
+    
+    // Build a list of available assignees for the AI
+    const activeProfiles = profiles?.filter(p => p.full_name) || [];
+    const assigneeList = activeProfiles.map(p => `- "${p.full_name}" (ID: ${p.user_id})`).join('\n');
+    
+    const tasksSystemPrompt = `Você é um assistente que extrai tarefas e encaminhamentos de atas de reunião.
+Analise o conteúdo e extraia APENAS tarefas que foram claramente atribuídas ou decididas.
+
+REGRAS IMPORTANTES:
+- Extraia tarefas com responsável identificado (pessoa ficou de fazer algo)
+- Identifique: título da tarefa, responsável (se mencionado), prazo (se mencionado), prioridade
+- Prioridade: "low" (rotineira), "medium" (normal), "high" (urgente ou importante)
+- Se uma data limite for mencionada, extraia-a no formato YYYY-MM-DD
+- NÃO extraia tarefas genéricas sem ação clara
+- Se não conseguir identificar quem vai fazer, deixe assignee_id vazio
+
+MEMBROS DISPONÍVEIS PARA ATRIBUIÇÃO:
+${assigneeList || 'Nenhum membro cadastrado'}
+
+IMPORTANTE: Use EXATAMENTE o ID listado acima para o campo assignee_id.
+Se o nome mencionado não estiver na lista ou for ambíguo, deixe assignee_id vazio.
+
+Você DEVE responder APENAS com a chamada da função extract_tasks.`;
+
+    const tasksUserPrompt = `Extraia as tarefas e encaminhamentos desta ata de reunião:\n\n${finalMinutes}\n\nRegistro original:\n${contentToProcess}`;
+
+    const tasksResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: tasksSystemPrompt },
+          { role: "user", content: tasksUserPrompt }
+        ],
+        tools: [{
+          type: "function",
+          function: {
+            name: "extract_tasks",
+            description: "Extrair tarefas do texto da ata de reunião",
+            parameters: {
+              type: "object",
+              properties: {
+                tasks: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string", description: "Título da tarefa (ação a ser feita)" },
+                      description: { type: "string", description: "Descrição adicional da tarefa (opcional)" },
+                      assignee_id: { type: "string", description: "UUID do responsável (da lista de membros)" },
+                      assignee_name: { type: "string", description: "Nome do responsável mencionado (para log)" },
+                      due_date: { type: "string", description: "Data limite no formato YYYY-MM-DD (opcional)" },
+                      priority: { type: "string", enum: ["low", "medium", "high"], description: "Prioridade da tarefa" }
+                    },
+                    required: ["title", "priority"]
+                  }
+                }
+              },
+              required: ["tasks"]
+            }
+          }
+        }],
+        tool_choice: { type: "function", function: { name: "extract_tasks" } }
+      }),
+    });
+
+    let tasksCreated = 0;
+    if (tasksResponse.ok) {
+      const tasksData = await tasksResponse.json();
+      const toolCall = tasksData.choices?.[0]?.message?.tool_calls?.[0];
+      
+      if (toolCall?.function?.arguments) {
+        try {
+          const parsed = JSON.parse(toolCall.function.arguments);
+          const extractedTasks = parsed.tasks || [];
+          
+          console.log(`Extracted ${extractedTasks.length} tasks from meeting`);
+          
+          for (const task of extractedTasks) {
+            // Validate assignee_id if provided
+            let validAssigneeId = null;
+            if (task.assignee_id) {
+              const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(task.assignee_id);
+              const assigneeExists = activeProfiles.some(p => p.user_id === task.assignee_id);
+              if (isValidUUID && assigneeExists) {
+                validAssigneeId = task.assignee_id;
+              } else {
+                console.log(`Invalid assignee_id for task "${task.title}", setting to null. Mentioned: ${task.assignee_name || 'unknown'}`);
+              }
+            }
+            
+            // Validate due_date if provided
+            let validDueDate = null;
+            if (task.due_date) {
+              const dateMatch = task.due_date.match(/^\d{4}-\d{2}-\d{2}$/);
+              if (dateMatch) {
+                const parsedDate = new Date(task.due_date);
+                if (!isNaN(parsedDate.getTime())) {
+                  validDueDate = task.due_date;
+                }
+              }
+            }
+            
+            // Check if similar task already exists for this meeting
+            const { data: existingTask } = await supabaseAdmin
+              .from('tasks')
+              .select('id')
+              .eq('meeting_id', meetingId)
+              .eq('title', task.title)
+              .maybeSingle();
+            
+            if (existingTask) {
+              console.log(`Task already exists, skipping: ${task.title}`);
+              continue;
+            }
+            
+            const { error: taskError } = await supabaseAdmin
+              .from('tasks')
+              .insert({
+                title: task.title,
+                description: task.description || null,
+                status: 'todo',
+                priority: task.priority || 'medium',
+                due_date: validDueDate,
+                assignee_id: validAssigneeId,
+                meeting_id: meetingId,
+                created_by: user.id,
+              });
+            
+            if (taskError) {
+              console.error(`Error creating task "${task.title}":`, taskError);
+            } else {
+              tasksCreated++;
+              console.log(`Created task: "${task.title}" ${validAssigneeId ? `assigned to ${task.assignee_name}` : '(unassigned)'}`);
+            }
+          }
+        } catch (parseError) {
+          console.error('Error parsing tasks:', parseError);
+        }
+      }
+    } else {
+      console.error('Tasks extraction failed, continuing without it');
+    }
+    
+    console.log(`Total tasks created: ${tasksCreated}`);
+
+    // ===== STEP 7: Save everything =====
     const { error: updateError } = await supabaseAdmin
       .from('meetings')
       .update({
@@ -591,6 +743,7 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
       hasMinutes: true,
       hasWhatsApp: !!whatsappMessage,
       eventsCreated: eventsCreated,
+      tasksCreated: tasksCreated,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

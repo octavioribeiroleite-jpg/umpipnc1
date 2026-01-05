@@ -162,9 +162,19 @@ export default function ReuniaoDetalhe() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const eventsCreated = processData?.eventsCreated || 0;
+      const tasksCreated = processData?.tasksCreated || 0;
+      
+      let description = 'Ata gerada e mensagem WhatsApp criada';
+      if (eventsCreated > 0 || tasksCreated > 0) {
+        const parts = [];
+        if (eventsCreated > 0) parts.push(`${eventsCreated} evento(s)`);
+        if (tasksCreated > 0) parts.push(`${tasksCreated} tarefa(s)`);
+        description += `. Criado(s): ${parts.join(' e ')}`;
+      }
+      
       toast({
         title: 'Reunião Finalizada!',
-        description: `Ata gerada, mensagem WhatsApp criada${eventsCreated > 0 ? ` e ${eventsCreated} evento(s) adicionado(s) ao calendário` : ''}.`,
+        description,
       });
 
       // Refresh data and go to resumo tab
