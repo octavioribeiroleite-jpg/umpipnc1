@@ -64,7 +64,6 @@ export function GastosTab() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
-  // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -79,19 +78,12 @@ export function GastosTab() {
 
   const fetchData = async () => {
     setLoading(true);
-
     const [txRes, catRes] = await Promise.all([
-      supabase
-        .from('transactions')
-        .select('*')
-        .eq('type', 'saida')
-        .order('date', { ascending: false }),
+      supabase.from('transactions').select('*').eq('type', 'saida').order('date', { ascending: false }),
       supabase.from('financial_categories').select('*').eq('type', 'saida'),
     ]);
-
     if (!txRes.error) setTransactions(txRes.data || []);
     if (!catRes.error) setCategories(catRes.data || []);
-
     setLoading(false);
   };
 
@@ -101,46 +93,32 @@ export function GastosTab() {
 
   const getCategoryName = (categoryId: string | null) => {
     if (!categoryId) return 'Sem categoria';
-    const cat = categories.find((c) => c.id === categoryId);
-    return cat?.name || 'Sem categoria';
+    return categories.find((c) => c.id === categoryId)?.name || 'Sem categoria';
   };
 
   const getCategoryColor = (categoryId: string | null) => {
     if (!categoryId) return '#6b7280';
-    const cat = categories.find((c) => c.id === categoryId);
-    return cat?.color || '#6b7280';
+    return categories.find((c) => c.id === categoryId)?.color || '#6b7280';
   };
 
   const openNewDialog = () => {
     setEditingTransaction(null);
-    setFormData({
-      description: '',
-      amount: '',
-      category_id: '',
-      date: new Date().toISOString().split('T')[0],
-    });
+    setFormData({ description: '', amount: '', category_id: '', date: new Date().toISOString().split('T')[0] });
     setDialogOpen(true);
   };
 
   const openEditDialog = (tx: Transaction) => {
     setEditingTransaction(tx);
-    setFormData({
-      description: tx.description,
-      amount: tx.amount.toString(),
-      category_id: tx.category_id || '',
-      date: tx.date,
-    });
+    setFormData({ description: tx.description, amount: tx.amount.toString(), category_id: tx.category_id || '', date: tx.date });
     setDialogOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!formData.description.trim()) {
       toast.error('Descrição é obrigatória');
       return;
     }
-
     const amount = parseFloat(formData.amount);
     if (isNaN(amount) || amount <= 0) {
       toast.error('Valor inválido');
@@ -150,21 +128,15 @@ export function GastosTab() {
     setSubmitting(true);
     try {
       if (editingTransaction) {
-        // Editar
-        const { error } = await supabase
-          .from('transactions')
-          .update({
-            description: formData.description,
-            amount,
-            category_id: formData.category_id || null,
-            date: formData.date,
-          })
-          .eq('id', editingTransaction.id);
-
+        const { error } = await supabase.from('transactions').update({
+          description: formData.description,
+          amount,
+          category_id: formData.category_id || null,
+          date: formData.date,
+        }).eq('id', editingTransaction.id);
         if (error) throw error;
         toast.success('Gasto atualizado!');
       } else {
-        // Criar
         const { error } = await supabase.from('transactions').insert({
           description: formData.description,
           amount,
@@ -174,11 +146,9 @@ export function GastosTab() {
           created_by: user?.id,
           origin: 'manual',
         });
-
         if (error) throw error;
         toast.success('Gasto registrado!');
       }
-
       setDialogOpen(false);
       fetchData();
     } catch (error: any) {
@@ -190,21 +160,20 @@ export function GastosTab() {
 
   const handleDelete = async () => {
     if (!deletingId) return;
-
     try {
       const { error } = await supabase.from('transactions').delete().eq('id', deletingId);
       if (error) throw error;
       toast.success('Gasto excluído!');
       fetchData();
     } catch (error: any) {
-      toast.error('Erro: ' + error.message);
+      toast.error('Erro ao excluir: ' + error.message);
     } finally {
       setDeleteDialogOpen(false);
       setDeletingId(null);
     }
   };
 
-  const confirmDelete = (id: string) => {
+  const openDeleteDialog = (id: string) => {
     setDeletingId(id);
     setDeleteDialogOpen(true);
   };
@@ -241,7 +210,7 @@ export function GastosTab() {
             </div>
           ) : transactions.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              Nenhum gasto registrado. Clique em "Novo Gasto" para adicionar.
+              Nenhum gasto registrado.
             </p>
           ) : (
             <Table>
@@ -277,18 +246,10 @@ export function GastosTab() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditDialog(tx)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(tx)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => confirmDelete(tx.id)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(tx.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -301,19 +262,15 @@ export function GastosTab() {
         </CardContent>
       </Card>
 
-      {/* Dialog de Criar/Editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingTransaction ? 'Editar Gasto' : 'Novo Gasto'}
-            </DialogTitle>
+            <DialogTitle>{editingTransaction ? 'Editar Gasto' : 'Novo Gasto'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="description">Descrição *</Label>
+              <Label>Descrição *</Label>
               <Textarea
-                id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Descreva o gasto..."
@@ -321,9 +278,8 @@ export function GastosTab() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="amount">Valor (R$) *</Label>
+                <Label>Valor (R$) *</Label>
                 <Input
-                  id="amount"
                   type="number"
                   step="0.01"
                   value={formData.amount}
@@ -332,9 +288,8 @@ export function GastosTab() {
                 />
               </div>
               <div>
-                <Label htmlFor="date">Data</Label>
+                <Label>Data</Label>
                 <Input
-                  id="date"
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -342,51 +297,35 @@ export function GastosTab() {
               </div>
             </div>
             <div>
-              <Label htmlFor="category">Categoria</Label>
-              <Select
-                value={formData.category_id}
-                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-              >
+              <Label>Categoria</Label>
+              <Select value={formData.category_id} onValueChange={(v) => setFormData({ ...formData, category_id: v })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
+                  <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancelar
-              </Button>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : editingTransaction ? (
-                  'Salvar'
-                ) : (
-                  'Registrar'
-                )}
+                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                {editingTransaction ? 'Salvar' : 'Registrar'}
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Alert Dialog de Confirmação de Exclusão */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Gasto?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O gasto será excluído permanentemente.
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
