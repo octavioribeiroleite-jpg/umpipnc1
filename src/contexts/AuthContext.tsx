@@ -79,6 +79,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId)
         .maybeSingle();
 
+      // Check if user is deactivated
+      if (profileData && !profileData.active) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        setRoles([]);
+        // Use setTimeout to show toast after state updates
+        setTimeout(() => {
+          import('sonner').then(({ toast }) => {
+            toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
+          });
+        }, 0);
+        setLoading(false);
+        return;
+      }
+
       if (profileData) {
         setProfile(profileData as Profile);
       }
