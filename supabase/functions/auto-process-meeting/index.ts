@@ -348,10 +348,16 @@ REGRAS:
 7. Termine com bênção ou palavra de encorajamento
 8. NÃO inclua detalhes administrativos internos
 
-FORMATO:
+FORMATO DE NEGRITO - MUITO IMPORTANTE:
+- Use APENAS UM asterisco de cada lado para negrito: *texto*
+- NÃO use dois asteriscos: **texto** (ERRADO!)
+- Exemplo CORRETO: *Próxima reunião:* dia 20/01
+- Exemplo ERRADO: **Próxima reunião:** dia 20/01
+
+FORMATO GERAL:
 - Use quebras de linha para separar seções
 - Use bullet points (•) para listas
-- Destaque datas e eventos importantes`;
+- Destaque datas e eventos importantes com *negrito*`;
 
     const whatsappUserPrompt = `Transforme esta ata em mensagem de WhatsApp para os membros:\n\n${finalMinutes}`;
 

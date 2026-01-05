@@ -208,8 +208,8 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
     );
   }
 
-  // Read-only mode (closed meeting)
-  if (meeting.status === 'fechada' && meeting.final_minutes) {
+  // Show minutes if they exist (regardless of meeting status)
+  if (meeting.final_minutes) {
     const handleStartEdit = () => {
       setEditedMinutes(meeting.final_minutes || '');
       setIsEditing(true);

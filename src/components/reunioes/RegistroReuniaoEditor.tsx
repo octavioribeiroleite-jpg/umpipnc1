@@ -179,7 +179,6 @@ OBSERVAÇÕES
 - Próxima reunião será dia 20/01 às 19h"
               value={notes}
               onChange={(e) => handleChange(e.target.value)}
-              disabled={isProcessed}
               className="min-h-[400px] font-mono text-sm leading-relaxed resize-y"
             />
 
