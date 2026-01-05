@@ -104,5 +104,29 @@ export function useMeetings() {
     fetchMeetings();
   }, [user]);
 
-  return { meetings, loading, error, refetch: fetchMeetings };
+  const deleteMeeting = async (meetingId: string) => {
+    try {
+      // Delete related data first
+      await supabase.from('ai_suggestions').delete().eq('meeting_id', meetingId);
+      await supabase.from('contributions').delete().eq('meeting_id', meetingId);
+      await supabase.from('agenda_items').delete().eq('meeting_id', meetingId);
+      await supabase.from('meeting_participants').delete().eq('meeting_id', meetingId);
+      await supabase.from('tasks').delete().eq('meeting_id', meetingId);
+      await supabase.from('files').delete().eq('meeting_id', meetingId);
+      
+      // Delete the meeting
+      const { error } = await supabase.from('meetings').delete().eq('id', meetingId);
+      
+      if (error) throw error;
+      
+      // Refresh the list
+      await fetchMeetings();
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting meeting:', err);
+      return { success: false, error: 'Erro ao excluir reunião' };
+    }
+  };
+
+  return { meetings, loading, error, refetch: fetchMeetings, deleteMeeting };
 }
