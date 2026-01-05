@@ -41,7 +41,7 @@ export default function ReuniaoDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isManagement } = useAuth();
+  const { user, isManagement, loading: authLoading } = useAuth();
   
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
@@ -92,8 +92,10 @@ export default function ReuniaoDetalhe() {
   };
 
   useEffect(() => {
-    fetchMeeting();
-  }, [id, user]);
+    if (!authLoading) {
+      fetchMeeting();
+    }
+  }, [id, user, authLoading]);
 
   const handleRevealContributions = async () => {
     if (!meeting || !id) return;
@@ -281,7 +283,7 @@ export default function ReuniaoDetalhe() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
