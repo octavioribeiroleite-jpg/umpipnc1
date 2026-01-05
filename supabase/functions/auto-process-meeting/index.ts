@@ -521,16 +521,23 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
               continue;
             }
             
-            // Check if event with same title and date already exists for this meeting
+            // Check if event on same date already exists for this meeting (by date, not title)
+            const eventDate = new Date(event.start_date);
+            const startOfDay = new Date(eventDate);
+            startOfDay.setHours(0, 0, 0, 0);
+            const endOfDay = new Date(eventDate);
+            endOfDay.setHours(23, 59, 59, 999);
+            
             const { data: existingEvent } = await supabaseAdmin
               .from('events')
               .select('id')
               .eq('reuniao_id', meetingId)
-              .eq('title', event.title)
-              .single();
+              .gte('start_date', startOfDay.toISOString())
+              .lte('start_date', endOfDay.toISOString())
+              .maybeSingle();
             
             if (existingEvent) {
-              console.log(`Event already exists, skipping: ${event.title}`);
+              console.log(`Event already exists for this date, skipping: ${event.title}`);
               continue;
             }
             
@@ -676,16 +683,24 @@ Você DEVE responder APENAS com a chamada da função extract_tasks.`;
               }
             }
             
-            // Check if similar task already exists for this meeting
-            const { data: existingTask } = await supabaseAdmin
+            // Check if similar task already exists for this meeting (using ILIKE for case-insensitive match)
+            const { data: existingTasks } = await supabaseAdmin
               .from('tasks')
-              .select('id')
-              .eq('meeting_id', meetingId)
-              .eq('title', task.title)
-              .maybeSingle();
+              .select('id, title')
+              .eq('meeting_id', meetingId);
             
-            if (existingTask) {
-              console.log(`Task already exists, skipping: ${task.title}`);
+            // Check for similar titles (normalize and compare)
+            const normalizedNewTitle = task.title.toLowerCase().trim();
+            const similarTask = existingTasks?.find(t => {
+              const normalizedExisting = t.title.toLowerCase().trim();
+              // Check if titles are very similar (contain same key words)
+              return normalizedExisting === normalizedNewTitle || 
+                     normalizedExisting.includes(normalizedNewTitle) ||
+                     normalizedNewTitle.includes(normalizedExisting);
+            });
+            
+            if (similarTask) {
+              console.log(`Similar task already exists, skipping: "${task.title}" (matches: "${similarTask.title}")`);
               continue;
             }
             
