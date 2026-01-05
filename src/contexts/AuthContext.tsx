@@ -43,15 +43,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         // Defer profile/roles fetch
         if (session?.user) {
+          setLoading(true);
           setTimeout(() => {
             fetchProfileAndRoles(session.user.id);
           }, 0);
         } else {
           setProfile(null);
           setRoles([]);
+          setLoading(false);
         }
       }
     );
@@ -60,8 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
+        setLoading(true);
         fetchProfileAndRoles(session.user.id);
       } else {
         setLoading(false);
