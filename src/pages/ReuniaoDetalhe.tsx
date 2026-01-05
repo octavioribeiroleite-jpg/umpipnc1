@@ -51,7 +51,7 @@ export default function ReuniaoDetalhe() {
   const [activeTab, setActiveTab] = useState('pauta');
 
   const fetchMeeting = async () => {
-    if (!id) return;
+    if (!id || !user) return;
 
     try {
       const { data: meetingData, error: meetingError } = await supabase
