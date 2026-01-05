@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Eye, CheckCircle, Circle, Brain, FileText, Trash2 } from 'lucide-react';
+import { Calendar, Users, Eye, CheckCircle, Circle, Brain, FileText, Trash2, CalendarCheck, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MeetingProgress {
   pautaComplete: boolean;
@@ -34,6 +35,8 @@ interface ReuniaoCardProps {
   participantsCount: number;
   progress: MeetingProgress;
   onDelete?: (id: string) => Promise<{ success: boolean; error?: string }>;
+  onFinalize?: () => void;
+  canManage?: boolean;
 }
 
 export function ReuniaoCard({
@@ -45,9 +48,12 @@ export function ReuniaoCard({
   participantsCount,
   progress,
   onDelete,
+  onFinalize,
+  canManage = false,
 }: ReuniaoCardProps) {
   const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const getAiStatusText = () => {
     switch (progress.aiStatus) {
@@ -82,6 +88,34 @@ export function ReuniaoCard({
       toast.success('Reunião excluída com sucesso');
     } else {
       toast.error(result.error || 'Erro ao excluir reunião');
+    }
+  };
+
+  const handleFinalize = async () => {
+    setIsProcessing(true);
+    try {
+      // Call auto-process function
+      const { data, error } = await supabase.functions.invoke('auto-process-meeting', {
+        body: { meetingId: id },
+      });
+
+      if (error) throw error;
+
+      // Close the meeting
+      await supabase
+        .from('meetings')
+        .update({ status: 'fechada' })
+        .eq('id', id);
+
+      const eventsCreated = data?.eventsCreated || 0;
+      toast.success(`Reunião finalizada! ${eventsCreated > 0 ? `${eventsCreated} evento(s) no calendário.` : ''}`);
+      
+      if (onFinalize) onFinalize();
+    } catch (err) {
+      console.error('Error finalizing meeting:', err);
+      toast.error('Erro ao finalizar reunião');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -124,18 +158,29 @@ export function ReuniaoCard({
                 size="sm"
                 onClick={() => navigate(`/reunioes/${id}`)}
               >
-                {status === 'aberta' ? (
-                  <>
-                    <Eye className="h-4 w-4 mr-2" />
-                    Acessar
-                  </>
-                ) : (
-                  <>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Ver Ata
-                  </>
-                )}
+                <Eye className="h-4 w-4 mr-2" />
+                {status === 'aberta' ? 'Acessar' : 'Ver Ata'}
               </Button>
+              
+              {status === 'aberta' && canManage && (
+                <Button
+                  size="sm"
+                  onClick={handleFinalize}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <CalendarCheck className="h-4 w-4 mr-2" />
+                      Finalizar
+                    </>
+                  )}
+                </Button>
+              )}
               
               {onDelete && (
                 <AlertDialog>
