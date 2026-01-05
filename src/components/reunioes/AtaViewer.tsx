@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +6,76 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { FileText, Calendar, Users, Loader2, Edit, Save, X } from 'lucide-react';
+
+// Helper function to format minutes display with proper styling
+function formatMinutesDisplay(text: string) {
+  // Remove any remaining markdown asterisks
+  const cleaned = text.replace(/\*\*/g, '').replace(/\*/g, '');
+  
+  // Split into lines
+  const lines = cleaned.split('\n');
+  
+  // Known section headers
+  const sectionHeaders = [
+    'ATA DE REUNIÃO',
+    'PAUTA',
+    'DELIBERAÇÕES',
+    'ENCAMINHAMENTOS',
+    'PENDÊNCIAS',
+    'OBSERVAÇÕES',
+    'DECISÕES',
+    'TAREFAS',
+    'DATAS E PRAZOS',
+  ];
+  
+  return (
+    <div className="space-y-2">
+      {lines.map((line, index) => {
+        const trimmedLine = line.trim();
+        
+        // Empty line = spacer
+        if (!trimmedLine) {
+          return <div key={index} className="h-2" />;
+        }
+        
+        // Check if it's a known section header (exact match or starts with)
+        const isHeader = sectionHeaders.some(header => 
+          trimmedLine.toUpperCase() === header || 
+          trimmedLine.toUpperCase().startsWith(header + ':')
+        );
+        
+        // Also detect ALL CAPS lines as headers
+        const isAllCaps = trimmedLine === trimmedLine.toUpperCase() && 
+                          trimmedLine.length > 3 && 
+                          /[A-Z]/.test(trimmedLine);
+        
+        if (isHeader || isAllCaps) {
+          return (
+            <h3 key={index} className="font-semibold text-foreground text-base mt-4 mb-2 border-b border-border pb-1">
+              {trimmedLine}
+            </h3>
+          );
+        }
+        
+        // Check for info lines (Reunião:, Data:, Moderador:, etc.)
+        if (/^(Reunião|Data|Moderador|Participantes):/i.test(trimmedLine)) {
+          return (
+            <p key={index} className="text-sm text-muted-foreground">
+              {trimmedLine}
+            </p>
+          );
+        }
+        
+        // Regular content
+        return (
+          <p key={index} className="text-sm leading-relaxed">
+            {trimmedLine}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
 interface Meeting {
   id: string;
@@ -276,8 +346,8 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
               </div>
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
-              {meeting.final_minutes}
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              {formatMinutesDisplay(meeting.final_minutes || '')}
             </div>
           )}
         </CardContent>

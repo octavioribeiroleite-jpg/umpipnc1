@@ -292,14 +292,13 @@ PENDÊNCIAS
 OBSERVAÇÕES
 
 REGRAS DE FORMATAÇÃO (OBRIGATÓRIAS):
-- Gerar a ata em TEXTO LIMPO.
-- NÃO utilizar markdown técnico (#, listas com traços, blocos de código).
-- NÃO utilizar asteriscos soltos ou símbolos decorativos.
-- Os títulos das seções devem estar em **NEGRITO**.
+- Gerar a ata em TEXTO PURO, SEM qualquer formatação markdown.
+- NÃO usar asteriscos (*), hashtags (#), traços (-) ou qualquer símbolo de formatação.
+- Títulos das seções devem estar em CAIXA ALTA (ex: PAUTA, DELIBERAÇÕES).
 - O conteúdo de cada seção deve ser apresentado em parágrafos separados.
 - Usar frases curtas e objetivas.
-- Separar seções apenas com linhas em branco.
-- Não numerar itens, exceto quando absolutamente necessário.
+- Separar seções com UMA linha em branco.
+- Separar itens dentro de uma seção com quebra de linha simples.
 - Manter linguagem formal e institucional.
 
 FORMATO DE SAÍDA:
@@ -331,7 +330,7 @@ FORMATO DE SAÍDA:
     } else {
       // Fallback: use raw content if formatting fails
       console.error('Formatting failed, using raw content');
-      finalMinutes = `**ATA DE REUNIÃO**\n\n${rawContent}\n\n*Ata gerada automaticamente pelo sistema.*`;
+      finalMinutes = `ATA DE REUNIÃO\n\n${rawContent}\n\nAta gerada automaticamente pelo sistema.`;
     }
 
     // ===== STEP 4: Generate WhatsApp Message =====
