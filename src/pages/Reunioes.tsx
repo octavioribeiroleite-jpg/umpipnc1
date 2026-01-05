@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { useMeetings } from '@/hooks/useMeetings';
 import { ReuniaoFilters } from '@/components/reunioes/ReuniaoFilters';
 import { ReuniaoCard } from '@/components/reunioes/ReuniaoCard';
+import { ReuniaoPastaData } from '@/components/reunioes/ReuniaoPastaData';
 
 export default function Reunioes() {
   const navigate = useNavigate();
@@ -43,6 +44,24 @@ export default function Reunioes() {
       return true;
     });
   }, [meetings, statusFilter, monthFilter, searchFilter]);
+
+  // Agrupar reuniões por data
+  const groupedMeetings = useMemo(() => {
+    const groups: Record<string, typeof filteredMeetings> = {};
+    
+    filteredMeetings.forEach(meeting => {
+      const dateKey = meeting.date;
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(meeting);
+    });
+    
+    // Ordenar por data (mais recente primeiro)
+    return Object.entries(groups).sort(([a], [b]) => 
+      new Date(b).getTime() - new Date(a).getTime()
+    );
+  }, [filteredMeetings]);
 
   const getAiStatus = (meeting: typeof meetings[0]) => {
     if (meeting.aiValidatedCount > 0 && meeting.aiValidatedCount === meeting.aiSuggestionsCount) {
@@ -80,7 +99,7 @@ export default function Reunioes() {
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
           </>
-        ) : filteredMeetings.length === 0 ? (
+        ) : groupedMeetings.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
               {meetings.length === 0
@@ -99,23 +118,32 @@ export default function Reunioes() {
             )}
           </div>
         ) : (
-          filteredMeetings.map((meeting) => (
-            <ReuniaoCard
-              key={meeting.id}
-              id={meeting.id}
-              title={meeting.title}
-              date={meeting.date}
-              moderatorName={meeting.moderatorName}
-              status={meeting.status}
-              participantsCount={meeting.participantsCount}
-              progress={{
-                pautaComplete: meeting.agendaItemsCount > 0,
-                totalContributions: meeting.totalContributions,
-                finalizedContributions: meeting.finalizedContributions,
-                contributionsRevealed: meeting.contributions_revealed,
-                aiStatus: getAiStatus(meeting),
-              }}
-            />
+          groupedMeetings.map(([date, meetingsInDate]) => (
+            <ReuniaoPastaData 
+              key={date} 
+              date={date} 
+              count={meetingsInDate.length}
+              defaultOpen={true}
+            >
+              {meetingsInDate.map((meeting) => (
+                <ReuniaoCard
+                  key={meeting.id}
+                  id={meeting.id}
+                  title={meeting.title}
+                  date={meeting.date}
+                  moderatorName={meeting.moderatorName}
+                  status={meeting.status}
+                  participantsCount={meeting.participantsCount}
+                  progress={{
+                    pautaComplete: meeting.agendaItemsCount > 0,
+                    totalContributions: meeting.totalContributions,
+                    finalizedContributions: meeting.finalizedContributions,
+                    contributionsRevealed: meeting.contributions_revealed,
+                    aiStatus: getAiStatus(meeting),
+                  }}
+                />
+              ))}
+            </ReuniaoPastaData>
           ))
         )}
       </div>
