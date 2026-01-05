@@ -25,6 +25,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isManagement: boolean;
+  isPendingApproval: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -150,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = roles.includes('admin');
   const isManagement = roles.includes('admin') || roles.includes('diretoria');
+  const isPendingApproval = user !== null && !loading && roles.length === 0;
 
   return (
     <AuthContext.Provider
@@ -164,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         isAdmin,
         isManagement,
+        isPendingApproval,
       }}
     >
       {children}

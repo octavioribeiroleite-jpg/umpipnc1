@@ -109,10 +109,10 @@ export default function Auth() {
       }
     } else {
       toast({
-        title: 'Conta criada!',
-        description: 'Você já pode acessar o sistema.',
+        title: 'Conta criada com sucesso!',
+        description: 'Aguarde a aprovação do administrador para acessar o sistema.',
       });
-      navigate('/');
+      navigate('/aguardando-permissao');
     }
 
     setIsLoading(false);
