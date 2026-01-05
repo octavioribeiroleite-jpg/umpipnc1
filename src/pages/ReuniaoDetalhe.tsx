@@ -9,12 +9,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Loader2, Lock, RotateCcw, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Lock, RotateCcw, Trash2, Pencil } from 'lucide-react';
 import { PautaEditor } from '@/components/reunioes/PautaEditor';
 import { RegistroReuniaoEditor } from '@/components/reunioes/RegistroReuniaoEditor';
 import { ResumoIATab } from '@/components/reunioes/ResumoIATab';
 import { AtaViewer } from '@/components/reunioes/AtaViewer';
 import { ComunicacaoTab } from '@/components/reunioes/ComunicacaoTab';
+import { EditMeetingDialog } from '@/components/reunioes/EditMeetingDialog';
 
 interface Meeting {
   id: string;
@@ -50,6 +51,7 @@ export default function ReuniaoDetalhe() {
   const [processingStep, setProcessingStep] = useState('');
   const [isModerator, setIsModerator] = useState(false);
   const [activeTab, setActiveTab] = useState('registro');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const fetchMeeting = async () => {
     if (!id || !user) return;
@@ -102,7 +104,7 @@ export default function ReuniaoDetalhe() {
     if (!meeting || !id) return;
 
     const confirmed = window.confirm(
-      'A IA irá organizar o registro e gerar a ata e mensagem de WhatsApp automaticamente.\n\nDeseja continuar?'
+      'A IA irá organizar o registro e gerar a ata e mensagem de WhatsApp automaticamente.\n\nApós revisar, você poderá finalizar a reunião.\n\nDeseja continuar?'
     );
 
     if (!confirmed) return;
@@ -146,16 +148,6 @@ export default function ReuniaoDetalhe() {
       setProcessingStep('calendar');
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Step 3: Close the meeting
-      const { error: closeError } = await supabase
-        .from('meetings')
-        .update({ status: 'fechada' })
-        .eq('id', id);
-
-      if (closeError) {
-        console.error('Error closing meeting:', closeError);
-      }
-
       setProcessingStep('done');
 
       // Wait a moment to show "done" step
@@ -173,8 +165,8 @@ export default function ReuniaoDetalhe() {
       }
       
       toast({
-        title: 'Reunião Finalizada!',
-        description,
+        title: 'Reunião Processada!',
+        description: description + '. Revise o conteúdo e finalize quando estiver pronto.',
       });
 
       // Refresh data and go to resumo tab
@@ -193,6 +185,39 @@ export default function ReuniaoDetalhe() {
     }
   };
 
+  const handleFinalizeMeeting = async () => {
+    if (!meeting || !id) return;
+
+    const confirmed = window.confirm(
+      'Deseja finalizar esta reunião?\n\nApós finalizar, a reunião ficará em modo somente leitura.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('meetings')
+        .update({ status: 'fechada' })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setMeeting({ ...meeting, status: 'fechada' });
+      
+      toast({
+        title: 'Reunião Finalizada!',
+        description: 'A reunião foi encerrada com sucesso.',
+      });
+    } catch (err) {
+      console.error('Error finalizing meeting:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao finalizar reunião.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleReopenMeeting = async () => {
     if (!meeting || !id) return;
 
@@ -207,7 +232,6 @@ export default function ReuniaoDetalhe() {
         .from('meetings')
         .update({ 
           status: 'aberta',
-          // Manter ai_organized e contributions_revealed true se já foram processados
         })
         .eq('id', id);
 
@@ -216,7 +240,6 @@ export default function ReuniaoDetalhe() {
       setMeeting({ 
         ...meeting, 
         status: 'aberta',
-        // Manter os flags de processamento
       });
       setActiveTab('registro');
       
@@ -229,6 +252,36 @@ export default function ReuniaoDetalhe() {
       toast({
         title: 'Erro',
         description: 'Erro ao reabrir reunião.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateMeeting = async (updates: { title: string; date: string }) => {
+    if (!meeting || !id) return;
+
+    try {
+      const { error } = await supabase
+        .from('meetings')
+        .update({
+          title: updates.title,
+          date: updates.date,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setMeeting({ ...meeting, ...updates });
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Reunião atualizada com sucesso!',
+      });
+    } catch (err) {
+      console.error('Error updating meeting:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar reunião.',
         variant: 'destructive',
       });
     }
@@ -339,7 +392,7 @@ export default function ReuniaoDetalhe() {
 
   const isClosed = meeting.status === 'fechada';
   const isProcessed = meeting.contributions_revealed && meeting.ai_organized;
-  const hasContent = !!meeting.final_minutes; // Permite ver ata mesmo se não "processado"
+  const hasContent = !!meeting.final_minutes;
   const canManage = isModerator || isManagement;
 
   return (
@@ -356,7 +409,15 @@ export default function ReuniaoDetalhe() {
         })}`}
         action={
           <div className="flex items-center gap-2">
-            <Badge variant={isClosed ? 'secondary' : 'default'} className={!isClosed ? 'bg-success' : ''}>
+            {canManage && !isClosed && (
+              <Button variant="ghost" size="icon" onClick={() => setEditDialogOpen(true)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            <Badge 
+              variant={isClosed ? 'secondary' : 'default'} 
+              className={isClosed ? '' : isProcessed ? 'bg-blue-500 hover:bg-blue-600' : 'bg-success'}
+            >
               {isClosed ? '⚪ Fechada' : isProcessed ? '🔵 Processada' : '🟢 Aberta'}
             </Badge>
             <Button variant="outline" onClick={() => navigate('/reunioes')}>
@@ -408,6 +469,7 @@ export default function ReuniaoDetalhe() {
             isProcessing={processing}
             processingStep={processingStep}
             onProcess={handleProcessMeeting}
+            onFinalize={handleFinalizeMeeting}
             onNotesChange={handleNotesChange}
           />
         </TabsContent>
@@ -430,7 +492,7 @@ export default function ReuniaoDetalhe() {
           ) : (
             <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
               <p className="text-muted-foreground">
-                Ainda não processado. Escreva o registro e clique em "Finalizar Reunião".
+                Ainda não processado. Escreva o registro e clique em "Processar Reunião".
               </p>
             </div>
           )}
@@ -448,7 +510,7 @@ export default function ReuniaoDetalhe() {
           ) : (
             <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
               <p className="text-muted-foreground">
-                Ainda não processado. Escreva o registro e clique em "Finalizar Reunião".
+                Ainda não processado. Escreva o registro e clique em "Processar Reunião".
               </p>
             </div>
           )}
@@ -464,6 +526,15 @@ export default function ReuniaoDetalhe() {
           />
         </TabsContent>
       </Tabs>
+
+      {meeting && (
+        <EditMeetingDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          meeting={meeting}
+          onUpdate={handleUpdateMeeting}
+        />
+      )}
     </AppLayout>
   );
 }

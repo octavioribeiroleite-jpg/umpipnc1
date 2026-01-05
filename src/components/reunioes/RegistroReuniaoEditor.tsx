@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Wand2, Check, FileText, CalendarCheck } from 'lucide-react';
+import { Loader2, Save, Wand2, Check, FileText, Lock } from 'lucide-react';
 
 interface RegistroReuniaoEditorProps {
   meetingId: string;
@@ -15,6 +15,7 @@ interface RegistroReuniaoEditorProps {
   isProcessing: boolean;
   processingStep: string;
   onProcess: () => void;
+  onFinalize: () => void;
   onNotesChange: (notes: string) => void;
 }
 
@@ -26,6 +27,7 @@ export function RegistroReuniaoEditor({
   isProcessing,
   processingStep,
   onProcess,
+  onFinalize,
   onNotesChange,
 }: RegistroReuniaoEditorProps) {
   const { toast } = useToast();
@@ -95,7 +97,7 @@ export function RegistroReuniaoEditor({
     { id: 'generating', label: 'Gerando ata...' },
     { id: 'whatsapp', label: 'Criando mensagem WhatsApp...' },
     { id: 'calendar', label: 'Sincronizando calendário...' },
-    { id: 'done', label: 'Reunião finalizada!' },
+    { id: 'done', label: 'Processamento concluído!' },
   ];
 
   const currentStepIndex = processingSteps.findIndex(s => s.id === processingStep);
@@ -195,25 +197,40 @@ OBSERVAÇÕES
               </Button>
 
               {canManage && (
-                <Button
-                  onClick={handleProcess}
-                  disabled={!notes.trim() || isProcessing}
-                  className="gap-2"
-                  size="lg"
-                  variant={isProcessed ? "outline" : "default"}
-                >
-                  {isProcessed ? (
-                    <>
-                      <Wand2 className="h-5 w-5" />
-                      Reprocessar Reunião
-                    </>
-                  ) : (
-                    <>
-                      <CalendarCheck className="h-5 w-5" />
-                      Finalizar Reunião
-                    </>
+                <div className="flex gap-2">
+                  {isProcessed && (
+                    <Button
+                      variant="outline"
+                      onClick={handleProcess}
+                      disabled={!notes.trim() || isProcessing}
+                      className="gap-2"
+                    >
+                      <Wand2 className="h-4 w-4" />
+                      Reprocessar
+                    </Button>
                   )}
-                </Button>
+
+                  {isProcessed ? (
+                    <Button
+                      onClick={onFinalize}
+                      className="gap-2"
+                      size="lg"
+                    >
+                      <Lock className="h-5 w-5" />
+                      Finalizar Reunião
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleProcess}
+                      disabled={!notes.trim() || isProcessing}
+                      className="gap-2"
+                      size="lg"
+                    >
+                      <Wand2 className="h-5 w-5" />
+                      Processar Reunião
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
 
