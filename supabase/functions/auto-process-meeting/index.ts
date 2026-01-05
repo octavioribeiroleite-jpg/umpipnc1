@@ -657,71 +657,62 @@ Você DEVE responder APENAS com a chamada da função extract_tasks.`;
           const extractedTasks = parsed.tasks || [];
           
           console.log(`Extracted ${extractedTasks.length} tasks from meeting`);
-          
-          for (const task of extractedTasks) {
-            // Validate assignee_id if provided
-            let validAssigneeId = null;
-            if (task.assignee_id) {
-              const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(task.assignee_id);
-              const assigneeExists = activeProfiles.some(p => p.user_id === task.assignee_id);
-              if (isValidUUID && assigneeExists) {
-                validAssigneeId = task.assignee_id;
-              } else {
-                console.log(`Invalid assignee_id for task "${task.title}", setting to null. Mentioned: ${task.assignee_name || 'unknown'}`);
-              }
-            }
-            
-            // Validate due_date if provided
-            let validDueDate = null;
-            if (task.due_date) {
-              const dateMatch = task.due_date.match(/^\d{4}-\d{2}-\d{2}$/);
-              if (dateMatch) {
-                const parsedDate = new Date(task.due_date);
-                if (!isNaN(parsedDate.getTime())) {
-                  validDueDate = task.due_date;
+
+          // If this meeting already has tasks, don't create more to avoid duplicates on re-processing
+          const { data: anyExistingTask } = await supabaseAdmin
+            .from('tasks')
+            .select('id')
+            .eq('meeting_id', meetingId)
+            .limit(1)
+            .maybeSingle();
+
+          if (anyExistingTask) {
+            console.log('Tasks already exist for this meeting, skipping task creation to avoid duplicates');
+          } else {
+            for (const task of extractedTasks) {
+              // Validate assignee_id if provided
+              let validAssigneeId = null;
+              if (task.assignee_id) {
+                const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(task.assignee_id);
+                const assigneeExists = activeProfiles.some(p => p.user_id === task.assignee_id);
+                if (isValidUUID && assigneeExists) {
+                  validAssigneeId = task.assignee_id;
+                } else {
+                  console.log(`Invalid assignee_id for task "${task.title}", setting to null. Mentioned: ${task.assignee_name || 'unknown'}`);
                 }
               }
-            }
-            
-            // Check if similar task already exists for this meeting (using ILIKE for case-insensitive match)
-            const { data: existingTasks } = await supabaseAdmin
-              .from('tasks')
-              .select('id, title')
-              .eq('meeting_id', meetingId);
-            
-            // Check for similar titles (normalize and compare)
-            const normalizedNewTitle = task.title.toLowerCase().trim();
-            const similarTask = existingTasks?.find(t => {
-              const normalizedExisting = t.title.toLowerCase().trim();
-              // Check if titles are very similar (contain same key words)
-              return normalizedExisting === normalizedNewTitle || 
-                     normalizedExisting.includes(normalizedNewTitle) ||
-                     normalizedNewTitle.includes(normalizedExisting);
-            });
-            
-            if (similarTask) {
-              console.log(`Similar task already exists, skipping: "${task.title}" (matches: "${similarTask.title}")`);
-              continue;
-            }
-            
-            const { error: taskError } = await supabaseAdmin
-              .from('tasks')
-              .insert({
-                title: task.title,
-                description: task.description || null,
-                status: 'todo',
-                priority: task.priority || 'medium',
-                due_date: validDueDate,
-                assignee_id: validAssigneeId,
-                meeting_id: meetingId,
-                created_by: user.id,
-              });
-            
-            if (taskError) {
-              console.error(`Error creating task "${task.title}":`, taskError);
-            } else {
-              tasksCreated++;
-              console.log(`Created task: "${task.title}" ${validAssigneeId ? `assigned to ${task.assignee_name}` : '(unassigned)'}`);
+
+              // Validate due_date if provided
+              let validDueDate = null;
+              if (task.due_date) {
+                const dateMatch = task.due_date.match(/^\d{4}-\d{2}-\d{2}$/);
+                if (dateMatch) {
+                  const parsedDate = new Date(task.due_date);
+                  if (!isNaN(parsedDate.getTime())) {
+                    validDueDate = task.due_date;
+                  }
+                }
+              }
+
+              const { error: taskError } = await supabaseAdmin
+                .from('tasks')
+                .insert({
+                  title: task.title,
+                  description: task.description || null,
+                  status: 'todo',
+                  priority: task.priority || 'medium',
+                  due_date: validDueDate,
+                  assignee_id: validAssigneeId,
+                  meeting_id: meetingId,
+                  created_by: user.id,
+                });
+
+              if (taskError) {
+                console.error(`Error creating task "${task.title}":`, taskError);
+              } else {
+                tasksCreated++;
+                console.log(`Created task: "${task.title}" ${validAssigneeId ? `assigned to ${task.assignee_name}` : '(unassigned)'}`);
+              }
             }
           }
         } catch (parseError) {
