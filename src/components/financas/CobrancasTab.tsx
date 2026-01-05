@@ -156,7 +156,22 @@ export function CobrancasTab() {
       return;
     }
 
-    setSubmitting(true);
+    const paidAt = new Date(paymentDate).toISOString();
+    const chargesToPay = memberCharges.filter(c => 
+      (c.type === 'mensalidade' && payMensalidade && c.status === 'pendente') ||
+      (c.type === 'percapita' && payPercapita && c.status === 'pendente')
+    );
+
+    // Atualização otimista - atualiza UI imediatamente
+    setCharges(prev => prev.map(c => 
+      chargesToPay.some(cp => cp.id === c.id)
+        ? { ...c, status: 'pago', paid_at: paidAt, payment_method: paymentMethod }
+        : c
+    ));
+    setDialogOpen(false);
+    toast.success('Pagamento registrado!');
+
+    // Processar em background
     try {
       let receiptUrl: string | null = null;
 
@@ -167,20 +182,14 @@ export function CobrancasTab() {
           .from('receipts')
           .upload(fileName, receiptFile);
 
-        if (uploadError) throw uploadError;
-        
-        const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(fileName);
-        receiptUrl = urlData.publicUrl;
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(fileName);
+          receiptUrl = urlData.publicUrl;
+        }
       }
 
-      const paidAt = new Date(paymentDate).toISOString();
-      const chargesToPay = memberCharges.filter(c => 
-        (c.type === 'mensalidade' && payMensalidade && c.status === 'pendente') ||
-        (c.type === 'percapita' && payPercapita && c.status === 'pendente')
-      );
-
       for (const charge of chargesToPay) {
-        const { data: transaction, error: transError } = await supabase
+        const { data: transaction } = await supabase
           .from('transactions')
           .insert({
             description: `${charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'} - ${selectedMember.name} - ${competence}`,
@@ -197,8 +206,6 @@ export function CobrancasTab() {
           .select('id')
           .single();
 
-        if (transError) throw transError;
-
         await supabase
           .from('charges')
           .update({
@@ -211,14 +218,10 @@ export function CobrancasTab() {
           })
           .eq('id', charge.id);
       }
-
-      toast.success('Pagamento registrado!');
-      setDialogOpen(false);
-      fetchData();
     } catch (error: any) {
-      toast.error('Erro: ' + error.message);
-    } finally {
-      setSubmitting(false);
+      // Reverter estado em caso de erro
+      fetchData();
+      toast.error('Erro ao processar: ' + error.message);
     }
   };
 
@@ -256,6 +259,14 @@ export function CobrancasTab() {
   };
 
   const handleRevertPayment = async (charge: Charge) => {
+    // Atualização otimista
+    setCharges(prev => prev.map(c => 
+      c.id === charge.id
+        ? { ...c, status: 'pendente', paid_at: null, payment_method: null, receipt_url: null, notes: null, transaction_id: null }
+        : c
+    ));
+    toast.success('Pagamento revertido para pendente!');
+
     try {
       if (charge.transaction_id) {
         await supabase.from('transactions').delete().eq('id', charge.transaction_id);
@@ -272,23 +283,24 @@ export function CobrancasTab() {
           transaction_id: null
         })
         .eq('id', charge.id);
-
-      toast.success('Pagamento revertido para pendente!');
-      fetchData();
     } catch (error: any) {
+      fetchData();
       toast.error('Erro: ' + error.message);
     }
   };
 
   const handleDeleteCharge = async (charge: Charge) => {
+    // Atualização otimista
+    setCharges(prev => prev.filter(c => c.id !== charge.id));
+    toast.success('Cobrança excluída!');
+
     try {
       if (charge.transaction_id) {
         await supabase.from('transactions').delete().eq('id', charge.transaction_id);
       }
       await supabase.from('charges').delete().eq('id', charge.id);
-      toast.success('Cobrança excluída!');
-      fetchData();
     } catch (error: any) {
+      fetchData();
       toast.error('Erro: ' + error.message);
     }
   };

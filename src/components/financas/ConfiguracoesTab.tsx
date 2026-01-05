@@ -77,11 +77,15 @@ export function ConfiguracoesTab() {
 
     setLoading(true);
     try {
+      const monthlyFee = parseFloat(formData.monthly_fee) || 0;
+      const perCapita = parseFloat(formData.per_capita) || 0;
+      const dueDay = Math.min(parseInt(formData.due_day) || 10, 28);
+
       const payload = {
         competence,
-        monthly_fee: parseFloat(formData.monthly_fee) || 0,
-        per_capita: parseFloat(formData.per_capita) || 0,
-        due_day: parseInt(formData.due_day) || 10,
+        monthly_fee: monthlyFee,
+        per_capita: perCapita,
+        due_day: dueDay,
         notes: formData.notes
       };
 
@@ -98,7 +102,33 @@ export function ConfiguracoesTab() {
         if (error) throw error;
       }
 
-      toast.success('Configurações salvas!');
+      // Atualizar cobranças pendentes com os novos valores
+      const [monthName, yearStr] = competence.split('/');
+      const monthIndex = MONTHS.indexOf(monthName);
+      const year = parseInt(yearStr);
+      const dueDate = new Date(year, monthIndex, dueDay).toISOString().split('T')[0];
+
+      // Atualizar mensalidades pendentes
+      if (monthlyFee > 0) {
+        await supabase
+          .from('charges')
+          .update({ amount: monthlyFee, due_date: dueDate })
+          .eq('competence', competence)
+          .eq('type', 'mensalidade')
+          .eq('status', 'pendente');
+      }
+
+      // Atualizar per capitas pendentes
+      if (perCapita > 0) {
+        await supabase
+          .from('charges')
+          .update({ amount: perCapita, due_date: dueDate })
+          .eq('competence', competence)
+          .eq('type', 'percapita')
+          .eq('status', 'pendente');
+      }
+
+      toast.success('Configurações salvas e cobranças pendentes atualizadas!');
       fetchSettings();
     } catch (error: any) {
       toast.error('Erro ao salvar: ' + error.message);
