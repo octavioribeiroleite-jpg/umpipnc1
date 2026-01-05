@@ -151,7 +151,10 @@ export type Database = {
           end_date: string | null
           id: string
           location: string | null
+          origem: Database["public"]["Enums"]["event_origin"]
+          reuniao_id: string | null
           start_date: string
+          status: Database["public"]["Enums"]["event_status"]
           title: string
           updated_at: string
         }
@@ -164,7 +167,10 @@ export type Database = {
           end_date?: string | null
           id?: string
           location?: string | null
+          origem?: Database["public"]["Enums"]["event_origin"]
+          reuniao_id?: string | null
           start_date: string
+          status?: Database["public"]["Enums"]["event_status"]
           title: string
           updated_at?: string
         }
@@ -177,11 +183,22 @@ export type Database = {
           end_date?: string | null
           id?: string
           location?: string | null
+          origem?: Database["public"]["Enums"]["event_origin"]
+          reuniao_id?: string | null
           start_date?: string
+          status?: Database["public"]["Enums"]["event_status"]
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_reuniao_id_fkey"
+            columns: ["reuniao_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       files: {
         Row: {
@@ -605,6 +622,8 @@ export type Database = {
     Enums: {
       app_role: "admin" | "diretoria" | "visualizador"
       contribution_status: "draft" | "final" | "revealed"
+      event_origin: "reuniao" | "manual"
+      event_status: "confirmado" | "pendente" | "cancelado"
       meeting_status: "aberta" | "fechada"
       suggestion_category:
         | "pauta"
@@ -748,6 +767,8 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "diretoria", "visualizador"],
       contribution_status: ["draft", "final", "revealed"],
+      event_origin: ["reuniao", "manual"],
+      event_status: ["confirmado", "pendente", "cancelado"],
       meeting_status: ["aberta", "fechada"],
       suggestion_category: [
         "pauta",

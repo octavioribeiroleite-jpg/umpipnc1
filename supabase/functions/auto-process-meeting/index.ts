@@ -437,14 +437,16 @@ REGRAS TÉCNICAS:
     console.log('Extracting events from meeting content...');
     
     const eventsSystemPrompt = `Você é um assistente que extrai eventos e compromissos de atas de reunião.
-Analise o conteúdo e extraia TODOS os eventos, compromissos, datas importantes mencionados.
+Analise o conteúdo e extraia APENAS decisões confirmadas com datas objetivas.
 
-REGRAS:
-- Extraia apenas eventos FUTUROS (ignore eventos passados)
+REGRAS IMPORTANTES:
+- Extraia apenas eventos CONFIRMADOS com datas DEFINIDAS
+- NÃO extraia ideias soltas, sugestões ou eventos sem data
 - Para cada evento, identifique: título, data, horário (se disponível), local (se disponível)
 - Se não houver hora específica, use 09:00 como padrão
 - Formato de data deve ser ISO 8601 (YYYY-MM-DDTHH:mm:ss)
 - Se o ano não for especificado, assuma ${new Date().getFullYear()}
+- Eventos devem ser FUTUROS (ignore eventos passados)
 
 Você DEVE responder APENAS com a chamada da função extract_events.`;
 
@@ -520,6 +522,19 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
               continue;
             }
             
+            // Check if event with same title and date already exists for this meeting
+            const { data: existingEvent } = await supabaseAdmin
+              .from('events')
+              .select('id')
+              .eq('reuniao_id', meetingId)
+              .eq('title', event.title)
+              .single();
+            
+            if (existingEvent) {
+              console.log(`Event already exists, skipping: ${event.title}`);
+              continue;
+            }
+            
             const { error: eventError } = await supabaseAdmin
               .from('events')
               .insert({
@@ -530,7 +545,10 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
                 description: event.description || `Evento criado automaticamente da reunião: ${meeting.title}`,
                 all_day: event.all_day || false,
                 created_by: user.id,
-                color: '#8b5cf6' // Purple color for auto-created events
+                color: '#8b5cf6', // Purple color for auto-created events
+                status: 'confirmado',
+                origem: 'reuniao',
+                reuniao_id: meetingId
               });
             
             if (eventError) {
