@@ -10,6 +10,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,19 +24,32 @@ const menuItems = [
   { icon: Calendar, label: 'Calendário', path: '/calendario' },
   { icon: DollarSign, label: 'Finanças', path: '/financas' },
   { icon: FolderOpen, label: 'Arquivos', path: '/arquivos' },
+];
+
+const adminMenuItems = [
+  { icon: UserCheck, label: 'Usuários', path: '/usuarios' },
+];
+
+const bottomMenuItems = [
   { icon: Settings, label: 'Configurações', path: '/configuracoes' },
 ];
 
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, isAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
+
+  const allMenuItems = [
+    ...menuItems,
+    ...(isAdmin ? adminMenuItems : []),
+    ...bottomMenuItems,
+  ];
 
   return (
     <aside
@@ -65,7 +79,7 @@ export function AppSidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-4 overflow-y-auto scrollbar-thin">
         <ul className="space-y-1 px-2">
-          {menuItems.map((item) => {
+          {allMenuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <li key={item.path}>
