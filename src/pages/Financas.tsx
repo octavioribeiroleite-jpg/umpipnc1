@@ -185,15 +185,17 @@ export default function Financas() {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="mb-4 flex-wrap h-auto gap-1">
-          <TabsTrigger value="cobrancas">Cobranças</TabsTrigger>
-          <TabsTrigger value="membros">Membros</TabsTrigger>
-          <TabsTrigger value="receitas">Receitas</TabsTrigger>
-          <TabsTrigger value="gastos">Gastos</TabsTrigger>
-          <TabsTrigger value="camisas">Camisas</TabsTrigger>
-          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-          <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 mb-4">
+          <TabsList className="inline-flex w-max md:w-auto gap-1">
+            <TabsTrigger value="cobrancas" className="min-w-max">Cobranças</TabsTrigger>
+            <TabsTrigger value="membros" className="min-w-max">Membros</TabsTrigger>
+            <TabsTrigger value="receitas" className="min-w-max">Receitas</TabsTrigger>
+            <TabsTrigger value="gastos" className="min-w-max">Gastos</TabsTrigger>
+            <TabsTrigger value="camisas" className="min-w-max">Camisas</TabsTrigger>
+            <TabsTrigger value="relatorios" className="min-w-max">Relatórios</TabsTrigger>
+            <TabsTrigger value="configuracoes" className="min-w-max">Configurações</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="cobrancas" className="animate-in fade-in-50">
           <CobrancasTab />

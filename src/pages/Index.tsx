@@ -97,13 +97,13 @@ function QuickAction({
   return (
     <Button
       variant="outline"
-      className="flex-1 h-auto py-4 flex-col gap-2"
+      className="flex-shrink-0 h-auto py-4 px-6 flex-col gap-2 min-w-[100px] md:flex-1"
       onClick={onClick}
     >
       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-sm font-medium whitespace-nowrap">{label}</span>
     </Button>
   );
 }
@@ -244,10 +244,10 @@ export default function Index() {
         />
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Horizontal scroll on mobile */}
       <div className="mb-8">
         <h2 className="font-display text-lg font-semibold mb-4">Ações Rápidas</h2>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap scrollbar-thin">
           <QuickAction
             label="Nova Reunião"
             icon={Users}
