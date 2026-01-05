@@ -167,7 +167,7 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
           return (
             <Card key={category}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <Badge variant="outline" className={config.color}>
                     {config.icon}
                     <span className="ml-1">{config.title}</span>
@@ -175,7 +175,7 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
                   <span className="text-sm text-muted-foreground font-normal">
                     ({items.length} {items.length === 1 ? 'item' : 'itens'})
                   </span>
-                </CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <ul className="space-y-2">

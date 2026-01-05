@@ -11,19 +11,25 @@ interface ComunicacaoTabProps {
   canManage: boolean;
   whatsappMessage: string | null;
   hasFinalMinutes: boolean;
-  onRegenerate?: () => void;
+  onMessageUpdated?: (message: string) => void;
 }
 
-export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinalMinutes, onRegenerate }: ComunicacaoTabProps) {
+export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinalMinutes, onMessageUpdated }: ComunicacaoTabProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [localMessage, setLocalMessage] = useState(whatsappMessage);
+
+  // Sync local state when prop changes
+  useEffect(() => {
+    setLocalMessage(whatsappMessage);
+  }, [whatsappMessage]);
 
   const handleCopy = async () => {
-    if (!whatsappMessage) return;
+    if (!localMessage) return;
 
     try {
-      await navigator.clipboard.writeText(whatsappMessage);
+      await navigator.clipboard.writeText(localMessage);
       setCopied(true);
       toast({
         title: 'Copiado!',
@@ -62,18 +68,23 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
         throw new Error(response.data.error);
       }
 
+      const newMessage = response.data.message;
+
       // Update in database
       await supabase
         .from('meetings')
-        .update({ whatsapp_message: response.data.message })
+        .update({ whatsapp_message: newMessage })
         .eq('id', meetingId);
+
+      // Update local state immediately (no page reload)
+      setLocalMessage(newMessage);
 
       toast({
         title: 'Sucesso',
         description: 'Mensagem regenerada com sucesso!',
       });
 
-      if (onRegenerate) onRegenerate();
+      if (onMessageUpdated) onMessageUpdated(newMessage);
     } catch (err: any) {
       console.error('Error regenerating WhatsApp message:', err);
       toast({
@@ -97,7 +108,7 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
     );
   }
 
-  if (!whatsappMessage) {
+  if (!localMessage) {
     return (
       <Card>
         <CardContent className="py-8 text-center">
@@ -160,7 +171,7 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
         </CardHeader>
         <CardContent>
           <div className="bg-muted/50 rounded-lg p-4 border">
-            <p className="text-sm whitespace-pre-wrap font-mono">{whatsappMessage}</p>
+            <p className="text-sm whitespace-pre-wrap font-mono">{localMessage}</p>
           </div>
         </CardContent>
       </Card>
