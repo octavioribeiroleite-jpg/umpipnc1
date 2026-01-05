@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEvents } from '@/hooks/useEvents';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import {
   DollarSign,
   Users,
@@ -16,7 +18,11 @@ import {
   ArrowDownRight,
   Plus,
   TrendingUp,
+  MapPin,
+  Clock,
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Stats {
   saldo: number;
@@ -102,9 +108,22 @@ function QuickAction({
   );
 }
 
+const statusStyles: Record<string, string> = {
+  confirmado: 'bg-success/10 text-success border-success/20',
+  pendente: 'bg-warning/10 text-warning border-warning/20',
+  cancelado: 'bg-destructive/10 text-destructive border-destructive/20',
+};
+
+const statusLabels: Record<string, string> = {
+  confirmado: 'Confirmado',
+  pendente: 'Pendente',
+  cancelado: 'Cancelado',
+};
+
 export default function Index() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { upcomingEvents, isUpcomingLoading } = useEvents();
   const [stats, setStats] = useState<Stats>({
     saldo: 0,
     mensalidadesMes: 0,
@@ -136,18 +155,27 @@ export default function Index() {
         supabase.from('tasks').select('id').neq('status', 'done'),
       ]);
 
+      // Calcular mensalidades pagas
       const allPayments = paymentsRes.data || [];
-      const totalEntradas = allPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+      const totalMensalidades = allPayments.reduce((sum, p) => sum + Number(p.amount), 0);
       const mensalidadesMes = allPayments
         .filter((p) => p.competence === competence)
         .reduce((sum, p) => sum + Number(p.amount), 0);
 
-      const totalSaidas = (transactionsRes.data || [])
+      // Calcular transações (entradas e saídas)
+      const transactions = transactionsRes.data || [];
+      const totalEntradas = transactions
+        .filter((t) => t.type === 'entrada')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      const totalSaidas = transactions
         .filter((t) => t.type === 'saida')
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
+      // Saldo = Mensalidades Pagas + Transações Entrada - Transações Saída
+      const saldo = totalMensalidades + totalEntradas - totalSaidas;
+
       setStats({
-        saldo: totalEntradas - totalSaidas,
+        saldo,
         mensalidadesMes,
         membrosAtivos: membersRes.data?.length || 0,
         tarefasPendentes: tasksRes.data?.length || 0,
@@ -177,6 +205,8 @@ export default function Index() {
   if (!user) {
     return null;
   }
+
+  const displayedEvents = upcomingEvents.slice(0, 5);
 
   return (
     <AppLayout>
@@ -245,9 +275,54 @@ export default function Index() {
             <CardTitle className="text-lg">Próximos Eventos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-center py-4">
-              Nenhum evento cadastrado ainda.
-            </p>
+            {isUpcomingLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16" />
+                ))}
+              </div>
+            ) : displayedEvents.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                Nenhum evento próximo cadastrado.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {displayedEvents.map((event) => {
+                  const startDate = new Date(event.start_date);
+                  return (
+                    <div
+                      key={event.id}
+                      className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                      onClick={() => navigate('/calendario')}
+                    >
+                      <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium truncate">{event.title}</span>
+                          <Badge variant="outline" className={statusStyles[event.status]}>
+                            {statusLabels[event.status]}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {format(startDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </span>
+                          {event.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {event.location}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <Button variant="ghost" className="w-full mt-4" onClick={() => navigate('/calendario')}>
               Ver calendário
             </Button>
