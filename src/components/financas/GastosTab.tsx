@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Trash2, Edit, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit, Loader2, Upload, FileImage, X } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -55,6 +55,7 @@ interface Transaction {
   date: string;
   type: string;
   category_id: string | null;
+  receipt_url: string | null;
 }
 
 export function GastosTab() {
@@ -75,6 +76,11 @@ export function GastosTab() {
     category_id: '',
     date: new Date().toISOString().split('T')[0],
   });
+  
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -104,13 +110,60 @@ export function GastosTab() {
   const openNewDialog = () => {
     setEditingTransaction(null);
     setFormData({ description: '', amount: '', category_id: '', date: new Date().toISOString().split('T')[0] });
+    setReceiptFile(null);
+    setReceiptPreview(null);
     setDialogOpen(true);
   };
 
   const openEditDialog = (tx: Transaction) => {
     setEditingTransaction(tx);
     setFormData({ description: tx.description, amount: tx.amount.toString(), category_id: tx.category_id || '', date: tx.date });
+    setReceiptFile(null);
+    setReceiptPreview(tx.receipt_url);
     setDialogOpen(true);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Arquivo muito grande. Máximo 5MB.');
+        return;
+      }
+      setReceiptFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeReceipt = () => {
+    setReceiptFile(null);
+    setReceiptPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadReceipt = async (transactionId: string): Promise<string | null> => {
+    if (!receiptFile) return null;
+    
+    const fileExt = receiptFile.name.split('.').pop();
+    const fileName = `gastos/${transactionId}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('receipts')
+      .upload(fileName, receiptFile, { upsert: true });
+    
+    if (uploadError) throw uploadError;
+    
+    const { data: urlData } = supabase.storage
+      .from('receipts')
+      .getPublicUrl(fileName);
+    
+    return urlData.publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,20 +177,35 @@ export function GastosTab() {
       toast.error('Valor inválido');
       return;
     }
+    
+    // Validar comprovante obrigatório para novos gastos
+    if (!editingTransaction && !receiptFile) {
+      toast.error('Comprovante é obrigatório');
+      return;
+    }
 
     setSubmitting(true);
     try {
       if (editingTransaction) {
+        let receiptUrl = editingTransaction.receipt_url;
+        
+        // Upload novo comprovante se selecionado
+        if (receiptFile) {
+          receiptUrl = await uploadReceipt(editingTransaction.id);
+        }
+        
         const { error } = await supabase.from('transactions').update({
           description: formData.description,
           amount,
           category_id: formData.category_id || null,
           date: formData.date,
+          receipt_url: receiptUrl,
         }).eq('id', editingTransaction.id);
         if (error) throw error;
         toast.success('Gasto atualizado!');
       } else {
-        const { error } = await supabase.from('transactions').insert({
+        // Criar transação primeiro para obter o ID
+        const { data: newTx, error } = await supabase.from('transactions').insert({
           description: formData.description,
           amount,
           type: 'saida',
@@ -145,8 +213,15 @@ export function GastosTab() {
           date: formData.date,
           created_by: user?.id,
           origin: 'manual',
-        });
+        }).select().single();
         if (error) throw error;
+        
+        // Upload do comprovante
+        if (receiptFile && newTx) {
+          const receiptUrl = await uploadReceipt(newTx.id);
+          await supabase.from('transactions').update({ receipt_url: receiptUrl }).eq('id', newTx.id);
+        }
+        
         toast.success('Gasto registrado!');
       }
       setDialogOpen(false);
@@ -229,7 +304,22 @@ export function GastosTab() {
                     <TableCell className="text-muted-foreground">
                       {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </TableCell>
-                    <TableCell className="font-medium">{tx.description}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {tx.receipt_url && (
+                          <a 
+                            href={tx.receipt_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:text-primary/80"
+                            title="Ver comprovante"
+                          >
+                            <FileImage className="h-4 w-4" />
+                          </a>
+                        )}
+                        {tx.description}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant="secondary"
@@ -309,6 +399,60 @@ export function GastosTab() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Campo de Upload do Comprovante */}
+            <div>
+              <Label>Comprovante {!editingTransaction && '*'}</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              
+              {receiptPreview ? (
+                <div className="mt-2 relative">
+                  <div className="border rounded-lg p-2 bg-muted/50">
+                    {receiptPreview.startsWith('data:image') || receiptPreview.includes('/receipts/') ? (
+                      <img 
+                        src={receiptPreview} 
+                        alt="Preview" 
+                        className="max-h-32 rounded mx-auto object-contain"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center py-4 text-muted-foreground">
+                        <FileImage className="h-8 w-8 mr-2" />
+                        <span>Arquivo selecionado</span>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-6 w-6"
+                    onClick={removeReceipt}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Anexar Comprovante
+                </Button>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Aceito: imagens ou PDF (máx. 5MB)
+              </p>
+            </div>
+            
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
               <Button type="submit" disabled={submitting}>
