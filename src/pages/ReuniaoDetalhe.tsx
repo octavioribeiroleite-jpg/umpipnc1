@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Loader2, Lock, RotateCcw, Trash2 } from 'lucide-react';
 import { PautaEditor } from '@/components/reunioes/PautaEditor';
 import { RegistroReuniaoEditor } from '@/components/reunioes/RegistroReuniaoEditor';
+import { ResumoIATab } from '@/components/reunioes/ResumoIATab';
 import { AtaViewer } from '@/components/reunioes/AtaViewer';
 import { ComunicacaoTab } from '@/components/reunioes/ComunicacaoTab';
 
@@ -151,9 +152,9 @@ export default function ReuniaoDetalhe() {
         description: 'Reunião processada! Ata e mensagem WhatsApp geradas.',
       });
 
-      // Refresh data and go to ata tab
+      // Refresh data and go to resumo tab
       await fetchMeeting();
-      setActiveTab('ata');
+      setActiveTab('resumo');
     } catch (err) {
       console.error('Error processing meeting:', err);
       toast({
@@ -365,79 +366,80 @@ export default function ReuniaoDetalhe() {
         </Alert>
       )}
 
-      {isClosed ? (
-        <AtaViewer 
-          meeting={meeting} 
-          agendaItems={agendaItems}
-          canManage={canManage}
-          onUpdateMinutes={handleUpdateMinutes}
-        />
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            {!isProcessed && (
-              <>
-                <TabsTrigger value="registro">Registro</TabsTrigger>
-                <TabsTrigger value="pauta">Pauta</TabsTrigger>
-              </>
-            )}
-            {isProcessed && (
-              <>
-                <TabsTrigger value="ata">Ata</TabsTrigger>
-                <TabsTrigger value="comunicacao">WhatsApp</TabsTrigger>
-                <TabsTrigger value="registro">Registro</TabsTrigger>
-                <TabsTrigger value="pauta">Pauta</TabsTrigger>
-              </>
-            )}
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="registro">1. Registro</TabsTrigger>
+          <TabsTrigger value="resumo">2. Resumo IA</TabsTrigger>
+          <TabsTrigger value="ata">3. Ata</TabsTrigger>
+          <TabsTrigger value="whatsapp">4. WhatsApp</TabsTrigger>
+          <TabsTrigger value="pauta">Pauta</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="registro">
-            <RegistroReuniaoEditor
-              meetingId={meeting.id}
-              meetingNotes={meeting.meeting_notes}
-              isProcessed={isProcessed}
-              canManage={canManage}
-              isProcessing={processing}
-              processingStep={processingStep}
-              onProcess={handleProcessMeeting}
-              onNotesChange={handleNotesChange}
-            />
-          </TabsContent>
+        <TabsContent value="registro">
+          <RegistroReuniaoEditor
+            meetingId={meeting.id}
+            meetingNotes={meeting.meeting_notes}
+            isProcessed={isProcessed}
+            canManage={canManage}
+            isProcessing={processing}
+            processingStep={processingStep}
+            onProcess={handleProcessMeeting}
+            onNotesChange={handleNotesChange}
+          />
+        </TabsContent>
 
-          <TabsContent value="pauta">
-            <PautaEditor
-              meetingId={meeting.id}
+        <TabsContent value="resumo">
+          <ResumoIATab
+            meetingId={meeting.id}
+            isProcessed={isProcessed}
+          />
+        </TabsContent>
+
+        <TabsContent value="ata">
+          {isProcessed && meeting.final_minutes ? (
+            <AtaViewer 
+              meeting={meeting} 
               agendaItems={agendaItems}
-              onUpdate={fetchMeeting}
-              disabled={isClosed}
               canManage={canManage}
+              onUpdateMinutes={handleUpdateMinutes}
             />
-          </TabsContent>
-
-          {isProcessed && (
-            <>
-              <TabsContent value="ata">
-                <AtaViewer 
-                  meeting={meeting} 
-                  agendaItems={agendaItems}
-                  canManage={canManage}
-                  onUpdateMinutes={handleUpdateMinutes}
-                />
-              </TabsContent>
-
-              <TabsContent value="comunicacao">
-                <ComunicacaoTab
-                  meetingId={meeting.id}
-                  canManage={canManage}
-                  whatsappMessage={meeting.whatsapp_message}
-                  hasFinalMinutes={!!meeting.final_minutes}
-                  onRegenerate={fetchMeeting}
-                />
-              </TabsContent>
-            </>
+          ) : (
+            <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+              <p className="text-muted-foreground">
+                Ainda não processado. Escreva o registro e clique em "Processar Reunião".
+              </p>
+            </div>
           )}
-        </Tabs>
-      )}
+        </TabsContent>
+
+        <TabsContent value="whatsapp">
+          {isProcessed ? (
+            <ComunicacaoTab
+              meetingId={meeting.id}
+              canManage={canManage}
+              whatsappMessage={meeting.whatsapp_message}
+              hasFinalMinutes={!!meeting.final_minutes}
+              onRegenerate={fetchMeeting}
+            />
+          ) : (
+            <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+              <p className="text-muted-foreground">
+                Ainda não processado. Escreva o registro e clique em "Processar Reunião".
+              </p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="pauta">
+          <PautaEditor
+            meetingId={meeting.id}
+            agendaItems={agendaItems}
+            onUpdate={fetchMeeting}
+            disabled={isClosed}
+            canManage={canManage}
+          />
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   );
 }
