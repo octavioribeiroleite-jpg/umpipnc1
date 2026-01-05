@@ -3,17 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Loader2, AlertTriangle, Lock, RotateCcw, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Lock, RotateCcw, Trash2 } from 'lucide-react';
 import { PautaEditor } from '@/components/reunioes/PautaEditor';
-import { ContribuicoesSection } from '@/components/reunioes/ContribuicoesSection';
-import { IASection } from '@/components/reunioes/IASection';
+import { RegistroReuniaoEditor } from '@/components/reunioes/RegistroReuniaoEditor';
 import { AtaViewer } from '@/components/reunioes/AtaViewer';
 import { ComunicacaoTab } from '@/components/reunioes/ComunicacaoTab';
 
@@ -27,6 +25,7 @@ interface Meeting {
   ai_organized: boolean;
   final_minutes: string | null;
   whatsapp_message: string | null;
+  meeting_notes: string | null;
 }
 
 interface AgendaItem {
@@ -47,8 +46,9 @@ export default function ReuniaoDetalhe() {
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState('');
   const [isModerator, setIsModerator] = useState(false);
-  const [activeTab, setActiveTab] = useState('pauta');
+  const [activeTab, setActiveTab] = useState('registro');
 
   const fetchMeeting = async () => {
     if (!id || !user) return;
@@ -97,19 +97,22 @@ export default function ReuniaoDetalhe() {
     }
   }, [id, user, authLoading]);
 
-  const handleRevealContributions = async () => {
+  const handleProcessMeeting = async () => {
     if (!meeting || !id) return;
 
     const confirmed = window.confirm(
-      'ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\nApós revelar, a IA irá organizar as contribuições, gerar a ata e a mensagem de WhatsApp automaticamente.\n\nDeseja continuar?'
+      'A IA irá organizar o registro e gerar a ata e mensagem de WhatsApp automaticamente.\n\nDeseja continuar?'
     );
 
     if (!confirmed) return;
 
     setProcessing(true);
+    setProcessingStep('saving');
 
     try {
-      // Update meeting to revealed
+      // Step 1: Mark as revealed (for backward compatibility)
+      setProcessingStep('analyzing');
+      
       const { error: meetingError } = await supabase
         .from('meetings')
         .update({ contributions_revealed: true })
@@ -117,76 +120,50 @@ export default function ReuniaoDetalhe() {
 
       if (meetingError) throw meetingError;
 
-      // Update all contributions to revealed
-      const { error: contribError } = await supabase
-        .from('contributions')
-        .update({ status: 'revealed' })
-        .eq('meeting_id', id)
-        .eq('status', 'final');
-
-      if (contribError) throw contribError;
-
-      // Call auto-process function
+      // Step 2: Call auto-process function
+      setProcessingStep('generating');
+      
       const { error: processError } = await supabase.functions.invoke('auto-process-meeting', {
         body: { meetingId: id },
       });
 
+      setProcessingStep('whatsapp');
+
       if (processError) {
         console.error('Auto-process error:', processError);
         toast({
-          title: 'Aviso',
-          description: 'Contribuições reveladas, mas houve erro no processamento automático.',
+          title: 'Erro',
+          description: 'Houve um erro no processamento automático.',
           variant: 'destructive',
         });
-      } else {
-        toast({
-          title: 'Sucesso',
-          description: 'Reunião processada! Ata e mensagem WhatsApp geradas.',
-        });
+        setProcessing(false);
+        setProcessingStep('');
+        return;
       }
 
-      // Refresh data
+      setProcessingStep('done');
+
+      // Wait a moment to show "done" step
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      toast({
+        title: 'Sucesso',
+        description: 'Reunião processada! Ata e mensagem WhatsApp geradas.',
+      });
+
+      // Refresh data and go to ata tab
       await fetchMeeting();
       setActiveTab('ata');
     } catch (err) {
-      console.error('Error revealing contributions:', err);
+      console.error('Error processing meeting:', err);
       toast({
         title: 'Erro',
-        description: 'Erro ao revelar contribuições.',
+        description: 'Erro ao processar reunião.',
         variant: 'destructive',
       });
     } finally {
       setProcessing(false);
-    }
-  };
-
-  const handleCloseMeeting = async (finalMinutes: string) => {
-    if (!meeting || !id) return;
-
-    try {
-      const { error } = await supabase
-        .from('meetings')
-        .update({ 
-          status: 'fechada',
-          final_minutes: finalMinutes 
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setMeeting({ ...meeting, status: 'fechada', final_minutes: finalMinutes });
-      
-      toast({
-        title: 'Sucesso',
-        description: 'Reunião encerrada e ata gerada com sucesso!',
-      });
-    } catch (err) {
-      console.error('Error closing meeting:', err);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao encerrar reunião.',
-        variant: 'destructive',
-      });
+      setProcessingStep('');
     }
   };
 
@@ -202,12 +179,22 @@ export default function ReuniaoDetalhe() {
     try {
       const { error } = await supabase
         .from('meetings')
-        .update({ status: 'aberta' })
+        .update({ 
+          status: 'aberta',
+          contributions_revealed: false,
+          ai_organized: false,
+        })
         .eq('id', id);
 
       if (error) throw error;
 
-      setMeeting({ ...meeting, status: 'aberta' });
+      setMeeting({ 
+        ...meeting, 
+        status: 'aberta',
+        contributions_revealed: false,
+        ai_organized: false,
+      });
+      setActiveTab('registro');
       
       toast({
         title: 'Sucesso',
@@ -254,7 +241,7 @@ export default function ReuniaoDetalhe() {
     if (!meeting || !id) return;
 
     const confirmed = window.confirm(
-      'ATENÇÃO: Deseja excluir a ata desta reunião?\n\nEsta ação não pode ser desfeita.'
+      'ATENÇÃO: Deseja excluir a ata e reprocessar a reunião?\n\nEsta ação não pode ser desfeita.'
     );
 
     if (!confirmed) return;
@@ -262,16 +249,30 @@ export default function ReuniaoDetalhe() {
     try {
       const { error } = await supabase
         .from('meetings')
-        .update({ final_minutes: null, status: 'aberta' })
+        .update({ 
+          final_minutes: null, 
+          whatsapp_message: null,
+          status: 'aberta',
+          contributions_revealed: false,
+          ai_organized: false,
+        })
         .eq('id', id);
 
       if (error) throw error;
 
-      setMeeting({ ...meeting, final_minutes: null, status: 'aberta' });
+      setMeeting({ 
+        ...meeting, 
+        final_minutes: null, 
+        whatsapp_message: null,
+        status: 'aberta',
+        contributions_revealed: false,
+        ai_organized: false,
+      });
+      setActiveTab('registro');
       
       toast({
         title: 'Sucesso',
-        description: 'Ata excluída. Reunião reaberta.',
+        description: 'Ata excluída. Reunião reaberta para edição.',
       });
     } catch (err) {
       console.error('Error deleting minutes:', err);
@@ -280,6 +281,12 @@ export default function ReuniaoDetalhe() {
         description: 'Erro ao excluir ata.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleNotesChange = (notes: string) => {
+    if (meeting) {
+      setMeeting({ ...meeting, meeting_notes: notes });
     }
   };
 
@@ -307,6 +314,7 @@ export default function ReuniaoDetalhe() {
   }
 
   const isClosed = meeting.status === 'fechada';
+  const isProcessed = meeting.contributions_revealed && meeting.ai_organized;
   const canManage = isModerator || isManagement;
 
   return (
@@ -324,7 +332,7 @@ export default function ReuniaoDetalhe() {
         action={
           <div className="flex items-center gap-2">
             <Badge variant={isClosed ? 'secondary' : 'default'} className={!isClosed ? 'bg-success' : ''}>
-              {isClosed ? '⚪ Fechada' : '🟢 Aberta'}
+              {isClosed ? '⚪ Fechada' : isProcessed ? '🔵 Processada' : '🟢 Aberta'}
             </Badge>
             <Button variant="outline" onClick={() => navigate('/reunioes')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -367,16 +375,34 @@ export default function ReuniaoDetalhe() {
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
-            <TabsTrigger value="pauta">Pauta</TabsTrigger>
-            <TabsTrigger value="contribuicoes">Contribuições</TabsTrigger>
-            {meeting.contributions_revealed && (
-              <TabsTrigger value="ia">Organização IA</TabsTrigger>
+            {!isProcessed && (
+              <>
+                <TabsTrigger value="registro">Registro</TabsTrigger>
+                <TabsTrigger value="pauta">Pauta</TabsTrigger>
+              </>
             )}
-            <TabsTrigger value="ata">Gerar Ata</TabsTrigger>
-            {meeting.contributions_revealed && (
-              <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
+            {isProcessed && (
+              <>
+                <TabsTrigger value="ata">Ata</TabsTrigger>
+                <TabsTrigger value="comunicacao">WhatsApp</TabsTrigger>
+                <TabsTrigger value="registro">Registro</TabsTrigger>
+                <TabsTrigger value="pauta">Pauta</TabsTrigger>
+              </>
             )}
           </TabsList>
+
+          <TabsContent value="registro">
+            <RegistroReuniaoEditor
+              meetingId={meeting.id}
+              meetingNotes={meeting.meeting_notes}
+              isProcessed={isProcessed}
+              canManage={canManage}
+              isProcessing={processing}
+              processingStep={processingStep}
+              onProcess={handleProcessMeeting}
+              onNotesChange={handleNotesChange}
+            />
+          </TabsContent>
 
           <TabsContent value="pauta">
             <PautaEditor
@@ -388,65 +414,27 @@ export default function ReuniaoDetalhe() {
             />
           </TabsContent>
 
-          <TabsContent value="contribuicoes">
-            <ContribuicoesSection
-              meetingId={meeting.id}
-              agendaItems={agendaItems}
-              contributionsRevealed={meeting.contributions_revealed}
-              isModerator={isModerator}
-              isProcessing={processing}
-              onReveal={handleRevealContributions}
-            />
-          </TabsContent>
-
-          {meeting.contributions_revealed && (
-            <TabsContent value="ia">
-              <IASection
-                meetingId={meeting.id}
-                canManage={canManage}
-                aiOrganized={meeting.ai_organized}
-                onUpdate={fetchMeeting}
-              />
-            </TabsContent>
-          )}
-
-          <TabsContent value="ata">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gerar Ata Final</CardTitle>
-                <CardDescription>
-                  Compile a ata da reunião com base nas contribuições e decisões.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!meeting.contributions_revealed && (
-                  <Alert className="mb-4">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      As contribuições precisam ser reveladas antes de gerar a ata.
-                    </AlertDescription>
-                  </Alert>
-                )}
+          {isProcessed && (
+            <>
+              <TabsContent value="ata">
                 <AtaViewer 
                   meeting={meeting} 
                   agendaItems={agendaItems}
-                  editable={canManage && meeting.contributions_revealed}
-                  onClose={handleCloseMeeting}
+                  canManage={canManage}
+                  onUpdateMinutes={handleUpdateMinutes}
                 />
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </TabsContent>
 
-          {meeting.contributions_revealed && (
-            <TabsContent value="comunicacao">
-              <ComunicacaoTab
-                meetingId={meeting.id}
-                canManage={canManage}
-                whatsappMessage={meeting.whatsapp_message}
-                hasFinalMinutes={!!meeting.final_minutes}
-                onRegenerate={fetchMeeting}
-              />
-            </TabsContent>
+              <TabsContent value="comunicacao">
+                <ComunicacaoTab
+                  meetingId={meeting.id}
+                  canManage={canManage}
+                  whatsappMessage={meeting.whatsapp_message}
+                  hasFinalMinutes={!!meeting.final_minutes}
+                  onRegenerate={fetchMeeting}
+                />
+              </TabsContent>
+            </>
           )}
         </Tabs>
       )}
