@@ -187,7 +187,7 @@ OBSERVAÇÕES
                 variant="outline"
                 size="sm"
                 onClick={handleManualSave}
-                disabled={!hasUnsavedChanges || isSaving || isProcessed}
+                disabled={!hasUnsavedChanges || isSaving}
               >
                 <Save className="h-4 w-4 mr-2" />
                 Salvar
