@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +14,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { ChargeCard } from './ChargeCard';
 import { toast } from 'sonner';
-import { Check, MoreHorizontal, Receipt, Loader2, Undo2, Trash2, Edit, Eye } from 'lucide-react';
+import { Check, MoreHorizontal, Receipt, Loader2, Undo2, Trash2, Edit, Eye, Calendar, User } from 'lucide-react';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -42,6 +44,7 @@ interface Charge {
 
 export function CobrancasTab() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const currentYear = new Date().getFullYear();
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
@@ -361,7 +364,8 @@ export function CobrancasTab() {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Desktop: Table */}
+      <Card className="hidden md:block">
         <CardContent className="pt-6">
           {charges.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
@@ -505,6 +509,49 @@ export function CobrancasTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Mobile: Cards */}
+      <div className="md:hidden space-y-3">
+        {charges.length === 0 ? (
+          <Card>
+            <CardContent className="py-8">
+              <p className="text-center text-muted-foreground">
+                Nenhuma cobrança gerada para {competence}. Vá em "Configurações" para gerar.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          members.map(member => {
+            const mensalidade = getChargeByType(member.id, 'mensalidade');
+            const percapita = getChargeByType(member.id, 'percapita');
+            
+            if (!mensalidade && !percapita) return null;
+
+            const hasPendingCharges = mensalidade?.status === 'pendente' || percapita?.status === 'pendente';
+
+            return (
+              <ChargeCard
+                key={member.id}
+                memberName={member.name}
+                mensalidade={mensalidade ? {
+                  amount: mensalidade.amount,
+                  status: mensalidade.status,
+                  due_date: mensalidade.due_date,
+                } : null}
+                percapita={percapita ? {
+                  amount: percapita.amount,
+                  status: percapita.status,
+                  due_date: percapita.due_date,
+                } : null}
+                hasPendingCharges={hasPendingCharges}
+                onPayment={() => openPaymentDialog(member)}
+                onViewMensalidade={mensalidade?.status === 'pago' ? () => openDetailsDialog(mensalidade) : undefined}
+                onViewPercapita={percapita?.status === 'pago' ? () => openDetailsDialog(percapita) : undefined}
+              />
+            );
+          })
+        )}
+      </div>
 
       {/* Dialog de Dar Baixa */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
