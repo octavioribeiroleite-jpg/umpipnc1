@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Wand2, Check, FileText } from 'lucide-react';
+import { Loader2, Save, Wand2, Check, FileText, CalendarCheck } from 'lucide-react';
 
 interface RegistroReuniaoEditorProps {
   meetingId: string;
@@ -94,7 +94,8 @@ export function RegistroReuniaoEditor({
     { id: 'analyzing', label: 'Analisando conteúdo...' },
     { id: 'generating', label: 'Gerando ata...' },
     { id: 'whatsapp', label: 'Criando mensagem WhatsApp...' },
-    { id: 'done', label: 'Concluído!' },
+    { id: 'calendar', label: 'Sincronizando calendário...' },
+    { id: 'done', label: 'Reunião finalizada!' },
   ];
 
   const currentStepIndex = processingSteps.findIndex(s => s.id === processingStep);
@@ -201,8 +202,17 @@ OBSERVAÇÕES
                   size="lg"
                   variant={isProcessed ? "outline" : "default"}
                 >
-                  <Wand2 className="h-5 w-5" />
-                  {isProcessed ? 'Reprocessar Reunião' : 'Processar e Gerar Ata'}
+                  {isProcessed ? (
+                    <>
+                      <Wand2 className="h-5 w-5" />
+                      Reprocessar Reunião
+                    </>
+                  ) : (
+                    <>
+                      <CalendarCheck className="h-5 w-5" />
+                      Finalizar Reunião
+                    </>
+                  )}
                 </Button>
               )}
             </div>
