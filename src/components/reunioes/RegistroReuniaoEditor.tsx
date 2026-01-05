@@ -36,7 +36,7 @@ export function RegistroReuniaoEditor({
 
   // Auto-save every 5 seconds when there are unsaved changes
   useEffect(() => {
-    if (!hasUnsavedChanges || isProcessed) return;
+    if (!hasUnsavedChanges) return;
 
     const timer = setTimeout(() => {
       saveNotes();
@@ -46,7 +46,7 @@ export function RegistroReuniaoEditor({
   }, [notes, hasUnsavedChanges, isProcessed]);
 
   const saveNotes = useCallback(async () => {
-    if (isSaving || isProcessed) return;
+    if (isSaving) return;
 
     setIsSaving(true);
     try {
