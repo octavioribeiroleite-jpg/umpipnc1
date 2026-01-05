@@ -193,15 +193,16 @@ OBSERVAÇÕES
                 Salvar
               </Button>
 
-              {canManage && !isProcessed && (
+              {canManage && (
                 <Button
                   onClick={handleProcess}
                   disabled={!notes.trim() || isProcessing}
                   className="gap-2"
                   size="lg"
+                  variant={isProcessed ? "outline" : "default"}
                 >
                   <Wand2 className="h-5 w-5" />
-                  Processar e Gerar Ata
+                  {isProcessed ? 'Reprocessar Reunião' : 'Processar e Gerar Ata'}
                 </Button>
               )}
             </div>
