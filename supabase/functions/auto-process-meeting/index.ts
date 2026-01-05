@@ -348,6 +348,18 @@ REGRAS:
 7. Termine com bênção ou palavra de encorajamento
 8. NÃO inclua detalhes administrativos internos
 
+FORMATO DE COMPROMISSOS/EVENTOS - MUITO IMPORTANTE:
+- Ao listar próximos compromissos, eventos ou datas importantes, SEMPRE colocar a data PRIMEIRO
+- Formato obrigatório: DD/MM/AAAA: Descrição do evento
+- Exemplo CORRETO:
+  *Próximos compromissos:*
+  • 18/05/2025: Lual jardim camburi
+  • 25/05/2025: Culto especial
+  • 01/06/2025: Reunião de oração
+- Exemplo ERRADO:
+  • Lual jardim camburi - 18/05/2025
+  • Culto especial no dia 25/05/2025
+
 FORMATO DE NEGRITO - MUITO IMPORTANTE:
 - Use APENAS UM asterisco de cada lado para negrito: *texto*
 - NÃO use dois asteriscos: **texto** (ERRADO!)
