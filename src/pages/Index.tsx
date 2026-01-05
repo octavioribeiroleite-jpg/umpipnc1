@@ -121,7 +121,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { user, loading, isPendingApproval } = useAuth();
   const navigate = useNavigate();
   const { upcomingEvents, isUpcomingLoading } = useEvents();
   const [stats, setStats] = useState<Stats>({
@@ -132,10 +132,14 @@ export default function Index() {
   });
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
+    if (!loading) {
+      if (!user) {
+        navigate('/auth');
+      } else if (isPendingApproval) {
+        navigate('/aguardando-permissao');
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, isPendingApproval, navigate]);
 
   useEffect(() => {
     const fetchStats = async () => {
