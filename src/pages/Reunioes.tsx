@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus } from 'lucide-react';
 import { useMeetings } from '@/hooks/useMeetings';
+import { useAuth } from '@/contexts/AuthContext';
 import { ReuniaoFilters } from '@/components/reunioes/ReuniaoFilters';
 import { ReuniaoCard } from '@/components/reunioes/ReuniaoCard';
 import { ReuniaoPastaData } from '@/components/reunioes/ReuniaoPastaData';
 
 export default function Reunioes() {
   const navigate = useNavigate();
-  const { meetings, loading, deleteMeeting } = useMeetings();
+  const { meetings, loading, deleteMeeting, refetch } = useMeetings();
+  const { isManagement } = useAuth();
   
   
   const [statusFilter, setStatusFilter] = useState('all');
@@ -142,7 +144,9 @@ export default function Reunioes() {
                     contributionsRevealed: meeting.contributions_revealed,
                     aiStatus: getAiStatus(meeting),
                   }}
-                  onDelete={deleteMeeting}
+                  onDelete={isManagement ? deleteMeeting : undefined}
+                  onFinalize={refetch}
+                  canManage={isManagement}
                 />
               ))}
             </ReuniaoPastaData>
