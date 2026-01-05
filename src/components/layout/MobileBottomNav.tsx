@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, Wallet, MoreHorizontal, CheckSquare, FolderOpen, Settings } from 'lucide-react';
+import { Home, Users, Calendar, Wallet, MoreHorizontal, CheckSquare, FolderOpen, Settings, UserCheck } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
@@ -9,6 +9,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const mainNavItems = [
   { to: '/', icon: Home, label: 'Home' },
@@ -17,15 +18,17 @@ const mainNavItems = [
   { to: '/financas', icon: Wallet, label: 'Finanças' },
 ];
 
-const moreNavItems = [
-  { to: '/tarefas', icon: CheckSquare, label: 'Tarefas' },
-  { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
-  { to: '/configuracoes', icon: Settings, label: 'Configurações' },
-];
-
 export function MobileBottomNav() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const location = useLocation();
+  const { isAdmin } = useAuth();
+
+  const moreNavItems = [
+    { to: '/tarefas', icon: CheckSquare, label: 'Tarefas' },
+    { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
+    ...(isAdmin ? [{ to: '/usuarios', icon: UserCheck, label: 'Usuários' }] : []),
+    { to: '/configuracoes', icon: Settings, label: 'Configurações' },
+  ];
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
