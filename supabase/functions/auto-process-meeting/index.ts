@@ -433,7 +433,124 @@ REGRAS TÉCNICAS:
       console.log('WhatsApp message generated');
     }
 
-    // ===== STEP 5: Save everything =====
+    // ===== STEP 5: Extract and create calendar events =====
+    console.log('Extracting events from meeting content...');
+    
+    const eventsSystemPrompt = `Você é um assistente que extrai eventos e compromissos de atas de reunião.
+Analise o conteúdo e extraia TODOS os eventos, compromissos, datas importantes mencionados.
+
+REGRAS:
+- Extraia apenas eventos FUTUROS (ignore eventos passados)
+- Para cada evento, identifique: título, data, horário (se disponível), local (se disponível)
+- Se não houver hora específica, use 09:00 como padrão
+- Formato de data deve ser ISO 8601 (YYYY-MM-DDTHH:mm:ss)
+- Se o ano não for especificado, assuma ${new Date().getFullYear()}
+
+Você DEVE responder APENAS com a chamada da função extract_events.`;
+
+    const eventsUserPrompt = `Extraia os eventos desta ata de reunião:\n\n${finalMinutes}`;
+
+    const eventsResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: eventsSystemPrompt },
+          { role: "user", content: eventsUserPrompt }
+        ],
+        tools: [{
+          type: "function",
+          function: {
+            name: "extract_events",
+            description: "Extrair eventos do texto da ata de reunião",
+            parameters: {
+              type: "object",
+              properties: {
+                events: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string", description: "Nome do evento" },
+                      start_date: { type: "string", description: "Data e hora de início no formato ISO 8601" },
+                      end_date: { type: "string", description: "Data e hora de término no formato ISO 8601 (opcional)" },
+                      location: { type: "string", description: "Local do evento (opcional)" },
+                      description: { type: "string", description: "Descrição breve do evento" },
+                      all_day: { type: "boolean", description: "Se é evento de dia inteiro" }
+                    },
+                    required: ["title", "start_date"]
+                  }
+                }
+              },
+              required: ["events"]
+            }
+          }
+        }],
+        tool_choice: { type: "function", function: { name: "extract_events" } }
+      }),
+    });
+
+    let eventsCreated = 0;
+    if (eventsResponse.ok) {
+      const eventsData = await eventsResponse.json();
+      const toolCall = eventsData.choices?.[0]?.message?.tool_calls?.[0];
+      
+      if (toolCall?.function?.arguments) {
+        try {
+          const parsed = JSON.parse(toolCall.function.arguments);
+          const extractedEvents = parsed.events || [];
+          
+          console.log(`Extracted ${extractedEvents.length} events from meeting`);
+          
+          for (const event of extractedEvents) {
+            // Validate the date is valid
+            const startDate = new Date(event.start_date);
+            if (isNaN(startDate.getTime())) {
+              console.log(`Skipping event with invalid date: ${event.title}`);
+              continue;
+            }
+            
+            // Skip events in the past
+            if (startDate < new Date()) {
+              console.log(`Skipping past event: ${event.title}`);
+              continue;
+            }
+            
+            const { error: eventError } = await supabaseAdmin
+              .from('events')
+              .insert({
+                title: event.title,
+                start_date: event.start_date,
+                end_date: event.end_date || null,
+                location: event.location || null,
+                description: event.description || `Evento criado automaticamente da reunião: ${meeting.title}`,
+                all_day: event.all_day || false,
+                created_by: user.id,
+                color: '#8b5cf6' // Purple color for auto-created events
+              });
+            
+            if (eventError) {
+              console.error(`Error creating event ${event.title}:`, eventError);
+            } else {
+              eventsCreated++;
+              console.log(`Created event: ${event.title}`);
+            }
+          }
+        } catch (parseError) {
+          console.error('Error parsing events:', parseError);
+        }
+      }
+    } else {
+      console.error('Events extraction failed, continuing without it');
+    }
+    
+    console.log(`Total events created: ${eventsCreated}`);
+
+    // ===== STEP 6: Save everything =====
     const { error: updateError } = await supabaseAdmin
       .from('meetings')
       .update({
@@ -456,6 +573,7 @@ REGRAS TÉCNICAS:
       organizedItems: organizedItems.length,
       hasMinutes: true,
       hasWhatsApp: !!whatsappMessage,
+      eventsCreated: eventsCreated,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
