@@ -305,6 +305,7 @@ export type Database = {
           date: string
           final_minutes: string | null
           id: string
+          meeting_notes: string | null
           moderator_id: string
           status: Database["public"]["Enums"]["meeting_status"]
           title: string
@@ -318,6 +319,7 @@ export type Database = {
           date: string
           final_minutes?: string | null
           id?: string
+          meeting_notes?: string | null
           moderator_id: string
           status?: Database["public"]["Enums"]["meeting_status"]
           title: string
@@ -331,6 +333,7 @@ export type Database = {
           date?: string
           final_minutes?: string | null
           id?: string
+          meeting_notes?: string | null
           moderator_id?: string
           status?: Database["public"]["Enums"]["meeting_status"]
           title?: string

@@ -69,13 +69,6 @@ serve(async (req) => {
 
     console.log('Meeting found:', meeting.title);
 
-    // Fetch contributions
-    const { data: contributions } = await supabaseAdmin
-      .from('contributions')
-      .select('*')
-      .eq('meeting_id', meetingId)
-      .eq('status', 'revealed');
-
     // Fetch agenda items
     const { data: agendaItems } = await supabaseAdmin
       .from('agenda_items')
@@ -102,16 +95,39 @@ serve(async (req) => {
 
     const moderatorName = profileMap.get(meeting.moderator_id) || 'Desconhecido';
 
-    console.log(`Found ${contributions?.length || 0} contributions, ${agendaItems?.length || 0} agenda items`);
+    // Get content to process - prefer meeting_notes (new flow) over contributions (old flow)
+    let contentToProcess = '';
+    
+    if (meeting.meeting_notes && meeting.meeting_notes.trim()) {
+      // New flow: use meeting_notes directly
+      contentToProcess = meeting.meeting_notes;
+      console.log('Using meeting_notes for processing');
+    } else {
+      // Old flow: use contributions
+      const { data: contributions } = await supabaseAdmin
+        .from('contributions')
+        .select('*')
+        .eq('meeting_id', meetingId)
+        .eq('status', 'revealed');
+
+      contentToProcess = (contributions || []).map(c => {
+        const name = profileMap.get(c.user_id) || 'Anônimo';
+        return `[${name}]: ${c.content}`;
+      }).join('\n');
+      console.log(`Using ${contributions?.length || 0} contributions for processing`);
+    }
+
+    console.log(`Content length: ${contentToProcess.length} characters`);
 
     // ===== STEP 2: Organize with AI =====
     const organizeSystemPrompt = `Você é um assistente para organizar reuniões de igreja. 
-Analise as contribuições e organize em categorias.
+Analise o texto da reunião e organize em categorias.
 
 REGRAS:
 1. Mantenha a essência mas melhore a redação
 2. Agrupe itens semelhantes
 3. Seja objetivo e claro
+4. Identifique títulos/seções escritos pelo usuário e use-os
 
 CATEGORIAS DISPONÍVEIS (use exatamente estes valores):
 - decisoes: Decisões tomadas
@@ -129,14 +145,10 @@ Retorne um JSON assim:
 }`;
 
     const pautaText = (agendaItems || []).map((item, i) => `${i + 1}. ${item.title}`).join('\n');
-    const contribText = (contributions || []).map(c => {
-      const name = profileMap.get(c.user_id) || 'Anônimo';
-      return `- [${name}]: ${c.content}`;
-    }).join('\n');
+    
+    const organizeUserPrompt = `PAUTA:\n${pautaText || 'Sem pauta definida'}\n\nREGISTRO DA REUNIÃO:\n${contentToProcess || 'Sem conteúdo'}`;
 
-    const organizeUserPrompt = `PAUTA:\n${pautaText || 'Sem pauta definida'}\n\nCONTRIBUIÇÕES:\n${contribText || 'Sem contribuições'}`;
-
-    console.log('Calling AI to organize contributions...');
+    console.log('Calling AI to organize content...');
     
     const organizeResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -234,13 +246,13 @@ Retorne um JSON assim:
         minute: '2-digit',
       })}`,
       `Moderador: ${moderatorName}`,
-      `Participantes: ${participantNames.join(', ')}`,
+      `Participantes: ${participantNames.join(', ') || 'Não informado'}`,
       '',
     ];
 
     if (agendaItems && agendaItems.length > 0) {
       rawLines.push('PAUTA:');
-      agendaItems.forEach((item, i) => {
+      agendaItems.forEach((item) => {
         rawLines.push(`${item.title}${item.description ? ' - ' + item.description : ''}`);
       });
       rawLines.push('');
@@ -376,6 +388,7 @@ FORMATO:
       .from('meetings')
       .update({
         ai_organized: true,
+        contributions_revealed: true,
         final_minutes: finalMinutes,
         whatsapp_message: whatsappMessage || null,
       })
