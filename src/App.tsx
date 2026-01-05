@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Reunioes from "./pages/Reunioes";
 import NovaReuniao from "./pages/NovaReuniao";
 import ReuniaoDetalhe from "./pages/ReuniaoDetalhe";
@@ -28,6 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/reunioes" element={<Reunioes />} />
             <Route path="/reunioes/nova" element={<NovaReuniao />} />
             <Route path="/reunioes/:id" element={<ReuniaoDetalhe />} />
