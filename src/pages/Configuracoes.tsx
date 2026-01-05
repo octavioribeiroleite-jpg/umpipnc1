@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2 } from 'lucide-react';
+import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador';
@@ -301,13 +301,22 @@ export default function Configuracoes() {
         {isAdmin && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Gestão de Usuários
-              </CardTitle>
-              <CardDescription>Gerencie usuários e permissões</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Gestão de Usuários
+                    {users.filter(u => u.role === null).length > 0 && (
+                      <Badge variant="destructive" className="animate-pulse ml-2">
+                        {users.filter(u => u.role === null).length} pendente{users.filter(u => u.role === null).length > 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>Gerencie usuários e permissões</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -317,102 +326,217 @@ export default function Configuracoes() {
                   Nenhum usuário cadastrado
                 </p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Cargo</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((userItem) => (
-                      <TableRow key={userItem.id}>
-                        <TableCell className="font-medium">
-                          {userItem.full_name}
-                          {userItem.user_id === user?.id && (
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              Você
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{userItem.email}</TableCell>
-                        <TableCell>
-                          <Badge className={roleColors[userItem.role || 'pending']}>
-                            {roleLabels[userItem.role || 'pending']}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Select 
-                              value={userItem.role || 'none'} 
-                              onValueChange={(value) => handleRoleChange(userItem.user_id, value)}
-                              disabled={updatingUser === userItem.user_id}
-                            >
-                              <SelectTrigger className="w-[140px]">
-                                {updatingUser === userItem.user_id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <SelectValue />
-                                )}
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">Administrador</SelectItem>
-                                <SelectItem value="diretoria">Diretoria</SelectItem>
-                                <SelectItem value="visualizador">Visualizador</SelectItem>
-                                <SelectItem value="none">Sem cargo</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  disabled={userItem.user_id === user?.id || deletingUser === userItem.user_id}
-                                >
-                                  {deletingUser === userItem.user_id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Excluir Usuário</AlertDialogTitle>
-                                  <AlertDialogDescription className="space-y-2">
-                                    <p>
-                                      Tem certeza que deseja excluir o usuário{' '}
-                                      <strong>{userItem.full_name}</strong> ({userItem.email})?
-                                    </p>
-                                    <p className="text-sm">Esta ação irá:</p>
-                                    <ul className="list-disc list-inside text-sm space-y-1">
-                                      <li>Desativar a conta do usuário</li>
-                                      <li>Remover todos os cargos</li>
-                                      <li>O usuário não poderá mais acessar o sistema</li>
-                                    </ul>
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteUser(userItem)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                <>
+                  {/* Pending Users Section */}
+                  {users.filter(u => u.role === null).length > 0 ? (
+                    <div className="rounded-lg border-2 border-amber-500/50 bg-amber-500/5 p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                        <h3 className="font-semibold text-amber-500">
+                          Aguardando Aprovação ({users.filter(u => u.role === null).length})
+                        </h3>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users.filter(u => u.role === null).map((userItem) => (
+                            <TableRow key={userItem.id}>
+                              <TableCell className="font-medium">{userItem.full_name}</TableCell>
+                              <TableCell className="text-muted-foreground">{userItem.email}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  {/* Approve with role selection */}
+                                  <Select 
+                                    onValueChange={(value) => handleRoleChange(userItem.user_id, value)}
+                                    disabled={updatingUser === userItem.user_id}
                                   >
-                                    Excluir Usuário
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                                    <SelectTrigger className="w-[160px] border-green-500/50 bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                                      {updatingUser === userItem.user_id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <span className="flex items-center gap-2">
+                                          <UserCheck className="h-4 w-4" />
+                                          Aprovar como...
+                                        </span>
+                                      )}
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="visualizador">Visualizador</SelectItem>
+                                      <SelectItem value="diretoria">Diretoria</SelectItem>
+                                      <SelectItem value="admin">Administrador</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  {/* Reject button */}
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button 
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                        disabled={deletingUser === userItem.user_id}
+                                      >
+                                        {deletingUser === userItem.user_id ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <>
+                                            <XCircle className="h-4 w-4 mr-1" />
+                                            Recusar
+                                          </>
+                                        )}
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Recusar Cadastro</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Tem certeza que deseja recusar o cadastro de{' '}
+                                          <strong>{userItem.full_name}</strong> ({userItem.email})?
+                                          <br /><br />
+                                          O usuário não poderá acessar o sistema.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleDeleteUser(userItem)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Recusar Cadastro
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 flex items-center gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span className="text-green-600 text-sm font-medium">
+                        Nenhuma conta aguardando aprovação
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Active Users Section */}
+                  {users.filter(u => u.role !== null).length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Users className="h-5 w-5 text-muted-foreground" />
+                        <h3 className="font-semibold text-foreground">
+                          Usuários Ativos ({users.filter(u => u.role !== null).length})
+                        </h3>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Cargo</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users.filter(u => u.role !== null).map((userItem) => (
+                            <TableRow key={userItem.id}>
+                              <TableCell className="font-medium">
+                                {userItem.full_name}
+                                {userItem.user_id === user?.id && (
+                                  <Badge variant="outline" className="ml-2 text-xs">
+                                    Você
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">{userItem.email}</TableCell>
+                              <TableCell>
+                                <Badge className={roleColors[userItem.role || 'pending']}>
+                                  {roleLabels[userItem.role || 'pending']}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Select 
+                                    value={userItem.role || 'none'} 
+                                    onValueChange={(value) => handleRoleChange(userItem.user_id, value)}
+                                    disabled={updatingUser === userItem.user_id}
+                                  >
+                                    <SelectTrigger className="w-[140px]">
+                                      {updatingUser === userItem.user_id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <SelectValue />
+                                      )}
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="admin">Administrador</SelectItem>
+                                      <SelectItem value="diretoria">Diretoria</SelectItem>
+                                      <SelectItem value="visualizador">Visualizador</SelectItem>
+                                      <SelectItem value="none">Sem cargo</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                        disabled={userItem.user_id === user?.id || deletingUser === userItem.user_id}
+                                      >
+                                        {deletingUser === userItem.user_id ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <Trash2 className="h-4 w-4" />
+                                        )}
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Excluir Usuário</AlertDialogTitle>
+                                        <AlertDialogDescription className="space-y-2">
+                                          <p>
+                                            Tem certeza que deseja excluir o usuário{' '}
+                                            <strong>{userItem.full_name}</strong> ({userItem.email})?
+                                          </p>
+                                          <p className="text-sm">Esta ação irá:</p>
+                                          <ul className="list-disc list-inside text-sm space-y-1">
+                                            <li>Desativar a conta do usuário</li>
+                                            <li>Remover todos os cargos</li>
+                                            <li>O usuário não poderá mais acessar o sistema</li>
+                                          </ul>
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleDeleteUser(userItem)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Excluir Usuário
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
