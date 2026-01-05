@@ -124,11 +124,9 @@ export default function ReuniaoDetalhe() {
       // Step 2: Call auto-process function
       setProcessingStep('generating');
       
-      const { error: processError } = await supabase.functions.invoke('auto-process-meeting', {
+      const { data: processData, error: processError } = await supabase.functions.invoke('auto-process-meeting', {
         body: { meetingId: id },
       });
-
-      setProcessingStep('whatsapp');
 
       if (processError) {
         console.error('Auto-process error:', processError);
@@ -142,14 +140,31 @@ export default function ReuniaoDetalhe() {
         return;
       }
 
+      setProcessingStep('whatsapp');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setProcessingStep('calendar');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Step 3: Close the meeting
+      const { error: closeError } = await supabase
+        .from('meetings')
+        .update({ status: 'fechada' })
+        .eq('id', id);
+
+      if (closeError) {
+        console.error('Error closing meeting:', closeError);
+      }
+
       setProcessingStep('done');
 
       // Wait a moment to show "done" step
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      const eventsCreated = processData?.eventsCreated || 0;
       toast({
-        title: 'Sucesso',
-        description: 'Reunião processada! Ata e mensagem WhatsApp geradas.',
+        title: 'Reunião Finalizada!',
+        description: `Ata gerada, mensagem WhatsApp criada${eventsCreated > 0 ? ` e ${eventsCreated} evento(s) adicionado(s) ao calendário` : ''}.`,
       });
 
       // Refresh data and go to resumo tab
