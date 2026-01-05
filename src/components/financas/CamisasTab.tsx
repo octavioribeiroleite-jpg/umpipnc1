@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt } from 'lucide-react';
+import { ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 
@@ -31,6 +32,7 @@ interface Purchase {
   total_cost: number;
   unit_cost: number;
   notes: string | null;
+  transaction_id: string | null;
 }
 
 interface Sale {
@@ -42,6 +44,7 @@ interface Sale {
   unit_price: number;
   total_price: number;
   payment_method: string | null;
+  transaction_id: string | null;
 }
 
 export function CamisasTab() {
@@ -57,6 +60,11 @@ export function CamisasTab() {
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Delete states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'purchase' | 'sale'; transactionId?: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Purchase form
   const [purchaseForm, setPurchaseForm] = useState({
@@ -276,6 +284,76 @@ export function CamisasTab() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+    
+    setDeleting(true);
+    try {
+      if (itemToDelete.type === 'purchase') {
+        // Buscar itens da compra para reverter o estoque
+        const { data: items } = await supabase
+          .from('shirt_purchase_items')
+          .select('size, quantity')
+          .eq('purchase_id', itemToDelete.id);
+        
+        if (items) {
+          for (const item of items) {
+            const inv = inventory.find(i => i.size === item.size);
+            if (inv) {
+              await supabase
+                .from('shirt_inventory')
+                .update({ quantity: Math.max(0, inv.quantity - item.quantity) })
+                .eq('id', inv.id);
+            }
+          }
+        }
+        
+        // Excluir itens da compra
+        await supabase.from('shirt_purchase_items').delete().eq('purchase_id', itemToDelete.id);
+        
+        // Excluir a compra
+        await supabase.from('shirt_purchases').delete().eq('id', itemToDelete.id);
+        
+        // Excluir transação se existir
+        if (itemToDelete.transactionId) {
+          await supabase.from('transactions').delete().eq('id', itemToDelete.transactionId);
+        }
+        
+        toast.success('Compra excluída com sucesso!');
+      } else {
+        // Buscar a venda para reverter o estoque
+        const sale = sales.find(s => s.id === itemToDelete.id);
+        if (sale) {
+          const inv = inventory.find(i => i.size === sale.size);
+          if (inv) {
+            await supabase
+              .from('shirt_inventory')
+              .update({ quantity: inv.quantity + sale.quantity })
+              .eq('id', inv.id);
+          }
+        }
+        
+        // Excluir a venda
+        await supabase.from('shirt_sales').delete().eq('id', itemToDelete.id);
+        
+        // Excluir transação se existir
+        if (itemToDelete.transactionId) {
+          await supabase.from('transactions').delete().eq('id', itemToDelete.transactionId);
+        }
+        
+        toast.success('Venda excluída com sucesso!');
+      }
+      
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+      fetchData();
+    } catch (error: any) {
+      toast.error('Erro ao excluir: ' + error.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // Stats
   const totalStock = inventory.reduce((sum, i) => sum + i.quantity, 0);
   const totalPurchased = purchases.reduce((sum, p) => sum + p.total_cost, 0);
@@ -402,6 +480,7 @@ export function CamisasTab() {
                       <TableHead>Quantidade</TableHead>
                       <TableHead>Custo Total</TableHead>
                       <TableHead>Custo Unit.</TableHead>
+                      <TableHead className="w-16">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -411,7 +490,20 @@ export function CamisasTab() {
                         <TableCell>{p.supplier || '-'}</TableCell>
                         <TableCell>{p.total_quantity}</TableCell>
                         <TableCell>R$ {p.total_cost.toFixed(2).replace('.', ',')}</TableCell>
-                        <TableCell>R$ {p.unit_cost.toFixed(2).replace('.', ',')}</TableCell>
+                        <TableCell>R$ {(p.unit_cost || 0).toFixed(2).replace('.', ',')}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => {
+                              setItemToDelete({ id: p.id, type: 'purchase', transactionId: p.transaction_id || undefined });
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -442,6 +534,7 @@ export function CamisasTab() {
                       <TableHead>Tamanho</TableHead>
                       <TableHead>Qtd</TableHead>
                       <TableHead>Valor</TableHead>
+                      <TableHead className="w-16">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -451,7 +544,20 @@ export function CamisasTab() {
                         <TableCell>{s.buyer_name || '-'}</TableCell>
                         <TableCell><Badge variant="outline">{s.size}</Badge></TableCell>
                         <TableCell>{s.quantity}</TableCell>
-                        <TableCell>R$ {s.total_price.toFixed(2).replace('.', ',')}</TableCell>
+                        <TableCell>R$ {(s.total_price || 0).toFixed(2).replace('.', ',')}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => {
+                              setItemToDelete({ id: s.id, type: 'sale', transactionId: s.transaction_id || undefined });
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -625,6 +731,31 @@ export function CamisasTab() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              {itemToDelete?.type === 'purchase' 
+                ? 'Ao excluir esta compra, o estoque será ajustado (quantidades reduzidas) e a transação financeira associada será removida.'
+                : 'Ao excluir esta venda, o estoque será ajustado (quantidades devolvidas) e a transação financeira associada será removida.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
