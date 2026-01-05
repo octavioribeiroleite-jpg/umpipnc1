@@ -268,6 +268,7 @@ export type Database = {
       }
       files: {
         Row: {
+          category: string | null
           created_at: string
           created_by: string
           event_id: string | null
@@ -280,6 +281,7 @@ export type Database = {
           url: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           created_by: string
           event_id?: string | null
@@ -292,6 +294,7 @@ export type Database = {
           url: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           created_by?: string
           event_id?: string | null

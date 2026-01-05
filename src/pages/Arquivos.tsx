@@ -1,109 +1,144 @@
+import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Upload, FileText, Image, Download, Search, Filter } from 'lucide-react';
-
-const mockFiles = [
-  { id: '1', name: 'Comprovante-Janeiro.pdf', type: 'pdf', date: '2024-01-14', size: '245 KB' },
-  { id: '2', name: 'Foto-Reuniao.jpg', type: 'image', date: '2024-01-12', size: '1.2 MB' },
-  { id: '3', name: 'Ata-Reuniao-01.pdf', type: 'pdf', date: '2024-01-10', size: '156 KB' },
-  { id: '4', name: 'Recibo-Material.pdf', type: 'pdf', date: '2024-01-08', size: '89 KB' },
-  { id: '5', name: 'Banner-Evento.png', type: 'image', date: '2024-01-05', size: '2.4 MB' },
-];
-
-function FileCard({ file }: { file: (typeof mockFiles)[0] }) {
-  return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer group">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div
-            className={`h-12 w-12 rounded-lg flex items-center justify-center ${
-              file.type === 'pdf' ? 'bg-destructive/10' : 'bg-info/10'
-            }`}
-          >
-            {file.type === 'pdf' ? (
-              <FileText className={`h-6 w-6 ${file.type === 'pdf' ? 'text-destructive' : 'text-info'}`} />
-            ) : (
-              <Image className="h-6 w-6 text-info" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">{file.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {new Date(file.date).toLocaleDateString('pt-BR')} • {file.size}
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { FAB } from '@/components/ui/fab';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Upload, FileX } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useFiles, useDeleteFile, FileFilters as FileFiltersType, FileRecord } from '@/hooks/useFiles';
+import { FileCard } from '@/components/arquivos/FileCard';
+import { FileFilters } from '@/components/arquivos/FileFilters';
+import { UploadDialog } from '@/components/arquivos/UploadDialog';
+import { FileDetailsDialog } from '@/components/arquivos/FileDetailsDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Arquivos() {
+  const isMobile = useIsMobile();
+  const { isManagement } = useAuth();
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<FileRecord | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [filters, setFilters] = useState<FileFiltersType>({
+    search: '',
+    type: 'all',
+    category: 'all',
+    sortBy: 'newest',
+  });
+
+  // Debounce search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useMemo(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(filters.search || '');
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [filters.search]);
+
+  const queryFilters = useMemo(() => ({
+    ...filters,
+    search: debouncedSearch,
+  }), [filters, debouncedSearch]);
+
+  const { data: files, isLoading } = useFiles(queryFilters);
+  const deleteMutation = useDeleteFile();
+
+  const handleDownload = (file: FileRecord) => {
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.name;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDelete = (file: FileRecord) => {
+    deleteMutation.mutate({ id: file.id, url: file.url });
+  };
+
+  const handleView = (file: FileRecord) => {
+    setSelectedFile(file);
+    setDetailsOpen(true);
+  };
+
   return (
     <AppLayout>
       <PageHeader
         title="Arquivos"
         description="Gerencie comprovantes e anexos"
         action={
-          <Button>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload
-          </Button>
+          isManagement && !isMobile ? (
+            <Button onClick={() => setUploadOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload
+            </Button>
+          ) : undefined
         }
       />
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar arquivos..." className="pl-10" />
+      <FileFilters filters={filters} onFiltersChange={setFilters} />
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-32 rounded-lg" />
+          ))}
         </div>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="pdf">PDF</SelectItem>
-            <SelectItem value="image">Imagens</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="comprovantes">Comprovantes</SelectItem>
-            <SelectItem value="atas">Atas</SelectItem>
-            <SelectItem value="fotos">Fotos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && (!files || files.length === 0) && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <FileX className="h-16 w-16 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Nenhum arquivo encontrado</h3>
+          <p className="text-muted-foreground mb-4 max-w-md">
+            {filters.search || filters.category !== 'all' || filters.type !== 'all'
+              ? 'Tente ajustar os filtros para encontrar o que procura.'
+              : 'Comece enviando seu primeiro arquivo clicando no botão acima.'}
+          </p>
+          {isManagement && !filters.search && filters.category === 'all' && filters.type === 'all' && (
+            <Button onClick={() => setUploadOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Enviar arquivo
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Files Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockFiles.map((file) => (
-          <FileCard key={file.id} file={file} />
-        ))}
-      </div>
+      {!isLoading && files && files.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {files.map((file) => (
+            <FileCard
+              key={file.id}
+              file={file}
+              onDownload={handleDownload}
+              onDelete={handleDelete}
+              onView={handleView}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* FAB for mobile */}
+      {isManagement && isMobile && (
+        <FAB onClick={() => setUploadOpen(true)} icon={<Upload className="h-5 w-5" />} />
+      )}
+
+      {/* Upload Dialog */}
+      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} />
+
+      {/* File Details Dialog */}
+      <FileDetailsDialog
+        file={selectedFile}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        onDownload={handleDownload}
+        onDelete={handleDelete}
+      />
     </AppLayout>
   );
 }
