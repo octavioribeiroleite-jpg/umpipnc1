@@ -149,3 +149,25 @@
     background-color: hsl(var(--primary) / 0.5);
   }
 }
+
+/* Smooth page and tab transitions */
+@layer utilities {
+  .page-transition {
+    @apply animate-fade-in;
+  }
+
+  .tab-content {
+    @apply animate-fade-in;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
