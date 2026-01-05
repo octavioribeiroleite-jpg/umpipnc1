@@ -187,7 +187,7 @@ export default function ReuniaoDetalhe() {
     if (!meeting || !id) return;
 
     const confirmed = window.confirm(
-      'Deseja reabrir esta reunião?\n\nA ata será preservada, mas a reunião voltará ao status aberta.'
+      'Deseja reabrir esta reunião?\n\nA ata será preservada, mas a reunião voltará ao status aberta para edição.'
     );
 
     if (!confirmed) return;
@@ -197,8 +197,7 @@ export default function ReuniaoDetalhe() {
         .from('meetings')
         .update({ 
           status: 'aberta',
-          contributions_revealed: false,
-          ai_organized: false,
+          // Manter ai_organized e contributions_revealed true se já foram processados
         })
         .eq('id', id);
 
@@ -207,8 +206,7 @@ export default function ReuniaoDetalhe() {
       setMeeting({ 
         ...meeting, 
         status: 'aberta',
-        contributions_revealed: false,
-        ai_organized: false,
+        // Manter os flags de processamento
       });
       setActiveTab('registro');
       
@@ -331,6 +329,7 @@ export default function ReuniaoDetalhe() {
 
   const isClosed = meeting.status === 'fechada';
   const isProcessed = meeting.contributions_revealed && meeting.ai_organized;
+  const hasContent = !!meeting.final_minutes; // Permite ver ata mesmo se não "processado"
   const canManage = isModerator || isManagement;
 
   return (
@@ -411,7 +410,7 @@ export default function ReuniaoDetalhe() {
         </TabsContent>
 
         <TabsContent value="ata">
-          {isProcessed && meeting.final_minutes ? (
+          {hasContent ? (
             <AtaViewer 
               meeting={meeting} 
               agendaItems={agendaItems}
@@ -421,25 +420,25 @@ export default function ReuniaoDetalhe() {
           ) : (
             <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
               <p className="text-muted-foreground">
-                Ainda não processado. Escreva o registro e clique em "Processar Reunião".
+                Ainda não processado. Escreva o registro e clique em "Finalizar Reunião".
               </p>
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="whatsapp">
-          {isProcessed ? (
+          {hasContent ? (
             <ComunicacaoTab
               meetingId={meeting.id}
               canManage={canManage}
               whatsappMessage={meeting.whatsapp_message}
               hasFinalMinutes={!!meeting.final_minutes}
-              onRegenerate={fetchMeeting}
+              onMessageUpdated={(msg) => setMeeting(prev => prev ? { ...prev, whatsapp_message: msg } : null)}
             />
           ) : (
             <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
               <p className="text-muted-foreground">
-                Ainda não processado. Escreva o registro e clique em "Processar Reunião".
+                Ainda não processado. Escreva o registro e clique em "Finalizar Reunião".
               </p>
             </div>
           )}
