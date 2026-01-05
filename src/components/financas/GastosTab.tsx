@@ -17,7 +17,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -26,11 +25,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Plus, Trash2, Edit, Loader2 } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -46,7 +55,6 @@ interface Transaction {
   date: string;
   type: string;
   category_id: string | null;
-  category?: Category;
 }
 
 export function GastosTab() {
@@ -54,14 +62,20 @@ export function GastosTab() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
     category_id: '',
     date: new Date().toISOString().split('T')[0],
   });
-  const { toast } = useToast();
 
   const fetchData = async () => {
     setLoading(true);
@@ -75,17 +89,8 @@ export function GastosTab() {
       supabase.from('financial_categories').select('*').eq('type', 'saida'),
     ]);
 
-    if (txRes.error) {
-      toast({ title: 'Erro ao carregar gastos', variant: 'destructive' });
-    } else {
-      setTransactions(txRes.data || []);
-    }
-
-    if (catRes.error) {
-      toast({ title: 'Erro ao carregar categorias', variant: 'destructive' });
-    } else {
-      setCategories(catRes.data || []);
-    }
+    if (!txRes.error) setTransactions(txRes.data || []);
+    if (!catRes.error) setCategories(catRes.data || []);
 
     setLoading(false);
   };
@@ -106,54 +111,102 @@ export function GastosTab() {
     return cat?.color || '#6b7280';
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.description.trim()) {
-      toast({ title: 'Descrição é obrigatória', variant: 'destructive' });
-      return;
-    }
-
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({ title: 'Valor inválido', variant: 'destructive' });
-      return;
-    }
-
-    const { error } = await supabase.from('transactions').insert({
-      description: formData.description,
-      amount,
-      type: 'saida',
-      category_id: formData.category_id || null,
-      date: formData.date,
-      created_by: user?.id,
-    });
-
-    if (error) {
-      toast({ title: 'Erro ao registrar gasto', variant: 'destructive' });
-    } else {
-      toast({ title: 'Gasto registrado com sucesso' });
-      fetchData();
-    }
-
-    setDialogOpen(false);
+  const openNewDialog = () => {
+    setEditingTransaction(null);
     setFormData({
       description: '',
       amount: '',
       category_id: '',
       date: new Date().toISOString().split('T')[0],
     });
+    setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('transactions').delete().eq('id', id);
+  const openEditDialog = (tx: Transaction) => {
+    setEditingTransaction(tx);
+    setFormData({
+      description: tx.description,
+      amount: tx.amount.toString(),
+      category_id: tx.category_id || '',
+      date: tx.date,
+    });
+    setDialogOpen(true);
+  };
 
-    if (error) {
-      toast({ title: 'Erro ao excluir gasto', variant: 'destructive' });
-    } else {
-      toast({ title: 'Gasto excluído' });
-      fetchData();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.description.trim()) {
+      toast.error('Descrição é obrigatória');
+      return;
     }
+
+    const amount = parseFloat(formData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Valor inválido');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (editingTransaction) {
+        // Editar
+        const { error } = await supabase
+          .from('transactions')
+          .update({
+            description: formData.description,
+            amount,
+            category_id: formData.category_id || null,
+            date: formData.date,
+          })
+          .eq('id', editingTransaction.id);
+
+        if (error) throw error;
+        toast.success('Gasto atualizado!');
+      } else {
+        // Criar
+        const { error } = await supabase.from('transactions').insert({
+          description: formData.description,
+          amount,
+          type: 'saida',
+          category_id: formData.category_id || null,
+          date: formData.date,
+          created_by: user?.id,
+          origin: 'manual',
+        });
+
+        if (error) throw error;
+        toast.success('Gasto registrado!');
+      }
+
+      setDialogOpen(false);
+      fetchData();
+    } catch (error: any) {
+      toast.error('Erro: ' + error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingId) return;
+
+    try {
+      const { error } = await supabase.from('transactions').delete().eq('id', deletingId);
+      if (error) throw error;
+      toast.success('Gasto excluído!');
+      fetchData();
+    } catch (error: any) {
+      toast.error('Erro: ' + error.message);
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+    }
+  };
+
+  const confirmDelete = (id: string) => {
+    setDeletingId(id);
+    setDeleteDialogOpen(true);
   };
 
   const totalGastos = transactions.reduce((sum, tx) => sum + tx.amount, 0);
@@ -169,88 +222,10 @@ export function GastosTab() {
                 R$ {totalGastos.toFixed(2).replace('.', ',')}
               </p>
             </div>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Gasto
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Registrar Gasto</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="description">Descrição *</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
-                      placeholder="Descreva o gasto..."
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="amount">Valor (R$) *</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        value={formData.amount}
-                        onChange={(e) =>
-                          setFormData({ ...formData, amount: e.target.value })
-                        }
-                        placeholder="0,00"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="date">Data</Label>
-                      <Input
-                        id="date"
-                        type="date"
-                        value={formData.date}
-                        onChange={(e) =>
-                          setFormData({ ...formData, date: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Categoria</Label>
-                    <Select
-                      value={formData.category_id}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, category_id: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setDialogOpen(false)}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button type="submit">Registrar</Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={openNewDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Gasto
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -261,7 +236,9 @@ export function GastosTab() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-muted-foreground text-center py-8">Carregando...</p>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
           ) : transactions.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
               Nenhum gasto registrado. Clique em "Novo Gasto" para adicionar.
@@ -281,7 +258,7 @@ export function GastosTab() {
                 {transactions.map((tx) => (
                   <TableRow key={tx.id}>
                     <TableCell className="text-muted-foreground">
-                      {new Date(tx.date).toLocaleDateString('pt-BR')}
+                      {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell className="font-medium">{tx.description}</TableCell>
                     <TableCell>
@@ -299,13 +276,22 @@ export function GastosTab() {
                       -R$ {tx.amount.toFixed(2).replace('.', ',')}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(tx.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(tx)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => confirmDelete(tx.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -314,6 +300,101 @@ export function GastosTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de Criar/Editar */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingTransaction ? 'Editar Gasto' : 'Novo Gasto'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="description">Descrição *</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Descreva o gasto..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="amount">Valor (R$) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  placeholder="0,00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="date">Data</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : editingTransaction ? (
+                  'Salvar'
+                ) : (
+                  'Registrar'
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Alert Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Gasto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O gasto será excluído permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
