@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { AppSidebar } from './AppSidebar';
-import { MobileNav } from './MobileNav';
+import { MobileHeader } from './MobileHeader';
+import { MobileBottomNav } from './MobileBottomNav';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -9,18 +10,21 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
-      {/* Desktop sidebar */}
-      <div className="hidden md:flex">
+      {/* Desktop layout with sidebar */}
+      <div className="hidden md:flex min-h-screen">
         <AppSidebar />
         <main className="flex-1 overflow-auto">
           <div className="container py-6 px-4 lg:px-8">{children}</div>
         </main>
       </div>
 
-      {/* Mobile layout */}
-      <div className="md:hidden">
-        <MobileNav />
-        <main className="pt-20 pb-6 px-4">{children}</main>
+      {/* Mobile layout with bottom nav */}
+      <div className="md:hidden flex flex-col min-h-screen">
+        <MobileHeader />
+        <main className="flex-1 overflow-auto pt-14 pb-20 px-4">
+          {children}
+        </main>
+        <MobileBottomNav />
       </div>
     </div>
   );
