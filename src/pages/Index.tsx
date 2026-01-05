@@ -32,6 +32,7 @@ function StatCard({
   icon: Icon,
   trend,
   trendUp,
+  onClick,
 }: {
   title: string;
   value: string;
@@ -39,9 +40,13 @@ function StatCard({
   icon: any;
   trend?: string;
   trendUp?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <Card className="overflow-hidden">
+    <Card 
+      className={`overflow-hidden ${onClick ? 'cursor-pointer hover:bg-accent/50 transition-colors' : ''}`}
+      onClick={onClick}
+    >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -191,6 +196,7 @@ export default function Index() {
           title="Contribuições (mês)"
           value={`R$ ${stats.mensalidadesMes.toFixed(2).replace('.', ',')}`}
           icon={TrendingUp}
+          onClick={() => navigate('/financas?tab=receitas')}
         />
         <StatCard
           title="Membros Ativos"
