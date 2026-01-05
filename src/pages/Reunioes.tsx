@@ -12,7 +12,8 @@ import { ReuniaoPastaData } from '@/components/reunioes/ReuniaoPastaData';
 
 export default function Reunioes() {
   const navigate = useNavigate();
-  const { meetings, loading } = useMeetings();
+  const { meetings, loading, deleteMeeting } = useMeetings();
+  
   
   const [statusFilter, setStatusFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all');
@@ -141,6 +142,7 @@ export default function Reunioes() {
                     contributionsRevealed: meeting.contributions_revealed,
                     aiStatus: getAiStatus(meeting),
                   }}
+                  onDelete={deleteMeeting}
                 />
               ))}
             </ReuniaoPastaData>

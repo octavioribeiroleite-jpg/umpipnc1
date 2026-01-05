@@ -1,8 +1,21 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Eye, CheckCircle, Circle, Brain, FileText } from 'lucide-react';
+import { Calendar, Users, Eye, CheckCircle, Circle, Brain, FileText, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 interface MeetingProgress {
   pautaComplete: boolean;
@@ -20,6 +33,7 @@ interface ReuniaoCardProps {
   status: 'aberta' | 'fechada';
   participantsCount: number;
   progress: MeetingProgress;
+  onDelete?: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function ReuniaoCard({
@@ -30,8 +44,10 @@ export function ReuniaoCard({
   status,
   participantsCount,
   progress,
+  onDelete,
 }: ReuniaoCardProps) {
   const navigate = useNavigate();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getAiStatusText = () => {
     switch (progress.aiStatus) {
@@ -52,6 +68,20 @@ export function ReuniaoCard({
         return 'text-warning';
       case 'validated':
         return 'text-success';
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    
+    setIsDeleting(true);
+    const result = await onDelete(id);
+    setIsDeleting(false);
+    
+    if (result.success) {
+      toast.success('Reunião excluída com sucesso');
+    } else {
+      toast.error(result.error || 'Erro ao excluir reunião');
     }
   };
 
@@ -88,23 +118,57 @@ export function ReuniaoCard({
                 <span>Moderador: {moderatorName}</span>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/reunioes/${id}`)}
-            >
-              {status === 'aberta' ? (
-                <>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Acessar
-                </>
-              ) : (
-                <>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Ver Ata
-                </>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/reunioes/${id}`)}
+              >
+                {status === 'aberta' ? (
+                  <>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Acessar
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Ver Ata
+                  </>
+                )}
+              </Button>
+              
+              {onDelete && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir reunião?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Todos os dados relacionados a esta reunião serão excluídos permanentemente, incluindo pauta, contribuições, sugestões da IA e tarefas.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {isDeleting ? 'Excluindo...' : 'Excluir'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
-            </Button>
+            </div>
           </div>
 
           {/* Progress Indicators */}
