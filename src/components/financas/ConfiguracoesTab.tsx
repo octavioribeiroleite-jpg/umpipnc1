@@ -1,0 +1,298 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { Settings, Save, Users } from 'lucide-react';
+
+const MONTHS = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+
+export function ConfiguracoesTab() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
+  const [selectedYear, setSelectedYear] = useState(currentYear.toString());
+  const [formData, setFormData] = useState({
+    monthly_fee: '',
+    per_capita: '',
+    due_day: '10',
+    notes: ''
+  });
+  const [existingSettings, setExistingSettings] = useState<any>(null);
+  const [activeMembers, setActiveMembers] = useState(0);
+
+  const competence = `${selectedMonth}/${selectedYear}`;
+
+  useEffect(() => {
+    fetchSettings();
+    fetchActiveMembers();
+  }, [competence]);
+
+  const fetchSettings = async () => {
+    const { data } = await supabase
+      .from('financial_settings')
+      .select('*')
+      .eq('competence', competence)
+      .maybeSingle();
+
+    if (data) {
+      setExistingSettings(data);
+      setFormData({
+        monthly_fee: data.monthly_fee.toString(),
+        per_capita: data.per_capita.toString(),
+        due_day: data.due_day.toString(),
+        notes: data.notes || ''
+      });
+    } else {
+      setExistingSettings(null);
+      setFormData({ monthly_fee: '', per_capita: '', due_day: '10', notes: '' });
+    }
+  };
+
+  const fetchActiveMembers = async () => {
+    const { count } = await supabase
+      .from('members')
+      .select('*', { count: 'exact', head: true })
+      .eq('active', true);
+    setActiveMembers(count || 0);
+  };
+
+  const handleSave = async () => {
+    if (!formData.monthly_fee && !formData.per_capita) {
+      toast.error('Informe pelo menos um valor (mensalidade ou per capita)');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        competence,
+        monthly_fee: parseFloat(formData.monthly_fee) || 0,
+        per_capita: parseFloat(formData.per_capita) || 0,
+        due_day: parseInt(formData.due_day) || 10,
+        notes: formData.notes
+      };
+
+      if (existingSettings) {
+        const { error } = await supabase
+          .from('financial_settings')
+          .update(payload)
+          .eq('id', existingSettings.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('financial_settings')
+          .insert(payload);
+        if (error) throw error;
+      }
+
+      toast.success('Configurações salvas!');
+      fetchSettings();
+    } catch (error: any) {
+      toast.error('Erro ao salvar: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateCharges = async () => {
+    if (!existingSettings) {
+      toast.error('Salve as configurações primeiro');
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      // Buscar membros ativos
+      const { data: members, error: membersError } = await supabase
+        .from('members')
+        .select('id')
+        .eq('active', true);
+
+      if (membersError) throw membersError;
+      if (!members || members.length === 0) {
+        toast.error('Nenhum membro ativo encontrado');
+        return;
+      }
+
+      // Calcular data de vencimento
+      const [monthName, yearStr] = competence.split('/');
+      const monthIndex = MONTHS.indexOf(monthName);
+      const year = parseInt(yearStr);
+      const dueDay = Math.min(existingSettings.due_day, 28);
+      const dueDate = new Date(year, monthIndex, dueDay).toISOString().split('T')[0];
+
+      // Buscar cobranças existentes
+      const { data: existingCharges } = await supabase
+        .from('charges')
+        .select('member_id, type')
+        .eq('competence', competence);
+
+      const existingMap = new Set(
+        (existingCharges || []).map(c => `${c.member_id}-${c.type}`)
+      );
+
+      // Preparar novas cobranças
+      const newCharges: any[] = [];
+
+      for (const member of members) {
+        if (existingSettings.monthly_fee > 0 && !existingMap.has(`${member.id}-mensalidade`)) {
+          newCharges.push({
+            member_id: member.id,
+            competence,
+            type: 'mensalidade',
+            amount: existingSettings.monthly_fee,
+            due_date: dueDate,
+            status: 'pendente'
+          });
+        }
+        if (existingSettings.per_capita > 0 && !existingMap.has(`${member.id}-percapita`)) {
+          newCharges.push({
+            member_id: member.id,
+            competence,
+            type: 'percapita',
+            amount: existingSettings.per_capita,
+            due_date: dueDate,
+            status: 'pendente'
+          });
+        }
+      }
+
+      if (newCharges.length === 0) {
+        toast.info('Todas as cobranças já foram geradas para esta competência');
+        return;
+      }
+
+      const { error } = await supabase.from('charges').insert(newCharges);
+      if (error) throw error;
+
+      toast.success(`${newCharges.length} cobranças geradas com sucesso!`);
+    } catch (error: any) {
+      toast.error('Erro ao gerar cobranças: ' + error.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Configurações da Competência
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Seletor de competência */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Mês</Label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map(month => (
+                    <SelectItem key={month} value={month}>{month}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Ano</Label>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Valores */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Mensalidade (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.monthly_fee}
+                onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Per Capita (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={formData.per_capita}
+                onChange={(e) => setFormData({ ...formData, per_capita: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Dia do Vencimento</Label>
+              <Input
+                type="number"
+                min="1"
+                max="28"
+                value={formData.due_day}
+                onChange={(e) => setFormData({ ...formData, due_day: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Observações */}
+          <div className="space-y-2">
+            <Label>Observações</Label>
+            <Textarea
+              placeholder="Observações sobre esta competência..."
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            />
+          </div>
+
+          {/* Ações */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={handleSave} disabled={loading}>
+              <Save className="h-4 w-4 mr-2" />
+              {loading ? 'Salvando...' : 'Salvar Configurações'}
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={handleGenerateCharges} 
+              disabled={generating || !existingSettings}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              {generating ? 'Gerando...' : `Gerar Cobranças (${activeMembers} membros)`}
+            </Button>
+          </div>
+
+          {existingSettings && (
+            <p className="text-sm text-muted-foreground">
+              Configurações salvas em {new Date(existingSettings.updated_at).toLocaleString('pt-BR')}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

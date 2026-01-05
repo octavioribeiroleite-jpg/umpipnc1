@@ -7,16 +7,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MembrosTab } from '@/components/financas/MembrosTab';
 import { MensalidadesTab } from '@/components/financas/MensalidadesTab';
 import { GastosTab } from '@/components/financas/GastosTab';
+import { CobrancasTab } from '@/components/financas/CobrancasTab';
+import { CamisasTab } from '@/components/financas/CamisasTab';
+import { ConfiguracoesTab } from '@/components/financas/ConfiguracoesTab';
+import { RelatoriosTab } from '@/components/financas/RelatoriosTab';
 import {
   DollarSign,
   TrendingUp,
   TrendingDown,
+  Users,
 } from 'lucide-react';
 
 interface Stats {
   saldo: number;
   mensalidadesMes: number;
   gastosMes: number;
+  adimplencia: number;
 }
 
 function StatCard({
@@ -54,8 +60,8 @@ function StatCard({
 }
 
 export default function Financas() {
-  const [activeTab, setActiveTab] = useState('membros');
-  const [stats, setStats] = useState<Stats>({ saldo: 0, mensalidadesMes: 0, gastosMes: 0 });
+  const [activeTab, setActiveTab] = useState('cobrancas');
+  const [stats, setStats] = useState<Stats>({ saldo: 0, mensalidadesMes: 0, gastosMes: 0, adimplencia: 0 });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -70,37 +76,46 @@ export default function Financas() {
       ];
       const competence = `${months[currentMonth]}/${currentYear}`;
 
-      const [paymentsRes, transactionsRes] = await Promise.all([
-        supabase
-          .from('membership_payments')
-          .select('amount')
-          .eq('status', 'pago')
-          .eq('competence', competence),
+      const [transactionsRes, chargesRes] = await Promise.all([
         supabase
           .from('transactions')
           .select('amount, type')
           .gte('date', startOfMonth)
           .lte('date', endOfMonth),
+        supabase
+          .from('charges')
+          .select('status')
+          .eq('competence', competence)
       ]);
 
-      const mensalidadesMes = (paymentsRes.data || []).reduce((sum, p) => sum + Number(p.amount), 0);
+      const entradas = (transactionsRes.data || [])
+        .filter((t) => t.type === 'entrada')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
       
-      const allPayments = await supabase.from('membership_payments').select('amount').eq('status', 'pago');
-      const allTransactions = await supabase.from('transactions').select('amount, type');
+      const saidas = (transactionsRes.data || [])
+        .filter((t) => t.type === 'saida')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      const totalEntradas = (allPayments.data || []).reduce((sum, p) => sum + Number(p.amount), 0);
+      // Calcular saldo total (todas as transações)
+      const allTransactions = await supabase.from('transactions').select('amount, type');
+      const totalEntradas = (allTransactions.data || [])
+        .filter((t) => t.type === 'entrada')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
       const totalSaidas = (allTransactions.data || [])
         .filter((t) => t.type === 'saida')
         .reduce((sum, t) => sum + Number(t.amount), 0);
-      
-      const gastosMes = (transactionsRes.data || [])
-        .filter((t) => t.type === 'saida')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      // Calcular adimplência
+      const charges = chargesRes.data || [];
+      const totalCharges = charges.length;
+      const paidCharges = charges.filter(c => c.status === 'pago').length;
+      const adimplencia = totalCharges > 0 ? Math.round((paidCharges / totalCharges) * 100) : 0;
 
       setStats({
         saldo: totalEntradas - totalSaidas,
-        mensalidadesMes,
-        gastosMes,
+        mensalidadesMes: entradas,
+        gastosMes: saidas,
+        adimplencia,
       });
     };
 
@@ -109,8 +124,8 @@ export default function Financas() {
     // Subscribe to changes
     const channel = supabase
       .channel('financas-stats')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'membership_payments' }, fetchStats)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, fetchStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'charges' }, fetchStats)
       .subscribe();
 
     return () => {
@@ -122,11 +137,11 @@ export default function Financas() {
     <AppLayout>
       <PageHeader
         title="Finanças"
-        description="Gerencie membros, mensalidades e gastos"
+        description="Gerencie cobranças, membros, camisas e gastos"
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           title="Saldo Atual"
           value={`R$ ${stats.saldo.toFixed(2).replace('.', ',')}`}
@@ -134,7 +149,7 @@ export default function Financas() {
           variant={stats.saldo >= 0 ? 'success' : 'destructive'}
         />
         <StatCard
-          title="Contribuições (mês)"
+          title="Receitas (mês)"
           value={`R$ ${stats.mensalidadesMes.toFixed(2).replace('.', ',')}`}
           icon={TrendingUp}
           variant="success"
@@ -145,25 +160,51 @@ export default function Financas() {
           icon={TrendingDown}
           variant="destructive"
         />
+        <StatCard
+          title="Adimplência"
+          value={`${stats.adimplencia}%`}
+          icon={Users}
+          variant={stats.adimplencia >= 70 ? 'success' : stats.adimplencia >= 50 ? 'default' : 'destructive'}
+        />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex-wrap h-auto gap-1">
+          <TabsTrigger value="cobrancas">Cobranças</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
-          <TabsTrigger value="mensalidades">Contribuições</TabsTrigger>
+          <TabsTrigger value="receitas">Receitas</TabsTrigger>
           <TabsTrigger value="gastos">Gastos</TabsTrigger>
+          <TabsTrigger value="camisas">Camisas</TabsTrigger>
+          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+          <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="membros">
+        <TabsContent value="cobrancas" className="animate-in fade-in-50">
+          <CobrancasTab />
+        </TabsContent>
+
+        <TabsContent value="membros" className="animate-in fade-in-50">
           <MembrosTab />
         </TabsContent>
 
-        <TabsContent value="mensalidades">
+        <TabsContent value="receitas" className="animate-in fade-in-50">
           <MensalidadesTab />
         </TabsContent>
 
-        <TabsContent value="gastos">
+        <TabsContent value="gastos" className="animate-in fade-in-50">
           <GastosTab />
+        </TabsContent>
+
+        <TabsContent value="camisas" className="animate-in fade-in-50">
+          <CamisasTab />
+        </TabsContent>
+
+        <TabsContent value="relatorios" className="animate-in fade-in-50">
+          <RelatoriosTab />
+        </TabsContent>
+
+        <TabsContent value="configuracoes" className="animate-in fade-in-50">
+          <ConfiguracoesTab />
         </TabsContent>
       </Tabs>
     </AppLayout>

@@ -93,6 +93,72 @@ export type Database = {
           },
         ]
       }
+      charges: {
+        Row: {
+          amount: number
+          competence: string
+          created_at: string
+          due_date: string
+          id: string
+          member_id: string
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          receipt_url: string | null
+          status: string
+          transaction_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          competence: string
+          created_at?: string
+          due_date: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string
+          transaction_id?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          competence?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string
+          transaction_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charges_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charges_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contributions: {
         Row: {
           agenda_item_id: string | null
@@ -282,6 +348,39 @@ export type Database = {
           id?: string
           name?: string
           type?: string
+        }
+        Relationships: []
+      }
+      financial_settings: {
+        Row: {
+          competence: string
+          created_at: string
+          due_day: number
+          id: string
+          monthly_fee: number
+          notes: string | null
+          per_capita: number
+          updated_at: string
+        }
+        Insert: {
+          competence: string
+          created_at?: string
+          due_day?: number
+          id?: string
+          monthly_fee?: number
+          notes?: string | null
+          per_capita?: number
+          updated_at?: string
+        }
+        Update: {
+          competence?: string
+          created_at?: string
+          due_day?: number
+          id?: string
+          monthly_fee?: number
+          notes?: string | null
+          per_capita?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -487,6 +586,175 @@ export type Database = {
         }
         Relationships: []
       }
+      shirt_inventory: {
+        Row: {
+          average_cost: number
+          id: string
+          quantity: number
+          size: string
+          updated_at: string
+        }
+        Insert: {
+          average_cost?: number
+          id?: string
+          quantity?: number
+          size: string
+          updated_at?: string
+        }
+        Update: {
+          average_cost?: number
+          id?: string
+          quantity?: number
+          size?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shirt_purchase_items: {
+        Row: {
+          id: string
+          purchase_id: string
+          quantity: number
+          size: string
+        }
+        Insert: {
+          id?: string
+          purchase_id: string
+          quantity?: number
+          size: string
+        }
+        Update: {
+          id?: string
+          purchase_id?: string
+          quantity?: number
+          size?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shirt_purchase_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "shirt_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shirt_purchases: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          notes: string | null
+          receipt_url: string | null
+          supplier: string | null
+          total_cost: number
+          total_quantity: number
+          transaction_id: string | null
+          unit_cost: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date?: string
+          id?: string
+          notes?: string | null
+          receipt_url?: string | null
+          supplier?: string | null
+          total_cost: number
+          total_quantity: number
+          transaction_id?: string | null
+          unit_cost?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          receipt_url?: string | null
+          supplier?: string | null
+          total_cost?: number
+          total_quantity?: number
+          transaction_id?: string | null
+          unit_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shirt_purchases_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shirt_sales: {
+        Row: {
+          buyer_name: string | null
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          member_id: string | null
+          notes: string | null
+          payment_method: string | null
+          quantity: number
+          receipt_url: string | null
+          size: string
+          total_price: number | null
+          transaction_id: string | null
+          unit_price: number
+        }
+        Insert: {
+          buyer_name?: string | null
+          created_at?: string
+          created_by: string
+          date?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          quantity: number
+          receipt_url?: string | null
+          size: string
+          total_price?: number | null
+          transaction_id?: string | null
+          unit_price: number
+        }
+        Update: {
+          buyer_name?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          quantity?: number
+          receipt_url?: string | null
+          size?: string
+          total_price?: number | null
+          transaction_id?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shirt_sales_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shirt_sales_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee_id: string | null
@@ -546,7 +814,11 @@ export type Database = {
           date: string
           description: string
           id: string
+          member_id: string | null
+          origin: string | null
           receipt_url: string | null
+          reference_id: string | null
+          reference_type: string | null
           type: string
           updated_at: string
         }
@@ -558,7 +830,11 @@ export type Database = {
           date?: string
           description: string
           id?: string
+          member_id?: string | null
+          origin?: string | null
           receipt_url?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
           type: string
           updated_at?: string
         }
@@ -570,7 +846,11 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          member_id?: string | null
+          origin?: string | null
           receipt_url?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
           type?: string
           updated_at?: string
         }
@@ -580,6 +860,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "financial_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
             referencedColumns: ["id"]
           },
         ]
