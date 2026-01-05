@@ -4,9 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Loader2, TrendingUp, Users, PieChartIcon, BarChart3, Download, FileText, Wallet, ArrowDownCircle, ArrowUpCircle, Percent, ImageIcon } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -437,7 +436,7 @@ export function RelatoriosTab() {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Tooltip formatter={(value: number) => `${value} membros`} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -487,10 +486,7 @@ export function RelatoriosTab() {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="month" className="text-xs" />
                     <YAxis className="text-xs" tickFormatter={(v) => `R$${v}`} />
-                    <ChartTooltip 
-                      content={<ChartTooltipContent />}
-                      formatter={(value: number) => `R$ ${value.toFixed(2)}`}
-                    />
+                    <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
                     <Legend />
                     <Bar dataKey="receitas" name="Receitas" fill={COLORS.receita} radius={[4, 4, 0, 0]} />
                     <Bar dataKey="despesas" name="Despesas" fill={COLORS.despesa} radius={[4, 4, 0, 0]} />
@@ -514,10 +510,7 @@ export function RelatoriosTab() {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="month" className="text-xs" />
                     <YAxis className="text-xs" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-                    <ChartTooltip 
-                      content={<ChartTooltipContent />}
-                      formatter={(value: number) => `${value}%`}
-                    />
+                    <Tooltip formatter={(value: number) => `${value}%`} />
                     <Line 
                       type="monotone" 
                       dataKey="rate" 
@@ -557,10 +550,7 @@ export function RelatoriosTab() {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <ChartTooltip 
-                        content={<ChartTooltipContent />}
-                        formatter={(value: number) => `R$ ${value.toFixed(2)}`}
-                      />
+                      <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
