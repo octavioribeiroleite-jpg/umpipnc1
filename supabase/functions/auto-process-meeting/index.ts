@@ -348,17 +348,21 @@ REGRAS:
 7. Termine com bênção ou palavra de encorajamento
 8. NÃO inclua detalhes administrativos internos
 
-FORMATO DE COMPROMISSOS/EVENTOS - MUITO IMPORTANTE:
-- Ao listar próximos compromissos, eventos ou datas importantes, SEMPRE colocar a data PRIMEIRO
-- Formato obrigatório: DD/MM/AAAA: Descrição do evento
+FORMATO DE COMPROMISSOS/EVENTOS - REGRA OBRIGATÓRIA:
+- Ao listar próximos compromissos, eventos ou datas importantes, A DATA DEVE VIR SEMPRE PRIMEIRO
+- Formato OBRIGATÓRIO: DD/MM/AAAA: NOME DO EVENTO em local, às hora.
+- Inclua sempre: data, nome do evento em MAIÚSCULO ou destaque, local (se houver), horário (se houver)
 - Exemplo CORRETO:
-  *Próximos compromissos:*
-  • 18/05/2025: Lual jardim camburi
-  • 25/05/2025: Culto especial
-  • 01/06/2025: Reunião de oração
-- Exemplo ERRADO:
-  • Lual jardim camburi - 18/05/2025
-  • Culto especial no dia 25/05/2025
+  *Fiquem atentos para as seguintes datas:*
+  📅 18/05/2026: LUAL em Jardim Camburi, às 20h. Venham desfrutar de um tempo de comunhão!
+  📖 19/05/2026: ESTUDO BÍBLICO na casa do irmão Octávio, às 19h30.
+  🎉 20/05/2026: ANIVERSÁRIO DA UMP. Vamos celebrar juntos!
+  🙏 25/05/2026: EVANGELIZAÇÃO. Um dia para compartilhar o amor de Cristo!
+- Exemplo ERRADO (NUNCA FAZER):
+  • LUAL em Jardim Camburi: 18 de maio de 2026
+  • Estudo bíblico no dia 19/05/2026
+  • 18 de maio de 2026, às 20h - Lual
+- A DATA SEMPRE VEM ANTES, seguida de dois pontos, depois o nome do evento
 
 FORMATO DE NEGRITO - MUITO IMPORTANTE:
 - Use APENAS UM asterisco de cada lado para negrito: *texto*
@@ -368,7 +372,7 @@ FORMATO DE NEGRITO - MUITO IMPORTANTE:
 
 FORMATO GERAL:
 - Use quebras de linha para separar seções
-- Use bullet points (•) para listas
+- Use bullet points (•) ou emojis temáticos para listas
 - Destaque datas e eventos importantes com *negrito*`;
 
     const whatsappUserPrompt = `Transforme esta ata em mensagem de WhatsApp para os membros:\n\n${finalMinutes}`;
