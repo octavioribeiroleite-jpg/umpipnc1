@@ -102,6 +102,7 @@ export type Database = {
           id: string
           member_id: string
           notes: string | null
+          paid_amount: number | null
           paid_at: string | null
           payment_method: string | null
           receipt_url: string | null
@@ -118,6 +119,7 @@ export type Database = {
           id?: string
           member_id: string
           notes?: string | null
+          paid_amount?: number | null
           paid_at?: string | null
           payment_method?: string | null
           receipt_url?: string | null
@@ -134,6 +136,7 @@ export type Database = {
           id?: string
           member_id?: string
           notes?: string | null
+          paid_amount?: number | null
           paid_at?: string | null
           payment_method?: string | null
           receipt_url?: string | null

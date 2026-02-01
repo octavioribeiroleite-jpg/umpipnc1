@@ -15,11 +15,13 @@ interface ChargeCardProps {
     amount: number;
     status: string;
     due_date: string;
+    paid_amount?: number | null;
   } | null;
   percapita?: {
     amount: number;
     status: string;
     due_date?: string;
+    paid_amount?: number | null;
   } | null;
   hasPendingCharges: boolean;
   onPayment: () => void;
@@ -29,19 +31,29 @@ interface ChargeCardProps {
   onEditPercapita?: () => void;
 }
 
-const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pago: 'default',
-  pendente: 'destructive',
-  isento: 'secondary',
-  cancelado: 'outline',
-};
-
 const statusLabels: Record<string, string> = {
   pago: 'Pago',
   pendente: 'Pendente',
   isento: 'Isento',
   cancelado: 'Cancelado',
 };
+
+function getStatusBadge(status: string, amount: number, paidAmount?: number | null) {
+  const isPartial = status === 'pago' && paidAmount !== null && paidAmount !== undefined && paidAmount < amount;
+  
+  if (isPartial) {
+    return <Badge variant="secondary" className="text-[10px] bg-warning/20 text-warning-foreground border-warning">Parcial</Badge>;
+  }
+  
+  const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    pago: 'default',
+    pendente: 'destructive',
+    isento: 'secondary',
+    cancelado: 'outline',
+  };
+  
+  return <Badge variant={statusVariants[status]} className="text-[10px]">{statusLabels[status]}</Badge>;
+}
 
 export function ChargeCard({
   memberName,
@@ -72,9 +84,7 @@ export function ChargeCard({
                     <span className="text-sm font-medium">
                       R$ {mensalidade.amount.toFixed(2).replace('.', ',')}
                     </span>
-                    <Badge variant={statusVariants[mensalidade.status]} className="text-[10px]">
-                      {statusLabels[mensalidade.status]}
-                    </Badge>
+                    {getStatusBadge(mensalidade.status, mensalidade.amount, mensalidade.paid_amount)}
                   </div>
                 </div>
               )}
@@ -86,9 +96,7 @@ export function ChargeCard({
                     <span className="text-sm font-medium">
                       R$ {percapita.amount.toFixed(2).replace('.', ',')}
                     </span>
-                    <Badge variant={statusVariants[percapita.status]} className="text-[10px]">
-                      {statusLabels[percapita.status]}
-                    </Badge>
+                    {getStatusBadge(percapita.status, percapita.amount, percapita.paid_amount)}
                   </div>
                 </div>
               )}

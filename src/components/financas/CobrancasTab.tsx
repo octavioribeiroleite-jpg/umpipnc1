@@ -33,6 +33,7 @@ interface Charge {
   member_id: string;
   type: string;
   amount: number;
+  paid_amount: number | null;
   status: string;
   due_date: string;
   paid_at: string | null;
@@ -63,6 +64,9 @@ export function CobrancasTab() {
   const [paymentNotes, setPaymentNotes] = useState('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Partial payment state
+  const [partialAmounts, setPartialAmounts] = useState<Record<string, string>>({});
+  const [isPartialPayment, setIsPartialPayment] = useState(false);
 
   // Dialog state - Editar Pagamento
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -106,7 +110,14 @@ export function CobrancasTab() {
     return charges.filter(c => c.member_id === memberId);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (charge: Charge) => {
+    const status = charge.status;
+    const isPartial = status === 'pago' && charge.paid_amount !== null && charge.paid_amount < charge.amount;
+    
+    if (isPartial) {
+      return <Badge variant="secondary" className="bg-warning/20 text-warning-foreground border-warning">Parcial</Badge>;
+    }
+    
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       pago: 'default',
       pendente: 'destructive',
@@ -130,12 +141,32 @@ export function CobrancasTab() {
     const mensalidade = mCharges.find(c => c.type === 'mensalidade');
     const percapita = mCharges.find(c => c.type === 'percapita');
     
-    setPayMensalidade(mensalidade?.status === 'pendente');
-    setPayPercapita(percapita?.status === 'pendente');
+    // Check for charges that can be paid (pendente or parcial)
+    const canPayMensalidade = mensalidade?.status === 'pendente' || 
+      (mensalidade?.status === 'pago' && mensalidade.paid_amount !== null && mensalidade.paid_amount < mensalidade.amount);
+    const canPayPercapita = percapita?.status === 'pendente' || 
+      (percapita?.status === 'pago' && percapita.paid_amount !== null && percapita.paid_amount < percapita.amount);
+    
+    setPayMensalidade(canPayMensalidade || false);
+    setPayPercapita(canPayPercapita || false);
     setPaymentDate(new Date().toISOString().slice(0, 16));
     setPaymentMethod('pix');
     setPaymentNotes('');
     setReceiptFile(null);
+    setIsPartialPayment(false);
+    
+    // Initialize partial amounts with remaining amounts
+    const amounts: Record<string, string> = {};
+    if (mensalidade && canPayMensalidade) {
+      const remaining = mensalidade.amount - (mensalidade.paid_amount || 0);
+      amounts[mensalidade.id] = remaining.toFixed(2);
+    }
+    if (percapita && canPayPercapita) {
+      const remaining = percapita.amount - (percapita.paid_amount || 0);
+      amounts[percapita.id] = remaining.toFixed(2);
+    }
+    setPartialAmounts(amounts);
+    
     setDialogOpen(true);
   };
 
@@ -160,19 +191,60 @@ export function CobrancasTab() {
     }
 
     const paidAt = new Date(paymentDate).toISOString();
-    const chargesToPay = memberCharges.filter(c => 
-      (c.type === 'mensalidade' && payMensalidade && c.status === 'pendente') ||
-      (c.type === 'percapita' && payPercapita && c.status === 'pendente')
-    );
+    
+    // Get charges to process (pendente or parcial)
+    const chargesToPay = memberCharges.filter(c => {
+      const isPending = c.status === 'pendente';
+      const isPartial = c.status === 'pago' && c.paid_amount !== null && c.paid_amount < c.amount;
+      const isSelected = (c.type === 'mensalidade' && payMensalidade) || (c.type === 'percapita' && payPercapita);
+      return isSelected && (isPending || isPartial);
+    });
+
+    if (chargesToPay.length === 0) {
+      toast.error('Nenhuma cobrança selecionada para pagamento');
+      return;
+    }
+
+    // Calculate amounts for each charge
+    const paymentsInfo = chargesToPay.map(charge => {
+      const enteredAmount = parseFloat(partialAmounts[charge.id] || '0');
+      const previouslyPaid = charge.paid_amount || 0;
+      const remainingAmount = charge.amount - previouslyPaid;
+      const amountToPay = isPartialPayment ? Math.min(enteredAmount, remainingAmount) : remainingAmount;
+      const newTotalPaid = previouslyPaid + amountToPay;
+      const isFullyPaid = newTotalPaid >= charge.amount;
+      
+      return {
+        charge,
+        amountToPay,
+        newTotalPaid,
+        isFullyPaid
+      };
+    });
+
+    // Validate amounts
+    for (const info of paymentsInfo) {
+      if (info.amountToPay <= 0) {
+        toast.error(`Informe um valor válido para ${info.charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}`);
+        return;
+      }
+    }
 
     // Atualização otimista - atualiza UI imediatamente
-    setCharges(prev => prev.map(c => 
-      chargesToPay.some(cp => cp.id === c.id)
-        ? { ...c, status: 'pago', paid_at: paidAt, payment_method: paymentMethod }
-        : c
-    ));
+    setCharges(prev => prev.map(c => {
+      const paymentInfo = paymentsInfo.find(p => p.charge.id === c.id);
+      if (!paymentInfo) return c;
+      
+      return { 
+        ...c, 
+        status: 'pago', 
+        paid_at: paidAt, 
+        payment_method: paymentMethod,
+        paid_amount: paymentInfo.newTotalPaid
+      };
+    }));
     setDialogOpen(false);
-    toast.success('Pagamento registrado!');
+    toast.success(isPartialPayment ? 'Pagamento parcial registrado!' : 'Pagamento registrado!');
 
     // Processar em background
     try {
@@ -191,12 +263,17 @@ export function CobrancasTab() {
         }
       }
 
-      for (const charge of chargesToPay) {
+      for (const info of paymentsInfo) {
+        const { charge, amountToPay, newTotalPaid } = info;
+        const partialNote = isPartialPayment && newTotalPaid < charge.amount 
+          ? ` (Pagamento parcial: R$ ${amountToPay.toFixed(2).replace('.', ',')} de R$ ${charge.amount.toFixed(2).replace('.', ',')})`
+          : '';
+
         const { data: transaction } = await supabase
           .from('transactions')
           .insert({
-            description: `${charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'} - ${selectedMember.name} - ${competence}`,
-            amount: charge.amount,
+            description: `${charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'} - ${selectedMember.name} - ${competence}${partialNote}`,
+            amount: amountToPay,
             type: 'entrada',
             date: paidAt.split('T')[0],
             created_by: user.id,
@@ -217,7 +294,8 @@ export function CobrancasTab() {
             payment_method: paymentMethod,
             receipt_url: receiptUrl,
             notes: paymentNotes,
-            transaction_id: transaction?.id
+            transaction_id: transaction?.id,
+            paid_amount: newTotalPaid
           })
           .eq('id', charge.id);
       }
@@ -265,7 +343,7 @@ export function CobrancasTab() {
     // Atualização otimista
     setCharges(prev => prev.map(c => 
       c.id === charge.id
-        ? { ...c, status: 'pendente', paid_at: null, payment_method: null, receipt_url: null, notes: null, transaction_id: null }
+        ? { ...c, status: 'pendente', paid_at: null, payment_method: null, receipt_url: null, notes: null, transaction_id: null, paid_amount: null }
         : c
     ));
     toast.success('Pagamento revertido para pendente!');
@@ -283,7 +361,8 @@ export function CobrancasTab() {
           payment_method: null,
           receipt_url: null,
           notes: null,
-          transaction_id: null
+          transaction_id: null,
+          paid_amount: null
         })
         .eq('id', charge.id);
     } catch (error: any) {
@@ -389,7 +468,12 @@ export function CobrancasTab() {
                   
                   if (!mensalidade && !percapita) return null;
 
-                  const hasPendingCharges = mensalidade?.status === 'pendente' || percapita?.status === 'pendente';
+                  // Check if charge can receive payment (pending or partial)
+                  const canPayMensalidade = mensalidade?.status === 'pendente' || 
+                    (mensalidade?.status === 'pago' && mensalidade.paid_amount !== null && mensalidade.paid_amount < mensalidade.amount);
+                  const canPayPercapita = percapita?.status === 'pendente' || 
+                    (percapita?.status === 'pago' && percapita.paid_amount !== null && percapita.paid_amount < percapita.amount);
+                  const hasPendingCharges = canPayMensalidade || canPayPercapita;
 
                   return (
                     <TableRow key={member.id}>
@@ -398,7 +482,7 @@ export function CobrancasTab() {
                         {mensalidade ? (
                           <div className="flex items-center gap-2">
                             <span>R$ {mensalidade.amount.toFixed(2).replace('.', ',')}</span>
-                            {getStatusBadge(mensalidade.status)}
+                            {getStatusBadge(mensalidade)}
                           </div>
                         ) : '-'}
                       </TableCell>
@@ -406,7 +490,7 @@ export function CobrancasTab() {
                         {percapita ? (
                           <div className="flex items-center gap-2">
                             <span>R$ {percapita.amount.toFixed(2).replace('.', ',')}</span>
-                            {getStatusBadge(percapita.status)}
+                            {getStatusBadge(percapita)}
                           </div>
                         ) : '-'}
                       </TableCell>
@@ -527,7 +611,12 @@ export function CobrancasTab() {
             
             if (!mensalidade && !percapita) return null;
 
-            const hasPendingCharges = mensalidade?.status === 'pendente' || percapita?.status === 'pendente';
+            // Check if charge can receive payment (pending or partial)
+            const canPayMensalidade = mensalidade?.status === 'pendente' || 
+              (mensalidade?.status === 'pago' && mensalidade.paid_amount !== null && mensalidade.paid_amount < mensalidade.amount);
+            const canPayPercapita = percapita?.status === 'pendente' || 
+              (percapita?.status === 'pago' && percapita.paid_amount !== null && percapita.paid_amount < percapita.amount);
+            const hasPendingCharges = canPayMensalidade || canPayPercapita;
 
             return (
               <ChargeCard
@@ -537,11 +626,13 @@ export function CobrancasTab() {
                   amount: mensalidade.amount,
                   status: mensalidade.status,
                   due_date: mensalidade.due_date,
+                  paid_amount: mensalidade.paid_amount,
                 } : null}
                 percapita={percapita ? {
                   amount: percapita.amount,
                   status: percapita.status,
                   due_date: percapita.due_date,
+                  paid_amount: percapita.paid_amount,
                 } : null}
                 hasPendingCharges={hasPendingCharges}
                 onPayment={() => openPaymentDialog(member)}
@@ -560,27 +651,83 @@ export function CobrancasTab() {
             <DialogTitle>Dar Baixa - {selectedMember?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
+            {/* Toggle for partial payment */}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="partial-payment"
+                checked={isPartialPayment}
+                onCheckedChange={(checked) => setIsPartialPayment(!!checked)}
+              />
+              <label htmlFor="partial-payment" className="text-sm font-medium">
+                Pagamento parcial
+              </label>
+            </div>
+
+            <div className="space-y-3">
               <Label>O que foi pago?</Label>
-              {memberCharges.map(charge => (
-                <div key={charge.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={charge.id}
-                    checked={charge.type === 'mensalidade' ? payMensalidade : payPercapita}
-                    onCheckedChange={(checked) => {
-                      if (charge.type === 'mensalidade') setPayMensalidade(!!checked);
-                      else setPayPercapita(!!checked);
-                    }}
-                    disabled={charge.status !== 'pendente'}
-                  />
-                  <label htmlFor={charge.id} className="text-sm">
-                    {charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'} - R$ {charge.amount.toFixed(2).replace('.', ',')}
-                    {charge.status !== 'pendente' && (
-                      <span className="text-muted-foreground ml-2">({charge.status})</span>
+              {memberCharges.map(charge => {
+                const isPending = charge.status === 'pendente';
+                const isPartialCharge = charge.status === 'pago' && charge.paid_amount !== null && charge.paid_amount < charge.amount;
+                const canPay = isPending || isPartialCharge;
+                const previouslyPaid = charge.paid_amount || 0;
+                const remainingAmount = charge.amount - previouslyPaid;
+                const isSelected = charge.type === 'mensalidade' ? payMensalidade : payPercapita;
+
+                return (
+                  <div key={charge.id} className="space-y-2 p-3 border rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={charge.id}
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          if (charge.type === 'mensalidade') setPayMensalidade(!!checked);
+                          else setPayPercapita(!!checked);
+                        }}
+                        disabled={!canPay}
+                      />
+                      <label htmlFor={charge.id} className="text-sm flex-1">
+                        <span className="font-medium">
+                          {charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}
+                        </span>
+                        <span className="text-muted-foreground ml-2">
+                          R$ {charge.amount.toFixed(2).replace('.', ',')}
+                        </span>
+                        {isPartialCharge && (
+                          <span className="text-warning ml-2">
+                            (Pago: R$ {previouslyPaid.toFixed(2).replace('.', ',')} | Restante: R$ {remainingAmount.toFixed(2).replace('.', ',')})
+                          </span>
+                        )}
+                        {!canPay && charge.status === 'pago' && !isPartialCharge && (
+                          <span className="text-muted-foreground ml-2">(Pago integralmente)</span>
+                        )}
+                      </label>
+                    </div>
+                    
+                    {/* Show amount input when partial payment is enabled and charge is selected */}
+                    {isPartialPayment && isSelected && canPay && (
+                      <div className="ml-6 flex items-center gap-2">
+                        <Label className="text-xs whitespace-nowrap">Valor a pagar:</Label>
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            max={remainingAmount}
+                            className="pl-10"
+                            value={partialAmounts[charge.id] || ''}
+                            onChange={(e) => setPartialAmounts(prev => ({
+                              ...prev,
+                              [charge.id]: e.target.value
+                            }))}
+                            placeholder={remainingAmount.toFixed(2)}
+                          />
+                        </div>
+                      </div>
                     )}
-                  </label>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="space-y-2">
@@ -663,13 +810,27 @@ export function CobrancasTab() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Valor</p>
+                  <p className="text-muted-foreground">Valor Total</p>
                   <p className="font-medium">R$ {viewingCharge.amount.toFixed(2).replace('.', ',')}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Status</p>
-                  {getStatusBadge(viewingCharge.status)}
+                  {getStatusBadge(viewingCharge)}
                 </div>
+                {viewingCharge.paid_amount !== null && viewingCharge.paid_amount !== undefined && (
+                  <>
+                    <div>
+                      <p className="text-muted-foreground">Valor Pago</p>
+                      <p className="font-medium text-success">R$ {viewingCharge.paid_amount.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                    {viewingCharge.paid_amount < viewingCharge.amount && (
+                      <div>
+                        <p className="text-muted-foreground">Valor Restante</p>
+                        <p className="font-medium text-warning">R$ {(viewingCharge.amount - viewingCharge.paid_amount).toFixed(2).replace('.', ',')}</p>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div>
                   <p className="text-muted-foreground">Data do Pagamento</p>
                   <p className="font-medium">{viewingCharge.paid_at ? new Date(viewingCharge.paid_at).toLocaleString('pt-BR') : '-'}</p>
