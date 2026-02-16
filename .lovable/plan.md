@@ -1,41 +1,25 @@
 
 
-## Configurar PWA com ícone personalizado UMP
+# Ajuste de Proporções do Dashboard Mobile
 
-### O que será feito
+## O que muda
 
-Transformar o app em um PWA (Progressive Web App) instalável, usando a imagem da UMP como ícone do app no celular.
+O dashboard atual mostra os cards de estatísticas empilhados (1 por linha) no mobile, ocupando muito espaço vertical. O objetivo é deixar mais compacto, similar ao segundo print de referência.
 
-### Etapas
+### Alterações planejadas:
 
-1. **Copiar o ícone para o projeto**
-   - Salvar a imagem enviada em `public/icons/icon-512x512.png`
-   - Criar versao 192x192 referenciando o mesmo arquivo (o navegador redimensiona)
+**1. Cards de estatísticas em grid 2x2 no mobile**
+- Atualmente: 1 coluna no mobile, cada card ocupa a linha inteira
+- Novo: Grid de 2 colunas no mobile, cards mais compactos
+- Reduzir padding interno dos cards para ficarem menores
 
-2. **Criar o arquivo `public/manifest.json`**
-   - Nome do app: "UMP"
-   - Nome curto: "UMP"
-   - Cores do tema baseadas no azul marinho do logo
-   - Ícones em 192x192 e 512x512
-   - Display: standalone (para parecer app nativo)
+**2. Ações rápidas em grid 2x2**
+- Atualmente: scroll horizontal
+- Novo: Grid de 2 colunas fixo, sem scroll, similar ao layout do print de referência
 
-3. **Criar o Service Worker (`public/sw.js`)**
-   - Cache básico para funcionamento offline
-   - Estratégia cache-first para assets estáticos
+**3. Espaçamentos mais compactos**
+- Reduzir margins e paddings gerais no mobile para melhor aproveitamento de tela
 
-4. **Atualizar `index.html`**
-   - Adicionar link para o manifest
-   - Adicionar meta tags para tema e cor
-   - Adicionar link para o favicon com a nova imagem
-   - Registrar o service worker
-
-### Resultado
-
-Ao acessar o site pelo celular, o navegador vai oferecer a opção "Adicionar à tela inicial". O app aparecerá com o ícone da UMP, abrirá em tela cheia (sem barra do navegador) e terá aparência de app nativo.
-
-### Detalhes técnicos
-
-- Manifest configurado com `display: standalone`, `theme_color: #1B2A4A`, `background_color: #ffffff`
-- Service worker com cache de assets estáticos para carregamento rápido
-- Favicon atualizado para usar a mesma imagem da UMP
+### Arquivo modificado:
+- `src/pages/Index.tsx` - Ajustar grid dos StatCards de `grid-cols-1` para `grid-cols-2` no mobile, ajustar layout das ações rápidas para grid 2x2, e reduzir espaçamentos internos dos componentes
 
