@@ -39,13 +39,11 @@ interface SummaryData {
 }
 
 export default function PainelPastor() {
-  const { user, profile, roles, loading: authLoading, signOut } = useAuth();
+  const { user, profile, roles, loading: authLoading, signOut, isAdmin, isPastor } = useAuth();
   const navigate = useNavigate();
   const [data, setData] = useState<SummaryData | null>(null);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const isPastor = roles.includes('pastor' as any);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -54,7 +52,7 @@ export default function PainelPastor() {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (!user || !isPastor) return;
+    if (!user || (!isPastor && !isAdmin)) return;
     const fetchData = async () => {
       setLoadingData(true);
       try {
@@ -70,7 +68,7 @@ export default function PainelPastor() {
       }
     };
     fetchData();
-  }, [user, isPastor]);
+  }, [user, isPastor, isAdmin]);
 
   if (authLoading) {
     return (
@@ -82,7 +80,7 @@ export default function PainelPastor() {
 
   if (!user) return null;
 
-  if (!isPastor) {
+  if (!isPastor && !isAdmin) {
     navigate('/');
     return null;
   }
@@ -155,6 +153,10 @@ export default function PainelPastor() {
         {/* AI General Summary */}
         {loadingData ? (
           <div className="space-y-4">
+            <div className="flex flex-col items-center justify-center py-8 gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Gerando resumo com IA... isso pode levar alguns segundos.</p>
+            </div>
             <Skeleton className="h-24" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
