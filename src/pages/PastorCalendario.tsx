@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronLeft, ChevronRight, Loader2, MapPin, Clock, Calendar, Info, Link, BookOpen, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, MapPin, Clock, Calendar, Info, Link, BookOpen, ChevronDown, Download } from 'lucide-react';
 import { useEvents, CalendarEvent } from '@/hooks/useEvents';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -20,6 +20,8 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { generateCalendarPDF } from '@/utils/generateCalendarPDF';
+import { toast } from 'sonner';
 
 const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const months = [
@@ -141,6 +143,28 @@ export default function PastorCalendario() {
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+
+  const handleDownloadPDF = () => {
+    if (filteredEvents.length === 0) {
+      toast.info('Nenhum evento para exportar neste mês.');
+      return;
+    }
+    const selectedSoc = societies.find(s => s.id === societyFilter);
+    const filterLabel = selectedSoc ? selectedSoc.name : 'Geral';
+    generateCalendarPDF({
+      events: filteredEvents,
+      month,
+      year,
+      societies,
+      getEventColor: (e) => getEventColor(e as CalendarEvent),
+      getEventSocietyName: (e) => {
+        const soc = getEventSociety(e as CalendarEvent);
+        return soc?.name || null;
+      },
+      filterLabel,
+    });
+    toast.success('PDF gerado com sucesso!');
+  };
 
   const getEventsForDate = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -291,22 +315,27 @@ export default function PastorCalendario() {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
-                <Select value={societyFilter} onValueChange={setSocietyFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px] h-8 text-xs md:text-sm">
-                    <SelectValue placeholder="Todas as Sociedades" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as Sociedades</SelectItem>
-                    {societies.map(s => (
-                      <SelectItem key={s.id} value={s.id}>
-                        <div className="flex items-center gap-2">
-                          <div className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                          {s.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Select value={societyFilter} onValueChange={setSocietyFilter}>
+                    <SelectTrigger className="w-full sm:w-[180px] h-8 text-xs md:text-sm">
+                      <SelectValue placeholder="Todas as Sociedades" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as Sociedades</SelectItem>
+                      {societies.map(s => (
+                        <SelectItem key={s.id} value={s.id}>
+                          <div className="flex items-center gap-2">
+                            <div className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                            {s.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleDownloadPDF} title="Gerar PDF">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="px-2 md:px-6">
