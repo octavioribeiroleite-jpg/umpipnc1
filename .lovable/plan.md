@@ -1,44 +1,45 @@
 
+# Adicionar Edicao de Nome na Gestao de Usuarios
 
-# Corrigir Service Worker - Cache Impedindo Atualizacoes
+## Objetivo
+Permitir que o admin altere o nome completo e o username de um usuario, alem da senha que ja existe.
 
-## Problema
-O Service Worker atual (`public/sw.js`) usa estrategia **cache-first**: ele sempre serve o conteudo do cache antes de tentar buscar da rede. Isso faz com que, apos publicar mudancas, os usuarios continuem vendo a versao antiga ate que o cache expire ou seja limpo manualmente.
+## Mudancas
 
-## Solucao
-Mudar a estrategia para **network-first** com fallback para cache. Isso garante que o usuario sempre receba a versao mais recente, e so use o cache quando estiver offline.
+### 1. Edge Function `update-user-password/index.ts`
+- Aceitar campos opcionais `new_full_name` e `new_username` no body, alem de `new_password`
+- Quando receber `new_full_name` ou `new_username`, atualizar na tabela `profiles`
+- Quando receber `new_username`, tambem atualizar o email no auth (`username@ipnc.local`) e o `user_metadata`
+- Pelo menos um dos tres campos deve ser enviado
+- Renomear a function nao e necessario, podemos reutilizar a mesma
 
-Tambem vamos incrementar a versao do cache (`CACHE_NAME`) para forcar a limpeza do cache antigo.
+### 2. `src/pages/Usuarios.tsx`
+- Transformar o dialog de "Alterar Senha" em "Editar Usuario"
+- Adicionar campos de nome completo e username no dialog, pre-preenchidos com os valores atuais
+- Senha continua opcional (so altera se preenchida)
+- Atualizar o botao e icone na tabela (trocar icone de chave por icone de edicao como `Pencil`)
+- Atualizar a funcao `handleChangePassword` para enviar os novos campos
 
 ## Detalhes tecnicos
 
-### Arquivo: `public/sw.js`
-
-**Mudancas:**
-1. Atualizar `CACHE_NAME` de `'ump-cache-v1'` para `'ump-cache-v2'` para invalidar o cache antigo
-2. Mudar o handler do evento `fetch` de cache-first para **network-first**:
-   - Tentar buscar da rede primeiro
-   - Se a rede responder, salvar no cache e retornar
-   - Se a rede falhar (offline), usar o cache como fallback
-3. Manter o pre-cache de assets estaticos no install para funcionamento offline
-
-**Codigo do novo fetch handler:**
-```javascript
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        return response;
-      })
-      .catch(() => caches.match(event.request))
-  );
-});
+### Edge Function - campos do body:
+```
+{
+  user_id: string (obrigatorio),
+  new_password?: string,
+  new_full_name?: string,
+  new_username?: string
+}
 ```
 
-## Resultado esperado
-- Usuarios sempre recebem a versao mais recente ao publicar
-- App continua funcionando offline com fallback do cache
-- Cache antigo (v1) sera automaticamente removido pelo evento `activate`
+A function vai:
+1. Validar que pelo menos um campo de alteracao foi enviado
+2. Se `new_password`: atualizar auth password + `profiles.plain_password`
+3. Se `new_full_name`: atualizar `profiles.full_name` + `auth.user_metadata.full_name`
+4. Se `new_username`: atualizar `profiles.username` + email no auth para `newusername@ipnc.local` + `auth.user_metadata.username`
+
+### Frontend - Dialog de edicao:
+- Campo "Nome completo" (pre-preenchido)
+- Campo "Usuario (login)" (pre-preenchido)
+- Campo "Nova senha" (vazio, opcional - so altera se preenchido)
+- Botao "Salvar"
