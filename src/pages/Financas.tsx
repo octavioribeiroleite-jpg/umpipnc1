@@ -45,14 +45,14 @@ function StatCard({
 
   return (
     <Card>
-      <CardContent className="pt-6">
+      <CardContent className="p-3 md:pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className={`text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
+            <p className="text-xs md:text-sm text-muted-foreground">{title}</p>
+            <p className={`text-lg md:text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
           </div>
-          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Icon className="h-6 w-6 text-primary" />
+          <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
           </div>
         </div>
       </CardContent>
@@ -157,7 +157,7 @@ export default function Financas() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
         <StatCard
           title="Saldo Atual"
           value={`R$ ${stats.saldo.toFixed(2).replace('.', ',')}`}
