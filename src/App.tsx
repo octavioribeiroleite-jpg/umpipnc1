@@ -19,6 +19,8 @@ import Configuracoes from "./pages/Configuracoes";
 import Usuarios from "./pages/Usuarios";
 import Plenarias from "./pages/Plenarias";
 import PlenariaDetalhe from "./pages/PlenariaDetalhe";
+import PainelPastor from "./pages/PainelPastor";
+import PastorSugestoes from "./pages/PastorSugestoes";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
@@ -47,6 +49,8 @@ const App = () => (
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/plenarias" element={<Plenarias />} />
             <Route path="/plenarias/:id" element={<PlenariaDetalhe />} />
+            <Route path="/pastor" element={<PainelPastor />} />
+            <Route path="/pastor-sugestoes" element={<PastorSugestoes />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

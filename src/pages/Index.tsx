@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { PastorNotificationBanner } from '@/components/pastor/PastorNotificationBanner';
+import { PastorLoginNotification } from '@/components/pastor/PastorLoginNotification';
 import { useEvents } from '@/hooks/useEvents';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -121,7 +123,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { user, loading, isPastor } = useAuth();
   const navigate = useNavigate();
   const { upcomingEvents, isUpcomingLoading } = useEvents();
   const [stats, setStats] = useState<Stats>({
@@ -134,8 +136,10 @@ export default function Index() {
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
+    } else if (!loading && user && isPastor) {
+      navigate('/pastor');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isPastor]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -210,10 +214,12 @@ export default function Index() {
 
   return (
     <AppLayout>
+      <PastorLoginNotification />
       <PageHeader
         title="Dashboard"
         description="Visão geral do painel da Diretoria de Jovens"
       />
+      <PastorNotificationBanner />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-6 md:mb-8">

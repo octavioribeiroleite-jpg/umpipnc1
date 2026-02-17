@@ -16,7 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 
-type AppRole = 'admin' | 'diretoria' | 'visualizador';
+type AppRole = 'admin' | 'diretoria' | 'visualizador' | 'pastor';
 
 interface UserWithRole {
   id: string;
@@ -33,12 +33,14 @@ const roleLabels: Record<AppRole, string> = {
   admin: 'Administrador',
   diretoria: 'Diretoria',
   visualizador: 'Visualizador',
+  pastor: 'Pastor',
 };
 
 const roleColors: Record<AppRole, string> = {
   admin: 'bg-destructive text-destructive-foreground',
   diretoria: 'bg-primary text-primary-foreground',
   visualizador: 'bg-muted text-muted-foreground',
+  pastor: 'bg-accent text-accent-foreground',
 };
 
 export default function Usuarios() {
@@ -317,6 +319,7 @@ export default function Usuarios() {
                         <SelectItem value="visualizador">Visualizador</SelectItem>
                         <SelectItem value="diretoria">Diretoria</SelectItem>
                         <SelectItem value="admin">Administrador</SelectItem>
+                        <SelectItem value="pastor">Pastor</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -405,6 +408,7 @@ export default function Usuarios() {
                             <SelectItem value="visualizador">Visualizador</SelectItem>
                             <SelectItem value="diretoria">Diretoria</SelectItem>
                             <SelectItem value="admin">Administrador</SelectItem>
+                            <SelectItem value="pastor">Pastor</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>

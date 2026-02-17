@@ -12,6 +12,7 @@ import {
   ChevronRight,
   UserCheck,
   ClipboardCheck,
+  Church,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,7 @@ const menuItems = [
 
 const adminMenuItems = [
   { icon: UserCheck, label: 'Usuários', path: '/usuarios' },
+  { icon: Church, label: 'Sugestões do Pastor', path: '/pastor-sugestoes' },
 ];
 
 const bottomMenuItems = [
