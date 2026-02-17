@@ -43,11 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Safety timeout - never stay loading forever
     const safetyTimer = setTimeout(() => {
-      if (isMounted && loading) {
+      if (isMounted) {
         console.warn('Auth loading safety timeout triggered');
         setLoading(false);
       }
-    }, 8000);
+    }, 4000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
