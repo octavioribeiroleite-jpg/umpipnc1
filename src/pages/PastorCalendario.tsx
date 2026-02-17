@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Loader2, MapPin, Clock, Calendar, Info, Link } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronLeft, ChevronRight, Loader2, MapPin, Clock, Calendar, Info, Link, BookOpen, ChevronDown } from 'lucide-react';
 import { useEvents, CalendarEvent } from '@/hooks/useEvents';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -212,6 +213,67 @@ export default function PastorCalendario() {
     <PastorLayout>
       <div className="space-y-4 md:space-y-6">
         <h1 className="text-lg md:text-xl font-bold">Calendário Unificado</h1>
+
+        {/* Theme & Guidelines Card */}
+        <Collapsible>
+          <Card className="border-primary/20 bg-primary/5">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-2 cursor-pointer hover:bg-primary/10 transition-colors rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-base md:text-lg">
+                      Tema 2026: RENOVO — Isaías 40.31
+                    </CardTitle>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+                </div>
+                <p className="text-sm text-muted-foreground italic mt-1">
+                  "Os que esperam no Senhor renovam as suas forças."
+                </p>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="space-y-4 pt-2">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Ênfases Trimestrais</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+                    {[
+                      { m: 'Jan', t: 'No silêncio' },
+                      { m: 'Fev', t: 'No altar' },
+                      { m: 'Mar', t: 'Da história' },
+                      { m: 'Abr', t: 'Pela cruz' },
+                      { m: 'Mai', t: 'Nos lares' },
+                      { m: 'Jun', t: 'Do compromisso' },
+                      { m: 'Jul', t: 'Da alegria' },
+                      { m: 'Ago', t: 'Para a missão' },
+                      { m: 'Set', t: 'Na visão' },
+                      { m: 'Out', t: 'Da gratidão' },
+                      { m: 'Nov', t: 'Da fidelidade' },
+                      { m: 'Dez', t: 'Da esperança' },
+                    ].map(({ m, t }) => (
+                      <div key={m} className="text-xs rounded-md border border-border/50 px-2 py-1.5 bg-background">
+                        <span className="font-semibold">{m}:</span> {t}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Diretrizes de Planejamento</h3>
+                  <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                    <li>Investir tempo no planejamento das atividades para o ano de 2026.</li>
+                    <li>Reunir a Executiva para discutir os trabalhos e demandas da Sociedade.</li>
+                    <li>Notificar a Junta Diaconal (Pres. Dc. Tiago) sobre reuniões e necessidades.</li>
+                    <li>Informar antecipadamente os avisos à Superintendência da EBD.</li>
+                    <li>Preparar a Sociedade para as programações de Março (Aniversário da Igreja).</li>
+                    <li>Trabalhar o tema anual e trimestral junto à Sociedade.</li>
+                  </ol>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Calendar Grid */}
