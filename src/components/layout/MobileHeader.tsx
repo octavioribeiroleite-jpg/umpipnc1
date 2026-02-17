@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import logoIpnc from '@/assets/logo-ipnc.png';
 
 export function MobileHeader() {
   const { user, profile, signOut } = useAuth();
@@ -32,9 +33,7 @@ export function MobileHeader() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border safe-top">
       <div className="flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">IP</span>
-          </div>
+          <img src={logoIpnc} alt="Renovo IPNC" className="h-8 w-8 object-contain" />
           <span className="font-semibold text-foreground">IPNC</span>
         </div>
 

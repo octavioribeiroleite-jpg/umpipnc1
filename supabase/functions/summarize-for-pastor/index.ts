@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
     const authHeader = req.headers.get('Authorization')!
     const callerClient = createClient(supabaseUrl, anonKey, {
@@ -28,7 +29,6 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Verify pastor or management role
     const { data: isPastor } = await callerClient.rpc('has_role', { _user_id: user.id, _role: 'pastor' })
     const { data: isManagement } = await callerClient.rpc('has_management_role', { _user_id: user.id })
     
@@ -39,9 +39,42 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Fetch all data for summary
-    const serviceClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey)
 
+    // Check for force parameter
+    let forceRefresh = false
+    try {
+      const body = await req.json()
+      forceRefresh = body?.force === true
+    } catch { /* no body or not JSON */ }
+
+    // Check cache first
+    if (!forceRefresh) {
+      const { data: cached } = await serviceClient
+        .from('pastor_summaries')
+        .select('*')
+        .eq('invalidated', false)
+        .is('society_id', null)
+        .order('generated_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (cached) {
+        return new Response(JSON.stringify({
+          summaries: cached.summaries,
+          stats: cached.stats,
+          meetings: cached.meetings_data,
+          events: cached.events_data,
+          plenaries: cached.plenaries_data,
+          generated_at: cached.generated_at,
+          from_cache: true,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    // Fetch all data for summary
     const [meetingsRes, tasksRes, transactionsRes, paymentsRes, membersRes, eventsRes, plenariesRes] = await Promise.all([
       serviceClient.from('meetings').select('id, title, date, status, meeting_notes').order('date', { ascending: false }).limit(5),
       serviceClient.from('tasks').select('id, title, status, priority, due_date'),
@@ -52,7 +85,6 @@ Deno.serve(async (req) => {
       serviceClient.from('plenaries').select('id, title, date, quorum_required').order('date', { ascending: false }).limit(3),
     ])
 
-    // Calculate financial summary
     const transactions = transactionsRes.data || []
     const payments = paymentsRes.data || []
     const totalEntradas = transactions.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0)
@@ -65,11 +97,16 @@ Deno.serve(async (req) => {
     const tasksPending = tasks.filter(t => t.status !== 'done').length
     const membersActive = (membersRes.data || []).filter(m => m.active).length
 
+    const stats = { saldo, totalEntradas, totalSaidas, totalMensalidades, membersActive, tasksDone, tasksPending }
+    const meetingsData = meetingsRes.data || []
+    const eventsData = eventsRes.data || []
+    const plenariesData = plenariesRes.data || []
+
     const dataContext = `
-DADOS DA UMP - DIRETORIA DE JOVENS:
+DADOS DA DIRETORIA - IPNC:
 
 REUNIÕES RECENTES:
-${(meetingsRes.data || []).map(m => `- "${m.title}" em ${m.date} (${m.status})${m.meeting_notes ? ` - Notas: ${m.meeting_notes.substring(0, 200)}` : ''}`).join('\n')}
+${meetingsData.map(m => `- "${m.title}" em ${m.date} (${m.status})${m.meeting_notes ? ` - Notas: ${m.meeting_notes.substring(0, 200)}` : ''}`).join('\n')}
 
 TAREFAS:
 - Concluídas: ${tasksDone}
@@ -86,10 +123,10 @@ FINANÇAS:
 MEMBROS: ${membersActive} ativos
 
 PRÓXIMOS EVENTOS:
-${(eventsRes.data || []).map(e => `- "${e.title}" em ${e.start_date}${e.location ? ` (${e.location})` : ''} - ${e.status}`).join('\n')}
+${eventsData.map(e => `- "${e.title}" em ${e.start_date}${e.location ? ` (${e.location})` : ''} - ${e.status}`).join('\n')}
 
 PLENÁRIAS RECENTES:
-${(plenariesRes.data || []).map(p => `- "${p.title}" em ${p.date} (quórum mínimo: ${p.quorum_required}%)`).join('\n')}
+${plenariesData.map(p => `- "${p.title}" em ${p.date} (quórum mínimo: ${p.quorum_required}%)`).join('\n')}
 `
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -103,7 +140,7 @@ ${(plenariesRes.data || []).map(p => `- "${p.title}" em ${p.date} (quórum míni
         messages: [
           {
             role: 'system',
-            content: `Você é um assistente que resume informações da UMP (União de Mocidade Presbiteriana) para o pastor da igreja. 
+            content: `Você é um assistente que resume informações da diretoria da IPNC para o pastor da igreja. 
 Gere um resumo claro, organizado e pastoral de cada seção. Use linguagem respeitosa e profissional.
 Retorne o resumo em formato JSON com as seguintes chaves:
 - reunioes: resumo das reuniões recentes (2-3 frases)
@@ -111,7 +148,7 @@ Retorne o resumo em formato JSON com as seguintes chaves:
 - tarefas: resumo das tarefas (2-3 frases)
 - eventos: resumo dos próximos eventos (2-3 frases)
 - plenarias: resumo das plenárias (2-3 frases)
-- geral: uma visão geral pastoral do progresso da UMP (3-4 frases)
+- geral: uma visão geral pastoral do progresso da diretoria (3-4 frases)
 Retorne APENAS o JSON válido, sem markdown.`
           },
           { role: 'user', content: dataContext }
@@ -140,17 +177,50 @@ Retorne APENAS o JSON válido, sem markdown.`
     try {
       summaries = JSON.parse(content)
     } catch {
-      // Try extracting JSON from markdown code block
       const match = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
       summaries = match ? JSON.parse(match[1]) : { geral: content }
     }
 
+    const generatedAt = new Date().toISOString()
+
+    // Save to cache using upsert
+    const { data: existing } = await serviceClient
+      .from('pastor_summaries')
+      .select('id')
+      .is('society_id', null)
+      .limit(1)
+      .single()
+
+    if (existing) {
+      await serviceClient.from('pastor_summaries').update({
+        summaries,
+        stats,
+        meetings_data: meetingsData,
+        events_data: eventsData,
+        plenaries_data: plenariesData,
+        generated_at: generatedAt,
+        invalidated: false,
+      }).eq('id', existing.id)
+    } else {
+      await serviceClient.from('pastor_summaries').insert({
+        summaries,
+        stats,
+        meetings_data: meetingsData,
+        events_data: eventsData,
+        plenaries_data: plenariesData,
+        generated_at: generatedAt,
+        invalidated: false,
+      })
+    }
+
     return new Response(JSON.stringify({
       summaries,
-      stats: { saldo, totalEntradas, totalSaidas, totalMensalidades, membersActive, tasksDone, tasksPending },
-      meetings: meetingsRes.data || [],
-      events: eventsRes.data || [],
-      plenaries: plenariesRes.data || [],
+      stats,
+      meetings: meetingsData,
+      events: eventsData,
+      plenaries: plenariesData,
+      generated_at: generatedAt,
+      from_cache: false,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

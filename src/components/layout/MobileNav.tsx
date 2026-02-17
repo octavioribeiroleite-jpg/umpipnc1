@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import logoIpnc from '@/assets/logo-ipnc.png';
 
 const menuItems = [
   { icon: Home, label: 'Home', path: '/' },
@@ -49,9 +50,12 @@ export function MobileNav() {
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar text-sidebar-foreground">
       <div className="flex items-center justify-between p-4">
-        <div className="flex flex-col">
-          <span className="font-display font-bold text-lg text-sidebar-primary">IPNC</span>
-          <span className="text-xs text-sidebar-muted">Diretoria de Jovens</span>
+        <div className="flex items-center gap-2">
+          <img src={logoIpnc} alt="Renovo IPNC" className="h-8 w-8 object-contain" />
+          <div className="flex flex-col">
+            <span className="font-display font-bold text-sm text-sidebar-primary">Renovo</span>
+            <span className="text-xs text-sidebar-muted">IPNC</span>
+          </div>
         </div>
         
         <Sheet open={open} onOpenChange={setOpen}>
@@ -64,9 +68,12 @@ export function MobileNav() {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-                <div className="flex flex-col">
-                  <span className="font-display font-bold text-lg text-sidebar-primary">IPNC</span>
-                  <span className="text-xs text-sidebar-muted">Diretoria de Jovens</span>
+                <div className="flex items-center gap-2">
+                  <img src={logoIpnc} alt="Renovo IPNC" className="h-8 w-8 object-contain" />
+                  <div className="flex flex-col">
+                    <span className="font-display font-bold text-sm text-sidebar-primary">Renovo</span>
+                    <span className="text-xs text-sidebar-muted">IPNC</span>
+                  </div>
                 </div>
               </div>
 
