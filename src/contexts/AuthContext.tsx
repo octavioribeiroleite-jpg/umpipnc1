@@ -113,16 +113,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (username: string, password: string) => {
-    // Look up actual email by username
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('username', username.toLowerCase().replace(/\s+/g, ''))
-      .maybeSingle();
+    // Use security definer function to look up email (bypasses RLS)
+    const cleanUsername = username.toLowerCase().replace(/\s+/g, '');
+    const { data: email } = await supabase.rpc('get_email_by_username', {
+      _username: cleanUsername,
+    });
 
-    const email = profileData?.email || `${username.toLowerCase().replace(/\s+/g, '')}@ipnc.local`;
+    const loginEmail = email || `${cleanUsername}@ipnc.local`;
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: loginEmail,
       password,
     });
     return { error };
