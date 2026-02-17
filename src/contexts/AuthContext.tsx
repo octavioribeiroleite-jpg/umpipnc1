@@ -4,6 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador' | 'pastor';
 
+interface Society {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+}
+
 interface Profile {
   id: string;
   user_id: string;
@@ -13,6 +20,7 @@ interface Profile {
   avatar_url: string | null;
   phone: string | null;
   active: boolean;
+  society_id: string | null;
 }
 
 interface AuthContextType {
@@ -26,6 +34,9 @@ interface AuthContextType {
   isAdmin: boolean;
   isManagement: boolean;
   isPastor: boolean;
+  society: Society | null;
+  selectedSocietyId: string | null;
+  setSelectedSocietyId: (id: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,12 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [society, setSociety] = useState<Society | null>(null);
+  const [selectedSocietyId, setSelectedSocietyId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     let initialLoadDone = false;
 
-    // Safety timeout - never stay loading forever
     const safetyTimer = setTimeout(() => {
       if (isMounted) {
         console.warn('Auth loading safety timeout triggered');
@@ -56,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Only fetch if initial load is done (avoid double fetch)
           if (initialLoadDone) {
             setTimeout(() => {
               if (isMounted) fetchProfileAndRoles(session.user.id);
@@ -65,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setProfile(null);
           setRoles([]);
+          setSociety(null);
           setLoading(false);
         }
       }
@@ -113,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setProfile(null);
         setRoles([]);
+        setSociety(null);
         setTimeout(() => {
           import('sonner').then(({ toast }) => {
             toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
@@ -124,6 +137,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (profileData) {
         setProfile(profileData as Profile);
+
+        // Fetch society if profile has society_id
+        if (profileData.society_id) {
+          const { data: societyData } = await supabase
+            .from('societies')
+            .select('*')
+            .eq('id', profileData.society_id)
+            .maybeSingle();
+          if (societyData) {
+            setSociety(societyData as Society);
+          }
+        } else {
+          setSociety(null);
+        }
       }
 
       const { data: rolesData } = await supabase
@@ -142,7 +169,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (username: string, password: string) => {
-    // Use security definer function to look up email (bypasses RLS)
     const cleanUsername = username.toLowerCase().replace(/\s+/g, '');
     const { data: email } = await supabase.rpc('get_email_by_username', {
       _username: cleanUsername,
@@ -162,6 +188,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setRoles([]);
+    setSociety(null);
+    setSelectedSocietyId(null);
   };
 
   const isAdmin = roles.includes('admin');
@@ -181,6 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         isManagement,
         isPastor,
+        society,
+        selectedSocietyId,
+        setSelectedSocietyId,
       }}
     >
       {children}

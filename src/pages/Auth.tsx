@@ -1,25 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Society {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+}
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  
-  const { signIn } = useAuth();
+  const [selectedSociety, setSelectedSociety] = useState('');
+  const [societies, setSocieties] = useState<Society[]>([]);
+
+  const { signIn, setSelectedSocietyId } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  useEffect(() => {
+    const fetchSocieties = async () => {
+      const { data } = await supabase
+        .from('societies')
+        .select('*')
+        .eq('active', true)
+        .order('name');
+      if (data) setSocieties(data as Society[]);
+    };
+    fetchSocieties();
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!selectedSociety) {
+      toast({
+        variant: 'destructive',
+        title: 'Selecione a sociedade',
+        description: 'Escolha sua sociedade antes de entrar.',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     const { error } = await signIn(username, password);
@@ -31,6 +64,8 @@ export default function Auth() {
         description: 'Usuário ou senha incorretos',
       });
     } else {
+      // Store selected society in context
+      setSelectedSocietyId(selectedSociety === 'geral' ? null : selectedSociety);
       toast({
         title: 'Bem-vindo!',
         description: 'Login realizado com sucesso.',
@@ -71,6 +106,33 @@ export default function Auth() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="society">Sociedade</Label>
+                  <Select value={selectedSociety} onValueChange={setSelectedSociety}>
+                    <SelectTrigger id="society">
+                      <SelectValue placeholder="Selecione sua sociedade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {societies.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: s.color }}
+                            />
+                            {s.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="geral">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-muted-foreground" />
+                          Geral (Admin / Pastor)
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="username">Usuário</Label>
                   <Input

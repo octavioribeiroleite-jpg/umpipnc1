@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trash2, UserPlus, Loader2, Pencil, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +18,13 @@ import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador' | 'pastor';
+
+interface Society {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+}
 
 interface UserWithRole {
   id: string;
@@ -27,6 +35,7 @@ interface UserWithRole {
   active: boolean;
   role: AppRole | null;
   created_at: string;
+  society_id: string | null;
 }
 
 const roleLabels: Record<AppRole, string> = {
@@ -46,6 +55,7 @@ const roleColors: Record<AppRole, string> = {
 export default function Usuarios() {
   const { isAdmin, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [societies, setSocieties] = useState<Society[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
@@ -57,7 +67,8 @@ export default function Usuarios() {
   const [newName, setNewName] = useState('');
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [newRole, setNewRole] = useState<AppRole>('visualizador');
+  const [newRole, setNewRole] = useState<AppRole>('diretoria');
+  const [newSocietyId, setNewSocietyId] = useState('');
 
   // Edit user dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -70,8 +81,18 @@ export default function Usuarios() {
   useEffect(() => {
     if (isAdmin) {
       fetchUsers();
+      fetchSocieties();
     }
   }, [isAdmin]);
+
+  const fetchSocieties = async () => {
+    const { data } = await supabase
+      .from('societies')
+      .select('*')
+      .eq('active', true)
+      .order('name');
+    if (data) setSocieties(data as Society[]);
+  };
 
   const fetchUsers = async () => {
     try {
@@ -101,6 +122,7 @@ export default function Usuarios() {
             active: profile.active,
             role: userRole?.role as AppRole | null,
             created_at: profile.created_at,
+            society_id: profile.society_id || null,
           };
         });
 
@@ -177,16 +199,23 @@ export default function Usuarios() {
       toast.error('Preencha todos os campos');
       return;
     }
+    if ((newRole === 'diretoria' || newRole === 'visualizador') && !newSocietyId) {
+      toast.error('Selecione a sociedade para este cargo');
+      return;
+    }
     setCreating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-user', {
-        body: {
-          full_name: newName,
-          username: newUsername,
-          password: newPassword,
-          role: newRole,
-        },
-      });
+      const body: Record<string, string> = {
+        full_name: newName,
+        username: newUsername,
+        password: newPassword,
+        role: newRole,
+      };
+      if (newSocietyId) {
+        body.society_id = newSocietyId;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-user', { body });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -196,7 +225,8 @@ export default function Usuarios() {
       setNewName('');
       setNewUsername('');
       setNewPassword('');
-      setNewRole('visualizador');
+      setNewRole('diretoria');
+      setNewSocietyId('');
       fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
@@ -253,6 +283,146 @@ export default function Usuarios() {
 
   const activeUsers = users.filter((u) => u.role);
 
+  const getUsersForSociety = (societyId: string | null) => {
+    if (societyId === null) {
+      return activeUsers.filter((u) => !u.society_id);
+    }
+    return activeUsers.filter((u) => u.society_id === societyId);
+  };
+
+  const renderUserTable = (filteredUsers: UserWithRole[]) => {
+    if (filteredUsers.length === 0) {
+      return (
+        <p className="text-center text-muted-foreground py-8">
+          Nenhum usuário nesta sociedade
+        </p>
+      );
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Usuário</TableHead>
+            <TableHead>Senha</TableHead>
+            <TableHead>Cargo</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredUsers.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">{user.full_name}</TableCell>
+              <TableCell>{user.username}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1">
+                  <span className="font-mono text-sm">
+                    {showPasswords[user.id]
+                      ? user.plain_password || '—'
+                      : '••••••'}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() =>
+                      setShowPasswords((prev) => ({
+                        ...prev,
+                        [user.id]: !prev[user.id],
+                      }))
+                    }
+                  >
+                    {showPasswords[user.id] ? (
+                      <EyeOff className="h-3 w-3" />
+                    ) : (
+                      <Eye className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+              </TableCell>
+              <TableCell>
+                <Select
+                  value={user.role || ''}
+                  onValueChange={(value) =>
+                    handleRoleChange(user.user_id, value as AppRole)
+                  }
+                  disabled={updatingUser === user.user_id}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue>
+                      {user.role && (
+                        <Badge className={roleColors[user.role]}>
+                          {roleLabels[user.role]}
+                        </Badge>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="visualizador">Visualizador</SelectItem>
+                    <SelectItem value="diretoria">Diretoria</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="pastor">Pastor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditUserId(user.user_id);
+                      setEditFullName(user.full_name);
+                      setEditUsername(user.username);
+                      setEditPassword('');
+                      setEditDialogOpen(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        disabled={deletingUser === user.user_id}
+                      >
+                        {deletingUser === user.user_id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remover usuário?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          O usuário {user.full_name} será desativado e perderá acesso ao sistema.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteUser(user.user_id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Remover
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  };
+
   return (
     <AppLayout>
       <PageHeader
@@ -278,7 +448,7 @@ export default function Usuarios() {
                 <DialogHeader>
                   <DialogTitle>Criar Novo Usuário</DialogTitle>
                   <DialogDescription>
-                    Defina o nome, usuário, senha e cargo do membro
+                    Defina o nome, sociedade, usuário, senha e cargo do membro
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -289,6 +459,27 @@ export default function Usuarios() {
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sociedade</Label>
+                    <Select value={newSocietyId} onValueChange={setNewSocietyId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a sociedade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {societies.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: s.color }}
+                              />
+                              {s.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Usuário (login)</Label>
@@ -316,8 +507,8 @@ export default function Usuarios() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="visualizador">Visualizador</SelectItem>
                         <SelectItem value="diretoria">Diretoria</SelectItem>
+                        <SelectItem value="visualizador">Visualizador</SelectItem>
                         <SelectItem value="admin">Administrador</SelectItem>
                         <SelectItem value="pastor">Pastor</SelectItem>
                       </SelectContent>
@@ -341,131 +532,50 @@ export default function Usuarios() {
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : activeUsers.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhum usuário ativo encontrado
-              </p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Senha</TableHead>
-                    <TableHead>Cargo</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.full_name}</TableCell>
-                      <TableCell>{user.username}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <span className="font-mono text-sm">
-                            {showPasswords[user.id]
-                              ? user.plain_password || '—'
-                              : '••••••'}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() =>
-                              setShowPasswords((prev) => ({
-                                ...prev,
-                                [user.id]: !prev[user.id],
-                              }))
-                            }
-                          >
-                            {showPasswords[user.id] ? (
-                              <EyeOff className="h-3 w-3" />
-                            ) : (
-                              <Eye className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={user.role || ''}
-                          onValueChange={(value) =>
-                            handleRoleChange(user.user_id, value as AppRole)
-                          }
-                          disabled={updatingUser === user.user_id}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue>
-                              {user.role && (
-                                <Badge className={roleColors[user.role]}>
-                                  {roleLabels[user.role]}
-                                </Badge>
-                              )}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="visualizador">Visualizador</SelectItem>
-                            <SelectItem value="diretoria">Diretoria</SelectItem>
-                            <SelectItem value="admin">Administrador</SelectItem>
-                            <SelectItem value="pastor">Pastor</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setEditUserId(user.user_id);
-                              setEditFullName(user.full_name);
-                              setEditUsername(user.username);
-                              setEditPassword('');
-                              setEditDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                disabled={deletingUser === user.user_id}
-                              >
-                                {deletingUser === user.user_id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Remover usuário?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  O usuário {user.full_name} será desativado e perderá acesso ao sistema.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteUser(user.user_id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Remover
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+              <Tabs defaultValue={societies[0]?.id || 'geral'} className="w-full">
+                <TabsList className="w-full flex flex-wrap h-auto gap-1 mb-4">
+                  {societies.map((s) => (
+                    <TabsTrigger
+                      key={s.id}
+                      value={s.id}
+                      className="data-[state=active]:text-white"
+                      style={{
+                        '--society-color': s.color,
+                      } as React.CSSProperties}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: s.color }}
+                        />
+                        <span>{s.name}</span>
+                        <Badge variant="secondary" className="ml-1 h-5 text-xs">
+                          {getUsersForSociety(s.id).length}
+                        </Badge>
+                      </div>
+                    </TabsTrigger>
                   ))}
-                </TableBody>
-              </Table>
+                  <TabsTrigger value="geral">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground" />
+                      <span>Geral</span>
+                      <Badge variant="secondary" className="ml-1 h-5 text-xs">
+                        {getUsersForSociety(null).length}
+                      </Badge>
+                    </div>
+                  </TabsTrigger>
+                </TabsList>
+
+                {societies.map((s) => (
+                  <TabsContent key={s.id} value={s.id}>
+                    {renderUserTable(getUsersForSociety(s.id))}
+                  </TabsContent>
+                ))}
+                <TabsContent value="geral">
+                  {renderUserTable(getUsersForSociety(null))}
+                </TabsContent>
+              </Tabs>
             )}
           </CardContent>
         </Card>
