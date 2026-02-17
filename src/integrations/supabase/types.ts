@@ -571,6 +571,53 @@ export type Database = {
         }
         Relationships: []
       }
+      pastor_summaries: {
+        Row: {
+          created_at: string
+          events_data: Json | null
+          generated_at: string
+          id: string
+          invalidated: boolean
+          meetings_data: Json | null
+          plenaries_data: Json | null
+          society_id: string | null
+          stats: Json | null
+          summaries: Json | null
+        }
+        Insert: {
+          created_at?: string
+          events_data?: Json | null
+          generated_at?: string
+          id?: string
+          invalidated?: boolean
+          meetings_data?: Json | null
+          plenaries_data?: Json | null
+          society_id?: string | null
+          stats?: Json | null
+          summaries?: Json | null
+        }
+        Update: {
+          created_at?: string
+          events_data?: Json | null
+          generated_at?: string
+          id?: string
+          invalidated?: boolean
+          meetings_data?: Json | null
+          plenaries_data?: Json | null
+          society_id?: string | null
+          stats?: Json | null
+          summaries?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pastor_summaries_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plenaries: {
         Row: {
           created_at: string
@@ -874,6 +921,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      societies: {
+        Row: {
+          active: boolean
+          color: string
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       tasks: {
         Row: {
