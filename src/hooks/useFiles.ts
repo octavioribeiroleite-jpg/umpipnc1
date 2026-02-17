@@ -33,12 +33,20 @@ export interface UploadFileParams {
 }
 
 export function useFiles(filters: FileFilters = {}) {
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+
   return useQuery({
-    queryKey: ['files', filters],
+    queryKey: ['files', filters, societyId],
     queryFn: async () => {
       let query = supabase
         .from('files')
         .select('*');
+
+      // Filter by society
+      if (societyId) {
+        query = query.eq('society_id', societyId);
+      }
 
       // Filter by search term
       if (filters.search) {
@@ -101,6 +109,13 @@ export function useUploadFile() {
         .from('receipts')
         .getPublicUrl(fileName);
 
+      // Get user's society_id
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('society_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       // Insert file record
       const { data, error } = await supabase
         .from('files')
@@ -114,6 +129,7 @@ export function useUploadFile() {
           meeting_id: meetingId || null,
           event_id: eventId || null,
           transaction_id: transactionId || null,
+          society_id: profileData?.society_id || null,
         })
         .select()
         .single();

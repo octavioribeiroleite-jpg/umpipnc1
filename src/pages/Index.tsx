@@ -123,7 +123,8 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function Index() {
-  const { user, loading, isPastor } = useAuth();
+  const { user, loading, isPastor, profile, isAdmin } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const navigate = useNavigate();
   const { upcomingEvents, isUpcomingLoading } = useEvents();
   const [stats, setStats] = useState<Stats>({
@@ -152,11 +153,22 @@ export default function Index() {
       ];
       const competence = `${months[currentMonth]}/${currentYear}`;
 
+      let paymentsQuery = supabase.from('membership_payments').select('amount, competence').eq('status', 'pago');
+      let transactionsQuery = supabase.from('transactions').select('amount, type');
+      let membersQuery = supabase.from('members').select('id').eq('active', true);
+      let tasksQuery = supabase.from('tasks').select('id').neq('status', 'done');
+
+      if (societyId) {
+        transactionsQuery = transactionsQuery.eq('society_id', societyId);
+        membersQuery = membersQuery.eq('society_id', societyId);
+        tasksQuery = tasksQuery.eq('society_id', societyId);
+      }
+
       const [paymentsRes, transactionsRes, membersRes, tasksRes] = await Promise.all([
-        supabase.from('membership_payments').select('amount, competence').eq('status', 'pago'),
-        supabase.from('transactions').select('amount, type'),
-        supabase.from('members').select('id').eq('active', true),
-        supabase.from('tasks').select('id').neq('status', 'done'),
+        paymentsQuery,
+        transactionsQuery,
+        membersQuery,
+        tasksQuery,
       ]);
 
       // Calcular mensalidades pagas

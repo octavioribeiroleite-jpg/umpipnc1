@@ -24,10 +24,12 @@ interface MeetingWithDetails extends Meeting {
 }
 
 export function useMeetings() {
-  const { user } = useAuth();
+  const { user, profile, isAdmin, isPastor } = useAuth();
   const [meetings, setMeetings] = useState<MeetingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
 
   const fetchMeetings = async () => {
     if (!user) return;
@@ -35,10 +37,16 @@ export function useMeetings() {
     setLoading(true);
     try {
       // Fetch meetings
-      const { data: meetingsData, error: meetingsError } = await supabase
+      let meetingsQuery = supabase
         .from('meetings')
         .select('*')
         .order('date', { ascending: false });
+
+      if (societyId) {
+        meetingsQuery = meetingsQuery.eq('society_id', societyId);
+      }
+
+      const { data: meetingsData, error: meetingsError } = await meetingsQuery;
 
       if (meetingsError) throw meetingsError;
 

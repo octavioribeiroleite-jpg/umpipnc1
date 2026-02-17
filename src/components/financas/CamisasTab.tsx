@@ -91,13 +91,25 @@ export function CamisasTab() {
     fetchData();
   }, []);
 
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+
   const fetchData = async () => {
     setLoading(true);
+    let invQuery = supabase.from('shirt_inventory').select('*').order('size');
+    let purchQuery = supabase.from('shirt_purchases').select('*').order('date', { ascending: false });
+    let salesQuery = supabase.from('shirt_sales').select('*').order('date', { ascending: false });
+    let membersQuery = supabase.from('members').select('id, name').eq('active', true).order('name');
+
+    if (societyId) {
+      invQuery = invQuery.eq('society_id', societyId);
+      purchQuery = purchQuery.eq('society_id', societyId);
+      salesQuery = salesQuery.eq('society_id', societyId);
+      membersQuery = membersQuery.eq('society_id', societyId);
+    }
+
     const [invRes, purchRes, salesRes, membersRes] = await Promise.all([
-      supabase.from('shirt_inventory').select('*').order('size'),
-      supabase.from('shirt_purchases').select('*').order('date', { ascending: false }),
-      supabase.from('shirt_sales').select('*').order('date', { ascending: false }),
-      supabase.from('members').select('id, name').eq('active', true).order('name')
+      invQuery, purchQuery, salesQuery, membersQuery
     ]);
 
     setInventory(invRes.data || []);
@@ -139,7 +151,8 @@ export function CamisasTab() {
           date: purchaseForm.date.split('T')[0],
           created_by: user.id,
           origin: 'automatic',
-          reference_type: 'shirt_purchase'
+          reference_type: 'shirt_purchase',
+          society_id: profile?.society_id || null,
         })
         .select('id')
         .single();
@@ -156,7 +169,8 @@ export function CamisasTab() {
           total_cost: totalCost,
           notes: purchaseForm.notes || null,
           transaction_id: transaction?.id,
-          created_by: user.id
+          created_by: user.id,
+          society_id: profile?.society_id || null,
         })
         .select('id')
         .single();
@@ -235,7 +249,8 @@ export function CamisasTab() {
           created_by: user.id,
           origin: 'automatic',
           reference_type: 'shirt_sale',
-          member_id: saleForm.member_id || null
+          member_id: saleForm.member_id || null,
+          society_id: profile?.society_id || null,
         })
         .select('id')
         .single();
@@ -255,7 +270,8 @@ export function CamisasTab() {
           payment_method: saleForm.payment_method || null,
           notes: saleForm.notes || null,
           transaction_id: transaction?.id,
-          created_by: user.id
+          created_by: user.id,
+          society_id: profile?.society_id || null,
         });
 
       // Atualizar estoque

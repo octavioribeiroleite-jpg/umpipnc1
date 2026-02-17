@@ -106,6 +106,7 @@ export type Database = {
           paid_at: string | null
           payment_method: string | null
           receipt_url: string | null
+          society_id: string | null
           status: string
           transaction_id: string | null
           type: string
@@ -123,6 +124,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           receipt_url?: string | null
+          society_id?: string | null
           status?: string
           transaction_id?: string | null
           type: string
@@ -140,6 +142,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           receipt_url?: string | null
+          society_id?: string | null
           status?: string
           transaction_id?: string | null
           type?: string
@@ -151,6 +154,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charges_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
             referencedColumns: ["id"]
           },
           {
@@ -279,6 +289,7 @@ export type Database = {
           meeting_id: string | null
           name: string
           size: number | null
+          society_id: string | null
           transaction_id: string | null
           type: string | null
           url: string
@@ -292,6 +303,7 @@ export type Database = {
           meeting_id?: string | null
           name: string
           size?: number | null
+          society_id?: string | null
           transaction_id?: string | null
           type?: string | null
           url: string
@@ -305,6 +317,7 @@ export type Database = {
           meeting_id?: string | null
           name?: string
           size?: number | null
+          society_id?: string | null
           transaction_id?: string | null
           type?: string | null
           url?: string
@@ -325,6 +338,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "files_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "files_transaction_id_fkey"
             columns: ["transaction_id"]
             isOneToOne: false
@@ -339,6 +359,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          society_id: string | null
           type: string
         }
         Insert: {
@@ -346,6 +367,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          society_id?: string | null
           type: string
         }
         Update: {
@@ -353,9 +375,18 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          society_id?: string | null
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "financial_categories_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       financial_settings: {
         Row: {
@@ -366,6 +397,7 @@ export type Database = {
           monthly_fee: number
           notes: string | null
           per_capita: number
+          society_id: string | null
           updated_at: string
         }
         Insert: {
@@ -376,6 +408,7 @@ export type Database = {
           monthly_fee?: number
           notes?: string | null
           per_capita?: number
+          society_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -386,9 +419,18 @@ export type Database = {
           monthly_fee?: number
           notes?: string | null
           per_capita?: number
+          society_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "financial_settings_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meeting_participants: {
         Row: {
@@ -429,6 +471,7 @@ export type Database = {
           id: string
           meeting_notes: string | null
           moderator_id: string
+          society_id: string | null
           status: Database["public"]["Enums"]["meeting_status"]
           title: string
           updated_at: string
@@ -443,6 +486,7 @@ export type Database = {
           id?: string
           meeting_notes?: string | null
           moderator_id: string
+          society_id?: string | null
           status?: Database["public"]["Enums"]["meeting_status"]
           title: string
           updated_at?: string
@@ -457,12 +501,21 @@ export type Database = {
           id?: string
           meeting_notes?: string | null
           moderator_id?: string
+          society_id?: string | null
           status?: Database["public"]["Enums"]["meeting_status"]
           title?: string
           updated_at?: string
           whatsapp_message?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "meetings_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       members: {
         Row: {
@@ -472,6 +525,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          society_id: string | null
           updated_at: string
         }
         Insert: {
@@ -481,6 +535,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          society_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -490,9 +545,18 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          society_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "members_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       membership_payments: {
         Row: {
@@ -770,6 +834,7 @@ export type Database = {
           id: string
           quantity: number
           size: string
+          society_id: string | null
           updated_at: string
         }
         Insert: {
@@ -777,6 +842,7 @@ export type Database = {
           id?: string
           quantity?: number
           size: string
+          society_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -784,9 +850,18 @@ export type Database = {
           id?: string
           quantity?: number
           size?: string
+          society_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shirt_inventory_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shirt_purchase_items: {
         Row: {
@@ -825,6 +900,7 @@ export type Database = {
           id: string
           notes: string | null
           receipt_url: string | null
+          society_id: string | null
           supplier: string | null
           total_cost: number
           total_quantity: number
@@ -838,6 +914,7 @@ export type Database = {
           id?: string
           notes?: string | null
           receipt_url?: string | null
+          society_id?: string | null
           supplier?: string | null
           total_cost: number
           total_quantity: number
@@ -851,6 +928,7 @@ export type Database = {
           id?: string
           notes?: string | null
           receipt_url?: string | null
+          society_id?: string | null
           supplier?: string | null
           total_cost?: number
           total_quantity?: number
@@ -858,6 +936,13 @@ export type Database = {
           unit_cost?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "shirt_purchases_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "shirt_purchases_transaction_id_fkey"
             columns: ["transaction_id"]
@@ -880,6 +965,7 @@ export type Database = {
           quantity: number
           receipt_url: string | null
           size: string
+          society_id: string | null
           total_price: number | null
           transaction_id: string | null
           unit_price: number
@@ -896,6 +982,7 @@ export type Database = {
           quantity: number
           receipt_url?: string | null
           size: string
+          society_id?: string | null
           total_price?: number | null
           transaction_id?: string | null
           unit_price: number
@@ -912,6 +999,7 @@ export type Database = {
           quantity?: number
           receipt_url?: string | null
           size?: string
+          society_id?: string | null
           total_price?: number | null
           transaction_id?: string | null
           unit_price?: number
@@ -922,6 +1010,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shirt_sales_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
             referencedColumns: ["id"]
           },
           {
@@ -970,6 +1065,7 @@ export type Database = {
           id: string
           meeting_id: string | null
           priority: Database["public"]["Enums"]["task_priority"]
+          society_id: string | null
           status: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at: string
@@ -983,6 +1079,7 @@ export type Database = {
           id?: string
           meeting_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
+          society_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at?: string
@@ -996,6 +1093,7 @@ export type Database = {
           id?: string
           meeting_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
+          society_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           title?: string
           updated_at?: string
@@ -1006,6 +1104,13 @@ export type Database = {
             columns: ["meeting_id"]
             isOneToOne: false
             referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
             referencedColumns: ["id"]
           },
         ]
@@ -1024,6 +1129,7 @@ export type Database = {
           receipt_url: string | null
           reference_id: string | null
           reference_type: string | null
+          society_id: string | null
           type: string
           updated_at: string
         }
@@ -1040,6 +1146,7 @@ export type Database = {
           receipt_url?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          society_id?: string | null
           type: string
           updated_at?: string
         }
@@ -1056,6 +1163,7 @@ export type Database = {
           receipt_url?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          society_id?: string | null
           type?: string
           updated_at?: string
         }
@@ -1072,6 +1180,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
             referencedColumns: ["id"]
           },
         ]

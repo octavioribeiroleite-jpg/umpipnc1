@@ -12,6 +12,7 @@ import { CobrancasTab } from '@/components/financas/CobrancasTab';
 import { CamisasTab } from '@/components/financas/CamisasTab';
 import { ConfiguracoesTab } from '@/components/financas/ConfiguracoesTab';
 import { RelatoriosTab } from '@/components/financas/RelatoriosTab';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DollarSign,
   TrendingUp,
@@ -61,6 +62,8 @@ function StatCard({
 }
 
 export default function Financas() {
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'cobrancas';
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -92,17 +95,22 @@ export default function Financas() {
       ];
       const competence = `${months[currentMonth]}/${currentYear}`;
 
-      const [transactionsRes, chargesRes] = await Promise.all([
-        supabase
+      let txQuery = supabase
           .from('transactions')
           .select('amount, type')
           .gte('date', startOfMonth)
-          .lte('date', endOfMonth),
-        supabase
+          .lte('date', endOfMonth);
+      let chargesQuery = supabase
           .from('charges')
           .select('status')
-          .eq('competence', competence)
-      ]);
+          .eq('competence', competence);
+
+      if (societyId) {
+        txQuery = txQuery.eq('society_id', societyId);
+        chargesQuery = chargesQuery.eq('society_id', societyId);
+      }
+
+      const [transactionsRes, chargesRes] = await Promise.all([txQuery, chargesQuery]);
 
       const entradas = (transactionsRes.data || [])
         .filter((t) => t.type === 'entrada')
@@ -113,7 +121,11 @@ export default function Financas() {
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       // Calcular saldo total (todas as transações)
-      const allTransactions = await supabase.from('transactions').select('amount, type');
+      let allTxQuery = supabase.from('transactions').select('amount, type');
+      if (societyId) {
+        allTxQuery = allTxQuery.eq('society_id', societyId);
+      }
+      const allTransactions = await allTxQuery;
       const totalEntradas = (allTransactions.data || [])
         .filter((t) => t.type === 'entrada')
         .reduce((sum, t) => sum + Number(t.amount), 0);

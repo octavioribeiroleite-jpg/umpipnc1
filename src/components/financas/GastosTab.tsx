@@ -82,12 +82,20 @@ export function GastosTab() {
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+
   const fetchData = async () => {
     setLoading(true);
-    const [txRes, catRes] = await Promise.all([
-      supabase.from('transactions').select('*').eq('type', 'saida').order('date', { ascending: false }),
-      supabase.from('financial_categories').select('*').eq('type', 'saida'),
-    ]);
+    let txQuery = supabase.from('transactions').select('*').eq('type', 'saida').order('date', { ascending: false });
+    let catQuery = supabase.from('financial_categories').select('*').eq('type', 'saida');
+
+    if (societyId) {
+      txQuery = txQuery.eq('society_id', societyId);
+      catQuery = catQuery.eq('society_id', societyId);
+    }
+
+    const [txRes, catRes] = await Promise.all([txQuery, catQuery]);
     if (!txRes.error) setTransactions(txRes.data || []);
     if (!catRes.error) setCategories(catRes.data || []);
     setLoading(false);
@@ -213,6 +221,7 @@ export function GastosTab() {
           date: formData.date,
           created_by: user?.id,
           origin: 'manual',
+          society_id: profile?.society_id || null,
         }).select().single();
         if (error) throw error;
         
