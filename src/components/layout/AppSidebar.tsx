@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
+  ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +25,7 @@ const menuItems = [
   { icon: Calendar, label: 'Calendário', path: '/calendario' },
   { icon: DollarSign, label: 'Finanças', path: '/financas' },
   { icon: FolderOpen, label: 'Arquivos', path: '/arquivos' },
+  { icon: ClipboardCheck, label: 'Plenárias', path: '/plenarias' },
 ];
 
 const adminMenuItems = [

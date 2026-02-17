@@ -17,6 +17,8 @@ import Financas from "./pages/Financas";
 import Arquivos from "./pages/Arquivos";
 import Configuracoes from "./pages/Configuracoes";
 import Usuarios from "./pages/Usuarios";
+import Plenarias from "./pages/Plenarias";
+import PlenariaDetalhe from "./pages/PlenariaDetalhe";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
@@ -43,6 +45,8 @@ const App = () => (
             <Route path="/arquivos" element={<Arquivos />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/plenarias" element={<Plenarias />} />
+            <Route path="/plenarias/:id" element={<PlenariaDetalhe />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
