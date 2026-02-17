@@ -1,201 +1,150 @@
 
-# Plano: Isolamento de Dados por Sociedade
 
-## Problema Atual
+# Plano: Painel do Pastor Reorganizado com Navegacao Propria
 
-Nenhuma tabela de dados (reunioes, tarefas, membros, financas, arquivos, camisas) possui `society_id`. Isso significa que todas as sociedades veem os mesmos dados. Apenas a tabela `profiles` tem `society_id` hoje.
+## Visao Geral
 
-## O que precisa mudar
-
-Adicionar `society_id` a todas as tabelas de dados e filtrar automaticamente com base na sociedade do usuario logado. O calendario (tabela `events`) permanece unificado.
+Transformar o painel do pastor em um mini-app com menu lateral proprio e paginas dedicadas, permitindo ao pastor navegar por cada sociedade individualmente e ter uma visao organizada de toda a igreja.
 
 ---
 
-## 1. Migracao do Banco de Dados
+## Estrutura do Novo Painel
 
-Adicionar coluna `society_id` (uuid, FK para `societies.id`) nas seguintes tabelas:
+```text
++-------------------+------------------------------------------+
+|                   |                                          |
+|  [Logo IPNC]     |   Conteudo da pagina selecionada         |
+|  Pastor Ronne    |                                          |
+|                   |                                          |
+|  > Visao Geral   |   Dashboard com alertas e stats globais  |
+|  > UMP           |   Dados especificos da UMP               |
+|  > SAF           |   Dados especificos da SAF               |
+|  > UPH           |   Dados especificos da UPH               |
+|  > UPA           |   Dados especificos da UPA               |
+|  > UCP           |   Dados especificos da UCP               |
+|  > Calendario    |   Calendario unificado de todas           |
+|  > Comunicados   |   Enviar avisos para sociedades           |
+|  > Sugestoes     |   Ver respostas das diretorias            |
+|                   |                                          |
+|  [Sair]          |                                          |
++-------------------+------------------------------------------+
+```
 
-| Tabela | Descricao |
-|--------|-----------|
-| `meetings` | Reunioes |
-| `tasks` | Tarefas |
-| `members` | Membros financeiros |
-| `transactions` | Transacoes financeiras |
-| `charges` | Cobrancas |
-| `files` | Arquivos |
-| `financial_settings` | Config. financeiras |
-| `financial_categories` | Categorias financeiras |
-| `shirt_inventory` | Estoque de camisas |
-| `shirt_purchases` | Compras de camisas |
-| `shirt_sales` | Vendas de camisas |
-
-**NAO** adicionar em:
-- `events` (calendario unificado)
-- `profiles` (ja tem)
-- `user_roles` (global)
-- `plenaries` / `plenary_attendance` (global)
-- `pastor_summaries` / `pastor_feedback` (global pastor)
-
-Tambem criar indices para performance em todas as colunas `society_id` adicionadas.
+No celular: header com titulo + bottom nav com 5 itens (Geral, Sociedades, Calendario, Comunicados, Sugestoes), onde "Sociedades" abre submenu com as 5 sociedades.
 
 ---
 
-## 2. AuthContext - Fornecer society_id globalmente
+## 1. Visao Geral (Dashboard)
 
-O `AuthContext` ja armazena `society` e `profile.society_id`. Os hooks e paginas usarao esse valor para filtrar queries.
-
-Para admin/pastor (sem society_id), ao acessar paginas de dados, verao dados de todas as sociedades (ou selecionam uma via `selectedSocietyId`).
-
----
-
-## 3. Hooks - Filtrar por society_id
-
-### useMeetings.ts
-- Receber `societyId` do AuthContext
-- Adicionar `.eq('society_id', societyId)` na query de meetings
-- Admin/pastor: sem filtro (ve tudo)
-
-### useTasks.ts
-- Adicionar filtro `.eq('society_id', societyId)` na query principal
-- Ao criar tarefa, salvar `society_id` do usuario
-
-### useFiles.ts
-- Adicionar filtro `.eq('society_id', societyId)` na query
-- Ao fazer upload, salvar `society_id`
-
-### useEvents.ts
-- **NAO ALTERAR** - calendario e unificado
+Pagina principal com:
+- Cards de estatisticas globais (saldo total, membros totais, tarefas)
+- Resumo geral da IA (ja existe)
+- **Nova secao: Alertas e Pendencias**
+  - Tarefas atrasadas (vencidas e nao concluidas)
+  - Reunioes sem ata
+  - Eventos nos proximos 7 dias
+  - Cada alerta com icone de urgencia (vermelho/amarelo)
+- Cards resumo rapido de cada sociedade (nome, cor, saldo, tarefas pendentes)
 
 ---
 
-## 4. Paginas de Financas
+## 2. Pagina por Sociedade (UMP, SAF, UPH, UPA, UCP)
 
-### MembrosTab.tsx
-- Filtrar `members` por `society_id`
-- Ao criar membro, salvar `society_id` do usuario logado
-
-### CobrancasTab.tsx
-- Filtrar `members` e `charges` por `society_id`
-
-### GastosTab.tsx / MensalidadesTab.tsx
-- Filtrar `transactions` por `society_id`
-- Ao criar transacao, salvar `society_id`
-
-### CamisasTab.tsx
-- Filtrar estoque, compras e vendas por `society_id`
-
-### ConfiguracoesTab.tsx
-- Filtrar `financial_settings` por `society_id`
-
-### RelatoriosTab.tsx
-- Filtrar dados por `society_id`
-
-### Financas.tsx (stats)
-- Filtrar `transactions` e `charges` por `society_id` nos cards de estatisticas
+Ao clicar em uma sociedade no menu, o pastor ve os dados filtrados daquela sociedade:
+- Resumo da IA focado naquela sociedade (via edge function com filtro)
+- Financas: saldo, entradas, saidas, mensalidades daquela sociedade
+- Ultimas reunioes da sociedade
+- Tarefas pendentes da sociedade
+- Membros ativos da sociedade
+- Formulario de sugestao direcionado a sociedade
 
 ---
 
-## 5. Paginas de Reunioes
+## 3. Calendario Unificado
 
-### NovaReuniao.tsx
-- Salvar `society_id` ao criar reuniao
-- Filtrar participantes pela mesma sociedade
-
-### ReuniaoDetalhe.tsx
-- Os dados ja vem filtrados pela reuniao especifica (sem mudanca necessaria)
+- Calendario mensal visual com eventos de todas as sociedades
+- Eventos coloridos pela cor da sociedade (UMP=azul, SAF=rosa, UPH=verde, UPA=laranja, UCP=roxo)
+- Lista dos proximos eventos abaixo do calendario
 
 ---
 
-## 6. Pagina de Tarefas
+## 4. Comunicados
 
-### Tarefas.tsx
-- Filtrar tarefas pelo `society_id` do usuario
-- Ao criar tarefa, salvar `society_id`
-
----
-
-## 7. Pagina de Arquivos
-
-### Arquivos.tsx
-- Filtrar arquivos pelo `society_id`
-- Ao fazer upload, salvar `society_id`
+Canal de comunicacao do pastor para as sociedades:
+- Formulario: titulo, mensagem, sociedades destinatarias (multi-select ou "Todas"), prioridade
+- Historico de comunicados enviados
+- Nova tabela `pastor_announcements` no banco
+- Membros verao notificacao ao entrar no sistema
 
 ---
 
-## 8. Pagina Index (Dashboard)
+## 5. Sugestoes (ja existe, mover para dentro do layout)
 
-- Filtrar dados do dashboard (reunioes recentes, tarefas pendentes, proximos eventos) pelo `society_id`
-- Eventos permanecem sem filtro (unificados)
+Manter funcionalidade atual da pagina PastorSugestoes, mas renderizada dentro do PastorLayout.
 
 ---
 
 ## Detalhes Tecnicos
 
-### Migracao SQL
+### Banco de Dados
 
-```text
-ALTER TABLE meetings ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE tasks ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE members ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE transactions ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE charges ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE files ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE financial_settings ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE financial_categories ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE shirt_inventory ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE shirt_purchases ADD COLUMN society_id uuid REFERENCES societies(id);
-ALTER TABLE shirt_sales ADD COLUMN society_id uuid REFERENCES societies(id);
+Nova tabela `pastor_announcements`:
+- `id` (uuid, PK)
+- `title` (text, not null)
+- `message` (text, not null)
+- `priority` (text, default 'normal' - valores: 'normal', 'urgente')
+- `target_societies` (uuid[] - array de society_ids, null = todas)
+- `created_by` (uuid, FK auth.users)
+- `created_at` (timestamptz, default now())
+- `read_by` (jsonb, default '[]')
 
-+ Indices em cada coluna society_id
-```
+RLS: somente pastor/admin pode inserir e selecionar; membros autenticados podem selecionar (para ver notificacoes).
 
-### Logica de Filtragem nos Hooks
+### Edge Function `summarize-for-pastor`
 
-Padrao a seguir em todos os hooks:
+Atualizar para aceitar parametro `society_id`:
+- Quando receber `society_id`, filtrar meetings, tasks, members, transactions por aquela sociedade
+- Retornar resumo focado na sociedade especifica
+- Cache separado por society_id na tabela `pastor_summaries`
 
-```text
-const { profile, isAdmin, isPastor } = useAuth();
-const societyId = profile?.society_id;
+### Novos Componentes
 
-// Na query:
-if (societyId && !isAdmin && !isPastor) {
-  query = query.eq('society_id', societyId);
-}
-```
+| Arquivo | Descricao |
+|---------|-----------|
+| `src/components/pastor/PastorLayout.tsx` | Layout com sidebar proprio do pastor |
+| `src/components/pastor/PastorSidebar.tsx` | Menu lateral com items do pastor + sociedades |
+| `src/components/pastor/PastorMobileNav.tsx` | Navegacao mobile para o pastor |
+| `src/components/pastor/AlertsSection.tsx` | Secao de alertas e pendencias |
+| `src/components/pastor/SocietyOverviewCard.tsx` | Card resumo de uma sociedade |
 
-### Logica de Insercao
+### Novas Paginas
 
-Ao criar qualquer registro, incluir `society_id`:
-
-```text
-society_id: profile?.society_id || null
-```
+| Rota | Arquivo | Descricao |
+|------|---------|-----------|
+| `/pastor` | `PainelPastor.tsx` (refatorar) | Dashboard com alertas |
+| `/pastor/sociedade/:slug` | `PastorSociedade.tsx` (novo) | Dados de uma sociedade |
+| `/pastor/calendario` | `PastorCalendario.tsx` (novo) | Calendario unificado |
+| `/pastor/comunicados` | `PastorComunicados.tsx` (novo) | Criar/ver comunicados |
+| `/pastor/sugestoes` | `PastorSugestoes.tsx` (mover) | Sugestoes dentro do layout |
 
 ### Arquivos Modificados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| Migracao SQL | Adicionar `society_id` em 11 tabelas |
-| `src/hooks/useMeetings.ts` | Filtrar e salvar por sociedade |
-| `src/hooks/useTasks.ts` | Filtrar e salvar por sociedade |
-| `src/hooks/useFiles.ts` | Filtrar e salvar por sociedade |
-| `src/components/financas/MembrosTab.tsx` | Filtrar e salvar por sociedade |
-| `src/components/financas/CobrancasTab.tsx` | Filtrar por sociedade |
-| `src/components/financas/GastosTab.tsx` | Filtrar por sociedade |
-| `src/components/financas/MensalidadesTab.tsx` | Filtrar por sociedade |
-| `src/components/financas/CamisasTab.tsx` | Filtrar por sociedade |
-| `src/components/financas/ConfiguracoesTab.tsx` | Filtrar por sociedade |
-| `src/components/financas/RelatoriosTab.tsx` | Filtrar por sociedade |
-| `src/pages/Financas.tsx` | Filtrar stats por sociedade |
-| `src/pages/NovaReuniao.tsx` | Salvar society_id na reuniao |
-| `src/pages/Tarefas.tsx` | Filtrar por sociedade |
-| `src/pages/Arquivos.tsx` | Filtrar por sociedade |
-| `src/pages/Index.tsx` | Filtrar dashboard por sociedade |
+| Migracao SQL | Tabela `pastor_announcements` + RLS |
+| `src/App.tsx` | Novas rotas `/pastor/*` |
+| `src/pages/PainelPastor.tsx` | Refatorar como dashboard com alertas |
+| `supabase/functions/summarize-for-pastor/index.ts` | Filtro por `society_id` |
 
 ### Ordem de Execucao
 
-1. Executar migracao SQL (adicionar society_id + indices em 11 tabelas)
-2. Atualizar hooks (useMeetings, useTasks, useFiles)
-3. Atualizar componentes de financas (6 tabs + stats)
-4. Atualizar NovaReuniao (salvar society_id)
-5. Atualizar paginas restantes (Tarefas, Arquivos, Index)
+1. Migracao SQL (tabela `pastor_announcements` + RLS)
+2. Criar `PastorLayout`, `PastorSidebar`, `PastorMobileNav`
+3. Refatorar `PainelPastor` como dashboard com alertas e cards por sociedade
+4. Criar `PastorSociedade` (dados filtrados por sociedade)
+5. Criar `PastorCalendario` (calendario unificado colorido)
+6. Criar `PastorComunicados` (formulario + historico)
+7. Mover `PastorSugestoes` para dentro do `PastorLayout`
+8. Atualizar rotas no `App.tsx`
+9. Atualizar edge function `summarize-for-pastor` com filtro por sociedade
+
