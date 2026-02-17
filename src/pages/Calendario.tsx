@@ -93,7 +93,7 @@ export default function Calendario() {
 
   const days = [];
   for (let i = 0; i < firstDay; i++) {
-    days.push(<div key={`empty-${i}`} className="p-2 min-h-[80px]" />);
+    days.push(<div key={`empty-${i}`} className="p-2 min-h-[60px] md:min-h-[80px]" />);
   }
   for (let day = 1; day <= daysInMonth; day++) {
     const dayEvents = getEventsForDate(day);
@@ -105,7 +105,7 @@ export default function Calendario() {
     days.push(
       <div
         key={day}
-        className={`p-2 min-h-[80px] border border-border/50 rounded-lg ${
+        className={`p-2 min-h-[60px] md:min-h-[80px] border border-border/50 rounded-lg ${
           isToday ? 'bg-primary/10' : 'hover:bg-muted/50'
         } transition-colors`}
       >
@@ -148,7 +148,7 @@ export default function Calendario() {
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
         {/* Calendar */}
         <Card className="lg:col-span-3">
           <CardHeader className="pb-4">

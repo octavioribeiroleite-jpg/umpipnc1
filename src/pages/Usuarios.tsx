@@ -250,7 +250,7 @@ export default function Usuarios() {
         description="Gerencie os usuários e permissões do sistema"
       />
 
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>

@@ -222,7 +222,7 @@ export default function Configuracoes() {
     <AppLayout>
       <PageHeader title="Configurações" description="Gerencie as configurações do sistema" />
 
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* General Settings */}
         <Card>
           <CardHeader>

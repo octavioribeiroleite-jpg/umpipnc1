@@ -95,7 +95,7 @@ export default function Reunioes() {
         onSearchChange={setSearchFilter}
       />
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {loading ? (
           <>
             <Skeleton className="h-32 w-full" />
