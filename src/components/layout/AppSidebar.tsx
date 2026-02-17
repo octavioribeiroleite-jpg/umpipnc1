@@ -12,12 +12,13 @@ import {
   ChevronRight,
   UserCheck,
   ClipboardCheck,
-  Church,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import logoIpnc from '@/assets/logo-ipnc.png';
 
 const menuItems = [
   { icon: Home, label: 'Home', path: '/' },
@@ -31,7 +32,7 @@ const menuItems = [
 
 const adminMenuItems = [
   { icon: UserCheck, label: 'Usuários', path: '/usuarios' },
-  { icon: Church, label: 'Sugestões do Pastor', path: '/pastor-sugestoes' },
+  { icon: MessageSquare, label: 'Sugestões do Pastor', path: '/pastor-sugestoes' },
 ];
 
 const bottomMenuItems = [
@@ -65,9 +66,12 @@ export function AppSidebar() {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
         {!collapsed && (
-          <div className="flex flex-col">
-            <span className="font-display font-bold text-lg text-sidebar-primary">IPNC</span>
-            <span className="text-xs text-sidebar-muted">Diretoria de Jovens</span>
+          <div className="flex items-center gap-2">
+            <img src={logoIpnc} alt="Renovo IPNC" className="h-8 w-8 object-contain" />
+            <div className="flex flex-col">
+              <span className="font-display font-bold text-sm text-sidebar-primary">Renovo</span>
+              <span className="text-xs text-sidebar-muted">IPNC</span>
+            </div>
           </div>
         )}
         <Button

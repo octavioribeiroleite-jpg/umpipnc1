@@ -1,11 +1,11 @@
 {
-  "name": "UMP",
-  "short_name": "UMP",
-  "description": "Sistema de gestão UMP",
+  "name": "Renovo IPNC",
+  "short_name": "IPNC",
+  "description": "Sistema de gestão - Igreja Presbiteriana de Nova Carapina",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1B2A4A",
+  "theme_color": "#2f9e6e",
   "orientation": "portrait-primary",
   "icons": [
     {

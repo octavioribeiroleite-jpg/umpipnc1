@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Download, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoIpnc from '@/assets/logo-ipnc.png';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -63,11 +64,9 @@ export const PWAInstallPrompt = () => {
     <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:max-w-sm animate-in slide-in-from-bottom-5 duration-300">
       <div className="rounded-xl border bg-card p-4 shadow-lg">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Download className="h-5 w-5 text-primary" />
-          </div>
+          <img src={logoIpnc} alt="Renovo IPNC" className="h-10 w-10 shrink-0 object-contain" />
           <div className="flex-1 space-y-1">
-            <p className="text-sm font-semibold text-card-foreground">Instalar UMP</p>
+            <p className="text-sm font-semibold text-card-foreground">Instalar IPNC</p>
             <p className="text-xs text-muted-foreground">
               {isIOS
                 ? 'Toque no botão de compartilhar e depois em "Adicionar à Tela de Início".'
