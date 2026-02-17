@@ -31,6 +31,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Pencil, UserX, UserCheck, Trash2 } from 'lucide-react';
 
 interface Member {
@@ -55,12 +56,20 @@ export function MembrosTab() {
   const [deleteMember, setDeleteMember] = useState<Member | null>(null);
   const [relatedData, setRelatedData] = useState<RelatedData | null>(null);
   const { toast } = useToast();
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
 
   const fetchMembers = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from('members')
       .select('*')
       .order('name');
+
+    if (societyId) {
+      query = query.eq('society_id', societyId);
+    }
+
+    const { data, error } = await query;
     
     if (error) {
       toast({ title: 'Erro ao carregar membros', variant: 'destructive' });
@@ -105,6 +114,7 @@ export function MembrosTab() {
           name: formData.name,
           phone: formData.phone || null,
           email: formData.email || null,
+          society_id: profile?.society_id || null,
         });
       
       if (error) {

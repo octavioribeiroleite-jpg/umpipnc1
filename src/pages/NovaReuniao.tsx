@@ -23,7 +23,7 @@ interface Profile {
 export default function NovaReuniao() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
@@ -36,11 +36,18 @@ export default function NovaReuniao() {
 
   useEffect(() => {
     const fetchProfiles = async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('*')
         .eq('active', true)
         .order('full_name');
+
+      // Filter participants by same society
+      if (profile?.society_id) {
+        query = query.eq('society_id', profile.society_id);
+      }
+
+      const { data, error } = await query;
 
       if (!error && data) {
         setProfiles(data);
@@ -108,6 +115,7 @@ export default function NovaReuniao() {
           date: dateTime,
           moderator_id: user.id,
           status: 'aberta',
+          society_id: profile?.society_id || null,
         })
         .select()
         .single();

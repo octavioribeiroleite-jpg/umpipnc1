@@ -46,14 +46,23 @@ export interface UpdateTaskInput {
 }
 
 export function useTasks() {
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+
   return useQuery({
-    queryKey: ['tasks'],
+    queryKey: ['tasks', societyId],
     queryFn: async (): Promise<TaskWithAssignee[]> => {
       // Buscar tarefas
-      const { data: tasks, error: tasksError } = await supabase
+      let query = supabase
         .from('tasks')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (societyId) {
+        query = query.eq('society_id', societyId);
+      }
+
+      const { data: tasks, error: tasksError } = await query;
 
       if (tasksError) throw tasksError;
       if (!tasks) return [];
@@ -122,6 +131,12 @@ export function useCreateTask() {
     mutationFn: async (input: CreateTaskInput) => {
       if (!user) throw new Error('Usuário não autenticado');
 
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('society_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       const { data, error } = await supabase
         .from('tasks')
         .insert({
@@ -133,6 +148,7 @@ export function useCreateTask() {
           assignee_id: input.assignee_id || null,
           meeting_id: input.meeting_id || null,
           created_by: user.id,
+          society_id: profileData?.society_id || null,
         })
         .select()
         .single();

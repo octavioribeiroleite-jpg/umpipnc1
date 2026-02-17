@@ -19,7 +19,8 @@ const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 export function ConfiguracoesTab() {
-  const { user } = useAuth();
+  const { user, profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
@@ -41,11 +42,16 @@ export function ConfiguracoesTab() {
   }, [competence]);
 
   const fetchSettings = async () => {
-    const { data } = await supabase
+    let query = supabase
       .from('financial_settings')
       .select('*')
-      .eq('competence', competence)
-      .maybeSingle();
+      .eq('competence', competence);
+
+    if (societyId) {
+      query = query.eq('society_id', societyId);
+    }
+
+    const { data } = await query.maybeSingle();
 
     if (data) {
       setExistingSettings(data);
@@ -62,10 +68,16 @@ export function ConfiguracoesTab() {
   };
 
   const fetchActiveMembers = async () => {
-    const { count } = await supabase
+    let query = supabase
       .from('members')
       .select('*', { count: 'exact', head: true })
       .eq('active', true);
+
+    if (societyId) {
+      query = query.eq('society_id', societyId);
+    }
+
+    const { count } = await query;
     setActiveMembers(count || 0);
   };
 
@@ -86,7 +98,8 @@ export function ConfiguracoesTab() {
         monthly_fee: monthlyFee,
         per_capita: perCapita,
         due_day: dueDay,
-        notes: formData.notes
+        notes: formData.notes,
+        society_id: profile?.society_id || null,
       };
 
       if (existingSettings) {
@@ -146,10 +159,16 @@ export function ConfiguracoesTab() {
     setGenerating(true);
     try {
       // Buscar membros ativos
-      const { data: members, error: membersError } = await supabase
+      let membersQuery = supabase
         .from('members')
         .select('id')
         .eq('active', true);
+
+      if (societyId) {
+        membersQuery = membersQuery.eq('society_id', societyId);
+      }
+
+      const { data: members, error: membersError } = await membersQuery;
 
       if (membersError) throw membersError;
       if (!members || members.length === 0) {
@@ -165,10 +184,16 @@ export function ConfiguracoesTab() {
       const dueDate = new Date(year, monthIndex, dueDay).toISOString().split('T')[0];
 
       // Buscar cobranças existentes
-      const { data: existingCharges } = await supabase
+      let chargesQuery = supabase
         .from('charges')
         .select('member_id, type')
         .eq('competence', competence);
+
+      if (societyId) {
+        chargesQuery = chargesQuery.eq('society_id', societyId);
+      }
+
+      const { data: existingCharges } = await chargesQuery;
 
       const existingMap = new Set(
         (existingCharges || []).map(c => `${c.member_id}-${c.type}`)
@@ -185,7 +210,8 @@ export function ConfiguracoesTab() {
             type: 'mensalidade',
             amount: existingSettings.monthly_fee,
             due_date: dueDate,
-            status: 'pendente'
+            status: 'pendente',
+            society_id: profile?.society_id || null,
           });
         }
         if (existingSettings.per_capita > 0 && !existingMap.has(`${member.id}-percapita`)) {
@@ -195,7 +221,8 @@ export function ConfiguracoesTab() {
             type: 'percapita',
             amount: existingSettings.per_capita,
             due_date: dueDate,
-            status: 'pendente'
+            status: 'pendente',
+            society_id: profile?.society_id || null,
           });
         }
       }

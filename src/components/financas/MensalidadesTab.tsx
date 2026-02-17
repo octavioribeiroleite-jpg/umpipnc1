@@ -37,6 +37,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Check, AlertCircle, Pencil, Trash2, User, ShoppingBag, CreditCard } from 'lucide-react';
 
 interface Member {
@@ -102,6 +103,9 @@ export function MensalidadesTab() {
 
   const competence = `${selectedMonth}/${selectedYear}`;
 
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+
   const fetchData = async () => {
     setLoading(true);
     
@@ -111,15 +115,23 @@ export function MensalidadesTab() {
     const startOfMonth = new Date(year, monthIndex, 1).toISOString().split('T')[0];
     const endOfMonth = new Date(year, monthIndex + 1, 0).toISOString().split('T')[0];
     
-    const [membersRes, paymentsRes, transactionsRes] = await Promise.all([
-      supabase.from('members').select('*').eq('active', true).order('name'),
-      supabase.from('membership_payments').select('*').eq('competence', competence),
-      supabase.from('transactions')
+    let membersQuery = supabase.from('members').select('*').eq('active', true).order('name');
+    let transactionsQuery = supabase.from('transactions')
         .select('*')
         .eq('type', 'entrada')
         .gte('date', startOfMonth)
         .lte('date', endOfMonth)
-        .order('date', { ascending: false }),
+        .order('date', { ascending: false });
+
+    if (societyId) {
+      membersQuery = membersQuery.eq('society_id', societyId);
+      transactionsQuery = transactionsQuery.eq('society_id', societyId);
+    }
+
+    const [membersRes, paymentsRes, transactionsRes] = await Promise.all([
+      membersQuery,
+      supabase.from('membership_payments').select('*').eq('competence', competence),
+      transactionsQuery,
     ]);
 
     if (membersRes.error) {

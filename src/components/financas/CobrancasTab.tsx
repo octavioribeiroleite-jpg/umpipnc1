@@ -90,12 +90,20 @@ export function CobrancasTab() {
     fetchData();
   }, [competence]);
 
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+
   const fetchData = async () => {
     setLoading(true);
-    const [membersRes, chargesRes] = await Promise.all([
-      supabase.from('members').select('id, name').eq('active', true).order('name'),
-      supabase.from('charges').select('*').eq('competence', competence)
-    ]);
+    let membersQuery = supabase.from('members').select('id, name').eq('active', true).order('name');
+    let chargesQuery = supabase.from('charges').select('*').eq('competence', competence);
+
+    if (societyId) {
+      membersQuery = membersQuery.eq('society_id', societyId);
+      chargesQuery = chargesQuery.eq('society_id', societyId);
+    }
+
+    const [membersRes, chargesRes] = await Promise.all([membersQuery, chargesQuery]);
 
     setMembers(membersRes.data || []);
     setCharges(chargesRes.data || []);
@@ -281,7 +289,8 @@ export function CobrancasTab() {
             reference_type: 'charge',
             reference_id: charge.id,
             member_id: selectedMember.id,
-            receipt_url: receiptUrl
+            receipt_url: receiptUrl,
+            society_id: profile?.society_id || null,
           })
           .select('id')
           .single();

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -57,6 +58,8 @@ interface TransactionWithReceipt {
 }
 
 export function RelatoriosTab() {
+  const { profile, isAdmin, isPastor } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const currentYear = new Date().getFullYear();
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
@@ -94,10 +97,16 @@ export function RelatoriosTab() {
   };
 
   const fetchChargeStats = async () => {
-    const { data: charges } = await supabase
+    let query = supabase
       .from('charges')
       .select('status')
       .eq('competence', competence);
+
+    if (societyId) {
+      query = query.eq('society_id', societyId);
+    }
+
+    const { data: charges } = await query;
 
     if (charges) {
       const stats = {
@@ -119,11 +128,17 @@ export function RelatoriosTab() {
       const startDate = new Date(year, i, 1).toISOString().split('T')[0];
       const endDate = new Date(year, i + 1, 0).toISOString().split('T')[0];
 
-      const { data: transData } = await supabase
+      let query = supabase
         .from('transactions')
         .select('amount, type')
         .gte('date', startDate)
         .lte('date', endDate);
+
+      if (societyId) {
+        query = query.eq('society_id', societyId);
+      }
+
+      const { data: transData } = await query;
 
       const receitas = (transData || [])
         .filter(t => t.type === 'entrada')
@@ -150,16 +165,24 @@ export function RelatoriosTab() {
     const startDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
     const endDate = new Date(year, monthIndex + 1, 0).toISOString().split('T')[0];
 
-    const { data: transData } = await supabase
+    let txQuery = supabase
       .from('transactions')
       .select('amount, category_id')
       .eq('type', 'saida')
       .gte('date', startDate)
       .lte('date', endDate);
 
-    const { data: categories } = await supabase
-      .from('financial_categories')
-      .select('id, name, color');
+    if (societyId) {
+      txQuery = txQuery.eq('society_id', societyId);
+    }
+
+    const { data: transData } = await txQuery;
+
+    let catQuery = supabase.from('financial_categories').select('id, name, color');
+    if (societyId) {
+      catQuery = catQuery.eq('society_id', societyId);
+    }
+    const { data: categories } = await catQuery;
 
     if (transData && categories) {
       const categoryMap = new Map(categories.map(c => [c.id, c]));
@@ -188,10 +211,16 @@ export function RelatoriosTab() {
       const monthName = MONTHS[i];
       const comp = `${monthName}/${year}`;
 
-      const { data: charges } = await supabase
+      let query = supabase
         .from('charges')
         .select('status')
         .eq('competence', comp);
+
+      if (societyId) {
+        query = query.eq('society_id', societyId);
+      }
+
+      const { data: charges } = await query;
 
       if (charges && charges.length > 0) {
         const paid = charges.filter(c => c.status === 'pago').length;
@@ -211,16 +240,24 @@ export function RelatoriosTab() {
     const startDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
     const endDate = new Date(year, monthIndex + 1, 0).toISOString().split('T')[0];
 
-    const { data: transData } = await supabase
+    let txQuery2 = supabase
       .from('transactions')
       .select('id, description, amount, date, type, category_id, receipt_url')
       .gte('date', startDate)
       .lte('date', endDate)
       .order('date', { ascending: true });
 
-    const { data: categories } = await supabase
-      .from('financial_categories')
-      .select('id, name, color');
+    if (societyId) {
+      txQuery2 = txQuery2.eq('society_id', societyId);
+    }
+
+    const { data: transData } = await txQuery2;
+
+    let catQuery2 = supabase.from('financial_categories').select('id, name, color');
+    if (societyId) {
+      catQuery2 = catQuery2.eq('society_id', societyId);
+    }
+    const { data: categories } = await catQuery2;
 
     const categoryMap = new Map(categories?.map(c => [c.id, c]) || []);
 
