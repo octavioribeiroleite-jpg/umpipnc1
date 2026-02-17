@@ -535,6 +535,78 @@ export type Database = {
           },
         ]
       }
+      plenaries: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          quorum_required: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date?: string
+          id?: string
+          quorum_required?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          quorum_required?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      plenary_attendance: {
+        Row: {
+          created_at: string
+          id: string
+          marked_at: string | null
+          marked_by: string | null
+          member_id: string
+          plenary_id: string
+          present: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          member_id: string
+          plenary_id: string
+          present?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          member_id?: string
+          plenary_id?: string
+          present?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plenary_attendance_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plenary_attendance_plenary_id_fkey"
+            columns: ["plenary_id"]
+            isOneToOne: false
+            referencedRelation: "plenaries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean

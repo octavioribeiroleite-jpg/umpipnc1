@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, Wallet, MoreHorizontal, CheckSquare, FolderOpen, Settings, UserCheck } from 'lucide-react';
+import { Home, Users, Calendar, Wallet, MoreHorizontal, CheckSquare, FolderOpen, Settings, UserCheck, ClipboardCheck } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
@@ -25,6 +25,7 @@ export function MobileBottomNav() {
 
   const moreNavItems = [
     { to: '/tarefas', icon: CheckSquare, label: 'Tarefas' },
+    { to: '/plenarias', icon: ClipboardCheck, label: 'Plenárias' },
     { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
     ...(isAdmin ? [{ to: '/usuarios', icon: UserCheck, label: 'Usuários' }] : []),
     { to: '/configuracoes', icon: Settings, label: 'Configurações' },
