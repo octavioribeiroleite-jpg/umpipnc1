@@ -53,14 +53,14 @@ function StatCard({
       className={`overflow-hidden ${onClick ? 'cursor-pointer hover:bg-accent/50 transition-colors' : ''}`}
       onClick={onClick}
     >
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="h-5 w-5 text-primary" />
+      <CardHeader className="flex flex-row items-center justify-between pb-1 p-3 md:p-6 md:pb-2">
+        <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+      <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+        <div className="text-lg md:text-2xl font-bold">{value}</div>
         {(description || trend) && (
           <div className="flex items-center gap-2 mt-1">
             {trend && (
@@ -97,13 +97,13 @@ function QuickAction({
   return (
     <Button
       variant="outline"
-      className="flex-shrink-0 h-auto py-4 px-6 flex-col gap-2 min-w-[100px] md:flex-1"
+      className="h-auto py-3 px-4 md:py-4 md:px-6 flex-col gap-1.5 md:gap-2 md:flex-1 md:min-w-[100px]"
       onClick={onClick}
     >
-      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-        <Icon className="h-5 w-5 text-primary" />
+      <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary/10 flex items-center justify-center">
+        <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
       </div>
-      <span className="text-sm font-medium whitespace-nowrap">{label}</span>
+      <span className="text-xs md:text-sm font-medium whitespace-nowrap">{label}</span>
     </Button>
   );
 }
@@ -220,7 +220,7 @@ export default function Index() {
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-6 md:mb-8">
         <StatCard
           title="Saldo do Caixa"
           value={`R$ ${stats.saldo.toFixed(2).replace('.', ',')}`}
@@ -245,9 +245,9 @@ export default function Index() {
       </div>
 
       {/* Quick Actions - Horizontal scroll on mobile */}
-      <div className="mb-8">
-        <h2 className="font-display text-lg font-semibold mb-4">Ações Rápidas</h2>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap scrollbar-thin">
+      <div className="mb-6 md:mb-8">
+        <h2 className="font-display text-base md:text-lg font-semibold mb-3 md:mb-4">Ações Rápidas</h2>
+        <div className="grid grid-cols-2 md:flex gap-2 md:gap-3 md:flex-wrap">
           <QuickAction
             label="Nova Reunião"
             icon={Users}
