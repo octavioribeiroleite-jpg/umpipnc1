@@ -5,6 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
+function computeHash(stats: Record<string, any>): string {
+  return JSON.stringify(stats)
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -48,7 +52,79 @@ Deno.serve(async (req) => {
       societyId = body?.society_id || null
     } catch { /* no body */ }
 
-    // Check cache
+    // Build queries with optional society filter
+    const addFilter = (query: any) => societyId ? query.eq('society_id', societyId) : query
+
+    // Fetch all societies for per-society grouping
+    const { data: allSocieties } = await serviceClient
+      .from('societies')
+      .select('id, name, slug')
+      .eq('active', true)
+      .order('name')
+
+    const societies = allSocieties || []
+
+    // Fetch raw data
+    const [tasksRes, transactionsRes, paymentsRes, membersRes, meetingsRes, eventsRes, plenariesRes] = await Promise.all([
+      addFilter(serviceClient.from('tasks').select('id, title, status, priority, due_date, society_id')),
+      addFilter(serviceClient.from('transactions').select('amount, type, description, date, society_id').order('date', { ascending: false }).limit(50)),
+      serviceClient.from('membership_payments').select('amount, status, competence, member_id'),
+      addFilter(serviceClient.from('members').select('id, name, active, society_id')),
+      addFilter(serviceClient.from('meetings').select('id, title, date, status, meeting_notes, society_id').order('date', { ascending: false }).limit(10)),
+      serviceClient.from('events').select('id, title, start_date, status, location').order('start_date', { ascending: true }).gte('start_date', new Date().toISOString()).limit(10),
+      serviceClient.from('plenaries').select('id, title, date, quorum_required').order('date', { ascending: false }).limit(3),
+    ])
+
+    const members = membersRes.data || []
+    const tasks = tasksRes.data || []
+    const transactions = transactionsRes.data || []
+    const payments = paymentsRes.data || []
+    const meetingsData = meetingsRes.data || []
+    const eventsData = eventsRes.data || []
+    const plenariesData = plenariesRes.data || []
+
+    // Compute per-society stats
+    const societyStats: Record<string, { membersActive: number; tasksDone: number; tasksPending: number; saldo: number; totalEntradas: number; totalSaidas: number; totalMensalidades: number }> = {}
+    
+    for (const soc of societies) {
+      const socMembers = members.filter(m => m.society_id === soc.id)
+      const socMemberIds = new Set(socMembers.map(m => m.id))
+      const socTasks = tasks.filter(t => t.society_id === soc.id)
+      const socTrans = transactions.filter(t => t.society_id === soc.id)
+      const socPayments = payments.filter(p => p.status === 'pago' && socMemberIds.has(p.member_id))
+      
+      const totalEntradas = socTrans.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0)
+      const totalSaidas = socTrans.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0)
+      const totalMensalidades = socPayments.reduce((s, p) => s + Number(p.amount), 0)
+      
+      societyStats[soc.id] = {
+        membersActive: socMembers.filter(m => m.active).length,
+        tasksDone: socTasks.filter(t => t.status === 'done').length,
+        tasksPending: socTasks.filter(t => t.status !== 'done').length,
+        saldo: totalMensalidades + totalEntradas - totalSaidas,
+        totalEntradas,
+        totalSaidas,
+        totalMensalidades,
+      }
+    }
+
+    // Global stats (sum of all societies)
+    const globalStats = {
+      membersActive: Object.values(societyStats).reduce((s, v) => s + v.membersActive, 0),
+      tasksDone: Object.values(societyStats).reduce((s, v) => s + v.tasksDone, 0),
+      tasksPending: Object.values(societyStats).reduce((s, v) => s + v.tasksPending, 0),
+      saldo: Object.values(societyStats).reduce((s, v) => s + v.saldo, 0),
+      totalEntradas: Object.values(societyStats).reduce((s, v) => s + v.totalEntradas, 0),
+      totalSaidas: Object.values(societyStats).reduce((s, v) => s + v.totalSaidas, 0),
+      totalMensalidades: Object.values(societyStats).reduce((s, v) => s + v.totalMensalidades, 0),
+    }
+
+    const stats = societyId ? (societyStats[societyId] || globalStats) : globalStats
+
+    // Compute data hash for cache comparison
+    const currentHash = computeHash({ globalStats, societyStats })
+
+    // Check cache (with hash comparison)
     if (!forceRefresh) {
       const cacheQuery = serviceClient
         .from('pastor_summaries')
@@ -66,79 +142,70 @@ Deno.serve(async (req) => {
       const { data: cached } = await cacheQuery.single()
 
       if (cached) {
+        // If data hash matches, return cached without calling AI
+        if (cached.data_hash === currentHash) {
+          return new Response(JSON.stringify({
+            summaries: cached.summaries,
+            stats,
+            society_stats: societyStats,
+            meetings: cached.meetings_data,
+            events: cached.events_data,
+            plenaries: cached.plenaries_data,
+            generated_at: cached.generated_at,
+            from_cache: true,
+            hash_match: true,
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+        // Hash changed but cache exists - return cache but mark as stale
         return new Response(JSON.stringify({
           summaries: cached.summaries,
-          stats: cached.stats,
+          stats,
+          society_stats: societyStats,
           meetings: cached.meetings_data,
           events: cached.events_data,
           plenaries: cached.plenaries_data,
           generated_at: cached.generated_at,
           from_cache: true,
+          hash_match: false,
+          data_changed: true,
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
     }
 
-    // Build queries with optional society filter
-    const addFilter = (query: any) => societyId ? query.eq('society_id', societyId) : query
-
-    const [meetingsRes, tasksRes, transactionsRes, paymentsRes, membersRes, eventsRes, plenariesRes] = await Promise.all([
-      addFilter(serviceClient.from('meetings').select('id, title, date, status, meeting_notes').order('date', { ascending: false }).limit(5)),
-      addFilter(serviceClient.from('tasks').select('id, title, status, priority, due_date')),
-      addFilter(serviceClient.from('transactions').select('amount, type, description, date').order('date', { ascending: false }).limit(20)),
-      serviceClient.from('membership_payments').select('amount, status, competence, member_id'),
-      addFilter(serviceClient.from('members').select('id, name, active')),
-      serviceClient.from('events').select('id, title, start_date, status, location').order('start_date', { ascending: true }).gte('start_date', new Date().toISOString()).limit(10),
-      serviceClient.from('plenaries').select('id, title, date, quorum_required').order('date', { ascending: false }).limit(3),
-    ])
-
-    const members = membersRes.data || []
-    const memberIds = new Set(members.map(m => m.id))
-    const transactions = transactionsRes.data || []
-    const payments = (paymentsRes.data || []).filter(p => !societyId || memberIds.has(p.member_id))
-    const totalEntradas = transactions.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0)
-    const totalSaidas = transactions.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0)
-    const totalMensalidades = payments.filter(p => p.status === 'pago').reduce((s, p) => s + Number(p.amount), 0)
-    const saldo = totalMensalidades + totalEntradas - totalSaidas
-
-    const tasks = tasksRes.data || []
-    const tasksDone = tasks.filter(t => t.status === 'done').length
-    const tasksPending = tasks.filter(t => t.status !== 'done').length
-    const membersActive = members.filter(m => m.active).length
-
-    const stats = { saldo, totalEntradas, totalSaidas, totalMensalidades, membersActive, tasksDone, tasksPending }
-    const meetingsData = meetingsRes.data || []
-    const eventsData = eventsRes.data || []
-    const plenariesData = plenariesRes.data || []
-
-    const scopeLabel = societyId ? 'da sociedade selecionada' : 'de todas as sociedades da IPNC'
+    // Build per-society context for AI
+    const perSocietyContext = societies.map(soc => {
+      const s = societyStats[soc.id]
+      const socMeetings = meetingsData.filter(m => m.society_id === soc.id)
+      const socTasks = tasks.filter(t => t.society_id === soc.id && t.status !== 'done')
+      return `
+${soc.name}:
+- Membros ativos: ${s.membersActive}
+- Tarefas: ${s.tasksDone} concluídas, ${s.tasksPending} pendentes
+- Saldo: R$ ${s.saldo.toFixed(2)} (Entradas: R$ ${s.totalEntradas.toFixed(2)}, Saídas: R$ ${s.totalSaidas.toFixed(2)}, Mensalidades: R$ ${s.totalMensalidades.toFixed(2)})
+- Últimas reuniões: ${socMeetings.length > 0 ? socMeetings.slice(0, 2).map(m => `"${m.title}" (${m.date})`).join(', ') : 'Nenhuma'}
+- Tarefas pendentes: ${socTasks.slice(0, 3).map(t => `"${t.title}" [${t.priority}]`).join(', ') || 'Nenhuma'}`
+    }).join('\n')
 
     const dataContext = `
-DADOS DA DIRETORIA - IPNC (${scopeLabel}):
+DADOS DA IGREJA PRESBITERIANA NOVA CIDADE (IPNC):
 
-REUNIÕES RECENTES:
-${meetingsData.map(m => `- "${m.title}" em ${m.date} (${m.status})${m.meeting_notes ? ` - Notas: ${m.meeting_notes.substring(0, 200)}` : ''}`).join('\n')}
+RESUMO POR SOCIEDADE:
+${perSocietyContext}
 
-TAREFAS:
-- Concluídas: ${tasksDone}
-- Pendentes: ${tasksPending}
-- Total: ${tasks.length}
-${tasks.filter(t => t.status !== 'done').slice(0, 5).map(t => `- [${t.priority}] "${t.title}" (${t.status})`).join('\n')}
-
-FINANÇAS:
-- Saldo atual: R$ ${saldo.toFixed(2)}
-- Total mensalidades pagas: R$ ${totalMensalidades.toFixed(2)}
-- Entradas (transações): R$ ${totalEntradas.toFixed(2)}
-- Saídas (transações): R$ ${totalSaidas.toFixed(2)}
-
-MEMBROS: ${membersActive} ativos
+TOTAIS GLOBAIS:
+- Membros ativos: ${globalStats.membersActive}
+- Tarefas concluídas: ${globalStats.tasksDone}, pendentes: ${globalStats.tasksPending}
+- Saldo total: R$ ${globalStats.saldo.toFixed(2)}
 
 PRÓXIMOS EVENTOS:
-${eventsData.map(e => `- "${e.title}" em ${e.start_date}${e.location ? ` (${e.location})` : ''} - ${e.status}`).join('\n')}
+${eventsData.map(e => `- "${e.title}" em ${e.start_date}${e.location ? ` (${e.location})` : ''} - ${e.status}`).join('\n') || 'Nenhum evento próximo'}
 
 PLENÁRIAS RECENTES:
-${plenariesData.map(p => `- "${p.title}" em ${p.date} (quórum mínimo: ${p.quorum_required}%)`).join('\n')}
+${plenariesData.map(p => `- "${p.title}" em ${p.date} (quórum mínimo: ${p.quorum_required}%)`).join('\n') || 'Nenhuma plenária recente'}
 `
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -152,16 +219,19 @@ ${plenariesData.map(p => `- "${p.title}" em ${p.date} (quórum mínimo: ${p.quor
         messages: [
           {
             role: 'system',
-            content: `Você é um assistente que resume informações da diretoria da IPNC para o pastor da igreja. 
-Gere um resumo claro, organizado e pastoral de cada seção. Use linguagem respeitosa e profissional.
-Retorne o resumo em formato JSON com as seguintes chaves:
-- reunioes: resumo das reuniões recentes (2-3 frases)
-- financas: resumo financeiro (2-3 frases)
-- tarefas: resumo das tarefas (2-3 frases)
-- eventos: resumo dos próximos eventos (2-3 frases)
-- plenarias: resumo das plenárias (2-3 frases)
-- geral: uma visão geral pastoral do progresso da diretoria (3-4 frases)
-Retorne APENAS o JSON válido, sem markdown.`
+            content: `Você é um assistente pastoral que resume dados da IPNC para o pastor.
+Analise os dados de CADA sociedade e compare-as. Destaque:
+- Quais sociedades estão mais ativas e quais precisam de atenção
+- Pontos positivos e preocupações financeiras
+- Tarefas atrasadas ou sociedades sem movimentação
+
+Retorne JSON com estas chaves:
+- geral: visão pastoral comparativa de todas as sociedades (4-5 frases, mencionando cada uma pelo nome)
+- financas: análise financeira consolidada comparando as sociedades (2-3 frases)
+- tarefas: resumo de produtividade das sociedades (2-3 frases)
+- destaques: 2-3 pontos de atenção específicos para o pastor agir
+
+Retorne APENAS JSON válido, sem markdown.`
           },
           { role: 'user', content: dataContext }
         ],
@@ -218,6 +288,7 @@ Retorne APENAS o JSON válido, sem markdown.`
       generated_at: generatedAt,
       invalidated: false,
       society_id: societyId,
+      data_hash: currentHash,
     }
 
     if (existing) {
@@ -229,6 +300,7 @@ Retorne APENAS o JSON válido, sem markdown.`
     return new Response(JSON.stringify({
       summaries,
       stats,
+      society_stats: societyStats,
       meetings: meetingsData,
       events: eventsData,
       plenaries: plenariesData,
