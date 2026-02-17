@@ -1,80 +1,54 @@
 
-# Login por Usuario e Senha (sem email)
 
-## Resumo
+# Layout Compacto em Todo o App
 
-Trocar o sistema de login de email para **usuario e senha**. O admin cria as contas definindo um nome de usuario (ex: "Davi") e uma senha (ex: "Davi123"). Na pagina de Usuarios, o admin consegue ver e alterar a senha de cada membro.
-
-## Como funciona
-
-Como o sistema de autenticacao exige um email por tras, vamos usar um email ficticio automatico (ex: `davi@ipnc.local`) que fica invisivel para todos. O usuario so ve e usa o **nome de usuario** e a **senha**.
+## Objetivo
+Aplicar o mesmo padrao compacto do Dashboard (Index.tsx) em todas as paginas do app, reduzindo tamanhos, paddings e espacamentos no mobile enquanto mantendo o desktop confortavel.
 
 ## O que muda
 
-### 1. Tela de Login (Auth.tsx)
-- Trocar campo "Email" por campo "Usuario"
-- Manter campo "Senha"
-- Remover aba "Cadastrar"
-- Remover "Esqueci minha senha" (admin reseta a senha pelo painel)
-- Por tras, converte o usuario digitado para email ficticio (ex: `davi@ipnc.local`)
+### 1. Financas.tsx - StatCards
+- CardContent: `pt-6` -> `p-3 md:pt-6`
+- Icone container: `h-12 w-12` -> `h-7 w-7 md:h-9 md:w-9`
+- Icone: `h-6 w-6` -> `h-4 w-4 md:h-5 md:w-5`
+- Texto valor: `text-2xl` -> `text-lg md:text-2xl`
+- Texto titulo: `text-sm` -> `text-xs md:text-sm`
+- Icone wrapper: `rounded-xl` -> `rounded-lg`
+- Grid stats: `gap-4` -> `gap-2 md:gap-4`
 
-### 2. Banco de Dados
-- Adicionar coluna `username` na tabela `profiles` (texto unico, obrigatorio)
-- Adicionar coluna `plain_password` na tabela `profiles` (texto, para o admin poder ver/alterar)
-- Atualizar o trigger `handle_new_user` para aceitar o username
+### 2. PageHeader.tsx (afeta todas as paginas)
+- Margin bottom: `mb-6` -> `mb-4 md:mb-6`
+- Titulo: `text-2xl lg:text-3xl` -> `text-xl md:text-2xl lg:text-3xl`
 
-### 3. Funcao Backend (create-user)
-- Recebe: nome completo, usuario, senha e cargo
-- Cria o email ficticio automaticamente (`usuario@ipnc.local`)
-- Cria a conta no sistema de autenticacao
-- Salva o username e a senha na tabela de perfis
-- Atribui o cargo escolhido
+### 3. AppLayout.tsx
+- Mobile padding: `px-4` -> `px-3`
+- Desktop container padding: `py-6` -> `py-4 md:py-6`
 
-### 4. Funcao Backend (update-user-password)
-- Recebe: user_id e nova senha
-- Atualiza a senha no sistema de autenticacao
-- Atualiza a senha salva na tabela de perfis
-- Apenas admins podem usar
+### 4. Calendario.tsx
+- Grid gap: `gap-6` -> `gap-4 md:gap-6`
+- Celulas do calendario: `min-h-[80px]` -> `min-h-[60px] md:min-h-[80px]`
 
-### 5. Pagina de Usuarios (Usuarios.tsx)
-- Adicionar botao "Novo Usuario" com dialog para criar: nome, usuario, senha, cargo
-- Mostrar coluna "Usuario" e "Senha" na tabela de usuarios ativos
-- Botao para alterar a senha de cada usuario
-- Remover coluna "Email" (nao e mais relevante)
-- Remover secao "Aguardando Aprovacao"
+### 5. Configuracoes.tsx
+- Espacamento entre cards: `space-y-6` -> `space-y-4 md:space-y-6`
+- CardHeader icons: manter tamanho mas reduzir padding
 
-### 6. Contexto de Auth (AuthContext.tsx)
-- Remover funcao `signUp`
-- Ajustar `signIn` para receber username ao inves de email (converte para email ficticio)
-- Remover `isPendingApproval`
+### 6. Usuarios.tsx
+- Espacamento entre secoes: `space-y-6` -> `space-y-4 md:space-y-6`
 
-### 7. Rotas (App.tsx)
-- Remover rota `/aguardando-permissao`
-- Remover import da pagina AguardandoPermissao
+### 7. Reunioes.tsx
+- Lista spacing: `space-y-4` -> `space-y-3 md:space-y-4`
 
-## Fluxo
-
-```text
-Admin abre Usuarios
-       |
-  Clica "Novo Usuario"
-       |
-  Preenche: Nome, Usuario, Senha, Cargo
-       |
-  Sistema cria conta com email ficticio
-       |
-  Admin informa usuario/senha ao membro
-       |
-  Membro abre o app e digita usuario + senha
-       |
-  Sistema converte para email ficticio e autentica
-```
+### 8. Arquivos.tsx
+- Grid gap: `gap-4` -> `gap-3 md:gap-4`
 
 ## Arquivos modificados
-- `src/pages/Auth.tsx` -- login por usuario
-- `src/pages/Usuarios.tsx` -- criar usuario, ver/alterar senhas
-- `src/contexts/AuthContext.tsx` -- remover signUp, ajustar signIn
-- `src/App.tsx` -- remover rota aguardando permissao
-- `supabase/functions/create-user/index.ts` -- nova funcao para criar usuario
-- `supabase/functions/update-user-password/index.ts` -- nova funcao para alterar senha
-- Migracao SQL -- adicionar colunas username e plain_password na tabela profiles
+- `src/components/layout/PageHeader.tsx`
+- `src/components/layout/AppLayout.tsx`
+- `src/pages/Financas.tsx`
+- `src/pages/Calendario.tsx`
+- `src/pages/Configuracoes.tsx`
+- `src/pages/Usuarios.tsx`
+- `src/pages/Reunioes.tsx`
+- `src/pages/Arquivos.tsx`
+- `src/pages/Index.tsx` (ajustes menores de consistencia)
+
