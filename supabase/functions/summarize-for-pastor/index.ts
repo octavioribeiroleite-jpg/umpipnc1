@@ -24,8 +24,7 @@ Deno.serve(async (req) => {
     const { data: { user } } = await callerClient.auth.getUser()
     if (!user) {
       return new Response(JSON.stringify({ error: 'Não autenticado' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -34,30 +33,37 @@ Deno.serve(async (req) => {
     
     if (!isPastor && !isManagement) {
       return new Response(JSON.stringify({ error: 'Acesso negado' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     const serviceClient = createClient(supabaseUrl, serviceRoleKey)
 
-    // Check for force parameter
+    // Parse body
     let forceRefresh = false
+    let societyId: string | null = null
     try {
       const body = await req.json()
       forceRefresh = body?.force === true
-    } catch { /* no body or not JSON */ }
+      societyId = body?.society_id || null
+    } catch { /* no body */ }
 
-    // Check cache first
+    // Check cache
     if (!forceRefresh) {
-      const { data: cached } = await serviceClient
+      const cacheQuery = serviceClient
         .from('pastor_summaries')
         .select('*')
         .eq('invalidated', false)
-        .is('society_id', null)
         .order('generated_at', { ascending: false })
         .limit(1)
-        .single()
+
+      if (societyId) {
+        cacheQuery.eq('society_id', societyId)
+      } else {
+        cacheQuery.is('society_id', null)
+      }
+
+      const { data: cached } = await cacheQuery.single()
 
       if (cached) {
         return new Response(JSON.stringify({
@@ -74,19 +80,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch all data for summary
+    // Build queries with optional society filter
+    const addFilter = (query: any) => societyId ? query.eq('society_id', societyId) : query
+
     const [meetingsRes, tasksRes, transactionsRes, paymentsRes, membersRes, eventsRes, plenariesRes] = await Promise.all([
-      serviceClient.from('meetings').select('id, title, date, status, meeting_notes').order('date', { ascending: false }).limit(5),
-      serviceClient.from('tasks').select('id, title, status, priority, due_date'),
-      serviceClient.from('transactions').select('amount, type, description, date').order('date', { ascending: false }).limit(20),
-      serviceClient.from('membership_payments').select('amount, status, competence'),
-      serviceClient.from('members').select('id, name, active'),
+      addFilter(serviceClient.from('meetings').select('id, title, date, status, meeting_notes').order('date', { ascending: false }).limit(5)),
+      addFilter(serviceClient.from('tasks').select('id, title, status, priority, due_date')),
+      addFilter(serviceClient.from('transactions').select('amount, type, description, date').order('date', { ascending: false }).limit(20)),
+      serviceClient.from('membership_payments').select('amount, status, competence, member_id'),
+      addFilter(serviceClient.from('members').select('id, name, active')),
       serviceClient.from('events').select('id, title, start_date, status, location').order('start_date', { ascending: true }).gte('start_date', new Date().toISOString()).limit(10),
       serviceClient.from('plenaries').select('id, title, date, quorum_required').order('date', { ascending: false }).limit(3),
     ])
 
+    const members = membersRes.data || []
+    const memberIds = new Set(members.map(m => m.id))
     const transactions = transactionsRes.data || []
-    const payments = paymentsRes.data || []
+    const payments = (paymentsRes.data || []).filter(p => !societyId || memberIds.has(p.member_id))
     const totalEntradas = transactions.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0)
     const totalSaidas = transactions.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0)
     const totalMensalidades = payments.filter(p => p.status === 'pago').reduce((s, p) => s + Number(p.amount), 0)
@@ -95,15 +105,17 @@ Deno.serve(async (req) => {
     const tasks = tasksRes.data || []
     const tasksDone = tasks.filter(t => t.status === 'done').length
     const tasksPending = tasks.filter(t => t.status !== 'done').length
-    const membersActive = (membersRes.data || []).filter(m => m.active).length
+    const membersActive = members.filter(m => m.active).length
 
     const stats = { saldo, totalEntradas, totalSaidas, totalMensalidades, membersActive, tasksDone, tasksPending }
     const meetingsData = meetingsRes.data || []
     const eventsData = eventsRes.data || []
     const plenariesData = plenariesRes.data || []
 
+    const scopeLabel = societyId ? 'da sociedade selecionada' : 'de todas as sociedades da IPNC'
+
     const dataContext = `
-DADOS DA DIRETORIA - IPNC:
+DADOS DA DIRETORIA - IPNC (${scopeLabel}):
 
 REUNIÕES RECENTES:
 ${meetingsData.map(m => `- "${m.title}" em ${m.date} (${m.status})${m.meeting_notes ? ` - Notas: ${m.meeting_notes.substring(0, 200)}` : ''}`).join('\n')}
@@ -183,34 +195,35 @@ Retorne APENAS o JSON válido, sem markdown.`
 
     const generatedAt = new Date().toISOString()
 
-    // Save to cache using upsert
-    const { data: existing } = await serviceClient
+    // Upsert cache
+    const cacheFilter = serviceClient
       .from('pastor_summaries')
       .select('id')
-      .is('society_id', null)
       .limit(1)
-      .single()
+
+    if (societyId) {
+      cacheFilter.eq('society_id', societyId)
+    } else {
+      cacheFilter.is('society_id', null)
+    }
+
+    const { data: existing } = await cacheFilter.single()
+
+    const cacheData = {
+      summaries,
+      stats,
+      meetings_data: meetingsData,
+      events_data: eventsData,
+      plenaries_data: plenariesData,
+      generated_at: generatedAt,
+      invalidated: false,
+      society_id: societyId,
+    }
 
     if (existing) {
-      await serviceClient.from('pastor_summaries').update({
-        summaries,
-        stats,
-        meetings_data: meetingsData,
-        events_data: eventsData,
-        plenaries_data: plenariesData,
-        generated_at: generatedAt,
-        invalidated: false,
-      }).eq('id', existing.id)
+      await serviceClient.from('pastor_summaries').update(cacheData).eq('id', existing.id)
     } else {
-      await serviceClient.from('pastor_summaries').insert({
-        summaries,
-        stats,
-        meetings_data: meetingsData,
-        events_data: eventsData,
-        plenaries_data: plenariesData,
-        generated_at: generatedAt,
-        invalidated: false,
-      })
+      await serviceClient.from('pastor_summaries').insert(cacheData)
     }
 
     return new Response(JSON.stringify({

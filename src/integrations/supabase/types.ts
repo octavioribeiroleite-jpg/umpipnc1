@@ -599,6 +599,39 @@ export type Database = {
           },
         ]
       }
+      pastor_announcements: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          message: string
+          priority: string
+          read_by: Json
+          target_societies: string[] | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          message: string
+          priority?: string
+          read_by?: Json
+          target_societies?: string[] | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          message?: string
+          priority?: string
+          read_by?: Json
+          target_societies?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
       pastor_feedback: {
         Row: {
           created_at: string
