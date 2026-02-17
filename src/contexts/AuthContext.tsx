@@ -39,6 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let initialLoadDone = false;
+
+    // Safety timeout - never stay loading forever
+    const safetyTimer = setTimeout(() => {
+      if (isMounted && loading) {
+        console.warn('Auth loading safety timeout triggered');
+        setLoading(false);
+      }
+    }, 8000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -47,9 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          setTimeout(() => {
-            if (isMounted) fetchProfileAndRoles(session.user.id);
-          }, 0);
+          // Only fetch if initial load is done (avoid double fetch)
+          if (initialLoadDone) {
+            setTimeout(() => {
+              if (isMounted) fetchProfileAndRoles(session.user.id);
+            }, 0);
+          }
         } else {
           setProfile(null);
           setRoles([]);
@@ -59,15 +71,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!isMounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        setSession(session);
+        setUser(session?.user ?? null);
 
-      if (session?.user) {
-        await fetchProfileAndRoles(session.user.id);
-      } else {
-        setLoading(false);
+        if (session?.user) {
+          await fetchProfileAndRoles(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+        if (isMounted) setLoading(false);
+      } finally {
+        initialLoadDone = true;
       }
     };
 
@@ -75,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isMounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);
