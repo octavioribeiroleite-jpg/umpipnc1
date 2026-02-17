@@ -544,8 +544,10 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          plain_password: string | null
           updated_at: string
           user_id: string
+          username: string
         }
         Insert: {
           active?: boolean
@@ -555,8 +557,10 @@ export type Database = {
           full_name: string
           id?: string
           phone?: string | null
+          plain_password?: string | null
           updated_at?: string
           user_id: string
+          username: string
         }
         Update: {
           active?: boolean
@@ -566,8 +570,10 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          plain_password?: string | null
           updated_at?: string
           user_id?: string
+          username?: string
         }
         Relationships: []
       }

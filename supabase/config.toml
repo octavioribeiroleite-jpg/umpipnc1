@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.auto-process-meeting]
 verify_jwt = false
+
+[functions.create-user]
+verify_jwt = false
+
+[functions.update-user-password]
+verify_jwt = false
