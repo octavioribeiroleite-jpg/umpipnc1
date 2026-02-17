@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Trash2, UserPlus, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { Trash2, UserPlus, Loader2, Pencil, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -57,12 +57,13 @@ export default function Usuarios() {
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState<AppRole>('visualizador');
 
-  // Change password dialog
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
-  const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
-  const [passwordUserName, setPasswordUserName] = useState('');
-  const [newPasswordValue, setNewPasswordValue] = useState('');
-  const [changingPassword, setChangingPassword] = useState(false);
+  // Edit user dialog
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editUsername, setEditUsername] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     if (isAdmin) {
@@ -203,27 +204,34 @@ export default function Usuarios() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!passwordUserId || !newPasswordValue) return;
-    setChangingPassword(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('update-user-password', {
-        body: { user_id: passwordUserId, new_password: newPasswordValue },
-      });
+  const handleEditUser = async () => {
+    if (!editUserId) return;
+    const body: Record<string, string> = { user_id: editUserId };
+    if (editFullName) body.new_full_name = editFullName;
+    if (editUsername) body.new_username = editUsername;
+    if (editPassword) body.new_password = editPassword;
 
+    if (!editFullName && !editUsername && !editPassword) {
+      toast.error('Altere pelo menos um campo');
+      return;
+    }
+
+    setSavingEdit(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-user-password', { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success('Senha alterada com sucesso!');
-      setPasswordDialogOpen(false);
-      setNewPasswordValue('');
-      setPasswordUserId(null);
+      toast.success('Usuário atualizado com sucesso!');
+      setEditDialogOpen(false);
+      setEditPassword('');
+      setEditUserId(null);
       fetchUsers();
     } catch (error: any) {
-      console.error('Error changing password:', error);
-      toast.error(error.message || 'Erro ao alterar senha');
+      console.error('Error updating user:', error);
+      toast.error(error.message || 'Erro ao atualizar usuário');
     } finally {
-      setChangingPassword(false);
+      setSavingEdit(false);
     }
   };
 
@@ -406,13 +414,14 @@ export default function Usuarios() {
                             size="sm"
                             variant="ghost"
                             onClick={() => {
-                              setPasswordUserId(user.user_id);
-                              setPasswordUserName(user.full_name);
-                              setNewPasswordValue('');
-                              setPasswordDialogOpen(true);
+                              setEditUserId(user.user_id);
+                              setEditFullName(user.full_name);
+                              setEditUsername(user.username);
+                              setEditPassword('');
+                              setEditDialogOpen(true);
                             }}
                           >
-                            <KeyRound className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -458,32 +467,50 @@ export default function Usuarios() {
         </Card>
       </div>
 
-      {/* Change Password Dialog */}
-      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Alterar Senha</DialogTitle>
+            <DialogTitle>Editar Usuário</DialogTitle>
             <DialogDescription>
-              Nova senha para {passwordUserName}
+              Altere o nome, usuário ou senha
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nova senha</Label>
+              <Label>Nome completo</Label>
+              <Input
+                placeholder="Nome completo"
+                value={editFullName}
+                onChange={(e) => setEditFullName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Usuário (login)</Label>
+              <Input
+                placeholder="Usuário"
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Nova senha (opcional)</Label>
               <Input
                 type="text"
-                placeholder="Digite a nova senha"
-                value={newPasswordValue}
-                onChange={(e) => setNewPasswordValue(e.target.value)}
+                placeholder="Deixe vazio para não alterar"
+                value={editPassword}
+                onChange={(e) => setEditPassword(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleChangePassword} disabled={changingPassword || !newPasswordValue}>
-              {changingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            <Button onClick={handleEditUser} disabled={savingEdit}>
+              {savingEdit ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Salvar
             </Button>
           </DialogFooter>
