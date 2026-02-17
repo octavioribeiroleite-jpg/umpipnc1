@@ -21,4 +21,7 @@ verify_jwt = false
 [functions.summarize-for-pastor]
 verify_jwt = false
 
+[functions.seed-calendar-events]
+verify_jwt = false
+
 
