@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { full_name, username, password, role } = await req.json()
+    const { full_name, username, password, role, society_id } = await req.json()
 
     if (!full_name || !username || !password || !role) {
       return new Response(JSON.stringify({ error: 'Campos obrigatórios: full_name, username, password, role' }), {
@@ -70,11 +70,16 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Update profile with username and plain_password (trigger creates the profile)
-    await adminClient.from('profiles').update({
+    // Update profile with username, plain_password and society_id
+    const profileUpdate: Record<string, unknown> = {
       username: username.toLowerCase(),
       plain_password: password,
-    }).eq('user_id', newUser.user.id)
+    }
+    if (society_id) {
+      profileUpdate.society_id = society_id
+    }
+
+    await adminClient.from('profiles').update(profileUpdate).eq('user_id', newUser.user.id)
 
     // Assign role
     await adminClient.from('user_roles').insert({

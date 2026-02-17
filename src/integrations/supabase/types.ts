@@ -700,6 +700,7 @@ export type Database = {
           id: string
           phone: string | null
           plain_password: string | null
+          society_id: string | null
           updated_at: string
           user_id: string
           username: string
@@ -713,6 +714,7 @@ export type Database = {
           id?: string
           phone?: string | null
           plain_password?: string | null
+          society_id?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -726,11 +728,20 @@ export type Database = {
           id?: string
           phone?: string | null
           plain_password?: string | null
+          society_id?: string | null
           updated_at?: string
           user_id?: string
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       settings: {
         Row: {
