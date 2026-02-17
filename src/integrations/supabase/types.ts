@@ -535,6 +535,42 @@ export type Database = {
           },
         ]
       }
+      pastor_feedback: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          message: string
+          read: boolean
+          read_at: string | null
+          read_by: string | null
+          response: string | null
+          section: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          message: string
+          read?: boolean
+          read_at?: string | null
+          read_by?: string | null
+          response?: string | null
+          section: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          message?: string
+          read?: boolean
+          read_at?: string | null
+          read_by?: string | null
+          response?: string | null
+          section?: string
+        }
+        Relationships: []
+      }
       plenaries: {
         Row: {
           created_at: string
@@ -983,6 +1019,7 @@ export type Database = {
     Functions: {
       get_email_by_username: { Args: { _username: string }; Returns: string }
       has_management_role: { Args: { _user_id: string }; Returns: boolean }
+      has_pastor_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -992,7 +1029,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "diretoria" | "visualizador"
+      app_role: "admin" | "diretoria" | "visualizador" | "pastor"
       contribution_status: "draft" | "final" | "revealed"
       event_origin: "reuniao" | "manual"
       event_status: "confirmado" | "pendente" | "cancelado"
@@ -1137,7 +1174,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "diretoria", "visualizador"],
+      app_role: ["admin", "diretoria", "visualizador", "pastor"],
       contribution_status: ["draft", "final", "revealed"],
       event_origin: ["reuniao", "manual"],
       event_status: ["confirmado", "pendente", "cancelado"],
