@@ -167,70 +167,196 @@ export default function PlenariaDetalhe() {
     if (!plenary) return;
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 20;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    const contentWidth = pageWidth - margin * 2;
+    let y = 0;
+    let pageNum = 1;
+    const totalPagesPlaceholder = '{total}';
 
-    // Title
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Chamada - ${plenary.title}`, pageWidth / 2, y, { align: 'center' });
-    y += 10;
-
-    // Date
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(
-      `Data: ${format(new Date(plenary.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`,
-      pageWidth / 2,
-      y,
-      { align: 'center' }
-    );
-    y += 12;
-
-    // Summary
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Presentes: ${presentCount}/${totalMembers} (${percentage}%)`, 20, y);
-    y += 7;
-    doc.text(`Quórum: ${quorumReached ? 'Atingido ✓' : 'Não atingido ✗'}`, 20, y);
-    y += 12;
-
-    // Present list
     const presentes = attendance.filter((a) => a.present).sort((a, b) => a.member_name.localeCompare(b.member_name));
     const ausentes = attendance.filter((a) => !a.present).sort((a, b) => a.member_name.localeCompare(b.member_name));
+    const absentCount = totalMembers - presentCount;
 
-    doc.setFontSize(13);
+    const addFooter = () => {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(120, 120, 120);
+      doc.text(
+        `Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`,
+        margin,
+        pageHeight - 10
+      );
+      doc.text(
+        `Página ${pageNum} de ${totalPagesPlaceholder}`,
+        pageWidth - margin,
+        pageHeight - 10,
+        { align: 'right' }
+      );
+    };
+
+    const checkPage = (needed: number) => {
+      if (y + needed > pageHeight - 20) {
+        addFooter();
+        doc.addPage();
+        pageNum++;
+        y = 20;
+      }
+    };
+
+    // === HEADER: dark blue bar ===
+    doc.setFillColor(30, 58, 95);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('Presentes', 20, y);
-    y += 8;
-
-    doc.setFontSize(10);
+    doc.text('Chamada de Presença', pageWidth / 2, 16, { align: 'center' });
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    presentes.forEach((p, i) => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.text(`${i + 1}. ${p.member_name}`, 25, y);
-      y += 6;
-    });
-    if (presentes.length === 0) {
-      doc.text('Nenhum presente registrado.', 25, y);
-      y += 6;
+    doc.text(plenary.title, pageWidth / 2, 25, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(
+      format(new Date(plenary.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
+      pageWidth / 2,
+      33,
+      { align: 'center' }
+    );
+
+    // Decorative line
+    doc.setDrawColor(52, 152, 219);
+    doc.setLineWidth(1);
+    doc.line(margin, 43, pageWidth - margin, 43);
+    y = 50;
+
+    // === SUMMARY BOX ===
+    doc.setFillColor(240, 245, 250);
+    doc.roundedRect(margin, y, contentWidth, 36, 3, 3, 'F');
+    doc.setDrawColor(200, 210, 220);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, contentWidth, 36, 3, 3, 'S');
+
+    // Stats row
+    doc.setTextColor(30, 58, 95);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    const col1 = margin + 10;
+    const col2 = margin + contentWidth * 0.3;
+    const col3 = margin + contentWidth * 0.55;
+    const statsY = y + 12;
+
+    doc.text('Presentes', col1, statsY);
+    doc.text('Ausentes', col2, statsY);
+    doc.text('Total', col3, statsY);
+
+    doc.setFontSize(16);
+    doc.setTextColor(39, 174, 96);
+    doc.text(`${presentCount}`, col1, statsY + 10);
+    doc.setTextColor(231, 76, 60);
+    doc.text(`${absentCount}`, col2, statsY + 10);
+    doc.setTextColor(30, 58, 95);
+    doc.text(`${totalMembers}`, col3, statsY + 10);
+
+    // Progress bar
+    const barX = margin + contentWidth * 0.72;
+    const barW = contentWidth * 0.22;
+    const barY = statsY + 1;
+    const barH = 6;
+    doc.setFillColor(220, 220, 220);
+    doc.roundedRect(barX, barY, barW, barH, 2, 2, 'F');
+    const fillW = (barW * percentage) / 100;
+    if (fillW > 0) {
+      doc.setFillColor(quorumReached ? 39 : 231, quorumReached ? 174 : 76, quorumReached ? 96 : 60);
+      doc.roundedRect(barX, barY, Math.max(fillW, 4), barH, 2, 2, 'F');
     }
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`${percentage}%`, barX + barW / 2, barY + barH + 8, { align: 'center' });
 
-    y += 6;
-    doc.setFontSize(13);
+    // Quorum badge
+    if (quorumReached) {
+      doc.setFillColor(39, 174, 96);
+    } else {
+      doc.setFillColor(231, 76, 60);
+    }
+    const badgeText = quorumReached ? 'Quórum Atingido' : 'Sem Quórum';
+    const badgeW = doc.getTextWidth(badgeText) + 10;
+    doc.roundedRect(barX + (barW - badgeW) / 2, barY + barH + 12, badgeW, 7, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
-    if (y > 260) { doc.addPage(); y = 20; }
-    doc.text('Ausentes', 20, y);
-    y += 8;
+    doc.text(badgeText, barX + barW / 2, barY + barH + 17, { align: 'center' });
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    ausentes.forEach((a, i) => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.text(`${i + 1}. ${a.member_name}`, 25, y);
-      y += 6;
-    });
-    if (ausentes.length === 0) {
-      doc.text('Nenhum ausente registrado.', 25, y);
+    y += 44;
+
+    // === HELPER: render member list ===
+    const renderList = (
+      title: string,
+      list: AttendanceRecord[],
+      headerColor: [number, number, number],
+      dotColor: [number, number, number],
+      emptyMsg: string
+    ) => {
+      checkPage(20);
+      // Section header
+      doc.setFillColor(...headerColor);
+      doc.roundedRect(margin, y, contentWidth, 9, 2, 2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${title} (${list.length})`, margin + 5, y + 6.5);
+      y += 14;
+
+      if (list.length === 0) {
+        doc.setTextColor(120, 120, 120);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.text(emptyMsg, margin + 5, y);
+        y += 8;
+        return;
+      }
+
+      list.forEach((item, i) => {
+        checkPage(8);
+        // Zebra striping
+        if (i % 2 === 0) {
+          doc.setFillColor(245, 247, 250);
+          doc.rect(margin, y - 4.5, contentWidth, 7, 'F');
+        }
+        // Dot
+        doc.setFillColor(...dotColor);
+        doc.circle(margin + 6, y - 1.5, 1.5, 'F');
+        // Number + name
+        doc.setTextColor(50, 50, 50);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        const num = `${(i + 1).toString().padStart(2, '0')}.`;
+        doc.text(num, margin + 11, y);
+        doc.text(item.member_name, margin + 22, y);
+        y += 7;
+      });
+      y += 4;
+    };
+
+    // === PRESENT LIST ===
+    renderList('Presentes', presentes, [39, 174, 96], [39, 174, 96], 'Nenhum presente registrado.');
+
+    // === ABSENT LIST ===
+    renderList('Ausentes', ausentes, [231, 76, 60], [231, 76, 60], 'Nenhum ausente registrado.');
+
+    // Add footer to last page
+    addFooter();
+
+    // Replace page number placeholders
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      // This is a workaround: we re-draw the footer with final total
+      doc.setFillColor(255, 255, 255);
+      doc.rect(pageWidth - margin - 40, pageHeight - 14, 40, 8, 'F');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(120, 120, 120);
+      doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
     }
 
     doc.save(`chamada-${plenary.title.replace(/\s+/g, '-').toLowerCase()}.pdf`);
