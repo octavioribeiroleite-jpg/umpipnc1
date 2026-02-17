@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { ChevronRight } from 'lucide-react';
 
 interface Society {
@@ -13,39 +12,16 @@ interface Society {
 
 interface SocietyStats {
   membersActive: number;
+  tasksDone: number;
   tasksPending: number;
   saldo: number;
+  lastMeetingDate?: string;
 }
 
-export function SocietyOverviewCard({ society }: { society: Society }) {
+export function SocietyOverviewCard({ society, stats }: { society: Society; stats: SocietyStats }) {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<SocietyStats>({ membersActive: 0, tasksPending: 0, saldo: 0 });
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      const [membersRes, tasksRes, transRes, paymentsRes] = await Promise.all([
-        supabase.from('members').select('id').eq('active', true).eq('society_id', society.id),
-        supabase.from('tasks').select('id').neq('status', 'done').eq('society_id', society.id),
-        supabase.from('transactions').select('amount, type').eq('society_id', society.id),
-        supabase.from('membership_payments').select('amount, status, member_id').eq('status', 'pago'),
-      ]);
-
-      const trans = transRes.data || [];
-      const entradas = trans.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0);
-      const saidas = trans.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0);
-
-      // Filter payments by members of this society
-      const memberIds = new Set((membersRes.data || []).map(m => m.id));
-      const mensalidades = (paymentsRes.data || []).filter(p => memberIds.has(p.member_id)).reduce((s, p) => s + Number(p.amount), 0);
-
-      setStats({
-        membersActive: (membersRes.data || []).length,
-        tasksPending: (tasksRes.data || []).length,
-        saldo: mensalidades + entradas - saidas,
-      });
-    };
-    fetchStats();
-  }, [society.id]);
+  const totalTasks = stats.tasksDone + stats.tasksPending;
+  const progress = totalTasks > 0 ? (stats.tasksDone / totalTasks) * 100 : 0;
 
   return (
     <Card
@@ -53,7 +29,7 @@ export function SocietyOverviewCard({ society }: { society: Society }) {
       onClick={() => navigate(`/pastor/sociedade/${society.slug}`)}
     >
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: society.color }}>
               {society.name.substring(0, 3)}
@@ -62,7 +38,7 @@ export function SocietyOverviewCard({ society }: { society: Society }) {
               <p className="font-semibold text-sm">{society.name}</p>
               <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                 <span>{stats.membersActive} membros</span>
-                <span>{stats.tasksPending} tarefas</span>
+                <span>{stats.tasksPending} pendentes</span>
               </div>
             </div>
           </div>
@@ -73,6 +49,12 @@ export function SocietyOverviewCard({ society }: { society: Society }) {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
+        {totalTasks > 0 && (
+          <div className="flex items-center gap-2">
+            <Progress value={progress} className="h-1.5 flex-1" />
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap">{stats.tasksDone}/{totalTasks}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

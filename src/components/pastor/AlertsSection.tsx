@@ -11,6 +11,7 @@ interface Alert {
   title: string;
   detail: string;
   severity: 'high' | 'medium';
+  societyName?: string;
 }
 
 export function AlertsSection() {
@@ -26,12 +27,14 @@ export function AlertsSection() {
       const now = new Date();
       const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-      const [tasksRes, meetingsRes, eventsRes] = await Promise.all([
-        supabase.from('tasks').select('id, title, due_date, status').neq('status', 'done').not('due_date', 'is', null).lt('due_date', now.toISOString().split('T')[0]),
-        supabase.from('meetings').select('id, title, date, final_minutes, status').eq('status', 'fechada').is('final_minutes', null),
+      const [tasksRes, meetingsRes, eventsRes, societiesRes] = await Promise.all([
+        supabase.from('tasks').select('id, title, due_date, status, society_id').neq('status', 'done').not('due_date', 'is', null).lt('due_date', now.toISOString().split('T')[0]),
+        supabase.from('meetings').select('id, title, date, final_minutes, status, society_id').eq('status', 'fechada').is('final_minutes', null),
         supabase.from('events').select('id, title, start_date, status').gte('start_date', now.toISOString()).lte('start_date', sevenDaysLater.toISOString()).eq('status', 'confirmado'),
+        supabase.from('societies').select('id, name').eq('active', true),
       ]);
 
+      const societyMap = new Map((societiesRes.data || []).map(s => [s.id, s.name]));
       const newAlerts: Alert[] = [];
 
       (tasksRes.data || []).forEach(t => {
@@ -40,6 +43,7 @@ export function AlertsSection() {
           title: t.title,
           detail: `Venceu em ${format(new Date(t.due_date!), "dd/MM/yy", { locale: ptBR })}`,
           severity: 'high',
+          societyName: t.society_id ? societyMap.get(t.society_id) : undefined,
         });
       });
 
@@ -49,6 +53,7 @@ export function AlertsSection() {
           title: m.title,
           detail: `Reunião de ${format(new Date(m.date), "dd/MM/yy", { locale: ptBR })} sem ata`,
           severity: 'medium',
+          societyName: m.society_id ? societyMap.get(m.society_id) : undefined,
         });
       });
 
@@ -98,7 +103,12 @@ export function AlertsSection() {
             <div key={i} className="flex items-start gap-3 text-sm py-1.5 border-b last:border-0">
               <Icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${alert.severity === 'high' ? 'text-destructive' : 'text-warning'}`} />
               <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{alert.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium truncate">{alert.title}</p>
+                  {alert.societyName && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0">{alert.societyName}</Badge>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">{alert.detail}</p>
               </div>
             </div>

@@ -671,6 +671,7 @@ export type Database = {
       pastor_summaries: {
         Row: {
           created_at: string
+          data_hash: string | null
           events_data: Json | null
           generated_at: string
           id: string
@@ -683,6 +684,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          data_hash?: string | null
           events_data?: Json | null
           generated_at?: string
           id?: string
@@ -695,6 +697,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          data_hash?: string | null
           events_data?: Json | null
           generated_at?: string
           id?: string

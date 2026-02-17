@@ -1,0 +1,1 @@
+ALTER TABLE public.pastor_summaries ADD COLUMN IF NOT EXISTS data_hash text;
