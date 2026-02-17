@@ -1,157 +1,116 @@
 
-# Plano: Dashboard Inteligente com Dados Diretos e IA sob Demanda
+
+# Plano: Calendario do Pastor com Melhor Visualizacao
 
 ## Problema Atual
 
-Hoje, ao abrir o painel do pastor, o sistema chama a edge function `summarize-for-pastor` que:
-1. Busca todos os dados do banco
-2. Chama a IA para gerar resumos
-3. Salva no cache
+A pagina `/pastor/calendario` usa o componente Calendar pequeno do shadcn (DayPicker), que mostra apenas um mini-calendario sem detalhes visuais dos eventos. A pagina principal do calendario (`/calendario`) ja tem um grid mensal completo com eventos inline, mas o pastor nao tem acesso a isso.
 
-Isso significa que o carregamento e lento (espera a IA) e gasta creditos de IA desnecessariamente. Os numeros (saldo, membros, tarefas) nao precisam de IA - sao dados crus do banco.
+## O que vai mudar
 
-## Nova Arquitetura
+Transformar o calendario do pastor em um grid mensal completo (igual ao da pagina principal), com eventos coloridos por sociedade e modo somente leitura.
 
-Separar em duas camadas:
+---
 
-### Camada 1: Dados diretos (sempre rapidos, sem IA)
+## Nova Estrutura Visual
 
-O frontend busca os dados consolidados **diretamente do banco** via queries Supabase, sem passar pela edge function:
+```text
++----------------------------------------------+
+|  Calendario Unificado                         |
+|                                              |
+|  < Fevereiro 2026 >     [Filtro: Todas v]    |
+|                                              |
+|  Dom  Seg  Ter  Qua  Qui  Sex  Sab          |
+|  +-----------------------------------------+ |
+|  |    |    |    |    |    |    |  1         | |
+|  |    |    |    |    |    |    |            | |
+|  +----+----+----+----+----+----+----+      | |
+|  |  2 |  3 |  4 |  5 |  6 |  7 |  8 |     | |
+|  |    |    |Reun|    |    |Cult|    |       | |
+|  |    |    |UMP |    |    |SAF |    |       | |
+|  +-----------------------------------------+ |
+|  | ...                                      | |
+|  +-----------------------------------------+ |
+|                                              |
+|  Proximos Eventos (lateral ou abaixo)        |
+|  - Reuniao UMP (20/02) [bolinha azul]        |
+|  - Culto SAF (22/02) [bolinha rosa]          |
++----------------------------------------------+
+```
 
-- Stats por sociedade (membros, tarefas, saldo)
-- Stats globais (soma de todos)
-- Alertas (tarefas atrasadas, reunioes sem ata, eventos proximos)
-- Proximos eventos
-
-Isso carrega **instantaneamente** ao abrir a pagina.
-
-### Camada 2: Resumo da IA (sob demanda, com cache inteligente)
-
-A IA so e chamada quando:
-- Nao existe cache valido
-- O pastor clica em "Atualizar Resumo" manualmente
-- Dados mudaram desde o ultimo resumo (comparacao por hash/timestamp)
-
-O resumo da IA fica em um card separado que pode carregar independentemente.
+No celular: calendario em formato lista por semana ou grid compacto, com proximos eventos abaixo.
 
 ---
 
 ## Mudancas Especificas
 
-### 1. PainelPastor.tsx - Buscar dados direto do banco
+### 1. Grid mensal completo
 
-Remover a dependencia total da edge function para carregar a pagina. Em vez disso:
+Substituir o componente `Calendar` (DayPicker) por um grid de 7 colunas customizado, igual ao usado em `Calendario.tsx`. Cada celula mostra o numero do dia e os eventos compactos daquele dia.
 
-- Buscar sociedades + stats de cada uma diretamente via queries paralelas
-- Calcular totais globais no frontend (soma dos stats por sociedade)
-- Mostrar tudo imediatamente
-- Buscar resumo IA separadamente (do cache ou gerar)
+### 2. Eventos coloridos por sociedade
 
-Nova ordem de carregamento:
-1. Sociedades + stats diretos do banco (rapido)
-2. Alertas diretos do banco (rapido)  
-3. Resumo IA do cache (rapido se existir)
-4. Se nao tiver cache: mostrar botao "Gerar Resumo com IA"
+Buscar `society_id` dos eventos e fazer join com `societies` para obter a cor da sociedade. Eventos que nao tem `society_id` usam a cor propria do evento.
 
-### 2. Edge Function - Separar dados de IA
+### 3. Filtro por sociedade
 
-A edge function passa a ter dois modos:
+Adicionar um select no topo para filtrar eventos: "Todas as Sociedades", "UMP", "SAF", "UPH", "UPA", "UCP". O pastor pode ver tudo junto ou focar em uma sociedade.
 
-**Modo `stats_only` (novo, padrao)**: Retorna apenas dados crus agregados, sem chamar IA. Rapido e barato.
+### 4. Clique no evento mostra detalhes
 
-**Modo `with_ai` (so quando solicitado)**: Busca dados + gera resumo IA. So e chamado quando:
-- Pastor clica "Gerar/Atualizar Resumo"
-- Nao existe cache valido
+Ao clicar em um evento compacto no grid, abrir um dialog/drawer somente leitura com os detalhes do evento (titulo, data, horario, local, descricao, status, qual sociedade).
 
-Adicionar campo `data_hash` no cache para detectar se os dados mudaram. Se o hash dos dados atuais for igual ao do cache, retorna o resumo existente sem chamar a IA novamente.
+### 5. Navegacao entre meses
 
-### 3. AlertsSection.tsx - Incluir nome da sociedade
+Setas para navegar entre meses (igual a pagina principal), com o nome do mes e ano no centro.
 
-Atualizar as queries para incluir `society_id` e fazer join com `societies` para mostrar qual sociedade cada alerta pertence (ex: "Tarefa atrasada - UMP").
+### 6. Proximos eventos na lateral (desktop) ou abaixo (mobile)
 
-### 4. SocietyOverviewCard.tsx - Receber stats via props
-
-Em vez de cada card fazer suas proprias queries (5 cards = 20 queries), o `PainelPastor` busca todos os dados uma vez e passa via props para os cards. Menos queries, mais rapido.
-
-### 5. Novo layout da pagina
-
-```text
-+----------------------------------------------+
-|  [Sparkles] Resumo Pastoral (IA)             |
-|  "A UMP esta ativa com 9 tarefas..."         |
-|  Atualizado em 17/02  [Atualizar Resumo]     |
-+----------------------------------------------+
-|  [!] Alertas (3 urgentes)                    |
-|  - Tarefa atrasada (UMP) - venceu 15/02      |
-|  - Reuniao sem ata (SAF) - 10/02             |
-+----------------------------------------------+
-|  Resumo Financeiro Consolidado               |
-|  Saldo: R$ X | Entradas: R$ X | Saidas: R$ X |
-+----------------------------------------------+
-|  SOCIEDADES                                  |
-|  [UMP] 18 membros | R$ 0 | 9/12 tarefas      |
-|  [SAF]  0 membros | R$ 0 | 0/0 tarefas       |
-|  ...                                         |
-+----------------------------------------------+
-|  Proximos Eventos                            |
-|  - Culto Jovem (20/02)                       |
-|  - Reuniao SAF (22/02)                       |
-+----------------------------------------------+
-```
+Lista dos proximos 10 eventos com bolinha colorida da sociedade, titulo, data e local.
 
 ---
 
 ## Detalhes Tecnicos
 
-### PainelPastor.tsx
+### PastorCalendario.tsx
 
-- Novo state: `statsLoaded` (dados diretos) separado de `aiLoaded` (resumo IA)
-- Carregar stats direto: queries paralelas para members, tasks, transactions por society_id
-- Carregar resumo IA: verificar cache primeiro, so chamar edge function se necessario
-- Botao "Atualizar Resumo" chama edge function com `{ force: true }`
-- Secao de proximos eventos: query direta em `events` com `gte(start_date, now)`
+Refatorar completamente para:
 
-### Edge Function `summarize-for-pastor`
+- Usar `useEvents(month, year)` em vez de query manual direta
+- Implementar grid de calendario customizado (reutilizar logica de `Calendario.tsx`)
+- Buscar sociedades para mapear cores
+- Adicionar state para filtro de sociedade
+- Dialog somente leitura para detalhes do evento (sem edicao/exclusao)
+- Layout responsivo: grid 7 colunas no desktop, mais compacto no mobile
 
-- Adicionar parametro `mode`: `'stats_only'` ou `'with_ai'` (default: `'with_ai'`)
-- Calcular `data_hash` (hash simples dos contadores: membros+tarefas+saldo) antes de chamar IA
-- Se `data_hash` do cache == `data_hash` atual: retornar cache sem chamar IA
-- Adicionar coluna `data_hash` na tabela `pastor_summaries`
-- No modo global (sem society_id), agrupar dados por sociedade no contexto da IA
+### Queries necessarias
 
-### AlertsSection.tsx
+- `useEvents(month, year)` para eventos do mes (ja existe)
+- Query para `societies` (id, name, slug, color) para mapeamento de cores
+- Filtro client-side por `society_id` quando selecionado
 
-- Adicionar `society_id` nas queries de tasks e meetings
-- Buscar sociedades para mapear society_id -> nome
-- Mostrar "(UMP)", "(SAF)" etc. no detalhe de cada alerta
+### Componente de detalhes (somente leitura)
 
-### SocietyOverviewCard.tsx
-
-- Receber `stats` como prop em vez de buscar internamente
-- Adicionar barra de progresso de tarefas (done/total)
-- Adicionar data da ultima reuniao
-
-### Migracao SQL
-
-Adicionar coluna `data_hash` na tabela `pastor_summaries`:
-```text
-ALTER TABLE pastor_summaries ADD COLUMN data_hash text;
-```
+Criar um dialog simples que mostra:
+- Titulo do evento
+- Data e horario
+- Local
+- Descricao
+- Status (badge)
+- Sociedade (se tiver society_id)
+- Origem (manual ou via reuniao)
+- Sem botoes de editar/excluir (pastor so visualiza)
 
 ### Arquivos Modificados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| Migracao SQL | Adicionar `data_hash` em `pastor_summaries` |
-| `src/pages/PainelPastor.tsx` | Buscar dados direto do banco, IA separada, novo layout |
-| `src/components/pastor/AlertsSection.tsx` | Mostrar nome da sociedade nos alertas |
-| `src/components/pastor/SocietyOverviewCard.tsx` | Receber stats via props, adicionar progresso |
-| `supabase/functions/summarize-for-pastor/index.ts` | Hash de dados, modo stats_only, dados por sociedade |
+| `src/pages/PastorCalendario.tsx` | Refatorar com grid mensal, filtro por sociedade, dialog de detalhes |
 
 ### Ordem de Execucao
 
-1. Migracao SQL (data_hash)
-2. Atualizar edge function (hash + modo stats_only + dados por sociedade no prompt)
-3. Refatorar PainelPastor (dados diretos + IA separada + novo layout)
-4. Melhorar AlertsSection (nome da sociedade)
-5. Melhorar SocietyOverviewCard (props + progresso)
+1. Refatorar `PastorCalendario.tsx` com grid mensal customizado
+2. Adicionar filtro por sociedade
+3. Adicionar dialog somente leitura para detalhes do evento
+4. Ajustar layout responsivo (mobile-first)
+
