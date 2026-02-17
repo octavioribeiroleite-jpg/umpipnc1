@@ -109,7 +109,7 @@ export default function PainelPastor() {
       <header className="border-b bg-card">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logoIpnc} alt="Renovo IPNC" className="h-10 w-10 object-contain" />
+            <img src={logoIpnc} alt="Renovo IPNC" className="h-12 w-12 object-contain" />
             <div>
               <h1 className="font-display font-bold text-lg">Painel do Pastor</h1>
               <p className="text-xs text-muted-foreground">

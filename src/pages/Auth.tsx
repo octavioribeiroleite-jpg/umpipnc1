@@ -50,7 +50,7 @@ export default function Auth() {
             <img
               src={logoIpnc}
               alt="Renovo IPNC"
-              className="h-36 w-36 mx-auto object-contain drop-shadow-lg"
+              className="h-44 w-44 mx-auto object-contain drop-shadow-lg"
             />
           </div>
           <h1 className="font-display text-3xl font-bold text-foreground animate-fade-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
