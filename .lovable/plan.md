@@ -1,150 +1,157 @@
 
+# Plano: Dashboard Inteligente com Dados Diretos e IA sob Demanda
 
-# Plano: Painel do Pastor Reorganizado com Navegacao Propria
+## Problema Atual
 
-## Visao Geral
+Hoje, ao abrir o painel do pastor, o sistema chama a edge function `summarize-for-pastor` que:
+1. Busca todos os dados do banco
+2. Chama a IA para gerar resumos
+3. Salva no cache
 
-Transformar o painel do pastor em um mini-app com menu lateral proprio e paginas dedicadas, permitindo ao pastor navegar por cada sociedade individualmente e ter uma visao organizada de toda a igreja.
+Isso significa que o carregamento e lento (espera a IA) e gasta creditos de IA desnecessariamente. Os numeros (saldo, membros, tarefas) nao precisam de IA - sao dados crus do banco.
+
+## Nova Arquitetura
+
+Separar em duas camadas:
+
+### Camada 1: Dados diretos (sempre rapidos, sem IA)
+
+O frontend busca os dados consolidados **diretamente do banco** via queries Supabase, sem passar pela edge function:
+
+- Stats por sociedade (membros, tarefas, saldo)
+- Stats globais (soma de todos)
+- Alertas (tarefas atrasadas, reunioes sem ata, eventos proximos)
+- Proximos eventos
+
+Isso carrega **instantaneamente** ao abrir a pagina.
+
+### Camada 2: Resumo da IA (sob demanda, com cache inteligente)
+
+A IA so e chamada quando:
+- Nao existe cache valido
+- O pastor clica em "Atualizar Resumo" manualmente
+- Dados mudaram desde o ultimo resumo (comparacao por hash/timestamp)
+
+O resumo da IA fica em um card separado que pode carregar independentemente.
 
 ---
 
-## Estrutura do Novo Painel
+## Mudancas Especificas
+
+### 1. PainelPastor.tsx - Buscar dados direto do banco
+
+Remover a dependencia total da edge function para carregar a pagina. Em vez disso:
+
+- Buscar sociedades + stats de cada uma diretamente via queries paralelas
+- Calcular totais globais no frontend (soma dos stats por sociedade)
+- Mostrar tudo imediatamente
+- Buscar resumo IA separadamente (do cache ou gerar)
+
+Nova ordem de carregamento:
+1. Sociedades + stats diretos do banco (rapido)
+2. Alertas diretos do banco (rapido)  
+3. Resumo IA do cache (rapido se existir)
+4. Se nao tiver cache: mostrar botao "Gerar Resumo com IA"
+
+### 2. Edge Function - Separar dados de IA
+
+A edge function passa a ter dois modos:
+
+**Modo `stats_only` (novo, padrao)**: Retorna apenas dados crus agregados, sem chamar IA. Rapido e barato.
+
+**Modo `with_ai` (so quando solicitado)**: Busca dados + gera resumo IA. So e chamado quando:
+- Pastor clica "Gerar/Atualizar Resumo"
+- Nao existe cache valido
+
+Adicionar campo `data_hash` no cache para detectar se os dados mudaram. Se o hash dos dados atuais for igual ao do cache, retorna o resumo existente sem chamar a IA novamente.
+
+### 3. AlertsSection.tsx - Incluir nome da sociedade
+
+Atualizar as queries para incluir `society_id` e fazer join com `societies` para mostrar qual sociedade cada alerta pertence (ex: "Tarefa atrasada - UMP").
+
+### 4. SocietyOverviewCard.tsx - Receber stats via props
+
+Em vez de cada card fazer suas proprias queries (5 cards = 20 queries), o `PainelPastor` busca todos os dados uma vez e passa via props para os cards. Menos queries, mais rapido.
+
+### 5. Novo layout da pagina
 
 ```text
-+-------------------+------------------------------------------+
-|                   |                                          |
-|  [Logo IPNC]     |   Conteudo da pagina selecionada         |
-|  Pastor Ronne    |                                          |
-|                   |                                          |
-|  > Visao Geral   |   Dashboard com alertas e stats globais  |
-|  > UMP           |   Dados especificos da UMP               |
-|  > SAF           |   Dados especificos da SAF               |
-|  > UPH           |   Dados especificos da UPH               |
-|  > UPA           |   Dados especificos da UPA               |
-|  > UCP           |   Dados especificos da UCP               |
-|  > Calendario    |   Calendario unificado de todas           |
-|  > Comunicados   |   Enviar avisos para sociedades           |
-|  > Sugestoes     |   Ver respostas das diretorias            |
-|                   |                                          |
-|  [Sair]          |                                          |
-+-------------------+------------------------------------------+
++----------------------------------------------+
+|  [Sparkles] Resumo Pastoral (IA)             |
+|  "A UMP esta ativa com 9 tarefas..."         |
+|  Atualizado em 17/02  [Atualizar Resumo]     |
++----------------------------------------------+
+|  [!] Alertas (3 urgentes)                    |
+|  - Tarefa atrasada (UMP) - venceu 15/02      |
+|  - Reuniao sem ata (SAF) - 10/02             |
++----------------------------------------------+
+|  Resumo Financeiro Consolidado               |
+|  Saldo: R$ X | Entradas: R$ X | Saidas: R$ X |
++----------------------------------------------+
+|  SOCIEDADES                                  |
+|  [UMP] 18 membros | R$ 0 | 9/12 tarefas      |
+|  [SAF]  0 membros | R$ 0 | 0/0 tarefas       |
+|  ...                                         |
++----------------------------------------------+
+|  Proximos Eventos                            |
+|  - Culto Jovem (20/02)                       |
+|  - Reuniao SAF (22/02)                       |
++----------------------------------------------+
 ```
-
-No celular: header com titulo + bottom nav com 5 itens (Geral, Sociedades, Calendario, Comunicados, Sugestoes), onde "Sociedades" abre submenu com as 5 sociedades.
-
----
-
-## 1. Visao Geral (Dashboard)
-
-Pagina principal com:
-- Cards de estatisticas globais (saldo total, membros totais, tarefas)
-- Resumo geral da IA (ja existe)
-- **Nova secao: Alertas e Pendencias**
-  - Tarefas atrasadas (vencidas e nao concluidas)
-  - Reunioes sem ata
-  - Eventos nos proximos 7 dias
-  - Cada alerta com icone de urgencia (vermelho/amarelo)
-- Cards resumo rapido de cada sociedade (nome, cor, saldo, tarefas pendentes)
-
----
-
-## 2. Pagina por Sociedade (UMP, SAF, UPH, UPA, UCP)
-
-Ao clicar em uma sociedade no menu, o pastor ve os dados filtrados daquela sociedade:
-- Resumo da IA focado naquela sociedade (via edge function com filtro)
-- Financas: saldo, entradas, saidas, mensalidades daquela sociedade
-- Ultimas reunioes da sociedade
-- Tarefas pendentes da sociedade
-- Membros ativos da sociedade
-- Formulario de sugestao direcionado a sociedade
-
----
-
-## 3. Calendario Unificado
-
-- Calendario mensal visual com eventos de todas as sociedades
-- Eventos coloridos pela cor da sociedade (UMP=azul, SAF=rosa, UPH=verde, UPA=laranja, UCP=roxo)
-- Lista dos proximos eventos abaixo do calendario
-
----
-
-## 4. Comunicados
-
-Canal de comunicacao do pastor para as sociedades:
-- Formulario: titulo, mensagem, sociedades destinatarias (multi-select ou "Todas"), prioridade
-- Historico de comunicados enviados
-- Nova tabela `pastor_announcements` no banco
-- Membros verao notificacao ao entrar no sistema
-
----
-
-## 5. Sugestoes (ja existe, mover para dentro do layout)
-
-Manter funcionalidade atual da pagina PastorSugestoes, mas renderizada dentro do PastorLayout.
 
 ---
 
 ## Detalhes Tecnicos
 
-### Banco de Dados
+### PainelPastor.tsx
 
-Nova tabela `pastor_announcements`:
-- `id` (uuid, PK)
-- `title` (text, not null)
-- `message` (text, not null)
-- `priority` (text, default 'normal' - valores: 'normal', 'urgente')
-- `target_societies` (uuid[] - array de society_ids, null = todas)
-- `created_by` (uuid, FK auth.users)
-- `created_at` (timestamptz, default now())
-- `read_by` (jsonb, default '[]')
-
-RLS: somente pastor/admin pode inserir e selecionar; membros autenticados podem selecionar (para ver notificacoes).
+- Novo state: `statsLoaded` (dados diretos) separado de `aiLoaded` (resumo IA)
+- Carregar stats direto: queries paralelas para members, tasks, transactions por society_id
+- Carregar resumo IA: verificar cache primeiro, so chamar edge function se necessario
+- Botao "Atualizar Resumo" chama edge function com `{ force: true }`
+- Secao de proximos eventos: query direta em `events` com `gte(start_date, now)`
 
 ### Edge Function `summarize-for-pastor`
 
-Atualizar para aceitar parametro `society_id`:
-- Quando receber `society_id`, filtrar meetings, tasks, members, transactions por aquela sociedade
-- Retornar resumo focado na sociedade especifica
-- Cache separado por society_id na tabela `pastor_summaries`
+- Adicionar parametro `mode`: `'stats_only'` ou `'with_ai'` (default: `'with_ai'`)
+- Calcular `data_hash` (hash simples dos contadores: membros+tarefas+saldo) antes de chamar IA
+- Se `data_hash` do cache == `data_hash` atual: retornar cache sem chamar IA
+- Adicionar coluna `data_hash` na tabela `pastor_summaries`
+- No modo global (sem society_id), agrupar dados por sociedade no contexto da IA
 
-### Novos Componentes
+### AlertsSection.tsx
 
-| Arquivo | Descricao |
-|---------|-----------|
-| `src/components/pastor/PastorLayout.tsx` | Layout com sidebar proprio do pastor |
-| `src/components/pastor/PastorSidebar.tsx` | Menu lateral com items do pastor + sociedades |
-| `src/components/pastor/PastorMobileNav.tsx` | Navegacao mobile para o pastor |
-| `src/components/pastor/AlertsSection.tsx` | Secao de alertas e pendencias |
-| `src/components/pastor/SocietyOverviewCard.tsx` | Card resumo de uma sociedade |
+- Adicionar `society_id` nas queries de tasks e meetings
+- Buscar sociedades para mapear society_id -> nome
+- Mostrar "(UMP)", "(SAF)" etc. no detalhe de cada alerta
 
-### Novas Paginas
+### SocietyOverviewCard.tsx
 
-| Rota | Arquivo | Descricao |
-|------|---------|-----------|
-| `/pastor` | `PainelPastor.tsx` (refatorar) | Dashboard com alertas |
-| `/pastor/sociedade/:slug` | `PastorSociedade.tsx` (novo) | Dados de uma sociedade |
-| `/pastor/calendario` | `PastorCalendario.tsx` (novo) | Calendario unificado |
-| `/pastor/comunicados` | `PastorComunicados.tsx` (novo) | Criar/ver comunicados |
-| `/pastor/sugestoes` | `PastorSugestoes.tsx` (mover) | Sugestoes dentro do layout |
+- Receber `stats` como prop em vez de buscar internamente
+- Adicionar barra de progresso de tarefas (done/total)
+- Adicionar data da ultima reuniao
+
+### Migracao SQL
+
+Adicionar coluna `data_hash` na tabela `pastor_summaries`:
+```text
+ALTER TABLE pastor_summaries ADD COLUMN data_hash text;
+```
 
 ### Arquivos Modificados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| Migracao SQL | Tabela `pastor_announcements` + RLS |
-| `src/App.tsx` | Novas rotas `/pastor/*` |
-| `src/pages/PainelPastor.tsx` | Refatorar como dashboard com alertas |
-| `supabase/functions/summarize-for-pastor/index.ts` | Filtro por `society_id` |
+| Migracao SQL | Adicionar `data_hash` em `pastor_summaries` |
+| `src/pages/PainelPastor.tsx` | Buscar dados direto do banco, IA separada, novo layout |
+| `src/components/pastor/AlertsSection.tsx` | Mostrar nome da sociedade nos alertas |
+| `src/components/pastor/SocietyOverviewCard.tsx` | Receber stats via props, adicionar progresso |
+| `supabase/functions/summarize-for-pastor/index.ts` | Hash de dados, modo stats_only, dados por sociedade |
 
 ### Ordem de Execucao
 
-1. Migracao SQL (tabela `pastor_announcements` + RLS)
-2. Criar `PastorLayout`, `PastorSidebar`, `PastorMobileNav`
-3. Refatorar `PainelPastor` como dashboard com alertas e cards por sociedade
-4. Criar `PastorSociedade` (dados filtrados por sociedade)
-5. Criar `PastorCalendario` (calendario unificado colorido)
-6. Criar `PastorComunicados` (formulario + historico)
-7. Mover `PastorSugestoes` para dentro do `PastorLayout`
-8. Atualizar rotas no `App.tsx`
-9. Atualizar edge function `summarize-for-pastor` com filtro por sociedade
-
+1. Migracao SQL (data_hash)
+2. Atualizar edge function (hash + modo stats_only + dados por sociedade no prompt)
+3. Refatorar PainelPastor (dados diretos + IA separada + novo layout)
+4. Melhorar AlertsSection (nome da sociedade)
+5. Melhorar SocietyOverviewCard (props + progresso)
