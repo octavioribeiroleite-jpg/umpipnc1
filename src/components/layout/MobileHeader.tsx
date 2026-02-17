@@ -32,9 +32,9 @@ export function MobileHeader() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border safe-top">
       <div className="flex items-center justify-between h-14 px-4">
-        <div className="flex items-center gap-2">
-          <img src={logoIpnc} alt="Renovo IPNC" className="h-10 w-10 object-contain" />
-          <span className="font-semibold text-foreground">IPNC</span>
+        <div className="flex items-center gap-3">
+          <img src={logoIpnc} alt="Renovo IPNC" className="h-12 w-12 object-contain" />
+          <span className="font-semibold text-foreground text-lg">IPNC</span>
         </div>
 
         {user && (
