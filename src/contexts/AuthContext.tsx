@@ -9,6 +9,7 @@ interface Profile {
   user_id: string;
   full_name: string;
   email: string;
+  username: string;
   avatar_url: string | null;
   phone: string | null;
   active: boolean;
@@ -20,12 +21,10 @@ interface AuthContextType {
   profile: Profile | null;
   roles: AppRole[];
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signIn: (username: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isManagement: boolean;
-  isPendingApproval: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,13 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
-        // Defer profile/roles fetch
         if (session?.user) {
           setLoading(true);
           setTimeout(() => {
@@ -58,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -76,21 +72,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfileAndRoles = async (userId: string) => {
     try {
-      // Fetch profile
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      // Check if user is deactivated
       if (profileData && !profileData.active) {
         await supabase.auth.signOut();
         setUser(null);
         setSession(null);
         setProfile(null);
         setRoles([]);
-        // Use setTimeout to show toast after state updates
         setTimeout(() => {
           import('sonner').then(({ toast }) => {
             toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
@@ -104,7 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(profileData as Profile);
       }
 
-      // Fetch roles
       const { data: rolesData } = await supabase
         .from('user_roles')
         .select('role')
@@ -120,26 +112,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (username: string, password: string) => {
+    // Look up actual email by username
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('username', username.toLowerCase().replace(/\s+/g, ''))
+      .maybeSingle();
+
+    const email = profileData?.email || `${username.toLowerCase().replace(/\s+/g, '')}@ipnc.local`;
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    });
-    return { error };
-  };
-
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        },
-      },
     });
     return { error };
   };
@@ -154,7 +138,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = roles.includes('admin');
   const isManagement = roles.includes('admin') || roles.includes('diretoria');
-  const isPendingApproval = user !== null && !loading && roles.length === 0;
 
   return (
     <AuthContext.Provider
@@ -165,11 +148,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roles,
         loading,
         signIn,
-        signUp,
         signOut,
         isAdmin,
         isManagement,
-        isPendingApproval,
       }}
     >
       {children}
