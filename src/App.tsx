@@ -27,7 +27,20 @@ import PastorComunicados from "./pages/PastorComunicados";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: (failureCount, error) => {
+        // Don't retry when offline
+        if (!navigator.onLine) return false;
+        return failureCount < 3;
+      },
+      refetchOnReconnect: true,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

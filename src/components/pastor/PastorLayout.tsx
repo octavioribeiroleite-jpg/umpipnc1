@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 interface PastorLayoutProps {
   children: React.ReactNode;
@@ -38,6 +39,7 @@ export function PastorLayout({ children }: PastorLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
+      <OfflineBanner />
       {/* Mobile Header */}
       {isMobile && (
         <header className="border-b bg-card sticky top-0 z-40">

@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { AppSidebar } from './AppSidebar';
 import { MobileHeader } from './MobileHeader';
 import { MobileBottomNav } from './MobileBottomNav';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -10,6 +11,7 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
+      <OfflineBanner />
       {/* Desktop layout with sidebar */}
       <div className="hidden md:flex min-h-screen">
         <AppSidebar />
