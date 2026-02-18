@@ -1,90 +1,54 @@
 
+# Suporte Offline Basico para o App
 
-# Plano: Gerar PDF de Eventos do Calendario
+## O que muda para o usuario
 
-## O que sera feito
+- Ao abrir o app sem internet, ele carrega normalmente (a interface aparece)
+- Um banner discreto aparece avisando "Voce esta offline" quando nao ha conexao
+- Os dados que o usuario ja viu antes (eventos, tarefas, reunioes) continuam visiveis
+- Quando a conexao voltar, o banner some e os dados atualizam automaticamente
 
-Adicionar um botao "Gerar PDF" no calendario do pastor (e tambem acessivel nas paginas das sociedades) que exporta os eventos do mes atual em um PDF bonito, organizado por dia, com logo da IPNC, cores de cada sociedade e layout profissional.
+## Mudancas tecnicas
 
----
+### 1. Melhorar o Service Worker (`public/sw.js`)
 
-## Layout do PDF
+- Pre-cachear todos os assets estaticos do build (JS, CSS, fontes, imagens)
+- Adicionar uma pagina de fallback offline para rotas nao cacheadas
+- Usar estrategia "cache-first" para assets estaticos (JS/CSS/imagens) e "network-first" para navegacao HTML
+- Excluir chamadas de API do cache do service worker (o React Query ja cuida disso)
+- **Excluir** a rota `/~oauth` do cache (requisito tecnico para autenticacao funcionar)
 
-```text
-+--------------------------------------------------+
-|  [BARRA AZUL ESCURO - HEADER]                    |
-|  [Logo IPNC]  Cronograma de Eventos              |
-|               Fevereiro 2026                      |
-|               Igreja Presbiteriana de Nova Carapina|
-+--------------------------------------------------+
-|  Tema 2026: RENOVO - Isaias 40.31                |
-|  Enfase do mes: No altar                         |
-+--------------------------------------------------+
-|                                                  |
-|  DOM 01/02                                       |
-|  [bolinha azul] Plenaria da UMP         18:45 UMP|
-|  [bolinha laranja] Plenaria da UPA      18:45 UPA|
-|                                                  |
-|  SEX 06/02                                       |
-|  [bolinha laranja] Abertura UPA         19:00 UPA|
-|  [bolinha rosa] Departamental da SAF    19:00 SAF|
-|                                                  |
-|  SAB 07/02                                       |
-|  [bolinha laranja] Abertura FEDUPA      09:00 UPA|
-|  ...                                             |
-|                                                  |
-|  LEGENDA                                         |
-|  [azul] UMP  [rosa] SAF  [verde] UPH            |
-|  [laranja] UPA  [roxo] UCP  [cinza] IPNC        |
-+--------------------------------------------------+
-|  Gerado em 17/02/2026    Pagina 1 de 1           |
-+--------------------------------------------------+
-```
+### 2. Criar componente de aviso offline (`src/components/OfflineBanner.tsx`)
 
----
+- Detecta estado da conexao usando `navigator.onLine` e eventos `online`/`offline`
+- Mostra um banner fixo no topo: "Sem conexao. Os dados exibidos podem estar desatualizados."
+- O banner some automaticamente quando a internet volta
+- Animacao suave de entrada/saida
 
-## Mudancas
+### 3. Configurar cache de dados com React Query
 
-### 1. PastorCalendario.tsx
+- No `App.tsx`, ajustar as opcoes globais do React Query para:
+  - `gcTime` (garbage collection time) maior para manter dados em memoria por mais tempo
+  - `staleTime` maior para nao re-buscar dados desnecessariamente
+  - `retry` inteligente que para de tentar quando offline
+- Isso faz com que dados ja carregados continuem visiveis mesmo sem internet
 
-Adicionar botao "Gerar PDF" ao lado do filtro de sociedade no header do calendario. Ao clicar:
+### 4. Adicionar o banner no layout
 
-- Busca todos os eventos filtrados do mes atual
-- Agrupa eventos por dia (ordenados cronologicamente)
-- Gera PDF com jsPDF usando o mesmo padrao visual do PlenariaDetalhe (header azul escuro, linhas decorativas, fontes consistentes)
-- Inclui logo da IPNC no header (converter imagem para base64)
-- Cada evento mostra bolinha colorida da sociedade, titulo, horario e nome da sociedade
-- Rodape com data de geracao e paginacao
-- Legenda de cores das sociedades no final
+- Incluir `OfflineBanner` no `AppLayout.tsx` e no `PastorLayout.tsx` para que apareca em todas as paginas
 
-### 2. Funcao de geracao
-
-Criar a logica de geracao do PDF diretamente no componente (ou extrair para um utilitario), seguindo o padrao ja usado em `PlenariaDetalhe.tsx`:
-
-- Header com barra azul escuro + logo + titulo do mes
-- Card de tema anual e enfase mensal
-- Lista de eventos agrupados por dia
-- Cada dia: linha com data formatada (ex: "DOM 01/02")
-- Cada evento: bolinha colorida + titulo + horario + sociedade
-- Legenda de cores no final
-- Footer com data de geracao e pagina
-
-### Detalhes tecnicos
-
-- Usar `jsPDF` (ja instalado no projeto)
-- Carregar logo de `src/assets/logo-ipnc.png` como base64 para embed no PDF
-- Respeitar filtro de sociedade ativo (se filtrando por UMP, so exporta eventos da UMP)
-- Titulo do PDF muda conforme filtro: "Cronograma UMP - Fevereiro 2026" ou "Cronograma Geral - Fevereiro 2026"
-- Paginacao automatica quando eventos ultrapassam uma pagina
-
-### Arquivo modificado
+## Arquivos modificados
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/pages/PastorCalendario.tsx` | Adicionar botao e funcao de geracao de PDF |
+| `public/sw.js` | Melhorar estrategia de cache com pre-cache de assets e fallback offline |
+| `src/components/OfflineBanner.tsx` | Novo componente de aviso de conexao |
+| `src/components/layout/AppLayout.tsx` | Incluir OfflineBanner |
+| `src/components/pastor/PastorLayout.tsx` | Incluir OfflineBanner |
+| `src/App.tsx` | Ajustar configuracoes do React Query para melhor cache offline |
 
-### Ordem de execucao
+## Limitacoes
 
-1. Adicionar funcao `handleDownloadPDF` com toda a logica de geracao
-2. Adicionar botao "PDF" no header do calendario (icone Download)
-3. Testar com eventos do mes atual
+- O usuario **nao podera criar ou editar** dados enquanto estiver offline (apenas visualizar o que ja foi carregado)
+- Se o usuario nunca abriu o app antes, a primeira abertura precisa de internet
+- Arquivos anexados (PDFs, imagens) so ficam disponiveis offline se ja foram abertos antes
