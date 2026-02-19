@@ -1,29 +1,31 @@
 
-# Corrigir Icones PWA - Logo Maior e Centralizada
 
-## Problema
+# Usar Logo Original Diretamente como Icones PWA
 
-Ambos os icones (`icon-512x512.png` e `icon-maskable-512x512.png`) mostram a logo original com muito espaco em branco ao redor, fazendo com que ela apareca pequena na tela inicial do Android. Alem disso, no formato maskable, o Android recorta ~20% das bordas, reduzindo ainda mais a logo visivel.
+## O que sera feito
 
-## Solucao
+Copiar o arquivo `src/assets/logo-ipnc.png` diretamente para os dois icones PWA, sem nenhuma geracao ou edicao de imagem. Isso garante que a logo apareca exatamente como no arquivo original, sem perda de tamanho ou adicao de espaco em branco.
 
-Usar a API de edicao de imagem para recriar ambos os icones a partir da logo original (`src/assets/logo-ipnc.png`), com as seguintes especificacoes:
+## Arquivos modificados
 
-### 1. `public/icons/icon-512x512.png` (icone principal)
-- Fundo branco 512x512px
-- Logo original centralizada ocupando ~85-90% do canvas
-- Reduzir drasticamente o espaco em branco ao redor
+### 1. `public/icons/icon-512x512.png`
+- Substituir pelo conteudo exato de `src/assets/logo-ipnc.png`
 
-### 2. `public/icons/icon-maskable-512x512.png` (icone adaptativo Android)
-- Fundo branco 512x512px
-- Logo original centralizada ocupando ~70% do canvas (para caber na "safe zone" de 80% do maskable)
-- O Android recorta as bordas, entao a logo precisa estar bem centralizada
-
-### 3. Manifest (`public/manifest.json`)
-- Sem alteracoes necessarias - a configuracao atual ja esta correta com `"purpose": "any"` e `"purpose": "maskable"` separados
+### 2. `public/icons/icon-maskable-512x512.png`
+- Substituir pelo conteudo exato de `src/assets/logo-ipnc.png`
 
 ## Secao Tecnica
 
-Serao modificados 2 arquivos de imagem usando a API de edicao de imagens (Gemini), passando a logo original como referencia e instruindo para centralizar e aumentar o tamanho dentro do canvas 512x512.
+Serao usados dois comandos `lov-copy` para copiar o arquivo original diretamente:
 
-**Nota importante**: Apos publicar, os usuarios precisarao remover o app da tela inicial e adicionar novamente para ver os icones atualizados.
+```
+lov-copy src/assets/logo-ipnc.png public/icons/icon-512x512.png
+lov-copy src/assets/logo-ipnc.png public/icons/icon-maskable-512x512.png
+```
+
+Nenhuma edicao de imagem sera feita. O `manifest.json` permanece inalterado.
+
+**Nota**: No formato maskable, o Android recorta ~20% das bordas. Se a logo original tiver conteudo muito proximo das bordas, ele pode ser cortado. Caso isso aconteca, podemos ajustar depois. Mas como a logo ja tem fundo branco com alguma margem, deve funcionar bem.
+
+**Apos publicar**: usuarios precisam remover o app da tela inicial e adicionar novamente para ver os icones atualizados.
+
