@@ -27,10 +27,10 @@ import { TaskFilters, PriorityFilter } from '@/components/tarefas/TaskFilters';
 
 type TaskStatus = 'todo' | 'in_progress' | 'done';
 
-const columnConfig: Record<TaskStatus, { title: string; icon: typeof CircleDot; bg: string }> = {
-  todo: { title: 'A fazer', icon: CircleDot, bg: 'bg-muted/40' },
-  in_progress: { title: 'Em andamento', icon: Clock, bg: 'bg-blue-50/50 dark:bg-blue-950/20' },
-  done: { title: 'Concluída', icon: CheckCircle2, bg: 'bg-emerald-50/50 dark:bg-emerald-950/20' },
+const columnConfig: Record<TaskStatus, { title: string; icon: typeof CircleDot; bg: string; variant: 'full' | 'compact' }> = {
+  todo: { title: 'A fazer', icon: CircleDot, bg: 'bg-muted/40', variant: 'full' },
+  in_progress: { title: 'Em andamento', icon: Clock, bg: 'bg-blue-50/50 dark:bg-blue-950/20', variant: 'compact' },
+  done: { title: 'Concluída', icon: CheckCircle2, bg: 'bg-emerald-50/50 dark:bg-emerald-950/20', variant: 'compact' },
 };
 
 function KanbanColumn({
@@ -48,7 +48,7 @@ function KanbanColumn({
   const Icon = config.icon;
 
   return (
-    <div className="flex-1 min-w-[280px]">
+    <div className={status === 'todo' ? 'flex-[1.4] min-w-[320px]' : 'flex-1 min-w-[260px]'}>
       <div className={`rounded-xl ${config.bg} p-3 md:p-4 min-h-[200px]`}>
         <div className="flex items-center gap-2 mb-4">
           <Icon className="h-4 w-4 text-muted-foreground" />
@@ -59,7 +59,13 @@ function KanbanColumn({
         </div>
         <div className="space-y-0">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              variant={config.variant}
+            />
           ))}
           {tasks.length === 0 && (
             <p className="text-center text-muted-foreground text-xs py-8">Nenhuma tarefa</p>
@@ -75,21 +81,21 @@ function MobileTaskList({
   title,
   onEdit,
   onDelete,
+  variant,
 }: {
   tasks: TaskWithAssignee[];
   title: string;
   onEdit: (task: TaskWithAssignee) => void;
   onDelete: (task: TaskWithAssignee) => void;
+  variant: 'full' | 'compact';
 }) {
   if (tasks.length === 0) {
-    return (
-      <p className="text-center text-muted-foreground py-8">Nenhuma tarefa {title.toLowerCase()}.</p>
-    );
+    return <p className="text-center text-muted-foreground py-8">Nenhuma tarefa {title.toLowerCase()}.</p>;
   }
   return (
     <div className="space-y-0">
       {tasks.map((task) => (
-        <TaskCard key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} />
+        <TaskCard key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} variant={variant} />
       ))}
     </div>
   );
@@ -136,7 +142,6 @@ export default function Tarefas() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskWithAssignee | null>(null);
 
-  // Filters
   const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
 
@@ -152,20 +157,9 @@ export default function Tarefas() {
   const inProgressTasks = filteredTasks.filter((t) => t.status === 'in_progress');
   const doneTasks = filteredTasks.filter((t) => t.status === 'done');
 
-  const handleCreateClick = () => {
-    setSelectedTask(null);
-    setDialogOpen(true);
-  };
-
-  const handleEdit = (task: TaskWithAssignee) => {
-    setSelectedTask(task);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = (task: TaskWithAssignee) => {
-    setSelectedTask(task);
-    setDeleteDialogOpen(true);
-  };
+  const handleCreateClick = () => { setSelectedTask(null); setDialogOpen(true); };
+  const handleEdit = (task: TaskWithAssignee) => { setSelectedTask(task); setDialogOpen(true); };
+  const handleDelete = (task: TaskWithAssignee) => { setSelectedTask(task); setDeleteDialogOpen(true); };
 
   const handleSubmit = (data: CreateTaskInput | UpdateTaskInput) => {
     if ('id' in data) {
@@ -178,10 +172,7 @@ export default function Tarefas() {
   const handleConfirmDelete = () => {
     if (selectedTask) {
       deleteTask.mutate(selectedTask.id, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setSelectedTask(null);
-        },
+        onSuccess: () => { setDeleteDialogOpen(false); setSelectedTask(null); },
       });
     }
   };
@@ -198,9 +189,7 @@ export default function Tarefas() {
             </div>
           ))}
         </div>
-        <div className="md:hidden">
-          <LoadingSkeleton />
-        </div>
+        <div className="md:hidden"><LoadingSkeleton /></div>
       </AppLayout>
     );
   }
@@ -227,8 +216,7 @@ export default function Tarefas() {
         title="Tarefas"
         description="Gerencie as tarefas da diretoria"
         action={
-          !isMobile &&
-          isManagement && (
+          !isMobile && isManagement && (
             <Button onClick={handleCreateClick}>
               <Plus className="h-4 w-4 mr-2" />
               Nova Tarefa
@@ -237,16 +225,8 @@ export default function Tarefas() {
         }
       />
 
-      {/* Stats */}
       <TaskStats tasks={tasks} />
-
-      {/* Filters */}
-      <TaskFilters
-        search={search}
-        onSearchChange={setSearch}
-        priority={priorityFilter}
-        onPriorityChange={setPriorityFilter}
-      />
+      <TaskFilters search={search} onSearchChange={setSearch} priority={priorityFilter} onPriorityChange={setPriorityFilter} />
 
       {/* Desktop: Kanban */}
       <div className="hidden md:flex gap-4 overflow-x-auto pb-4">
@@ -259,25 +239,18 @@ export default function Tarefas() {
       <div className="md:hidden">
         <Tabs defaultValue="todo">
           <TabsList className="w-full grid grid-cols-3 mb-4">
-            <TabsTrigger value="todo" className="text-xs">
-              A fazer ({todoTasks.length})
-            </TabsTrigger>
-            <TabsTrigger value="in_progress" className="text-xs">
-              Andamento ({inProgressTasks.length})
-            </TabsTrigger>
-            <TabsTrigger value="done" className="text-xs">
-              Concluída ({doneTasks.length})
-            </TabsTrigger>
+            <TabsTrigger value="todo" className="text-xs">A fazer ({todoTasks.length})</TabsTrigger>
+            <TabsTrigger value="in_progress" className="text-xs">Andamento ({inProgressTasks.length})</TabsTrigger>
+            <TabsTrigger value="done" className="text-xs">Concluída ({doneTasks.length})</TabsTrigger>
           </TabsList>
-
           <TabsContent value="todo" className="mt-0">
-            <MobileTaskList tasks={todoTasks} title="A fazer" onEdit={handleEdit} onDelete={handleDelete} />
+            <MobileTaskList tasks={todoTasks} title="A fazer" onEdit={handleEdit} onDelete={handleDelete} variant="full" />
           </TabsContent>
           <TabsContent value="in_progress" className="mt-0">
-            <MobileTaskList tasks={inProgressTasks} title="Em andamento" onEdit={handleEdit} onDelete={handleDelete} />
+            <MobileTaskList tasks={inProgressTasks} title="Em andamento" onEdit={handleEdit} onDelete={handleDelete} variant="compact" />
           </TabsContent>
           <TabsContent value="done" className="mt-0">
-            <MobileTaskList tasks={doneTasks} title="Concluída" onEdit={handleEdit} onDelete={handleDelete} />
+            <MobileTaskList tasks={doneTasks} title="Concluída" onEdit={handleEdit} onDelete={handleDelete} variant="compact" />
           </TabsContent>
         </Tabs>
       </div>
