@@ -139,7 +139,7 @@ export default function Calendario() {
     if (!isMobile || viewMode === 'month') {
       // Full month view with leading empties
       for (let i = 0; i < firstDay; i++) {
-        days.push(<div key={`empty-${i}`} className={`p-1 md:p-2 ${isMobile ? 'min-h-[48px]' : 'min-h-[80px]'}`} />);
+        days.push(<div key={`empty-${i}`} className="p-1 md:p-2 min-h-[48px] md:min-h-[80px]" />);
       }
     } else {
       // Partial views: add leading empties for the first visible day's weekday
@@ -157,7 +157,7 @@ export default function Calendario() {
         <div
           key={day}
           onClick={() => handleDayClick(day)}
-          className={`p-1 md:p-2 ${isMobile ? 'min-h-[48px]' : 'min-h-[80px]'} border border-border/50 rounded-lg cursor-pointer ${
+          className={`p-1 md:p-2 min-h-[48px] md:min-h-[80px] border border-border/50 rounded-lg cursor-pointer ${
             isToday ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/50'
           } transition-colors`}
         >
@@ -170,26 +170,24 @@ export default function Calendario() {
           </span>
 
           {/* Mobile: colored dots */}
-          {isMobile ? (
-            <div className="flex gap-0.5 mt-1 flex-wrap">
-              {dayEvents.slice(0, 3).map((event) => (
-                <div key={event.id} className={`w-2 h-2 rounded-full ${getEventDotClass(event.color)}`} />
-              ))}
-              {dayEvents.length > 3 && (
-                <span className="text-[10px] text-muted-foreground leading-none">+{dayEvents.length - 3}</span>
-              )}
-            </div>
-          ) : (
-            /* Desktop: compact event cards */
-            <div className="mt-1 space-y-1">
-              {dayEvents.slice(0, 2).map((event) => (
-                <EventCard key={event.id} event={event} compact onClick={() => handleEventClick(event)} />
-              ))}
-              {dayEvents.length > 2 && (
-                <span className="text-xs text-muted-foreground">+{dayEvents.length - 2} mais</span>
-              )}
-            </div>
-          )}
+          <div className="flex gap-0.5 mt-1 flex-wrap md:hidden">
+            {dayEvents.slice(0, 3).map((event) => (
+              <div key={event.id} className={`w-2 h-2 rounded-full ${getEventDotClass(event.color)}`} />
+            ))}
+            {dayEvents.length > 3 && (
+              <span className="text-[10px] text-muted-foreground leading-none">+{dayEvents.length - 3}</span>
+            )}
+          </div>
+
+          {/* Desktop: compact event cards */}
+          <div className="hidden md:block mt-1 space-y-1">
+            {dayEvents.slice(0, 2).map((event) => (
+              <EventCard key={event.id} event={event} compact onClick={() => handleEventClick(event)} />
+            ))}
+            {dayEvents.length > 2 && (
+              <span className="text-xs text-muted-foreground">+{dayEvents.length - 2} mais</span>
+            )}
+          </div>
         </div>
       );
     }
@@ -242,7 +240,8 @@ export default function Calendario() {
                 <div className="grid grid-cols-7 gap-0.5 md:gap-1 mb-1 md:mb-2">
                   {daysOfWeek.map((day) => (
                     <div key={day} className="text-center text-xs md:text-sm font-medium text-muted-foreground p-1 md:p-2">
-                      {isMobile ? day.charAt(0) : day}
+                      <span className="md:hidden">{day.charAt(0)}</span>
+                      <span className="hidden md:inline">{day}</span>
                     </div>
                   ))}
                 </div>
