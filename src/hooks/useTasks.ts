@@ -174,12 +174,19 @@ export function useUpdateTask() {
     mutationFn: async (input: UpdateTaskInput) => {
       const { id, ...updates } = input;
 
-      const { data, error } = await supabase
-        .from('tasks')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('update_task', {
+        task_id: id,
+        new_title: updates.title || null,
+        new_description: updates.description !== undefined ? updates.description : null,
+        new_status: updates.status || null,
+        new_priority: updates.priority || null,
+        new_due_date: updates.due_date || null,
+        new_assignee_id: updates.assignee_id || null,
+        new_meeting_id: updates.meeting_id || null,
+        clear_due_date: updates.due_date === null,
+        clear_assignee: updates.assignee_id === null,
+        clear_meeting: updates.meeting_id === null,
+      });
 
       if (error) throw error;
       return data;
@@ -200,12 +207,10 @@ export function useUpdateTaskStatus() {
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: TaskStatus }) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('update_task_status', {
+        task_id: id,
+        new_status: status,
+      });
 
       if (error) throw error;
       return data;
@@ -225,10 +230,9 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.rpc('delete_task', {
+        task_id: id,
+      });
 
       if (error) throw error;
     },

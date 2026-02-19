@@ -1253,6 +1253,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_task: { Args: { task_id: string }; Returns: undefined }
       get_email_by_username: { Args: { _username: string }; Returns: string }
       has_management_role: { Args: { _user_id: string }; Returns: boolean }
       has_pastor_role: { Args: { _user_id: string }; Returns: boolean }
@@ -1262,6 +1263,29 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_task: {
+        Args: {
+          clear_assignee?: boolean
+          clear_due_date?: boolean
+          clear_meeting?: boolean
+          new_assignee_id?: string
+          new_description?: string
+          new_due_date?: string
+          new_meeting_id?: string
+          new_priority?: Database["public"]["Enums"]["task_priority"]
+          new_status?: Database["public"]["Enums"]["task_status"]
+          new_title?: string
+          task_id: string
+        }
+        Returns: Json
+      }
+      update_task_status: {
+        Args: {
+          new_status: Database["public"]["Enums"]["task_status"]
+          task_id: string
+        }
+        Returns: Json
       }
     }
     Enums: {
