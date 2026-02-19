@@ -17,6 +17,7 @@ export interface CalendarEvent {
   status: EventStatus;
   origem: EventOrigin;
   reuniao_id: string | null;
+  society_id: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -31,6 +32,7 @@ export interface CreateEventInput {
   location?: string;
   color?: string;
   status?: EventStatus;
+  society_id?: string;
 }
 
 export interface UpdateEventInput extends Partial<CreateEventInput> {

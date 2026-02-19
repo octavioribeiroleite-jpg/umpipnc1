@@ -232,6 +232,7 @@ export type Database = {
           location: string | null
           origem: Database["public"]["Enums"]["event_origin"]
           reuniao_id: string | null
+          society_id: string | null
           start_date: string
           status: Database["public"]["Enums"]["event_status"]
           title: string
@@ -248,6 +249,7 @@ export type Database = {
           location?: string | null
           origem?: Database["public"]["Enums"]["event_origin"]
           reuniao_id?: string | null
+          society_id?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["event_status"]
           title: string
@@ -264,6 +266,7 @@ export type Database = {
           location?: string | null
           origem?: Database["public"]["Enums"]["event_origin"]
           reuniao_id?: string | null
+          society_id?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["event_status"]
           title?: string
@@ -275,6 +278,13 @@ export type Database = {
             columns: ["reuniao_id"]
             isOneToOne: false
             referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
             referencedColumns: ["id"]
           },
         ]
@@ -1262,6 +1272,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_event_society_member: {
+        Args: { _event_society_id: string; _user_id: string }
         Returns: boolean
       }
       update_task: {

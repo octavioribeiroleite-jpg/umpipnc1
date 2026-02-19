@@ -84,7 +84,16 @@ export default function Calendario() {
   const month = currentDate.getMonth();
 
   const { events, upcomingEvents, isLoading, createEvent, updateEvent, deleteEvent } = useEvents(month, year);
-  const { isManagement } = useAuth();
+  const { isManagement, isAdmin, profile, society } = useAuth();
+
+  // Check if the current user can edit a specific event
+  const canEditEvent = (event: CalendarEvent): boolean => {
+    if (isAdmin) return true;
+    if (!isManagement) return false;
+    // Diretoria can only edit events from their own society
+    if (!event.society_id) return false;
+    return event.society_id === profile?.society_id;
+  };
 
   // Group events by day for monthly program list
   const eventsByDay = useMemo(() => {
@@ -140,7 +149,15 @@ export default function Calendario() {
     if ('id' in data && data.id) {
       updateEvent.mutate(data as UpdateEventInput, { onSuccess: () => setDialogOpen(false) });
     } else {
-      createEvent.mutate(data as CreateEventInput, { onSuccess: () => setDialogOpen(false) });
+      // Auto-set society_id and color for non-admin diretoria
+      const createData = data as CreateEventInput;
+      if (!isAdmin && isManagement && profile?.society_id) {
+        createData.society_id = profile.society_id;
+        if (society?.color) {
+          createData.color = society.color;
+        }
+      }
+      createEvent.mutate(createData, { onSuccess: () => setDialogOpen(false) });
     }
   };
 
@@ -414,8 +431,10 @@ export default function Calendario() {
         onOpenChange={setDialogOpen}
         event={selectedEvent}
         onSave={handleSave}
-        onDelete={isManagement ? handleDelete : undefined}
+        onDelete={selectedEvent && canEditEvent(selectedEvent) ? handleDelete : undefined}
         isLoading={createEvent.isPending || updateEvent.isPending || deleteEvent.isPending}
+        readOnly={selectedEvent ? !canEditEvent(selectedEvent) : false}
+        lockColor={!isAdmin && isManagement ? society?.color : undefined}
       />
     </AppLayout>
   );
