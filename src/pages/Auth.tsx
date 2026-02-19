@@ -31,7 +31,7 @@ const roleConfig: Record<RoleCard, { label: string; description: string; icon: t
     label: 'Diretoria',
     description: 'Gestão completa da sua sociedade',
     icon: Users,
-    showSociety: true,
+    showSociety: false,
   },
   membro: {
     label: 'Membro',
