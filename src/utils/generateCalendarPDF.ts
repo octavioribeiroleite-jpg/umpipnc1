@@ -78,8 +78,15 @@ export function generateCalendarPDF(params: GenerateCalendarPDFParams) {
     .filter(e => e.status !== 'cancelado')
     .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
 
+  const toLocalDateString = (date: Date): string => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
   sortedEvents.forEach(event => {
-    const dateKey = new Date(event.start_date).toISOString().split('T')[0];
+    const dateKey = toLocalDateString(new Date(event.start_date));
     if (!eventsByDay.has(dateKey)) eventsByDay.set(dateKey, []);
     eventsByDay.get(dateKey)!.push(event);
   });
