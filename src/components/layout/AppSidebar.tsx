@@ -67,8 +67,8 @@ export function AppSidebar() {
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="bg-white rounded-lg p-1">
-              <img src={logoIpnc} alt="Renovo IPNC" className="h-10 w-10 object-contain" />
+            <div className="bg-white rounded-lg p-1 flex items-center justify-center">
+              <img src={logoIpnc} alt="Renovo IPNC" className="h-9 w-9 object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="font-display font-bold text-sm text-sidebar-primary">Renovo</span>
