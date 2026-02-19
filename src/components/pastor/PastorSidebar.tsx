@@ -49,8 +49,8 @@ export function PastorSidebar() {
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="bg-white rounded-lg p-1">
-            <img src={logoIpnc} alt="IPNC" className="h-10 w-10 object-contain" />
+          <div className="bg-white rounded-lg p-1 flex items-center justify-center">
+            <img src={logoIpnc} alt="IPNC" className="h-9 w-9 object-contain" />
           </div>
           <div>
             <h2 className="font-bold text-sm">Painel do Pastor</h2>
