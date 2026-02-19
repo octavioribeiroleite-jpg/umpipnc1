@@ -17,6 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -32,7 +34,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Pencil, UserX, UserCheck, Trash2 } from 'lucide-react';
+import { Plus, Pencil, UserX, UserCheck, Trash2, KeyRound, Copy } from 'lucide-react';
+
+function removeAccents(str: string): string {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function generateUsername(name: string): string {
+  return removeAccents(name).replace(/\s+/g, '').toLowerCase();
+}
+
+function generatePassword(name: string): string {
+  return name.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('') + '123';
+}
 
 interface Member {
   id: string;
@@ -40,11 +54,18 @@ interface Member {
   phone: string | null;
   email: string | null;
   active: boolean;
+  user_id: string | null;
 }
 
 interface RelatedData {
   charges: number;
   payments: number;
+}
+
+interface Credentials {
+  name: string;
+  username: string;
+  password: string;
 }
 
 export function MembrosTab() {
@@ -55,6 +76,8 @@ export function MembrosTab() {
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
   const [deleteMember, setDeleteMember] = useState<Member | null>(null);
   const [relatedData, setRelatedData] = useState<RelatedData | null>(null);
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
+  const [creating, setCreating] = useState(false);
   const { toast } = useToast();
   const { profile, isAdmin, isPastor } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
@@ -107,27 +130,63 @@ export function MembrosTab() {
         toast({ title: 'Membro atualizado com sucesso' });
         fetchMembers();
       }
+      setDialogOpen(false);
+      setEditingMember(null);
+      setFormData({ name: '', phone: '', email: '' });
     } else {
-      const { error } = await supabase
+      setCreating(true);
+      const memberSocietyId = profile?.society_id || null;
+
+      // 1. Insert member
+      const { data: newMember, error: insertError } = await supabase
         .from('members')
         .insert({
           name: formData.name,
           phone: formData.phone || null,
           email: formData.email || null,
-          society_id: profile?.society_id || null,
-        });
-      
-      if (error) {
-        toast({ title: 'Erro ao cadastrar membro', variant: 'destructive' });
-      } else {
-        toast({ title: 'Membro cadastrado com sucesso' });
-        fetchMembers();
-      }
-    }
+          society_id: memberSocietyId,
+        })
+        .select('id')
+        .single();
 
-    setDialogOpen(false);
-    setEditingMember(null);
-    setFormData({ name: '', phone: '', email: '' });
+      if (insertError || !newMember) {
+        toast({ title: 'Erro ao cadastrar membro', variant: 'destructive' });
+        setCreating(false);
+        return;
+      }
+
+      // 2. Generate credentials and create login
+      const username = generateUsername(formData.name);
+      const password = generatePassword(formData.name);
+
+      const { data: createData, error: createError } = await supabase.functions.invoke('create-user', {
+        body: {
+          full_name: formData.name,
+          username,
+          password,
+          role: 'visualizador',
+          society_id: memberSocietyId,
+          member_id: newMember.id,
+        },
+      });
+
+      if (createError || createData?.error) {
+        // Member created but login failed - still show success for member
+        toast({ 
+          title: 'Membro cadastrado, mas erro ao criar login', 
+          description: createData?.error || createError?.message,
+          variant: 'destructive' 
+        });
+      } else {
+        // Show credentials dialog
+        setCredentials({ name: formData.name, username, password });
+      }
+
+      setCreating(false);
+      setDialogOpen(false);
+      setFormData({ name: '', phone: '', email: '' });
+      fetchMembers();
+    }
   };
 
   const toggleMemberStatus = async (member: Member) => {
@@ -161,7 +220,6 @@ export function MembrosTab() {
   };
   
   const openDeleteDialog = async (member: Member) => {
-    // Check for related data
     const [chargesRes, paymentsRes] = await Promise.all([
       supabase.from('charges').select('id').eq('member_id', member.id),
       supabase.from('membership_payments').select('id').eq('member_id', member.id),
@@ -177,14 +235,12 @@ export function MembrosTab() {
   const handleDeleteMember = async () => {
     if (!deleteMember) return;
     
-    // Delete related data first
     await Promise.all([
       supabase.from('charges').delete().eq('member_id', deleteMember.id),
       supabase.from('membership_payments').delete().eq('member_id', deleteMember.id),
       supabase.from('transactions').update({ member_id: null }).eq('member_id', deleteMember.id),
     ]);
     
-    // Delete the member
     const { error } = await supabase
       .from('members')
       .delete()
@@ -199,6 +255,13 @@ export function MembrosTab() {
     
     setDeleteMember(null);
     setRelatedData(null);
+  };
+
+  const copyCredentials = () => {
+    if (!credentials) return;
+    const text = `Login: ${credentials.username}\nSenha: ${credentials.password}`;
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Credenciais copiadas!' });
   };
 
   return (
@@ -219,6 +282,11 @@ export function MembrosTab() {
                   <DialogTitle>
                     {editingMember ? 'Editar Membro' : 'Novo Membro'}
                   </DialogTitle>
+                  {!editingMember && (
+                    <DialogDescription>
+                      Um login será criado automaticamente para o membro.
+                    </DialogDescription>
+                  )}
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
@@ -249,12 +317,19 @@ export function MembrosTab() {
                       placeholder="email@exemplo.com"
                     />
                   </div>
+                  {!editingMember && formData.name.trim() && (
+                    <div className="p-3 rounded-md bg-muted text-sm space-y-1">
+                      <p className="font-medium text-muted-foreground">Credenciais que serão geradas:</p>
+                      <p>Usuário: <span className="font-mono font-medium">{generateUsername(formData.name)}</span></p>
+                      <p>Senha: <span className="font-mono font-medium">{generatePassword(formData.name)}</span></p>
+                    </div>
+                  )}
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                       Cancelar
                     </Button>
-                    <Button type="submit">
-                      {editingMember ? 'Salvar' : 'Cadastrar'}
+                    <Button type="submit" disabled={creating}>
+                      {creating ? 'Criando...' : editingMember ? 'Salvar' : 'Cadastrar'}
                     </Button>
                   </div>
                 </form>
@@ -276,6 +351,7 @@ export function MembrosTab() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Login</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -286,6 +362,16 @@ export function MembrosTab() {
                     <TableCell className="font-medium">{member.name}</TableCell>
                     <TableCell>{member.phone || '-'}</TableCell>
                     <TableCell>{member.email || '-'}</TableCell>
+                    <TableCell>
+                      {member.user_id ? (
+                        <Badge variant="outline" className="gap-1">
+                          <KeyRound className="h-3 w-3" />
+                          Vinculado
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={member.active ? 'default' : 'secondary'}>
                         {member.active ? 'Ativo' : 'Inativo'}
@@ -327,6 +413,33 @@ export function MembrosTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog: Credenciais Geradas */}
+      <Dialog open={!!credentials} onOpenChange={() => setCredentials(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Login Criado com Sucesso!</DialogTitle>
+            <DialogDescription>
+              Repasse essas credenciais ao membro para que ele acesse o portal.
+            </DialogDescription>
+          </DialogHeader>
+          {credentials && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted space-y-2">
+                <p><span className="text-muted-foreground">Nome:</span> <strong>{credentials.name}</strong></p>
+                <p><span className="text-muted-foreground">Usuário:</span> <span className="font-mono font-bold">{credentials.username}</span></p>
+                <p><span className="text-muted-foreground">Senha:</span> <span className="font-mono font-bold">{credentials.password}</span></p>
+              </div>
+              <DialogFooter>
+                <Button onClick={copyCredentials} className="w-full gap-2">
+                  <Copy className="h-4 w-4" />
+                  Copiar Credenciais
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       
       {/* AlertDialog: Excluir Membro */}
       <AlertDialog open={!!deleteMember} onOpenChange={() => { setDeleteMember(null); setRelatedData(null); }}>
