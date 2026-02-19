@@ -123,7 +123,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function Index() {
-  const { user, loading, rolesLoaded, isPastor, profile, isAdmin } = useAuth();
+  const { user, loading, rolesLoaded, isPastor, profile, isAdmin, isManagement, roles } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const navigate = useNavigate();
   const { upcomingEvents, isUpcomingLoading } = useEvents();
@@ -133,14 +133,27 @@ export default function Index() {
     membrosAtivos: 0,
     tarefasPendentes: 0,
   });
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
-    } else if (!loading && user && rolesLoaded && isPastor && !isAdmin) {
-      navigate('/pastor');
+    } else if (!loading && user && rolesLoaded) {
+      // Pastor (sem admin) -> /pastor
+      if (isPastor && !isAdmin) {
+        navigate('/pastor');
+      }
+      // Visualizador puro (sem diretoria/admin/pastor) -> /membro
+      else if (
+        roles.includes('visualizador') &&
+        !isAdmin &&
+        !isManagement &&
+        !isPastor
+      ) {
+        navigate('/membro');
+      }
     }
-  }, [user, loading, rolesLoaded, navigate, isPastor, isAdmin]);
+  }, [user, loading, rolesLoaded, navigate, isPastor, isAdmin, isManagement, roles]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -200,6 +213,18 @@ export default function Index() {
 
     if (user) {
       fetchStats();
+
+      // Fetch pending payment submissions
+      const fetchPending = async () => {
+        let query = supabase
+          .from('member_payment_submissions')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pendente');
+        if (societyId) query = query.eq('society_id', societyId);
+        const { count } = await query;
+        setPendingSubmissions(count || 0);
+      };
+      fetchPending();
     }
   }, [user]);
 
@@ -232,6 +257,16 @@ export default function Index() {
         description="Visão geral do painel da Diretoria de Jovens"
       />
       <PastorNotificationBanner />
+
+      {/* Pending submissions notification */}
+      {pendingSubmissions > 0 && (
+        <div
+          className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/20 text-warning text-sm font-medium cursor-pointer hover:bg-warning/15 transition-colors"
+          onClick={() => navigate('/financas?tab=comprovantes')}
+        >
+          📋 {pendingSubmissions} comprovante{pendingSubmissions > 1 ? 's' : ''} de pagamento pendente{pendingSubmissions > 1 ? 's' : ''} de aprovação
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-6 md:mb-8">
