@@ -1,66 +1,50 @@
 
-# Melhoria do Calendario Mobile
 
-## Problema
+# Correcao do Calendario Mobile + Botoes de Tarefas
 
-No celular, o calendario mostra o mes inteiro em grade 7x5, com celulas muito pequenas onde os nomes dos eventos ficam truncados (ex: "P...", "A...", "D..."). Nao ha como ver os detalhes de um dia sem clicar diretamente no evento.
+## Problema 1: Calendario Mobile
+As melhorias mobile (bolinhas coloridas, seletor de visualizacao, nomes abreviados) nao aparecem porque usam `useIsMobile()` (JavaScript) que pode retornar `false` dependendo da largura do iframe. Solucao: usar classes CSS responsivas do Tailwind.
 
-## Solucao
+## Problema 2: Botoes de Tarefas
+O erro "UPDATE requires a WHERE clause" persiste ao concluir, editar ou excluir tarefas, mesmo apos correcao do RLS. Solucao: criar funcoes RPC com SECURITY DEFINER que contornam o RLS e validam permissoes internamente.
 
-Criar 3 modos de visualizacao para mobile (Semana, 15 dias, Mes) e adicionar um popup ao clicar em qualquer dia para ver todos os eventos daquele dia.
-
-### 1. Seletor de visualizacao (mobile only)
-
-Adicionar tabs/botoes acima do calendario no mobile com 3 opcoes:
-- **Semana**: mostra apenas 7 dias (semana atual ou semana contendo o dia selecionado)
-- **15 dias**: mostra 15 dias a partir do inicio da quinzena atual
-- **Mes**: visualizacao completa do mes (atual, mas com celulas mais compactas)
-
-No desktop, manter a visualizacao mensal como esta.
-
-### 2. Popup de detalhes do dia
-
-Ao clicar em qualquer celula de dia (nao apenas no evento), abrir um Drawer (bottom sheet no mobile) mostrando:
-- Data completa no titulo (ex: "Quarta, 19 de Fevereiro")
-- Lista de todos os eventos do dia com EventCard detalhado
-- Botao "Novo Evento" se o usuario for gestao (pre-preenchendo a data)
-
-### 3. Melhorias visuais mobile
-
-- Celulas mais compactas com indicadores de cor (bolinhas) em vez de texto truncado
-- Numero do dia mais destacado
-- Ocultar o card "Proximos Eventos" no mobile (fica acessivel via drawer do dia)
+---
 
 ## Secao Tecnica
 
-### Novo componente: `src/components/calendario/DayDetailDrawer.tsx`
+### Parte 1: Calendario Mobile (`src/pages/Calendario.tsx`)
 
-- Usa `ResponsiveDialog` (drawer no mobile, dialog no desktop)
-- Recebe: `date`, `events`, `open`, `onOpenChange`, `onEventClick`, `onNewEvent`
-- Mostra lista de EventCards completos para o dia selecionado
+Substituir condicionais `isMobile` por classes CSS responsivas:
 
-### Novo componente: `src/components/calendario/CalendarViewSelector.tsx`
+| Elemento | Antes (JS) | Depois (CSS) |
+|---|---|---|
+| Nomes dos dias | `isMobile ? day.charAt(0) : day` | Dois spans: `md:hidden` e `hidden md:inline` |
+| Eventos na celula | `isMobile ? <dots> : <EventCards>` | Ambos renderizados com `md:hidden` / `hidden md:block` |
+| Altura celulas | `isMobile ? '48px' : '80px'` | `min-h-[48px] md:min-h-[80px]` |
+| Padding | `isMobile ? 'p-1' : 'p-2'` | `p-1 md:p-2` |
 
-- Tabs com opcoes: "Semana", "15 dias", "Mes"
-- Controla o estado `viewMode` passado pelo pai
-- Visivel apenas no mobile
+Manter `useIsMobile()` apenas para logica de calculo em `getVisibleDays`.
 
-### Modificacoes em `src/pages/Calendario.tsx`
+### Parte 2: Botoes de Tarefas
 
-- Adicionar estados: `viewMode` ('week' | 'fortnight' | 'month'), `selectedDay` (number | null), `dayDrawerOpen` (boolean)
-- Usar `useIsMobile()` para condicionar visualizacao
-- Logica de filtragem de dias conforme viewMode:
-  - `week`: calcular inicio/fim da semana atual e renderizar apenas esses 7 dias
-  - `fortnight`: calcular quinzena (1-15 ou 16-fim) e renderizar
-  - `month`: manter comportamento atual
-- Ao clicar na celula do dia: setar `selectedDay` e abrir `DayDetailDrawer`
-- No mobile, mostrar bolinhas coloridas em vez de EventCard compact (max 3 bolinhas + "+N")
-- Ocultar card "Proximos Eventos" no mobile via `hidden md:block`
+**Nova migracao SQL** - Criar 3 funcoes RPC com SECURITY DEFINER:
 
-### Resumo de mudancas nos arquivos
+- `update_task_status(task_id uuid, new_status task_status)` - permite management OU assignee
+- `update_task(task_id uuid, ...)` - permite management OU assignee
+- `delete_task(task_id uuid)` - permite apenas management
+- Incluir `NOTIFY pgrst, 'reload schema'` para forcar reload do cache
+
+**Modificar `src/hooks/useTasks.ts`** - Trocar chamadas diretas por RPC:
+
+- `useUpdateTaskStatus`: `supabase.rpc('update_task_status', { task_id, new_status })`
+- `useUpdateTask`: `supabase.rpc('update_task', { task_id, ... })`
+- `useDeleteTask`: `supabase.rpc('delete_task', { task_id })`
+
+### Resumo de arquivos
 
 | Arquivo | Acao |
 |---|---|
-| `src/components/calendario/DayDetailDrawer.tsx` | Criar novo |
-| `src/components/calendario/CalendarViewSelector.tsx` | Criar novo |
-| `src/pages/Calendario.tsx` | Modificar - adicionar viewMode, dayDrawer, bolinhas mobile |
+| Nova migracao SQL | Criar funcoes RPC + NOTIFY pgrst |
+| `src/pages/Calendario.tsx` | Substituir condicionais JS por CSS responsivo |
+| `src/hooks/useTasks.ts` | Alterar mutations para usar `.rpc()` |
+
