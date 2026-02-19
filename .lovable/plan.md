@@ -1,55 +1,44 @@
 
-# Correcao do Redirecionamento Indevido para o Painel do Pastor
 
-## Problema identificado
+# Correcao das Datas no Calendario
 
-O log do console mostra **"Auth loading safety timeout triggered"**, indicando que o timer de seguranca de 4 segundos disparou antes dos dados de perfil/roles terminarem de carregar. Isso causa uma condicao de corrida:
+## Problema
 
-1. O timer dispara e `loading` vira `false`
-2. Nesse momento, `user` ja existe mas `roles` ainda esta vazio (`[]`)
-3. `isAdmin = false` e `isPastor = false` temporariamente
-4. Quando `fetchProfileAndRoles` finalmente completa, os roles atualizam e o `useEffect` na Index reage as mudancas de dependencias, podendo causar navegacao inesperada
-
-Alem disso, a logica de redirecionamento na Index nao protege admins — se por qualquer motivo `isPastor` ficar `true` para um admin (ex: usuario com ambos os roles), ele seria redirecionado.
+As datas dos eventos no calendario estao aparecendo no dia errado. Isso acontece porque o codigo usa `.toISOString()` para comparar datas, que converte para UTC. Dependendo do fuso horario do usuario (ex: Brasil, UTC-3), um evento criado para "19/02 as 22h" vira "20/02 01h UTC", aparecendo no dia seguinte.
 
 ## Solucao
 
-### 1. Adicionar flag `rolesLoaded` no AuthContext
+Substituir `.toISOString().split('T')[0]` por uma funcao que usa a data local do navegador, extraindo ano/mes/dia diretamente sem conversao para UTC.
 
-Criar um estado separado `rolesLoaded` que so fica `true` depois que `fetchProfileAndRoles` completa com sucesso. Isso permite que a pagina saiba se os roles ja foram carregados, independente do timer de seguranca.
+## Arquivos a modificar
 
-### 2. Proteger o redirecionamento na Index
-
-Alterar a logica para:
-- So redirecionar para `/pastor` quando `rolesLoaded` for `true` (nao apenas quando `loading` for `false`)
-- Admins nunca sao redirecionados para `/pastor`, mesmo que tambem tenham role de pastor
-
-### 3. Aumentar o timeout de seguranca
-
-Aumentar de 4s para 8s para dar mais tempo em conexoes lentas, reduzindo a chance do timeout disparar antes dos dados carregarem.
+| Arquivo | Linha | Mudanca |
+|---|---|---|
+| `src/pages/Calendario.tsx` | 61 | Trocar `toISOString()` por extracoa local |
+| `src/pages/PastorCalendario.tsx` | 172 | Mesma correcao |
+| `src/utils/generateCalendarPDF.ts` | 82 | Mesma correcao |
 
 ## Secao tecnica
 
-### Arquivo: `src/contexts/AuthContext.tsx`
+Criar uma funcao helper `toLocalDateString` e usar nos 3 arquivos:
 
-- Adicionar estado `const [rolesLoaded, setRolesLoaded] = useState(false)`
-- Setar `setRolesLoaded(true)` no final de `fetchProfileAndRoles`
-- Setar `setRolesLoaded(false)` no `signOut`
-- Expor `rolesLoaded` no contexto
-- Aumentar safety timer de 4000ms para 8000ms
+```typescript
+function toLocalDateString(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+```
 
-### Arquivo: `src/pages/Index.tsx`
+Substituir:
+```typescript
+// Antes (UTC - causa erro de fuso)
+const eventDate = new Date(e.start_date).toISOString().split('T')[0];
 
-- Importar `rolesLoaded` do `useAuth()`
-- Mudar a condicao de redirecionamento de:
-  ```
-  else if (!loading && user && isPastor)
-  ```
-  para:
-  ```
-  else if (!loading && user && rolesLoaded && isPastor && !isAdmin)
-  ```
-- Isso garante que:
-  - Os roles ja foram carregados (`rolesLoaded`)
-  - O usuario e pastor (`isPastor`)
-  - O usuario NAO e admin (`!isAdmin`) — admins ficam no painel principal
+// Depois (local - data correta)
+const eventDate = toLocalDateString(new Date(e.start_date));
+```
+
+Mesma correcao aplicada nos 3 arquivos afetados.
+
