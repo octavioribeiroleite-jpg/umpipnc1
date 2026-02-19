@@ -26,6 +26,7 @@ function isApiRequest(url) {
     url.pathname.includes('/auth/') ||
     url.pathname.includes('/functions/') ||
     url.pathname.includes('/storage/') ||
+    url.pathname.includes('/token') ||
     url.hostname.includes('supabase');
 }
 
