@@ -29,6 +29,7 @@ interface AuthContextType {
   profile: Profile | null;
   roles: AppRole[];
   loading: boolean;
+  rolesLoaded: boolean;
   signIn: (username: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
   const [society, setSociety] = useState<Society | null>(null);
   const [selectedSocietyId, setSelectedSocietyId] = useState<string | null>(null);
 
@@ -59,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('Auth loading safety timeout triggered');
         setLoading(false);
       }
-    }, 4000);
+    }, 8000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -164,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error fetching profile/roles:', error);
     } finally {
+      setRolesLoaded(true);
       setLoading(false);
     }
   };
@@ -189,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setRoles([]);
     setSociety(null);
+    setRolesLoaded(false);
     setSelectedSocietyId(null);
   };
 
@@ -204,6 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         roles,
         loading,
+        rolesLoaded,
         signIn,
         signOut,
         isAdmin,
