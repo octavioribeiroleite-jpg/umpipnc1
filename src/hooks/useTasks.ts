@@ -174,22 +174,27 @@ export function useUpdateTask() {
     mutationFn: async (input: UpdateTaskInput) => {
       const { id, ...updates } = input;
 
-      const { data, error } = await supabase.rpc('update_task', {
-        task_id: id,
-        new_title: updates.title || null,
-        new_description: updates.description !== undefined ? updates.description : null,
-        new_status: updates.status || null,
-        new_priority: updates.priority || null,
-        new_due_date: updates.due_date || null,
-        new_assignee_id: updates.assignee_id || null,
-        new_meeting_id: updates.meeting_id || null,
-        clear_due_date: updates.due_date === null,
-        clear_assignee: updates.assignee_id === null,
-        clear_meeting: updates.meeting_id === null,
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
 
-      if (error) throw error;
-      return data;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-task`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ action: 'update', task_id: id, updates }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Erro ao atualizar tarefa');
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -207,13 +212,27 @@ export function useUpdateTaskStatus() {
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: TaskStatus }) => {
-      const { data, error } = await supabase.rpc('update_task_status', {
-        task_id: id,
-        new_status: status,
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
 
-      if (error) throw error;
-      return data;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-task`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ action: 'update_status', task_id: id, updates: { status } }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Erro ao mover tarefa');
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -230,11 +249,25 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc('delete_task', {
-        task_id: id,
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
 
-      if (error) throw error;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-task`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ action: 'delete', task_id: id }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Erro ao excluir tarefa');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
