@@ -527,6 +527,72 @@ export type Database = {
           },
         ]
       }
+      member_payment_submissions: {
+        Row: {
+          amount: number | null
+          competence: string
+          created_at: string
+          id: string
+          member_id: string
+          notes: string | null
+          receipt_url: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          society_id: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          competence: string
+          created_at?: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          receipt_url: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          society_id?: string | null
+          status?: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          competence?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          receipt_url?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          society_id?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_payment_submissions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_payment_submissions_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           active: boolean
@@ -537,6 +603,7 @@ export type Database = {
           phone: string | null
           society_id: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           active?: boolean
@@ -547,6 +614,7 @@ export type Database = {
           phone?: string | null
           society_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           active?: boolean
@@ -557,6 +625,7 @@ export type Database = {
           phone?: string | null
           society_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {

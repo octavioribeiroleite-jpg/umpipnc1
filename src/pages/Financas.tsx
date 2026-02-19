@@ -12,6 +12,7 @@ import { CobrancasTab } from '@/components/financas/CobrancasTab';
 import { CamisasTab } from '@/components/financas/CamisasTab';
 import { ConfiguracoesTab } from '@/components/financas/ConfiguracoesTab';
 import { RelatoriosTab } from '@/components/financas/RelatoriosTab';
+import { ComprovantesTab } from '@/components/financas/ComprovantesTab';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DollarSign,
@@ -198,8 +199,9 @@ export default function Financas() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 mb-4">
-          <TabsList className="inline-flex w-max md:w-auto gap-1">
+           <TabsList className="inline-flex w-max md:w-auto gap-1">
             <TabsTrigger value="cobrancas" className="min-w-max">Cobranças</TabsTrigger>
+            <TabsTrigger value="comprovantes" className="min-w-max">Comprovantes</TabsTrigger>
             <TabsTrigger value="membros" className="min-w-max">Membros</TabsTrigger>
             <TabsTrigger value="receitas" className="min-w-max">Receitas</TabsTrigger>
             <TabsTrigger value="gastos" className="min-w-max">Gastos</TabsTrigger>
@@ -211,6 +213,10 @@ export default function Financas() {
 
         <TabsContent value="cobrancas" className="animate-in fade-in-50">
           <CobrancasTab />
+        </TabsContent>
+
+        <TabsContent value="comprovantes" className="animate-in fade-in-50">
+          <ComprovantesTab />
         </TabsContent>
 
         <TabsContent value="membros" className="animate-in fade-in-50">
