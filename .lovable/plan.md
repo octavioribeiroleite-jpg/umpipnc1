@@ -1,39 +1,66 @@
 
+# Melhoria do Calendario Mobile
 
-# Correcao dos Botoes de Tarefas e Edicao de Eventos
+## Problema
 
-## Problema Raiz
-
-As politicas de seguranca (RLS) nas tabelas `tasks` e `events` estao configuradas como **RESTRICTIVE** (restritivas). No PostgreSQL, isso causa dois problemas criticos:
-
-1. **Politicas restritivas exigem que TODAS passem** - Na tabela `tasks`, a politica "Management can update" e "Assignees can update" sao ambas restritivas. Um usuario de gestao que nao e o responsavel falha na segunda, e um responsavel que nao e gestao falha na primeira. Resultado: ninguem consegue atualizar.
-
-2. **Sem politica permissiva, ninguem tem acesso** - O PostgreSQL exige ao menos uma politica PERMISSIVE para conceder acesso. Se todas forem RESTRICTIVE, o acesso e negado por padrao.
-
-Isso explica o erro "UPDATE requires a WHERE clause" nas tarefas e falhas ao salvar eventos.
+No celular, o calendario mostra o mes inteiro em grade 7x5, com celulas muito pequenas onde os nomes dos eventos ficam truncados (ex: "P...", "A...", "D..."). Nao ha como ver os detalhes de um dia sem clicar diretamente no evento.
 
 ## Solucao
 
-Recriar as politicas das tabelas `tasks` e `events` como **PERMISSIVE** (padrao do PostgreSQL), onde basta **UMA** politica passar para conceder acesso.
+Criar 3 modos de visualizacao para mobile (Semana, 15 dias, Mes) e adicionar um popup ao clicar em qualquer dia para ver todos os eventos daquele dia.
+
+### 1. Seletor de visualizacao (mobile only)
+
+Adicionar tabs/botoes acima do calendario no mobile com 3 opcoes:
+- **Semana**: mostra apenas 7 dias (semana atual ou semana contendo o dia selecionado)
+- **15 dias**: mostra 15 dias a partir do inicio da quinzena atual
+- **Mes**: visualizacao completa do mes (atual, mas com celulas mais compactas)
+
+No desktop, manter a visualizacao mensal como esta.
+
+### 2. Popup de detalhes do dia
+
+Ao clicar em qualquer celula de dia (nao apenas no evento), abrir um Drawer (bottom sheet no mobile) mostrando:
+- Data completa no titulo (ex: "Quarta, 19 de Fevereiro")
+- Lista de todos os eventos do dia com EventCard detalhado
+- Botao "Novo Evento" se o usuario for gestao (pre-preenchendo a data)
+
+### 3. Melhorias visuais mobile
+
+- Celulas mais compactas com indicadores de cor (bolinhas) em vez de texto truncado
+- Numero do dia mais destacado
+- Ocultar o card "Proximos Eventos" no mobile (fica acessivel via drawer do dia)
 
 ## Secao Tecnica
 
-### Migracao SQL
+### Novo componente: `src/components/calendario/DayDetailDrawer.tsx`
 
-Uma unica migracao para corrigir ambas as tabelas:
+- Usa `ResponsiveDialog` (drawer no mobile, dialog no desktop)
+- Recebe: `date`, `events`, `open`, `onOpenChange`, `onEventClick`, `onNewEvent`
+- Mostra lista de EventCards completos para o dia selecionado
 
-**Tabela `tasks`** - Recriar as 6 politicas como PERMISSIVE:
-- SELECT: "Tasks viewable by authenticated" (USING true)
-- SELECT: "Management can view all tasks" (USING has_management_role)
-- INSERT: "Management can create tasks" (WITH CHECK has_management_role)
-- UPDATE: "Management can update all tasks" (USING/WITH CHECK has_management_role)
-- UPDATE: "Assignees can update their tasks" (USING/WITH CHECK auth.uid() = assignee_id)
-- DELETE: "Management can delete all tasks" (USING has_management_role)
+### Novo componente: `src/components/calendario/CalendarViewSelector.tsx`
 
-**Tabela `events`** - Recriar as 2 politicas como PERMISSIVE:
-- SELECT: "Events viewable by authenticated" (USING true)
-- ALL: "Management can manage events" (USING has_management_role)
+- Tabs com opcoes: "Semana", "15 dias", "Mes"
+- Controla o estado `viewMode` passado pelo pai
+- Visivel apenas no mobile
 
-### Nenhuma alteracao de codigo necessaria
+### Modificacoes em `src/pages/Calendario.tsx`
 
-O codigo do frontend (TaskCard, EventDialog, useEvents, useTasks) esta correto. O problema e exclusivamente no banco de dados.
+- Adicionar estados: `viewMode` ('week' | 'fortnight' | 'month'), `selectedDay` (number | null), `dayDrawerOpen` (boolean)
+- Usar `useIsMobile()` para condicionar visualizacao
+- Logica de filtragem de dias conforme viewMode:
+  - `week`: calcular inicio/fim da semana atual e renderizar apenas esses 7 dias
+  - `fortnight`: calcular quinzena (1-15 ou 16-fim) e renderizar
+  - `month`: manter comportamento atual
+- Ao clicar na celula do dia: setar `selectedDay` e abrir `DayDetailDrawer`
+- No mobile, mostrar bolinhas coloridas em vez de EventCard compact (max 3 bolinhas + "+N")
+- Ocultar card "Proximos Eventos" no mobile via `hidden md:block`
+
+### Resumo de mudancas nos arquivos
+
+| Arquivo | Acao |
+|---|---|
+| `src/components/calendario/DayDetailDrawer.tsx` | Criar novo |
+| `src/components/calendario/CalendarViewSelector.tsx` | Criar novo |
+| `src/pages/Calendario.tsx` | Modificar - adicionar viewMode, dayDrawer, bolinhas mobile |
