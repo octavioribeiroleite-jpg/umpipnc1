@@ -1,54 +1,38 @@
 
-# Suporte Offline Basico para o App
 
-## O que muda para o usuario
+# Melhorar Visibilidade da Logo na Barra Lateral
 
-- Ao abrir o app sem internet, ele carrega normalmente (a interface aparece)
-- Um banner discreto aparece avisando "Voce esta offline" quando nao ha conexao
-- Os dados que o usuario ja viu antes (eventos, tarefas, reunioes) continuam visiveis
-- Quando a conexao voltar, o banner some e os dados atualizam automaticamente
+## Problema
 
-## Mudancas tecnicas
+A logo da IPNC e predominantemente verde e esta sobre o fundo verde escuro da sidebar, fazendo com que ela se misture e fique quase invisivel.
 
-### 1. Melhorar o Service Worker (`public/sw.js`)
+## Solucao
 
-- Pre-cachear todos os assets estaticos do build (JS, CSS, fontes, imagens)
-- Adicionar uma pagina de fallback offline para rotas nao cacheadas
-- Usar estrategia "cache-first" para assets estaticos (JS/CSS/imagens) e "network-first" para navegacao HTML
-- Excluir chamadas de API do cache do service worker (o React Query ja cuida disso)
-- **Excluir** a rota `/~oauth` do cache (requisito tecnico para autenticacao funcionar)
+Adicionar um fundo circular branco (com leve sombra) atras da logo, criando contraste sem mudar as cores do app. Isso funciona tanto no tema claro quanto no escuro.
 
-### 2. Criar componente de aviso offline (`src/components/OfflineBanner.tsx`)
+## Mudancas
 
-- Detecta estado da conexao usando `navigator.onLine` e eventos `online`/`offline`
-- Mostra um banner fixo no topo: "Sem conexao. Os dados exibidos podem estar desatualizados."
-- O banner some automaticamente quando a internet volta
-- Animacao suave de entrada/saida
-
-### 3. Configurar cache de dados com React Query
-
-- No `App.tsx`, ajustar as opcoes globais do React Query para:
-  - `gcTime` (garbage collection time) maior para manter dados em memoria por mais tempo
-  - `staleTime` maior para nao re-buscar dados desnecessariamente
-  - `retry` inteligente que para de tentar quando offline
-- Isso faz com que dados ja carregados continuem visiveis mesmo sem internet
-
-### 4. Adicionar o banner no layout
-
-- Incluir `OfflineBanner` no `AppLayout.tsx` e no `PastorLayout.tsx` para que apareca em todas as paginas
-
-## Arquivos modificados
+### Arquivos modificados
 
 | Arquivo | Mudanca |
 |---|---|
-| `public/sw.js` | Melhorar estrategia de cache com pre-cache de assets e fallback offline |
-| `src/components/OfflineBanner.tsx` | Novo componente de aviso de conexao |
-| `src/components/layout/AppLayout.tsx` | Incluir OfflineBanner |
-| `src/components/pastor/PastorLayout.tsx` | Incluir OfflineBanner |
-| `src/App.tsx` | Ajustar configuracoes do React Query para melhor cache offline |
+| `src/components/layout/AppSidebar.tsx` | Envolver a `<img>` da logo em um `<div>` com fundo branco arredondado e padding |
+| `src/components/pastor/PastorSidebar.tsx` | Mesma mudanca para manter consistencia |
 
-## Limitacoes
+### Detalhe visual
 
-- O usuario **nao podera criar ou editar** dados enquanto estiver offline (apenas visualizar o que ja foi carregado)
-- Se o usuario nunca abriu o app antes, a primeira abertura precisa de internet
-- Arquivos anexados (PDFs, imagens) so ficam disponiveis offline se ja foram abertos antes
+A logo recebera um container com:
+- Fundo branco (`bg-white`)
+- Bordas arredondadas (`rounded-lg`)
+- Padding interno (`p-1`)
+- Isso cria um "cartao" branco pequeno que destaca a logo do fundo verde escuro
+
+### Resultado esperado
+
+```
+Antes:  [logo verde sobre fundo verde] = invisivel
+Depois: [logo verde sobre circulo branco sobre fundo verde] = destaque claro
+```
+
+Nenhuma mudanca de cor no tema do app - apenas um container de contraste atras da imagem.
+
