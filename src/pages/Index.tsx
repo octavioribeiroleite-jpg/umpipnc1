@@ -123,7 +123,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function Index() {
-  const { user, loading, isPastor, profile, isAdmin } = useAuth();
+  const { user, loading, rolesLoaded, isPastor, profile, isAdmin } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const navigate = useNavigate();
   const { upcomingEvents, isUpcomingLoading } = useEvents();
@@ -137,10 +137,10 @@ export default function Index() {
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
-    } else if (!loading && user && isPastor) {
+    } else if (!loading && user && rolesLoaded && isPastor && !isAdmin) {
       navigate('/pastor');
     }
-  }, [user, loading, navigate, isPastor]);
+  }, [user, loading, rolesLoaded, navigate, isPastor, isAdmin]);
 
   useEffect(() => {
     const fetchStats = async () => {
