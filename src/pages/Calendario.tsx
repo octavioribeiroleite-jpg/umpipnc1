@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Loader2, MapPin, Clock } from 'lucide-react';
 import { useEvents, CalendarEvent, CreateEventInput, UpdateEventInput } from '@/hooks/useEvents';
 import { EventDialog } from '@/components/calendario/EventDialog';
 import { EventCard } from '@/components/calendario/EventCard';
@@ -11,6 +11,8 @@ import { CalendarViewSelector, ViewMode } from '@/components/calendario/Calendar
 import { DayDetailDrawer } from '@/components/calendario/DayDetailDrawer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const months = [
@@ -31,15 +33,42 @@ const eventDotColors: Record<string, string> = {
   '#3b82f6': 'bg-blue-500',
   '#ef4444': 'bg-red-500',
   '#22c55e': 'bg-green-500',
+  '#10b981': 'bg-emerald-500',
   '#f59e0b': 'bg-amber-500',
+  '#f97316': 'bg-orange-500',
   '#8b5cf6': 'bg-violet-500',
   '#ec4899': 'bg-pink-500',
   '#06b6d4': 'bg-cyan-500',
+  '#6b7280': 'bg-gray-500',
 };
 
 function getEventDotClass(color: string | null): string {
   if (!color) return 'bg-primary';
   return eventDotColors[color] || 'bg-primary';
+}
+
+// Society name mapping by color
+const colorToSocietyName: Record<string, string> = {
+  '#3b82f6': 'UMP',
+  '#ec4899': 'SAF',
+  '#10b981': 'UPH',
+  '#f97316': 'UPA',
+  '#8b5cf6': 'UCP',
+  '#6b7280': 'IPNC',
+};
+
+const legendItems = [
+  { color: '#3b82f6', name: 'UMP', dotClass: 'bg-blue-500' },
+  { color: '#ec4899', name: 'SAF', dotClass: 'bg-pink-500' },
+  { color: '#10b981', name: 'UPH', dotClass: 'bg-emerald-500' },
+  { color: '#f97316', name: 'UPA', dotClass: 'bg-orange-500' },
+  { color: '#8b5cf6', name: 'UCP', dotClass: 'bg-violet-500' },
+  { color: '#6b7280', name: 'IPNC', dotClass: 'bg-gray-500' },
+];
+
+function getSocietyNameByColor(color: string | null): string {
+  if (!color) return 'IPNC';
+  return colorToSocietyName[color] || 'IPNC';
 }
 
 export default function Calendario() {
@@ -56,6 +85,19 @@ export default function Calendario() {
 
   const { events, upcomingEvents, isLoading, createEvent, updateEvent, deleteEvent } = useEvents(month, year);
   const { isManagement } = useAuth();
+
+  // Group events by day for monthly program list
+  const eventsByDay = useMemo(() => {
+    const grouped: Record<string, CalendarEvent[]> = {};
+    const sorted = [...events].sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    sorted.forEach(event => {
+      const d = new Date(event.start_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(event);
+    });
+    return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
+  }, [events]);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -229,6 +271,15 @@ export default function Calendario() {
               </div>
             </div>
             <CalendarViewSelector viewMode={viewMode} onViewModeChange={setViewMode} />
+            {/* Color Legend */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-2">
+              {legendItems.map(item => (
+                <div key={item.name} className="flex items-center gap-1.5">
+                  <div className={`w-2.5 h-2.5 rounded-full ${item.dotClass}`} />
+                  <span className="text-xs font-medium text-muted-foreground">{item.name}</span>
+                </div>
+              ))}
+            </div>
           </CardHeader>
           <CardContent className="px-2 md:px-6">
             {isLoading ? (
@@ -273,6 +324,77 @@ export default function Calendario() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Monthly Program List */}
+      {!isLoading && eventsByDay.length > 0 && (
+        <Card className="mt-4 md:mt-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg">
+              Programações de {months[month]}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {eventsByDay.map(([dateKey, dayEvents]) => {
+              const date = new Date(dateKey + 'T12:00:00');
+              return (
+                <div key={dateKey}>
+                  <h3 className="text-sm font-semibold text-foreground capitalize mb-2 pb-1 border-b border-border/60">
+                    {format(date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                  </h3>
+                  <div className="space-y-2">
+                    {dayEvents.map(event => {
+                      const societyName = getSocietyNameByColor(event.color);
+                      const dotClass = getEventDotClass(event.color);
+                      return (
+                        <div
+                          key={event.id}
+                          onClick={() => handleEventClick(event)}
+                          className="flex gap-3 p-2.5 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
+                          style={{ borderLeftWidth: '3px', borderLeftColor: event.color || '#6b7280' }}
+                        >
+                          <div className="flex flex-col items-center pt-0.5">
+                            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${dotClass}`} />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium text-sm truncate">{event.title}</span>
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${event.color || '#6b7280'}15`, color: event.color || '#6b7280' }}>
+                                {societyName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              {event.all_day ? (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  Dia inteiro
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {format(new Date(event.start_date), 'HH:mm')}
+                                </span>
+                              )}
+                              {event.location && (
+                                <span className="flex items-center gap-1 truncate">
+                                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                                  {event.location}
+                                </span>
+                              )}
+                            </div>
+                            {event.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2 pt-0.5">{event.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Day Detail Drawer */}
       <DayDetailDrawer
