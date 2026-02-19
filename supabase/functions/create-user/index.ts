@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
-    // Verify caller is admin
+    // Verify caller is admin or diretoria
     const authHeader = req.headers.get('Authorization')!
     const callerClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -32,18 +32,31 @@ Deno.serve(async (req) => {
       _user_id: caller.id,
       _role: 'admin',
     })
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Apenas admins podem criar usuários' }), {
+    const { data: isDiretoria } = await callerClient.rpc('has_role', {
+      _user_id: caller.id,
+      _role: 'diretoria',
+    })
+
+    if (!isAdmin && !isDiretoria) {
+      return new Response(JSON.stringify({ error: 'Sem permissão para criar usuários' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const { full_name, username, password, role, society_id } = await req.json()
+    const { full_name, username, password, role, society_id, member_id } = await req.json()
 
     if (!full_name || !username || !password || !role) {
       return new Response(JSON.stringify({ error: 'Campos obrigatórios: full_name, username, password, role' }), {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Diretoria can only create visualizador
+    if (!isAdmin && isDiretoria && role !== 'visualizador') {
+      return new Response(JSON.stringify({ error: 'Diretoria só pode criar usuários visualizadores' }), {
+        status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
@@ -86,6 +99,11 @@ Deno.serve(async (req) => {
       user_id: newUser.user.id,
       role,
     })
+
+    // Link member_id if provided
+    if (member_id) {
+      await adminClient.from('members').update({ user_id: newUser.user.id }).eq('id', member_id)
+    }
 
     return new Response(JSON.stringify({ success: true, user_id: newUser.user.id }), {
       status: 200,
