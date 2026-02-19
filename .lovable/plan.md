@@ -1,58 +1,67 @@
 
+# Restringir Edicao do Calendario por Sociedade
 
-# Legenda de Cores + Lista de Programacoes do Mes
+## O que muda
 
-## O que sera feito
+Atualmente, qualquer membro com cargo de diretoria pode criar, editar e excluir eventos de qualquer sociedade. Com essa mudanca, cada grupo so podera gerenciar seus proprios eventos:
 
-1. **Legenda de cores** acima do grid do calendario (abaixo do seletor de visualizacao), mostrando bolinhas coloridas com o nome de cada sociedade (UMP, SAF, UPH, UPA, UCP) e "IPNC" para eventos gerais (cinza).
-
-2. **Lista de programacoes do mes** abaixo do calendario, agrupadas por dia, mostrando titulo do evento, nome da sociedade (com cor), descricao e horario. O usuario pode simplesmente rolar para ver todas as programacoes do mes.
+- Um membro da UMP so edita/exclui eventos da UMP (azul)
+- Um membro da SAF so edita/exclui eventos da SAF (rosa)
+- Admins continuam podendo gerenciar todos os eventos
+- Todos continuam visualizando todos os eventos normalmente
 
 ## Secao Tecnica
 
-### Arquivo: `src/pages/Calendario.tsx`
+### 1. Migracao SQL - Adicionar `society_id` na tabela `events`
 
-**Mudanca 1 - Legenda de cores**
+Adicionar coluna `society_id` (uuid, nullable, FK para societies) na tabela events e preencher automaticamente os eventos existentes com base no mapeamento de cor:
 
-Adicionar uma secao entre o `CalendarViewSelector` e o grid de dias, com layout horizontal (flex-wrap) mostrando:
-
-```text
-[bolinha azul] UMP  [bolinha rosa] SAF  [bolinha verde] UPH  [bolinha laranja] UPA  [bolinha roxa] UCP  [bolinha cinza] IPNC
-```
-
-Sera um mapeamento estatico das cores conhecidas para nomes:
-
-| Cor | Nome |
+| Cor | Sociedade |
 |---|---|
 | #3b82f6 | UMP |
 | #ec4899 | SAF |
 | #10b981 | UPH |
 | #f97316 | UPA |
 | #8b5cf6 | UCP |
-| #6b7280 | IPNC |
+| #6b7280 | NULL (IPNC/geral) |
 
-**Mudanca 2 - Lista de programacoes abaixo do calendario**
+Atualizar as politicas RLS de INSERT/UPDATE/DELETE para verificar:
+- Admin pode tudo (ja existente via `has_management_role`)
+- Diretoria so pode gerenciar eventos onde `events.society_id` = `profile.society_id`
 
-Adicionar um Card abaixo do grid principal (fora do grid lg:grid-cols-4), com titulo "Programacoes de {Mes}". Conteudo:
+Criar funcao auxiliar `is_event_owner` (SECURITY DEFINER) que verifica se o usuario pertence a mesma sociedade do evento.
 
-- Agrupar `events` por dia (extraindo a data local)
-- Para cada dia, mostrar um cabecalho com data formatada (ex: "Sabado, 21 de Fevereiro")
-- Para cada evento do dia, mostrar:
-  - Bolinha colorida + nome da sociedade (derivado da cor)
-  - Titulo do evento
-  - Horario (ou "Dia inteiro")
-  - Descricao (se houver)
-  - Local (se houver)
-- Estilo: cards compactos com borda lateral colorida, separados por dia
+### 2. Modificar `src/hooks/useEvents.ts`
 
-A derivacao do nome da sociedade sera feita pelo mapeamento de cor, ja que os dados mostram que cada sociedade tem cor unica. Para eventos com cor `#6b7280`, o nome sera "IPNC".
+- No `createEvent`, incluir `society_id` do perfil do usuario logado ao inserir o evento
+- Adicionar `society_id` ao tipo `CalendarEvent`
 
-### Resumo
+### 3. Modificar `src/pages/Calendario.tsx`
 
-| Mudanca | Local |
+- Substituir a verificacao `isManagement` por uma logica mais granular:
+  - Botao "Novo Evento": visivel para qualquer membro com role diretoria/admin
+  - Ao clicar em um evento para editar: verificar se `event.society_id === profile.society_id` ou se o usuario e admin
+  - Passar `onDelete` e permitir edicao somente se o usuario tem permissao sobre aquele evento especifico
+- Na criacao, travar a cor automaticamente para a cor da sociedade do usuario (diretoria nao-admin)
+
+### 4. Modificar `src/components/calendario/EventDialog.tsx`
+
+- Receber nova prop `readOnly` (boolean)
+- Quando `readOnly = true`: mostrar os dados do evento sem formulario de edicao, apenas botao "Fechar"
+- Quando `readOnly = false`: manter o comportamento atual (formulario editavel)
+- Para admins: permitir selecionar qualquer cor/sociedade
+- Para diretoria: travar cor na cor da sociedade do usuario
+
+### 5. Modificar `src/components/calendario/DayDetailDrawer.tsx`
+
+- Passar a informacao de permissao por evento, para que o botao "Novo Evento" continue disponivel para diretoria/admin
+
+### Resumo de arquivos
+
+| Arquivo | Acao |
 |---|---|
-| Legenda de cores (bolinhas + nomes) | Dentro do Card do calendario, apos CalendarViewSelector |
-| Lista de programacoes do mes agrupada por dia | Novo Card abaixo do grid principal |
-
-Apenas o arquivo `src/pages/Calendario.tsx` sera modificado.
-
+| Nova migracao SQL | Adicionar `society_id` em events + backfill + RLS + funcao auxiliar |
+| `src/hooks/useEvents.ts` | Incluir `society_id` na criacao de eventos |
+| `src/pages/Calendario.tsx` | Verificacao granular de permissao por evento |
+| `src/components/calendario/EventDialog.tsx` | Modo somente leitura + travar cor por sociedade |
+| `src/components/calendario/DayDetailDrawer.tsx` | Ajuste menor de props |
