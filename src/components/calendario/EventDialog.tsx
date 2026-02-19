@@ -29,9 +29,11 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { CalendarEvent, EventStatus, CreateEventInput, UpdateEventInput } from '@/hooks/useEvents';
-import { Calendar, Link, Trash2 } from 'lucide-react';
+import { Calendar, Link, Trash2, MapPin, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const eventSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -55,6 +57,8 @@ interface EventDialogProps {
   onSave: (data: CreateEventInput | UpdateEventInput) => void;
   onDelete?: (id: string) => void;
   isLoading?: boolean;
+  readOnly?: boolean;
+  lockColor?: string;
 }
 
 const colorOptions = [
@@ -65,7 +69,25 @@ const colorOptions = [
   { value: '#ec4899', label: 'Rosa' },
   { value: '#f59e0b', label: 'Âmbar' },
   { value: '#ef4444', label: 'Vermelho' },
+  { value: '#3b82f6', label: 'Azul' },
+  { value: '#f97316', label: 'Laranja' },
+  { value: '#6b7280', label: 'Cinza' },
 ];
+
+const colorToSocietyName: Record<string, string> = {
+  '#3b82f6': 'UMP',
+  '#ec4899': 'SAF',
+  '#10b981': 'UPH',
+  '#f97316': 'UPA',
+  '#8b5cf6': 'UCP',
+  '#6b7280': 'IPNC',
+};
+
+const statusLabels: Record<string, string> = {
+  confirmado: '✓ Confirmado',
+  pendente: '⏳ Pendente',
+  cancelado: '✗ Cancelado',
+};
 
 export function EventDialog({
   open,
@@ -74,6 +96,8 @@ export function EventDialog({
   onSave,
   onDelete,
   isLoading,
+  readOnly = false,
+  lockColor,
 }: EventDialogProps) {
   const navigate = useNavigate();
   const isEditing = !!event;
@@ -90,7 +114,7 @@ export function EventDialog({
       location: '',
       status: 'confirmado',
       all_day: false,
-      color: '#10b981',
+      color: lockColor || '#10b981',
     },
   });
 
@@ -122,10 +146,10 @@ export function EventDialog({
         location: '',
         status: 'confirmado',
         all_day: false,
-        color: '#10b981',
+        color: lockColor || '#10b981',
       });
     }
-  }, [event, form]);
+  }, [event, form, lockColor]);
 
   const onSubmit = (values: EventFormValues) => {
     const startDateTime = values.all_day
@@ -148,7 +172,7 @@ export function EventDialog({
       location: values.location,
       status: values.status as EventStatus,
       all_day: values.all_day,
-      color: values.color,
+      color: lockColor || values.color,
     };
 
     onSave(data);
@@ -166,6 +190,71 @@ export function EventDialog({
       onOpenChange(false);
     }
   };
+
+  // Read-only view
+  if (readOnly && event) {
+    const startDate = new Date(event.start_date);
+    const societyName = colorToSocietyName[event.color || ''] || 'IPNC';
+
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              {event.title}
+            </DialogTitle>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant={event.origem === 'reuniao' ? 'secondary' : 'outline'}>
+                {event.origem === 'reuniao' ? 'Via Reunião' : 'Manual'}
+              </Badge>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${event.color || '#6b7280'}15`, color: event.color || '#6b7280' }}>
+                {societyName}
+              </span>
+              {event.reuniao_id && (
+                <Button variant="ghost" size="sm" onClick={goToMeeting} className="h-6 px-2">
+                  <Link className="h-3 w-3 mr-1" />
+                  Ver reunião
+                </Button>
+              )}
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              {event.all_day ? (
+                <span>Dia inteiro — {format(startDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+              ) : (
+                <span>{format(startDate, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}</span>
+              )}
+            </div>
+            {event.location && (
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span>{event.location}</span>
+              </div>
+            )}
+            {event.description && (
+              <div className="text-sm text-muted-foreground pt-1 border-t border-border/50">
+                {event.description}
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Status:</span>
+              <span>{statusLabels[event.status] || event.status}</span>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -337,36 +426,48 @@ export function EventDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="color"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cor</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a cor" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {colorOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: option.value }}
-                              />
-                              {option.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!lockColor ? (
+                <FormField
+                  control={form.control}
+                  name="color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cor</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a cor" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {colorOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: option.value }}
+                                />
+                                {option.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="space-y-2">
+                  <FormLabel>Cor</FormLabel>
+                  <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted/50">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lockColor }} />
+                    <span className="text-sm text-muted-foreground">
+                      {colorToSocietyName[lockColor] || 'Sociedade'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <DialogFooter className="gap-2">
