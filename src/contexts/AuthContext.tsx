@@ -57,11 +57,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let initialLoadDone = false;
 
     const safetyTimer = setTimeout(() => {
-      if (isMounted) {
-        console.warn('Auth loading safety timeout triggered');
+      if (isMounted && loading) {
+        console.warn('Auth loading safety timeout triggered - forcing load complete');
+        // Clear potentially corrupted session data
+        try {
+          const storageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+          localStorage.removeItem(storageKey);
+        } catch (e) { /* ignore */ }
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        setRoles([]);
+        setSociety(null);
         setLoading(false);
+        setRolesLoaded(true);
       }
-    }, 8000);
+    }, 5000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -86,19 +97,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Auth] Starting getSession...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('[Auth] getSession completed', { hasSession: !!session, error: error?.message });
+        
         if (!isMounted) return;
+        
+        if (error) {
+          console.error('[Auth] getSession error, clearing session:', error.message);
+          await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          console.log('[Auth] Fetching profile and roles...');
           await fetchProfileAndRoles(session.user.id);
+          console.log('[Auth] Profile and roles loaded');
         } else {
           setLoading(false);
         }
-      } catch (err) {
-        console.error('Auth initialization error:', err);
-        if (isMounted) setLoading(false);
+      } catch (err: any) {
+        console.error('[Auth] Initialization error, cleaning up:', err?.message || err);
+        if (isMounted) {
+          try {
+            await supabase.auth.signOut();
+          } catch (e) { /* ignore signout errors */ }
+          setUser(null);
+          setSession(null);
+          setProfile(null);
+          setRoles([]);
+          setSociety(null);
+          setLoading(false);
+        }
       } finally {
         initialLoadDone = true;
       }
