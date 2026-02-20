@@ -220,6 +220,144 @@ export type Database = {
           },
         ]
       }
+      election_attendance: {
+        Row: {
+          election_id: string
+          id: string
+          name: string
+          present: boolean
+        }
+        Insert: {
+          election_id: string
+          id?: string
+          name: string
+          present?: boolean
+        }
+        Update: {
+          election_id?: string
+          id?: string
+          name?: string
+          present?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "election_attendance_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      election_candidates: {
+        Row: {
+          display_order: number
+          election_id: string
+          id: string
+          name: string
+          photo_url: string | null
+        }
+        Insert: {
+          display_order?: number
+          election_id: string
+          id?: string
+          name: string
+          photo_url?: string | null
+        }
+        Update: {
+          display_order?: number
+          election_id?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "election_candidates_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      election_votes: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          election_id: string
+          id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          election_id: string
+          id?: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          election_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "election_votes_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "election_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "election_votes_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      elections: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          position: string
+          society_id: string | null
+          status: string
+          total_present: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          position: string
+          society_id?: string | null
+          status?: string
+          total_present?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          position?: string
+          society_id?: string | null
+          status?: string
+          total_present?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "elections_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           all_day: boolean | null

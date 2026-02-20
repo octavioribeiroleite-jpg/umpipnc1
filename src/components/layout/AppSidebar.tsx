@@ -13,6 +13,7 @@ import {
   UserCheck,
   ClipboardCheck,
   MessageSquare,
+  Vote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,6 +29,7 @@ const menuItems = [
   { icon: DollarSign, label: 'Finanças', path: '/financas' },
   { icon: FolderOpen, label: 'Arquivos', path: '/arquivos' },
   { icon: ClipboardCheck, label: 'Plenárias', path: '/plenarias' },
+  { icon: Vote, label: 'Eleições', path: '/eleicoes' },
 ];
 
 const adminMenuItems = [

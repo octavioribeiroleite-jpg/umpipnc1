@@ -25,6 +25,9 @@ import PastorSociedade from "./pages/PastorSociedade";
 import PastorCalendario from "./pages/PastorCalendario";
 import PastorComunicados from "./pages/PastorComunicados";
 import MembroHome from "./pages/MembroHome";
+import Eleicoes from "./pages/Eleicoes";
+import EleicaoDetalhe from "./pages/EleicaoDetalhe";
+import VotePublic from "./pages/VotePublic";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
@@ -73,6 +76,9 @@ const App = () => (
             <Route path="/pastor/sugestoes" element={<PastorSugestoes />} />
             <Route path="/pastor-sugestoes" element={<PastorSugestoes />} />
             <Route path="/membro" element={<MembroHome />} />
+            <Route path="/eleicoes" element={<Eleicoes />} />
+            <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />
+            <Route path="/vote/:electionId" element={<VotePublic />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
