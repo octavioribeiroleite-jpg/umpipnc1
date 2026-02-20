@@ -27,8 +27,8 @@ interface Submission {
 }
 
 export function ComprovantesTab() {
-  const { user, profile, isAdmin, isPastor } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  const { user, profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
   const { toast } = useToast();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);

@@ -58,8 +58,8 @@ interface TransactionWithReceipt {
 }
 
 export function RelatoriosTab() {
-  const { profile, isAdmin, isPastor } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
   const currentYear = new Date().getFullYear();
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());

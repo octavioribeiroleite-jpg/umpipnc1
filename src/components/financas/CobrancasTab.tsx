@@ -90,8 +90,8 @@ export function CobrancasTab() {
     fetchData();
   }, [competence]);
 
-  const { profile, isAdmin, isPastor } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
 
   const fetchData = async () => {
     setLoading(true);
@@ -290,7 +290,7 @@ export function CobrancasTab() {
             reference_id: charge.id,
             member_id: selectedMember.id,
             receipt_url: receiptUrl,
-            society_id: profile?.society_id || null,
+            society_id: societyId || null,
           })
           .select('id')
           .single();

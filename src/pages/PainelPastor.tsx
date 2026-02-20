@@ -289,7 +289,7 @@ export default function PainelPastor() {
             </h3>
             <div className="space-y-2">
               {societies.map(s => (
-                <SocietyOverviewCard key={s.id} society={s} />
+                <SocietyOverviewCard key={s.id} society={s} stats={societyStats[s.id]} />
               ))}
             </div>
           </div>
