@@ -1,43 +1,34 @@
 
-# Refatorar secao de Sociedades no Painel do Pastor
+# Consolidar dados por sociedade e redesenhar cards de estatisticas
 
-## Resumo
+## Problema identificado
 
-Substituir os cards detalhados de sociedades (que estao cortados e feios no mobile) por uma lista limpa e simples, mostrando apenas o nome e a cor de cada grupo. Ao clicar em uma sociedade, o pastor e redirecionado para a pagina de detalhes (`/pastor/sociedade/:slug`) que ja existe e contem todas as informacoes organizadas (financas, reunioes, tarefas, membros, resumo IA).
+A query de `membership_payments` (linha 59) nao filtra por sociedade no banco -- busca todos os pagamentos pagos de todas as sociedades e depois filtra no cliente por `memberIds`. Isso funciona mas e ineficiente e pode causar confusao. As demais queries (meetings, tasks, members, transactions) ja filtram corretamente por `society_id`.
 
-## Detalhes tecnicos
+## Mudancas
 
-### 1. `src/components/pastor/SocietyOverviewCard.tsx` -- Simplificar
+### 1. `src/pages/PastorSociedade.tsx` -- Corrigir query de pagamentos
 
-Redesenhar o card para ser minimalista:
-- Mostrar apenas: icone colorido com sigla + nome da sociedade + seta de navegacao (ChevronRight)
-- Remover as informacoes de membros, pendentes, saldo e barra de progresso
-- Usar layout de lista vertical (`grid-cols-1`) em vez de grade 2x2
-- Manter o `onClick` para navegar ate `/pastor/sociedade/:slug`
-- Estilo: card com borda sutil, altura compacta, hover suave
+Adicionar filtro para buscar apenas pagamentos de membros da sociedade atual diretamente no banco, usando um join ou filtrando pelo `member_id` dos membros ja carregados. Como `membership_payments` nao tem `society_id`, a abordagem atual de filtrar por `memberIds` e valida, mas vamos reorganizar para ficar mais claro.
 
-### 2. `src/pages/PainelPastor.tsx` -- Ajustar grade
+### 2. `src/pages/PastorSociedade.tsx` -- Redesenhar cards de estatisticas
 
-- Trocar `grid grid-cols-2 gap-3` por `space-y-2` (lista vertical)
-- Remover a prop `stats` do `SocietyOverviewCard` (nao sera mais necessaria)
-- O titulo "Sociedades" permanece como esta
+Trocar o grid `grid-cols-2 md:grid-cols-4` por uma fileira unica horizontal com 5 cards compactos:
 
-### Resultado visual esperado
+- Adicionar um 5o card: **Reunioes** (quantidade total)
+- Layout: `grid grid-cols-5 gap-2` com cards bem menores
+- Reduzir padding dos cards de `p-4` para `p-2`
+- Reduzir tamanho da fonte do valor de `text-lg` para `text-sm` 
+- Reduzir icones de `h-4 w-4` para `h-3 w-3`
+- Reduzir label de `text-xs` para `text-[10px]`
+- No mobile, usar `overflow-x-auto` com `flex` para scroll horizontal se necessario, ou manter `grid-cols-5` com cards minusculos
 
-Cada sociedade aparecera como uma linha limpa:
+Resultado visual esperado (uma unica linha):
 
 ```text
-+--------------------------------------------+
-| [SAF]  SAF                              >  |
-+--------------------------------------------+
-| [UCP]  UCP                              >  |
-+--------------------------------------------+
-| [UMP]  UMP                              >  |
-+--------------------------------------------+
-| [UPA]  UPA                              >  |
-+--------------------------------------------+
-| [UPH]  UPH                              >  |
-+--------------------------------------------+
+| Saldo | Membros | Feitas | Pend. | Reun. |
+| R$120 |    8    |   5    |   3   |   4   |
 ```
 
-Ao clicar, abre a pagina `/pastor/sociedade/:slug` com todas as informacoes detalhadas (financas, reunioes, tarefas, membros, resumo IA) -- essa pagina ja existe e esta funcional.
+### Arquivos modificados
+- `src/pages/PastorSociedade.tsx`
