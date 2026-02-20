@@ -287,7 +287,7 @@ export default function PainelPastor() {
             <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">
               Sociedades
             </h3>
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               {societies.map(s => (
                 <SocietyOverviewCard
                   key={s.id}
