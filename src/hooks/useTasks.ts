@@ -234,12 +234,27 @@ export function useUpdateTaskStatus() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+      const previousTasks = queryClient.getQueriesData<TaskWithAssignee[]>({ queryKey: ['tasks'] });
+
+      queryClient.setQueriesData<TaskWithAssignee[]>({ queryKey: ['tasks'] }, (old) =>
+        old?.map(t => t.id === id ? { ...t, status } : t)
+      );
+
+      return { previousTasks };
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
       console.error('Error updating task status:', error);
       toast.error('Erro ao mover tarefa');
+      if (context?.previousTasks) {
+        for (const [key, data] of context.previousTasks) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 }
