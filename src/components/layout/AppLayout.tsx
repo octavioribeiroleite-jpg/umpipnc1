@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import { AppSidebar } from './AppSidebar';
 import { MobileHeader } from './MobileHeader';
-import { MobileBottomNav } from './MobileBottomNav';
 import { OfflineBanner } from '@/components/OfflineBanner';
 
 interface AppLayoutProps {
@@ -20,13 +19,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         </main>
       </div>
 
-      {/* Mobile layout with bottom nav */}
+      {/* Mobile layout with hamburger menu */}
       <div className="md:hidden flex flex-col min-h-screen">
         <MobileHeader />
-        <main className="flex-1 overflow-auto pt-14 pb-20 px-3">
+        <main className="flex-1 overflow-auto pt-14 px-3 pb-4">
           {children}
         </main>
-        <MobileBottomNav />
       </div>
     </div>
   );

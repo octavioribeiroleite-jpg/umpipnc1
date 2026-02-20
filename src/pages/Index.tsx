@@ -4,8 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { PastorNotificationBanner } from '@/components/pastor/PastorNotificationBanner';
 import { PastorLoginNotification } from '@/components/pastor/PastorLoginNotification';
-import { useEvents, CalendarEvent, CreateEventInput, UpdateEventInput } from '@/hooks/useEvents';
-import { EventDialog } from '@/components/calendario/EventDialog';
+import { useEvents } from '@/hooks/useEvents';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -127,9 +126,7 @@ export default function Index() {
   const { user, loading, rolesLoaded, isPastor, profile, isAdmin, isManagement, roles } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const navigate = useNavigate();
-  const { upcomingEvents, isUpcomingLoading, updateEvent, deleteEvent } = useEvents();
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [eventDialogOpen, setEventDialogOpen] = useState(false);
+  const { upcomingEvents, isUpcomingLoading } = useEvents();
   const [stats, setStats] = useState<Stats>({
     saldo: 0,
     mensalidadesMes: 0,
@@ -252,30 +249,8 @@ export default function Index() {
 
   const displayedEvents = upcomingEvents.slice(0, 5);
 
-  const handleEventClick = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-    setEventDialogOpen(true);
-  };
 
-  const canEditEvent = (event: CalendarEvent) => {
-    if (isAdmin) return true;
-    if (isManagement && event.society_id === profile?.society_id) return true;
-    return false;
-  };
 
-  const handleEventSave = (data: CreateEventInput | UpdateEventInput) => {
-    if ('id' in data) {
-      updateEvent.mutate(data as UpdateEventInput, {
-        onSuccess: () => setEventDialogOpen(false),
-      });
-    }
-  };
-
-  const handleEventDelete = (id: string) => {
-    deleteEvent.mutate(id, {
-      onSuccess: () => setEventDialogOpen(false),
-    });
-  };
 
   const colorToSociety: Record<string, string> = {
     '#3b82f6': 'UMP',
@@ -383,9 +358,8 @@ export default function Index() {
                   return (
                     <div
                       key={event.id}
-                      className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                      className="p-3 rounded-lg border bg-card"
                       style={{ borderLeftWidth: 3, borderLeftColor: event.color || 'hsl(var(--primary))' }}
-                      onClick={() => handleEventClick(event)}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1.5">
                         <h4 className="font-medium text-sm leading-snug">{event.title}</h4>
@@ -432,16 +406,8 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        {/* Event Detail/Edit Dialog */}
-        <EventDialog
-          open={eventDialogOpen}
-          onOpenChange={setEventDialogOpen}
-          event={selectedEvent}
-          onSave={handleEventSave}
-          onDelete={selectedEvent && canEditEvent(selectedEvent) ? handleEventDelete : undefined}
-          isLoading={updateEvent.isPending || deleteEvent.isPending}
-          readOnly={selectedEvent ? !canEditEvent(selectedEvent) : false}
-        />
+
+
 
         {/* Financial Summary */}
         <Card>
