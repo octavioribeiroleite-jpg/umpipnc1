@@ -287,13 +287,9 @@ export default function PainelPastor() {
             <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">
               Sociedades
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
               {societies.map(s => (
-                <SocietyOverviewCard
-                  key={s.id}
-                  society={s}
-                  stats={societyStats[s.id] || { membersActive: 0, tasksDone: 0, tasksPending: 0, saldo: 0 }}
-                />
+                <SocietyOverviewCard key={s.id} society={s} />
               ))}
             </div>
           </div>
