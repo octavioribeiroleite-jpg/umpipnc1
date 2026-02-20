@@ -52,145 +52,318 @@ Deno.serve(async (req) => {
       societyId = body?.society_id || null
     } catch { /* no body */ }
 
-    // Build queries with optional society filter
-    const addFilter = (query: any) => societyId ? query.eq('society_id', societyId) : query
-
-    // Fetch all societies for per-society grouping
-    const { data: allSocieties } = await serviceClient
-      .from('societies')
-      .select('id, name, slug')
-      .eq('active', true)
-      .order('name')
-
-    const societies = allSocieties || []
-
-    // Fetch raw data
-    const [tasksRes, transactionsRes, paymentsRes, membersRes, meetingsRes, eventsRes, plenariesRes] = await Promise.all([
-      addFilter(serviceClient.from('tasks').select('id, title, status, priority, due_date, society_id')),
-      addFilter(serviceClient.from('transactions').select('amount, type, description, date, society_id').order('date', { ascending: false }).limit(50)),
-      serviceClient.from('membership_payments').select('amount, status, competence, member_id'),
-      addFilter(serviceClient.from('members').select('id, name, active, society_id')),
-      addFilter(serviceClient.from('meetings').select('id, title, date, status, meeting_notes, society_id').order('date', { ascending: false }).limit(10)),
-      serviceClient.from('events').select('id, title, start_date, status, location').order('start_date', { ascending: true }).gte('start_date', new Date().toISOString()).limit(10),
-      serviceClient.from('plenaries').select('id, title, date, quorum_required').order('date', { ascending: false }).limit(3),
-    ])
-
-    const members = membersRes.data || []
-    const tasks = tasksRes.data || []
-    const transactions = transactionsRes.data || []
-    const payments = paymentsRes.data || []
-    const meetingsData = meetingsRes.data || []
-    const eventsData = eventsRes.data || []
-    const plenariesData = plenariesRes.data || []
-
-    // Compute per-society stats
-    const societyStats: Record<string, { membersActive: number; tasksDone: number; tasksPending: number; saldo: number; totalEntradas: number; totalSaidas: number; totalMensalidades: number }> = {}
-    
-    for (const soc of societies) {
-      const socMembers = members.filter(m => m.society_id === soc.id)
-      const socMemberIds = new Set(socMembers.map(m => m.id))
-      const socTasks = tasks.filter(t => t.society_id === soc.id)
-      const socTrans = transactions.filter(t => t.society_id === soc.id)
-      const socPayments = payments.filter(p => p.status === 'pago' && socMemberIds.has(p.member_id))
-      
-      const totalEntradas = socTrans.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0)
-      const totalSaidas = socTrans.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0)
-      const totalMensalidades = socPayments.reduce((s, p) => s + Number(p.amount), 0)
-      
-      societyStats[soc.id] = {
-        membersActive: socMembers.filter(m => m.active).length,
-        tasksDone: socTasks.filter(t => t.status === 'done').length,
-        tasksPending: socTasks.filter(t => t.status !== 'done').length,
-        saldo: totalMensalidades + totalEntradas - totalSaidas,
-        totalEntradas,
-        totalSaidas,
-        totalMensalidades,
-      }
+    // ====== SOCIETY-SPECIFIC MODE ======
+    if (societyId) {
+      return await handleSocietySpecific(serviceClient, societyId, forceRefresh, lovableApiKey, corsHeaders)
     }
 
-    // Global stats (sum of all societies)
-    const globalStats = {
-      membersActive: Object.values(societyStats).reduce((s, v) => s + v.membersActive, 0),
-      tasksDone: Object.values(societyStats).reduce((s, v) => s + v.tasksDone, 0),
-      tasksPending: Object.values(societyStats).reduce((s, v) => s + v.tasksPending, 0),
-      saldo: Object.values(societyStats).reduce((s, v) => s + v.saldo, 0),
-      totalEntradas: Object.values(societyStats).reduce((s, v) => s + v.totalEntradas, 0),
-      totalSaidas: Object.values(societyStats).reduce((s, v) => s + v.totalSaidas, 0),
-      totalMensalidades: Object.values(societyStats).reduce((s, v) => s + v.totalMensalidades, 0),
-    }
+    // ====== GLOBAL MODE (all societies) ======
+    return await handleGlobal(serviceClient, forceRefresh, lovableApiKey, corsHeaders)
 
-    const stats = societyId ? (societyStats[societyId] || globalStats) : globalStats
+  } catch (error) {
+    console.error('summarize-for-pastor error:', error)
+    return new Response(JSON.stringify({ error: error.message || 'Erro interno' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+})
 
-    // Compute data hash for cache comparison
-    const currentHash = computeHash({ globalStats, societyStats })
+// ========== SOCIETY-SPECIFIC: fetch only data for one society ==========
+async function handleSocietySpecific(
+  serviceClient: any, societyId: string, forceRefresh: boolean, lovableApiKey: string, corsHeaders: Record<string, string>
+) {
+  // Get society info
+  const { data: society } = await serviceClient
+    .from('societies').select('id, name, slug').eq('id', societyId).single()
 
-    // Check cache (with hash comparison)
-    if (!forceRefresh) {
-      const cacheQuery = serviceClient
-        .from('pastor_summaries')
-        .select('*')
-        .eq('invalidated', false)
-        .order('generated_at', { ascending: false })
-        .limit(1)
+  if (!society) {
+    return new Response(JSON.stringify({ error: 'Sociedade não encontrada' }), {
+      status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
-      if (societyId) {
-        cacheQuery.eq('society_id', societyId)
-      } else {
-        cacheQuery.is('society_id', null)
-      }
+  // Fetch data filtered by this society
+  const [tasksRes, transactionsRes, membersRes, meetingsRes, eventsRes] = await Promise.all([
+    serviceClient.from('tasks').select('id, title, status, priority, due_date, society_id').eq('society_id', societyId),
+    serviceClient.from('transactions').select('amount, type, description, date, society_id').eq('society_id', societyId).order('date', { ascending: false }).limit(50),
+    serviceClient.from('members').select('id, name, active, society_id').eq('society_id', societyId),
+    serviceClient.from('meetings').select('id, title, date, status, meeting_notes, society_id').eq('society_id', societyId).order('date', { ascending: false }).limit(10),
+    serviceClient.from('events').select('id, title, start_date, status, location, society_id').or(`society_id.eq.${societyId},society_id.is.null`).order('start_date', { ascending: true }).gte('start_date', new Date().toISOString()).limit(10),
+  ])
 
-      const { data: cached } = await cacheQuery.single()
+  const members = membersRes.data || []
+  const tasks = tasksRes.data || []
+  const transactions = transactionsRes.data || []
+  const meetingsData = meetingsRes.data || []
+  const eventsData = eventsRes.data || []
 
-      if (cached) {
-        // If data hash matches, return cached without calling AI
-        if (cached.data_hash === currentHash) {
-          return new Response(JSON.stringify({
-            summaries: cached.summaries,
-            stats,
-            society_stats: societyStats,
-            meetings: cached.meetings_data,
-            events: cached.events_data,
-            plenaries: cached.plenaries_data,
-            generated_at: cached.generated_at,
-            from_cache: true,
-            hash_match: true,
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        }
-        // Hash changed but cache exists - return cache but mark as stale
+  // Fetch payments only for members of this society
+  const memberIds = members.map((m: any) => m.id)
+  let payments: any[] = []
+  if (memberIds.length > 0) {
+    const { data: paymentsData } = await serviceClient
+      .from('membership_payments')
+      .select('amount, status, competence, member_id')
+      .in('member_id', memberIds)
+      .eq('status', 'pago')
+    payments = paymentsData || []
+  }
+
+  // Compute stats for this society only
+  const totalEntradas = transactions.filter((t: any) => t.type === 'entrada').reduce((s: number, t: any) => s + Number(t.amount), 0)
+  const totalSaidas = transactions.filter((t: any) => t.type === 'saida').reduce((s: number, t: any) => s + Number(t.amount), 0)
+  const totalMensalidades = payments.reduce((s: number, p: any) => s + Number(p.amount), 0)
+
+  const stats = {
+    membersActive: members.filter((m: any) => m.active).length,
+    tasksDone: tasks.filter((t: any) => t.status === 'done').length,
+    tasksPending: tasks.filter((t: any) => t.status !== 'done').length,
+    saldo: totalMensalidades + totalEntradas - totalSaidas,
+    totalEntradas,
+    totalSaidas,
+    totalMensalidades,
+  }
+
+  const currentHash = computeHash(stats)
+
+  // Check cache
+  if (!forceRefresh) {
+    const { data: cached } = await serviceClient
+      .from('pastor_summaries')
+      .select('*')
+      .eq('invalidated', false)
+      .eq('society_id', societyId)
+      .order('generated_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (cached) {
+      if (cached.data_hash === currentHash) {
         return new Response(JSON.stringify({
-          summaries: cached.summaries,
-          stats,
-          society_stats: societyStats,
-          meetings: cached.meetings_data,
-          events: cached.events_data,
-          plenaries: cached.plenaries_data,
-          generated_at: cached.generated_at,
-          from_cache: true,
-          hash_match: false,
-          data_changed: true,
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+          summaries: cached.summaries, stats, society_stats: { [societyId]: stats },
+          meetings: cached.meetings_data, events: cached.events_data,
+          plenaries: cached.plenaries_data, generated_at: cached.generated_at,
+          from_cache: true, hash_match: true,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
       }
+      return new Response(JSON.stringify({
+        summaries: cached.summaries, stats, society_stats: { [societyId]: stats },
+        meetings: cached.meetings_data, events: cached.events_data,
+        plenaries: cached.plenaries_data, generated_at: cached.generated_at,
+        from_cache: true, hash_match: false, data_changed: true,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
+  }
 
-    // Build per-society context for AI
-    const perSocietyContext = societies.map(soc => {
-      const s = societyStats[soc.id]
-      const socMeetings = meetingsData.filter(m => m.society_id === soc.id)
-      const socTasks = tasks.filter(t => t.society_id === soc.id && t.status !== 'done')
-      return `
+  // Build AI context for THIS society only
+  const pendingTasks = tasks.filter((t: any) => t.status !== 'done')
+  const dataContext = `
+DADOS DA SOCIEDADE: ${society.name} (IPNC)
+
+MEMBROS:
+- Membros ativos: ${stats.membersActive}
+
+FINANÇAS:
+- Saldo: R$ ${stats.saldo.toFixed(2)}
+- Entradas: R$ ${totalEntradas.toFixed(2)}
+- Saídas: R$ ${totalSaidas.toFixed(2)}
+- Mensalidades pagas: R$ ${totalMensalidades.toFixed(2)}
+
+TAREFAS:
+- Concluídas: ${stats.tasksDone}
+- Pendentes: ${stats.tasksPending}
+${pendingTasks.length > 0 ? '- Tarefas pendentes: ' + pendingTasks.slice(0, 5).map((t: any) => `"${t.title}" [${t.priority}]`).join(', ') : ''}
+
+ÚLTIMAS REUNIÕES:
+${meetingsData.length > 0 ? meetingsData.slice(0, 5).map((m: any) => `- "${m.title}" (${m.date}) - ${m.status}`).join('\n') : 'Nenhuma reunião registrada'}
+
+PRÓXIMOS EVENTOS:
+${eventsData.map((e: any) => `- "${e.title}" em ${e.start_date}${e.location ? ` (${e.location})` : ''} - ${e.status}${!e.society_id ? ' (evento geral da igreja)' : ''}`).join('\n') || 'Nenhum evento próximo'}
+`
+
+  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${lovableApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-3-flash-preview',
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um assistente pastoral que resume dados da sociedade ${society.name} da IPNC para o pastor.
+Analise APENAS os dados desta sociedade específica. NÃO mencione outras sociedades.
+Destaque:
+- Situação financeira da sociedade
+- Produtividade nas tarefas
+- Frequência de reuniões
+- Pontos que precisam de atenção pastoral
+
+Retorne JSON com estas chaves:
+- geral: visão pastoral da sociedade ${society.name} (3-4 frases)
+- financas: análise financeira da sociedade (2-3 frases)
+- tarefas: resumo de produtividade (2-3 frases)
+- destaques: 2-3 pontos de atenção específicos para o pastor agir
+
+Retorne APENAS JSON válido, sem markdown.`
+        },
+        { role: 'user', content: dataContext }
+      ],
+    }),
+  })
+
+  if (!aiResponse.ok) {
+    if (aiResponse.status === 429) {
+      return new Response(JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em alguns minutos.' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    if (aiResponse.status === 402) {
+      return new Response(JSON.stringify({ error: 'Créditos insuficientes.' }), {
+        status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    throw new Error('AI gateway error')
+  }
+
+  const aiData = await aiResponse.json()
+  const content = aiData.choices?.[0]?.message?.content || '{}'
+  
+  let summaries
+  try {
+    summaries = JSON.parse(content)
+  } catch {
+    const match = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+    summaries = match ? JSON.parse(match[1]) : { geral: content }
+  }
+
+  const generatedAt = new Date().toISOString()
+
+  // Upsert cache
+  const { data: existing } = await serviceClient
+    .from('pastor_summaries').select('id').eq('society_id', societyId).limit(1).single()
+
+  const cacheData = {
+    summaries, stats, meetings_data: meetingsData, events_data: eventsData,
+    plenaries_data: [], generated_at: generatedAt, invalidated: false,
+    society_id: societyId, data_hash: currentHash,
+  }
+
+  if (existing) {
+    await serviceClient.from('pastor_summaries').update(cacheData).eq('id', existing.id)
+  } else {
+    await serviceClient.from('pastor_summaries').insert(cacheData)
+  }
+
+  return new Response(JSON.stringify({
+    summaries, stats, society_stats: { [societyId]: stats },
+    meetings: meetingsData, events: eventsData, plenaries: [],
+    generated_at: generatedAt, from_cache: false,
+  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+}
+
+// ========== GLOBAL: fetch all societies, compare ==========
+async function handleGlobal(
+  serviceClient: any, forceRefresh: boolean, lovableApiKey: string, corsHeaders: Record<string, string>
+) {
+  const { data: allSocieties } = await serviceClient
+    .from('societies').select('id, name, slug').eq('active', true).order('name')
+
+  const societies = allSocieties || []
+
+  const [tasksRes, transactionsRes, paymentsRes, membersRes, meetingsRes, eventsRes, plenariesRes] = await Promise.all([
+    serviceClient.from('tasks').select('id, title, status, priority, due_date, society_id'),
+    serviceClient.from('transactions').select('amount, type, description, date, society_id').order('date', { ascending: false }).limit(50),
+    serviceClient.from('membership_payments').select('amount, status, competence, member_id'),
+    serviceClient.from('members').select('id, name, active, society_id'),
+    serviceClient.from('meetings').select('id, title, date, status, meeting_notes, society_id').order('date', { ascending: false }).limit(10),
+    serviceClient.from('events').select('id, title, start_date, status, location').order('start_date', { ascending: true }).gte('start_date', new Date().toISOString()).limit(10),
+    serviceClient.from('plenaries').select('id, title, date, quorum_required').order('date', { ascending: false }).limit(3),
+  ])
+
+  const members = membersRes.data || []
+  const tasks = tasksRes.data || []
+  const transactions = transactionsRes.data || []
+  const payments = paymentsRes.data || []
+  const meetingsData = meetingsRes.data || []
+  const eventsData = eventsRes.data || []
+  const plenariesData = plenariesRes.data || []
+
+  // Compute per-society stats
+  const societyStats: Record<string, any> = {}
+  for (const soc of societies) {
+    const socMembers = members.filter((m: any) => m.society_id === soc.id)
+    const socMemberIds = new Set(socMembers.map((m: any) => m.id))
+    const socTasks = tasks.filter((t: any) => t.society_id === soc.id)
+    const socTrans = transactions.filter((t: any) => t.society_id === soc.id)
+    const socPayments = payments.filter((p: any) => p.status === 'pago' && socMemberIds.has(p.member_id))
+    
+    const totalEntradas = socTrans.filter((t: any) => t.type === 'entrada').reduce((s: number, t: any) => s + Number(t.amount), 0)
+    const totalSaidas = socTrans.filter((t: any) => t.type === 'saida').reduce((s: number, t: any) => s + Number(t.amount), 0)
+    const totalMensalidades = socPayments.reduce((s: number, p: any) => s + Number(p.amount), 0)
+    
+    societyStats[soc.id] = {
+      membersActive: socMembers.filter((m: any) => m.active).length,
+      tasksDone: socTasks.filter((t: any) => t.status === 'done').length,
+      tasksPending: socTasks.filter((t: any) => t.status !== 'done').length,
+      saldo: totalMensalidades + totalEntradas - totalSaidas,
+      totalEntradas, totalSaidas, totalMensalidades,
+    }
+  }
+
+  const globalStats = {
+    membersActive: Object.values(societyStats).reduce((s: number, v: any) => s + v.membersActive, 0),
+    tasksDone: Object.values(societyStats).reduce((s: number, v: any) => s + v.tasksDone, 0),
+    tasksPending: Object.values(societyStats).reduce((s: number, v: any) => s + v.tasksPending, 0),
+    saldo: Object.values(societyStats).reduce((s: number, v: any) => s + v.saldo, 0),
+    totalEntradas: Object.values(societyStats).reduce((s: number, v: any) => s + v.totalEntradas, 0),
+    totalSaidas: Object.values(societyStats).reduce((s: number, v: any) => s + v.totalSaidas, 0),
+    totalMensalidades: Object.values(societyStats).reduce((s: number, v: any) => s + v.totalMensalidades, 0),
+  }
+
+  const currentHash = computeHash({ globalStats, societyStats })
+
+  // Check cache
+  if (!forceRefresh) {
+    const { data: cached } = await serviceClient
+      .from('pastor_summaries').select('*').eq('invalidated', false)
+      .is('society_id', null).order('generated_at', { ascending: false }).limit(1).single()
+
+    if (cached) {
+      if (cached.data_hash === currentHash) {
+        return new Response(JSON.stringify({
+          summaries: cached.summaries, stats: globalStats, society_stats: societyStats,
+          meetings: cached.meetings_data, events: cached.events_data,
+          plenaries: cached.plenaries_data, generated_at: cached.generated_at,
+          from_cache: true, hash_match: true,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({
+        summaries: cached.summaries, stats: globalStats, society_stats: societyStats,
+        meetings: cached.meetings_data, events: cached.events_data,
+        plenaries: cached.plenaries_data, generated_at: cached.generated_at,
+        from_cache: true, hash_match: false, data_changed: true,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+  }
+
+  // Build per-society context for AI
+  const perSocietyContext = societies.map((soc: any) => {
+    const s = societyStats[soc.id]
+    const socMeetings = meetingsData.filter((m: any) => m.society_id === soc.id)
+    const socTasks = tasks.filter((t: any) => t.society_id === soc.id && t.status !== 'done')
+    return `
 ${soc.name}:
 - Membros ativos: ${s.membersActive}
 - Tarefas: ${s.tasksDone} concluídas, ${s.tasksPending} pendentes
 - Saldo: R$ ${s.saldo.toFixed(2)} (Entradas: R$ ${s.totalEntradas.toFixed(2)}, Saídas: R$ ${s.totalSaidas.toFixed(2)}, Mensalidades: R$ ${s.totalMensalidades.toFixed(2)})
-- Últimas reuniões: ${socMeetings.length > 0 ? socMeetings.slice(0, 2).map(m => `"${m.title}" (${m.date})`).join(', ') : 'Nenhuma'}
-- Tarefas pendentes: ${socTasks.slice(0, 3).map(t => `"${t.title}" [${t.priority}]`).join(', ') || 'Nenhuma'}`
-    }).join('\n')
+- Últimas reuniões: ${socMeetings.length > 0 ? socMeetings.slice(0, 2).map((m: any) => `"${m.title}" (${m.date})`).join(', ') : 'Nenhuma'}
+- Tarefas pendentes: ${socTasks.slice(0, 3).map((t: any) => `"${t.title}" [${t.priority}]`).join(', ') || 'Nenhuma'}`
+  }).join('\n')
 
-    const dataContext = `
+  const dataContext = `
 DADOS DA IGREJA PRESBITERIANA NOVA CIDADE (IPNC):
 
 RESUMO POR SOCIEDADE:
@@ -202,24 +375,24 @@ TOTAIS GLOBAIS:
 - Saldo total: R$ ${globalStats.saldo.toFixed(2)}
 
 PRÓXIMOS EVENTOS:
-${eventsData.map(e => `- "${e.title}" em ${e.start_date}${e.location ? ` (${e.location})` : ''} - ${e.status}`).join('\n') || 'Nenhum evento próximo'}
+${eventsData.map((e: any) => `- "${e.title}" em ${e.start_date}${e.location ? ` (${e.location})` : ''} - ${e.status}`).join('\n') || 'Nenhum evento próximo'}
 
 PLENÁRIAS RECENTES:
-${plenariesData.map(p => `- "${p.title}" em ${p.date} (quórum mínimo: ${p.quorum_required}%)`).join('\n') || 'Nenhuma plenária recente'}
+${plenariesData.map((p: any) => `- "${p.title}" em ${p.date} (quórum mínimo: ${p.quorum_required}%)`).join('\n') || 'Nenhuma plenária recente'}
 `
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          {
-            role: 'system',
-            content: `Você é um assistente pastoral que resume dados da IPNC para o pastor.
+  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${lovableApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-3-flash-preview',
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um assistente pastoral que resume dados da IPNC para o pastor.
 Analise os dados de CADA sociedade e compare-as. Destaque:
 - Quais sociedades estão mais ativas e quais precisam de atenção
 - Pontos positivos e preocupações financeiras
@@ -232,88 +405,57 @@ Retorne JSON com estas chaves:
 - destaques: 2-3 pontos de atenção específicos para o pastor agir
 
 Retorne APENAS JSON válido, sem markdown.`
-          },
-          { role: 'user', content: dataContext }
-        ],
-      }),
-    })
+        },
+        { role: 'user', content: dataContext }
+      ],
+    }),
+  })
 
-    if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em alguns minutos.' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: 'Créditos insuficientes.' }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-      throw new Error('AI gateway error')
+  if (!aiResponse.ok) {
+    if (aiResponse.status === 429) {
+      return new Response(JSON.stringify({ error: 'Limite de requisições excedido.' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
-
-    const aiData = await aiResponse.json()
-    const content = aiData.choices?.[0]?.message?.content || '{}'
-    
-    let summaries
-    try {
-      summaries = JSON.parse(content)
-    } catch {
-      const match = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
-      summaries = match ? JSON.parse(match[1]) : { geral: content }
+    if (aiResponse.status === 402) {
+      return new Response(JSON.stringify({ error: 'Créditos insuficientes.' }), {
+        status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
-
-    const generatedAt = new Date().toISOString()
-
-    // Upsert cache
-    const cacheFilter = serviceClient
-      .from('pastor_summaries')
-      .select('id')
-      .limit(1)
-
-    if (societyId) {
-      cacheFilter.eq('society_id', societyId)
-    } else {
-      cacheFilter.is('society_id', null)
-    }
-
-    const { data: existing } = await cacheFilter.single()
-
-    const cacheData = {
-      summaries,
-      stats,
-      meetings_data: meetingsData,
-      events_data: eventsData,
-      plenaries_data: plenariesData,
-      generated_at: generatedAt,
-      invalidated: false,
-      society_id: societyId,
-      data_hash: currentHash,
-    }
-
-    if (existing) {
-      await serviceClient.from('pastor_summaries').update(cacheData).eq('id', existing.id)
-    } else {
-      await serviceClient.from('pastor_summaries').insert(cacheData)
-    }
-
-    return new Response(JSON.stringify({
-      summaries,
-      stats,
-      society_stats: societyStats,
-      meetings: meetingsData,
-      events: eventsData,
-      plenaries: plenariesData,
-      generated_at: generatedAt,
-      from_cache: false,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  } catch (error) {
-    console.error('summarize-for-pastor error:', error)
-    return new Response(JSON.stringify({ error: error.message || 'Erro interno' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    throw new Error('AI gateway error')
   }
-})
+
+  const aiData = await aiResponse.json()
+  const content = aiData.choices?.[0]?.message?.content || '{}'
+  
+  let summaries
+  try {
+    summaries = JSON.parse(content)
+  } catch {
+    const match = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+    summaries = match ? JSON.parse(match[1]) : { geral: content }
+  }
+
+  const generatedAt = new Date().toISOString()
+
+  const { data: existing } = await serviceClient
+    .from('pastor_summaries').select('id').is('society_id', null).limit(1).single()
+
+  const cacheData = {
+    summaries, stats: globalStats, meetings_data: meetingsData, events_data: eventsData,
+    plenaries_data: plenariesData, generated_at: generatedAt, invalidated: false,
+    society_id: null, data_hash: currentHash,
+  }
+
+  if (existing) {
+    await serviceClient.from('pastor_summaries').update(cacheData).eq('id', existing.id)
+  } else {
+    await serviceClient.from('pastor_summaries').insert(cacheData)
+  }
+
+  return new Response(JSON.stringify({
+    summaries, stats: globalStats, society_stats: societyStats,
+    meetings: meetingsData, events: eventsData, plenaries: plenariesData,
+    generated_at: generatedAt, from_cache: false,
+  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+}
