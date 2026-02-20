@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { PastorNotificationBanner } from '@/components/pastor/PastorNotificationBanner';
 import { PastorLoginNotification } from '@/components/pastor/PastorLoginNotification';
-import { useEvents } from '@/hooks/useEvents';
+import { useEvents, CalendarEvent, CreateEventInput, UpdateEventInput } from '@/hooks/useEvents';
+import { EventDialog } from '@/components/calendario/EventDialog';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -126,7 +127,9 @@ export default function Index() {
   const { user, loading, rolesLoaded, isPastor, profile, isAdmin, isManagement, roles } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const navigate = useNavigate();
-  const { upcomingEvents, isUpcomingLoading } = useEvents();
+  const { upcomingEvents, isUpcomingLoading, updateEvent, deleteEvent } = useEvents();
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [stats, setStats] = useState<Stats>({
     saldo: 0,
     mensalidadesMes: 0,
@@ -249,6 +252,40 @@ export default function Index() {
 
   const displayedEvents = upcomingEvents.slice(0, 5);
 
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setEventDialogOpen(true);
+  };
+
+  const canEditEvent = (event: CalendarEvent) => {
+    if (isAdmin) return true;
+    if (isManagement && event.society_id === profile?.society_id) return true;
+    return false;
+  };
+
+  const handleEventSave = (data: CreateEventInput | UpdateEventInput) => {
+    if ('id' in data) {
+      updateEvent.mutate(data as UpdateEventInput, {
+        onSuccess: () => setEventDialogOpen(false),
+      });
+    }
+  };
+
+  const handleEventDelete = (id: string) => {
+    deleteEvent.mutate(id, {
+      onSuccess: () => setEventDialogOpen(false),
+    });
+  };
+
+  const colorToSociety: Record<string, string> = {
+    '#3b82f6': 'UMP',
+    '#ec4899': 'SAF',
+    '#10b981': 'UPH',
+    '#f97316': 'UPA',
+    '#8b5cf6': 'UCP',
+    '#6b7280': 'IPNC',
+  };
+
   return (
     <AppLayout>
       <PastorLoginNotification />
@@ -339,37 +376,50 @@ export default function Index() {
                 Nenhum evento próximo cadastrado.
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {displayedEvents.map((event) => {
                   const startDate = new Date(event.start_date);
+                  const societyName = colorToSociety[event.color || ''] || '';
                   return (
                     <div
                       key={event.id}
-                      className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => navigate('/calendario')}
+                      className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                      style={{ borderLeftWidth: 3, borderLeftColor: event.color || 'hsl(var(--primary))' }}
+                      onClick={() => handleEventClick(event)}
                     >
-                      <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium truncate">{event.title}</span>
-                          <Badge variant="outline" className={statusStyles[event.status]}>
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <h4 className="font-medium text-sm leading-snug">{event.title}</h4>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {societyName && (
+                            <span
+                              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                              style={{ backgroundColor: `${event.color || '#6b7280'}15`, color: event.color || '#6b7280' }}
+                            >
+                              {societyName}
+                            </span>
+                          )}
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusStyles[event.status]}`}>
                             {statusLabels[event.status]}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      </div>
+                      <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 shrink-0" />
+                          {event.all_day
+                            ? format(startDate, "dd 'de' MMMM", { locale: ptBR }) + ' • Dia inteiro'
+                            : format(startDate, "dd/MM 'às' HH:mm", { locale: ptBR })
+                          }
+                        </span>
+                        {event.location && (
                           <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {format(startDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            {event.location}
                           </span>
-                          {event.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {event.location}
-                            </span>
-                          )}
-                        </div>
+                        )}
+                        {event.description && (
+                          <p className="text-muted-foreground/70 line-clamp-1 mt-0.5">{event.description}</p>
+                        )}
                       </div>
                     </div>
                   );
@@ -381,6 +431,17 @@ export default function Index() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Event Detail/Edit Dialog */}
+        <EventDialog
+          open={eventDialogOpen}
+          onOpenChange={setEventDialogOpen}
+          event={selectedEvent}
+          onSave={handleEventSave}
+          onDelete={selectedEvent && canEditEvent(selectedEvent) ? handleEventDelete : undefined}
+          isLoading={updateEvent.isPending || deleteEvent.isPending}
+          readOnly={selectedEvent ? !canEditEvent(selectedEvent) : false}
+        />
 
         {/* Financial Summary */}
         <Card>
