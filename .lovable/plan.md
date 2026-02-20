@@ -1,34 +1,38 @@
 
-# Consolidar dados por sociedade e redesenhar cards de estatisticas
+# Isolamento completo de dados por sociedade
 
-## Problema identificado
+## Problema encontrado
 
-A query de `membership_payments` (linha 59) nao filtra por sociedade no banco -- busca todos os pagamentos pagos de todas as sociedades e depois filtra no cliente por `memberIds`. Isso funciona mas e ineficiente e pode causar confusao. As demais queries (meetings, tasks, members, transactions) ja filtram corretamente por `society_id`.
+A funcao backend `summarize-for-pastor` tem uma falha de isolamento: mesmo quando recebe um `society_id` especifico (ex: UMP), ela:
 
-## Mudancas
+1. Busca `membership_payments` de TODAS as sociedades (linha 71 - sem filtro)
+2. Busca `events` de TODAS as sociedades (linha 74 - sem filtro)  
+3. Busca `plenaries` de TODAS as sociedades (linha 75 - sem filtro)
+4. Computa stats para TODAS as sociedades (linhas 89-109), nao apenas para a solicitada
+5. Envia contexto de TODAS as sociedades para a IA (linhas 180-209), resultando em resumo misturado
 
-### 1. `src/pages/PastorSociedade.tsx` -- Corrigir query de pagamentos
+Por isso, quando o pastor abre a pagina da UMP, o resumo da IA fala sobre SAF, UPA, UPH -- dados que nao pertencem aquela sociedade.
 
-Adicionar filtro para buscar apenas pagamentos de membros da sociedade atual diretamente no banco, usando um join ou filtrando pelo `member_id` dos membros ja carregados. Como `membership_payments` nao tem `society_id`, a abordagem atual de filtrar por `memberIds` e valida, mas vamos reorganizar para ficar mais claro.
+## Solucao
 
-### 2. `src/pages/PastorSociedade.tsx` -- Redesenhar cards de estatisticas
+### 1. `supabase/functions/summarize-for-pastor/index.ts`
 
-Trocar o grid `grid-cols-2 md:grid-cols-4` por uma fileira unica horizontal com 5 cards compactos:
+Quando `society_id` for fornecido:
 
-- Adicionar um 5o card: **Reunioes** (quantidade total)
-- Layout: `grid grid-cols-5 gap-2` com cards bem menores
-- Reduzir padding dos cards de `p-4` para `p-2`
-- Reduzir tamanho da fonte do valor de `text-lg` para `text-sm` 
-- Reduzir icones de `h-4 w-4` para `h-3 w-3`
-- Reduzir label de `text-xs` para `text-[10px]`
-- No mobile, usar `overflow-x-auto` com `flex` para scroll horizontal se necessario, ou manter `grid-cols-5` com cards minusculos
+- Filtrar `membership_payments` apenas por membros daquela sociedade (usando os member_ids ja carregados)
+- Filtrar `events` por `society_id` (eventos da sociedade) + eventos sem society_id (eventos gerais da igreja)
+- Computar stats apenas para a sociedade solicitada, nao para todas
+- Enviar para a IA apenas o contexto daquela sociedade especifica
+- Ajustar o prompt da IA para focar na sociedade individual em vez de comparar todas
 
-Resultado visual esperado (uma unica linha):
+Quando `society_id` NAO for fornecido (dashboard global do pastor):
+- Manter o comportamento atual: buscar tudo, comparar sociedades
 
-```text
-| Saldo | Membros | Feitas | Pend. | Reun. |
-| R$120 |    8    |   5    |   3   |   4   |
-```
+### 2. `src/pages/PastorSociedade.tsx`
+
+A pagina ja filtra corretamente por `society_id` nas queries diretas (meetings, tasks, members, transactions, payments). Nenhuma mudanca necessaria na camada de dados direta.
+
+A unica mudanca e garantir que o resumo da IA retornado pelo backend ja venha filtrado (corrigido no passo 1 acima).
 
 ### Arquivos modificados
-- `src/pages/PastorSociedade.tsx`
+- `supabase/functions/summarize-for-pastor/index.ts` (filtros por society_id na funcao backend)
