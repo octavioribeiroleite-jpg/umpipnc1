@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MembrosTab } from '@/components/financas/MembrosTab';
 import { MensalidadesTab } from '@/components/financas/MensalidadesTab';
 import { GastosTab } from '@/components/financas/GastosTab';
@@ -20,6 +21,11 @@ import {
   TrendingDown,
   Users,
 } from 'lucide-react';
+
+interface Society {
+  id: string;
+  name: string;
+}
 
 interface Stats {
   saldo: number;
@@ -63,12 +69,27 @@ function StatCard({
 }
 
 export default function Financas() {
-  const { profile, isAdmin, isPastor } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  const { profile, isAdmin, isPastor, selectedSocietyId, setSelectedSocietyId } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'cobrancas';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [stats, setStats] = useState<Stats>({ saldo: 0, mensalidadesMes: 0, gastosMes: 0, adimplencia: 0 });
+  const [societies, setSocieties] = useState<Society[]>([]);
+
+  // Fetch societies for admin/pastor selector
+  useEffect(() => {
+    if (isAdmin || isPastor) {
+      supabase.from('societies').select('id, name').eq('active', true).order('name')
+        .then(({ data }) => {
+          if (data) setSocieties(data);
+          // Auto-select first if none selected
+          if (data && data.length > 0 && !selectedSocietyId) {
+            setSelectedSocietyId(data[0].id);
+          }
+        });
+    }
+  }, [isAdmin, isPastor]);
   
   // Sync tab with URL
   useEffect(() => {
@@ -160,7 +181,7 @@ export default function Financas() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [societyId]);
 
   return (
     <AppLayout>
@@ -168,6 +189,22 @@ export default function Financas() {
         title="Finanças"
         description="Gerencie cobranças, membros, camisas e gastos"
       />
+
+      {/* Society Selector for admin/pastor */}
+      {(isAdmin || isPastor) && societies.length > 0 && (
+        <div className="mb-4">
+          <Select value={selectedSocietyId || ''} onValueChange={setSelectedSocietyId}>
+            <SelectTrigger className="w-full sm:w-64">
+              <SelectValue placeholder="Selecione a sociedade" />
+            </SelectTrigger>
+            <SelectContent>
+              {societies.map(s => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">

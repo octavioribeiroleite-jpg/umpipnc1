@@ -82,8 +82,8 @@ export function GastosTab() {
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { profile, isAdmin, isPastor } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
 
   const fetchData = async () => {
     setLoading(true);
@@ -103,7 +103,7 @@ export function GastosTab() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [societyId]);
 
   const getCategoryName = (categoryId: string | null) => {
     if (!categoryId) return 'Sem categoria';
@@ -221,7 +221,7 @@ export function GastosTab() {
           date: formData.date,
           created_by: user?.id,
           origin: 'manual',
-          society_id: profile?.society_id || null,
+          society_id: societyId || null,
         }).select().single();
         if (error) throw error;
         

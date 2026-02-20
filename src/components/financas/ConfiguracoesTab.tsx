@@ -19,8 +19,8 @@ const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 export function ConfiguracoesTab() {
-  const { user, profile, isAdmin, isPastor } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  const { user, profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
@@ -99,7 +99,7 @@ export function ConfiguracoesTab() {
         per_capita: perCapita,
         due_day: dueDay,
         notes: formData.notes,
-        society_id: profile?.society_id || null,
+        society_id: societyId || null,
       };
 
       if (existingSettings) {
@@ -211,7 +211,7 @@ export function ConfiguracoesTab() {
             amount: existingSettings.monthly_fee,
             due_date: dueDate,
             status: 'pendente',
-            society_id: profile?.society_id || null,
+            society_id: societyId || null,
           });
         }
         if (existingSettings.per_capita > 0 && !existingMap.has(`${member.id}-percapita`)) {
@@ -222,7 +222,7 @@ export function ConfiguracoesTab() {
             amount: existingSettings.per_capita,
             due_date: dueDate,
             status: 'pendente',
-            society_id: profile?.society_id || null,
+            society_id: societyId || null,
           });
         }
       }

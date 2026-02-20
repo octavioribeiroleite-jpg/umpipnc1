@@ -79,8 +79,8 @@ export function MembrosTab() {
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [creating, setCreating] = useState(false);
   const { toast } = useToast();
-  const { profile, isAdmin, isPastor } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
 
   const fetchMembers = async () => {
     let query = supabase
@@ -104,7 +104,7 @@ export function MembrosTab() {
 
   useEffect(() => {
     fetchMembers();
-  }, []);
+  }, [societyId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +135,7 @@ export function MembrosTab() {
       setFormData({ name: '', phone: '', email: '' });
     } else {
       setCreating(true);
-      const memberSocietyId = profile?.society_id || null;
+      const memberSocietyId = societyId || null;
 
       // 1. Insert member
       const { data: newMember, error: insertError } = await supabase

@@ -87,12 +87,12 @@ export function CamisasTab() {
     notes: ''
   });
 
+  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+
   useEffect(() => {
     fetchData();
-  }, []);
-
-  const { profile, isAdmin, isPastor } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  }, [societyId]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -152,7 +152,7 @@ export function CamisasTab() {
           created_by: user.id,
           origin: 'automatic',
           reference_type: 'shirt_purchase',
-          society_id: profile?.society_id || null,
+          society_id: societyId || null,
         })
         .select('id')
         .single();
@@ -170,7 +170,7 @@ export function CamisasTab() {
           notes: purchaseForm.notes || null,
           transaction_id: transaction?.id,
           created_by: user.id,
-          society_id: profile?.society_id || null,
+          society_id: societyId || null,
         })
         .select('id')
         .single();
@@ -250,7 +250,7 @@ export function CamisasTab() {
           origin: 'automatic',
           reference_type: 'shirt_sale',
           member_id: saleForm.member_id || null,
-          society_id: profile?.society_id || null,
+          society_id: societyId || null,
         })
         .select('id')
         .single();
@@ -271,7 +271,7 @@ export function CamisasTab() {
           notes: saleForm.notes || null,
           transaction_id: transaction?.id,
           created_by: user.id,
-          society_id: profile?.society_id || null,
+          society_id: societyId || null,
         });
 
       // Atualizar estoque
