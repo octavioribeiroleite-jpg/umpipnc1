@@ -29,7 +29,7 @@ export default function PastorSociedade() {
   const [summaryData, setSummaryData] = useState<any>(null);
   const [stats, setStats] = useState({
     saldo: 0, entradas: 0, saidas: 0, mensalidades: 0,
-    membersActive: 0, tasksPending: 0, tasksDone: 0,
+    membersActive: 0, tasksPending: 0, tasksDone: 0, meetingsTotal: 0,
   });
   const [meetings, setMeetings] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -51,35 +51,47 @@ export default function PastorSociedade() {
     else setLoading(true);
 
     try {
-      const [meetingsRes, tasksRes, membersRes, transRes, paymentsRes, aiRes] = await Promise.all([
+      const [meetingsRes, tasksRes, membersRes, transRes, aiRes] = await Promise.all([
         supabase.from('meetings').select('id, title, date, status').eq('society_id', society.id).order('date', { ascending: false }).limit(5),
         supabase.from('tasks').select('id, title, status, priority, due_date').eq('society_id', society.id),
         supabase.from('members').select('id, name, active, phone, email').eq('society_id', society.id).eq('active', true).order('name'),
         supabase.from('transactions').select('amount, type').eq('society_id', society.id),
-        supabase.from('membership_payments').select('amount, status, member_id').eq('status', 'pago'),
         supabase.functions.invoke('summarize-for-pastor', {
           body: { society_id: society.id, ...(force ? { force: true } : {}) },
         }),
       ]);
 
-      setMeetings(meetingsRes.data || []);
+      const allMembers = membersRes.data || [];
+      const memberIds = allMembers.map(m => m.id);
+
+      // Fetch payments only for this society's members
+      let mensalidades = 0;
+      if (memberIds.length > 0) {
+        const { data: paymentsData } = await supabase
+          .from('membership_payments')
+          .select('amount')
+          .eq('status', 'pago')
+          .in('member_id', memberIds);
+        mensalidades = (paymentsData || []).reduce((s, p) => s + Number(p.amount), 0);
+      }
+
+      const allMeetings = meetingsRes.data || [];
+      setMeetings(allMeetings);
       const allTasks = tasksRes.data || [];
       setTasks(allTasks.filter(t => t.status !== 'done').slice(0, 5));
-      setMembers(membersRes.data || []);
+      setMembers(allMembers);
 
       const trans = transRes.data || [];
       const entradas = trans.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0);
       const saidas = trans.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0);
 
-      const memberIds = new Set((membersRes.data || []).map(m => m.id));
-      const mensalidades = (paymentsRes.data || []).filter(p => memberIds.has(p.member_id)).reduce((s, p) => s + Number(p.amount), 0);
-
       setStats({
         saldo: mensalidades + entradas - saidas,
         entradas, saidas, mensalidades,
-        membersActive: (membersRes.data || []).length,
+        membersActive: allMembers.length,
         tasksPending: allTasks.filter(t => t.status !== 'done').length,
         tasksDone: allTasks.filter(t => t.status === 'done').length,
+        meetingsTotal: allMeetings.length,
       });
 
       if (aiRes.data?.summaries) setSummaryData(aiRes.data);
@@ -139,43 +151,42 @@ export default function PastorSociedade() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-5 gap-2">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs text-muted-foreground">Saldo</span>
-              </div>
-              <p className={`text-lg font-bold ${stats.saldo >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
-                R$ {stats.saldo.toFixed(2).replace('.', ',')}
+            <CardContent className="p-2 text-center">
+              <DollarSign className="h-3 w-3 mx-auto text-emerald-600 mb-0.5" />
+              <p className={`text-sm font-bold ${stats.saldo >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                {stats.saldo.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
               </p>
+              <span className="text-[10px] text-muted-foreground">Saldo</span>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Users className="h-4 w-4 text-blue-600" />
-                <span className="text-xs text-muted-foreground">Membros</span>
-              </div>
-              <p className="text-lg font-bold">{stats.membersActive}</p>
+            <CardContent className="p-2 text-center">
+              <Users className="h-3 w-3 mx-auto text-primary mb-0.5" />
+              <p className="text-sm font-bold">{stats.membersActive}</p>
+              <span className="text-[10px] text-muted-foreground">Membros</span>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckSquare className="h-4 w-4 text-amber-600" />
-                <span className="text-xs text-muted-foreground">Concluídas</span>
-              </div>
-              <p className="text-lg font-bold">{stats.tasksDone}</p>
+            <CardContent className="p-2 text-center">
+              <CheckSquare className="h-3 w-3 mx-auto text-emerald-600 mb-0.5" />
+              <p className="text-sm font-bold">{stats.tasksDone}</p>
+              <span className="text-[10px] text-muted-foreground">Feitas</span>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-4 w-4 text-rose-600" />
-                <span className="text-xs text-muted-foreground">Pendentes</span>
-              </div>
-              <p className="text-lg font-bold">{stats.tasksPending}</p>
+            <CardContent className="p-2 text-center">
+              <TrendingUp className="h-3 w-3 mx-auto text-destructive mb-0.5" />
+              <p className="text-sm font-bold">{stats.tasksPending}</p>
+              <span className="text-[10px] text-muted-foreground">Pend.</span>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-2 text-center">
+              <Calendar className="h-3 w-3 mx-auto text-primary mb-0.5" />
+              <p className="text-sm font-bold">{stats.meetingsTotal}</p>
+              <span className="text-[10px] text-muted-foreground">Reun.</span>
             </CardContent>
           </Card>
         </div>
