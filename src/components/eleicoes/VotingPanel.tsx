@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import { Play, RotateCcw, CheckCircle, Loader2, Vote, Link as LinkIcon, Copy } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -129,6 +130,15 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Progress bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Progresso da votação</span>
+              <span className="font-semibold">{voteCount}/{totalPresent}</span>
+            </div>
+            <Progress value={totalPresent > 0 ? (voteCount / totalPresent) * 100 : 0} className="h-4" />
+          </div>
+
           {/* Counters */}
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="p-4 bg-muted rounded-lg">
