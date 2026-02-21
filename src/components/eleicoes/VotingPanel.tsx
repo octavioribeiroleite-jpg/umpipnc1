@@ -51,10 +51,10 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
       })
       .subscribe();
 
-    // Fallback polling every 3 seconds
+    // Fallback polling every 1 second
     const interval = setInterval(() => {
       fetchVoteCount();
-    }, 3000);
+    }, 1000);
 
     return () => {
       clearInterval(interval);
