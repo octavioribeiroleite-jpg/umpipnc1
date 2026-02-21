@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Loader2, UserCheck, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, UserCheck, Vote, XCircle } from 'lucide-react';
 
 interface Election { id: string; name: string; position: string; status: string; }
 interface Candidate { id: string; name: string; photo_url: string | null; display_order: number; }
@@ -14,6 +14,7 @@ export default function VotePublic() {
   const [voting, setVoting] = useState(false);
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
   const [voteSuccess, setVoteSuccess] = useState(false);
+  const [readyToVote, setReadyToVote] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,7 +47,10 @@ export default function VotePublic() {
     setVoteSuccess(true);
     setVoting(false);
 
-    setTimeout(() => setVoteSuccess(false), 3000);
+    setTimeout(() => {
+      setVoteSuccess(false);
+      setReadyToVote(false);
+    }, 3000);
   };
 
   if (loading) {
@@ -115,6 +119,27 @@ export default function VotePublic() {
               {voting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'CONFIRMAR'}
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pre-voting screen
+  if (!readyToVote) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+        <div className="max-w-sm w-full space-y-8">
+          <div>
+            <Vote className="h-20 w-20 text-primary mx-auto mb-4" />
+            <h1 className="text-2xl font-bold">{election.name}</h1>
+            <p className="text-muted-foreground mt-1">Cargo: {election.position}</p>
+          </div>
+          <button
+            onClick={() => setReadyToVote(true)}
+            className="w-full py-5 rounded-xl bg-primary text-primary-foreground text-xl font-bold hover:bg-primary/90 transition-colors"
+          >
+            Iniciar Votação
+          </button>
         </div>
       </div>
     );
