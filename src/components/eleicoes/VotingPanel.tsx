@@ -38,6 +38,7 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
   useEffect(() => {
     fetchVoteCount();
 
+    // Realtime subscription
     const channel = supabase
       .channel(`election-votes-${electionId}`)
       .on('postgres_changes', {
@@ -50,7 +51,15 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Fallback polling every 3 seconds
+    const interval = setInterval(() => {
+      fetchVoteCount();
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [electionId]);
 
   const handleStartVoting = async () => {
