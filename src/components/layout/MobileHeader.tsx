@@ -16,6 +16,7 @@ import {
   UserCheck,
   ClipboardCheck,
   MessageSquare,
+  Vote,
 } from 'lucide-react';
 import {
   Sheet,
@@ -34,6 +35,7 @@ const navItems = [
   { to: '/financas', icon: Wallet, label: 'Finanças' },
   { to: '/tarefas', icon: CheckSquare, label: 'Tarefas' },
   { to: '/plenarias', icon: ClipboardCheck, label: 'Plenárias' },
+  { to: '/eleicoes', icon: Vote, label: 'Eleições' },
   { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
 ];
 
