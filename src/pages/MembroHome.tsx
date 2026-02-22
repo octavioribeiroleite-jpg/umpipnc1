@@ -7,6 +7,7 @@ import { MembroInicio } from '@/components/membro/MembroInicio';
 import { MembroEventos } from '@/components/membro/MembroEventos';
 import { MembroPagamentos } from '@/components/membro/MembroPagamentos';
 import { MembroComunicados } from '@/components/membro/MembroComunicados';
+import { MembroDizimos } from '@/components/membro/MembroDizimos';
 import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -71,6 +72,8 @@ export default function MembroHome() {
         return <MembroPagamentos />;
       case 'comunicados':
         return <MembroComunicados />;
+      case 'dizimos':
+        return <MembroDizimos />;
     }
   };
 
