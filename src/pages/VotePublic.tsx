@@ -23,6 +23,7 @@ export default function VotePublic() {
   const { electionId } = useParams<{ electionId: string }>();
   const [searchParams] = useSearchParams();
   const isUrnaMode = searchParams.get('mode') === 'urna';
+  const urnaToken = searchParams.get('token') || '';
 
   const [election, setElection] = useState<Election | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -39,24 +40,48 @@ export default function VotePublic() {
   const [authError, setAuthError] = useState('');
   const [authUsername, setAuthUsername] = useState('');
   const [authPassword, setAuthPassword] = useState('');
-
+  const [deviceLabel, setDeviceLabel] = useState('');
+  const [invalidToken, setInvalidToken] = useState(false);
   // In urna mode after auth, behave as shared. Otherwise check voting_mode.
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
 
   // Check urna session on mount
   useEffect(() => {
-    if (isUrnaMode && electionId) {
-      const flag = sessionStorage.getItem(`urna_authenticated_${electionId}`);
+    if (isUrnaMode && electionId && urnaToken) {
+      const flag = sessionStorage.getItem(`urna_authenticated_${electionId}_${urnaToken}`);
       if (flag === 'true') {
         setUrnaAuthenticated(true);
       }
     }
-  }, [isUrnaMode, electionId]);
+  }, [isUrnaMode, electionId, urnaToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!electionId) return;
+
+      // If urna mode, validate token first
+      if (isUrnaMode) {
+        if (!urnaToken) {
+          setInvalidToken(true);
+          setLoading(false);
+          return;
+        }
+        const { data: deviceData, error: deviceError } = await supabase
+          .from('election_devices' as any)
+          .select('*')
+          .eq('election_id', electionId)
+          .eq('token', urnaToken)
+          .single();
+
+        if (deviceError || !deviceData) {
+          setInvalidToken(true);
+          setLoading(false);
+          return;
+        }
+        setDeviceLabel((deviceData as any).label || '');
+      }
+
       const [elRes, caRes] = await Promise.all([
         supabase.from('elections' as any).select('*').eq('id', electionId).single(),
         supabase.from('election_candidates' as any).select('*').eq('election_id', electionId).order('display_order' as any),
@@ -86,7 +111,7 @@ export default function VotePublic() {
       setLoading(false);
     };
     fetchData();
-  }, [electionId, isUrnaMode]);
+  }, [electionId, isUrnaMode, urnaToken]);
 
   const handleUrnaAuth = async () => {
     if (!authUsername.trim() || !authPassword.trim()) return;
@@ -131,8 +156,16 @@ export default function VotePublic() {
         return;
       }
 
+      // Mark device as activated
+      if (urnaToken) {
+        await supabase
+          .from('election_devices' as any)
+          .update({ activated: true } as any)
+          .eq('token', urnaToken);
+      }
+
       // Success
-      sessionStorage.setItem(`urna_authenticated_${electionId}`, 'true');
+      sessionStorage.setItem(`urna_authenticated_${electionId}_${urnaToken}`, 'true');
       setUrnaAuthenticated(true);
     } catch {
       setAuthError('Erro ao autenticar. Tente novamente.');
@@ -198,6 +231,19 @@ export default function VotePublic() {
     );
   }
 
+  // Invalid token screen
+  if (invalidToken) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+        <XCircle className="h-16 w-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Dispositivo Não Cadastrado</h1>
+        <p className="text-muted-foreground">
+          Este link de urna fixa não é válido ou o dispositivo não foi cadastrado.
+        </p>
+      </div>
+    );
+  }
+
   if (!election || election.status !== 'open') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
@@ -220,6 +266,9 @@ export default function VotePublic() {
           <div className="text-center">
             <Monitor className="h-16 w-16 text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold">Ativar Urna Fixa</h1>
+            {deviceLabel && (
+              <p className="text-primary font-medium mt-1">{deviceLabel}</p>
+            )}
             <p className="text-muted-foreground mt-2 text-sm">
               Digite suas credenciais de admin ou diretoria para liberar esta urna.
             </p>

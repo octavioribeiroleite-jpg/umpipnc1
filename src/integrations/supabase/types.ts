@@ -281,6 +281,41 @@ export type Database = {
           },
         ]
       }
+      election_devices: {
+        Row: {
+          activated: boolean
+          created_at: string
+          election_id: string
+          id: string
+          label: string
+          token: string
+        }
+        Insert: {
+          activated?: boolean
+          created_at?: string
+          election_id: string
+          id?: string
+          label: string
+          token?: string
+        }
+        Update: {
+          activated?: boolean
+          created_at?: string
+          election_id?: string
+          id?: string
+          label?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "election_devices_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       election_votes: {
         Row: {
           candidate_id: string

@@ -13,27 +13,36 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+interface Device { id: string; label: string; token: string; activated: boolean; }
+interface Candidate { id: string; name: string; }
+
 interface VotingPanelProps {
   electionId: string;
   electionName?: string;
   status: string;
   totalPresent: number;
   votingMode: string;
+  devices: Device[];
+  candidates: Candidate[];
   onRefresh: () => void;
 }
 
-export function VotingPanel({ electionId, electionName, status, totalPresent, votingMode, onRefresh }: VotingPanelProps) {
+export function VotingPanel({ electionId, electionName, status, totalPresent, votingMode, devices, candidates, onRefresh }: VotingPanelProps) {
   const [voteCount, setVoteCount] = useState(0);
   const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
   const [qrExpanded, setQrExpanded] = useState(false);
+  const [expandedDeviceToken, setExpandedDeviceToken] = useState<string | null>(null);
   const { toast } = useToast();
 
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
-  const urnaUrl = `${window.location.origin}/vote/${electionId}?mode=urna`;
   const [activeTab, setActiveTab] = useState<string>('celular');
   const diff = voteCount - totalPresent;
+
+  const showDevices = selectedMode === 'both' || selectedMode === 'shared';
+  const needsDevices = showDevices && devices.length === 0;
+  const canStart = candidates.length > 0 && totalPresent > 0 && !needsDevices;
 
   const fetchVoteCount = async () => {
     const { count } = await supabase
@@ -161,12 +170,16 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         </div>
 
-        <Button size="sm" onClick={handleStartVoting} disabled={loading || totalPresent === 0}>
+        <Button size="sm" onClick={handleStartVoting} disabled={loading || !canStart}>
           {loading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
           Iniciar Votação
         </Button>
-        {totalPresent === 0 && (
-          <p className="text-xs text-destructive">Confirme a presença antes de iniciar.</p>
+        {!canStart && (
+          <div className="text-xs text-destructive space-y-0.5">
+            {candidates.length === 0 && <p>• Cadastre pelo menos 1 candidato.</p>}
+            {needsDevices && <p>• Cadastre pelo menos 1 dispositivo fixo.</p>}
+            {totalPresent === 0 && <p>• Confirme a presença antes de iniciar.</p>}
+          </div>
         )}
       </div>
     );
@@ -230,12 +243,12 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 <Smartphone className="h-3.5 w-3.5" /> Celular
               </TabsTrigger>
               <TabsTrigger value="urna" className="text-xs gap-1">
-                <Monitor className="h-3.5 w-3.5" /> Urna Fixa
+                <Monitor className="h-3.5 w-3.5" /> Urna Fixa ({devices.length})
               </TabsTrigger>
             </TabsList>
             <TabsContent value="celular">
               <div className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
+                <div className="relative cursor-pointer" onClick={() => { setExpandedDeviceToken(null); setQrExpanded(true); }}>
                   <QRCodeSVG value={voteUrl} size={100} />
                   <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
                     <Maximize2 className="h-5 w-5 text-foreground" />
@@ -250,7 +263,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                     <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { navigator.clipboard.writeText(voteUrl); toast({ title: 'Link copiado!' }); }}>
                       <Copy className="h-3 w-3 mr-1" /> Copiar
                     </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setQrExpanded(true)}>
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { setExpandedDeviceToken(null); setQrExpanded(true); }}>
                       <Maximize2 className="h-3 w-3 mr-1" /> Expandir
                     </Button>
                   </div>
@@ -258,28 +271,46 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               </div>
             </TabsContent>
             <TabsContent value="urna">
-              <div className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
-                  <QRCodeSVG value={urnaUrl} size={100} />
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
-                    <Maximize2 className="h-5 w-5 text-foreground" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <p className="text-xs font-medium flex items-center gap-1">
-                    <Monitor className="h-3 w-3" /> Urna Fixa
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">Requer senha de admin/diretoria</p>
-                  <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{urnaUrl}</code>
-                  <div className="flex gap-1.5">
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { navigator.clipboard.writeText(urnaUrl); toast({ title: 'Link copiado!' }); }}>
-                      <Copy className="h-3 w-3 mr-1" /> Copiar
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setQrExpanded(true)}>
-                      <Maximize2 className="h-3 w-3 mr-1" /> Expandir
-                    </Button>
-                  </div>
-                </div>
+              <div className="space-y-2">
+                {devices.map((d) => {
+                  const deviceUrl = `${window.location.origin}/vote/${electionId}?mode=urna&token=${d.token}`;
+                  return (
+                    <div key={d.id} className="p-3 border rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium flex items-center gap-1.5">
+                          <Monitor className="h-3 w-3" /> {d.label}
+                        </p>
+                        {d.activated ? (
+                          <span className="text-[10px] text-success font-medium">✓ Ativada</span>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground">Aguardando</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="relative cursor-pointer" onClick={() => { setExpandedDeviceToken(d.token); setQrExpanded(true); }}>
+                          <QRCodeSVG value={deviceUrl} size={80} />
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
+                            <Maximize2 className="h-4 w-4 text-foreground" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{deviceUrl}</code>
+                          <div className="flex gap-1.5">
+                            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { navigator.clipboard.writeText(deviceUrl); toast({ title: 'Link copiado!' }); }}>
+                              <Copy className="h-3 w-3 mr-1" /> Copiar
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { setExpandedDeviceToken(d.token); setQrExpanded(true); }}>
+                              <Maximize2 className="h-3 w-3 mr-1" /> Expandir
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {devices.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">Nenhum dispositivo cadastrado.</p>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -322,12 +353,21 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             {electionName && (
               <h2 className="text-xl font-bold text-center">{electionName}</h2>
             )}
+            {expandedDeviceToken && (
+              <p className="text-sm text-muted-foreground">
+                {devices.find(d => d.token === expandedDeviceToken)?.label}
+              </p>
+            )}
             <QRCodeSVG
-              value={votingMode === 'both' && activeTab === 'urna' ? urnaUrl : voteUrl}
+              value={expandedDeviceToken
+                ? `${window.location.origin}/vote/${electionId}?mode=urna&token=${expandedDeviceToken}`
+                : voteUrl}
               size={Math.min(window.innerWidth - 80, window.innerHeight - 200, 400)}
             />
             <code className="text-sm bg-muted p-3 rounded-lg break-all text-center max-w-sm">
-              {votingMode === 'both' && activeTab === 'urna' ? urnaUrl : voteUrl}
+              {expandedDeviceToken
+                ? `${window.location.origin}/vote/${electionId}?mode=urna&token=${expandedDeviceToken}`
+                : voteUrl}
             </code>
           </div>
         </DialogContent>
