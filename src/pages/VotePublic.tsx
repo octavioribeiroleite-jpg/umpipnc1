@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; }
 interface Candidate { id: string; name: string; photo_url: string | null; display_order: number; }
@@ -18,6 +21,9 @@ function getDeviceId(): string {
 
 export default function VotePublic() {
   const { electionId } = useParams<{ electionId: string }>();
+  const [searchParams] = useSearchParams();
+  const isUrnaMode = searchParams.get('mode') === 'urna';
+
   const [election, setElection] = useState<Election | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +33,26 @@ export default function VotePublic() {
   const [readyToVote, setReadyToVote] = useState(false);
   const [alreadyVoted, setAlreadyVoted] = useState(false);
 
-  const isIndividual = election?.voting_mode === 'individual' || election?.voting_mode === 'both';
+  // Urna auth state
+  const [urnaAuthenticated, setUrnaAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authUsername, setAuthUsername] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+
+  // In urna mode after auth, behave as shared. Otherwise check voting_mode.
+  const isSharedBehavior = isUrnaMode && urnaAuthenticated;
+  const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
+
+  // Check urna session on mount
+  useEffect(() => {
+    if (isUrnaMode && electionId) {
+      const flag = sessionStorage.getItem(`urna_authenticated_${electionId}`);
+      if (flag === 'true') {
+        setUrnaAuthenticated(true);
+      }
+    }
+  }, [isUrnaMode, electionId]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,14 +65,12 @@ export default function VotePublic() {
       setElection(elData);
       setCandidates((caRes.data as any[]) || []);
 
-      // Check if device already voted (individual mode)
-      if (elData?.voting_mode === 'individual' || elData?.voting_mode === 'both') {
+      // Check if device already voted (individual mode only, not urna mode)
+      if (!isUrnaMode && (elData?.voting_mode === 'individual' || elData?.voting_mode === 'both')) {
         const deviceId = getDeviceId();
-        // Check localStorage first
         if (localStorage.getItem(`voted_${electionId}`)) {
           setAlreadyVoted(true);
         } else {
-          // Check server
           const { count } = await supabase
             .from('election_votes' as any)
             .select('*', { count: 'exact', head: true })
@@ -63,7 +86,59 @@ export default function VotePublic() {
       setLoading(false);
     };
     fetchData();
-  }, [electionId]);
+  }, [electionId, isUrnaMode]);
+
+  const handleUrnaAuth = async () => {
+    if (!authUsername.trim() || !authPassword.trim()) return;
+    setAuthLoading(true);
+    setAuthError('');
+
+    try {
+      // Get email from username
+      const { data: email, error: emailError } = await supabase.rpc('get_email_by_username', {
+        _username: authUsername.trim(),
+      });
+
+      if (emailError || !email) {
+        setAuthError('Usuário não encontrado.');
+        setAuthLoading(false);
+        return;
+      }
+
+      // Sign in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email as string,
+        password: authPassword,
+      });
+
+      if (signInError || !signInData.user) {
+        setAuthError('Senha incorreta.');
+        setAuthLoading(false);
+        return;
+      }
+
+      // Check management role
+      const { data: hasRole } = await supabase.rpc('has_management_role', {
+        _user_id: signInData.user.id,
+      });
+
+      // Sign out after check (urna is public, don't keep session)
+      await supabase.auth.signOut();
+
+      if (!hasRole) {
+        setAuthError('Apenas admin ou diretoria podem ativar a urna.');
+        setAuthLoading(false);
+        return;
+      }
+
+      // Success
+      sessionStorage.setItem(`urna_authenticated_${electionId}`, 'true');
+      setUrnaAuthenticated(true);
+    } catch {
+      setAuthError('Erro ao autenticar. Tente novamente.');
+    }
+    setAuthLoading(false);
+  };
 
   const handleVote = async () => {
     if (!confirmCandidate || !electionId) return;
@@ -76,13 +151,12 @@ export default function VotePublic() {
 
     if (isIndividual) {
       const deviceId = getDeviceId();
-      // Server-side check before inserting
       const { count } = await supabase
         .from('election_votes' as any)
         .select('*', { count: 'exact', head: true })
         .eq('election_id', electionId)
         .eq('device_id', deviceId);
-      
+
       if (count && count > 0) {
         setAlreadyVoted(true);
         setConfirmCandidate(null);
@@ -107,7 +181,7 @@ export default function VotePublic() {
     setVoteSuccess(true);
     setVoting(false);
 
-    if (!isIndividual) {
+    if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
       // Shared mode: reset after 3s for next voter
       setTimeout(() => {
         setVoteSuccess(false);
@@ -138,6 +212,62 @@ export default function VotePublic() {
     );
   }
 
+  // Urna mode: show auth screen if not authenticated
+  if (isUrnaMode && !urnaAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
+        <div className="max-w-sm w-full space-y-6">
+          <div className="text-center">
+            <Monitor className="h-16 w-16 text-primary mx-auto mb-4" />
+            <h1 className="text-2xl font-bold">Ativar Urna Fixa</h1>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Digite suas credenciais de admin ou diretoria para liberar esta urna.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="urna-username">Usuário</Label>
+              <Input
+                id="urna-username"
+                value={authUsername}
+                onChange={(e) => setAuthUsername(e.target.value)}
+                placeholder="Digite seu usuário"
+                onKeyDown={(e) => e.key === 'Enter' && handleUrnaAuth()}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="urna-password">Senha</Label>
+              <Input
+                id="urna-password"
+                type="password"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="Digite sua senha"
+                onKeyDown={(e) => e.key === 'Enter' && handleUrnaAuth()}
+              />
+            </div>
+            {authError && (
+              <p className="text-sm text-destructive text-center">{authError}</p>
+            )}
+            <Button
+              onClick={handleUrnaAuth}
+              disabled={authLoading || !authUsername.trim() || !authPassword.trim()}
+              className="w-full"
+              size="lg"
+            >
+              {authLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <LogIn className="h-4 w-4 mr-2" />
+              )}
+              Autenticar
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Already voted screen (individual mode)
   if (alreadyVoted) {
     return (
@@ -159,7 +289,7 @@ export default function VotePublic() {
           <CheckCircle className="h-24 w-24 text-success mx-auto mb-6" />
           <h1 className="text-3xl font-bold mb-2">Voto Computado!</h1>
           <p className="text-muted-foreground text-lg">
-            {isIndividual ? 'Obrigado por votar!' : 'Aguarde para o próximo votante...'}
+            {isSharedBehavior || !isIndividual ? 'Aguarde para o próximo votante...' : 'Obrigado por votar!'}
           </p>
         </div>
       </div>
@@ -202,8 +332,8 @@ export default function VotePublic() {
     );
   }
 
-  // Pre-voting screen (shared mode only)
-  if (!isIndividual && !readyToVote) {
+  // Pre-voting screen (shared mode / urna mode)
+  if ((isSharedBehavior || !isIndividual) && !readyToVote) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
         <div className="max-w-sm w-full space-y-8">
@@ -211,6 +341,11 @@ export default function VotePublic() {
             <Vote className="h-20 w-20 text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold">{election.name}</h1>
             <p className="text-muted-foreground mt-1">Cargo: {election.position}</p>
+            {isSharedBehavior && (
+              <p className="text-xs text-primary mt-2 flex items-center justify-center gap-1">
+                <Monitor className="h-3 w-3" /> Urna Fixa Ativada
+              </p>
+            )}
           </div>
           <button
             onClick={() => setReadyToVote(true)}

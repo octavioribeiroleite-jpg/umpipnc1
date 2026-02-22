@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -30,6 +31,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const { toast } = useToast();
 
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
+  const urnaUrl = `${window.location.origin}/vote/${electionId}?mode=urna`;
+  const [activeTab, setActiveTab] = useState<string>('celular');
   const diff = voteCount - totalPresent;
 
   const fetchVoteCount = async () => {
@@ -219,29 +222,91 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           )}
         </div>
 
-        {/* QR Code & Link - compact */}
-        <div className="flex items-center gap-3 p-3 border rounded-lg">
-          <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
-            <QRCodeSVG value={voteUrl} size={100} />
-            <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
-              <Maximize2 className="h-5 w-5 text-foreground" />
+        {/* QR Code & Link */}
+        {votingMode === 'both' ? (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full grid grid-cols-2">
+              <TabsTrigger value="celular" className="text-xs gap-1">
+                <Smartphone className="h-3.5 w-3.5" /> Celular
+              </TabsTrigger>
+              <TabsTrigger value="urna" className="text-xs gap-1">
+                <Monitor className="h-3.5 w-3.5" /> Urna Fixa
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="celular">
+              <div className="flex items-center gap-3 p-3 border rounded-lg">
+                <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
+                  <QRCodeSVG value={voteUrl} size={100} />
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
+                    <Maximize2 className="h-5 w-5 text-foreground" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <p className="text-xs font-medium flex items-center gap-1">
+                    <Smartphone className="h-3 w-3" /> Voto Individual
+                  </p>
+                  <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
+                  <div className="flex gap-1.5">
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { navigator.clipboard.writeText(voteUrl); toast({ title: 'Link copiado!' }); }}>
+                      <Copy className="h-3 w-3 mr-1" /> Copiar
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setQrExpanded(true)}>
+                      <Maximize2 className="h-3 w-3 mr-1" /> Expandir
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="urna">
+              <div className="flex items-center gap-3 p-3 border rounded-lg">
+                <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
+                  <QRCodeSVG value={urnaUrl} size={100} />
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
+                    <Maximize2 className="h-5 w-5 text-foreground" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <p className="text-xs font-medium flex items-center gap-1">
+                    <Monitor className="h-3 w-3" /> Urna Fixa
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Requer senha de admin/diretoria</p>
+                  <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{urnaUrl}</code>
+                  <div className="flex gap-1.5">
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { navigator.clipboard.writeText(urnaUrl); toast({ title: 'Link copiado!' }); }}>
+                      <Copy className="h-3 w-3 mr-1" /> Copiar
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setQrExpanded(true)}>
+                      <Maximize2 className="h-3 w-3 mr-1" /> Expandir
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="flex items-center gap-3 p-3 border rounded-lg">
+            <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
+              <QRCodeSVG value={voteUrl} size={100} />
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
+                <Maximize2 className="h-5 w-5 text-foreground" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <p className="text-xs font-medium flex items-center gap-1">
+                <LinkIcon className="h-3 w-3" /> Link da Urna
+              </p>
+              <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
+              <div className="flex gap-1.5">
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={copyLink}>
+                  <Copy className="h-3 w-3 mr-1" /> Copiar
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setQrExpanded(true)}>
+                  <Maximize2 className="h-3 w-3 mr-1" /> Expandir
+                </Button>
+              </div>
             </div>
           </div>
-          <div className="flex-1 min-w-0 space-y-1.5">
-            <p className="text-xs font-medium flex items-center gap-1">
-              <LinkIcon className="h-3 w-3" /> Link da Urna
-            </p>
-            <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
-            <div className="flex gap-1.5">
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={copyLink}>
-                <Copy className="h-3 w-3 mr-1" /> Copiar
-              </Button>
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setQrExpanded(true)}>
-                <Maximize2 className="h-3 w-3 mr-1" /> Expandir
-              </Button>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Fullscreen QR Dialog */}
@@ -257,8 +322,13 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             {electionName && (
               <h2 className="text-xl font-bold text-center">{electionName}</h2>
             )}
-            <QRCodeSVG value={voteUrl} size={Math.min(window.innerWidth - 80, window.innerHeight - 200, 400)} />
-            <code className="text-sm bg-muted p-3 rounded-lg break-all text-center max-w-sm">{voteUrl}</code>
+            <QRCodeSVG
+              value={votingMode === 'both' && activeTab === 'urna' ? urnaUrl : voteUrl}
+              size={Math.min(window.innerWidth - 80, window.innerHeight - 200, 400)}
+            />
+            <code className="text-sm bg-muted p-3 rounded-lg break-all text-center max-w-sm">
+              {votingMode === 'both' && activeTab === 'urna' ? urnaUrl : voteUrl}
+            </code>
           </div>
         </DialogContent>
       </Dialog>
