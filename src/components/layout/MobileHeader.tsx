@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { ShareAppDialog } from '@/components/layout/ShareAppDialog';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
@@ -111,6 +112,8 @@ export function MobileHeader() {
                     {item.label}
                   </button>
                 ))}
+                <Separator className="my-2" />
+                <ShareAppDialog />
               </nav>
               <Separator />
               {user && (
