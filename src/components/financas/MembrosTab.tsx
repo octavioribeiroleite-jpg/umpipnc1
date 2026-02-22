@@ -35,6 +35,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Pencil, UserX, UserCheck, Trash2, KeyRound, Copy } from 'lucide-react';
+import { BulkLoginDialog } from './BulkLoginDialog';
 
 function removeAccents(str: string): string {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -55,6 +56,7 @@ interface Member {
   email: string | null;
   active: boolean;
   user_id: string | null;
+  society_id: string | null;
 }
 
 interface RelatedData {
@@ -270,11 +272,13 @@ export function MembrosTab() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Membros Cadastrados</CardTitle>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openNewDialog}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Membro
+            <div className="flex gap-2">
+              <BulkLoginDialog members={members} onComplete={fetchMembers} />
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={openNewDialog}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Membro
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -335,6 +339,7 @@ export function MembrosTab() {
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
