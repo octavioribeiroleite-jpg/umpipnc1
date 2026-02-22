@@ -250,7 +250,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-card border-b border-border px-4 py-3 safe-top">
+      <header className="sticky top-0 z-30 bg-card border-b border-border px-4 py-4 safe-top">
         <div className="flex items-center justify-between max-w-2xl mx-auto">
           <div className="flex items-center gap-3">
             {/* Hamburger Menu */}
@@ -314,10 +314,10 @@ function Portal({ visitor }: { visitor: VisitorData }) {
               </SheetContent>
             </Sheet>
 
-            <img src={logoIpnc} alt="IPNC" className="h-9 w-9 object-contain" />
+            <img src={logoIpnc} alt="IPNC" className="h-12 w-12 object-contain" />
             <div>
-              <p className="text-sm font-semibold leading-tight">Portal da Igreja</p>
-              <p className="text-xs text-muted-foreground">Olá, {firstName}!</p>
+              <p className="text-base font-semibold leading-tight">Portal da Igreja</p>
+              <p className="text-sm text-muted-foreground">Olá, {firstName}!</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
