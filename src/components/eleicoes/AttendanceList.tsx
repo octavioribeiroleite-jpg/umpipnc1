@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Download, Loader2, Trash2 } from 'lucide-react';
@@ -126,14 +127,21 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
       </div>
 
       {attendance.length > 0 && (
-        <div className="flex items-center justify-between pt-2 border-t">
-          <span className="text-xs font-medium">
-            Presentes: <strong className="text-primary">{presentCount}</strong>/{attendance.length}
-          </span>
-          <Button size="sm" onClick={handleConfirmPresence} disabled={saving || disabled}>
-            {saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
-            Confirmar
-          </Button>
+        <div className="space-y-2 pt-2 border-t">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium">
+              Presentes: <strong className="text-primary">{presentCount}</strong>/{attendance.length}
+            </span>
+            <Badge variant={presentCount > attendance.length / 2 ? 'default' : 'destructive'} className="text-[10px]">
+              {presentCount > attendance.length / 2 ? 'Quórum atingido' : 'Sem quórum'}
+            </Badge>
+          </div>
+          <div className="flex justify-end">
+            <Button size="sm" onClick={handleConfirmPresence} disabled={saving || disabled}>
+              {saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
+              Confirmar Presença
+            </Button>
+          </div>
         </div>
       )}
     </div>

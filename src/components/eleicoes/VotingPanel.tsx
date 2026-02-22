@@ -115,7 +115,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         {/* Voting mode selector */}
         <div className="space-y-2">
           <p className="text-xs font-medium">Modo de votação:</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => handleModeChange('shared')}
               className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-xs ${
@@ -125,8 +125,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               }`}
             >
               <Monitor className="h-5 w-5" />
-              <span className="font-medium">Urna Compartilhada</span>
-              <span className="text-[10px] text-muted-foreground text-center">Um dispositivo para todos</span>
+              <span className="font-medium">Urna Fixa</span>
+              <span className="text-[10px] text-muted-foreground text-center">Um dispositivo</span>
             </button>
             <button
               onClick={() => handleModeChange('individual')}
@@ -137,8 +137,23 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               }`}
             >
               <Smartphone className="h-5 w-5" />
-              <span className="font-medium">Voto Individual</span>
-              <span className="text-[10px] text-muted-foreground text-center">Cada um no seu celular</span>
+              <span className="font-medium">Celular</span>
+              <span className="text-[10px] text-muted-foreground text-center">Cada um no seu</span>
+            </button>
+            <button
+              onClick={() => handleModeChange('both')}
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-xs ${
+                selectedMode === 'both'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-muted-foreground/30'
+              }`}
+            >
+              <div className="flex gap-0.5">
+                <Monitor className="h-4 w-4" />
+                <Smartphone className="h-4 w-4" />
+              </div>
+              <span className="font-medium">Ambos</span>
+              <span className="text-[10px] text-muted-foreground text-center">Urna + Celular</span>
             </button>
           </div>
         </div>
@@ -161,7 +176,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       <div className="space-y-3">
         {/* Mode badge */}
         <Badge variant="outline" className="text-[10px]">
-          {votingMode === 'individual' ? '📱 Voto Individual' : '🖥️ Urna Compartilhada'}
+          {votingMode === 'individual' ? '📱 Voto Individual' : votingMode === 'both' ? '🖥️📱 Urna + Celular' : '🖥️ Urna Compartilhada'}
         </Badge>
 
         {/* Progress */}
