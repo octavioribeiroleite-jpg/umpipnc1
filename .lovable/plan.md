@@ -1,53 +1,48 @@
 
 
-# Melhorias na Tela de Reunioes (Mobile)
+# Melhorias na Pagina de Gestao de Usuarios (Mobile)
 
-## Problemas Identificados
+## Problemas Identificados na Screenshot
 
-1. **Filtros ocupam muito espaco vertical** - Busca, status e mes estao empilhados, ocupando quase metade da tela antes de chegar ao conteudo
-2. **Formatacao da data na pasta** - "16 De Dezembro De 2025" com "De" maiusculo (deveria ser "de")
-3. **Botao "Nova Reuniao" ocupa espaco fixo no topo** - Poderia ser um FAB (botao flutuante) no mobile para liberar espaco
-4. **Card da reuniao pode ser mais compacto** - Informacoes como "Pauta: incompleta" e indicadores de progresso ocupam bastante espaco
-5. **Filtros poderiam ser colapsaveis** - Um botao de filtro que expande/recolhe, mostrando badge com filtros ativos
+1. **Botao "Novo Usuario" ocupa espaco no header do card** - Deveria ser um FAB no mobile
+2. **Abas de sociedade ocupam muito espaco vertical** - Grid de badges com contadores toma quase 1/3 da tela
+3. **Tabela nao e adaptada para mobile** - Colunas Nome/Usuario/Senha/Cargo/Acoes nao cabem, forcando scroll horizontal ou layout quebrado
+4. **Sem indicacao clara de qual aba esta selecionada** - As abas parecem badges estaticos
 
 ## Alteracoes Planejadas
 
-### 1. `src/components/reunioes/ReuniaoFilters.tsx`
-- Tornar filtros colapsaveis no mobile com um botao "Filtros" que expande/recolhe
-- Mostrar badge com quantidade de filtros ativos
-- No desktop, manter layout atual (lado a lado)
-- Colocar busca sempre visivel, e status + mes dentro do colapsavel
+### 1. `src/pages/Usuarios.tsx` - Layout mobile otimizado
 
-### 2. `src/components/reunioes/ReuniaoPastaData.tsx`
-- Corrigir capitalizacao da data (usar "dd 'de' MMMM 'de' yyyy" corretamente -- o problema e o `capitalize` no CSS que forca maiusculas)
-- Remover a classe `capitalize` que esta forçando "De" maiusculo
+**Botao "Novo Usuario":**
+- Trocar por FAB (botao flutuante) no mobile, igual foi feito em Reunioes
+- Manter botao normal no desktop
 
-### 3. `src/pages/Reunioes.tsx`
-- No mobile, trocar o botao "Nova Reuniao" do header por um FAB (botao flutuante) no canto inferior direito
-- Manter o botao normal no desktop
+**Abas de sociedade:**
+- No mobile, usar um `Select` dropdown em vez de tabs para selecionar a sociedade
+- Mostrar a contagem de usuarios dentro do dropdown
+- No desktop, manter as tabs atuais
 
-### 4. `src/components/reunioes/ReuniaoCard.tsx`
-- Compactar layout mobile: reduzir padding e espacamento
-- Colocar botoes de acao (Ver Ata / Excluir) mais compactos
-- Reduzir tamanho dos indicadores de progresso no mobile
+**Tabela no mobile:**
+- Substituir a tabela por cards empilhados no mobile
+- Cada card mostra: nome, usuario, badge do cargo, e botoes de acao
+- Senha fica acessivel via botao de olho dentro do card
+- No desktop, manter a tabela atual
 
 ## Detalhes Tecnicos
 
-### ReuniaoFilters - Filtros colapsaveis
-- Usar `Collapsible` do Radix no mobile
-- Busca sempre visivel
-- Botao "Filtros" com icone `SlidersHorizontal` e badge de contagem
-- `useIsMobile()` para detectar tamanho
+### Select de sociedade (mobile)
+- Usar `useIsMobile()` para detectar
+- Criar estado `selectedSociety` controlado
+- Renderizar `Select` com opcoes coloridas (bolinha + nome + contagem)
 
-### ReuniaoPastaData - Data
-- Remover classe CSS `capitalize` da span da data
-- O `date-fns` ja formata corretamente com minusculas
+### Cards de usuario (mobile)
+- Layout vertical com nome em destaque, username abaixo
+- Linha com badge de cargo + botoes de acao (editar, excluir)
+- Linha de senha com toggle show/hide
+- Select de cargo inline no card
 
-### Reunioes - FAB
-- Usar componente `fab.tsx` existente ou criar botao fixo `fixed bottom-20 right-4` no mobile
-- Esconder botao do PageHeader no mobile com `hidden md:block`
+### FAB
+- Importar `FAB` de `@/components/ui/fab`
+- Posicionar `fixed bottom-20 right-4` como nas Reunioes
+- Esconder botao do header com `hidden md:inline-flex`
 
-### ReuniaoCard - Compactacao
-- Padding `p-3` no mobile (era `p-4`)
-- Gap menor entre elementos
-- Texto dos indicadores mais compacto
