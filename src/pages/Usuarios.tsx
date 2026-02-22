@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trash2, UserPlus, Loader2, Pencil, Eye, EyeOff } from 'lucide-react';
+import { Trash2, UserPlus, Loader2, Pencil, Eye, EyeOff, Copy, ClipboardList, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -54,6 +54,11 @@ const roleColors: Record<AppRole, string> = {
   pastor: 'bg-accent text-accent-foreground',
 };
 
+function generateRandomPassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
 export default function Usuarios() {
   const { isAdmin, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
@@ -64,6 +69,12 @@ export default function Usuarios() {
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [mobileSocietyTab, setMobileSocietyTab] = useState<string>('');
+  const [resettingPassword, setResettingPassword] = useState<string | null>(null);
+
+  // Reset password result dialog
+  const [resetResultOpen, setResetResultOpen] = useState(false);
+  const [resetResultUser, setResetResultUser] = useState('');
+  const [resetResultPassword, setResetResultPassword] = useState('');
 
   // Create user dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -146,6 +157,58 @@ export default function Usuarios() {
     }
   };
 
+  // --- Credential helpers ---
+  const copyCredentials = (user: UserWithRole) => {
+    const text = `Login: ${user.username}\nSenha: ${user.plain_password || '---'}`;
+    navigator.clipboard.writeText(text);
+    toast.success('Credenciais copiadas!');
+  };
+
+  const copyAllCredentials = (societyId: string | null) => {
+    const filtered = activeUsers
+      .filter((u) => {
+        if (societyId === null) return !u.society_id;
+        return u.society_id === societyId;
+      })
+      .filter((u) => u.plain_password);
+
+    if (filtered.length === 0) {
+      toast.error('Nenhum usuário com senha disponível');
+      return;
+    }
+
+    const text = `Nome | Login | Senha\n${filtered
+      .map((u) => `${u.full_name} | ${u.username} | ${u.plain_password}`)
+      .join('\n')}`;
+    navigator.clipboard.writeText(text);
+    toast.success(`${filtered.length} credenciais copiadas!`);
+  };
+
+  const handleResetPassword = async (user: UserWithRole) => {
+    setResettingPassword(user.user_id);
+    try {
+      const newPass = generateRandomPassword();
+      const { data, error } = await supabase.functions.invoke('update-user-password', {
+        body: { user_id: user.user_id, new_password: newPass },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setUsers((prev) =>
+        prev.map((u) => (u.user_id === user.user_id ? { ...u, plain_password: newPass } : u))
+      );
+      setResetResultUser(user.full_name);
+      setResetResultPassword(newPass);
+      setResetResultOpen(true);
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast.error(error.message || 'Erro ao resetar senha');
+    } finally {
+      setResettingPassword(null);
+    }
+  };
+
+  // --- Existing handlers ---
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
     setUpdatingUser(userId);
     try {
@@ -301,6 +364,13 @@ export default function Usuarios() {
     return activeUsers.filter((u) => u.society_id === societyId);
   };
 
+  const getCurrentSocietyId = (): string | null => {
+    if (isMobile) {
+      return mobileSocietyTab === 'geral' ? null : mobileSocietyTab;
+    }
+    return null; // desktop uses tabs, copy all is per-tab
+  };
+
   const renderUserCard = (user: UserWithRole) => (
     <div key={user.id} className="rounded-lg border bg-card p-3 space-y-2">
       <div className="flex items-start justify-between">
@@ -309,6 +379,29 @@ export default function Usuarios() {
           <p className="text-xs text-muted-foreground">@{user.username}</p>
         </div>
         <div className="flex items-center gap-1 ml-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            onClick={() => copyCredentials(user)}
+            title="Copiar login e senha"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            onClick={() => handleResetPassword(user)}
+            disabled={resettingPassword === user.user_id}
+            title="Resetar senha"
+          >
+            {resettingPassword === user.user_id ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5" />
+            )}
+          </Button>
           <Button
             size="sm"
             variant="ghost"
@@ -503,6 +596,27 @@ export default function Usuarios() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    onClick={() => copyCredentials(user)}
+                    title="Copiar credenciais"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleResetPassword(user)}
+                    disabled={resettingPassword === user.user_id}
+                    title="Resetar senha"
+                  >
+                    {resettingPassword === user.user_id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     onClick={() => {
                       setEditUserId(user.user_id);
                       setEditFullName(user.full_name);
@@ -554,6 +668,18 @@ export default function Usuarios() {
       </Table>
     );
   };
+
+  const renderCopyAllButton = (societyId: string | null) => (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => copyAllCredentials(societyId)}
+      className="gap-1.5"
+    >
+      <ClipboardList className="h-4 w-4" />
+      <span className="hidden sm:inline">Copiar todos</span>
+    </Button>
+  );
 
   const createDialog = (
     <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -651,10 +777,12 @@ export default function Usuarios() {
         title="Gestão de Usuários"
         description="Gerencie os usuários e permissões do sistema"
         action={
-          <Button className="hidden md:inline-flex" onClick={() => setCreateOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Novo Usuário
-          </Button>
+          <div className="hidden md:flex items-center gap-2">
+            <Button onClick={() => setCreateOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Novo Usuário
+            </Button>
+          </div>
         }
       />
 
@@ -673,10 +801,12 @@ export default function Usuarios() {
                 <CardTitle className="text-lg md:text-2xl">Usuários Ativos</CardTitle>
                 <CardDescription className="text-xs md:text-sm">Gerencie os cargos, senhas e permissões</CardDescription>
               </div>
-              <Button className="hidden md:inline-flex" onClick={() => setCreateOpen(true)}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Novo Usuário
-              </Button>
+              <div className="hidden md:flex items-center gap-2">
+                <Button onClick={() => setCreateOpen(true)}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Novo Usuário
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="px-3 md:px-6">
@@ -717,50 +847,61 @@ export default function Usuarios() {
                     </SelectItem>
                   </SelectContent>
                 </Select>
+                <div className="flex justify-end">
+                  {renderCopyAllButton(mobileSocietyTab === 'geral' ? null : mobileSocietyTab)}
+                </div>
                 {renderUserCards(mobileSocietyUsers)}
               </div>
             ) : (
               /* Desktop: Tabs + Table */
               <Tabs defaultValue={societies[0]?.id || 'geral'} className="w-full">
-                <TabsList className="w-full flex flex-wrap h-auto gap-1 mb-4">
-                  {societies.map((s) => (
-                    <TabsTrigger
-                      key={s.id}
-                      value={s.id}
-                      className="data-[state=active]:text-white"
-                      style={{
-                        '--society-color': s.color,
-                      } as React.CSSProperties}
-                    >
+                <div className="flex items-center justify-between mb-4 gap-2">
+                  <TabsList className="flex flex-wrap h-auto gap-1">
+                    {societies.map((s) => (
+                      <TabsTrigger
+                        key={s.id}
+                        value={s.id}
+                        className="data-[state=active]:text-white"
+                        style={{
+                          '--society-color': s.color,
+                        } as React.CSSProperties}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <div
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: s.color }}
+                          />
+                          <span>{s.name}</span>
+                          <Badge variant="secondary" className="ml-1 h-5 text-xs">
+                            {getUsersForSociety(s.id).length}
+                          </Badge>
+                        </div>
+                      </TabsTrigger>
+                    ))}
+                    <TabsTrigger value="geral">
                       <div className="flex items-center gap-1.5">
-                        <div
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: s.color }}
-                        />
-                        <span>{s.name}</span>
+                        <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground" />
+                        <span>Geral</span>
                         <Badge variant="secondary" className="ml-1 h-5 text-xs">
-                          {getUsersForSociety(s.id).length}
+                          {getUsersForSociety(null).length}
                         </Badge>
                       </div>
                     </TabsTrigger>
-                  ))}
-                  <TabsTrigger value="geral">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground" />
-                      <span>Geral</span>
-                      <Badge variant="secondary" className="ml-1 h-5 text-xs">
-                        {getUsersForSociety(null).length}
-                      </Badge>
-                    </div>
-                  </TabsTrigger>
-                </TabsList>
+                  </TabsList>
+                </div>
 
                 {societies.map((s) => (
                   <TabsContent key={s.id} value={s.id}>
+                    <div className="flex justify-end mb-2">
+                      {renderCopyAllButton(s.id)}
+                    </div>
                     {renderUserTable(getUsersForSociety(s.id))}
                   </TabsContent>
                 ))}
                 <TabsContent value="geral">
+                  <div className="flex justify-end mb-2">
+                    {renderCopyAllButton(null)}
+                  </div>
                   {renderUserTable(getUsersForSociety(null))}
                 </TabsContent>
               </Tabs>
@@ -815,6 +956,38 @@ export default function Usuarios() {
               {savingEdit ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Salvar
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Result Dialog */}
+      <Dialog open={resetResultOpen} onOpenChange={setResetResultOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Senha Resetada</DialogTitle>
+            <DialogDescription>
+              A senha de <strong>{resetResultUser}</strong> foi alterada com sucesso.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+              <span className="text-sm text-muted-foreground">Nova senha:</span>
+              <span className="font-mono text-lg font-bold">{resetResultPassword}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto"
+                onClick={() => {
+                  navigator.clipboard.writeText(resetResultPassword);
+                  toast.success('Senha copiada!');
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setResetResultOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
