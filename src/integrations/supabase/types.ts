@@ -1054,6 +1054,44 @@ export type Database = {
           },
         ]
       }
+      portal_visitors: {
+        Row: {
+          created_at: string
+          device_id: string
+          full_name: string
+          id: string
+          is_visitor: boolean
+          last_access: string
+          society_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          full_name: string
+          id?: string
+          is_visitor?: boolean
+          last_access?: string
+          society_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          full_name?: string
+          id?: string
+          is_visitor?: boolean
+          last_access?: string
+          society_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_visitors_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean

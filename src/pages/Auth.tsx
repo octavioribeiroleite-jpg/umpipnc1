@@ -143,6 +143,14 @@ export default function Auth() {
           /* Step 1: Role cards */
           <div className="space-y-3 animate-fade-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
             <p className="text-center text-sm text-muted-foreground mb-4">Como deseja entrar?</p>
+
+            {/* Botão acesso sem login */}
+            <button
+              onClick={() => navigate('/igreja')}
+              className="w-full text-center py-3 px-4 rounded-xl border-2 border-dashed border-primary/30 text-primary text-sm font-medium hover:bg-primary/5 transition-colors"
+            >
+              Acessar sem login →
+            </button>
             {(['pastor', 'diretoria', 'membro'] as RoleCard[]).map((role, i) => {
               const config = roleConfig[role];
               const Icon = config.icon;

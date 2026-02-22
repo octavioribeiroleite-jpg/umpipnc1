@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck } from 'lucide-react';
+import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck, Globe, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador';
@@ -64,18 +64,58 @@ const roleColors: Record<string, string> = {
   pending: 'bg-destructive/20 text-destructive',
 };
 
+interface PortalVisitor {
+  id: string;
+  full_name: string;
+  society_id: string | null;
+  is_visitor: boolean;
+  device_id: string;
+  created_at: string;
+  last_access: string;
+}
+
+interface SocietyInfo {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export default function Configuracoes() {
   const { isAdmin, user } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
+  const [portalVisitors, setPortalVisitors] = useState<PortalVisitor[]>([]);
+  const [portalSocieties, setPortalSocieties] = useState<Record<string, SocietyInfo>>({});
+  const [portalLoading, setPortalLoading] = useState(true);
 
   useEffect(() => {
     if (isAdmin) {
       fetchUsers();
+      fetchPortalVisitors();
     }
   }, [isAdmin]);
+
+  const fetchPortalVisitors = async () => {
+    setPortalLoading(true);
+    try {
+      const [visitorsRes, socRes] = await Promise.all([
+        supabase.from('portal_visitors' as any).select('*').order('created_at', { ascending: false }).limit(200),
+        supabase.from('societies').select('id, name, color').eq('active', true),
+      ]);
+      if (visitorsRes.data) setPortalVisitors(visitorsRes.data as any[]);
+      if (socRes.data) {
+        const map: Record<string, SocietyInfo> = {};
+        (socRes.data as SocietyInfo[]).forEach((s) => (map[s.id] = s));
+        setPortalSocieties(map);
+      }
+    } catch (e) {
+      console.error('Error fetching portal visitors:', e);
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -537,6 +577,102 @@ export default function Configuracoes() {
                     </div>
                   )}
                 </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Portal Visitors Report */}
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Relatório do Portal da Igreja
+              </CardTitle>
+              <CardDescription>Acessos ao portal público (sem login)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {portalLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : portalVisitors.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Nenhum acesso registrado ainda.</p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Stats */}
+                  {(() => {
+                    const now = new Date();
+                    const thisMonth = portalVisitors.filter((v) => {
+                      const d = new Date(v.created_at);
+                      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    });
+                    const visitors = thisMonth.filter((v) => v.is_visitor).length;
+                    const members = thisMonth.length - visitors;
+                    return (
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-lg border p-3 text-center">
+                          <p className="text-2xl font-bold">{thisMonth.length}</p>
+                          <p className="text-xs text-muted-foreground">Este mês</p>
+                        </div>
+                        <div className="rounded-lg border p-3 text-center">
+                          <p className="text-2xl font-bold">{members}</p>
+                          <p className="text-xs text-muted-foreground">Membros</p>
+                        </div>
+                        <div className="rounded-lg border p-3 text-center">
+                          <p className="text-2xl font-bold">{visitors}</p>
+                          <p className="text-xs text-muted-foreground">Visitantes</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Recent visitors list */}
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      Acessos recentes
+                    </h4>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Sociedade</TableHead>
+                          <TableHead>Data</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {portalVisitors.slice(0, 50).map((v) => (
+                          <TableRow key={v.id}>
+                            <TableCell className="font-medium">{v.full_name}</TableCell>
+                            <TableCell>
+                              {v.is_visitor ? (
+                                <Badge variant="outline" className="text-[10px]">Visitante</Badge>
+                              ) : v.society_id && portalSocieties[v.society_id] ? (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px]"
+                                  style={{
+                                    borderColor: portalSocieties[v.society_id].color,
+                                    color: portalSocieties[v.society_id].color,
+                                  }}
+                                >
+                                  {portalSocieties[v.society_id].name}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-xs">
+                              {new Date(v.created_at).toLocaleDateString('pt-BR')}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
