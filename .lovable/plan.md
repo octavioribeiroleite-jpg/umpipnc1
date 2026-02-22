@@ -1,74 +1,42 @@
 
 
-# Implementar Migração de Isolamento por Sociedade
+# Corrigir Página de Usuários Vazia
 
-## O que será feito
+## Problema
 
-Uma migração SQL que será aplicada automaticamente ao banco de dados, sem necessidade de ação manual.
+A tabela `user_roles` possui politicas RLS RESTRICTIVAS ("Permissive: No"). Quando existem multiplas politicas RESTRICTIVAS para SELECT, TODAS devem ser verdadeiras simultaneamente. As politicas atuais sao:
 
-## Conteúdo da migração
+- "Admins can view all roles" - RESTRICTIVE - `has_role(auth.uid(), 'admin')`
+- "Users can view their own roles" - RESTRICTIVE - `auth.uid() = user_id`
 
-1. **Criar função `get_user_society_id()`** - retorna o `society_id` do perfil do usuário autenticado
+Para um admin ver roles de outros usuarios, AMBAS precisam passar. Mas a segunda falha porque o admin nao e o dono da row. Resultado: admin so ve a propria role, a query retorna vazio para os demais.
 
-2. **Atualizar políticas RLS em 16 tabelas** para filtrar por sociedade:
+## Solucao
 
-### Tabelas com `society_id` direto (14 tabelas):
-- charges, transactions, members, meetings, tasks, files
-- financial_settings, financial_categories, membership_payments
-- shirt_inventory, shirt_purchases, shirt_purchase_items, shirt_sales
-- member_payment_submissions
+Recriar as politicas SELECT da tabela `user_roles` como PERMISSIVE (padrao), para que QUALQUER uma que passe libere o acesso.
 
-### Tabelas vinculadas via meeting_id (4 tabelas):
-- agenda_items, meeting_participants, contributions, ai_suggestions
+### Migracao SQL
 
-## Regras de acesso após a migração
-
-| Papel | Leitura | Escrita |
-|-------|---------|---------|
-| Admin | Todas as sociedades | Todas as sociedades |
-| Pastor | Todas as sociedades | Nenhuma (somente leitura) |
-| Diretoria | Apenas sua sociedade | Apenas sua sociedade |
-| Visualizador | Apenas sua sociedade | Nenhuma |
-
-## Detalhes Técnicos
-
-### Função auxiliar
 ```text
-get_user_society_id(uuid) -> uuid
-  SECURITY DEFINER (evita recursão RLS)
-  Retorna profiles.society_id WHERE user_id = parametro
+-- Remover politicas antigas de SELECT
+DROP POLICY IF EXISTS "Admins can view all roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Users can view their own roles" ON public.user_roles;
+
+-- Recriar como PERMISSIVE (padrao)
+CREATE POLICY "Admins can view all roles" ON public.user_roles
+FOR SELECT USING (has_role(auth.uid(), 'admin'::app_role));
+
+CREATE POLICY "Users can view their own roles" ON public.user_roles
+FOR SELECT USING (auth.uid() = user_id);
 ```
 
-### Padrão SELECT (tabelas com society_id)
-```text
-USING (
-  has_role(auth.uid(), 'admin')
-  OR has_pastor_role(auth.uid())
-  OR society_id = get_user_society_id(auth.uid())
-)
-```
+## Resultado esperado
 
-### Padrão INSERT/UPDATE/DELETE (management)
-```text
-USING (
-  has_role(auth.uid(), 'admin')
-  OR (has_role(auth.uid(), 'diretoria') AND society_id = get_user_society_id(auth.uid()))
-)
-```
+- Admin ve todas as roles de todos os usuarios
+- Usuarios comuns so veem a propria role
+- A pagina de Usuarios volta a funcionar normalmente
 
-### Padrão para tabelas via meeting_id
-```text
-USING (
-  has_role(auth.uid(), 'admin')
-  OR has_pastor_role(auth.uid())
-  OR EXISTS (
-    SELECT 1 FROM meetings m
-    WHERE m.id = table.meeting_id
-    AND m.society_id = get_user_society_id(auth.uid())
-  )
-)
-```
+## Sobre o ChargeCard
 
-## Nenhuma alteração no frontend
-O código já filtra por sociedade. Esta migração adiciona proteção no banco de dados.
+As mudanças visuais do ChargeCard ja estao aplicadas na preview. Para ver no app publicado, e necessario publicar o projeto.
 
