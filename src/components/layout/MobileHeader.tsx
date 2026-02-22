@@ -42,7 +42,7 @@ const navItems = [
 
 const adminItems = [
   { to: '/usuarios', icon: UserCheck, label: 'Usuários' },
-  { to: '/pastor-sugestoes', icon: MessageSquare, label: 'Sugestões do Pastor' },
+  { to: '/sugestoes', icon: MessageSquare, label: 'Sugestões do Pastor' },
 ];
 
 export function MobileHeader() {

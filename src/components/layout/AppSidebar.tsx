@@ -34,7 +34,7 @@ const menuItems = [
 
 const adminMenuItems = [
   { icon: UserCheck, label: 'Usuários', path: '/usuarios' },
-  { icon: MessageSquare, label: 'Sugestões do Pastor', path: '/pastor-sugestoes' },
+  { icon: MessageSquare, label: 'Sugestões do Pastor', path: '/sugestoes' },
 ];
 
 const bottomMenuItems = [
