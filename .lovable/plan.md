@@ -1,42 +1,77 @@
 
 
-# Corrigir Página de Usuários Vazia
+# Reestruturar Pagina de Usuarios com Cards de Diretoria e Membros
 
-## Problema
+## Visao Geral
 
-A tabela `user_roles` possui politicas RLS RESTRICTIVAS ("Permissive: No"). Quando existem multiplas politicas RESTRICTIVAS para SELECT, TODAS devem ser verdadeiras simultaneamente. As politicas atuais sao:
+Reorganizar a pagina `/usuarios` em duas secoes distintas:
 
-- "Admins can view all roles" - RESTRICTIVE - `has_role(auth.uid(), 'admin')`
-- "Users can view their own roles" - RESTRICTIVE - `auth.uid() = user_id`
+1. **Card "Diretoria"** -- Usuarios com cargo `diretoria`, organizados por sociedade (abas)
+2. **Card "Membros"** -- Todos os membros cadastrados (tabela `members`) de TODAS as sociedades, com gerenciamento de login e senha
 
-Para um admin ver roles de outros usuarios, AMBAS precisam passar. Mas a segunda falha porque o admin nao e o dono da row. Resultado: admin so ve a propria role, a query retorna vazio para os demais.
-
-## Solucao
-
-Recriar as politicas SELECT da tabela `user_roles` como PERMISSIVE (padrao), para que QUALQUER uma que passe libere o acesso.
-
-### Migracao SQL
+## Estrutura da Nova Pagina
 
 ```text
--- Remover politicas antigas de SELECT
-DROP POLICY IF EXISTS "Admins can view all roles" ON public.user_roles;
-DROP POLICY IF EXISTS "Users can view their own roles" ON public.user_roles;
-
--- Recriar como PERMISSIVE (padrao)
-CREATE POLICY "Admins can view all roles" ON public.user_roles
-FOR SELECT USING (has_role(auth.uid(), 'admin'::app_role));
-
-CREATE POLICY "Users can view their own roles" ON public.user_roles
-FOR SELECT USING (auth.uid() = user_id);
++------------------------------------------+
+|  Gestao de Usuarios       [+ Novo Usuario]|
++------------------------------------------+
+|                                          |
+|  CARD: Diretoria                         |
+|  [UMP] [SAF] [UPH] [UPA] [UCP] [Geral]  |
+|  Tabela/cards com usuarios diretoria     |
+|  (copiar creds, resetar, editar, excluir)|
+|                                          |
++------------------------------------------+
+|                                          |
+|  CARD: Membros     [Criar Logins] [+ Novo]|
+|  Filtro por sociedade (select)           |
+|  Tabela com TODOS os membros             |
+|  Colunas: Nome | Sociedade | Login |     |
+|           Senha | Status | Acoes         |
+|  Acoes: copiar creds, resetar senha,     |
+|         editar, ativar/desativar, excluir |
+|                                          |
++------------------------------------------+
 ```
 
-## Resultado esperado
+## Detalhes Tecnicos
 
-- Admin ve todas as roles de todos os usuarios
-- Usuarios comuns so veem a propria role
-- A pagina de Usuarios volta a funcionar normalmente
+### Card Diretoria
+- Filtrar `activeUsers` onde `role === 'diretoria' || role === 'admin' || role === 'pastor'`
+- Manter organizacao por abas de sociedade (desktop) e select (mobile)
+- Manter funcionalidades existentes: copiar credenciais, resetar senha, editar, excluir
 
-## Sobre o ChargeCard
+### Card Membros
+- Buscar dados da tabela `members` (todos, sem filtro de sociedade para admin)
+- Buscar tambem `profiles` vinculados via `user_id` para exibir login/senha
+- Adicionar coluna "Sociedade" com badge colorida mostrando o nome da sociedade
+- Filtro opcional por sociedade via select dropdown
+- Mostrar login e senha (do profile vinculado) com toggle de visibilidade
+- Botoes de acao:
+  - Copiar credenciais (login/senha do profile vinculado)
+  - Resetar senha (invoca edge function `update-user-password`)
+  - Criar login individual (para membros sem `user_id`, usando `create-user`)
+  - Editar dados do membro
+  - Ativar/Desativar
+  - Excluir
+- Integrar `BulkLoginDialog` existente para criacao em massa
+- Buscar nomes das sociedades para exibir badges coloridas
 
-As mudanças visuais do ChargeCard ja estao aplicadas na preview. Para ver no app publicado, e necessario publicar o projeto.
+### Dados necessarios para a secao Membros
+- `members` (todas as sociedades) -- admin ve tudo via RLS
+- `profiles` -- para obter `username` e `plain_password` dos membros com `user_id`
+- `societies` -- para exibir nome/cor da sociedade de cada membro
+
+### Mudancas no arquivo `src/pages/Usuarios.tsx`
+1. Adicionar estado para membros (`members[]`) e fetch dedicado
+2. Adicionar estado para filtro de sociedade dos membros
+3. Criar secao "Diretoria" com usuarios filtrados por role
+4. Criar secao "Membros" com tabela de todos os membros, incluindo sociedade e credenciais
+5. Integrar `BulkLoginDialog` na secao de membros
+6. Adicionar funcoes de resetar senha e criar login individual para membros
+7. Remover duplicacao com `MembrosTab` (centralizar tudo na pagina de Usuarios)
+
+### Mobile
+- Card Diretoria: select de sociedade + cards compactos (igual hoje)
+- Card Membros: select de sociedade (filtro opcional) + cards compactos com acoes de login
 
