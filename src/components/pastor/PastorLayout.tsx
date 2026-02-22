@@ -55,7 +55,7 @@ export function PastorLayout({ children }: PastorLayoutProps) {
       {isMobile && (
         <div className="flex flex-col min-h-screen">
           <PastorMobileHeader />
-          <main className="flex-1 overflow-auto pt-14 px-3 pb-4">
+          <main className="flex-1 overflow-auto pt-16 px-3 pb-4">
             {children}
           </main>
         </div>
