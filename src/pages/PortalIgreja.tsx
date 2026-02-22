@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import {
   Calendar, Clock, MapPin, Bell, Heart, Copy, Check, Loader2,
-  LogIn, ChevronRight, Home,
+  LogIn, ChevronRight, Home, Menu,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -33,7 +34,7 @@ interface Society {
   color: string;
 }
 
-type PortalTab = 'inicio' | 'programacoes' | 'avisos';
+type PortalTab = 'inicio' | 'programacoes' | 'avisos' | 'dizimos';
 
 const STORAGE_KEY = 'portal_visitor';
 
@@ -61,9 +62,8 @@ function getSavedVisitor(): VisitorData | null {
 
 export default function PortalIgreja() {
   const [visitor, setVisitor] = useState<VisitorData | null>(getSavedVisitor);
-  const [loading, setLoading] = useState(false);
 
-  // On revisit, log a new access silently (no UPDATE needed)
+  // On revisit, log a new access silently
   useEffect(() => {
     if (visitor) {
       const deviceId = getOrCreateDeviceId();
@@ -75,7 +75,7 @@ export default function PortalIgreja() {
           is_visitor: visitor.isVisitor,
           device_id: deviceId,
         } as any)
-        .then(); // fire and forget
+        .then();
     }
   }, []);
 
@@ -135,7 +135,6 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
 
     if (error) {
       console.warn('Erro ao registrar visitante:', error.message);
-      // Não bloquear acesso ao portal mesmo se o registro falhar
     }
 
     const visitorData: VisitorData = {
@@ -231,13 +230,22 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
 
 function Portal({ visitor }: { visitor: VisitorData }) {
   const [activeTab, setActiveTab] = useState<PortalTab>('inicio');
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const tabs: { key: PortalTab; label: string; icon: typeof Calendar }[] = [
-    { key: 'inicio', label: 'Início', icon: Heart },
+    { key: 'inicio', label: 'Início', icon: Home },
     { key: 'programacoes', label: 'Programações', icon: Calendar },
     { key: 'avisos', label: 'Avisos', icon: Bell },
+    { key: 'dizimos', label: 'Dízimos', icon: Heart },
   ];
+
+  const handleTabChange = (tab: PortalTab) => {
+    setActiveTab(tab);
+    setMenuOpen(false);
+  };
+
+  const firstName = visitor.fullName.split(' ')[0];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -245,10 +253,71 @@ function Portal({ visitor }: { visitor: VisitorData }) {
       <header className="sticky top-0 z-30 bg-card border-b border-border px-4 py-3 safe-top">
         <div className="flex items-center justify-between max-w-2xl mx-auto">
           <div className="flex items-center gap-3">
+            {/* Hamburger Menu */}
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="-ml-2">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 bg-sidebar text-sidebar-foreground p-0">
+                <div className="flex flex-col h-full">
+                  {/* Sidebar header */}
+                  <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
+                    <img src={logoIpnc} alt="IPNC" className="h-10 w-10 object-contain" />
+                    <div className="flex flex-col">
+                      <span className="font-display font-bold text-sm text-sidebar-primary">Portal da Igreja</span>
+                      <span className="text-xs text-sidebar-muted">IPNC</span>
+                    </div>
+                  </div>
+
+                  {/* Nav items */}
+                  <nav className="flex-1 py-4 overflow-y-auto">
+                    <ul className="space-y-1 px-2">
+                      {tabs.map((item) => {
+                        const isActive = activeTab === item.key;
+                        return (
+                          <li key={item.key}>
+                            <button
+                              onClick={() => handleTabChange(item.key)}
+                              className={`flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                                isActive
+                                  ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
+                                  : 'text-sidebar-foreground'
+                              }`}
+                            >
+                              <item.icon className="h-5 w-5 mr-3" />
+                              <span className="font-medium">{item.label}</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </nav>
+
+                  {/* Visitor + Login section */}
+                  <div className="p-4 border-t border-sidebar-border">
+                    <div className="mb-3 px-2">
+                      <p className="font-medium text-sm truncate">{visitor.fullName}</p>
+                      <p className="text-xs text-sidebar-muted">{visitor.isVisitor ? 'Visitante' : 'Membro'}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      onClick={() => { setMenuOpen(false); navigate('/auth'); }}
+                      className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    >
+                      <LogIn className="h-5 w-5 mr-3" />
+                      <span>Fazer Login</span>
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
             <img src={logoIpnc} alt="IPNC" className="h-9 w-9 object-contain" />
             <div>
               <p className="text-sm font-semibold leading-tight">Portal da Igreja</p>
-              <p className="text-xs text-muted-foreground">Olá, {visitor.fullName.split(' ')[0]}!</p>
+              <p className="text-xs text-muted-foreground">Olá, {firstName}!</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
@@ -260,9 +329,10 @@ function Portal({ visitor }: { visitor: VisitorData }) {
 
       {/* Content */}
       <main className="flex-1 overflow-auto px-4 py-4 pb-24 max-w-2xl mx-auto w-full">
-        {activeTab === 'inicio' && <InicioTab onTabChange={setActiveTab} />}
+        {activeTab === 'inicio' && <InicioTab visitor={visitor} onTabChange={setActiveTab} />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
         {activeTab === 'avisos' && <AvisosTab />}
+        {activeTab === 'dizimos' && <DizimosPortalTab />}
       </main>
 
       {/* Bottom Nav */}
@@ -289,24 +359,17 @@ function Portal({ visitor }: { visitor: VisitorData }) {
   );
 }
 
-// ---------- Início Tab (com Dízimos em destaque) ----------
+// ---------- Início Tab ----------
 
-function InicioTab({ onTabChange }: { onTabChange: (tab: PortalTab) => void }) {
-  const [pixKey, setPixKey] = useState('');
-  const [pixKeyType, setPixKeyType] = useState('');
-  const [pixBeneficiary, setPixBeneficiary] = useState('');
-  const [pixInstructions, setPixInstructions] = useState('');
+function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange: (tab: PortalTab) => void }) {
   const [nextEvent, setNextEvent] = useState<any>(null);
   const [lastAnnouncement, setLastAnnouncement] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+
+  const firstName = visitor.fullName.split(' ')[0];
 
   useEffect(() => {
     Promise.all([
-      supabase
-        .from('settings')
-        .select('key, value')
-        .in('key', ['pix_key', 'pix_key_type', 'pix_beneficiary', 'pix_instructions']),
       supabase
         .from('events')
         .select('*')
@@ -320,37 +383,23 @@ function InicioTab({ onTabChange }: { onTabChange: (tab: PortalTab) => void }) {
         .eq('scope', 'church')
         .order('created_at', { ascending: false })
         .limit(1),
-    ]).then(([settingsRes, eventRes, announcementRes]) => {
-      if (settingsRes.data) {
-        settingsRes.data.forEach((s: any) => {
-          if (s.key === 'pix_key') setPixKey(s.value);
-          if (s.key === 'pix_key_type') setPixKeyType(s.value);
-          if (s.key === 'pix_beneficiary') setPixBeneficiary(s.value);
-          if (s.key === 'pix_instructions') setPixInstructions(s.value);
-        });
-      }
+    ]).then(([eventRes, announcementRes]) => {
       if (eventRes.data && eventRes.data.length > 0) setNextEvent(eventRes.data[0]);
       if (announcementRes.data && announcementRes.data.length > 0) setLastAnnouncement(announcementRes.data[0]);
       setLoading(false);
     });
   }, []);
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(pixKey);
-      setCopied(true);
-      toast.success('Chave PIX copiada!');
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      toast.error('Não foi possível copiar');
-    }
-  };
-
   return (
     <div className="space-y-4">
-      <div className="text-center py-2">
-        <h2 className="text-lg font-bold">Bem-vindo à IPNC!</h2>
-        <p className="text-sm text-muted-foreground">Igreja Presbiteriana de Nova Carapina</p>
+      {/* Saudação bonita */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary/15 via-primary/8 to-primary/3 p-6 text-center">
+        <p className="text-2xl font-bold text-foreground">
+          Olá, {firstName}! 👋
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Bem-vindo à <span className="font-semibold text-primary">Igreja Presbiteriana de Nova Carapina</span>
+        </p>
       </div>
 
       {/* Próximo Evento */}
@@ -427,40 +476,98 @@ function InicioTab({ onTabChange }: { onTabChange: (tab: PortalTab) => void }) {
           </CardContent>
         </Card>
       ) : null}
+    </div>
+  );
+}
 
-      {/* Card de Dízimos e Ofertas */}
-      {loading ? (
+// ---------- Dízimos Portal Tab ----------
+
+function DizimosPortalTab() {
+  const [pixKey, setPixKey] = useState('');
+  const [pixKeyType, setPixKeyType] = useState('');
+  const [pixBeneficiary, setPixBeneficiary] = useState('');
+  const [pixInstructions, setPixInstructions] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from('settings')
+      .select('key, value')
+      .in('key', ['pix_key', 'pix_key_type', 'pix_beneficiary', 'pix_instructions'])
+      .then(({ data }) => {
+        if (data) {
+          data.forEach((s: any) => {
+            if (s.key === 'pix_key') setPixKey(s.value);
+            if (s.key === 'pix_key_type') setPixKeyType(s.value);
+            if (s.key === 'pix_beneficiary') setPixBeneficiary(s.value);
+            if (s.key === 'pix_instructions') setPixInstructions(s.value);
+          });
+        }
+        setLoading(false);
+      });
+  }, []);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(pixKey);
+      setCopied(true);
+      toast.success('Chave PIX copiada!');
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast.error('Não foi possível copiar');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <h2 className="font-semibold text-lg">Dízimos e Ofertas</h2>
         <Skeleton className="h-40" />
-      ) : pixKey ? (
-        <Card className="border-primary/40 shadow-lg overflow-hidden animate-shimmer-border">
-          <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 px-4 py-3 flex items-center gap-2">
-            <Heart className="h-5 w-5 text-primary" />
-            <span className="font-bold text-primary text-lg">Dízimos e Ofertas</span>
-          </div>
-          <CardContent className="pt-4 space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Chave PIX:</p>
-              <div className="flex items-center gap-2 bg-muted rounded-lg border p-3">
-                <code className="flex-1 text-sm font-mono break-all font-semibold">{pixKey}</code>
-                <Button onClick={handleCopy} variant={copied ? 'default' : 'outline'} size="sm" className="shrink-0">
-                  {copied ? <><Check className="h-4 w-4 mr-1" />Copiado!</> : <><Copy className="h-4 w-4 mr-1" />Copiar</>}
-                </Button>
-              </div>
+      </div>
+    );
+  }
+
+  if (!pixKey) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <Heart className="h-12 w-12 mb-3 opacity-40" />
+        <p className="text-sm font-medium">Chave PIX não configurada</p>
+        <p className="text-xs mt-1">Em breve as informações estarão disponíveis.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="border-primary/40 shadow-lg overflow-hidden animate-shimmer-border">
+        <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 px-4 py-3 flex items-center gap-2">
+          <Heart className="h-5 w-5 text-primary" />
+          <span className="font-bold text-primary text-lg">Dízimos e Ofertas</span>
+        </div>
+        <CardContent className="pt-4 space-y-4">
+          <div>
+            <p className="text-sm text-muted-foreground mb-2">Chave PIX:</p>
+            <div className="flex items-center gap-2 bg-muted rounded-lg border p-3">
+              <code className="flex-1 text-sm font-mono break-all font-semibold">{pixKey}</code>
+              <Button onClick={handleCopy} variant={copied ? 'default' : 'outline'} size="sm" className="shrink-0">
+                {copied ? <><Check className="h-4 w-4 mr-1" />Copiado!</> : <><Copy className="h-4 w-4 mr-1" />Copiar</>}
+              </Button>
             </div>
-            {pixBeneficiary && (
-              <div>
-                <p className="text-xs text-muted-foreground">Beneficiário</p>
-                <p className="text-sm font-medium">{pixBeneficiary}</p>
-              </div>
-            )}
-            {pixInstructions && (
-              <div className="rounded-lg bg-primary/5 p-3 border-l-4 border-primary">
-                <p className="text-sm italic text-foreground">{pixInstructions}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : null}
+          </div>
+          {pixBeneficiary && (
+            <div>
+              <p className="text-xs text-muted-foreground">Beneficiário</p>
+              <p className="text-sm font-medium">{pixBeneficiary}</p>
+            </div>
+          )}
+          {pixInstructions && (
+            <div className="rounded-lg bg-primary/5 p-3 border-l-4 border-primary">
+              <p className="text-sm italic text-foreground">{pixInstructions}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
