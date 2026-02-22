@@ -13,7 +13,7 @@ import { CamisasTab } from '@/components/financas/CamisasTab';
 import { ConfiguracoesTab } from '@/components/financas/ConfiguracoesTab';
 import { RelatoriosTab } from '@/components/financas/RelatoriosTab';
 import { ComprovantesTab } from '@/components/financas/ComprovantesTab';
-import { DizimosTab } from '@/components/financas/DizimosTab';
+
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DollarSign,
@@ -249,7 +249,6 @@ export default function Financas() {
               <SelectItem value="camisas">Camisas</SelectItem>
               <SelectItem value="relatorios">Relatórios</SelectItem>
               <SelectItem value="configuracoes">Configurações</SelectItem>
-              <SelectItem value="dizimos">Dízimos</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -264,7 +263,6 @@ export default function Financas() {
             <TabsTrigger value="camisas">Camisas</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
             <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
-            <TabsTrigger value="dizimos">Dízimos</TabsTrigger>
           </TabsList>
         </div>
 
@@ -296,9 +294,6 @@ export default function Financas() {
           <ConfiguracoesTab />
         </TabsContent>
 
-        <TabsContent value="dizimos" className="animate-in fade-in-50">
-          <DizimosTab />
-        </TabsContent>
       </Tabs>
     </AppLayout>
   );

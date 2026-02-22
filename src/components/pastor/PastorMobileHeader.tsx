@@ -11,6 +11,7 @@ import {
   Megaphone,
   MessageSquare,
   Users,
+  Heart,
 } from 'lucide-react';
 import {
   Sheet,
@@ -36,6 +37,7 @@ const navItems = [
   { to: '/pastor/calendario', icon: Calendar, label: 'Calendário' },
   { to: '/pastor/comunicados', icon: Megaphone, label: 'Comunicados' },
   { to: '/pastor/sugestoes', icon: MessageSquare, label: 'Sugestões' },
+  { to: '/dizimos', icon: Heart, label: 'Dízimos' },
 ];
 
 export function PastorMobileHeader() {

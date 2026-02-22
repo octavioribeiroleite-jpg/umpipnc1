@@ -9,6 +9,7 @@ import {
   MessageSquare,
   LogOut,
   Users,
+  Heart,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +38,7 @@ export function PastorSidebar() {
     { path: '/pastor/calendario', label: 'Calendário', icon: Calendar },
     { path: '/pastor/comunicados', label: 'Comunicados', icon: Megaphone },
     { path: '/pastor/sugestoes', label: 'Sugestões', icon: MessageSquare },
+    { path: '/dizimos', label: 'Dízimos', icon: Heart },
   ];
 
   const isActive = (path: string) => {

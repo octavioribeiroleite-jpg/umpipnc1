@@ -17,6 +17,7 @@ import {
   ClipboardCheck,
   MessageSquare,
   Vote,
+  Heart,
 } from 'lucide-react';
 import {
   Sheet,
@@ -41,6 +42,7 @@ const navItems = [
 ];
 
 const adminItems = [
+  { to: '/dizimos', icon: Heart, label: 'Dízimos' },
   { to: '/usuarios', icon: UserCheck, label: 'Usuários' },
   { to: '/sugestoes', icon: MessageSquare, label: 'Sugestões do Pastor' },
 ];
