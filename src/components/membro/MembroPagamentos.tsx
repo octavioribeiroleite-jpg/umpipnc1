@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { CreditCard, Upload, CheckCircle2, Clock, XCircle, Loader2 } from 'lucide-react';
+import { CreditCard, Upload, CheckCircle2, Clock, XCircle, Loader2, CalendarDays, Banknote } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Charge {
   id: string;
@@ -20,6 +22,9 @@ interface Charge {
   status: string;
   due_date: string;
   paid_at: string | null;
+  paid_amount: number | null;
+  payment_method: string | null;
+  notes: string | null;
 }
 
 interface Submission {
@@ -37,6 +42,13 @@ const statusConfig: Record<string, { label: string; icon: typeof Clock; classNam
   pendente: { label: 'Pendente', icon: Clock, className: 'bg-warning/10 text-warning border-warning/20' },
   aprovado: { label: 'Aprovado', icon: CheckCircle2, className: 'bg-success/10 text-success border-success/20' },
   rejeitado: { label: 'Rejeitado', icon: XCircle, className: 'bg-destructive/10 text-destructive border-destructive/20' },
+};
+
+const paymentMethodLabels: Record<string, string> = {
+  pix: 'PIX',
+  dinheiro: 'Dinheiro',
+  transferencia: 'Transferência',
+  cartao: 'Cartão',
 };
 
 export function MembroPagamentos() {
@@ -59,8 +71,6 @@ export function MembroPagamentos() {
 
   const fetchData = async () => {
     setLoading(true);
-
-    // Find member linked to this user
     const { data: memberData } = await supabase
       .from('members')
       .select('id')
@@ -74,17 +84,15 @@ export function MembroPagamentos() {
 
     setMemberId(memberData.id);
 
-    // Fetch pending charges
     const { data: chargesData } = await supabase
       .from('charges')
-      .select('*')
+      .select('id, amount, competence, type, status, due_date, paid_at, paid_amount, payment_method, notes')
       .eq('member_id', memberData.id)
       .in('status', ['pendente', 'parcial'])
       .order('due_date', { ascending: true });
 
     if (chargesData) setCharges(chargesData as Charge[]);
 
-    // Fetch submissions history
     const { data: subsData } = await supabase
       .from('member_payment_submissions')
       .select('*')
@@ -114,32 +122,23 @@ export function MembroPagamentos() {
     }
 
     setSubmitting(true);
-
     try {
       const fileExt = selectedFile.name.split('.').pop();
       const filePath = `member-receipts/${user!.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from('receipts')
-        .upload(filePath, selectedFile);
-
+      const { error: uploadError } = await supabase.storage.from('receipts').upload(filePath, selectedFile);
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(filePath);
 
-      const { error: insertError } = await supabase
-        .from('member_payment_submissions')
-        .insert({
-          member_id: memberId,
-          user_id: user!.id,
-          competence: selectedCompetence,
-          type: selectedType,
-          receipt_url: urlData.publicUrl,
-          notes: notes || null,
-          society_id: profile?.society_id || null,
-        });
-
+      const { error: insertError } = await supabase.from('member_payment_submissions').insert({
+        member_id: memberId,
+        user_id: user!.id,
+        competence: selectedCompetence,
+        type: selectedType,
+        receipt_url: urlData.publicUrl,
+        notes: notes || null,
+        society_id: profile?.society_id || null,
+      });
       if (insertError) throw insertError;
 
       toast({ title: 'Comprovante enviado!', description: 'A diretoria será notificada para aprovação.' });
@@ -198,22 +197,47 @@ export function MembroPagamentos() {
             </CardContent>
           </Card>
         ) : (
-          charges.map((charge) => (
-            <Card key={charge.id}>
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-sm capitalize">{charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}</p>
-                  <p className="text-xs text-muted-foreground">{charge.competence}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">R$ {Number(charge.amount).toFixed(2).replace('.', ',')}</p>
-                  <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/20">
-                    {charge.status === 'parcial' ? 'Parcial' : 'Pendente'}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+          charges.map((charge) => {
+            const remaining = charge.paid_amount ? charge.amount - charge.paid_amount : charge.amount;
+            return (
+              <Card key={charge.id}>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm capitalize">{charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}</p>
+                      <p className="text-xs text-muted-foreground">{charge.competence}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">R$ {Number(charge.amount).toFixed(2).replace('.', ',')}</p>
+                      <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/20">
+                        {charge.status === 'parcial' ? 'Parcial' : 'Pendente'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <CalendarDays className="h-3 w-3" />
+                      Vence: {format(new Date(charge.due_date + 'T12:00:00'), 'dd/MM/yyyy')}
+                    </span>
+                    {charge.status === 'parcial' && charge.paid_amount != null && (
+                      <span className="flex items-center gap-1">
+                        <Banknote className="h-3 w-3" />
+                        Pago: R$ {Number(charge.paid_amount).toFixed(2).replace('.', ',')} • Restante: R$ {remaining.toFixed(2).replace('.', ',')}
+                      </span>
+                    )}
+                    {charge.payment_method && (
+                      <span>{paymentMethodLabels[charge.payment_method] || charge.payment_method}</span>
+                    )}
+                  </div>
+
+                  {charge.notes && (
+                    <p className="text-xs text-muted-foreground italic">{charge.notes}</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
 
@@ -255,9 +279,7 @@ export function MembroPagamentos() {
             <div className="space-y-2">
               <Label>Competência</Label>
               <Select value={selectedCompetence} onValueChange={setSelectedCompetence}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o mês" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione o mês" /></SelectTrigger>
                 <SelectContent>
                   {getCompetenceOptions().map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -268,9 +290,7 @@ export function MembroPagamentos() {
             <div className="space-y-2">
               <Label>Tipo</Label>
               <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mensalidade">Mensalidade</SelectItem>
                   <SelectItem value="percapita">Per Capita</SelectItem>
@@ -297,10 +317,7 @@ export function MembroPagamentos() {
             </div>
             <Button className="w-full" onClick={handleSubmit} disabled={submitting}>
               {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
-                </>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</>
               ) : (
                 'Enviar Comprovante'
               )}

@@ -30,6 +30,7 @@ const menuItems = [
   { icon: FolderOpen, label: 'Arquivos', path: '/arquivos' },
   { icon: ClipboardCheck, label: 'Plenárias', path: '/plenarias' },
   { icon: Vote, label: 'Eleições', path: '/eleicoes' },
+  { icon: MessageSquare, label: 'Comunicados', path: '/comunicados' },
 ];
 
 const adminMenuItems = [
