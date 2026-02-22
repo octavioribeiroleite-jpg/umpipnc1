@@ -2,10 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PastorSidebar } from './PastorSidebar';
-import { PastorMobileNav } from './PastorMobileNav';
+import { PastorMobileHeader } from './PastorMobileHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { OfflineBanner } from '@/components/OfflineBanner';
 
@@ -40,38 +38,28 @@ export function PastorLayout({ children }: PastorLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <OfflineBanner />
-      {/* Mobile Header */}
-      {isMobile && (
-        <header className="border-b bg-card sticky top-0 z-40">
-          <div className="px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src={logoIpnc} alt="Renovo IPNC" className="h-8 w-8 object-contain" />
-              <div>
-                <h1 className="font-bold text-sm">Painel do Pastor</h1>
-                <p className="text-[10px] text-muted-foreground">{profile?.full_name || 'Pastor'}</p>
-              </div>
+
+      {/* Desktop layout */}
+      {!isMobile && (
+        <div className="flex min-h-screen">
+          <PastorSidebar />
+          <main className="flex-1 overflow-auto">
+            <div className="max-w-5xl mx-auto px-4 py-6">
+              {children}
             </div>
-            <Button variant="ghost" size="icon" onClick={async () => { await signOut(); navigate('/auth'); }}>
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </header>
+          </main>
+        </div>
       )}
 
-      <div className="flex">
-        {/* Desktop Sidebar */}
-        {!isMobile && <PastorSidebar />}
-
-        {/* Main Content */}
-        <main className={`flex-1 ${isMobile ? 'pb-20' : ''} overflow-auto`}>
-          <div className="max-w-5xl mx-auto px-4 py-6">
+      {/* Mobile layout with hamburger menu */}
+      {isMobile && (
+        <div className="flex flex-col min-h-screen">
+          <PastorMobileHeader />
+          <main className="flex-1 overflow-auto pt-14 px-3 pb-4">
             {children}
-          </div>
-        </main>
-      </div>
-
-      {/* Mobile Bottom Nav */}
-      {isMobile && <PastorMobileNav />}
+          </main>
+        </div>
+      )}
     </div>
   );
 }
