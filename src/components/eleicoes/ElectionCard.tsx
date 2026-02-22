@@ -28,7 +28,7 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
 
   return (
     <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={onClick}>
-      <CardContent className="flex items-center justify-between p-4">
+      <CardContent className="flex items-center justify-between p-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-semibold truncate">{election.name}</h3>

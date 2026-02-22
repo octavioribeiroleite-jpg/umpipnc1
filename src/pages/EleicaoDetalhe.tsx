@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy } from 'lucide-react';
 import { AttendanceList } from '@/components/eleicoes/AttendanceList';
 import { CandidateForm } from '@/components/eleicoes/CandidateForm';
 import { VotingPanel } from '@/components/eleicoes/VotingPanel';
 import { ResultPanel } from '@/components/eleicoes/ResultPanel';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface Election {
   id: string;
@@ -70,54 +70,101 @@ export default function EleicaoDetalhe() {
   const statusLabel: Record<string, string> = { draft: 'Rascunho', open: 'Em Votação', finished: 'Finalizada' };
   const isDraft = election.status === 'draft';
 
+  // Accordion default open based on status
+  const defaultOpen = (() => {
+    switch (election.status) {
+      case 'draft': return ['chamada', 'candidatos'];
+      case 'open': return ['votacao'];
+      case 'finished': return ['resultado'];
+      default: return ['chamada'];
+    }
+  })();
+
   return (
     <AppLayout>
-      <PageHeader
-        title={election.name}
-        description={`Cargo: ${election.position}`}
-        action={
+      {/* Compact header */}
+      <div className="flex items-center gap-2 mb-3">
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/eleicoes')}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Badge variant={election.status === 'open' ? 'default' : 'secondary'}>
+            <h1 className="text-base font-semibold truncate">{election.name}</h1>
+            <Badge variant={election.status === 'open' ? 'default' : 'secondary'} className="shrink-0">
               {statusLabel[election.status]}
             </Badge>
-            <Button variant="outline" size="sm" onClick={() => navigate('/eleicoes')}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-            </Button>
           </div>
-        }
-      />
+          <p className="text-xs text-muted-foreground">{election.position}</p>
+        </div>
+      </div>
 
-      <div className="space-y-6">
-        <AttendanceList
-          electionId={election.id}
-          societyId={election.society_id}
-          attendance={attendance}
-          onRefresh={fetchAll}
-          disabled={!isDraft}
-        />
+      <Accordion type="multiple" defaultValue={defaultOpen} className="space-y-2">
+        <AccordionItem value="chamada" className="border rounded-lg px-3">
+          <AccordionTrigger className="py-3 text-sm font-medium">
+            <span className="flex items-center gap-2">
+              <Users className="h-4 w-4" /> Chamada de Presença
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <AttendanceList
+              electionId={election.id}
+              societyId={election.society_id}
+              attendance={attendance}
+              onRefresh={fetchAll}
+              disabled={!isDraft}
+            />
+          </AccordionContent>
+        </AccordionItem>
 
-        <CandidateForm
-          electionId={election.id}
-          candidates={candidates}
-          onRefresh={fetchAll}
-          disabled={!isDraft}
-        />
+        <AccordionItem value="candidatos" className="border rounded-lg px-3">
+          <AccordionTrigger className="py-3 text-sm font-medium">
+            <span className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4" /> Candidatos
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <CandidateForm
+              electionId={election.id}
+              candidates={candidates}
+              onRefresh={fetchAll}
+              disabled={!isDraft}
+            />
+          </AccordionContent>
+        </AccordionItem>
 
-        <VotingPanel
-          electionId={election.id}
-          status={election.status}
-          totalPresent={election.total_present}
-          onRefresh={fetchAll}
-        />
+        <AccordionItem value="votacao" className="border rounded-lg px-3">
+          <AccordionTrigger className="py-3 text-sm font-medium">
+            <span className="flex items-center gap-2">
+              <Vote className="h-4 w-4" /> Votação
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <VotingPanel
+              electionId={election.id}
+              status={election.status}
+              totalPresent={election.total_present}
+              onRefresh={fetchAll}
+            />
+          </AccordionContent>
+        </AccordionItem>
 
         {election.status === 'finished' && (
-          <ResultPanel
-            electionId={election.id}
-            totalPresent={election.total_present}
-            candidates={candidates}
-          />
+          <AccordionItem value="resultado" className="border rounded-lg px-3">
+            <AccordionTrigger className="py-3 text-sm font-medium">
+              <span className="flex items-center gap-2">
+                <Trophy className="h-4 w-4" /> Resultado
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ResultPanel
+                electionId={election.id}
+                totalPresent={election.total_present}
+                candidates={candidates}
+              />
+            </AccordionContent>
+          </AccordionItem>
         )}
-      </div>
+      </Accordion>
     </AppLayout>
   );
 }

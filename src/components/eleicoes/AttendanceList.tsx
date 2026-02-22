@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Download, Loader2, Users, Trash2 } from 'lucide-react';
+import { Plus, Download, Loader2, Trash2 } from 'lucide-react';
 
 interface AttendanceItem {
   id: string;
@@ -90,63 +89,53 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" /> Chamada de Presença
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleImportMembers} disabled={importing || disabled}>
-            {importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
-            Importar Membros
-          </Button>
-        </div>
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <Input
+          placeholder="Nome do membro"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          disabled={disabled}
+          className="h-9"
+        />
+        <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleAdd} disabled={disabled}>
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="sm" className="h-9 shrink-0" onClick={handleImportMembers} disabled={importing || disabled}>
+          {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+        </Button>
+      </div>
 
-        <div className="flex gap-2">
-          <Input
-            placeholder="Nome do membro"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            disabled={disabled}
-          />
-          <Button size="icon" onClick={handleAdd} disabled={disabled}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-1 max-h-80 overflow-y-auto">
-          {attendance.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 py-2 px-2 rounded hover:bg-muted/50">
-              <Checkbox
-                checked={item.present}
-                onCheckedChange={(checked) => handleToggle(item.id, !!checked)}
-                disabled={disabled}
-              />
-              <span className="flex-1 text-sm">{item.name}</span>
-              {!disabled && (
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemove(item.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {attendance.length > 0 && (
-          <div className="flex items-center justify-between pt-2 border-t">
-            <span className="text-sm font-medium">
-              Presentes: <strong className="text-primary">{presentCount}</strong> / {attendance.length}
-            </span>
-            <Button onClick={handleConfirmPresence} disabled={saving || disabled}>
-              {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              Confirmar Presença
-            </Button>
+      <div className="space-y-0.5 max-h-60 overflow-y-auto">
+        {attendance.map((item) => (
+          <div key={item.id} className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-muted/50">
+            <Checkbox
+              checked={item.present}
+              onCheckedChange={(checked) => handleToggle(item.id, !!checked)}
+              disabled={disabled}
+            />
+            <span className="flex-1 text-sm truncate">{item.name}</span>
+            {!disabled && (
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive shrink-0" onClick={() => handleRemove(item.id)}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+
+      {attendance.length > 0 && (
+        <div className="flex items-center justify-between pt-2 border-t">
+          <span className="text-xs font-medium">
+            Presentes: <strong className="text-primary">{presentCount}</strong>/{attendance.length}
+          </span>
+          <Button size="sm" onClick={handleConfirmPresence} disabled={saving || disabled}>
+            {saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
+            Confirmar
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
