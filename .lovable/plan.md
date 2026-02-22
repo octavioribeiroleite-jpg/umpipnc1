@@ -1,79 +1,67 @@
 
+# Dois QR Codes Separados + Urna Fixa com Senha Admin
 
-# Reorganizar Fluxo da Eleicao + Modo "Ambos"
+## Resumo
 
-## Problema
-A ordem atual (Chamada -> Candidatos -> Votacao) nao e ideal. O usuario quer preparar tudo antes da chamada, pois a chamada e o ultimo passo antes de iniciar a votacao.
+No modo **"Ambos"**, o painel de votacao mostrara **2 abas** com QR Codes separados. O QR da Urna Fixa **nao aparece automaticamente** -- so e exibido ao clicar na aba correspondente, garantindo que apenas os mesarios controlem a liberacao. A Urna Fixa exigira autenticacao de admin/diretoria antes de funcionar.
 
-## Nova Ordem das Secoes
+## Como vai funcionar
 
-1. **Candidatos** - Cadastrar os candidatos primeiro
-2. **Modo de Votacao** - Escolher: Urna Compartilhada, Voto Individual, ou Ambos
-3. **Chamada de Presenca** - Fazer a chamada e confirmar quorum
-4. **Votacao** - Acompanhar votos em tempo real (aparece ao iniciar)
-5. **Resultado** - Exibido ao concluir
+### No Painel Admin (VotingPanel.tsx) -- modo "Ambos"
 
-Isso reflete o fluxo natural: preparar candidatos e modo -> contar presentes -> votar -> resultado.
+Quando a votacao estiver aberta e o modo for `'both'`, o QR Code atual sera substituido por **2 abas (Tabs)**:
 
-## Novo Modo "Ambos" (shared + individual)
+- **Aba "Celular"** (aberta por padrao): QR Code com link `/vote/{id}` -- voto individual, 1 por dispositivo
+- **Aba "Urna Fixa"** (fechada, so abre ao clicar): QR Code com link `/vote/{id}?mode=urna` -- requer autenticacao admin/diretoria
 
-Adicionar terceira opcao de modo de votacao: `'both'`
-- Gera o mesmo link/QR code
-- Na pagina publica (`VotePublic.tsx`), funciona como individual (1 voto por dispositivo)
-- No painel admin, o aparelho fixo tambem pode ser usado como urna compartilhada
-- Pratica: a banca oferece os dois caminhos -- quem quiser vota no celular, quem preferir vota na urna fixa
+Nos modos `'shared'` ou `'individual'`, continua com um unico QR Code (sem abas).
 
-### Migration SQL
-```sql
--- Nenhuma migration necessaria. A coluna voting_mode ja e text e aceita qualquer valor.
--- Vamos usar 'both' como novo valor possivel.
-```
+### Na Pagina Publica (VotePublic.tsx)
 
-## Mudancas por Arquivo
+Ao detectar `?mode=urna` na URL:
+1. Exibe tela de login: "Digite suas credenciais para ativar esta urna"
+2. Campos: usuario e senha
+3. Autentica via `get_email_by_username` + `supabase.auth.signInWithPassword`
+4. Verifica role admin/diretoria via `has_management_role`
+5. Salva flag `urna_authenticated_{electionId}` no `sessionStorage`
+6. Funciona como urna compartilhada: tela pre-votacao entre votantes, reseta apos 3s, sem bloqueio de device_id
 
-### 1. `EleicaoDetalhe.tsx`
-- Reordenar accordion: Candidatos -> Votacao (modo) -> Chamada -> Resultado
-- Ajustar `defaultOpen` no draft: `['candidatos', 'votacao']`
-- Mover o seletor de modo para dentro da secao "Votacao" (ja esta la)
+Sem `?mode=urna`: funciona como individual (comportamento atual).
 
-### 2. `VotingPanel.tsx` - Status Draft
-- Adicionar terceiro botao no seletor de modo: "Ambos" com icone de Monitor+Smartphone
-- Mover o botao "Iniciar Votacao" para a secao de chamada (ou validar que chamada foi feita)
-- Ajustar label: `totalPresent === 0` -> "Confirme a presenca na secao Chamada"
+## Arquivos alterados
 
-### 3. `VotingPanel.tsx` - Status Open
-- Quando modo = `'both'`, mostrar badge "Urna + Celular"
-- QR Code e link funcionam igual
+### 1. `VotingPanel.tsx`
+- Importar componente Tabs
+- Quando `votingMode === 'both'` e `status === 'open'`:
+  - Substituir o bloco unico de QR por Tabs com 2 abas
+  - Aba "Celular" (default): QR + link para `/vote/{id}`
+  - Aba "Urna Fixa": QR + link para `/vote/{id}?mode=urna`
+  - Cada aba com botoes "Copiar" e "Expandir" proprios
+  - O dialog fullscreen usara a URL da aba ativa
+- Quando `votingMode !== 'both'`: manter QR unico (sem mudanca)
 
-### 4. `VotePublic.tsx`
-- Tratar modo `'both'` igual a `'individual'` (1 voto por dispositivo via device_id)
+### 2. `VotePublic.tsx`
+- Detectar `searchParams.get('mode') === 'urna'` via `useSearchParams`
+- Novo estado: `isUrnaMode`, `urnaAuthenticated`, `authLoading`, `authError`
+- Nova tela de autenticacao:
+  - Icone de Monitor + titulo "Ativar Urna Fixa"
+  - Campos usuario e senha
+  - Botao "Autenticar"
+  - Fluxo: `get_email_by_username` -> `signInWithPassword` -> `has_management_role` -> salvar `sessionStorage`
+- Ao verificar `sessionStorage` no carregamento, pular login se ja autenticado
+- Se autenticado em modo urna: comportar como `shared` (pre-vote screen, reset apos 3s, sem device_id)
+- Se nao autenticado em modo urna: mostrar tela de login
 
-### 5. `AttendanceList.tsx`
-- Adicionar indicador de quorum na confirmacao de presenca
-- Mostrar "Quorum atingido" ou "Quorum nao atingido" com base em regra simples (ex: > 50% dos membros importados, ou simplesmente exibir o numero de presentes de forma destacada)
+### 3. Nenhuma migracao necessaria
+- Nao ha mudancas no banco de dados
 
-## Detalhes Tecnicos
+## Seguranca
+- Autenticacao validada no servidor via Supabase Auth
+- Role verificada via funcao `has_management_role`
+- `sessionStorage` limpo ao fechar aba/navegador
+- Senha pedida apenas 1 vez por sessao
 
-### Seletor de modo com 3 opcoes
-```
-grid grid-cols-3 gap-2
-[Urna Compartilhada] [Voto Individual] [Ambos]
-```
-
-### Accordion reordenado (draft)
-```
-1. Candidatos (aberto)
-2. Votacao - modo (aberto)  
-3. Chamada de Presenca (fechado, abre quando candidatos estiverem prontos)
-4. Resultado (so aparece quando finished)
-```
-
-### VotePublic.tsx - modo 'both'
-- Simplesmente tratar `'both'` como `'individual'` na logica de device_id
-- `if (votingMode === 'individual' || votingMode === 'both')` nas verificacoes
-
-## Resultado Esperado
-- Fluxo mais logico: preparar -> contar -> votar -> resultado
-- Terceira opcao de votacao para flexibilidade maxima
-- Quorum visivel na chamada de presenca
-
+## Detalhe importante: Aba "Urna Fixa" escondida por padrao
+- A aba Celular vem selecionada por padrao
+- O QR da Urna Fixa **so aparece quando o mesario clica na aba "Urna Fixa"**
+- Isso garante controle dos mesarios sobre quais dispositivos sao liberados como urna
