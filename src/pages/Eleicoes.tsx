@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Vote, Loader2, Trash2 } from 'lucide-react';
+import { FAB } from '@/components/ui/fab';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -137,11 +138,13 @@ export default function Eleicoes() {
         title="Eleições"
         description="Votações digitais — modelo papel digital"
         action={
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
             <Plus className="h-4 w-4 mr-2" /> Nova Eleição
           </Button>
         }
       />
+
+      <FAB onClick={() => setDialogOpen(true)} />
 
       {loading ? (
         <div className="flex justify-center py-12">

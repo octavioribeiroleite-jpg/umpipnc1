@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Vote, Link as LinkIcon, Copy } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -39,7 +38,6 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
   useEffect(() => {
     fetchVoteCount();
 
-    // Realtime subscription
     const channel = supabase
       .channel(`election-votes-${electionId}`)
       .on('postgres_changes', {
@@ -52,7 +50,6 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
       })
       .subscribe();
 
-    // Fallback polling every 1 second
     const interval = setInterval(() => {
       fetchVoteCount();
     }, 1000);
@@ -96,25 +93,18 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
 
   if (status === 'draft') {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Vote className="h-5 w-5" /> Votação
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Configure a chamada e os candidatos antes de iniciar a votação.
-          </p>
-          <Button onClick={handleStartVoting} disabled={loading || totalPresent === 0}>
-            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-            Iniciar Votação
-          </Button>
-          {totalPresent === 0 && (
-            <p className="text-xs text-destructive">Confirme a presença antes de iniciar.</p>
-          )}
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground">
+          Configure a chamada e os candidatos antes de iniciar.
+        </p>
+        <Button size="sm" onClick={handleStartVoting} disabled={loading || totalPresent === 0}>
+          {loading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
+          Iniciar Votação
+        </Button>
+        {totalPresent === 0 && (
+          <p className="text-xs text-destructive">Confirme a presença antes de iniciar.</p>
+        )}
+      </div>
     );
   }
 
@@ -122,69 +112,61 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Vote className="h-5 w-5" /> Painel de Votação
-            <Badge variant="default">Em Votação</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Progress bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progresso da votação</span>
-              <span className="font-semibold">{voteCount}/{totalPresent}</span>
-            </div>
-            <Progress value={totalPresent > 0 ? (voteCount / totalPresent) * 100 : 0} className="h-4" />
+      <div className="space-y-3">
+        {/* Progress */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Progresso</span>
+            <span className="font-semibold">{voteCount}/{totalPresent}</span>
           </div>
+          <Progress value={totalPresent > 0 ? (voteCount / totalPresent) * 100 : 0} className="h-2" />
+        </div>
 
-          {/* Counters */}
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-2xl font-bold">{totalPresent}</p>
-              <p className="text-xs text-muted-foreground">Presentes</p>
-            </div>
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-2xl font-bold">{voteCount}</p>
-              <p className="text-xs text-muted-foreground">Votos</p>
-            </div>
-            <div className={`p-4 rounded-lg ${diff === 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
-              <p className={`text-2xl font-bold ${diff === 0 ? 'text-success' : 'text-destructive'}`}>
-                {diff > 0 ? `+${diff}` : diff}
-              </p>
-              <p className="text-xs text-muted-foreground">Diferença</p>
-            </div>
+        {/* Compact counters */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="p-2 bg-muted rounded-lg">
+            <p className="text-lg font-bold">{totalPresent}</p>
+            <p className="text-[10px] text-muted-foreground">Presentes</p>
           </div>
+          <div className="p-2 bg-muted rounded-lg">
+            <p className="text-lg font-bold">{voteCount}</p>
+            <p className="text-[10px] text-muted-foreground">Votos</p>
+          </div>
+          <div className={`p-2 rounded-lg ${diff === 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
+            <p className={`text-lg font-bold ${diff === 0 ? 'text-success' : 'text-destructive'}`}>
+              {diff > 0 ? `+${diff}` : diff}
+            </p>
+            <p className="text-[10px] text-muted-foreground">Diferença</p>
+          </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 flex-wrap">
-            {diff !== 0 ? (
-              <Button variant="destructive" onClick={() => setConfirmAction('reset')}>
-                <RotateCcw className="h-4 w-4 mr-2" /> Reiniciar Votação
-              </Button>
-            ) : (
-              <Button onClick={() => setConfirmAction('finish')} className="bg-success hover:bg-success/90">
-                <CheckCircle className="h-4 w-4 mr-2" /> Concluir Votação
-              </Button>
-            )}
-          </div>
+        {/* Actions */}
+        <div className="flex gap-2">
+          {diff !== 0 ? (
+            <Button variant="destructive" size="sm" onClick={() => setConfirmAction('reset')}>
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reiniciar
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => setConfirmAction('finish')} className="bg-success hover:bg-success/90">
+              <CheckCircle className="h-3.5 w-3.5 mr-1.5" /> Concluir
+            </Button>
+          )}
+        </div>
 
-          {/* QR Code & Link */}
-          <div className="flex flex-col md:flex-row items-center gap-4 p-4 border rounded-lg">
-            <QRCodeSVG value={voteUrl} size={160} />
-            <div className="flex-1 space-y-2">
-              <p className="text-sm font-medium flex items-center gap-1">
-                <LinkIcon className="h-4 w-4" /> Link da Urna
-              </p>
-              <code className="text-xs bg-muted p-2 rounded block break-all">{voteUrl}</code>
-              <Button variant="outline" size="sm" onClick={copyLink}>
-                <Copy className="h-3 w-3 mr-1" /> Copiar Link
-              </Button>
-            </div>
+        {/* QR Code & Link - compact */}
+        <div className="flex items-center gap-3 p-3 border rounded-lg">
+          <QRCodeSVG value={voteUrl} size={100} />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <p className="text-xs font-medium flex items-center gap-1">
+              <LinkIcon className="h-3 w-3" /> Link da Urna
+            </p>
+            <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={copyLink}>
+              <Copy className="h-3 w-3 mr-1" /> Copiar
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
         <AlertDialogContent>
