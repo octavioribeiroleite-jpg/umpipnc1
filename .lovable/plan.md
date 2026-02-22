@@ -1,48 +1,57 @@
 
 
-# Melhorias na Pagina de Gestao de Usuarios (Mobile)
+# Reestruturar Portal do Membro com Menu Lateral
 
-## Problemas Identificados na Screenshot
+## Situacao Atual
+O portal do membro (`/membro`) usa **abas na parte inferior** (bottom nav) com apenas 2 opcoes: Eventos e Pagamentos. O usuario quer trocar por um **menu lateral** (hamburger/drawer), similar ao que o app principal usa.
 
-1. **Botao "Novo Usuario" ocupa espaco no header do card** - Deveria ser um FAB no mobile
-2. **Abas de sociedade ocupam muito espaco vertical** - Grid de badges com contadores toma quase 1/3 da tela
-3. **Tabela nao e adaptada para mobile** - Colunas Nome/Usuario/Senha/Cargo/Acoes nao cabem, forcando scroll horizontal ou layout quebrado
-4. **Sem indicacao clara de qual aba esta selecionada** - As abas parecem badges estaticos
+## Nova Estrutura
 
-## Alteracoes Planejadas
+O portal do membro tera um menu lateral acessivel pelo icone de hamburguer no header, com as seguintes secoes:
 
-### 1. `src/pages/Usuarios.tsx` - Layout mobile otimizado
+- **Inicio** - Dashboard com boas-vindas, resumo de cobranças pendentes, proximo evento e ultimos comunicados
+- **Eventos** - Lista de proximos eventos (ja existe)
+- **Pagamentos** - Cobranças pendentes e envio de comprovantes (ja existe)
+- **Comunicados** - Feed de comunicados do pastor para a sociedade do membro
 
-**Botao "Novo Usuario":**
-- Trocar por FAB (botao flutuante) no mobile, igual foi feito em Reunioes
-- Manter botao normal no desktop
+## Alteracoes
 
-**Abas de sociedade:**
-- No mobile, usar um `Select` dropdown em vez de tabs para selecionar a sociedade
-- Mostrar a contagem de usuarios dentro do dropdown
-- No desktop, manter as tabs atuais
+### Modificar: `src/components/membro/MembroLayout.tsx`
+- Remover a bottom navigation (nav fixa no rodape)
+- Adicionar botao hamburguer no header que abre um `Sheet` lateral (igual ao `MobileNav` do app principal)
+- Menu lateral com itens: Inicio, Eventos, Pagamentos, Comunicados
+- Atualizar tipo do `activeTab` para `'inicio' | 'eventos' | 'pagamentos' | 'comunicados'`
+- Remover `pb-20` do main (nao precisa mais de espaco para bottom nav)
 
-**Tabela no mobile:**
-- Substituir a tabela por cards empilhados no mobile
-- Cada card mostra: nome, usuario, badge do cargo, e botoes de acao
-- Senha fica acessivel via botao de olho dentro do card
-- No desktop, manter a tabela atual
+### Modificar: `src/pages/MembroHome.tsx`
+- Adicionar imports dos novos componentes (MembroInicio, MembroComunicados)
+- Estado inicial da aba passa a ser `'inicio'`
+- Renderizar componente correto conforme aba selecionada no menu
+
+### Criar: `src/components/membro/MembroInicio.tsx`
+- Card de boas-vindas com nome do membro e sociedade
+- Mini-cards de resumo: total de cobranças pendentes e proximo evento
+- Ultimos 3 comunicados com destaque para urgentes
+- Botoes de acao rapida que trocam para outras abas
+
+### Criar: `src/components/membro/MembroComunicados.tsx`
+- Busca comunicados da tabela `pastor_announcements` filtrados pela sociedade do membro (via `target_societies`)
+- Cards com titulo, mensagem, data formatada e badge de prioridade
+- Estado vazio com icone e mensagem
 
 ## Detalhes Tecnicos
 
-### Select de sociedade (mobile)
-- Usar `useIsMobile()` para detectar
-- Criar estado `selectedSociety` controlado
-- Renderizar `Select` com opcoes coloridas (bolinha + nome + contagem)
+### Menu lateral (Sheet)
+- Usar `Sheet` do Radix (side="left") com mesma estetica do `MobileNav`
+- Icones: Home, Calendar, CreditCard, Bell
+- Item ativo destacado com `bg-primary text-primary-foreground`
+- Ao clicar, fecha o sheet e troca o `activeTab`
 
-### Cards de usuario (mobile)
-- Layout vertical com nome em destaque, username abaixo
-- Linha com badge de cargo + botoes de acao (editar, excluir)
-- Linha de senha com toggle show/hide
-- Select de cargo inline no card
+### MembroComunicados
+- Query: `supabase.from('pastor_announcements').select('*').contains('target_societies', [society_id]).order('created_at', { ascending: false }).limit(30)`
+- Prioridade "urgente" com borda colorida e badge vermelho
 
-### FAB
-- Importar `FAB` de `@/components/ui/fab`
-- Posicionar `fixed bottom-20 right-4` como nas Reunioes
-- Esconder botao do header com `hidden md:inline-flex`
+### MembroInicio
+- Busca paralela: cobranças pendentes + proximo evento + ultimos comunicados
+- Cards clicaveis que chamam `onTabChange` para navegar entre secoes
 
