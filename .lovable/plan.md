@@ -1,36 +1,46 @@
 
-# Mover Dizimos para pagina propria (mantendo formato atual)
+# Simplificar registro de visitante no portal /igreja
 
 ## Resumo
 
-Mover a aba "Dizimos" de dentro da pagina Financas para uma pagina independente em `/dizimos`, mantendo exatamente o mesmo componente `DizimosTab` sem alteracoes visuais. A pagina sera acessivel apenas para admin e pastor, com item de menu nos dois paineis.
+Simplificar o formulario de identificacao do portal publico. Manter a coleta de nome e sociedade para registro no banco, mas tornar o fluxo mais simples e robusto, eliminando a dependencia do `device_id` nos headers (que causa erros de RLS no UPDATE) e tratando melhor os erros.
 
-## Mudancas
+## Mudancas em `src/pages/PortalIgreja.tsx`
 
-### 1. Nova pagina `src/pages/Dizimos.tsx`
-- Usa `AppLayout` para admin ou `PastorLayout` para pastor
-- Renderiza `PageHeader` com titulo "Dizimos e Ofertas" + `DizimosTab` (mesmo componente, sem mudancas)
-- Protege acesso: so admin ou pastor
+### 1. Simplificar o INSERT (remover `.select().single()`)
+- O INSERT atual usa `.select('id').single()` que exige uma politica SELECT alem de INSERT
+- Mudar para um INSERT simples sem retorno, apenas checando se houve erro
+- O `id` do registro nao e necessario para o funcionamento do portal
 
-### 2. Remover aba Dizimos de `src/pages/Financas.tsx`
-- Remover import de `DizimosTab`
-- Remover `<SelectItem value="dizimos">` (mobile)
-- Remover `<TabsTrigger value="dizimos">` (desktop)
-- Remover `<TabsContent value="dizimos">` com `<DizimosTab />`
+### 2. Remover o UPDATE de `last_access` na revisita
+- O UPDATE usa `device_id` com `current_setting('request.headers')` no RLS, o que falha porque o header `x-device-id` nao e enviado pelo Supabase JS client
+- Solucao: ao inves de fazer UPDATE, fazer um novo INSERT a cada acesso (registro simples de log)
+- Ou simplesmente remover o UPDATE silencioso, ja que ele falha sem impacto visivel
 
-### 3. Adicionar rota em `src/App.tsx`
-- `<Route path="/dizimos" element={<Dizimos />} />`
+### 3. Manter o formulario visual identico
+- Nome completo + selecao de sociedade/visitante permanecem iguais
+- Apenas o `handleSubmit` muda internamente para ser mais robusto
 
-### 4. Menu da diretoria (admin only)
-- `AppSidebar.tsx`: adicionar `{ icon: Heart, label: 'Dizimos', path: '/dizimos' }` em `adminMenuItems`
-- `MobileHeader.tsx`: adicionar nos `adminItems`
-- `MobileBottomNav.tsx`: adicionar nos `moreNavItems` condicional `isAdmin`
+### 4. Salvar no localStorage apos sucesso
+- Continua salvando os dados localmente para nao pedir novamente no mesmo dispositivo
+- VisitorData simplificada: remover `id` (nao usado) e manter `fullName`, `societyId`, `isVisitor`, `deviceId`
 
-### 5. Menu do pastor
-- `PastorSidebar.tsx`: adicionar item `/dizimos` com icone `Heart`
-- `PastorMobileHeader.tsx`: adicionar nos `navItems`
-- `PastorMobileNav.tsx`: adicionar nos items de navegacao
+## Detalhes tecnicos
 
-### 6. Sem alteracoes
-- `DizimosTab.tsx` permanece identico
-- `MembroDizimos.tsx` (visao do membro no portal) permanece identico
+### handleSubmit simplificado
+```text
+- Validar nome e sociedade
+- INSERT no portal_visitors (sem .select())
+- Se erro: mostrar toast mas permitir continuar (nao bloquear acesso ao portal)
+- Salvar no localStorage e mostrar o portal
+```
+
+### Remover o useEffect de UPDATE last_access
+- Eliminar o bloco que tenta atualizar `last_access` na revisita
+- Alternativa: tentar o INSERT de novo registro silenciosamente (sem bloquear)
+
+### Resultado esperado
+- Formulario funciona identico visualmente
+- INSERT funciona para usuarios anon e authenticated
+- Sem erros de RLS no UPDATE
+- Portal sempre acessivel mesmo se o registro falhar
