@@ -1,80 +1,93 @@
 
+# Separar Membros na Pagina de Usuarios + Melhorias de Credenciais
 
-# Melhorar Visual da Aba de Cobranças
+## Resumo
+Mover a gestao de membros (cadastro + login) da aba Financas para a pagina de Usuarios, onde o admin tera visao completa de todos os usuarios do sistema (diretoria e membros). Adicionar botoes de copiar credenciais individuais e em massa, e funcionalidade de resetar senha.
 
-## Problemas Atuais
-- Cards com visual repetitivo e pouco diferenciado
-- Resumo de pagos/pendentes/isentos aparece como texto simples, sem destaque
-- Sem busca por nome para encontrar membros rapido
-- Cards de membros pagos e pendentes tem a mesma aparencia visual
-- Nao ha agrupamento visual por status
+## Alteracoes
 
-## Melhorias Propostas
+### 1. Pagina de Usuarios (`src/pages/Usuarios.tsx`)
 
-### 1. Resumo com mini-cards coloridos (em vez de texto)
-Substituir o texto "0 pagos / 36 pendentes / 0 isentos" por 3 mini-cards clicaveis com cores distintas:
-- Verde para pagos (com icone de check)
-- Vermelho para pendentes (com icone de relogio)
-- Cinza para isentos
-- Clicar em um mini-card filtra a lista por aquele status
+**Incluir membros na listagem:**
+- A pagina ja lista usuarios com role (admin, diretoria, pastor, visualizador). Os membros com role "visualizador" ja aparecem ali. A mudanca principal sera:
+  - Adicionar botao **"Copiar login"** (icone Copy) em cada usuario, que copia "Login: xxx / Senha: xxx" para a area de transferencia
+  - Adicionar botao **"Copiar todos"** no topo, que copia credenciais de todos os membros (visualizadores) da sociedade selecionada
+  - Adicionar botao **"Resetar senha"** que gera uma nova senha aleatoria (6 caracteres alfanumericos) e atualiza via Edge Function `update-user-password`, exibindo a nova senha num dialogo com opcao de copiar
+  - O dialogo de criar usuario continua funcionando normalmente para criar membros com role visualizador
 
-### 2. Barra de progresso de adimplencia
-Adicionar uma barra de progresso abaixo dos seletores de mes/ano mostrando visualmente a porcentagem de membros que ja pagaram naquele mes.
+**Novo layout dos cards mobile:**
+- Adicionar icone de Copy ao lado da senha
+- Botao "Resetar" com icone RefreshCw
 
-### 3. Busca por nome
-Campo de busca acima da lista de cards para filtrar membros pelo nome rapidamente, util quando ha muitos membros.
+**Novo layout da tabela desktop:**
+- Coluna extra com botao de copiar credenciais
+- Botao "Resetar senha" no menu de acoes
 
-### 4. Cards com visual diferenciado por status
-- **Pendente**: borda esquerda vermelha + fundo levemente avermelhado
-- **Pago**: borda esquerda verde + fundo levemente esverdeado, botao "Baixa" desaparece
-- **Parcial**: borda esquerda amarela + fundo levemente amarelado
-- **Isento**: borda esquerda cinza + estilo mais discreto
+### 2. Remover aba Membros do Financas (`src/pages/Financas.tsx`)
 
-### 5. Layout do card mais compacto
-Reorganizar o card mobile para ser mais limpo:
-- Nome do membro com fonte maior e mais destaque
-- Valor total (mensalidade + per capita) em destaque
-- Badges de status menores e alinhados
-- Botao de acao (Baixa/Ver) mais acessivel
+- Remover o import de `MembrosTab` e o `TabsTrigger`/`TabsContent` de "membros"
+- Os membros continuam cadastrados na tabela `members` e vinculados via `user_id`, mas a gestao de login/senha fica centralizada em Usuarios
 
-## Arquivos a Modificar
+### 3. Botao "Copiar todos os logins" 
 
-### `src/components/financas/CobrancasTab.tsx`
-- Adicionar estado de busca (`searchTerm`) e filtro por status (`statusFilter`)
-- Adicionar campo de busca no topo
-- Substituir texto de resumo por mini-cards clicaveis
-- Adicionar barra de progresso (`Progress`) abaixo dos seletores
-- Filtrar membros exibidos conforme busca e filtro de status
-- Aplicar classes de borda/fundo por status nos cards mobile
+- Aparece no header da pagina de Usuarios
+- Copia no formato:
+```text
+Nome | Login | Senha
+Joao Silva | joaosilva | JoaoSilva123
+Maria Santos | mariasantos | MariaSantos123
+```
+- Filtra apenas usuarios com `plain_password` preenchido da sociedade ativa
 
-### `src/components/financas/ChargeCard.tsx`
-- Receber prop `variant` baseada no status geral do membro (pendente/pago/parcial/isento)
-- Aplicar borda esquerda colorida e fundo sutil conforme variante
-- Layout mais compacto: nome com fonte `text-base font-semibold`, valores alinhados a direita
-- Badge de status mais discreto (menor, sem borda)
-- Mostrar valor total combinado (mensalidade + per capita) em destaque
+### 4. Resetar senha
+
+- Botao por usuario que gera senha aleatoria (6 chars: letras + numeros)
+- Chama `update-user-password` com `{ user_id, new_password }`
+- Atualiza `plain_password` no profile
+- Exibe dialogo com a nova senha e botao de copiar
+
+## Arquivos Modificados
+
+- `src/pages/Usuarios.tsx` - Adicionar botoes de copiar e resetar senha
+- `src/pages/Financas.tsx` - Remover aba "Membros"
+- Nenhum arquivo novo necessario; nenhuma alteracao no banco de dados
 
 ## Detalhes Tecnicos
 
-### Mini-cards de resumo
-- 3 cards lado a lado usando `grid grid-cols-3 gap-2`
-- Cada card com `cursor-pointer` e `ring-2 ring-primary` quando ativo como filtro
-- Clicar no filtro ativo remove o filtro (toggle)
-
-### Busca
-- `Input` com icone `Search` e `placeholder="Buscar membro..."`
-- Filtragem local (sem chamada ao banco) por `member.name.toLowerCase().includes(searchTerm)`
-
-### Barra de progresso
-- Usar componente `Progress` ja existente no projeto (`@radix-ui/react-progress`)
-- Valor: `(paidCharges / totalCharges) * 100`
-- Cor verde quando acima de 70%, amarela entre 50-70%, vermelha abaixo
-
-### Variantes do ChargeCard
+### Copiar credenciais individual
 ```text
-pendente -> border-l-4 border-l-destructive bg-destructive/5
-pago     -> border-l-4 border-l-green-500 bg-green-50 dark:bg-green-950/20
-parcial  -> border-l-4 border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950/20
-isento   -> border-l-4 border-l-muted bg-muted/30 opacity-70
+const copyCredentials = (user) => {
+  const text = `Login: ${user.username}\nSenha: ${user.plain_password || '---'}`;
+  navigator.clipboard.writeText(text);
+  toast.success('Credenciais copiadas!');
+};
 ```
 
+### Copiar todos (filtrado por sociedade)
+```text
+const copyAll = () => {
+  const filtered = activeUsers
+    .filter(u => u.society_id === currentSocietyId && u.plain_password)
+    .map(u => `${u.full_name} | ${u.username} | ${u.plain_password}`)
+    .join('\n');
+  navigator.clipboard.writeText(`Nome | Login | Senha\n${filtered}`);
+  toast.success('Todos os logins copiados!');
+};
+```
+
+### Resetar senha
+```text
+const resetPassword = async (userId) => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const newPass = Array.from({length: 6}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  await supabase.functions.invoke('update-user-password', {
+    body: { user_id: userId, new_password: newPass }
+  });
+  // Exibir dialogo com nova senha
+};
+```
+
+### Sobre a aba Membros em Financas
+- A aba "Membros" sera removida de Financas pois a gestao de cadastro e credenciais ficara toda em Usuarios
+- O cadastro de membros na tabela `members` (nome, telefone, email) permanece inalterado e continua sendo referenciado pelas cobrancas
+- Para adicionar novos membros, o admin usara o botao "Novo Usuario" na pagina de Usuarios, que ja cria o profile + role + vinculacao com member
