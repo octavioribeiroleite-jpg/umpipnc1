@@ -1,67 +1,123 @@
 
-# Dois QR Codes Separados + Urna Fixa com Senha Admin
 
-## Resumo
+# Fluxo Estruturado de Eleicao com Cadastro de Dispositivos Fixos
 
-No modo **"Ambos"**, o painel de votacao mostrara **2 abas** com QR Codes separados. O QR da Urna Fixa **nao aparece automaticamente** -- so e exibido ao clicar na aba correspondente, garantindo que apenas os mesarios controlem a liberacao. A Urna Fixa exigira autenticacao de admin/diretoria antes de funcionar.
+## Problema Atual
 
-## Como vai funcionar
+Hoje, os QR Codes aparecem assim que a votacao e iniciada, sem uma etapa previa de planejamento dos dispositivos fixos. O usuario quer um fluxo mais seguro e organizado.
 
-### No Painel Admin (VotingPanel.tsx) -- modo "Ambos"
+## Nova Ordem Proposta (5 etapas sequenciais)
 
-Quando a votacao estiver aberta e o modo for `'both'`, o QR Code atual sera substituido por **2 abas (Tabs)**:
+O accordion da eleicao tera as seguintes secoes, com indicadores visuais de "concluido" em cada etapa:
 
-- **Aba "Celular"** (aberta por padrao): QR Code com link `/vote/{id}` -- voto individual, 1 por dispositivo
-- **Aba "Urna Fixa"** (fechada, so abre ao clicar): QR Code com link `/vote/{id}?mode=urna` -- requer autenticacao admin/diretoria
+```text
+1. Candidatos         [v] Concluido (2 candidatos)
+2. Modo de Votacao    [v] Ambos selecionado
+3. Dispositivos Fixos [v] 2 urnas cadastradas  (so aparece no modo "Ambos" ou "Urna Fixa")
+4. Chamada de Presenca [v] 15 presentes
+5. Votacao            [ ] Aguardando...  -> Botao "Iniciar Votacao" (so libera quando 1-4 estao ok)
+```
 
-Nos modos `'shared'` ou `'individual'`, continua com um unico QR Code (sem abas).
+Os QR Codes so aparecem APOS clicar em "Iniciar Votacao", que so fica habilitado quando todas as etapas anteriores estao completas.
 
-### Na Pagina Publica (VotePublic.tsx)
+## Etapa 3: Cadastro de Dispositivos Fixos (nova)
 
-Ao detectar `?mode=urna` na URL:
-1. Exibe tela de login: "Digite suas credenciais para ativar esta urna"
-2. Campos: usuario e senha
-3. Autentica via `get_email_by_username` + `supabase.auth.signInWithPassword`
-4. Verifica role admin/diretoria via `has_management_role`
-5. Salva flag `urna_authenticated_{electionId}` no `sessionStorage`
-6. Funciona como urna compartilhada: tela pre-votacao entre votantes, reseta apos 3s, sem bloqueio de device_id
+Quando o modo for "Ambos" ou "Urna Fixa", aparece uma secao para cadastrar as urnas fixas:
 
-Sem `?mode=urna`: funciona como individual (comportamento atual).
+- Campo para adicionar um rotulo (ex: "Mesa 1", "Entrada", "Salao Principal")
+- Lista dos dispositivos cadastrados com botao de remover
+- Cada dispositivo gera um link unico com token: `/vote/{id}?mode=urna&token={uuid}`
+- O QR Code so e gerado e exibido apos a votacao ser iniciada
 
-## Arquivos alterados
+Isso permite que a diretoria planeje quantas urnas terao e onde ficarao ANTES de iniciar.
 
-### 1. `VotingPanel.tsx`
-- Importar componente Tabs
-- Quando `votingMode === 'both'` e `status === 'open'`:
-  - Substituir o bloco unico de QR por Tabs com 2 abas
-  - Aba "Celular" (default): QR + link para `/vote/{id}`
-  - Aba "Urna Fixa": QR + link para `/vote/{id}?mode=urna`
-  - Cada aba com botoes "Copiar" e "Expandir" proprios
-  - O dialog fullscreen usara a URL da aba ativa
-- Quando `votingMode !== 'both'`: manter QR unico (sem mudanca)
+## Tabela no Banco de Dados (nova)
 
-### 2. `VotePublic.tsx`
-- Detectar `searchParams.get('mode') === 'urna'` via `useSearchParams`
-- Novo estado: `isUrnaMode`, `urnaAuthenticated`, `authLoading`, `authError`
-- Nova tela de autenticacao:
-  - Icone de Monitor + titulo "Ativar Urna Fixa"
-  - Campos usuario e senha
-  - Botao "Autenticar"
-  - Fluxo: `get_email_by_username` -> `signInWithPassword` -> `has_management_role` -> salvar `sessionStorage`
-- Ao verificar `sessionStorage` no carregamento, pular login se ja autenticado
-- Se autenticado em modo urna: comportar como `shared` (pre-vote screen, reset apos 3s, sem device_id)
-- Se nao autenticado em modo urna: mostrar tela de login
+Criar tabela `election_devices` para registrar os dispositivos fixos:
 
-### 3. Nenhuma migracao necessaria
-- Nao ha mudancas no banco de dados
+- `id` (uuid, PK)
+- `election_id` (uuid, FK para elections)
+- `label` (text) - nome/rotulo do dispositivo (ex: "Mesa 1")
+- `token` (uuid) - token unico para autenticacao do dispositivo
+- `activated` (boolean, default false) - se ja foi ativado com senha
+- `created_at` (timestamp)
+
+Politicas RLS:
+- SELECT: autenticados podem ver
+- ALL: apenas admin/diretoria podem gerenciar
+
+## Mudancas na Autenticacao da Urna (VotePublic.tsx)
+
+Em vez de usar apenas `?mode=urna`, o link agora sera `?mode=urna&token={uuid}`:
+
+1. Ao abrir, verifica se o `token` existe na tabela `election_devices`
+2. Se o token for invalido, mostra "Dispositivo nao cadastrado"
+3. Se valido, mostra a tela de login (admin/diretoria) como ja funciona
+4. Apos autenticar, marca `activated = true` na tabela
+5. Funciona como urna compartilhada
+
+Isso adiciona uma camada extra: mesmo que alguem veja o QR Code da urna, o token precisa estar cadastrado.
+
+## Mudancas no Painel Admin (VotingPanel.tsx)
+
+### Status Draft - Secao "Dispositivos Fixos"
+- Lista de dispositivos cadastrados com rotulo
+- Botao "Adicionar Urna" para cadastrar novo dispositivo
+- Cada item mostra: rotulo + status (cadastrado/ativado)
+
+### Status Open - Aba "Urna Fixa"
+- Mostra a lista de dispositivos cadastrados
+- Cada um com seu QR Code proprio (com token unico)
+- Indicador de status: "Aguardando ativacao" ou "Ativada"
+- Os QR Codes so podem ser revelados um por um ao clicar
+
+## Mudancas no EleicaoDetalhe.tsx
+
+Nova secao no accordion (posicao 3), visivel apenas quando modo = 'both' ou 'shared':
+
+```text
+Dispositivos Fixos (icone Monitor)
+```
+
+O botao "Iniciar Votacao" valida:
+- Pelo menos 1 candidato cadastrado
+- Modo de votacao definido
+- Se modo inclui urna fixa: pelo menos 1 dispositivo cadastrado
+- Chamada realizada (total_present > 0)
+
+## Novo Componente: DeviceRegistration.tsx
+
+Componente para gerenciar os dispositivos fixos:
+- Props: `electionId`, `disabled`, `onRefresh`
+- Formulario simples: campo de texto para rotulo + botao adicionar
+- Lista de dispositivos com rotulo e botao remover
+- Contador: "X dispositivos cadastrados"
+
+## Arquivos Alterados
+
+1. **Migracao SQL** - Criar tabela `election_devices` com RLS
+2. **`src/components/eleicoes/DeviceRegistration.tsx`** (novo) - Componente de cadastro de dispositivos
+3. **`src/pages/EleicaoDetalhe.tsx`** - Adicionar secao "Dispositivos Fixos" no accordion
+4. **`src/components/eleicoes/VotingPanel.tsx`** - Mostrar QR Codes individuais por dispositivo na aba "Urna Fixa"; validar etapas antes de iniciar
+5. **`src/pages/VotePublic.tsx`** - Validar token do dispositivo; marcar como ativado apos autenticacao
 
 ## Seguranca
-- Autenticacao validada no servidor via Supabase Auth
-- Role verificada via funcao `has_management_role`
-- `sessionStorage` limpo ao fechar aba/navegador
-- Senha pedida apenas 1 vez por sessao
 
-## Detalhe importante: Aba "Urna Fixa" escondida por padrao
-- A aba Celular vem selecionada por padrao
-- O QR da Urna Fixa **so aparece quando o mesario clica na aba "Urna Fixa"**
-- Isso garante controle dos mesarios sobre quais dispositivos sao liberados como urna
+- Token unico por dispositivo (UUID) - dificil de adivinhar
+- Autenticacao de admin/diretoria ainda e obrigatoria
+- Dispositivo precisa estar pre-cadastrado para funcionar
+- Status de ativacao visivel no painel admin
+- RLS protege a tabela de dispositivos
+
+## Fluxo Completo (passo a passo)
+
+1. Diretoria cadastra os candidatos
+2. Escolhe o modo "Ambos"
+3. Cadastra os dispositivos fixos (ex: "Mesa 1", "Mesa 2")
+4. Faz a chamada de presenca
+5. Clica em "Iniciar Votacao" (so habilitado se tudo esta pronto)
+6. QR Codes aparecem: um geral para celulares, e um por dispositivo fixo
+7. Mesarios abrem o QR da urna fixa no dispositivo correspondente
+8. Digitam credenciais de admin/diretoria para ativar
+9. Urna fica ativa para votacao compartilhada
+
