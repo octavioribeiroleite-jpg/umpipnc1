@@ -214,6 +214,35 @@
   }
 }
 
+@keyframes shimmer-border {
+  0%, 100% {
+    border-color: hsl(var(--primary) / 0.2);
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.05);
+  }
+  50% {
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 16px hsl(var(--primary) / 0.15);
+  }
+}
+
+@keyframes bounce-right {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+@layer utilities {
+  .animate-shimmer-border {
+    animation: shimmer-border 2s ease-in-out infinite;
+  }
+  .animate-bounce-right {
+    animation: bounce-right 1.5s ease-in-out infinite;
+  }
+}
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,

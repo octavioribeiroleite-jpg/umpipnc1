@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -147,9 +147,16 @@ export default function Auth() {
             {/* Botão acesso sem login */}
             <button
               onClick={() => navigate('/igreja')}
-              className="w-full text-center py-3 px-4 rounded-xl border-2 border-dashed border-primary/30 text-primary text-sm font-medium hover:bg-primary/5 transition-colors"
+              className="w-full rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 p-4 flex items-center gap-4 hover:scale-[1.02] hover:shadow-lg hover:border-primary/50 transition-all duration-300 animate-shimmer-border"
             >
-              Acessar sem login →
+              <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                <Church className="h-6 w-6 text-primary" />
+              </div>
+              <div className="text-left flex-1">
+                <h3 className="font-semibold text-base text-foreground">Acessar sem login</h3>
+                <p className="text-xs text-muted-foreground">Programações, avisos e dízimos da igreja</p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-primary animate-bounce-right flex-shrink-0" />
             </button>
             {(['pastor', 'diretoria', 'membro'] as RoleCard[]).map((role, i) => {
               const config = roleConfig[role];
