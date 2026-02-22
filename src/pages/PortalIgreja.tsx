@@ -482,6 +482,14 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
 
 // ---------- Dízimos Portal Tab ----------
 
+const PIX_TYPE_LABELS: Record<string, string> = {
+  cpf: 'CPF',
+  cnpj: 'CNPJ',
+  email: 'E-mail',
+  telefone: 'Telefone',
+  aleatoria: 'Chave aleatória',
+};
+
 function DizimosPortalTab() {
   const [pixKey, setPixKey] = useState('');
   const [pixKeyType, setPixKeyType] = useState('');
@@ -539,30 +547,54 @@ function DizimosPortalTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="border-primary/40 shadow-lg overflow-hidden animate-shimmer-border">
-        <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 px-4 py-3 flex items-center gap-2">
+    <div className="space-y-5">
+      {/* Bloco motivacional */}
+      <div className="relative rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 overflow-hidden">
+        <Heart className="absolute top-4 right-4 h-16 w-16 text-primary opacity-[0.08]" />
+        <h2 className="text-xl font-bold text-foreground mb-1">Contribua com alegria</h2>
+        <p className="text-sm italic text-muted-foreground leading-relaxed">
+          "Cada um dê como propôs no seu coração, não com tristeza ou por necessidade; porque Deus ama ao que dá com alegria."
+        </p>
+        <p className="text-xs text-muted-foreground mt-1 font-medium">— 2 Coríntios 9:7</p>
+      </div>
+
+      {/* Card PIX */}
+      <Card className="border-primary/40 shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 px-5 py-3.5 flex items-center gap-2">
           <Heart className="h-5 w-5 text-primary" />
           <span className="font-bold text-primary text-lg">Dízimos e Ofertas</span>
         </div>
-        <CardContent className="pt-4 space-y-4">
+        <CardContent className="pt-5 pb-6 space-y-5 px-5">
+          {/* Chave PIX */}
           <div>
             <p className="text-sm text-muted-foreground mb-2">Chave PIX:</p>
-            <div className="flex items-center gap-2 bg-muted rounded-lg border p-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-muted rounded-lg border p-3">
               <code className="flex-1 text-sm font-mono break-all font-semibold">{pixKey}</code>
-              <Button onClick={handleCopy} variant={copied ? 'default' : 'outline'} size="sm" className="shrink-0">
+              <Button onClick={handleCopy} variant={copied ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto shrink-0">
                 {copied ? <><Check className="h-4 w-4 mr-1" />Copiado!</> : <><Copy className="h-4 w-4 mr-1" />Copiar</>}
               </Button>
             </div>
           </div>
+
+          {/* Tipo da chave */}
+          {pixKeyType && (
+            <div>
+              <p className="text-xs text-muted-foreground">Tipo da chave</p>
+              <p className="text-sm font-medium">{PIX_TYPE_LABELS[pixKeyType] || pixKeyType}</p>
+            </div>
+          )}
+
+          {/* Beneficiário */}
           {pixBeneficiary && (
             <div>
               <p className="text-xs text-muted-foreground">Beneficiário</p>
               <p className="text-sm font-medium">{pixBeneficiary}</p>
             </div>
           )}
+
+          {/* Instruções */}
           {pixInstructions && (
-            <div className="rounded-lg bg-primary/5 p-3 border-l-4 border-primary">
+            <div className="rounded-lg bg-primary/5 p-4 border-l-4 border-primary">
               <p className="text-sm italic text-foreground">{pixInstructions}</p>
             </div>
           )}
