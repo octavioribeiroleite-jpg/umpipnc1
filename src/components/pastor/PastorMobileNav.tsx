@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, Calendar, Megaphone, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Megaphone, MessageSquare, Heart } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -36,6 +36,7 @@ export function PastorMobileNav() {
     { path: '/pastor/calendario', icon: Calendar, label: 'Calendário' },
     { path: '/pastor/comunicados', icon: Megaphone, label: 'Comunicados' },
     { path: '/pastor/sugestoes', icon: MessageSquare, label: 'Sugestões' },
+    { path: '/dizimos', icon: Heart, label: 'Dízimos' },
   ];
 
   return (
