@@ -31,7 +31,7 @@ export function ReuniaoPastaData({ date, count, children, defaultOpen = true }: 
             <Folder className="h-5 w-5 text-muted-foreground" />
           )}
           
-          <span className="font-medium text-foreground capitalize">
+          <span className="font-medium text-foreground">
             {formattedDate}
           </span>
           
