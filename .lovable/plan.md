@@ -1,74 +1,46 @@
 
 
-# Enriquecer a aba Inicio do Portal
+# Corrigir erro ao criar visitante no portal
 
-## Resumo
+## Problema
 
-Adicionar dois cards de acesso rapido na aba Inicio: o proximo evento da igreja e o ultimo aviso/comunicado. Esses cards ficam acima do card de Dizimos ja existente, dando uma visao geral rapida ao visitante.
+O banco de dados esta rejeitando o INSERT na tabela `portal_visitors` com o erro: **"new row violates row-level security policy"**.
 
-## Visual esperado
+A causa raiz e que todas as politicas RLS da tabela `portal_visitors` foram criadas como **RESTRICTIVE** (restritivas). No PostgreSQL, politicas restritivas funcionam com logica AND -- ou seja, **todas** precisam passar ao mesmo tempo. Como a politica de SELECT so permite admin/diretoria/pastor, ela bloqueia o INSERT anonimo tambem.
 
-```text
-+-----------------------------------------------+
-|  Bem-vindo a IPNC!                              |
-|  Igreja Presbiteriana de Nova Carapina           |
-+-----------------------------------------------+
+## Solucao
 
-+-- Proximo Evento ----------------------------+
-|  [Calendario]  Titulo do Evento              |
-|               Sabado, 01 de marco - 19:00    |
-|               Local do Evento                |
-|                              [Ver todos ->]  |
-+----------------------------------------------+
-
-+-- Ultimo Aviso ------------------------------+
-|  [Sino]  Titulo do Aviso          [Urgente]  |
-|          Trecho da mensagem...               |
-|          ha 2 dias                            |
-|                              [Ver todos ->]  |
-+----------------------------------------------+
-
-+-- Dizimos e Ofertas (card existente) --------+
-|  ...                                         |
-+----------------------------------------------+
-```
+Recriar as politicas de INSERT e UPDATE como **PERMISSIVE** (permissivas), que e o comportamento padrao e correto para esse caso. Politicas permissivas funcionam com logica OR -- basta uma delas passar.
 
 ## Detalhes tecnicos
 
-### `src/pages/PortalIgreja.tsx` - funcao `InicioTab`
+### Migracao SQL
 
-**Novos estados:**
-- `nextEvent` (proximo evento nao cancelado)
-- `lastAnnouncement` (ultimo comunicado com scope "church")
+Remover as 3 politicas restritivas atuais e recriar como permissivas:
 
-**Novas queries no useEffect existente (em paralelo com settings):**
-- `events`: SELECT proximo evento (`start_date >= now()`, `status != cancelado`, order by `start_date asc`, limit 1)
-- `pastor_announcements`: SELECT ultimo aviso (`scope = 'church'`, order by `created_at desc`, limit 1)
+```sql
+-- Remover politicas restritivas
+DROP POLICY "Anon can insert portal visitors" ON portal_visitors;
+DROP POLICY "Anon can update own device last_access" ON portal_visitors;
+DROP POLICY "Management can view portal visitors" ON portal_visitors;
 
-**Novos cards (inseridos entre o titulo de boas-vindas e o card de dizimos):**
+-- Recriar como PERMISSIVE
+CREATE POLICY "Anon can insert portal visitors"
+  ON portal_visitors FOR INSERT TO anon
+  WITH CHECK (true);
 
-1. **Card "Proximo Evento"**
-   - Icone `Calendar` com cor do evento
-   - Titulo do evento
-   - Data formatada (dia da semana + data + horario)
-   - Local (se houver)
-   - Botao "Ver todos" que muda a aba para "programacoes" (recebe `onTabChange` como prop)
+CREATE POLICY "Anon can update own device last_access"
+  ON portal_visitors FOR UPDATE TO anon
+  USING (device_id = current_setting('request.headers')::json->>'x-device-id')
+  WITH CHECK (true);
 
-2. **Card "Ultimo Aviso"**
-   - Icone `Bell`
-   - Titulo do aviso
-   - Mensagem truncada (2 linhas com `line-clamp-2`)
-   - Badge "Urgente" se `priority === 'urgente'`
-   - Data relativa (`formatDistanceToNow`)
-   - Botao "Ver todos" que muda a aba para "avisos"
+CREATE POLICY "Management can view portal visitors"
+  ON portal_visitors FOR SELECT TO authenticated
+  USING (has_management_role(auth.uid()) OR has_pastor_role(auth.uid()));
+```
 
-**Mudanca de assinatura:**
-- `InicioTab` passa a receber `onTabChange: (tab: PortalTab) => void` como prop
-- No componente `Portal`, passar `setActiveTab` como prop para `InicioTab`
+**Nota:** As politicas permissivas sao o padrao do PostgreSQL. A diferenca e nao incluir a clausula `RESTRICTIVE`. O INSERT para `anon` com `WITH CHECK (true)` permite qualquer visitante se registrar, e o SELECT continua restrito a gestao.
 
-### Imports adicionais
-- `formatDistanceToNow` de `date-fns`
+### Nenhuma mudanca de codigo
 
-### Skeleton loading
-- Enquanto carrega, mostrar 2 skeletons extras (h-24) acima do skeleton do PIX
-
+O codigo do `PortalIgreja.tsx` esta correto. O problema e exclusivamente nas politicas RLS do banco.
