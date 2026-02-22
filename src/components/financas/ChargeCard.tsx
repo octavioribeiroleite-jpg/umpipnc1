@@ -82,51 +82,50 @@ export function ChargeCard({
   const totalValue = (mensalidade?.amount || 0) + (percapita?.amount || 0);
 
   return (
-    <Card className={cn('mb-2', variant && variantStyles[variant])}>
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between gap-2">
+    <Card className={cn('mb-1.5', variant && variantStyles[variant])}>
+      <CardContent className="px-3 py-2">
+        <div className="flex items-center justify-between gap-1">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="text-base font-semibold truncate">{memberName}</h4>
-              <span className="text-sm font-bold text-foreground whitespace-nowrap">
+            <div className="flex items-center gap-1.5">
+              <h4 className="text-sm font-semibold truncate">{memberName}</h4>
+              <span className="text-xs font-bold text-foreground whitespace-nowrap">
                 R$ {totalValue.toFixed(2).replace('.', ',')}
               </span>
             </div>
 
-            <div className="flex items-center gap-3 mt-1.5">
+            <div className="flex items-center gap-2 mt-1">
               {mensalidade && (
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">Mens.</span>
+                <div className="flex items-center gap-0.5">
+                  <span className="text-[10px] text-muted-foreground">M</span>
                   {getStatusBadge(mensalidade.status, mensalidade.amount, mensalidade.paid_amount)}
                 </div>
               )}
               {percapita && (
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-muted-foreground">P.C.</span>
+                <div className="flex items-center gap-0.5">
+                  <span className="text-[10px] text-muted-foreground">PC</span>
                   {getStatusBadge(percapita.status, percapita.amount, percapita.paid_amount)}
                 </div>
               )}
               {dueDate && (
-                <span className="text-[11px] text-muted-foreground flex items-center gap-0.5 ml-auto">
-                  <Calendar className="h-3 w-3" />
+                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 ml-auto">
+                  <Calendar className="h-2.5 w-2.5" />
                   {new Date(dueDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 shrink-0">
             {hasPendingCharges && (
-              <Button size="sm" onClick={onPayment} className="h-8 text-xs">
-                <Check className="h-3 w-3 mr-1" />
-                Baixa
+              <Button size="sm" onClick={onPayment} className="h-7 px-2 text-[11px]">
+                <Check className="h-3 w-3" />
               </Button>
             )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <MoreHorizontal className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
