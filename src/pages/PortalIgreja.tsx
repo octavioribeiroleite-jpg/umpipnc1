@@ -58,29 +58,210 @@ function getSavedVisitor(): VisitorData | null {
   }
 }
 
-// ---------- Main Component ----------
+// ---------- Welcome Screen (first-time visitors) ----------
 
-export default function PortalIgreja() {
-  const [visitor, setVisitor] = useState<VisitorData | null>(getSavedVisitor);
+function WelcomeScreen({ visitor, onContinue }: { visitor: VisitorData; onContinue: () => void }) {
+  const firstName = visitor.fullName.split(' ')[0];
 
-  // On revisit, log a new access silently
-  useEffect(() => {
-    if (visitor) {
-      const deviceId = getOrCreateDeviceId();
-      supabase
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 p-4">
+      <div className="w-full max-w-md text-center space-y-6">
+        {/* Logo grande */}
+        <div className="animate-fade-in">
+          <img
+            src={logoIpnc}
+            alt="IPNC"
+            className="h-32 w-32 mx-auto object-contain drop-shadow-xl"
+          />
+        </div>
+
+        {/* Coração animado */}
+        <div className="animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+          <Heart className="h-8 w-8 mx-auto text-primary animate-pulse" />
+        </div>
+
+        {/* Título */}
+        <h1
+          className="text-3xl font-bold text-foreground animate-fade-in"
+          style={{ animationDelay: '0.5s', animationFillMode: 'both' }}
+        >
+          Que alegria ter você aqui!
+        </h1>
+
+        {/* Mensagem acolhedora */}
+        <p
+          className="text-muted-foreground leading-relaxed animate-fade-in"
+          style={{ animationDelay: '0.7s', animationFillMode: 'both' }}
+        >
+          Seja muito bem-vindo à nossa igreja! É uma honra receber você.
+          Que este momento seja especial e que você se sinta em casa entre nós.
+          Deus te abençoe!
+        </p>
+
+        {/* Nome em destaque */}
+        <p
+          className="text-lg text-foreground animate-fade-in"
+          style={{ animationDelay: '0.9s', animationFillMode: 'both' }}
+        >
+          Obrigado pela sua visita, <span className="font-bold text-primary">{firstName}</span>!
+        </p>
+
+        {/* Botão de entrar */}
+        <div className="animate-fade-in" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
+          <Button onClick={onContinue} size="lg" className="w-full max-w-xs text-base py-6">
+            Entrar no Portal
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground animate-fade-in" style={{ animationDelay: '1.3s', animationFillMode: 'both' }}>
+          Igreja Presbiteriana de Nova Carapina
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Return Visitor Confirmation ----------
+
+function ReturnVisitorConfirm({
+  visitor,
+  onConfirm,
+  onReset,
+}: {
+  visitor: VisitorData;
+  onConfirm: () => void;
+  onReset: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+
+  const handleConfirm = async () => {
+    setConfirming(true);
+    try {
+      await supabase
         .from('portal_visitors' as any)
         .insert({
           full_name: visitor.fullName,
           society_id: visitor.societyId,
           is_visitor: visitor.isVisitor,
-          device_id: deviceId,
-        } as any)
-        .then();
+          device_id: visitor.deviceId,
+        } as any);
+    } catch (e) {
+      console.warn('Erro ao registrar visita:', e);
+    }
+    onConfirm();
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+      <div className="w-full max-w-md text-center space-y-6">
+        <div className="animate-fade-in">
+          <img src={logoIpnc} alt="IPNC" className="h-24 w-24 mx-auto object-contain drop-shadow-lg" />
+        </div>
+
+        <h1
+          className="text-2xl font-bold text-foreground animate-fade-in"
+          style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
+        >
+          Bem-vindo de volta!
+        </h1>
+
+        <p
+          className="text-lg text-muted-foreground animate-fade-in"
+          style={{ animationDelay: '0.4s', animationFillMode: 'both' }}
+        >
+          Você é <span className="font-bold text-foreground">{visitor.fullName}</span>?
+        </p>
+
+        <div
+          className="flex flex-col gap-3 max-w-xs mx-auto animate-fade-in"
+          style={{ animationDelay: '0.6s', animationFillMode: 'both' }}
+        >
+          <Button onClick={handleConfirm} size="lg" className="w-full py-5" disabled={confirming}>
+            {confirming ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Entrando...</>
+            ) : (
+              'Sim, sou eu'
+            )}
+          </Button>
+          <Button onClick={onReset} variant="outline" size="lg" className="w-full py-5" disabled={confirming}>
+            Não, sou outra pessoa
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Igreja Presbiteriana de Nova Carapina
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Main Component ----------
+
+export default function PortalIgreja() {
+  const [visitor, setVisitor] = useState<VisitorData | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [savedVisitor, setSavedVisitor] = useState<VisitorData | null>(null);
+
+  useEffect(() => {
+    const saved = getSavedVisitor();
+    if (saved) {
+      setSavedVisitor(saved);
+      setShowConfirm(true);
     }
   }, []);
 
+  // Returning visitor confirmed identity
+  const handleReturnConfirm = () => {
+    if (savedVisitor) {
+      setVisitor(savedVisitor);
+      setShowConfirm(false);
+    }
+  };
+
+  // Returning visitor is someone else
+  const handleReturnReset = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setSavedVisitor(null);
+    setShowConfirm(false);
+  };
+
+  // New identification completed
+  const handleIdentificationComplete = (v: VisitorData) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
+    if (v.isVisitor) {
+      setSavedVisitor(v);
+      setShowWelcome(true);
+    } else {
+      setVisitor(v);
+    }
+  };
+
+  // Welcome screen "Entrar" clicked
+  const handleWelcomeContinue = () => {
+    if (savedVisitor) {
+      setVisitor(savedVisitor);
+      setShowWelcome(false);
+    }
+  };
+
+  if (showConfirm && savedVisitor) {
+    return (
+      <ReturnVisitorConfirm
+        visitor={savedVisitor}
+        onConfirm={handleReturnConfirm}
+        onReset={handleReturnReset}
+      />
+    );
+  }
+
+  if (showWelcome && savedVisitor) {
+    return <WelcomeScreen visitor={savedVisitor} onContinue={handleWelcomeContinue} />;
+  }
+
   if (!visitor) {
-    return <IdentificationForm onComplete={(v) => { setVisitor(v); localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); }} />;
+    return <IdentificationForm onComplete={handleIdentificationComplete} />;
   }
 
   return <Portal visitor={visitor} />;
@@ -260,14 +441,14 @@ function Portal({ visitor }: { visitor: VisitorData }) {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 bg-sidebar text-sidebar-foreground p-0">
+              <SheetContent side="left" className="w-72 bg-card text-foreground p-0">
                 <div className="flex flex-col h-full">
                   {/* Sidebar header */}
-                  <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
+                  <div className="flex items-center gap-2 p-4 border-b border-border">
                     <img src={logoIpnc} alt="IPNC" className="h-10 w-10 object-contain" />
                     <div className="flex flex-col">
-                      <span className="font-display font-bold text-sm text-sidebar-primary">Portal da Igreja</span>
-                      <span className="text-xs text-sidebar-muted">IPNC</span>
+                      <span className="font-display font-bold text-sm text-primary">Portal da Igreja</span>
+                      <span className="text-xs text-muted-foreground">IPNC</span>
                     </div>
                   </div>
 
@@ -280,10 +461,10 @@ function Portal({ visitor }: { visitor: VisitorData }) {
                           <li key={item.key}>
                             <button
                               onClick={() => handleTabChange(item.key)}
-                              className={`flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                              className={`flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-muted ${
                                 isActive
-                                  ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
-                                  : 'text-sidebar-foreground'
+                                  ? 'bg-primary/10 text-primary shadow-sm'
+                                  : 'text-foreground'
                               }`}
                             >
                               <item.icon className="h-5 w-5 mr-3" />
@@ -296,15 +477,15 @@ function Portal({ visitor }: { visitor: VisitorData }) {
                   </nav>
 
                   {/* Visitor + Login section */}
-                  <div className="p-4 border-t border-sidebar-border">
+                  <div className="p-4 border-t border-border">
                     <div className="mb-3 px-2">
                       <p className="font-medium text-sm truncate">{visitor.fullName}</p>
-                      <p className="text-xs text-sidebar-muted">{visitor.isVisitor ? 'Visitante' : 'Membro'}</p>
+                      <p className="text-xs text-muted-foreground">{visitor.isVisitor ? 'Visitante' : 'Membro'}</p>
                     </div>
                     <Button
                       variant="ghost"
                       onClick={() => { setMenuOpen(false); navigate('/auth'); }}
-                      className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      className="w-full justify-start text-foreground hover:bg-muted"
                     >
                       <LogIn className="h-5 w-5 mr-3" />
                       <span>Fazer Login</span>
