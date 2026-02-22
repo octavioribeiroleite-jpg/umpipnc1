@@ -1,57 +1,60 @@
 
 
-# Reestruturar Portal do Membro com Menu Lateral
+# Criar Login em Massa para Membros Cadastrados
 
 ## Situacao Atual
-O portal do membro (`/membro`) usa **abas na parte inferior** (bottom nav) com apenas 2 opcoes: Eventos e Pagamentos. O usuario quer trocar por um **menu lateral** (hamburger/drawer), similar ao que o app principal usa.
 
-## Nova Estrutura
+Existem **18 membros ativos da UMP** sem conta de acesso no sistema. Todos precisam receber credenciais (usuario + senha) com o papel "visualizador" para acessar o portal do membro.
 
-O portal do membro tera um menu lateral acessivel pelo icone de hamburguer no header, com as seguintes secoes:
+## O que sera feito
 
-- **Inicio** - Dashboard com boas-vindas, resumo de cobranças pendentes, proximo evento e ultimos comunicados
-- **Eventos** - Lista de proximos eventos (ja existe)
-- **Pagamentos** - Cobranças pendentes e envio de comprovantes (ja existe)
-- **Comunicados** - Feed de comunicados do pastor para a sociedade do membro
+Adicionar um botao "Criar logins em massa" na aba de Membros (Financas) que processa todos os membros sem conta de uma vez, gerando credenciais automaticamente e exibindo um relatorio consolidado ao final.
+
+## Logica de credenciais (ja existente no sistema)
+
+- **Usuario**: nome sem acentos, tudo junto e minusculo (ex: "Lucas Felix" -> "lucasfelix")
+- **Senha**: nome capitalizado + "123" (ex: "Lucas Felix" -> "LucasFelix123")
 
 ## Alteracoes
 
-### Modificar: `src/components/membro/MembroLayout.tsx`
-- Remover a bottom navigation (nav fixa no rodape)
-- Adicionar botao hamburguer no header que abre um `Sheet` lateral (igual ao `MobileNav` do app principal)
-- Menu lateral com itens: Inicio, Eventos, Pagamentos, Comunicados
-- Atualizar tipo do `activeTab` para `'inicio' | 'eventos' | 'pagamentos' | 'comunicados'`
-- Remover `pb-20` do main (nao precisa mais de espaco para bottom nav)
+### Modificar: `src/components/financas/MembrosTab.tsx`
 
-### Modificar: `src/pages/MembroHome.tsx`
-- Adicionar imports dos novos componentes (MembroInicio, MembroComunicados)
-- Estado inicial da aba passa a ser `'inicio'`
-- Renderizar componente correto conforme aba selecionada no menu
+1. **Novo botao "Criar logins em massa"**
+   - Aparece apenas quando ha membros sem conta (`user_id IS NULL`)
+   - Mostra badge com quantidade de membros pendentes
+   - Abre dialogo de confirmacao antes de processar
 
-### Criar: `src/components/membro/MembroInicio.tsx`
-- Card de boas-vindas com nome do membro e sociedade
-- Mini-cards de resumo: total de cobranças pendentes e proximo evento
-- Ultimos 3 comunicados com destaque para urgentes
-- Botoes de acao rapida que trocam para outras abas
+2. **Dialogo de confirmacao**
+   - Lista quantos membros serao processados
+   - Botao "Confirmar" inicia o processamento
 
-### Criar: `src/components/membro/MembroComunicados.tsx`
-- Busca comunicados da tabela `pastor_announcements` filtrados pela sociedade do membro (via `target_societies`)
-- Cards com titulo, mensagem, data formatada e badge de prioridade
-- Estado vazio com icone e mensagem
+3. **Processamento em lote**
+   - Para cada membro sem `user_id`, chama a Edge Function `create-user` sequencialmente
+   - Gera username e password usando as funcoes `generateUsername` e `generatePassword` ja existentes
+   - Envia: `{ full_name, username, password, role: 'visualizador', society_id, member_id }`
+   - Mostra progresso (ex: "Processando 5 de 18...")
+   - Coleta sucessos e falhas separadamente
+
+4. **Relatorio final**
+   - Dialogo com tabela de credenciais geradas (nome, usuario, senha)
+   - Indicacao visual de falhas (se houver)
+   - Botao para copiar todas as credenciais em formato texto
+   - Recarrega a lista de membros ao fechar
 
 ## Detalhes Tecnicos
 
-### Menu lateral (Sheet)
-- Usar `Sheet` do Radix (side="left") com mesma estetica do `MobileNav`
-- Icones: Home, Calendar, CreditCard, Bell
-- Item ativo destacado com `bg-primary text-primary-foreground`
-- Ao clicar, fecha o sheet e troca o `activeTab`
+### Fluxo do processamento
+- Usa `for...of` sequencial (nao paralelo) para evitar sobrecarga na Edge Function
+- Cada chamada: `supabase.functions.invoke('create-user', { body: { full_name, username, password, role: 'visualizador', society_id, member_id } })`
+- Timeout de seguranca por membro
+- Estado de progresso atualizado a cada iteracao
 
-### MembroComunicados
-- Query: `supabase.from('pastor_announcements').select('*').contains('target_societies', [society_id]).order('created_at', { ascending: false }).limit(30)`
-- Prioridade "urgente" com borda colorida e badge vermelho
+### Tratamento de erros
+- Usernames duplicados: se o username ja existir, adiciona um sufixo numerico (ex: "lucasfelix2")
+- Falha individual nao interrompe o lote; membro e marcado como "falha" no relatorio
+- Toast de resumo ao final: "X contas criadas, Y falhas"
 
-### MembroInicio
-- Busca paralela: cobranças pendentes + proximo evento + ultimos comunicados
-- Cards clicaveis que chamam `onTabChange` para navegar entre secoes
+### Copiar credenciais
+- Formato texto: "Nome | Usuario | Senha" por linha
+- Usa `navigator.clipboard.writeText()`
 
