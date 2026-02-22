@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Clock, FileText, Calendar } from 'lucide-react';
+import { AlertTriangle, Clock, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface Alert {
-  type: 'overdue_task' | 'no_minutes' | 'upcoming_event';
+  type: 'overdue_task' | 'no_minutes';
   title: string;
   detail: string;
   severity: 'high' | 'medium';
@@ -25,12 +25,10 @@ export function AlertsSection() {
   const fetchAlerts = async () => {
     try {
       const now = new Date();
-      const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-      const [tasksRes, meetingsRes, eventsRes, societiesRes] = await Promise.all([
+      const [tasksRes, meetingsRes, societiesRes] = await Promise.all([
         supabase.from('tasks').select('id, title, due_date, status, society_id').neq('status', 'done').not('due_date', 'is', null).lt('due_date', now.toISOString().split('T')[0]),
         supabase.from('meetings').select('id, title, date, final_minutes, status, society_id').eq('status', 'fechada').is('final_minutes', null),
-        supabase.from('events').select('id, title, start_date, status').gte('start_date', now.toISOString()).lte('start_date', sevenDaysLater.toISOString()).eq('status', 'confirmado'),
         supabase.from('societies').select('id, name').eq('active', true),
       ]);
 
@@ -57,15 +55,6 @@ export function AlertsSection() {
         });
       });
 
-      (eventsRes.data || []).forEach(e => {
-        newAlerts.push({
-          type: 'upcoming_event',
-          title: e.title,
-          detail: format(new Date(e.start_date), "dd/MM 'às' HH:mm", { locale: ptBR }),
-          severity: 'medium',
-        });
-      });
-
       setAlerts(newAlerts);
     } catch (err) {
       console.error('Error fetching alerts:', err);
@@ -79,7 +68,6 @@ export function AlertsSection() {
   const iconMap = {
     overdue_task: Clock,
     no_minutes: FileText,
-    upcoming_event: Calendar,
   };
 
   const highAlerts = alerts.filter(a => a.severity === 'high');

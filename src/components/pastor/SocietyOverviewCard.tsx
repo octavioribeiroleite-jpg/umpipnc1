@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, Users, DollarSign, ListTodo } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { ChevronRight } from 'lucide-react';
 
 interface Society {
   id: string;
@@ -25,38 +25,22 @@ export function SocietyOverviewCard({ society, stats }: Props) {
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-md transition-shadow"
+      className="cursor-pointer hover:shadow-md transition-shadow p-2.5 flex items-center gap-2"
       onClick={() => navigate(`/pastor/sociedade/${society.slug}`)}
     >
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold text-xs" style={{ backgroundColor: society.color }}>
-              {society.name.substring(0, 3)}
-            </div>
-            <p className="font-semibold text-sm">{society.name}</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </div>
+      <div
+        className="h-8 w-8 rounded-md flex items-center justify-center text-white font-bold text-[10px] flex-shrink-0"
+        style={{ backgroundColor: society.color }}
+      >
+        {society.name.substring(0, 3)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-xs truncate">{society.name}</p>
         {stats && (
-          <div className="flex items-center gap-4 mt-2 ml-12 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              {stats.membersActive} membros
-            </span>
-            <span className={`flex items-center gap-1 ${stats.saldo >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
-              <DollarSign className="h-3 w-3" />
-              R$ {stats.saldo.toFixed(2).replace('.', ',')}
-            </span>
-            {stats.tasksPending > 0 && (
-              <span className="flex items-center gap-1 text-warning">
-                <ListTodo className="h-3 w-3" />
-                {stats.tasksPending} pendentes
-              </span>
-            )}
-          </div>
+          <p className="text-[10px] text-muted-foreground">{stats.membersActive} membros</p>
         )}
-      </CardContent>
+      </div>
+      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
     </Card>
   );
 }

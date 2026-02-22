@@ -2,17 +2,18 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
-  DollarSign, TrendingUp, TrendingDown, Sparkles, RefreshCw, Calendar,
+  DollarSign, Users, ListTodo, Calendar, ChevronRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { AlertsSection } from '@/components/pastor/AlertsSection';
 import { SocietyOverviewCard } from '@/components/pastor/SocietyOverviewCard';
+import { AISummaryDrawer } from '@/components/pastor/AISummaryDrawer';
 import logoIpnc from '@/assets/logo-ipnc.png';
 
 interface Society {
@@ -33,14 +34,6 @@ interface SocietyStats {
   lastMeetingDate?: string;
 }
 
-interface AISummary {
-  geral?: string;
-  financas?: string;
-  tarefas?: string;
-  destaques?: string | string[];
-  [key: string]: any;
-}
-
 interface UpcomingEvent {
   id: string;
   title: string;
@@ -49,25 +42,23 @@ interface UpcomingEvent {
   location?: string;
 }
 
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Bom dia';
+  if (h < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
 export default function PainelPastor() {
   const { user, isPastor, isAdmin } = useAuth();
-  
-  // Layer 1: Direct data (fast)
+  const navigate = useNavigate();
+
   const [societies, setSocieties] = useState<Society[]>([]);
   const [societyStats, setSocietyStats] = useState<Record<string, SocietyStats>>({});
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
-  
-  // Layer 2: AI summary (on-demand)
-  const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
-  const [aiGeneratedAt, setAiGeneratedAt] = useState<string | null>(null);
-  const [aiFromCache, setAiFromCache] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiDataChanged, setAiDataChanged] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Layer 1: Fetch direct stats from DB
   const fetchDirectStats = useCallback(async () => {
     setStatsLoading(true);
     try {
@@ -102,7 +93,6 @@ export default function PainelPastor() {
         const totalEntradas = socTrans.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0);
         const totalSaidas = socTrans.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0);
         const totalMensalidades = socPayments.reduce((s, p) => s + Number(p.amount), 0);
-
         const lastMeeting = meetings.find(m => m.society_id === soc.id);
 
         stats[soc.id] = {
@@ -126,42 +116,15 @@ export default function PainelPastor() {
     }
   }, []);
 
-  // Layer 2: Fetch AI summary (from cache or generate)
-  const fetchAISummary = useCallback(async (force = false) => {
-    if (force) setRefreshing(true);
-    else setAiLoading(true);
-    try {
-      const { data: result, error: fnError } = await supabase.functions.invoke('summarize-for-pastor', {
-        body: force ? { force: true } : undefined,
-      });
-      if (fnError) throw fnError;
-      if (result?.error) throw new Error(result.error);
-      
-      setAiSummary(result.summaries || null);
-      setAiGeneratedAt(result.generated_at || null);
-      setAiFromCache(result.from_cache || false);
-      setAiDataChanged(result.data_changed || false);
-    } catch (err: any) {
-      console.error('AI Summary error:', err);
-      // Don't block the page for AI errors
-    } finally {
-      setAiLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
   useEffect(() => {
     if (!user || (!isPastor && !isAdmin)) return;
     fetchDirectStats();
-    fetchAISummary();
-  }, [user, isPastor, isAdmin, fetchDirectStats, fetchAISummary]);
+  }, [user, isPastor, isAdmin, fetchDirectStats]);
 
-  // Global stats computed from society stats
-  const globalStats = {
-    saldo: Object.values(societyStats).reduce((s, v) => s + v.saldo, 0),
-    totalEntradas: Object.values(societyStats).reduce((s, v) => s + v.totalEntradas, 0),
-    totalSaidas: Object.values(societyStats).reduce((s, v) => s + v.totalSaidas, 0),
-  };
+  // Global stats
+  const totalMembers = Object.values(societyStats).reduce((s, v) => s + v.membersActive, 0);
+  const totalSaldo = Object.values(societyStats).reduce((s, v) => s + v.saldo, 0);
+  const totalPending = Object.values(societyStats).reduce((s, v) => s + v.tasksPending, 0);
 
   return (
     <PastorLayout>
@@ -181,136 +144,89 @@ export default function PainelPastor() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
-          {/* AI Summary Card */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Resumo Pastoral (IA)
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  {aiGeneratedAt && (
-                    <span className="text-[10px] text-muted-foreground">
-                      {format(new Date(aiGeneratedAt), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                    </span>
-                  )}
-                  {aiFromCache && <Badge variant="outline" className="text-[10px] px-1">Cache</Badge>}
-                  {aiDataChanged && <Badge variant="secondary" className="text-[10px] px-1">Dados mudaram</Badge>}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {aiLoading ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <RefreshCw className="h-3 w-3 animate-spin" />
-                  Carregando resumo...
-                </div>
-              ) : aiSummary?.geral ? (
-                <div className="space-y-2">
-                  <p className="text-sm leading-relaxed text-muted-foreground">{aiSummary.geral}</p>
-                  {aiSummary.destaques && (
-                    <div className="mt-3 pt-2 border-t">
-                      <p className="text-xs font-medium mb-1">Pontos de atenção:</p>
-                      {Array.isArray(aiSummary.destaques) ? (
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          {aiSummary.destaques.map((d: string, i: number) => (
-                            <li key={i}>• {d}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">{aiSummary.destaques}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Nenhum resumo disponível ainda.</p>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => fetchAISummary(true)}
-                disabled={refreshing}
-              >
-                <RefreshCw className={`h-3 w-3 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Gerando...' : aiSummary ? 'Atualizar Resumo' : 'Gerar Resumo com IA'}
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="space-y-4">
+          {/* 1. Greeting + AI button */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold">{getGreeting()}, Pastor!</h2>
+              <p className="text-xs text-muted-foreground">
+                {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+              </p>
+            </div>
+            <AISummaryDrawer />
+          </div>
 
-          {/* Alerts */}
+          {/* 2. Quick Metrics Grid 2x2 */}
+          <div className="grid grid-cols-2 gap-2">
+            <Card className="p-3">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <span className="text-xs text-muted-foreground">Membros</span>
+              </div>
+              <p className="text-xl font-bold mt-1">{totalMembers}</p>
+            </Card>
+            <Card className="p-3">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs text-muted-foreground">Saldo</span>
+              </div>
+              <p className={`text-xl font-bold mt-1 ${totalSaldo >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                R$ {totalSaldo.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+              </p>
+            </Card>
+            <Card className="p-3">
+              <div className="flex items-center gap-2">
+                <ListTodo className="h-4 w-4 text-warning" />
+                <span className="text-xs text-muted-foreground">Pendentes</span>
+              </div>
+              <p className="text-xl font-bold mt-1">{totalPending}</p>
+            </Card>
+            <Card className="p-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="text-xs text-muted-foreground">Eventos</span>
+              </div>
+              <p className="text-xl font-bold mt-1">{upcomingEvents.length}</p>
+            </Card>
+          </div>
+
+          {/* 3. Alerts (only real pendencies) */}
           <AlertsSection />
 
-          {/* Consolidated Financial Summary */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
-                Resumo Financeiro Consolidado
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Saldo Total</p>
-                  <p className={`text-lg font-bold ${globalStats.saldo >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
-                    R$ {globalStats.saldo.toFixed(2).replace('.', ',')}
-                  </p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1 mb-0.5">
-                    <TrendingUp className="h-3 w-3 text-emerald-600" />
-                    <p className="text-xs text-muted-foreground">Entradas</p>
-                  </div>
-                  <p className="text-sm font-semibold text-emerald-600">
-                    R$ {globalStats.totalEntradas.toFixed(2).replace('.', ',')}
-                  </p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1 mb-0.5">
-                    <TrendingDown className="h-3 w-3 text-destructive" />
-                    <p className="text-xs text-muted-foreground">Saídas</p>
-                  </div>
-                  <p className="text-sm font-semibold text-destructive">
-                    R$ {globalStats.totalSaidas.toFixed(2).replace('.', ',')}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Society Cards */}
+          {/* 4. Societies compact grid */}
           <div>
-            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">
+            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">
               Sociedades
             </h3>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
               {societies.map(s => (
                 <SocietyOverviewCard key={s.id} society={s} stats={societyStats[s.id]} />
               ))}
             </div>
           </div>
 
-          {/* Upcoming Events */}
+          {/* 5. Upcoming Events (max 3) */}
           {upcomingEvents.length > 0 && (
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Próximos Eventos
-                </CardTitle>
+              <CardHeader className="pb-1 pt-3 px-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    Próximos Eventos
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => navigate('/pastor/calendario')}>
+                    Ver todos <ChevronRight className="h-3 w-3 ml-0.5" />
+                  </Button>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {upcomingEvents.map(e => (
+              <CardContent className="px-3 pb-3 pt-0 space-y-1">
+                {upcomingEvents.slice(0, 3).map(e => (
                   <div key={e.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
-                    <div>
-                      <p className="font-medium">{e.title}</p>
-                      {e.location && <p className="text-xs text-muted-foreground">{e.location}</p>}
+                    <div className="min-w-0">
+                      <p className="font-medium text-xs truncate">{e.title}</p>
+                      {e.location && <p className="text-[10px] text-muted-foreground truncate">{e.location}</p>}
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
                       {format(new Date(e.start_date), "dd/MM 'às' HH:mm", { locale: ptBR })}
                     </span>
                   </div>
