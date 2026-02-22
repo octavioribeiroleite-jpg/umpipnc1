@@ -1,71 +1,56 @@
 
+# Melhorias no Layout do Painel do Pastor
 
-# Vincular automaticamente os dados das abas ao banco de dados por sociedade
+## Problemas Identificados
 
-## Problema identificado
+1. **Resumo IA ocupa muito espaco vertical** - O card do resumo pastoral com IA e muito grande e empurra todo o conteudo importante para baixo
+2. **Alertas misturam eventos futuros com pendencias reais** - Eventos proximos aparecem como "alertas", poluindo a secao com itens que nao sao problemas
+3. **Cards de sociedade ocupam muito espaco** - Cada sociedade tem um card separado com muito padding, fazendo o usuario rolar muito
+4. **Resumo financeiro basico** - Mostra apenas 3 numeros sem contexto visual
+5. **Secao de eventos duplicada** - Eventos aparecem tanto nos Alertas quanto na secao "Proximos Eventos"
 
-Quando um administrador ou pastor cria dados nas abas de Financas (membros, gastos, cobrancas, camisas, configuracoes), o sistema usa `profile?.society_id` para definir a qual sociedade o registro pertence. Isso funciona para usuarios de diretoria (que tem sociedade fixa), mas para admins/pastores que gerenciam multiplas sociedades, nao ha como escolher para qual sociedade o dado vai.
+## Solucao Proposta
 
-Alem disso, o `SocietyOverviewCard` no Painel do Pastor nao mostra estatisticas resumidas -- apenas navega para a pagina de detalhe.
+### 1. Saudacao compacta com hora do dia
+Substituir o card grande de IA por uma saudacao simples ("Bom dia, Pastor!") com a data atual e um botao discreto para gerar/ver o resumo IA em um drawer/dialog separado.
 
-## Solucao
+### 2. Cards de metricas rapidas (grid 2x2)
+Quatro mini-cards compactos no topo:
+- Total de Membros ativos (soma de todas as sociedades)
+- Saldo Consolidado
+- Tarefas Pendentes (total)
+- Proximos Eventos (contagem)
 
-### 1. Seletor de sociedade no contexto global (AuthContext)
+### 3. Alertas apenas para pendencias reais
+Manter na secao de alertas somente:
+- Tarefas atrasadas
+- Reunioes sem ata
+Remover eventos proximos dos alertas (eles ja tem secao propria).
 
-O `selectedSocietyId` ja existe no AuthContext mas nao e utilizado. Vamos ativa-lo:
+### 4. Sociedades em grid compacto (2 colunas)
+Reduzir os cards de sociedade para um formato mais compacto em grid de 2 colunas no mobile, mostrando apenas: sigla colorida, nome, e numero de membros. Ao clicar, navega para detalhes.
 
-- Na pagina de Financas, quando o usuario for admin ou pastor, exibir um seletor de sociedade no topo da pagina
-- Ao selecionar, gravar no `selectedSocietyId` do AuthContext
-- Todas as abas filhas passarao a usar esse valor para leitura E escrita
+### 5. Proximos Eventos compacto
+Manter a secao de eventos, mas limitada a 3 itens com link "Ver todos" para o calendario.
 
-### 2. Atualizar todas as abas financeiras
+### 6. Resumo IA sob demanda
+Mover o resumo da IA para um botao flutuante ou um drawer acessivel por um botao "Resumo IA" na saudacao, em vez de ocupar o topo da pagina.
 
-Modificar os seguintes arquivos para usar o `selectedSocietyId` quando o usuario for admin/pastor:
+## Detalhes Tecnicos
 
-- **MembrosTab**: Usar `selectedSocietyId` em vez de `profile?.society_id` nos inserts e filtros
-- **GastosTab**: Idem para transacoes de saida
-- **CobrancasTab**: Idem para cobrancas e transacoes de pagamento
-- **CamisasTab**: Idem para compras/vendas de camisas
-- **ConfiguracoesTab**: Idem para configuracoes financeiras e geracao de cobrancas
-- **MensalidadesTab**: Idem para pagamentos de mensalidade
-- **ComprovantesTab**: Idem para filtros de comprovantes
+### Arquivos a modificar:
+- **`src/pages/PainelPastor.tsx`**: Reorganizar a ordem dos blocos, adicionar saudacao, criar grid de metricas 2x2, mover IA para drawer
+- **`src/components/pastor/SocietyOverviewCard.tsx`**: Tornar mais compacto, reduzir padding
+- **`src/components/pastor/AlertsSection.tsx`**: Filtrar para remover `upcoming_event` dos alertas (deixar apenas `overdue_task` e `no_minutes`)
 
-### 3. Adicionar estatisticas no SocietyOverviewCard
+### Nova ordem do layout:
+1. Saudacao + botao "Resumo IA"
+2. Grid 2x2 de metricas globais (membros, saldo, tarefas pendentes, eventos)
+3. Alertas (somente pendencias reais, se houver)
+4. Sociedades (grid 2 colunas, compacto)
+5. Proximos Eventos (max 3)
 
-Enriquecer o card de cada sociedade no Painel do Pastor para mostrar dados resumidos inline (membros ativos, saldo, tarefas pendentes), usando os dados ja carregados em `societyStats`.
+### Componentes novos:
+- Drawer/Dialog para o Resumo IA (reaproveitando a logica existente do `fetchAISummary`)
 
-## Detalhes tecnicos
-
-### Arquivo: `src/pages/Financas.tsx`
-- Adicionar seletor de sociedade (Select) visivel apenas para admin/pastor
-- Carregar lista de sociedades do banco
-- Passar `effectiveSocietyId` (selectedSocietyId ou profile.society_id) como prop ou usar via AuthContext
-
-### Arquivos: todas as tabs em `src/components/financas/`
-- Substituir o padrao atual:
-```
-const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
-```
-por:
-```
-const societyId = (!isAdmin && !isPastor) 
-  ? profile?.society_id 
-  : selectedSocietyId;
-```
-- Substituir `profile?.society_id || null` nos inserts por `societyId`
-
-### Arquivo: `src/components/pastor/SocietyOverviewCard.tsx`
-- Receber `stats` como prop (ja disponivel no componente pai)
-- Exibir membros, saldo e tarefas pendentes no card
-
-### Arquivos a modificar
-- `src/pages/Financas.tsx` (seletor de sociedade)
-- `src/components/financas/MembrosTab.tsx`
-- `src/components/financas/GastosTab.tsx`
-- `src/components/financas/CobrancasTab.tsx`
-- `src/components/financas/CamisasTab.tsx`
-- `src/components/financas/ConfiguracoesTab.tsx`
-- `src/components/financas/MensalidadesTab.tsx`
-- `src/components/financas/ComprovantesTab.tsx`
-- `src/components/pastor/SocietyOverviewCard.tsx`
-- `src/pages/PainelPastor.tsx` (passar stats para SocietyOverviewCard)
+### Sem alteracoes no banco de dados.
