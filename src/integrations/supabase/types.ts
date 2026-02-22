@@ -1472,6 +1472,7 @@ export type Database = {
     Functions: {
       delete_task: { Args: { task_id: string }; Returns: undefined }
       get_email_by_username: { Args: { _username: string }; Returns: string }
+      get_user_society_id: { Args: { _user_id: string }; Returns: string }
       has_management_role: { Args: { _user_id: string }; Returns: boolean }
       has_pastor_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
