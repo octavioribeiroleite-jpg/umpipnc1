@@ -61,7 +61,7 @@ export function PastorLoginNotification() {
           <Button variant="outline" onClick={() => setOpen(false)}>
             Ver depois
           </Button>
-          <Button onClick={() => { setOpen(false); navigate('/pastor-sugestoes'); }}>
+          <Button onClick={() => { setOpen(false); navigate('/sugestoes'); }}>
             Ver sugestões
           </Button>
         </DialogFooter>

@@ -30,7 +30,7 @@ export function MobileBottomNav() {
     { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
     ...(isAdmin ? [
       { to: '/usuarios', icon: UserCheck, label: 'Usuários' },
-      { to: '/pastor-sugestoes', icon: MessageSquare, label: 'Sugestões do Pastor' },
+      { to: '/sugestoes', icon: MessageSquare, label: 'Sugestões do Pastor' },
     ] : []),
     { to: '/configuracoes', icon: Settings, label: 'Configurações' },
   ];
