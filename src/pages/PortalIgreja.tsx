@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import {
   Calendar, Clock, MapPin, Bell, Heart, Copy, Check, Loader2,
-  LogIn, ChevronRight,
+  LogIn, ChevronRight, Home,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -34,7 +34,7 @@ interface Society {
   color: string;
 }
 
-type PortalTab = 'programacoes' | 'avisos' | 'dizimos';
+type PortalTab = 'inicio' | 'programacoes' | 'avisos';
 
 const STORAGE_KEY = 'portal_visitor';
 
@@ -230,13 +230,13 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
 // ---------- Portal ----------
 
 function Portal({ visitor }: { visitor: VisitorData }) {
-  const [activeTab, setActiveTab] = useState<PortalTab>('programacoes');
+  const [activeTab, setActiveTab] = useState<PortalTab>('inicio');
   const navigate = useNavigate();
 
   const tabs: { key: PortalTab; label: string; icon: typeof Calendar }[] = [
+    { key: 'inicio', label: 'Início', icon: Heart },
     { key: 'programacoes', label: 'Programações', icon: Calendar },
     { key: 'avisos', label: 'Avisos', icon: Bell },
-    { key: 'dizimos', label: 'Dízimos', icon: Heart },
   ];
 
   return (
@@ -260,9 +260,9 @@ function Portal({ visitor }: { visitor: VisitorData }) {
 
       {/* Content */}
       <main className="flex-1 overflow-auto px-4 py-4 pb-24 max-w-2xl mx-auto w-full">
+        {activeTab === 'inicio' && <InicioTab />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
         {activeTab === 'avisos' && <AvisosTab />}
-        {activeTab === 'dizimos' && <DizimosTab />}
       </main>
 
       {/* Bottom Nav */}
@@ -285,6 +285,89 @@ function Portal({ visitor }: { visitor: VisitorData }) {
           })}
         </div>
       </nav>
+    </div>
+  );
+}
+
+// ---------- Início Tab (com Dízimos em destaque) ----------
+
+function InicioTab() {
+  const [pixKey, setPixKey] = useState('');
+  const [pixKeyType, setPixKeyType] = useState('');
+  const [pixBeneficiary, setPixBeneficiary] = useState('');
+  const [pixInstructions, setPixInstructions] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from('settings')
+      .select('key, value')
+      .in('key', ['pix_key', 'pix_key_type', 'pix_beneficiary', 'pix_instructions'])
+      .then(({ data }) => {
+        if (data) {
+          data.forEach((s: any) => {
+            if (s.key === 'pix_key') setPixKey(s.value);
+            if (s.key === 'pix_key_type') setPixKeyType(s.value);
+            if (s.key === 'pix_beneficiary') setPixBeneficiary(s.value);
+            if (s.key === 'pix_instructions') setPixInstructions(s.value);
+          });
+        }
+        setLoading(false);
+      });
+  }, []);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(pixKey);
+      setCopied(true);
+      toast.success('Chave PIX copiada!');
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast.error('Não foi possível copiar');
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="text-center py-2">
+        <h2 className="text-lg font-bold">Bem-vindo à IPNC!</h2>
+        <p className="text-sm text-muted-foreground">Igreja Presbiteriana de Nova Carapina</p>
+      </div>
+
+      {/* Card de Dízimos e Ofertas em destaque */}
+      {loading ? (
+        <Skeleton className="h-40" />
+      ) : pixKey ? (
+        <Card className="border-primary/40 shadow-lg overflow-hidden animate-shimmer-border">
+          <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 px-4 py-3 flex items-center gap-2">
+            <Heart className="h-5 w-5 text-primary" />
+            <span className="font-bold text-primary text-lg">Dízimos e Ofertas</span>
+          </div>
+          <CardContent className="pt-4 space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Chave PIX:</p>
+              <div className="flex items-center gap-2 bg-muted rounded-lg border p-3">
+                <code className="flex-1 text-sm font-mono break-all font-semibold">{pixKey}</code>
+                <Button onClick={handleCopy} variant={copied ? 'default' : 'outline'} size="sm" className="shrink-0">
+                  {copied ? <><Check className="h-4 w-4 mr-1" />Copiado!</> : <><Copy className="h-4 w-4 mr-1" />Copiar</>}
+                </Button>
+              </div>
+            </div>
+            {pixBeneficiary && (
+              <div>
+                <p className="text-xs text-muted-foreground">Beneficiário</p>
+                <p className="text-sm font-medium">{pixBeneficiary}</p>
+              </div>
+            )}
+            {pixInstructions && (
+              <div className="rounded-lg bg-primary/5 p-3 border-l-4 border-primary">
+                <p className="text-sm italic text-foreground">{pixInstructions}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }
@@ -467,104 +550,6 @@ function AvisosTab() {
           </CardContent>
         </Card>
       ))}
-    </div>
-  );
-}
-
-// ---------- Dízimos Tab ----------
-
-const PIX_TYPE_LABELS: Record<string, string> = {
-  cpf: 'CPF', cnpj: 'CNPJ', email: 'E-mail', telefone: 'Telefone', aleatoria: 'Chave aleatória',
-};
-
-function DizimosTab() {
-  const [pixKey, setPixKey] = useState('');
-  const [pixKeyType, setPixKeyType] = useState('');
-  const [pixBeneficiary, setPixBeneficiary] = useState('');
-  const [pixInstructions, setPixInstructions] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    supabase
-      .from('settings')
-      .select('key, value')
-      .in('key', ['pix_key', 'pix_key_type', 'pix_beneficiary', 'pix_instructions'])
-      .then(({ data }) => {
-        if (data) {
-          data.forEach((s: any) => {
-            if (s.key === 'pix_key') setPixKey(s.value);
-            if (s.key === 'pix_key_type') setPixKeyType(s.value);
-            if (s.key === 'pix_beneficiary') setPixBeneficiary(s.value);
-            if (s.key === 'pix_instructions') setPixInstructions(s.value);
-          });
-        }
-        setLoading(false);
-      });
-  }, []);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(pixKey);
-      setCopied(true);
-      toast.success('Chave PIX copiada!');
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      toast.error('Não foi possível copiar');
-    }
-  };
-
-  if (loading) {
-    return <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
-  }
-
-  if (!pixKey) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="py-12 text-center">
-          <Heart className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">A chave PIX ainda não foi configurada.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <Card className="border-primary/40 shadow-md overflow-hidden">
-        <div className="bg-primary/10 px-4 py-3 flex items-center gap-2">
-          <Heart className="h-5 w-5 text-primary" />
-          <span className="font-bold text-primary text-lg">Dízimos e Ofertas</span>
-        </div>
-        <CardContent className="pt-5 space-y-5">
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">Chave PIX:</p>
-            <div className="flex items-center gap-2 bg-muted rounded-lg border p-3">
-              <code className="flex-1 text-sm font-mono break-all font-semibold">{pixKey}</code>
-              <Button onClick={handleCopy} variant={copied ? 'default' : 'outline'} size="sm" className="shrink-0">
-                {copied ? <><Check className="h-4 w-4 mr-1" />Copiado!</> : <><Copy className="h-4 w-4 mr-1" />Copiar</>}
-              </Button>
-            </div>
-          </div>
-          {pixBeneficiary && (
-            <div>
-              <p className="text-sm text-muted-foreground">Beneficiário:</p>
-              <p className="font-medium">{pixBeneficiary}</p>
-            </div>
-          )}
-          {pixKeyType && (
-            <div>
-              <p className="text-sm text-muted-foreground">Tipo da chave:</p>
-              <p className="font-medium">{PIX_TYPE_LABELS[pixKeyType] || pixKeyType}</p>
-            </div>
-          )}
-          {pixInstructions && (
-            <div className="rounded-lg bg-primary/5 p-4 border-l-4 border-primary">
-              <p className="text-sm italic text-foreground">{pixInstructions}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
