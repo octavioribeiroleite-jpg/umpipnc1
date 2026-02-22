@@ -6,7 +6,6 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MembrosTab } from '@/components/financas/MembrosTab';
 import { MensalidadesTab } from '@/components/financas/MensalidadesTab';
 import { GastosTab } from '@/components/financas/GastosTab';
 import { CobrancasTab } from '@/components/financas/CobrancasTab';
@@ -239,7 +238,6 @@ export default function Financas() {
            <TabsList className="inline-flex w-max md:w-auto gap-1">
             <TabsTrigger value="cobrancas" className="min-w-max">Cobranças</TabsTrigger>
             <TabsTrigger value="comprovantes" className="min-w-max">Comprovantes</TabsTrigger>
-            <TabsTrigger value="membros" className="min-w-max">Membros</TabsTrigger>
             <TabsTrigger value="receitas" className="min-w-max">Receitas</TabsTrigger>
             <TabsTrigger value="gastos" className="min-w-max">Gastos</TabsTrigger>
             <TabsTrigger value="camisas" className="min-w-max">Camisas</TabsTrigger>
@@ -254,10 +252,6 @@ export default function Financas() {
 
         <TabsContent value="comprovantes" className="animate-in fade-in-50">
           <ComprovantesTab />
-        </TabsContent>
-
-        <TabsContent value="membros" className="animate-in fade-in-50">
-          <MembrosTab />
         </TabsContent>
 
         <TabsContent value="receitas" className="animate-in fade-in-50">
