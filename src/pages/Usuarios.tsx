@@ -16,6 +16,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
+import { FAB } from '@/components/ui/fab';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador' | 'pastor';
 
@@ -54,12 +56,14 @@ const roleColors: Record<AppRole, string> = {
 
 export default function Usuarios() {
   const { isAdmin, loading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [societies, setSocieties] = useState<Society[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [mobileSocietyTab, setMobileSocietyTab] = useState<string>('');
 
   // Create user dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -84,6 +88,13 @@ export default function Usuarios() {
       fetchSocieties();
     }
   }, [isAdmin]);
+
+  // Set default mobile tab when societies load
+  useEffect(() => {
+    if (societies.length > 0 && !mobileSocietyTab) {
+      setMobileSocietyTab(societies[0].id);
+    }
+  }, [societies]);
 
   const fetchSocieties = async () => {
     const { data } = await supabase
@@ -290,6 +301,127 @@ export default function Usuarios() {
     return activeUsers.filter((u) => u.society_id === societyId);
   };
 
+  const renderUserCard = (user: UserWithRole) => (
+    <div key={user.id} className="rounded-lg border bg-card p-3 space-y-2">
+      <div className="flex items-start justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-sm truncate">{user.full_name}</p>
+          <p className="text-xs text-muted-foreground">@{user.username}</p>
+        </div>
+        <div className="flex items-center gap-1 ml-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            onClick={() => {
+              setEditUserId(user.user_id);
+              setEditFullName(user.full_name);
+              setEditUsername(user.username);
+              setEditPassword('');
+              setEditDialogOpen(true);
+            }}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                disabled={deletingUser === user.user_id}
+              >
+                {deletingUser === user.user_id ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remover usuário?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  O usuário {user.full_name} será desativado e perderá acesso ao sistema.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDeleteUser(user.user_id)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Remover
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">Senha:</span>
+          <span className="font-mono text-xs">
+            {showPasswords[user.id] ? user.plain_password || '—' : '••••••'}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 w-5 p-0"
+            onClick={() =>
+              setShowPasswords((prev) => ({
+                ...prev,
+                [user.id]: !prev[user.id],
+              }))
+            }
+          >
+            {showPasswords[user.id] ? (
+              <EyeOff className="h-3 w-3" />
+            ) : (
+              <Eye className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
+        <Select
+          value={user.role || ''}
+          onValueChange={(value) => handleRoleChange(user.user_id, value as AppRole)}
+          disabled={updatingUser === user.user_id}
+        >
+          <SelectTrigger className="w-auto h-7 text-xs px-2">
+            <SelectValue>
+              {user.role && (
+                <Badge className={`${roleColors[user.role]} text-[10px] px-1.5 py-0`}>
+                  {roleLabels[user.role]}
+                </Badge>
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="visualizador">Visualizador</SelectItem>
+            <SelectItem value="diretoria">Diretoria</SelectItem>
+            <SelectItem value="admin">Administrador</SelectItem>
+            <SelectItem value="pastor">Pastor</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const renderUserCards = (filteredUsers: UserWithRole[]) => {
+    if (filteredUsers.length === 0) {
+      return (
+        <p className="text-center text-muted-foreground py-8 text-sm">
+          Nenhum usuário nesta sociedade
+        </p>
+      );
+    }
+    return (
+      <div className="space-y-2">
+        {filteredUsers.map(renderUserCard)}
+      </div>
+    );
+  };
+
   const renderUserTable = (filteredUsers: UserWithRole[]) => {
     if (filteredUsers.length === 0) {
       return (
@@ -423,116 +555,174 @@ export default function Usuarios() {
     );
   };
 
+  const createDialog = (
+    <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Criar Novo Usuário</DialogTitle>
+          <DialogDescription>
+            Defina o nome, sociedade, usuário, senha e cargo do membro
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Nome completo</Label>
+            <Input
+              placeholder="Ex: Davi Silva"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Sociedade</Label>
+            <Select value={newSocietyId} onValueChange={setNewSocietyId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a sociedade" />
+              </SelectTrigger>
+              <SelectContent>
+                {societies.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: s.color }}
+                      />
+                      {s.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Usuário (login)</Label>
+            <Input
+              placeholder="Ex: davi"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Senha</Label>
+            <Input
+              type="text"
+              placeholder="Ex: Davi123"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Cargo</Label>
+            <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="diretoria">Diretoria</SelectItem>
+                <SelectItem value="visualizador">Visualizador</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="pastor">Pastor</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setCreateOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleCreateUser} disabled={creating}>
+            {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Criar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  const mobileSocietyUsers = mobileSocietyTab === 'geral'
+    ? getUsersForSociety(null)
+    : getUsersForSociety(mobileSocietyTab);
+
   return (
     <AppLayout>
       <PageHeader
         title="Gestão de Usuários"
         description="Gerencie os usuários e permissões do sistema"
+        action={
+          <DialogTrigger asChild>
+            <Button className="hidden md:inline-flex" onClick={() => setCreateOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Novo Usuário
+            </Button>
+          </DialogTrigger>
+        }
       />
+
+      <FAB
+        icon={<UserPlus className="h-6 w-6" />}
+        onClick={() => setCreateOpen(true)}
+      />
+
+      {createDialog}
 
       <div className="space-y-4 md:space-y-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>Usuários Ativos</CardTitle>
-              <CardDescription>Gerencie os cargos, senhas e permissões</CardDescription>
+          <CardHeader className="pb-3 md:pb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg md:text-2xl">Usuários Ativos</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Gerencie os cargos, senhas e permissões</CardDescription>
+              </div>
+              <Button className="hidden md:inline-flex" onClick={() => setCreateOpen(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Novo Usuário
+              </Button>
             </div>
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Novo Usuário
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Criar Novo Usuário</DialogTitle>
-                  <DialogDescription>
-                    Defina o nome, sociedade, usuário, senha e cargo do membro
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Nome completo</Label>
-                    <Input
-                      placeholder="Ex: Davi Silva"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Sociedade</Label>
-                    <Select value={newSocietyId} onValueChange={setNewSocietyId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a sociedade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {societies.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: s.color }}
-                              />
-                              {s.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Usuário (login)</Label>
-                    <Input
-                      placeholder="Ex: davi"
-                      value={newUsername}
-                      onChange={(e) => setNewUsername(e.target.value)}
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Senha</Label>
-                    <Input
-                      type="text"
-                      placeholder="Ex: Davi123"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Cargo</Label>
-                    <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="diretoria">Diretoria</SelectItem>
-                        <SelectItem value="visualizador">Visualizador</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="pastor">Pastor</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setCreateOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleCreateUser} disabled={creating}>
-                    {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Criar
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 md:px-6">
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
+            ) : isMobile ? (
+              /* Mobile: Select dropdown + cards */
+              <div className="space-y-3">
+                <Select value={mobileSocietyTab} onValueChange={setMobileSocietyTab}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione a sociedade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {societies.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: s.color }}
+                          />
+                          <span>{s.name}</span>
+                          <Badge variant="secondary" className="ml-auto h-5 text-xs">
+                            {getUsersForSociety(s.id).length}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="geral">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-muted-foreground" />
+                        <span>Geral</span>
+                        <Badge variant="secondary" className="ml-auto h-5 text-xs">
+                          {getUsersForSociety(null).length}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {renderUserCards(mobileSocietyUsers)}
+              </div>
             ) : (
+              /* Desktop: Tabs + Table */
               <Tabs defaultValue={societies[0]?.id || 'geral'} className="w-full">
                 <TabsList className="w-full flex flex-wrap h-auto gap-1 mb-4">
                   {societies.map((s) => (
