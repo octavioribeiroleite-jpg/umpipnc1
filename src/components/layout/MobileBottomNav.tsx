@@ -25,6 +25,7 @@ export function MobileBottomNav() {
 
   const moreNavItems = [
     { to: '/tarefas', icon: CheckSquare, label: 'Tarefas' },
+    { to: '/comunicados', icon: MessageSquare, label: 'Comunicados' },
     { to: '/plenarias', icon: ClipboardCheck, label: 'Plenárias' },
     { to: '/eleicoes', icon: Vote, label: 'Eleições' },
     { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },

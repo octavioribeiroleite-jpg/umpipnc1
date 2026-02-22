@@ -23,7 +23,19 @@ export function MembroComunicados() {
         .order('created_at', { ascending: false })
         .limit(30);
 
-      setAnnouncements(data || []);
+      // Filter: show only church-wide OR targeted to member's society
+      const filtered = (data || []).filter((a: any) => {
+        // Church-wide announcements visible to all
+        if (a.scope === 'church') return true;
+        // Society-specific: show if member's society is in target list
+        if (a.target_societies && Array.isArray(a.target_societies) && profile.society_id) {
+          return a.target_societies.includes(profile.society_id);
+        }
+        // "All societies" (target_societies null, scope=societies) is for diretoria only
+        return false;
+      });
+
+      setAnnouncements(filtered);
       setLoading(false);
     };
 
@@ -61,9 +73,14 @@ export function MembroComunicados() {
           <CardContent className="pt-4 pb-4">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-sm font-semibold">{a.title}</h3>
-              {a.priority === 'urgente' && (
-                <Badge variant="destructive" className="text-[10px] shrink-0">Urgente</Badge>
-              )}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {a.priority === 'urgente' && (
+                  <Badge variant="destructive" className="text-[10px]">Urgente</Badge>
+                )}
+                {a.created_by_role === 'diretoria' && (
+                  <Badge variant="outline" className="text-[10px]">Diretoria</Badge>
+                )}
+              </div>
             </div>
             <p className="text-sm text-muted-foreground mt-2 whitespace-pre-line">{a.message}</p>
             <p className="text-[10px] text-muted-foreground mt-2">

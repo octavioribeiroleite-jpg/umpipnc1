@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { MembroLayout, type MembroTab } from '@/components/membro/MembroLayout';
 import { MembroInicio } from '@/components/membro/MembroInicio';
 import { MembroEventos } from '@/components/membro/MembroEventos';
 import { MembroPagamentos } from '@/components/membro/MembroPagamentos';
 import { MembroComunicados } from '@/components/membro/MembroComunicados';
+import { toast } from 'sonner';
+import { format, differenceInDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function MembroHome() {
   const { user, loading } = useAuth();
@@ -17,6 +21,43 @@ export default function MembroHome() {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // Event notifications (7 days)
+  useEffect(() => {
+    if (!user) return;
+    const key = `event-notif-${user.id}`;
+    if (sessionStorage.getItem(key)) return;
+
+    const fetchUpcoming = async () => {
+      const now = new Date();
+      const inWeek = new Date();
+      inWeek.setDate(inWeek.getDate() + 7);
+
+      const { data } = await supabase
+        .from('events')
+        .select('title, start_date')
+        .gte('start_date', now.toISOString())
+        .lte('start_date', inWeek.toISOString())
+        .neq('status', 'cancelado')
+        .order('start_date', { ascending: true })
+        .limit(3);
+
+      if (data && data.length > 0) {
+        sessionStorage.setItem(key, '1');
+        data.forEach((event, i) => {
+          const days = differenceInDays(new Date(event.start_date), now);
+          const label = days === 0 ? 'Hoje' : days === 1 ? 'Amanhã' : `Em ${days} dias`;
+          setTimeout(() => {
+            toast(`📅 ${label}: ${event.title}`, {
+              description: format(new Date(event.start_date), "EEEE, dd/MM", { locale: ptBR }),
+              duration: 6000,
+            });
+          }, i * 1500);
+        });
+      }
+    };
+    fetchUpcoming();
+  }, [user]);
 
   if (loading || !user) return null;
 

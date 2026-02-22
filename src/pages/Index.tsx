@@ -305,7 +305,7 @@ export default function Index() {
     }
   }, [user]);
 
-  if (loading) {
+  if (loading || !rolesLoaded) {
     return (
       <AppLayout>
         <div className="space-y-6">

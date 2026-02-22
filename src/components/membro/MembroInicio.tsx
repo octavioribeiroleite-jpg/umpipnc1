@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, CreditCard, Bell, ChevronRight } from 'lucide-react';
+import { Calendar, CreditCard, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -42,7 +42,7 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
         .from('pastor_announcements')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(10);
 
       const [memberRes, eventsRes, announcementsRes] = await Promise.all([
         membersQuery,
@@ -72,8 +72,16 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
         });
       }
 
+      // Filter announcements: church-wide OR targeted to member's society
       if (announcementsRes.data) {
-        setRecentAnnouncements(announcementsRes.data);
+        const filtered = announcementsRes.data.filter((a: any) => {
+          if (a.scope === 'church') return true;
+          if (a.target_societies && Array.isArray(a.target_societies) && profile.society_id) {
+            return a.target_societies.includes(profile.society_id);
+          }
+          return false;
+        });
+        setRecentAnnouncements(filtered.slice(0, 3));
       }
 
       setLoading(false);
@@ -94,17 +102,15 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
 
   return (
     <div className="space-y-4">
-      {/* Welcome */}
-      <Card>
-        <CardContent className="pt-6">
-          <h2 className="text-lg font-semibold">
-            Olá, {profile?.full_name?.split(' ')[0] || 'Membro'}! 👋
-          </h2>
-          {society && (
-            <p className="text-sm text-muted-foreground mt-1">{society.name}</p>
-          )}
-        </CardContent>
-      </Card>
+      {/* Compact Welcome */}
+      <div className="flex items-baseline gap-2">
+        <span className="text-base font-semibold">
+          Olá, {profile?.full_name?.split(' ')[0] || 'Membro'}! 👋
+        </span>
+        {society && (
+          <span className="text-xs text-muted-foreground">• {society.name}</span>
+        )}
+      </div>
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-3">
@@ -118,7 +124,7 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
               <p className="text-2xl font-bold">{pendingCharges.count}</p>
               <p className="text-xs text-muted-foreground">
                 {pendingCharges.total > 0
-                  ? `R$ ${pendingCharges.total.toFixed(2)} pendente`
+                  ? `R$ ${pendingCharges.total.toFixed(2).replace('.', ',')} pendente`
                   : 'Nenhuma pendência'}
               </p>
             </CardContent>

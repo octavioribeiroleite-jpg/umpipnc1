@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import {
   Drawer,
   DrawerClose,
@@ -38,7 +40,11 @@ interface Announcement {
   target_societies: string[] | null;
   created_at: string;
   read_by: Json;
+  scope: string;
+  created_by_role: string;
 }
+
+type RecipientType = 'church' | 'all_societies' | 'specific';
 
 export default function PastorComunicados() {
   const { user } = useAuth();
@@ -53,8 +59,8 @@ export default function PastorComunicados() {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [priority, setPriority] = useState('normal');
-  const [selectedSocieties, setSelectedSocieties] = useState<string[]>([]);
-  const [allSocieties, setAllSocieties] = useState(true);
+  const [recipientType, setRecipientType] = useState<RecipientType>('church');
+  const [selectedSociety, setSelectedSociety] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -71,20 +77,32 @@ export default function PastorComunicados() {
     setTitle('');
     setMessage('');
     setPriority('normal');
-    setSelectedSocieties([]);
-    setAllSocieties(true);
+    setRecipientType('church');
+    setSelectedSociety('');
   };
 
   const handleSend = async () => {
     if (!title.trim() || !message.trim() || !user) return;
+    if (recipientType === 'specific' && !selectedSociety) {
+      toast.error('Selecione uma sociedade');
+      return;
+    }
+
     setSending(true);
     try {
+      const scope = recipientType === 'church' ? 'church' : 'societies';
+      const target_societies =
+        recipientType === 'specific' ? [selectedSociety] :
+        null;
+
       const { error } = await supabase.from('pastor_announcements').insert({
         title: title.trim(),
         message: message.trim(),
         priority,
-        target_societies: allSocieties ? null : selectedSocieties,
+        scope,
+        target_societies,
         created_by: user.id,
+        created_by_role: 'pastor',
       });
       if (error) throw error;
 
@@ -102,13 +120,10 @@ export default function PastorComunicados() {
     }
   };
 
-  const getSocietyNames = (ids: string[] | null) => {
-    if (!ids) return 'Todas as sociedades';
-    return ids.map(id => societies.find(s => s.id === id)?.name || id).join(', ');
-  };
-
-  const toggleSociety = (id: string) => {
-    setSelectedSocieties(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+  const getScopeLabel = (a: Announcement) => {
+    if (a.scope === 'church') return '🏛️ Toda a igreja';
+    if (!a.target_societies) return 'Todas as sociedades';
+    return a.target_societies.map(id => societies.find(s => s.id === id)?.name || id).join(', ');
   };
 
   const getReadCount = (readBy: Json): number => {
@@ -119,14 +134,11 @@ export default function PastorComunicados() {
   return (
     <PastorLayout>
       <div className="space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold">Comunicados</h1>
             {announcements.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {announcements.length}
-              </Badge>
+              <Badge variant="secondary" className="text-xs">{announcements.length}</Badge>
             )}
           </div>
           <Button size="sm" onClick={() => setDrawerOpen(true)}>
@@ -135,7 +147,7 @@ export default function PastorComunicados() {
           </Button>
         </div>
 
-        {/* Drawer with form */}
+        {/* Drawer */}
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerContent className="max-h-[85vh]">
             <DrawerHeader>
@@ -145,54 +157,51 @@ export default function PastorComunicados() {
               </DrawerTitle>
             </DrawerHeader>
             <div className="px-4 space-y-4 overflow-y-auto">
-              <Input
-                placeholder="Título do comunicado"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-              />
-              <Textarea
-                placeholder="Mensagem..."
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                rows={4}
-              />
+              <Input placeholder="Título do comunicado" value={title} onChange={e => setTitle(e.target.value)} />
+              <Textarea placeholder="Mensagem..." value={message} onChange={e => setMessage(e.target.value)} rows={4} />
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Prioridade</p>
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="urgente">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-3">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Prioridade</p>
-                  <Select value={priority} onValueChange={setPriority}>
-                    <SelectTrigger className="w-36">
-                      <SelectValue />
-                    </SelectTrigger>
+                <p className="text-sm font-medium">Destinatários</p>
+                <RadioGroup value={recipientType} onValueChange={(v) => setRecipientType(v as RecipientType)} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="church" id="church" />
+                    <Label htmlFor="church" className="text-sm">🏛️ Toda a igreja (todos veem)</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="all_societies" id="all_soc" />
+                    <Label htmlFor="all_soc" className="text-sm">📋 Todas as sociedades (só diretorias)</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="specific" id="specific" />
+                    <Label htmlFor="specific" className="text-sm">🎯 Sociedade específica</Label>
+                  </div>
+                </RadioGroup>
+                {recipientType === 'specific' && (
+                  <Select value={selectedSociety} onValueChange={setSelectedSociety}>
+                    <SelectTrigger><SelectValue placeholder="Selecione a sociedade" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="urgente">Urgente</SelectItem>
+                      {societies.map(s => (
+                        <SelectItem key={s.id} value={s.id}>
+                          <div className="flex items-center gap-2">
+                            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                            {s.name}
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Destinatários</p>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Checkbox
-                      checked={allSocieties}
-                      onCheckedChange={(v) => { setAllSocieties(!!v); if (v) setSelectedSocieties([]); }}
-                    />
-                    <span className="text-sm">Todas as sociedades</span>
-                  </div>
-                  {!allSocieties && (
-                    <div className="flex flex-wrap gap-2">
-                      {societies.map(s => (
-                        <label key={s.id} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                          <Checkbox
-                            checked={selectedSocieties.includes(s.id)}
-                            onCheckedChange={() => toggleSociety(s.id)}
-                          />
-                          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                          {s.name}
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
             <DrawerFooter>
@@ -248,22 +257,17 @@ export default function PastorComunicados() {
                             onClick={() => setExpandedId(isExpanded ? null : a.id)}
                             className="text-xs text-primary mt-1 flex items-center gap-0.5"
                           >
-                            {isExpanded ? (
-                              <>Menos <ChevronUp className="h-3 w-3" /></>
-                            ) : (
-                              <>Ver mais <ChevronDown className="h-3 w-3" /></>
-                            )}
+                            {isExpanded ? <>Menos <ChevronUp className="h-3 w-3" /></> : <>Ver mais <ChevronDown className="h-3 w-3" /></>}
                           </button>
                         )}
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge variant="outline" className="text-xs">{getSocietyNames(a.target_societies)}</Badge>
+                          <Badge variant="outline" className="text-xs">{getScopeLabel(a)}</Badge>
                           <span className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(a.created_at), { addSuffix: true, locale: ptBR })}
                           </span>
                           {readCount > 0 && (
                             <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                              <Eye className="h-3 w-3" />
-                              {readCount}
+                              <Eye className="h-3 w-3" />{readCount}
                             </span>
                           )}
                         </div>

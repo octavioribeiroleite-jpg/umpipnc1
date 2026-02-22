@@ -820,30 +820,36 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          created_by_role: string
           id: string
           message: string
           priority: string
           read_by: Json
+          scope: string
           target_societies: string[] | null
           title: string
         }
         Insert: {
           created_at?: string
           created_by: string
+          created_by_role?: string
           id?: string
           message: string
           priority?: string
           read_by?: Json
+          scope?: string
           target_societies?: string[] | null
           title: string
         }
         Update: {
           created_at?: string
           created_by?: string
+          created_by_role?: string
           id?: string
           message?: string
           priority?: string
           read_by?: Json
+          scope?: string
           target_societies?: string[] | null
           title?: string
         }

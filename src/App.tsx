@@ -25,6 +25,7 @@ import PastorSociedade from "./pages/PastorSociedade";
 import PastorCalendario from "./pages/PastorCalendario";
 import PastorComunicados from "./pages/PastorComunicados";
 import MembroHome from "./pages/MembroHome";
+import DiretoriaComunicados from "./pages/DiretoriaComunicados";
 import Eleicoes from "./pages/Eleicoes";
 import EleicaoDetalhe from "./pages/EleicaoDetalhe";
 import VotePublic from "./pages/VotePublic";
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/pastor/sugestoes" element={<PastorSugestoes />} />
             <Route path="/pastor-sugestoes" element={<PastorSugestoes />} />
             <Route path="/sugestoes" element={<PastorSugestoes />} />
+            <Route path="/comunicados" element={<DiretoriaComunicados />} />
             <Route path="/membro" element={<MembroHome />} />
             <Route path="/eleicoes" element={<Eleicoes />} />
             <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />
