@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy, Monitor } from 'lucide-react';
 import { AttendanceList } from '@/components/eleicoes/AttendanceList';
 import { CandidateForm } from '@/components/eleicoes/CandidateForm';
 import { VotingPanel } from '@/components/eleicoes/VotingPanel';
 import { ResultPanel } from '@/components/eleicoes/ResultPanel';
+import { DeviceRegistration } from '@/components/eleicoes/DeviceRegistration';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface Election {
@@ -25,6 +26,7 @@ interface Election {
 
 interface AttendanceItem { id: string; name: string; present: boolean; }
 interface Candidate { id: string; name: string; photo_url: string | null; display_order: number; }
+interface Device { id: string; label: string; token: string; activated: boolean; }
 
 export default function EleicaoDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -33,14 +35,16 @@ export default function EleicaoDetalhe() {
   const [election, setElection] = useState<Election | null>(null);
   const [attendance, setAttendance] = useState<AttendanceItem[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
     if (!id) return;
-    const [elRes, atRes, caRes] = await Promise.all([
+    const [elRes, atRes, caRes, devRes] = await Promise.all([
       supabase.from('elections' as any).select('*').eq('id', id).single(),
       supabase.from('election_attendance' as any).select('*').eq('election_id', id).order('name' as any),
       supabase.from('election_candidates' as any).select('*').eq('election_id', id).order('display_order' as any),
+      supabase.from('election_devices' as any).select('*').eq('election_id', id).order('created_at' as any),
     ]);
 
     if (elRes.error) {
@@ -52,6 +56,7 @@ export default function EleicaoDetalhe() {
     setElection(elRes.data as any);
     setAttendance((atRes.data as any[]) || []);
     setCandidates((caRes.data as any[]) || []);
+    setDevices((devRes.data as any[]) || []);
     setLoading(false);
   };
 
@@ -69,6 +74,8 @@ export default function EleicaoDetalhe() {
 
   const statusLabel: Record<string, string> = { draft: 'Rascunho', open: 'Em Votação', finished: 'Finalizada' };
   const isDraft = election.status === 'draft';
+  const votingMode = (election as any).voting_mode || 'shared';
+  const showDevices = votingMode === 'both' || votingMode === 'shared';
 
   // Accordion default open based on status
   const defaultOpen = (() => {
@@ -127,11 +134,34 @@ export default function EleicaoDetalhe() {
               electionName={election.name}
               status={election.status}
               totalPresent={election.total_present}
-              votingMode={(election as any).voting_mode || 'shared'}
+              votingMode={votingMode}
+              devices={devices}
+              candidates={candidates}
               onRefresh={fetchAll}
             />
           </AccordionContent>
         </AccordionItem>
+
+        {showDevices && (
+          <AccordionItem value="dispositivos" className="border rounded-lg px-3">
+            <AccordionTrigger className="py-3 text-sm font-medium">
+              <span className="flex items-center gap-2">
+                <Monitor className="h-4 w-4" /> Dispositivos Fixos
+                {devices.length > 0 && (
+                  <span className="text-[10px] text-muted-foreground ml-1">({devices.length})</span>
+                )}
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <DeviceRegistration
+                electionId={election.id}
+                devices={devices}
+                onRefresh={fetchAll}
+                disabled={!isDraft}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
         <AccordionItem value="chamada" className="border rounded-lg px-3">
           <AccordionTrigger className="py-3 text-sm font-medium">
