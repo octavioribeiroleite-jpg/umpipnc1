@@ -2,11 +2,11 @@ import { ReactNode, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Home, Calendar, CreditCard, Bell, LogOut, Menu } from 'lucide-react';
+import { Home, Calendar, CreditCard, Bell, Heart, LogOut, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logoIpnc from '@/assets/logo-ipnc.png';
 
-export type MembroTab = 'inicio' | 'eventos' | 'pagamentos' | 'comunicados';
+export type MembroTab = 'inicio' | 'eventos' | 'pagamentos' | 'comunicados' | 'dizimos';
 
 interface MembroLayoutProps {
   children: ReactNode;
@@ -19,6 +19,7 @@ const menuItems: { icon: typeof Home; label: string; tab: MembroTab }[] = [
   { icon: Calendar, label: 'Eventos', tab: 'eventos' },
   { icon: CreditCard, label: 'Pagamentos', tab: 'pagamentos' },
   { icon: Bell, label: 'Comunicados', tab: 'comunicados' },
+  { icon: Heart, label: 'Dízimos', tab: 'dizimos' },
 ];
 
 export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutProps) {

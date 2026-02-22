@@ -3,12 +3,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, CreditCard, ChevronRight } from 'lucide-react';
+import { Calendar, CreditCard, ChevronRight, Heart } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface MembroInicioProps {
-  onTabChange: (tab: 'inicio' | 'eventos' | 'pagamentos' | 'comunicados') => void;
+  onTabChange: (tab: 'inicio' | 'eventos' | 'pagamentos' | 'comunicados' | 'dizimos') => void;
 }
 
 export function MembroInicio({ onTabChange }: MembroInicioProps) {
@@ -111,6 +111,24 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
           <span className="text-xs text-muted-foreground">• {society.name}</span>
         )}
       </div>
+
+      {/* Dízimos quick access */}
+      <button onClick={() => onTabChange('dizimos')} className="w-full text-left">
+        <Card className="border-primary/30 bg-primary/5 hover:shadow-md transition-shadow">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <Heart className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-primary">Dízimos e Ofertas</p>
+                <p className="text-xs text-muted-foreground">Copiar chave PIX</p>
+              </div>
+              <ChevronRight className="h-4 w-4 ml-auto text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      </button>
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-3">
