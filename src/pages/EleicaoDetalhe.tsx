@@ -73,10 +73,10 @@ export default function EleicaoDetalhe() {
   // Accordion default open based on status
   const defaultOpen = (() => {
     switch (election.status) {
-      case 'draft': return ['chamada', 'candidatos'];
+      case 'draft': return ['candidatos', 'votacao'];
       case 'open': return ['votacao'];
       case 'finished': return ['resultado'];
-      default: return ['chamada'];
+      default: return ['candidatos'];
     }
   })();
 
@@ -99,23 +99,6 @@ export default function EleicaoDetalhe() {
       </div>
 
       <Accordion type="multiple" defaultValue={defaultOpen} className="space-y-2">
-        <AccordionItem value="chamada" className="border rounded-lg px-3">
-          <AccordionTrigger className="py-3 text-sm font-medium">
-            <span className="flex items-center gap-2">
-              <Users className="h-4 w-4" /> Chamada de Presença
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <AttendanceList
-              electionId={election.id}
-              societyId={election.society_id}
-              attendance={attendance}
-              onRefresh={fetchAll}
-              disabled={!isDraft}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
         <AccordionItem value="candidatos" className="border rounded-lg px-3">
           <AccordionTrigger className="py-3 text-sm font-medium">
             <span className="flex items-center gap-2">
@@ -146,6 +129,23 @@ export default function EleicaoDetalhe() {
               totalPresent={election.total_present}
               votingMode={(election as any).voting_mode || 'shared'}
               onRefresh={fetchAll}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="chamada" className="border rounded-lg px-3">
+          <AccordionTrigger className="py-3 text-sm font-medium">
+            <span className="flex items-center gap-2">
+              <Users className="h-4 w-4" /> Chamada de Presença
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <AttendanceList
+              electionId={election.id}
+              societyId={election.society_id}
+              attendance={attendance}
+              onRefresh={fetchAll}
+              disabled={!isDraft}
             />
           </AccordionContent>
         </AccordionItem>

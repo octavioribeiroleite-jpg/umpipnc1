@@ -27,7 +27,7 @@ export default function VotePublic() {
   const [readyToVote, setReadyToVote] = useState(false);
   const [alreadyVoted, setAlreadyVoted] = useState(false);
 
-  const isIndividual = election?.voting_mode === 'individual';
+  const isIndividual = election?.voting_mode === 'individual' || election?.voting_mode === 'both';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,7 +41,7 @@ export default function VotePublic() {
       setCandidates((caRes.data as any[]) || []);
 
       // Check if device already voted (individual mode)
-      if (elData?.voting_mode === 'individual') {
+      if (elData?.voting_mode === 'individual' || elData?.voting_mode === 'both') {
         const deviceId = getDeviceId();
         // Check localStorage first
         if (localStorage.getItem(`voted_${electionId}`)) {
