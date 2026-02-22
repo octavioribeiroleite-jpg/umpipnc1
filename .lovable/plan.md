@@ -1,124 +1,76 @@
-# Melhorias no Portal do Membro e Sistema de Comunicados
 
-## 1. Novo sistema de destinatarios para comunicados
+# Layout Compacto para Eleicoes (Mobile)
 
-### Regras de negocio
+O problema atual e que os 3 cards (Chamada, Candidatos, Votacao) ocupam muito espaco vertical no celular, com padding e titulos grandes. A solucao e compactar tudo.
 
-- **Pastor** pode enviar para: 1 sociedade especifica, todas as sociedades, ou toda a igreja
-- **Diretoria** pode enviar comunicados apenas para os membros da sua propria sociedade
-- **Membro** ve: comunicados da sua sociedade (enviados pelo pastor ou pela diretoria) + comunicados para "toda a igreja"
-- Comunicados marcados como "todas as sociedades" NAO chegam para membros -- so para diretorias
-- Comunicados marcados como "toda a igreja" chegam para TODOS (membros, diretoria, pastor)
+## Mudancas Planejadas
 
-### Mudanca no banco de dados (migration)
+### 1. EleicaoDetalhe.tsx - Layout compacto com Accordion
+- Substituir os 3 cards empilhados por um **Accordion** (colapsavel) onde cada secao pode ser expandida/recolhida
+- A secao ativa (baseada no status) abre por padrao:
+  - Status `draft`: "Chamada de Presenca" e "Candidatos" abertos
+  - Status `open`: "Votacao" aberto
+  - Status `finished`: "Resultado" aberto
+- Reduzir espaco entre secoes (`space-y-3` em vez de `space-y-6`)
+- Compactar o cabecalho: nome da eleicao + badge em uma unica linha, cargo como texto menor
 
-Adicionar coluna `scope` na tabela `pastor_announcements`:
+### 2. AttendanceList.tsx - Compactar
+- Reduzir padding do CardHeader e CardContent (`p-3 pt-0` e `p-3`)
+- Titulo menor (`text-base` em vez de padrao)
+- Input e botao "Importar" na mesma linha
+- Lista de nomes mais compacta (`py-1` em vez de `py-2`)
+- Footer com contagem e botao em layout mais apertado
 
-```sql
-ALTER TABLE pastor_announcements ADD COLUMN scope text NOT NULL DEFAULT 'societies';
--- Valores possiveis: 'church' (toda a igreja), 'societies' (sociedades especificas ou todas)
+### 3. CandidateForm.tsx - Compactar
+- Reduzir padding do card
+- Grid de candidatos: `grid-cols-3` no mobile (fotos menores `w-16 h-16` em vez de `w-24 h-24`)
+- Botoes de acao (Foto/Excluir) como icones menores sem texto
+- Titulo menor
+
+### 4. VotingPanel.tsx - Compactar
+- Reduzir padding
+- Contadores em layout mais compacto (texto menor)
+- QR Code menor no mobile (`size={120}` em vez de `160`)
+- Progress bar mais fina (`h-2` em vez de `h-4`)
+
+### 5. Eleicoes.tsx (Lista) - FAB
+- Substituir botao "Nova Eleicao" no header por um FAB (botao flutuante) no mobile, seguindo o padrao ja usado em outras paginas
+- Card de estado vazio mais compacto
+
+### 6. ElectionCard.tsx - Compactar
+- Reduzir padding (`p-3` em vez de `p-4`)
+- Informacoes em uma ou duas linhas compactas
+
+## Detalhes Tecnicos
+
+### Accordion na pagina de detalhe
+Usar o componente Accordion ja existente do projeto (Radix UI) para colapsar as secoes:
+
+```
+<Accordion type="multiple" defaultValue={defaultOpen}>
+  <AccordionItem value="chamada">
+    <AccordionTrigger>Chamada de Presenca</AccordionTrigger>
+    <AccordionContent>
+      <AttendanceList ... />
+    </AccordionContent>
+  </AccordionItem>
+  ...
+</Accordion>
 ```
 
-- `scope = 'church'` + `target_societies = null` -> Toda a igreja (visivel para membros)
-- `scope = 'societies'` + `target_societies = null` -> Todas as sociedades (so diretoria)
-- `scope = 'societies'` + `target_societies = [id1]` -> Sociedade especifica (diretoria + membros daquela sociedade)
+Isso elimina a necessidade de scroll extenso -- o usuario expande apenas o que precisa.
 
-Adicionar coluna `created_by_role` para distinguir se o comunicado foi criado pelo pastor ou pela diretoria:
+### Reducao de tamanhos
+- CardHeader padding: `p-4` em vez de `p-6`
+- CardContent padding: `p-4 pt-0` em vez de `p-6 pt-0`
+- Titulos: `text-base font-semibold` em vez de `text-2xl`
+- Espacamento geral: `space-y-3` em vez de `space-y-4` ou `space-y-6`
 
-```sql
-ALTER TABLE pastor_announcements ADD COLUMN created_by_role text NOT NULL DEFAULT 'pastor';
--- Valores: 'pastor', 'diretoria'
-```
+### FAB na lista de eleicoes
+Reutilizar o componente `Fab` ja existente no projeto para o botao "Nova Eleicao" no mobile.
 
-Atualizar RLS para permitir que diretoria tambem insira comunicados:
-
-```sql
--- Atualizar policy de INSERT para incluir diretoria
-DROP POLICY IF EXISTS "Pastor can create announcements" ON pastor_announcements;
-CREATE POLICY "Pastor and diretoria can create announcements"
-ON pastor_announcements FOR INSERT TO authenticated
-WITH CHECK (
-  has_role(auth.uid(), 'pastor'::app_role)
-  OR has_role(auth.uid(), 'admin'::app_role)
-  OR has_role(auth.uid(), 'diretoria'::app_role)
-);
-```
-
-### Arquivos afetados
-
-`**src/pages/PastorComunicados.tsx**`
-
-- Adicionar opcao "Toda a igreja" nos destinatarios (alem de "Todas as sociedades" e sociedades individuais)
-- Gravar campo `scope` e `created_by_role = 'pastor'`
-- 3 opcoes de destinatario: Toda a igreja / Todas as sociedades / Sociedade especifica
-
-**Nova pagina ou componente para comunicados da diretoria**
-
-- Criar componente `DiretoriaComunicados` acessivel pelo dashboard da diretoria
-- Diretoria so pode enviar para membros da SUA sociedade (sem opcao de escolher outras)
-- Grava `target_societies = [society_id]`, `scope = 'societies'`, `created_by_role = 'diretoria'`
-
-`**src/components/membro/MembroComunicados.tsx**`
-
-- Filtrar comunicados: mostrar apenas onde:
-  - `scope = 'church'` (toda a igreja), OU
-  - `target_societies` contem o `society_id` do membro
-- NAO mostrar comunicados onde `scope = 'societies'` e `target_societies = null` (esses sao so para diretorias)
-
-`**src/components/membro/MembroInicio.tsx**`
-
-- Aplicar mesmo filtro nos comunicados recentes da tela inicial
-
-## 2. Eliminar flash da pagina admin ao logar como membro
-
-`**src/pages/Index.tsx**`
-
-- Adicionar retorno antecipado: se `!rolesLoaded`, mostrar skeleton/spinner em vez do conteudo do dashboard
-- Isso impede que o membro veja brevemente a pagina do admin antes do redirecionamento
-
-## 3. Eventos mais detalhados e organizados
-
-`**src/components/membro/MembroEventos.tsx**`
-
-- Agrupar eventos por mes com separadores visuais (ex: "Fevereiro 2026")
-- Mostrar dia da semana (ex: "Sabado, 22 de fevereiro")
-- Exibir horario de inicio e fim quando houver `end_date`
-- Buscar e exibir badge com nome da sociedade responsavel
-- Destaque visual para eventos da propria sociedade
-
-## 4. Saudacao compacta
-
-`**src/components/membro/MembroInicio.tsx**`
-
-- Substituir card grande de saudacao por texto inline menor no topo
-- Formato: "Ola, [Nome]! -- [Sociedade]" em uma linha, sem card separado
-
-## 5. Pagamentos com detalhes completos
-
-`**src/components/membro/MembroPagamentos.tsx**`
-
-- Adicionar nos cards de cobranca: data de vencimento formatada, valor pago parcialmente, saldo restante
-- Exibir metodo de pagamento e notas/observacoes quando disponiveis
-
-## 6. Notificacoes pop-up para eventos proximos (7 dias)
-
-`**src/pages/MembroHome.tsx**`
-
-- Ao montar, buscar eventos dos proximos 7 dias
-- Exibir ate 3 toasts (sonner) com titulo do evento e quantos dias faltam
-- Usar `sessionStorage` para nao repetir na mesma sessao
-
-## Resumo das alteracoes
-
-
-| Arquivo                                                                                                                                                                                                                                                                              | Tipo           |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| Migration SQL (scope, created_by_role, RLS)                                                                                                                                                                                                                                          | Banco de dados |
-| `PastorComunicados.tsx`                                                                                                                                                                                                                                                              | Editar         |
-| `MembroComunicados.tsx`                                                                                                                                                                                                                                                              | Editar         |
-| `MembroInicio.tsx`                                                                                                                                                                                                                                                                   | Editar         |
-| `MembroEventos.tsx`                                                                                                                                                                                                                                                                  | Editar         |
-| `MembroPagamentos.tsx`                                                                                                                                                                                                                                                               | Editar         |
-| `MembroHome.tsx`                                                                                                                                                                                                                                                                     | Editar         |
-| `Index.tsx`                                                                                                                                                                                                                                                                          | Editar         |
-| Novo componente comunicados diretoria (ou integrar na pagina existente)E lembrar que aparece brevemente a tela do admn quando inicia a area de membros lembrar de consolidar todos os dados antes de exibir, e isso precisa valer para todos os tipos de login do aplicativo&nbsp; | Criar/Editar   |
+## Resultado Esperado
+- Pagina de detalhe cabe em uma tela sem precisar rolar tanto
+- Secoes colapsaveis permitem foco na etapa atual
+- Cards mais compactos e adequados para telas de celular
+- Lista de eleicoes com FAB seguindo padrao do resto do app
