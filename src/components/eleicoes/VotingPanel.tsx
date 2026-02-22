@@ -4,8 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -13,15 +14,19 @@ import {
 
 interface VotingPanelProps {
   electionId: string;
+  electionName?: string;
   status: string;
   totalPresent: number;
+  votingMode: string;
   onRefresh: () => void;
 }
 
-export function VotingPanel({ electionId, status, totalPresent, onRefresh }: VotingPanelProps) {
+export function VotingPanel({ electionId, electionName, status, totalPresent, votingMode, onRefresh }: VotingPanelProps) {
   const [voteCount, setVoteCount] = useState(0);
   const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
+  const [qrExpanded, setQrExpanded] = useState(false);
   const { toast } = useToast();
 
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
@@ -34,6 +39,10 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
       .eq('election_id', electionId);
     setVoteCount(count || 0);
   };
+
+  useEffect(() => {
+    setSelectedMode(votingMode || 'shared');
+  }, [votingMode]);
 
   useEffect(() => {
     fetchVoteCount();
@@ -60,9 +69,14 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
     };
   }, [electionId]);
 
+  const handleModeChange = async (mode: string) => {
+    setSelectedMode(mode);
+    await supabase.from('elections' as any).update({ voting_mode: mode } as any).eq('id', electionId);
+  };
+
   const handleStartVoting = async () => {
     setLoading(true);
-    await supabase.from('elections' as any).update({ status: 'open' } as any).eq('id', electionId);
+    await supabase.from('elections' as any).update({ status: 'open', voting_mode: selectedMode } as any).eq('id', electionId);
     toast({ title: 'Votação iniciada!' });
     setLoading(false);
     onRefresh();
@@ -97,6 +111,38 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
         <p className="text-xs text-muted-foreground">
           Configure a chamada e os candidatos antes de iniciar.
         </p>
+
+        {/* Voting mode selector */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium">Modo de votação:</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleModeChange('shared')}
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-xs ${
+                selectedMode === 'shared'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-muted-foreground/30'
+              }`}
+            >
+              <Monitor className="h-5 w-5" />
+              <span className="font-medium">Urna Compartilhada</span>
+              <span className="text-[10px] text-muted-foreground text-center">Um dispositivo para todos</span>
+            </button>
+            <button
+              onClick={() => handleModeChange('individual')}
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-xs ${
+                selectedMode === 'individual'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-muted-foreground/30'
+              }`}
+            >
+              <Smartphone className="h-5 w-5" />
+              <span className="font-medium">Voto Individual</span>
+              <span className="text-[10px] text-muted-foreground text-center">Cada um no seu celular</span>
+            </button>
+          </div>
+        </div>
+
         <Button size="sm" onClick={handleStartVoting} disabled={loading || totalPresent === 0}>
           {loading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
           Iniciar Votação
@@ -113,6 +159,11 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
   return (
     <>
       <div className="space-y-3">
+        {/* Mode badge */}
+        <Badge variant="outline" className="text-[10px]">
+          {votingMode === 'individual' ? '📱 Voto Individual' : '🖥️ Urna Compartilhada'}
+        </Badge>
+
         {/* Progress */}
         <div className="space-y-1">
           <div className="flex justify-between text-xs">
@@ -155,18 +206,47 @@ export function VotingPanel({ electionId, status, totalPresent, onRefresh }: Vot
 
         {/* QR Code & Link - compact */}
         <div className="flex items-center gap-3 p-3 border rounded-lg">
-          <QRCodeSVG value={voteUrl} size={100} />
+          <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
+            <QRCodeSVG value={voteUrl} size={100} />
+            <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
+              <Maximize2 className="h-5 w-5 text-foreground" />
+            </div>
+          </div>
           <div className="flex-1 min-w-0 space-y-1.5">
             <p className="text-xs font-medium flex items-center gap-1">
               <LinkIcon className="h-3 w-3" /> Link da Urna
             </p>
             <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={copyLink}>
-              <Copy className="h-3 w-3 mr-1" /> Copiar
-            </Button>
+            <div className="flex gap-1.5">
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={copyLink}>
+                <Copy className="h-3 w-3 mr-1" /> Copiar
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setQrExpanded(true)}>
+                <Maximize2 className="h-3 w-3 mr-1" /> Expandir
+              </Button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Fullscreen QR Dialog */}
+      <Dialog open={qrExpanded} onOpenChange={setQrExpanded}>
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 border-none rounded-none flex flex-col items-center justify-center bg-background [&>button]:hidden">
+          <button
+            onClick={() => setQrExpanded(false)}
+            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <div className="flex flex-col items-center gap-6 p-8">
+            {electionName && (
+              <h2 className="text-xl font-bold text-center">{electionName}</h2>
+            )}
+            <QRCodeSVG value={voteUrl} size={Math.min(window.innerWidth - 80, window.innerHeight - 200, 400)} />
+            <code className="text-sm bg-muted p-3 rounded-lg break-all text-center max-w-sm">{voteUrl}</code>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
         <AlertDialogContent>

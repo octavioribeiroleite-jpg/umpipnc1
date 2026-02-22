@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Loader2, UserCheck, Vote, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck } from 'lucide-react';
 
-interface Election { id: string; name: string; position: string; status: string; }
+interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; }
 interface Candidate { id: string; name: string; photo_url: string | null; display_order: number; }
+
+function getDeviceId(): string {
+  const key = 'vote_device_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
 
 export default function VotePublic() {
   const { electionId } = useParams<{ electionId: string }>();
@@ -15,6 +25,9 @@ export default function VotePublic() {
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
   const [voteSuccess, setVoteSuccess] = useState(false);
   const [readyToVote, setReadyToVote] = useState(false);
+  const [alreadyVoted, setAlreadyVoted] = useState(false);
+
+  const isIndividual = election?.voting_mode === 'individual';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,8 +36,30 @@ export default function VotePublic() {
         supabase.from('elections' as any).select('*').eq('id', electionId).single(),
         supabase.from('election_candidates' as any).select('*').eq('election_id', electionId).order('display_order' as any),
       ]);
-      setElection(elRes.data as any);
+      const elData = elRes.data as any;
+      setElection(elData);
       setCandidates((caRes.data as any[]) || []);
+
+      // Check if device already voted (individual mode)
+      if (elData?.voting_mode === 'individual') {
+        const deviceId = getDeviceId();
+        // Check localStorage first
+        if (localStorage.getItem(`voted_${electionId}`)) {
+          setAlreadyVoted(true);
+        } else {
+          // Check server
+          const { count } = await supabase
+            .from('election_votes' as any)
+            .select('*', { count: 'exact', head: true })
+            .eq('election_id', electionId)
+            .eq('device_id', deviceId);
+          if (count && count > 0) {
+            setAlreadyVoted(true);
+            localStorage.setItem(`voted_${electionId}`, 'true');
+          }
+        }
+      }
+
       setLoading(false);
     };
     fetchData();
@@ -33,24 +68,52 @@ export default function VotePublic() {
   const handleVote = async () => {
     if (!confirmCandidate || !electionId) return;
     setVoting(true);
-    const { error } = await supabase.from('election_votes' as any).insert({
+
+    const voteData: any = {
       election_id: electionId,
       candidate_id: confirmCandidate.id,
-    } as any);
+    };
+
+    if (isIndividual) {
+      const deviceId = getDeviceId();
+      // Server-side check before inserting
+      const { count } = await supabase
+        .from('election_votes' as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('election_id', electionId)
+        .eq('device_id', deviceId);
+      
+      if (count && count > 0) {
+        setAlreadyVoted(true);
+        setConfirmCandidate(null);
+        setVoting(false);
+        return;
+      }
+      voteData.device_id = deviceId;
+    }
+
+    const { error } = await supabase.from('election_votes' as any).insert(voteData as any);
 
     if (error) {
       setVoting(false);
       return;
     }
 
+    if (isIndividual) {
+      localStorage.setItem(`voted_${electionId}`, 'true');
+    }
+
     setConfirmCandidate(null);
     setVoteSuccess(true);
     setVoting(false);
 
-    setTimeout(() => {
-      setVoteSuccess(false);
-      setReadyToVote(false);
-    }, 3000);
+    if (!isIndividual) {
+      // Shared mode: reset after 3s for next voter
+      setTimeout(() => {
+        setVoteSuccess(false);
+        setReadyToVote(false);
+      }, 3000);
+    }
   };
 
   if (loading) {
@@ -75,6 +138,19 @@ export default function VotePublic() {
     );
   }
 
+  // Already voted screen (individual mode)
+  if (alreadyVoted) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+        <div className="animate-fade-up">
+          <ShieldCheck className="h-24 w-24 text-primary mx-auto mb-6" />
+          <h1 className="text-3xl font-bold mb-2">Você já votou</h1>
+          <p className="text-muted-foreground text-lg">Seu voto já foi computado nesta eleição.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Success screen
   if (voteSuccess) {
     return (
@@ -82,7 +158,9 @@ export default function VotePublic() {
         <div className="animate-fade-up">
           <CheckCircle className="h-24 w-24 text-success mx-auto mb-6" />
           <h1 className="text-3xl font-bold mb-2">Voto Computado!</h1>
-          <p className="text-muted-foreground text-lg">Aguarde para o próximo votante...</p>
+          <p className="text-muted-foreground text-lg">
+            {isIndividual ? 'Obrigado por votar!' : 'Aguarde para o próximo votante...'}
+          </p>
         </div>
       </div>
     );
@@ -124,8 +202,8 @@ export default function VotePublic() {
     );
   }
 
-  // Pre-voting screen
-  if (!readyToVote) {
+  // Pre-voting screen (shared mode only)
+  if (!isIndividual && !readyToVote) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
         <div className="max-w-sm w-full space-y-8">
