@@ -141,8 +141,10 @@ export default function EleicaoDetalhe() {
           <AccordionContent>
             <VotingPanel
               electionId={election.id}
+              electionName={election.name}
               status={election.status}
               totalPresent={election.total_present}
+              votingMode={(election as any).voting_mode || 'shared'}
               onRefresh={fetchAll}
             />
           </AccordionContent>

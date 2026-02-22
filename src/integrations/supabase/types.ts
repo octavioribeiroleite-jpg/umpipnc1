@@ -285,18 +285,21 @@ export type Database = {
         Row: {
           candidate_id: string
           created_at: string
+          device_id: string | null
           election_id: string
           id: string
         }
         Insert: {
           candidate_id: string
           created_at?: string
+          device_id?: string | null
           election_id: string
           id?: string
         }
         Update: {
           candidate_id?: string
           created_at?: string
+          device_id?: string | null
           election_id?: string
           id?: string
         }
@@ -327,6 +330,7 @@ export type Database = {
           society_id: string | null
           status: string
           total_present: number
+          voting_mode: string
         }
         Insert: {
           created_at?: string
@@ -337,6 +341,7 @@ export type Database = {
           society_id?: string | null
           status?: string
           total_present?: number
+          voting_mode?: string
         }
         Update: {
           created_at?: string
@@ -347,6 +352,7 @@ export type Database = {
           society_id?: string | null
           status?: string
           total_present?: number
+          voting_mode?: string
         }
         Relationships: [
           {
