@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ReuniaoFilters } from '@/components/reunioes/ReuniaoFilters';
 import { ReuniaoCard } from '@/components/reunioes/ReuniaoCard';
 import { ReuniaoPastaData } from '@/components/reunioes/ReuniaoPastaData';
+import { FAB } from '@/components/ui/fab';
 
 export default function Reunioes() {
   const navigate = useNavigate();
@@ -82,12 +83,14 @@ export default function Reunioes() {
         title="Reuniões"
         description="Gerencie as reuniões da diretoria"
         action={
-          <Button onClick={() => navigate('/reunioes/nova')}>
+          <Button onClick={() => navigate('/reunioes/nova')} className="hidden md:inline-flex">
             <Plus className="h-4 w-4 mr-2" />
             Nova Reunião
           </Button>
         }
       />
+
+      <FAB onClick={() => navigate('/reunioes/nova')} />
 
       <ReuniaoFilters
         onStatusChange={setStatusFilter}
