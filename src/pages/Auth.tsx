@@ -154,7 +154,7 @@ export default function Auth() {
               </div>
               <div className="text-left flex-1">
                 <h3 className="font-semibold text-base text-foreground">Acessar sem login</h3>
-                <p className="text-xs text-muted-foreground">Programações, avisos e dízimos da igreja</p>
+                <p className="text-xs text-muted-foreground">Programações e avisos da igreja</p>
               </div>
               <ArrowRight className="h-5 w-5 text-primary animate-bounce-right flex-shrink-0" />
             </button>
