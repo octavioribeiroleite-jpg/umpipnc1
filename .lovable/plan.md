@@ -1,57 +1,70 @@
 
-# Melhorar a aba de Dizimos no Portal
+# Tela de boas-vindas para visitantes + confirmacao de retorno + cores do menu
 
-## Resumo
+## 1. Tela de boas-vindas para visitantes (novo)
 
-Adicionar uma mensagem inspiradora antes do card PIX e melhorar o visual geral da aba de Dizimos, tornando-a mais acolhedora e bonita.
+Quando um visitante (que marcou "Sou visitante") completar o formulario de identificacao pela primeira vez, antes de entrar no portal, sera exibida uma tela especial de boas-vindas:
 
-## Mudancas em `src/pages/PortalIgreja.tsx` - componente `DizimosPortalTab`
+- Logo da igreja grande e centralizada (128px), com animacao suave de fade-in
+- Titulo: "Que alegria ter voce aqui!" (texto grande, bold)
+- Mensagem acolhedora: "Seja muito bem-vindo a nossa igreja! E uma honra receber voce. Que este momento seja especial e que voce se sinta em casa entre nos. Deus te abencoe!"
+- Nome da pessoa em destaque: "Obrigado pela sua visita, **[Nome]**!"
+- Icone decorativo de coracao com animacao
+- Botao "Entrar no Portal" (primario, grande) para prosseguir
+- Fundo com gradiente sutil verde/transparente
+- Animacoes de entrada (fade-in, scale-in) para dar vida a tela
 
-### 1. Adicionar mensagem motivacional antes do card PIX
+Para membros (que escolheram uma sociedade), a tela de boas-vindas nao aparece -- entra direto no portal como hoje.
 
-Antes do card com a chave PIX, inserir um bloco com:
-- Um titulo acolhedor: "Contribua com alegria"
-- Um versiculo biblico curto como motivacao: "Cada um de como propôs no seu coração, não com tristeza ou por necessidade; porque Deus ama ao que dá com alegria. — 2 Corintios 9:7"
-- Fundo com gradiente sutil (mesmo padrao do InicioTab)
-- Icone decorativo de coracao
+## 2. Confirmacao de retorno para todos
 
-### 2. Melhorar o card PIX
+Quando a pessoa ja tem dados salvos no localStorage (retornando ao portal):
 
-- Manter o layout atual mas adicionar mais respiro (padding)
-- Tornar o botao "Copiar" mais proeminente (full-width em mobile)
-- Exibir o tipo da chave PIX (que ja e carregado mas nao aparece)
+- Tela simples com logo centralizada
+- "Bem-vindo de volta!"
+- "Voce e **[Nome Completo]**?"
+- Botao "Sim, sou eu" (primario) -- registra nova visita e entra
+- Botao "Nao, sou outra pessoa" (outline) -- limpa localStorage e mostra formulario
 
-### 3. Sugestao de instrucao para configurar
+Cada confirmacao gera um novo INSERT no `portal_visitors`, servindo como log de presenca.
 
-Na pagina de configuracao (`/dizimos`), no campo "Instrucoes para os membros", sugestoes de frases que podem ser usadas:
-- "Coloque seu nome completo na descricao do PIX para identificacao."
-- "Identifique seu pagamento com: Nome - Dizimo (ou Oferta)."
-- "Em caso de duvidas, procure a diretoria."
+## 3. Corrigir cor do menu lateral
 
-Essas frases nao serao adicionadas automaticamente ao codigo, sao apenas sugestoes para o usuario preencher na configuracao.
+Trocar classes do Sheet sidebar de `bg-sidebar`/`text-sidebar-*` para `bg-card`/`text-foreground`/`bg-primary` etc., seguindo as cores gerais do app.
+
+## 4. Painel de visitantes para Pastor e Admin (`Configuracoes.tsx`)
+
+- Tornar o relatorio do portal visivel tambem para o Pastor
+- Adicionar coluna "Hora" na tabela de acessos
+- Adicionar badge "Novo" vs "Retornou" por device_id
+- Nova secao "Visitantes recorrentes" agrupando por nome+dispositivo com contagem de visitas
 
 ## Detalhes tecnicos
 
-### Bloco motivacional (novo, antes do card)
+### Fluxo atualizado do `PortalIgreja`
+
 ```text
-[Gradiente verde sutil, rounded-2xl, padding generoso]
-  [Icone Heart grande, cor primaria, opacidade 30%]
-  "Contribua com alegria" (text-xl, bold)
-  "Cada um de como propôs no seu coração..." (text-sm, italic, muted)
+tem localStorage?
+  Sim -> Tela "Voce e fulano?" (ReturnVisitorConfirm)
+    "Sim" -> INSERT portal_visitors + entra no portal
+    "Nao"  -> limpa localStorage -> formulario
+  Nao -> Formulario de identificacao
+    Preencheu -> salva localStorage
+      E visitante? -> Tela de boas-vindas (WelcomeScreen) -> botao "Entrar"
+      E membro?    -> entra direto no portal
 ```
 
-### Card PIX melhorado
-```text
-[Card com borda primaria]
-  [Header gradiente: "Dizimos e Ofertas"]
-  [Chave PIX + botao copiar]
-  [Tipo da chave] (novo - exibir CPF/CNPJ/Email etc)
-  [Beneficiario]
-  [Instrucoes - bloco destaque]
-```
+### Novo componente `WelcomeScreen`
+- Props: `visitor: VisitorData`, `onContinue: () => void`
+- Logo 128px com `animate-fade-in`
+- Textos com delay de animacao escalonado
+- Botao grande primario
 
-### Mudancas especificas
-- Linhas ~541-571: Reescrever o return do `DizimosPortalTab`
-- Adicionar bloco de saudacao/motivacao antes do Card
-- Mostrar `pixKeyType` formatado (ja carregado do banco mas nao exibido)
-- Aumentar padding e melhorar espacamento geral
+### Novo componente `ReturnVisitorConfirm`
+- Props: `visitor: VisitorData`, `onConfirm: () => void`, `onReset: () => void`
+- Logo centralizada, pergunta com nome em bold
+- Dois botoes
+
+### Arquivos modificados
+- `src/pages/PortalIgreja.tsx`: novos componentes WelcomeScreen e ReturnVisitorConfirm, ajuste no fluxo principal, correcao de cores do Sheet
+- `src/pages/Configuracoes.tsx`: acesso para pastor, melhorias no relatorio de visitantes
