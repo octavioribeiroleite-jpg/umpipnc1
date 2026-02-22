@@ -22,7 +22,16 @@ import {
   TrendingUp,
   MapPin,
   Clock,
+  Shield,
+  UserCheck,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -134,6 +143,10 @@ export default function Index() {
     tarefasPendentes: 0,
   });
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  const [diretoria, setDiretoria] = useState<{ full_name: string; society_name?: string }[]>([]);
+  const [membros, setMembros] = useState<{ name: string; society_name?: string }[]>([]);
+  const [showDiretoria, setShowDiretoria] = useState(false);
+  const [showMembros, setShowMembros] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -225,6 +238,70 @@ export default function Index() {
         setPendingSubmissions(count || 0);
       };
       fetchPending();
+
+      // Fetch diretoria (profiles with role 'diretoria')
+      const fetchDiretoria = async () => {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'diretoria');
+        if (roles && roles.length > 0) {
+          const userIds = roles.map(r => r.user_id);
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('full_name, society_id')
+            .in('user_id', userIds)
+            .eq('active', true);
+          if (profiles) {
+            // Get society names
+            const societyIds = [...new Set(profiles.map(p => p.society_id).filter(Boolean))];
+            let societyMap: Record<string, string> = {};
+            if (societyIds.length > 0) {
+              const { data: societies } = await supabase
+                .from('societies')
+                .select('id, name')
+                .in('id', societyIds as string[]);
+              if (societies) {
+                societyMap = Object.fromEntries(societies.map(s => [s.id, s.name]));
+              }
+            }
+            setDiretoria(profiles.map(p => ({
+              full_name: p.full_name,
+              society_name: p.society_id ? societyMap[p.society_id] : undefined,
+            })));
+          }
+        }
+      };
+      fetchDiretoria();
+
+      // Fetch membros (from members table)
+      const fetchMembros = async () => {
+        let query = supabase
+          .from('members')
+          .select('name, society_id')
+          .eq('active', true)
+          .order('name');
+        if (societyId) query = query.eq('society_id', societyId);
+        const { data } = await query;
+        if (data) {
+          const societyIds = [...new Set(data.map(m => m.society_id).filter(Boolean))];
+          let societyMap: Record<string, string> = {};
+          if (societyIds.length > 0) {
+            const { data: societies } = await supabase
+              .from('societies')
+              .select('id, name')
+              .in('id', societyIds as string[]);
+            if (societies) {
+              societyMap = Object.fromEntries(societies.map(s => [s.id, s.name]));
+            }
+          }
+          setMembros(data.map(m => ({
+            name: m.name,
+            society_name: m.society_id ? societyMap[m.society_id] : undefined,
+          })));
+        }
+      };
+      fetchMembros();
     }
   }, [user]);
 
@@ -305,7 +382,41 @@ export default function Index() {
         />
       </div>
 
-      {/* Quick Actions - Horizontal scroll on mobile */}
+      {/* Diretoria & Membros Cards */}
+      <div className="grid grid-cols-2 gap-2 md:gap-4 mb-6 md:mb-8">
+        <Card
+          className="cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => setShowDiretoria(true)}
+        >
+          <CardHeader className="flex flex-row items-center justify-between pb-1 p-3 md:p-6 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">Diretoria</CardTitle>
+            <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Shield className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-lg md:text-2xl font-bold">{diretoria.length}</div>
+            <span className="text-xs text-muted-foreground">Toque para ver</span>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => setShowMembros(true)}
+        >
+          <CardHeader className="flex flex-row items-center justify-between pb-1 p-3 md:p-6 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">Membros</CardTitle>
+            <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <UserCheck className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-lg md:text-2xl font-bold">{membros.length}</div>
+            <span className="text-xs text-muted-foreground">Toque para ver</span>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="mb-6 md:mb-8">
         <h2 className="font-display text-base md:text-lg font-semibold mb-3 md:mb-4">Ações Rápidas</h2>
         <div className="grid grid-cols-2 md:flex gap-2 md:gap-3 md:flex-wrap">
@@ -439,6 +550,72 @@ export default function Index() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Diretoria Dialog */}
+      <Dialog open={showDiretoria} onOpenChange={setShowDiretoria}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Diretoria
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {diretoria.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">Nenhum membro da diretoria encontrado.</p>
+            ) : (
+              diretoria.map((d, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                      {d.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium text-sm">{d.full_name}</p>
+                    {d.society_name && (
+                      <p className="text-xs text-muted-foreground">{d.society_name}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Membros Dialog */}
+      <Dialog open={showMembros} onOpenChange={setShowMembros}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-primary" />
+              Membros ({membros.length})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {membros.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">Nenhum membro encontrado.</p>
+            ) : (
+              membros.map((m, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                      {m.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium text-sm">{m.name}</p>
+                    {m.society_name && (
+                      <p className="text-xs text-muted-foreground">{m.society_name}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
