@@ -13,7 +13,7 @@ import {
   Calendar, Clock, MapPin, Bell, Heart, Copy, Check, Loader2,
   LogIn, ChevronRight, Home,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import logoIpnc from '@/assets/logo-ipnc.png';
 
@@ -260,7 +260,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
 
       {/* Content */}
       <main className="flex-1 overflow-auto px-4 py-4 pb-24 max-w-2xl mx-auto w-full">
-        {activeTab === 'inicio' && <InicioTab />}
+        {activeTab === 'inicio' && <InicioTab onTabChange={setActiveTab} />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
         {activeTab === 'avisos' && <AvisosTab />}
       </main>
@@ -291,30 +291,48 @@ function Portal({ visitor }: { visitor: VisitorData }) {
 
 // ---------- Início Tab (com Dízimos em destaque) ----------
 
-function InicioTab() {
+function InicioTab({ onTabChange }: { onTabChange: (tab: PortalTab) => void }) {
   const [pixKey, setPixKey] = useState('');
   const [pixKeyType, setPixKeyType] = useState('');
   const [pixBeneficiary, setPixBeneficiary] = useState('');
   const [pixInstructions, setPixInstructions] = useState('');
+  const [nextEvent, setNextEvent] = useState<any>(null);
+  const [lastAnnouncement, setLastAnnouncement] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    supabase
-      .from('settings')
-      .select('key, value')
-      .in('key', ['pix_key', 'pix_key_type', 'pix_beneficiary', 'pix_instructions'])
-      .then(({ data }) => {
-        if (data) {
-          data.forEach((s: any) => {
-            if (s.key === 'pix_key') setPixKey(s.value);
-            if (s.key === 'pix_key_type') setPixKeyType(s.value);
-            if (s.key === 'pix_beneficiary') setPixBeneficiary(s.value);
-            if (s.key === 'pix_instructions') setPixInstructions(s.value);
-          });
-        }
-        setLoading(false);
-      });
+    Promise.all([
+      supabase
+        .from('settings')
+        .select('key, value')
+        .in('key', ['pix_key', 'pix_key_type', 'pix_beneficiary', 'pix_instructions']),
+      supabase
+        .from('events')
+        .select('*')
+        .gte('start_date', new Date().toISOString())
+        .neq('status', 'cancelado')
+        .order('start_date', { ascending: true })
+        .limit(1),
+      supabase
+        .from('pastor_announcements')
+        .select('*')
+        .eq('scope', 'church')
+        .order('created_at', { ascending: false })
+        .limit(1),
+    ]).then(([settingsRes, eventRes, announcementRes]) => {
+      if (settingsRes.data) {
+        settingsRes.data.forEach((s: any) => {
+          if (s.key === 'pix_key') setPixKey(s.value);
+          if (s.key === 'pix_key_type') setPixKeyType(s.value);
+          if (s.key === 'pix_beneficiary') setPixBeneficiary(s.value);
+          if (s.key === 'pix_instructions') setPixInstructions(s.value);
+        });
+      }
+      if (eventRes.data && eventRes.data.length > 0) setNextEvent(eventRes.data[0]);
+      if (announcementRes.data && announcementRes.data.length > 0) setLastAnnouncement(announcementRes.data[0]);
+      setLoading(false);
+    });
   }, []);
 
   const handleCopy = async () => {
@@ -329,13 +347,88 @@ function InicioTab() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="text-center py-2">
         <h2 className="text-lg font-bold">Bem-vindo à IPNC!</h2>
         <p className="text-sm text-muted-foreground">Igreja Presbiteriana de Nova Carapina</p>
       </div>
 
-      {/* Card de Dízimos e Ofertas em destaque */}
+      {/* Próximo Evento */}
+      {loading ? (
+        <Skeleton className="h-24" />
+      ) : nextEvent ? (
+        <Card className="overflow-hidden">
+          <div className="h-1" style={{ backgroundColor: nextEvent.color || 'hsl(var(--primary))' }} />
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-primary/10 p-2.5 shrink-0 mt-0.5">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-1">Próximo Evento</p>
+                <h3 className="font-semibold text-sm">{nextEvent.title}</h3>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+                  <span>{format(new Date(nextEvent.start_date), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
+                  {!nextEvent.all_day && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {format(new Date(nextEvent.start_date), 'HH:mm')}
+                    </span>
+                  )}
+                </div>
+                {nextEvent.location && (
+                  <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                    <MapPin className="h-3 w-3" />
+                    {nextEvent.location}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => onTabChange('programacoes')}
+              className="flex items-center gap-1 text-xs text-primary font-medium mt-3 ml-auto hover:underline"
+            >
+              Ver todos <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Último Aviso */}
+      {loading ? (
+        <Skeleton className="h-24" />
+      ) : lastAnnouncement ? (
+        <Card className={lastAnnouncement.priority === 'urgente' ? 'border-destructive/50' : ''}>
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-amber-500/10 p-2.5 shrink-0 mt-0.5">
+                <Bell className="h-5 w-5 text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-600">Último Aviso</p>
+                  {lastAnnouncement.priority === 'urgente' && (
+                    <Badge variant="destructive" className="text-[10px] py-0">Urgente</Badge>
+                  )}
+                </div>
+                <h3 className="font-semibold text-sm">{lastAnnouncement.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{lastAnnouncement.message}</p>
+                <p className="text-[10px] text-muted-foreground mt-1.5">
+                  {formatDistanceToNow(new Date(lastAnnouncement.created_at), { addSuffix: true, locale: ptBR })}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => onTabChange('avisos')}
+              className="flex items-center gap-1 text-xs text-primary font-medium mt-3 ml-auto hover:underline"
+            >
+              Ver todos <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Card de Dízimos e Ofertas */}
       {loading ? (
         <Skeleton className="h-40" />
       ) : pixKey ? (
