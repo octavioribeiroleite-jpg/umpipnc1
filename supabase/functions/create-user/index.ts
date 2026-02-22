@@ -77,6 +77,36 @@ Deno.serve(async (req) => {
     })
 
     if (createError) {
+      // If email already exists, try to link existing user to member
+      const errMsg = createError.message || ''
+      if ((errMsg.includes('already been registered') || errMsg.includes('already exists')) && member_id) {
+        // Find existing user by email
+        const { data: existingProfile } = await adminClient
+          .from('profiles')
+          .select('user_id, username, plain_password')
+          .eq('email', email)
+          .maybeSingle()
+
+        if (existingProfile?.user_id) {
+          // Link member to existing user
+          await adminClient.from('members').update({ user_id: existingProfile.user_id }).eq('id', member_id)
+
+          // Update profile with society_id if provided
+          if (society_id) {
+            await adminClient.from('profiles').update({ society_id }).eq('user_id', existingProfile.user_id)
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            user_id: existingProfile.user_id,
+            linked_existing: true,
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      }
+
       return new Response(JSON.stringify({ error: createError.message }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
