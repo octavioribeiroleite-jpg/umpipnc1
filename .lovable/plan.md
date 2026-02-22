@@ -1,60 +1,80 @@
 
 
-# Criar Login em Massa para Membros Cadastrados
+# Melhorar Visual da Aba de Cobranças
 
-## Situacao Atual
+## Problemas Atuais
+- Cards com visual repetitivo e pouco diferenciado
+- Resumo de pagos/pendentes/isentos aparece como texto simples, sem destaque
+- Sem busca por nome para encontrar membros rapido
+- Cards de membros pagos e pendentes tem a mesma aparencia visual
+- Nao ha agrupamento visual por status
 
-Existem **18 membros ativos da UMP** sem conta de acesso no sistema. Todos precisam receber credenciais (usuario + senha) com o papel "visualizador" para acessar o portal do membro.
+## Melhorias Propostas
 
-## O que sera feito
+### 1. Resumo com mini-cards coloridos (em vez de texto)
+Substituir o texto "0 pagos / 36 pendentes / 0 isentos" por 3 mini-cards clicaveis com cores distintas:
+- Verde para pagos (com icone de check)
+- Vermelho para pendentes (com icone de relogio)
+- Cinza para isentos
+- Clicar em um mini-card filtra a lista por aquele status
 
-Adicionar um botao "Criar logins em massa" na aba de Membros (Financas) que processa todos os membros sem conta de uma vez, gerando credenciais automaticamente e exibindo um relatorio consolidado ao final.
+### 2. Barra de progresso de adimplencia
+Adicionar uma barra de progresso abaixo dos seletores de mes/ano mostrando visualmente a porcentagem de membros que ja pagaram naquele mes.
 
-## Logica de credenciais (ja existente no sistema)
+### 3. Busca por nome
+Campo de busca acima da lista de cards para filtrar membros pelo nome rapidamente, util quando ha muitos membros.
 
-- **Usuario**: nome sem acentos, tudo junto e minusculo (ex: "Lucas Felix" -> "lucasfelix")
-- **Senha**: nome capitalizado + "123" (ex: "Lucas Felix" -> "LucasFelix123")
+### 4. Cards com visual diferenciado por status
+- **Pendente**: borda esquerda vermelha + fundo levemente avermelhado
+- **Pago**: borda esquerda verde + fundo levemente esverdeado, botao "Baixa" desaparece
+- **Parcial**: borda esquerda amarela + fundo levemente amarelado
+- **Isento**: borda esquerda cinza + estilo mais discreto
 
-## Alteracoes
+### 5. Layout do card mais compacto
+Reorganizar o card mobile para ser mais limpo:
+- Nome do membro com fonte maior e mais destaque
+- Valor total (mensalidade + per capita) em destaque
+- Badges de status menores e alinhados
+- Botao de acao (Baixa/Ver) mais acessivel
 
-### Modificar: `src/components/financas/MembrosTab.tsx`
+## Arquivos a Modificar
 
-1. **Novo botao "Criar logins em massa"**
-   - Aparece apenas quando ha membros sem conta (`user_id IS NULL`)
-   - Mostra badge com quantidade de membros pendentes
-   - Abre dialogo de confirmacao antes de processar
+### `src/components/financas/CobrancasTab.tsx`
+- Adicionar estado de busca (`searchTerm`) e filtro por status (`statusFilter`)
+- Adicionar campo de busca no topo
+- Substituir texto de resumo por mini-cards clicaveis
+- Adicionar barra de progresso (`Progress`) abaixo dos seletores
+- Filtrar membros exibidos conforme busca e filtro de status
+- Aplicar classes de borda/fundo por status nos cards mobile
 
-2. **Dialogo de confirmacao**
-   - Lista quantos membros serao processados
-   - Botao "Confirmar" inicia o processamento
-
-3. **Processamento em lote**
-   - Para cada membro sem `user_id`, chama a Edge Function `create-user` sequencialmente
-   - Gera username e password usando as funcoes `generateUsername` e `generatePassword` ja existentes
-   - Envia: `{ full_name, username, password, role: 'visualizador', society_id, member_id }`
-   - Mostra progresso (ex: "Processando 5 de 18...")
-   - Coleta sucessos e falhas separadamente
-
-4. **Relatorio final**
-   - Dialogo com tabela de credenciais geradas (nome, usuario, senha)
-   - Indicacao visual de falhas (se houver)
-   - Botao para copiar todas as credenciais em formato texto
-   - Recarrega a lista de membros ao fechar
+### `src/components/financas/ChargeCard.tsx`
+- Receber prop `variant` baseada no status geral do membro (pendente/pago/parcial/isento)
+- Aplicar borda esquerda colorida e fundo sutil conforme variante
+- Layout mais compacto: nome com fonte `text-base font-semibold`, valores alinhados a direita
+- Badge de status mais discreto (menor, sem borda)
+- Mostrar valor total combinado (mensalidade + per capita) em destaque
 
 ## Detalhes Tecnicos
 
-### Fluxo do processamento
-- Usa `for...of` sequencial (nao paralelo) para evitar sobrecarga na Edge Function
-- Cada chamada: `supabase.functions.invoke('create-user', { body: { full_name, username, password, role: 'visualizador', society_id, member_id } })`
-- Timeout de seguranca por membro
-- Estado de progresso atualizado a cada iteracao
+### Mini-cards de resumo
+- 3 cards lado a lado usando `grid grid-cols-3 gap-2`
+- Cada card com `cursor-pointer` e `ring-2 ring-primary` quando ativo como filtro
+- Clicar no filtro ativo remove o filtro (toggle)
 
-### Tratamento de erros
-- Usernames duplicados: se o username ja existir, adiciona um sufixo numerico (ex: "lucasfelix2")
-- Falha individual nao interrompe o lote; membro e marcado como "falha" no relatorio
-- Toast de resumo ao final: "X contas criadas, Y falhas"
+### Busca
+- `Input` com icone `Search` e `placeholder="Buscar membro..."`
+- Filtragem local (sem chamada ao banco) por `member.name.toLowerCase().includes(searchTerm)`
 
-### Copiar credenciais
-- Formato texto: "Nome | Usuario | Senha" por linha
-- Usa `navigator.clipboard.writeText()`
+### Barra de progresso
+- Usar componente `Progress` ja existente no projeto (`@radix-ui/react-progress`)
+- Valor: `(paidCharges / totalCharges) * 100`
+- Cor verde quando acima de 70%, amarela entre 50-70%, vermelha abaixo
+
+### Variantes do ChargeCard
+```text
+pendente -> border-l-4 border-l-destructive bg-destructive/5
+pago     -> border-l-4 border-l-green-500 bg-green-50 dark:bg-green-950/20
+parcial  -> border-l-4 border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950/20
+isento   -> border-l-4 border-l-muted bg-muted/30 opacity-70
+```
 
