@@ -1,46 +1,70 @@
 
-# Simplificar registro de visitante no portal /igreja
+# Melhorias no Portal da Igreja
 
 ## Resumo
 
-Simplificar o formulario de identificacao do portal publico. Manter a coleta de nome e sociedade para registro no banco, mas tornar o fluxo mais simples e robusto, eliminando a dependencia do `device_id` nos headers (que causa erros de RLS no UPDATE) e tratando melhor os erros.
+Tres ajustes no portal publico (`/igreja`): adicionar aba "Dizimos" na navegacao inferior, adicionar menu hamburguer no header, e melhorar a mensagem de boas-vindas.
 
 ## Mudancas em `src/pages/PortalIgreja.tsx`
 
-### 1. Simplificar o INSERT (remover `.select().single()`)
-- O INSERT atual usa `.select('id').single()` que exige uma politica SELECT alem de INSERT
-- Mudar para um INSERT simples sem retorno, apenas checando se houve erro
-- O `id` do registro nao e necessario para o funcionamento do portal
+### 1. Adicionar aba "Dizimos" no bottom nav
 
-### 2. Remover o UPDATE de `last_access` na revisita
-- O UPDATE usa `device_id` com `current_setting('request.headers')` no RLS, o que falha porque o header `x-device-id` nao e enviado pelo Supabase JS client
-- Solucao: ao inves de fazer UPDATE, fazer um novo INSERT a cada acesso (registro simples de log)
-- Ou simplesmente remover o UPDATE silencioso, ja que ele falha sem impacto visivel
+Atualmente o portal tem 3 abas: Inicio, Programacoes, Avisos. Adicionar uma 4a aba "Dizimos" que mostra o card de dizimos (chave PIX) que hoje fica dentro do InicioTab.
 
-### 3. Manter o formulario visual identico
-- Nome completo + selecao de sociedade/visitante permanecem iguais
-- Apenas o `handleSubmit` muda internamente para ser mais robusto
+- Novo tipo: `type PortalTab = 'inicio' | 'programacoes' | 'avisos' | 'dizimos';`
+- Novo item no array `tabs`: `{ key: 'dizimos', label: 'Dizimos', icon: Heart }`
+- Novo componente `DizimosPortalTab` extraido do bloco de dizimos que ja existe no `InicioTab`
+- Renderizar `{activeTab === 'dizimos' && <DizimosPortalTab />}` no content
+- Remover o card de dizimos do `InicioTab` (ja que tera aba propria)
 
-### 4. Salvar no localStorage apos sucesso
-- Continua salvando os dados localmente para nao pedir novamente no mesmo dispositivo
-- VisitorData simplificada: remover `id` (nao usado) e manter `fullName`, `societyId`, `isVisitor`, `deviceId`
+### 2. Adicionar menu hamburguer no header
+
+Adicionar um botao hamburguer no header do portal que abre um Sheet lateral com as opcoes de navegacao (mesmo padrao do MembroLayout), permitindo navegar entre as abas.
+
+- Importar `Sheet`, `SheetContent`, `SheetTrigger`, `Menu` icon
+- Estado `menuOpen` para controlar o Sheet
+- Dentro do Sheet: logo, nome do visitante, lista de abas clicaveis, botao de login
+
+### 3. Melhorar a mensagem de boas-vindas
+
+Substituir o texto simples "Bem-vindo a IPNC!" por uma saudacao mais bonita com:
+- Saudacao personalizada com o nome do visitante ("Ola, [nome]!")
+- Subtitulo "Igreja Presbiteriana de Nova Carapina" em destaque
+- Icone decorativo ou gradiente sutil no fundo
+- Estilo mais visual com espacamento e tipografia melhores
 
 ## Detalhes tecnicos
 
-### handleSubmit simplificado
+### Estrutura do Portal (apos mudancas)
+
 ```text
-- Validar nome e sociedade
-- INSERT no portal_visitors (sem .select())
-- Se erro: mostrar toast mas permitir continuar (nao bloquear acesso ao portal)
-- Salvar no localStorage e mostrar o portal
+Portal
+  |-- Header (logo + nome + hamburguer + login)
+  |-- Content
+  |     |-- InicioTab (saudacao bonita + proximo evento + ultimo aviso)
+  |     |-- ProgramacoesTab (sem mudancas)
+  |     |-- AvisosTab (sem mudancas)
+  |     |-- DizimosPortalTab (card PIX extraido do InicioTab)
+  |-- Bottom Nav (4 abas: Inicio, Programacoes, Avisos, Dizimos)
 ```
 
-### Remover o useEffect de UPDATE last_access
-- Eliminar o bloco que tenta atualizar `last_access` na revisita
-- Alternativa: tentar o INSERT de novo registro silenciosamente (sem bloquear)
+### Header com hamburguer
 
-### Resultado esperado
-- Formulario funciona identico visualmente
-- INSERT funciona para usuarios anon e authenticated
-- Sem erros de RLS no UPDATE
-- Portal sempre acessivel mesmo se o registro falhar
+```text
+[Menu] [Logo] Portal da Igreja    [Login]
+              Ola, nome!
+```
+
+O Sheet lateral tera:
+- Logo + titulo "Portal da Igreja"
+- Botoes de navegacao para cada aba
+- Nome do visitante
+- Botao de login
+
+### Saudacao no InicioTab
+
+Substituir o bloco simples por um design com gradiente e texto maior:
+- "Ola, [primeiro nome]!" em fonte grande e bold
+- "Bem-vindo a Igreja Presbiteriana de Nova Carapina" como subtitulo
+- Background com gradiente sutil verde (cor primaria)
+- Padding e border-radius generosos
