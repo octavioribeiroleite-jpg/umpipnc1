@@ -1,43 +1,74 @@
 
 
-# Botao "Acessar sem login" mais evidente e com animacao sutil
+# Enriquecer a aba Inicio do Portal
 
-## O que muda
+## Resumo
 
-O botao atual e discreto (borda tracejada, texto pequeno). Vamos transforma-lo em um card destacado com:
-
-- **Fundo com gradiente emerald sutil** que pulsa suavemente (shimmer/glow)
-- **Icone de igreja** (Church do lucide-react) ao lado do texto
-- **Texto maior e mais chamativo**: "Acessar sem login" com subtitulo "Programacoes, avisos e dizimos da igreja"
-- **Seta animada** que se move sutilmente para a direita (convite ao clique)
-- **Brilho de borda animado** (border glow pulsante) para chamar atencao sem ser agressivo
+Adicionar dois cards de acesso rapido na aba Inicio: o proximo evento da igreja e o ultimo aviso/comunicado. Esses cards ficam acima do card de Dizimos ja existente, dando uma visao geral rapida ao visitante.
 
 ## Visual esperado
 
 ```text
 +-----------------------------------------------+
-|  [Igreja]  Acessar sem login            ->     |
-|            Programacoes, avisos e dizimos       |
+|  Bem-vindo a IPNC!                              |
+|  Igreja Presbiteriana de Nova Carapina           |
 +-----------------------------------------------+
-   (borda com glow pulsante verde esmeralda)
+
++-- Proximo Evento ----------------------------+
+|  [Calendario]  Titulo do Evento              |
+|               Sabado, 01 de marco - 19:00    |
+|               Local do Evento                |
+|                              [Ver todos ->]  |
++----------------------------------------------+
+
++-- Ultimo Aviso ------------------------------+
+|  [Sino]  Titulo do Aviso          [Urgente]  |
+|          Trecho da mensagem...               |
+|          ha 2 dias                            |
+|                              [Ver todos ->]  |
++----------------------------------------------+
+
++-- Dizimos e Ofertas (card existente) --------+
+|  ...                                         |
++----------------------------------------------+
 ```
 
 ## Detalhes tecnicos
 
-### `src/pages/Auth.tsx`
-- Importar `Church` e `ArrowRight` do lucide-react
-- Substituir o botao simples (linhas 148-153) por um card estilizado:
-  - `bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10`
-  - Borda solida com `border-primary/40` e animacao de glow
-  - Icone Church + texto principal + subtitulo + seta animada
-  - Hover: escala sutil (`hover:scale-[1.02]`) e sombra
+### `src/pages/PortalIgreja.tsx` - funcao `InicioTab`
 
-### `src/index.css`
-- Adicionar keyframe `shimmer-border` para o efeito de brilho pulsante na borda
-- Adicionar keyframe `bounce-right` para a seta que se move sutilmente para a direita
+**Novos estados:**
+- `nextEvent` (proximo evento nao cancelado)
+- `lastAnnouncement` (ultimo comunicado com scope "church")
 
-### Animacoes adicionadas
-- `shimmer-border`: borda alterna entre `primary/20` e `primary/50` a cada 2s
-- `bounce-right`: seta se move 4px para a direita e volta a cada 1.5s
-- Ambas sao sutis e respeitam `prefers-reduced-motion`
+**Novas queries no useEffect existente (em paralelo com settings):**
+- `events`: SELECT proximo evento (`start_date >= now()`, `status != cancelado`, order by `start_date asc`, limit 1)
+- `pastor_announcements`: SELECT ultimo aviso (`scope = 'church'`, order by `created_at desc`, limit 1)
+
+**Novos cards (inseridos entre o titulo de boas-vindas e o card de dizimos):**
+
+1. **Card "Proximo Evento"**
+   - Icone `Calendar` com cor do evento
+   - Titulo do evento
+   - Data formatada (dia da semana + data + horario)
+   - Local (se houver)
+   - Botao "Ver todos" que muda a aba para "programacoes" (recebe `onTabChange` como prop)
+
+2. **Card "Ultimo Aviso"**
+   - Icone `Bell`
+   - Titulo do aviso
+   - Mensagem truncada (2 linhas com `line-clamp-2`)
+   - Badge "Urgente" se `priority === 'urgente'`
+   - Data relativa (`formatDistanceToNow`)
+   - Botao "Ver todos" que muda a aba para "avisos"
+
+**Mudanca de assinatura:**
+- `InicioTab` passa a receber `onTabChange: (tab: PortalTab) => void` como prop
+- No componente `Portal`, passar `setActiveTab` como prop para `InicioTab`
+
+### Imports adicionais
+- `formatDistanceToNow` de `date-fns`
+
+### Skeleton loading
+- Enquanto carrega, mostrar 2 skeletons extras (h-24) acima do skeleton do PIX
 
