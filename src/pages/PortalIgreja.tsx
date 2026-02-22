@@ -20,7 +20,6 @@ import logoIpnc from '@/assets/logo-ipnc.png';
 // ---------- Types ----------
 
 interface VisitorData {
-  id: string;
   fullName: string;
   societyId: string | null;
   isVisitor: boolean;
@@ -64,14 +63,19 @@ export default function PortalIgreja() {
   const [visitor, setVisitor] = useState<VisitorData | null>(getSavedVisitor);
   const [loading, setLoading] = useState(false);
 
-  // On revisit, update last_access
+  // On revisit, log a new access silently (no UPDATE needed)
   useEffect(() => {
     if (visitor) {
+      const deviceId = getOrCreateDeviceId();
       supabase
         .from('portal_visitors' as any)
-        .update({ last_access: new Date().toISOString() } as any)
-        .eq('device_id', visitor.deviceId)
-        .then();
+        .insert({
+          full_name: visitor.fullName,
+          society_id: visitor.societyId,
+          is_visitor: visitor.isVisitor,
+          device_id: deviceId,
+        } as any)
+        .then(); // fire and forget
     }
   }, []);
 
@@ -120,25 +124,21 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
     const isVisitor = societyChoice === 'visitante';
     const societyId = isVisitor ? null : societyChoice;
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('portal_visitors' as any)
       .insert({
         full_name: trimmedName.slice(0, 100),
         society_id: societyId,
         is_visitor: isVisitor,
         device_id: deviceId,
-      } as any)
-      .select('id')
-      .single();
+      } as any);
 
     if (error) {
-      toast.error('Erro ao registrar. Tente novamente.');
-      setSubmitting(false);
-      return;
+      console.warn('Erro ao registrar visitante:', error.message);
+      // Não bloquear acesso ao portal mesmo se o registro falhar
     }
 
     const visitorData: VisitorData = {
-      id: (data as any).id,
       fullName: trimmedName,
       societyId,
       isVisitor,
