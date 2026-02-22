@@ -14,9 +14,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { ChargeCard } from './ChargeCard';
+import { Progress } from '@/components/ui/progress';
+import { ChargeCard, type ChargeCardVariant } from './ChargeCard';
 import { toast } from 'sonner';
-import { Check, MoreHorizontal, Receipt, Loader2, Undo2, Trash2, Edit, Eye, Calendar, User } from 'lucide-react';
+import { Check, MoreHorizontal, Receipt, Loader2, Undo2, Trash2, Edit, Eye, Calendar, User, Search, Clock, ShieldCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -52,6 +54,8 @@ export function CobrancasTab() {
   const [members, setMembers] = useState<Member[]>([]);
   const [charges, setCharges] = useState<Charge[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   
   // Dialog state - Dar Baixa
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -407,6 +411,35 @@ export function CobrancasTab() {
   const paidCharges = charges.filter(c => c.status === 'pago').length;
   const pendingCharges = charges.filter(c => c.status === 'pendente').length;
   const exemptCharges = charges.filter(c => c.status === 'isento').length;
+  const totalCharges = charges.length;
+  const progressValue = totalCharges > 0 ? Math.round((paidCharges / totalCharges) * 100) : 0;
+
+  // Determine member variant based on their charges
+  const getMemberVariant = (memberId: string): ChargeCardVariant => {
+    const memberChargesArr = charges.filter(c => c.member_id === memberId);
+    if (memberChargesArr.length === 0) return 'pendente';
+    const allIsento = memberChargesArr.every(c => c.status === 'isento');
+    if (allIsento) return 'isento';
+    const hasPartial = memberChargesArr.some(c => c.status === 'pago' && c.paid_amount !== null && c.paid_amount < c.amount);
+    if (hasPartial) return 'parcial';
+    const allPaid = memberChargesArr.every(c => c.status === 'pago' || c.status === 'isento');
+    if (allPaid) return 'pago';
+    return 'pendente';
+  };
+
+  // Determine member status for filtering
+  const getMemberStatus = (memberId: string): string => {
+    return getMemberVariant(memberId);
+  };
+
+  // Filter members
+  const filteredMembers = members.filter(member => {
+    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const memberStatus = getMemberStatus(member.id);
+    const matchesFilter = !statusFilter || memberStatus === statusFilter;
+    const hasCharges = charges.some(c => c.member_id === member.id);
+    return matchesSearch && matchesFilter && hasCharges;
+  });
 
   if (loading) {
     return (
@@ -417,47 +450,116 @@ export function CobrancasTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Header: Month/Year selectors */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex gap-2">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map(month => (
-                    <SelectItem key={month} value={month}>{month}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEARS.map(year => (
-                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <CardContent className="pt-6 pb-4">
+          <div className="flex gap-2 mb-4">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTHS.map(month => (
+                  <SelectItem key={month} value={month}>{month}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {YEARS.map(year => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+              <span>Adimplência</span>
+              <span className={cn(
+                'font-semibold',
+                progressValue >= 70 ? 'text-green-600 dark:text-green-400' :
+                progressValue >= 50 ? 'text-yellow-600 dark:text-yellow-400' :
+                'text-destructive'
+              )}>{progressValue}%</span>
             </div>
-            <div className="flex gap-4 text-sm">
-              <span className="text-success font-medium">{paidCharges} pagos</span>
-              <span className="text-destructive font-medium">{pendingCharges} pendentes</span>
-              <span className="text-muted-foreground">{exemptCharges} isentos</span>
-            </div>
+            <Progress
+              value={progressValue}
+              className={cn(
+                'h-2.5',
+                progressValue >= 70 ? '[&>div]:bg-green-500' :
+                progressValue >= 50 ? '[&>div]:bg-yellow-500' :
+                '[&>div]:bg-destructive'
+              )}
+            />
+          </div>
+
+          {/* Status mini-cards */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => setStatusFilter(statusFilter === 'pago' ? null : 'pago')}
+              className={cn(
+                'rounded-lg p-2.5 text-center transition-all cursor-pointer border',
+                'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900',
+                statusFilter === 'pago' && 'ring-2 ring-primary ring-offset-1'
+              )}
+            >
+              <Check className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto mb-0.5" />
+              <p className="text-lg font-bold text-green-700 dark:text-green-300">{paidCharges}</p>
+              <p className="text-[10px] text-green-600 dark:text-green-400">Pagos</p>
+            </button>
+            <button
+              onClick={() => setStatusFilter(statusFilter === 'pendente' ? null : 'pendente')}
+              className={cn(
+                'rounded-lg p-2.5 text-center transition-all cursor-pointer border',
+                'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900',
+                statusFilter === 'pendente' && 'ring-2 ring-primary ring-offset-1'
+              )}
+            >
+              <Clock className="h-4 w-4 text-destructive mx-auto mb-0.5" />
+              <p className="text-lg font-bold text-red-700 dark:text-red-300">{pendingCharges}</p>
+              <p className="text-[10px] text-red-600 dark:text-red-400">Pendentes</p>
+            </button>
+            <button
+              onClick={() => setStatusFilter(statusFilter === 'isento' ? null : 'isento')}
+              className={cn(
+                'rounded-lg p-2.5 text-center transition-all cursor-pointer border',
+                'bg-muted/50 border-border',
+                statusFilter === 'isento' && 'ring-2 ring-primary ring-offset-1'
+              )}
+            >
+              <ShieldCheck className="h-4 w-4 text-muted-foreground mx-auto mb-0.5" />
+              <p className="text-lg font-bold text-muted-foreground">{exemptCharges}</p>
+              <p className="text-[10px] text-muted-foreground">Isentos</p>
+            </button>
           </div>
         </CardContent>
       </Card>
 
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar membro..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       {/* Desktop: Table */}
       <Card className="hidden md:block">
         <CardContent className="pt-6">
-          {charges.length === 0 ? (
+          {filteredMembers.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Nenhuma cobrança gerada para {competence}. Vá em "Configurações" para gerar.
+              {charges.length === 0
+                ? `Nenhuma cobrança gerada para ${competence}. Vá em "Configurações" para gerar.`
+                : 'Nenhum membro encontrado.'}
             </p>
           ) : (
             <Table>
@@ -471,7 +573,7 @@ export function CobrancasTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {members.map(member => {
+                {filteredMembers.map(member => {
                   const mensalidade = getChargeByType(member.id, 'mensalidade');
                   const percapita = getChargeByType(member.id, 'percapita');
                   
@@ -604,23 +706,22 @@ export function CobrancasTab() {
       </Card>
 
       {/* Mobile: Cards */}
-      <div className="md:hidden space-y-3">
-        {charges.length === 0 ? (
+      <div className="md:hidden space-y-1">
+        {filteredMembers.length === 0 ? (
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-muted-foreground">
-                Nenhuma cobrança gerada para {competence}. Vá em "Configurações" para gerar.
+                {charges.length === 0
+                  ? `Nenhuma cobrança gerada para ${competence}. Vá em "Configurações" para gerar.`
+                  : 'Nenhum membro encontrado.'}
               </p>
             </CardContent>
           </Card>
         ) : (
-          members.map(member => {
+          filteredMembers.map(member => {
             const mensalidade = getChargeByType(member.id, 'mensalidade');
             const percapita = getChargeByType(member.id, 'percapita');
-            
-            if (!mensalidade && !percapita) return null;
 
-            // Check if charge can receive payment (pending or partial)
             const canPayMensalidade = mensalidade?.status === 'pendente' || 
               (mensalidade?.status === 'pago' && mensalidade.paid_amount !== null && mensalidade.paid_amount < mensalidade.amount);
             const canPayPercapita = percapita?.status === 'pendente' || 
@@ -631,6 +732,7 @@ export function CobrancasTab() {
               <ChargeCard
                 key={member.id}
                 memberName={member.name}
+                variant={getMemberVariant(member.id)}
                 mensalidade={mensalidade ? {
                   amount: mensalidade.amount,
                   status: mensalidade.status,
