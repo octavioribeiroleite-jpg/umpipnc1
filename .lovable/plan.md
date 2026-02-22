@@ -1,36 +1,36 @@
 
+# Mover Dizimos para pagina propria (mantendo formato atual)
 
-# Corrigir INSERT de visitante para usuarios autenticados
+## Resumo
 
-## Problema
+Mover a aba "Dizimos" de dentro da pagina Financas para uma pagina independente em `/dizimos`, mantendo exatamente o mesmo componente `DizimosTab` sem alteracoes visuais. A pagina sera acessivel apenas para admin e pastor, com item de menu nos dois paineis.
 
-A politica de INSERT na tabela `portal_visitors` foi criada apenas para o papel `anon`:
+## Mudancas
 
-```sql
-CREATE POLICY "Anon can insert portal visitors"
-  ON portal_visitors FOR INSERT TO anon
-  WITH CHECK (true);
-```
+### 1. Nova pagina `src/pages/Dizimos.tsx`
+- Usa `AppLayout` para admin ou `PastorLayout` para pastor
+- Renderiza `PageHeader` com titulo "Dizimos e Ofertas" + `DizimosTab` (mesmo componente, sem mudancas)
+- Protege acesso: so admin ou pastor
 
-Quando um usuario ja esta logado (como admin, diretoria, etc.), o Supabase usa o papel `authenticated`, e essa politica nao se aplica. Por isso o INSERT falha com "violates row-level security policy".
+### 2. Remover aba Dizimos de `src/pages/Financas.tsx`
+- Remover import de `DizimosTab`
+- Remover `<SelectItem value="dizimos">` (mobile)
+- Remover `<TabsTrigger value="dizimos">` (desktop)
+- Remover `<TabsContent value="dizimos">` com `<DizimosTab />`
 
-## Solucao
+### 3. Adicionar rota em `src/App.tsx`
+- `<Route path="/dizimos" element={<Dizimos />} />`
 
-Adicionar uma politica de INSERT permissiva tambem para `authenticated`, permitindo que qualquer usuario logado tambem possa se registrar como visitante no portal.
+### 4. Menu da diretoria (admin only)
+- `AppSidebar.tsx`: adicionar `{ icon: Heart, label: 'Dizimos', path: '/dizimos' }` em `adminMenuItems`
+- `MobileHeader.tsx`: adicionar nos `adminItems`
+- `MobileBottomNav.tsx`: adicionar nos `moreNavItems` condicional `isAdmin`
 
-## Detalhes tecnicos
+### 5. Menu do pastor
+- `PastorSidebar.tsx`: adicionar item `/dizimos` com icone `Heart`
+- `PastorMobileHeader.tsx`: adicionar nos `navItems`
+- `PastorMobileNav.tsx`: adicionar nos items de navegacao
 
-### Migracao SQL
-
-```sql
-CREATE POLICY "Authenticated can insert portal visitors"
-  ON portal_visitors FOR INSERT TO authenticated
-  WITH CHECK (true);
-```
-
-Isso cria uma segunda politica de INSERT (permissiva) que cobre usuarios autenticados. A politica existente para `anon` continua funcionando para visitantes nao logados.
-
-### Nenhuma mudanca de codigo
-
-O codigo do `PortalIgreja.tsx` permanece o mesmo.
-
+### 6. Sem alteracoes
+- `DizimosTab.tsx` permanece identico
+- `MembroDizimos.tsx` (visao do membro no portal) permanece identico
