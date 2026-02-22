@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -51,6 +52,8 @@ export default function PastorSugestoes() {
   const [profileNames, setProfileNames] = useState<Map<string, string>>(new Map());
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Pastor (with or without admin) uses PastorLayout; management-only uses AppLayout
+  const usePastorLayout = isPastor;
   const isPastorView = isPastor || isAdmin;
 
   useEffect(() => {
@@ -136,13 +139,15 @@ export default function PastorSugestoes() {
     }
   };
 
+  const Layout = usePastorLayout ? PastorLayout : AppLayout;
+
   if (authLoading) {
     return (
-      <PastorLayout>
+      <Layout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      </PastorLayout>
+      </Layout>
     );
   }
 
@@ -294,5 +299,5 @@ export default function PastorSugestoes() {
     </div>
   );
 
-  return <PastorLayout>{content}</PastorLayout>;
+  return <Layout>{content}</Layout>;
 }
