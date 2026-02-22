@@ -1,47 +1,38 @@
 
+# Corrigir Rotas de Sugestoes em Todo o App
 
-# Melhorias na Pagina de Sugestoes do Pastor
+## Problema
+Quatro componentes de navegacao ainda usam `/pastor-sugestoes` ao inves de `/sugestoes`. Quando um admin clica em "Sugestoes do Pastor" no menu, ele e direcionado para uma rota que pode causar conflito com o layout do pastor.
 
-## Problemas Identificados
+## Revisao Completa Realizada
 
-1. **Cards muito grandes** - Icone de 36px (`h-9 w-9`) e padding de `p-4` fazem cada sugestao ocupar muito espaco vertical no mobile
-2. **Sem identificacao do remetente** - Nao mostra quem enviou a sugestao (apenas o `created_by` UUID esta salvo, sem resolver para nome)
-3. **Sugestoes lidas sem opcao de responder** - Na secao "Lidas", nao ha botao para responder tardiamente
-4. **Sem opcao de excluir** - Sugestoes antigas nao podem ser removidas
-5. **Subtitulo "0 sugestoes nao lidas"** - Poderia mostrar algo mais positivo como "Tudo em dia"
-6. **Botoes "Lido" e "Responder" empilhados** - Ocupam espaco demais no mobile, poderiam ser icones inline
+Verifiquei **todos** os arquivos de navegacao e paginas do app. O problema esta **limitado a rota de sugestoes** - as demais paginas nao tem esse tipo de conflito porque:
 
-## Melhorias Propostas
+- Paginas do painel do pastor (`/pastor`, `/pastor/calendario`, `/pastor/comunicados`, `/pastor/sociedade/:slug`) usam `PastorLayout` que permite acesso para pastor E admin. Elas so sao acessadas pela navegacao interna do painel do pastor (PastorSidebar, PastorMobileNav, PastorMobileHeader), nunca pelo menu principal.
+- Paginas comuns (`/reunioes`, `/tarefas`, `/calendario`, etc.) usam `AppLayout` sem restricao de role.
+- `/usuarios` usa `Navigate to="/"` para nao-admins - correto.
+- `/membro` redireciona para `/auth` se nao logado - correto.
 
-### 1. Cards compactos
-Reduzir icone para `h-7 w-7`, padding para `p-3`, e colocar acoes em linha ao inves de empilhadas.
+## 4 Alteracoes Necessarias (apenas strings de rota)
 
-### 2. Mostrar remetente
-Buscar nomes da tabela `profiles` usando os IDs de `created_by` e exibir junto ao timestamp (ex: "Joao - ha 3 dias").
+### 1. `src/components/layout/AppSidebar.tsx` (linha 37)
+Trocar `path: '/pastor-sugestoes'` para `path: '/sugestoes'`
 
-### 3. Responder nas lidas
-Adicionar botao "Responder" tambem nos cards de sugestoes ja lidas, reutilizando a logica existente de `respondingTo`.
+### 2. `src/components/layout/MobileHeader.tsx` (linha 45)
+Trocar `to: '/pastor-sugestoes'` para `to: '/sugestoes'`
 
-### 4. Excluir sugestoes
-Adicionar icone de lixeira com confirmacao. Requer criar uma RLS policy de DELETE na tabela `pastor_feedback` para pastores/admins.
+### 3. `src/components/layout/MobileBottomNav.tsx` (linha 33)
+Trocar `to: '/pastor-sugestoes'` para `to: '/sugestoes'`
 
-### 5. Subtitulo inteligente
-Quando `unread.length === 0`, mostrar "Tudo em dia" com tom positivo em vez de "0 sugestoes nao lidas".
+### 4. `src/components/pastor/PastorLoginNotification.tsx` (linha 64)
+Trocar `navigate('/pastor-sugestoes')` para `navigate('/sugestoes')`
 
-### 6. Acoes mais compactas
-Trocar botoes com texto ("Lido", "Responder") por botoes com icone apenas (`variant="ghost"` com tooltip), alinhados horizontalmente.
+## O que NAO precisa mudar
 
-## Detalhes Tecnicos
+- **PastorSidebar, PastorMobileHeader, PastorMobileNav**: Usam `/pastor/sugestoes` corretamente (rota interna do painel do pastor, que ja tem o layout adaptativo)
+- **PastorNotificationBanner**: Ja foi corrigido no ultimo commit para usar `/sugestoes`
+- **App.tsx**: Ja tem as 3 rotas registradas (`/pastor/sugestoes`, `/pastor-sugestoes`, `/sugestoes`)
+- **PastorSugestoes.tsx**: Ja tem layout adaptativo (PastorLayout para pastor, AppLayout para admin)
 
-### Banco de dados
-- Criar migration para adicionar RLS policy de DELETE em `pastor_feedback` para pastores e admins (atualmente a tabela nao permite DELETE)
-
-### Arquivo a modificar:
-- **`src/pages/PastorSugestoes.tsx`**:
-  1. Buscar `profiles` (user_id, full_name) no `useEffect` e criar um `Map<string, string>` para resolver nomes
-  2. Reduzir icone de `h-9 w-9` para `h-7 w-7` e padding de `p-4` para `p-3`
-  3. Adicionar botao "Responder" nos cards lidos (mesma logica de `respondingTo`)
-  4. Adicionar botao de excluir com `supabase.from('pastor_feedback').delete().eq('id', id)`
-  5. Ajustar subtitulo: `unread.length === 0 ? 'Tudo em dia' : ...`
-  6. Substituir botoes empilhados por icones inline horizontais
-
+## Resultado
+Nenhum link do menu principal (sidebar, header mobile, bottom nav) apontara mais para `/pastor-sugestoes`. Todos usarao `/sugestoes`, que renderiza com o layout correto conforme o papel do usuario.
