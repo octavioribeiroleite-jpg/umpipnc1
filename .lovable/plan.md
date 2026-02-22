@@ -1,38 +1,53 @@
 
-# Corrigir Rotas de Sugestoes em Todo o App
 
-## Problema
-Quatro componentes de navegacao ainda usam `/pastor-sugestoes` ao inves de `/sugestoes`. Quando um admin clica em "Sugestoes do Pastor" no menu, ele e direcionado para uma rota que pode causar conflito com o layout do pastor.
+# Melhorias na Tela de Reunioes (Mobile)
 
-## Revisao Completa Realizada
+## Problemas Identificados
 
-Verifiquei **todos** os arquivos de navegacao e paginas do app. O problema esta **limitado a rota de sugestoes** - as demais paginas nao tem esse tipo de conflito porque:
+1. **Filtros ocupam muito espaco vertical** - Busca, status e mes estao empilhados, ocupando quase metade da tela antes de chegar ao conteudo
+2. **Formatacao da data na pasta** - "16 De Dezembro De 2025" com "De" maiusculo (deveria ser "de")
+3. **Botao "Nova Reuniao" ocupa espaco fixo no topo** - Poderia ser um FAB (botao flutuante) no mobile para liberar espaco
+4. **Card da reuniao pode ser mais compacto** - Informacoes como "Pauta: incompleta" e indicadores de progresso ocupam bastante espaco
+5. **Filtros poderiam ser colapsaveis** - Um botao de filtro que expande/recolhe, mostrando badge com filtros ativos
 
-- Paginas do painel do pastor (`/pastor`, `/pastor/calendario`, `/pastor/comunicados`, `/pastor/sociedade/:slug`) usam `PastorLayout` que permite acesso para pastor E admin. Elas so sao acessadas pela navegacao interna do painel do pastor (PastorSidebar, PastorMobileNav, PastorMobileHeader), nunca pelo menu principal.
-- Paginas comuns (`/reunioes`, `/tarefas`, `/calendario`, etc.) usam `AppLayout` sem restricao de role.
-- `/usuarios` usa `Navigate to="/"` para nao-admins - correto.
-- `/membro` redireciona para `/auth` se nao logado - correto.
+## Alteracoes Planejadas
 
-## 4 Alteracoes Necessarias (apenas strings de rota)
+### 1. `src/components/reunioes/ReuniaoFilters.tsx`
+- Tornar filtros colapsaveis no mobile com um botao "Filtros" que expande/recolhe
+- Mostrar badge com quantidade de filtros ativos
+- No desktop, manter layout atual (lado a lado)
+- Colocar busca sempre visivel, e status + mes dentro do colapsavel
 
-### 1. `src/components/layout/AppSidebar.tsx` (linha 37)
-Trocar `path: '/pastor-sugestoes'` para `path: '/sugestoes'`
+### 2. `src/components/reunioes/ReuniaoPastaData.tsx`
+- Corrigir capitalizacao da data (usar "dd 'de' MMMM 'de' yyyy" corretamente -- o problema e o `capitalize` no CSS que forca maiusculas)
+- Remover a classe `capitalize` que esta forçando "De" maiusculo
 
-### 2. `src/components/layout/MobileHeader.tsx` (linha 45)
-Trocar `to: '/pastor-sugestoes'` para `to: '/sugestoes'`
+### 3. `src/pages/Reunioes.tsx`
+- No mobile, trocar o botao "Nova Reuniao" do header por um FAB (botao flutuante) no canto inferior direito
+- Manter o botao normal no desktop
 
-### 3. `src/components/layout/MobileBottomNav.tsx` (linha 33)
-Trocar `to: '/pastor-sugestoes'` para `to: '/sugestoes'`
+### 4. `src/components/reunioes/ReuniaoCard.tsx`
+- Compactar layout mobile: reduzir padding e espacamento
+- Colocar botoes de acao (Ver Ata / Excluir) mais compactos
+- Reduzir tamanho dos indicadores de progresso no mobile
 
-### 4. `src/components/pastor/PastorLoginNotification.tsx` (linha 64)
-Trocar `navigate('/pastor-sugestoes')` para `navigate('/sugestoes')`
+## Detalhes Tecnicos
 
-## O que NAO precisa mudar
+### ReuniaoFilters - Filtros colapsaveis
+- Usar `Collapsible` do Radix no mobile
+- Busca sempre visivel
+- Botao "Filtros" com icone `SlidersHorizontal` e badge de contagem
+- `useIsMobile()` para detectar tamanho
 
-- **PastorSidebar, PastorMobileHeader, PastorMobileNav**: Usam `/pastor/sugestoes` corretamente (rota interna do painel do pastor, que ja tem o layout adaptativo)
-- **PastorNotificationBanner**: Ja foi corrigido no ultimo commit para usar `/sugestoes`
-- **App.tsx**: Ja tem as 3 rotas registradas (`/pastor/sugestoes`, `/pastor-sugestoes`, `/sugestoes`)
-- **PastorSugestoes.tsx**: Ja tem layout adaptativo (PastorLayout para pastor, AppLayout para admin)
+### ReuniaoPastaData - Data
+- Remover classe CSS `capitalize` da span da data
+- O `date-fns` ja formata corretamente com minusculas
 
-## Resultado
-Nenhum link do menu principal (sidebar, header mobile, bottom nav) apontara mais para `/pastor-sugestoes`. Todos usarao `/sugestoes`, que renderiza com o layout correto conforme o papel do usuario.
+### Reunioes - FAB
+- Usar componente `fab.tsx` existente ou criar botao fixo `fixed bottom-20 right-4` no mobile
+- Esconder botao do PageHeader no mobile com `hidden md:block`
+
+### ReuniaoCard - Compactacao
+- Padding `p-3` no mobile (era `p-4`)
+- Gap menor entre elementos
+- Texto dos indicadores mais compacto
