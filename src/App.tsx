@@ -75,6 +75,7 @@ const App = () => (
             <Route path="/pastor/comunicados" element={<PastorComunicados />} />
             <Route path="/pastor/sugestoes" element={<PastorSugestoes />} />
             <Route path="/pastor-sugestoes" element={<PastorSugestoes />} />
+            <Route path="/sugestoes" element={<PastorSugestoes />} />
             <Route path="/membro" element={<MembroHome />} />
             <Route path="/eleicoes" element={<Eleicoes />} />
             <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />

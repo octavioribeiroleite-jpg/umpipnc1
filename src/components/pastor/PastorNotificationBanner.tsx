@@ -41,7 +41,7 @@ export function PastorNotificationBanner() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => navigate('/pastor-sugestoes')}>
+          <Button size="sm" onClick={() => navigate('/sugestoes')}>
             Ver sugestões <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
           <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setDismissed(true)}>
