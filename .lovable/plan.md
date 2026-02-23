@@ -1,70 +1,64 @@
 
-# Tela de boas-vindas para visitantes + confirmacao de retorno + cores do menu
+# Nova pagina "Visitantes" com filtro por dia + menu lateral
 
-## 1. Tela de boas-vindas para visitantes (novo)
+## O que muda
 
-Quando um visitante (que marcou "Sou visitante") completar o formulario de identificacao pela primeira vez, antes de entrar no portal, sera exibida uma tela especial de boas-vindas:
+O relatorio de visitantes sai da pagina de Configuracoes e ganha sua propria pagina dedicada (`/visitantes`), acessivel pelo menu lateral para Admin e Pastor. A nova pagina tera filtro por data para saber quantos visitantes tiveram em cada dia.
 
-- Logo da igreja grande e centralizada (128px), com animacao suave de fade-in
-- Titulo: "Que alegria ter voce aqui!" (texto grande, bold)
-- Mensagem acolhedora: "Seja muito bem-vindo a nossa igreja! E uma honra receber voce. Que este momento seja especial e que voce se sinta em casa entre nos. Deus te abencoe!"
-- Nome da pessoa em destaque: "Obrigado pela sua visita, **[Nome]**!"
-- Icone decorativo de coracao com animacao
-- Botao "Entrar no Portal" (primario, grande) para prosseguir
-- Fundo com gradiente sutil verde/transparente
-- Animacoes de entrada (fade-in, scale-in) para dar vida a tela
+## 1. Nova pagina `src/pages/Visitantes.tsx`
 
-Para membros (que escolheram uma sociedade), a tela de boas-vindas nao aparece -- entra direto no portal como hoje.
+Pagina dedicada com:
+- **Filtro por data**: DatePicker para selecionar um dia especifico (padrao: hoje). Ao selecionar, filtra os registros daquele dia
+- **Cards de resumo do dia**: Total de acessos, Membros, Visitantes (apenas do dia selecionado)
+- **Secao "Visitantes recorrentes"**: mesma logica atual, agrupando por nome+dispositivo com contagem de visitas
+- **Tabela de acessos do dia**: com colunas Nome, Sociedade, Hora, Status (Novo/Retornou)
+- Protegida: so acessivel por Admin e Pastor (redireciona se nao tiver permissao)
+- Usa `AppLayout` (para admin) ou `PastorLayout` (para pastor) dependendo do perfil
 
-## 2. Confirmacao de retorno para todos
-
-Quando a pessoa ja tem dados salvos no localStorage (retornando ao portal):
-
-- Tela simples com logo centralizada
-- "Bem-vindo de volta!"
-- "Voce e **[Nome Completo]**?"
-- Botao "Sim, sou eu" (primario) -- registra nova visita e entra
-- Botao "Nao, sou outra pessoa" (outline) -- limpa localStorage e mostra formulario
-
-Cada confirmacao gera um novo INSERT no `portal_visitors`, servindo como log de presenca.
-
-## 3. Corrigir cor do menu lateral
-
-Trocar classes do Sheet sidebar de `bg-sidebar`/`text-sidebar-*` para `bg-card`/`text-foreground`/`bg-primary` etc., seguindo as cores gerais do app.
-
-## 4. Painel de visitantes para Pastor e Admin (`Configuracoes.tsx`)
-
-- Tornar o relatorio do portal visivel tambem para o Pastor
-- Adicionar coluna "Hora" na tabela de acessos
-- Adicionar badge "Novo" vs "Retornou" por device_id
-- Nova secao "Visitantes recorrentes" agrupando por nome+dispositivo com contagem de visitas
-
-## Detalhes tecnicos
-
-### Fluxo atualizado do `PortalIgreja`
+## 2. Adicionar rota no `src/App.tsx`
 
 ```text
-tem localStorage?
-  Sim -> Tela "Voce e fulano?" (ReturnVisitorConfirm)
-    "Sim" -> INSERT portal_visitors + entra no portal
-    "Nao"  -> limpa localStorage -> formulario
-  Nao -> Formulario de identificacao
-    Preencheu -> salva localStorage
-      E visitante? -> Tela de boas-vindas (WelcomeScreen) -> botao "Entrar"
-      E membro?    -> entra direto no portal
+<Route path="/visitantes" element={<Visitantes />} />
 ```
 
-### Novo componente `WelcomeScreen`
-- Props: `visitor: VisitorData`, `onContinue: () => void`
-- Logo 128px com `animate-fade-in`
-- Textos com delay de animacao escalonado
-- Botao grande primario
+## 3. Adicionar item no menu lateral
 
-### Novo componente `ReturnVisitorConfirm`
-- Props: `visitor: VisitorData`, `onConfirm: () => void`, `onReset: () => void`
-- Logo centralizada, pergunta com nome em bold
-- Dois botoes
+**`src/components/layout/AppSidebar.tsx`** (admin):
+- Adicionar `{ icon: Globe, label: 'Visitantes', path: '/visitantes' }` nos `adminMenuItems`
 
-### Arquivos modificados
-- `src/pages/PortalIgreja.tsx`: novos componentes WelcomeScreen e ReturnVisitorConfirm, ajuste no fluxo principal, correcao de cores do Sheet
-- `src/pages/Configuracoes.tsx`: acesso para pastor, melhorias no relatorio de visitantes
+**`src/components/layout/MobileBottomNav.tsx`** (mobile admin):
+- Adicionar item "Visitantes" nos `moreNavItems` para admin
+
+**`src/components/pastor/PastorSidebar.tsx`** (pastor desktop):
+- Adicionar `{ path: '/visitantes', label: 'Visitantes', icon: Globe }` nos `mainItems`
+
+**`src/components/pastor/PastorMobileNav.tsx`** e **`src/components/pastor/PastorMobileHeader.tsx`** (pastor mobile):
+- Adicionar item "Visitantes" na navegacao
+
+## 4. Remover relatorio do `src/pages/Configuracoes.tsx`
+
+- Remover todo o bloco do "Relatorio do Portal da Igreja" (linhas 628-786)
+- Remover estados, interfaces e funcoes relacionadas (`portalVisitors`, `portalSocieties`, `portalLoading`, `onlyVisitors`, `fetchPortalVisitors`, `deviceFirstSeen`, `recurringVisitors`, `filteredVisitors`, `canSeePortalReport`, tipos `PortalVisitor`, `SocietyInfo`, `RecurringVisitor`)
+- Remover imports nao mais usados (`Globe`, `Eye`, `RefreshCw`, `Switch`, `format`, `ptBR`)
+
+## 5. Detalhes do filtro por dia
+
+- DatePicker usando o componente `Calendar` do shadcn dentro de um `Popover`
+- Estado `selectedDate` (padrao: hoje)
+- Filtra `portalVisitors` por `created_at` do dia selecionado
+- Cards de resumo refletem apenas o dia filtrado
+- Tabela mostra apenas acessos do dia filtrado
+- Secao de recorrentes permanece global (todas as datas)
+- Botao "Hoje" para voltar rapidamente ao dia atual
+
+## Arquivos criados
+- `src/pages/Visitantes.tsx`
+
+## Arquivos modificados
+- `src/App.tsx` (nova rota)
+- `src/components/layout/AppSidebar.tsx` (menu admin)
+- `src/components/layout/MobileBottomNav.tsx` (menu mobile admin)
+- `src/components/pastor/PastorSidebar.tsx` (menu pastor)
+- `src/components/pastor/PastorMobileNav.tsx` (menu mobile pastor)
+- `src/components/pastor/PastorMobileHeader.tsx` (header mobile pastor)
+- `src/pages/Configuracoes.tsx` (remover relatorio)
