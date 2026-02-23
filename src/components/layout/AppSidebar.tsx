@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Vote,
   Heart,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +37,7 @@ const menuItems = [
 
 const adminMenuItems = [
   { icon: Heart, label: 'Dízimos', path: '/dizimos' },
+  { icon: Globe, label: 'Visitantes', path: '/visitantes' },
   { icon: UserCheck, label: 'Usuários', path: '/usuarios' },
   { icon: MessageSquare, label: 'Sugestões do Pastor', path: '/sugestoes' },
 ];

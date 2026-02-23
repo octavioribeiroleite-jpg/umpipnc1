@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Users,
   Heart,
+  Globe,
 } from 'lucide-react';
 import {
   Sheet,
@@ -38,6 +39,7 @@ const navItems = [
   { to: '/pastor/comunicados', icon: Megaphone, label: 'Comunicados' },
   { to: '/pastor/sugestoes', icon: MessageSquare, label: 'Sugestões' },
   { to: '/dizimos', icon: Heart, label: 'Dízimos' },
+  { to: '/visitantes', icon: Globe, label: 'Visitantes' },
 ];
 
 export function PastorMobileHeader() {

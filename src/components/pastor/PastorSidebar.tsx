@@ -10,6 +10,7 @@ import {
   LogOut,
   Users,
   Heart,
+  Globe,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +40,7 @@ export function PastorSidebar() {
     { path: '/pastor/comunicados', label: 'Comunicados', icon: Megaphone },
     { path: '/pastor/sugestoes', label: 'Sugestões', icon: MessageSquare },
     { path: '/dizimos', label: 'Dízimos', icon: Heart },
+    { path: '/visitantes', label: 'Visitantes', icon: Globe },
   ];
 
   const isActive = (path: string) => {
