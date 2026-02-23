@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -36,10 +36,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck, Globe, Eye, RefreshCw } from 'lucide-react';
+import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador';
 
@@ -66,31 +64,6 @@ const roleColors: Record<string, string> = {
   pending: 'bg-destructive/20 text-destructive',
 };
 
-interface PortalVisitor {
-  id: string;
-  full_name: string;
-  society_id: string | null;
-  is_visitor: boolean;
-  device_id: string;
-  created_at: string;
-  last_access: string;
-}
-
-interface SocietyInfo {
-  id: string;
-  name: string;
-  color: string;
-}
-
-interface RecurringVisitor {
-  fullName: string;
-  deviceId: string;
-  isVisitor: boolean;
-  societyId: string | null;
-  visitCount: number;
-  firstVisit: string;
-  lastVisit: string;
-}
 
 export default function Configuracoes() {
   const { isAdmin, isPastor, user } = useAuth();
@@ -98,41 +71,12 @@ export default function Configuracoes() {
   const [loading, setLoading] = useState(true);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
-  const [portalVisitors, setPortalVisitors] = useState<PortalVisitor[]>([]);
-  const [portalSocieties, setPortalSocieties] = useState<Record<string, SocietyInfo>>({});
-  const [portalLoading, setPortalLoading] = useState(true);
-  const [onlyVisitors, setOnlyVisitors] = useState(false);
-
-  const canSeePortalReport = isAdmin || isPastor;
 
   useEffect(() => {
     if (isAdmin) {
       fetchUsers();
     }
-    if (canSeePortalReport) {
-      fetchPortalVisitors();
-    }
-  }, [isAdmin, canSeePortalReport]);
-
-  const fetchPortalVisitors = async () => {
-    setPortalLoading(true);
-    try {
-      const [visitorsRes, socRes] = await Promise.all([
-        supabase.from('portal_visitors' as any).select('*').order('created_at', { ascending: false }).limit(500),
-        supabase.from('societies').select('id, name, color').eq('active', true),
-      ]);
-      if (visitorsRes.data) setPortalVisitors(visitorsRes.data as any[]);
-      if (socRes.data) {
-        const map: Record<string, SocietyInfo> = {};
-        (socRes.data as SocietyInfo[]).forEach((s) => (map[s.id] = s));
-        setPortalSocieties(map);
-      }
-    } catch (e) {
-      console.error('Error fetching portal visitors:', e);
-    } finally {
-      setPortalLoading(false);
-    }
-  };
+  }, [isAdmin]);
 
   const fetchUsers = async () => {
     try {
@@ -260,48 +204,6 @@ export default function Configuracoes() {
     }
   };
 
-  // Compute device_id first-seen map for Novo/Retornou badge
-  const deviceFirstSeen = useMemo(() => {
-    const map = new Map<string, string>();
-    // portalVisitors is sorted desc by created_at, iterate reverse for first occurrence
-    for (let i = portalVisitors.length - 1; i >= 0; i--) {
-      const v = portalVisitors[i];
-      if (!map.has(v.device_id)) {
-        map.set(v.device_id, v.id);
-      }
-    }
-    return map;
-  }, [portalVisitors]);
-
-  // Compute recurring visitors
-  const recurringVisitors = useMemo<RecurringVisitor[]>(() => {
-    const groups = new Map<string, { fullName: string; deviceId: string; isVisitor: boolean; societyId: string | null; dates: string[] }>();
-    portalVisitors.forEach((v) => {
-      const key = `${v.full_name}|${v.device_id}`;
-      if (!groups.has(key)) {
-        groups.set(key, { fullName: v.full_name, deviceId: v.device_id, isVisitor: v.is_visitor, societyId: v.society_id, dates: [] });
-      }
-      groups.get(key)!.dates.push(v.created_at);
-    });
-
-    return Array.from(groups.values())
-      .filter((g) => g.dates.length >= 2)
-      .map((g) => ({
-        fullName: g.fullName,
-        deviceId: g.deviceId,
-        isVisitor: g.isVisitor,
-        societyId: g.societyId,
-        visitCount: g.dates.length,
-        firstVisit: g.dates[g.dates.length - 1],
-        lastVisit: g.dates[0],
-      }))
-      .sort((a, b) => new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime());
-  }, [portalVisitors]);
-
-  const filteredVisitors = useMemo(() => {
-    if (!onlyVisitors) return portalVisitors;
-    return portalVisitors.filter((v) => v.is_visitor);
-  }, [portalVisitors, onlyVisitors]);
 
   return (
     <AppLayout>
@@ -625,165 +527,6 @@ export default function Configuracoes() {
           </Card>
         )}
 
-        {/* Portal Visitors Report — visible to Admin and Pastor */}
-        {canSeePortalReport && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Relatório do Portal da Igreja
-              </CardTitle>
-              <CardDescription>Acessos ao portal público (sem login)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {portalLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : portalVisitors.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Nenhum acesso registrado ainda.</p>
-              ) : (
-                <div className="space-y-6">
-                  {/* Stats */}
-                  {(() => {
-                    const now = new Date();
-                    const thisMonth = portalVisitors.filter((v) => {
-                      const d = new Date(v.created_at);
-                      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                    });
-                    const visitors = thisMonth.filter((v) => v.is_visitor).length;
-                    const members = thisMonth.length - visitors;
-                    return (
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="rounded-lg border p-3 text-center">
-                          <p className="text-2xl font-bold">{thisMonth.length}</p>
-                          <p className="text-xs text-muted-foreground">Este mês</p>
-                        </div>
-                        <div className="rounded-lg border p-3 text-center">
-                          <p className="text-2xl font-bold">{members}</p>
-                          <p className="text-xs text-muted-foreground">Membros</p>
-                        </div>
-                        <div className="rounded-lg border p-3 text-center">
-                          <p className="text-2xl font-bold">{visitors}</p>
-                          <p className="text-xs text-muted-foreground">Visitantes</p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Recurring visitors section */}
-                  {recurringVisitors.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
-                        <RefreshCw className="h-4 w-4 text-muted-foreground" />
-                        Visitantes recorrentes ({recurringVisitors.length})
-                      </h4>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {recurringVisitors.slice(0, 10).map((rv, i) => (
-                          <div key={i} className="rounded-lg border p-3 space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-sm truncate">{rv.fullName}</span>
-                              <Badge variant="secondary" className="text-[10px] shrink-0">
-                                {rv.visitCount} visitas
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {rv.isVisitor ? (
-                                <Badge variant="outline" className="text-[10px]">Visitante</Badge>
-                              ) : rv.societyId && portalSocieties[rv.societyId] ? (
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px]"
-                                  style={{
-                                    borderColor: portalSocieties[rv.societyId].color,
-                                    color: portalSocieties[rv.societyId].color,
-                                  }}
-                                >
-                                  {portalSocieties[rv.societyId].name}
-                                </Badge>
-                              ) : null}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground">
-                              Primeira: {format(new Date(rv.firstVisit), "dd/MM/yyyy")} · Última: {format(new Date(rv.lastVisit), "dd/MM/yyyy")}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Recent visitors list */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold flex items-center gap-1.5">
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                        Acessos recentes
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="only-visitors" className="text-xs text-muted-foreground cursor-pointer">
-                          Apenas visitantes
-                        </Label>
-                        <Switch id="only-visitors" checked={onlyVisitors} onCheckedChange={setOnlyVisitors} />
-                      </div>
-                    </div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Sociedade</TableHead>
-                          <TableHead>Data</TableHead>
-                          <TableHead>Hora</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredVisitors.slice(0, 50).map((v) => {
-                          const isFirstAccess = deviceFirstSeen.get(v.device_id) === v.id;
-                          return (
-                            <TableRow key={v.id}>
-                              <TableCell className="font-medium">{v.full_name}</TableCell>
-                              <TableCell>
-                                {v.is_visitor ? (
-                                  <Badge variant="outline" className="text-[10px]">Visitante</Badge>
-                                ) : v.society_id && portalSocieties[v.society_id] ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-[10px]"
-                                    style={{
-                                      borderColor: portalSocieties[v.society_id].color,
-                                      color: portalSocieties[v.society_id].color,
-                                    }}
-                                  >
-                                    {portalSocieties[v.society_id].name}
-                                  </Badge>
-                                ) : (
-                                  <span className="text-muted-foreground text-xs">—</span>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-muted-foreground text-xs">
-                                {format(new Date(v.created_at), "dd/MM/yyyy")}
-                              </TableCell>
-                              <TableCell className="text-muted-foreground text-xs">
-                                {format(new Date(v.created_at), "HH:mm")}
-                              </TableCell>
-                              <TableCell>
-                                {isFirstAccess ? (
-                                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">Novo</Badge>
-                                ) : (
-                                  <Badge variant="secondary" className="text-[10px]">Retornou</Badge>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </div>
     </AppLayout>
   );

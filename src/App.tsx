@@ -31,6 +31,7 @@ import EleicaoDetalhe from "./pages/EleicaoDetalhe";
 import VotePublic from "./pages/VotePublic";
 import PortalIgreja from "./pages/PortalIgreja";
 import Dizimos from "./pages/Dizimos";
+import Visitantes from "./pages/Visitantes";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
@@ -86,6 +87,7 @@ const App = () => (
             <Route path="/vote/:electionId" element={<VotePublic />} />
             <Route path="/dizimos" element={<Dizimos />} />
             <Route path="/igreja" element={<PortalIgreja />} />
+            <Route path="/visitantes" element={<Visitantes />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
