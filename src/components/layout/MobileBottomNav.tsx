@@ -27,9 +27,9 @@ export function MobileBottomNav() {
     { to: '/tarefas', icon: CheckSquare, label: 'Tarefas' },
     { to: '/comunicados', icon: MessageSquare, label: 'Comunicados' },
     { to: '/plenarias', icon: ClipboardCheck, label: 'Plenárias' },
-    { to: '/eleicoes', icon: Vote, label: 'Eleições' },
     { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
     ...(isAdmin ? [
+      { to: '/eleicoes', icon: Vote, label: 'Eleições' },
       { to: '/dizimos', icon: Heart, label: 'Dízimos' },
       { to: '/visitantes', icon: Globe, label: 'Visitantes' },
       { to: '/usuarios', icon: UserCheck, label: 'Usuários' },

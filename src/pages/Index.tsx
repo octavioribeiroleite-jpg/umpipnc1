@@ -343,7 +343,7 @@ export default function Index() {
       <PastorLoginNotification />
       <PageHeader
         title="Dashboard"
-        description="Visão geral do painel da Diretoria de Jovens"
+        description="Visão geral das atividades e indicadores"
       />
       <PastorNotificationBanner />
 

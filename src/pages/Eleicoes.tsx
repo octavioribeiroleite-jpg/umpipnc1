@@ -54,8 +54,15 @@ export default function Eleicoes() {
   const [societyId, setSocietyId] = useState<string>('');
   const [creating, setCreating] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin, isPastor } = useAuth();
   const navigate = useNavigate();
+
+  // Only admin and pastor can access elections
+  useEffect(() => {
+    if (!isAdmin && !isPastor) {
+      navigate('/');
+    }
+  }, [isAdmin, isPastor, navigate]);
 
   const fetchElections = async () => {
     setLoading(true);
