@@ -13,8 +13,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { Globe, CalendarIcon, RefreshCw, Loader2, Users, UserCheck, Eye } from 'lucide-react';
-import { format, isSameDay, startOfDay } from 'date-fns';
+import { Globe, CalendarIcon, RefreshCw, Loader2, Users, UserCheck, Eye, Church } from 'lucide-react';
+import { format, isSameDay, startOfDay, subDays, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -126,6 +126,27 @@ export default function Visitantes() {
     return { total, members: total - visitorsCount, visitors: visitorsCount };
   }, [dayVisitors]);
 
+  // Sunday stats (last 8 Sundays)
+  const sundayStats = useMemo(() => {
+    const sundays: { date: Date; total: number; members: number; visitors: number }[] = [];
+    const today = new Date();
+    // Find last Sunday (or today if Sunday)
+    const dayOfWeek = getDay(today); // 0 = Sunday
+    let lastSunday = startOfDay(subDays(today, dayOfWeek === 0 ? 0 : dayOfWeek));
+    for (let i = 0; i < 8; i++) {
+      const sundayDate = subDays(lastSunday, i * 7);
+      const dayVis = visitors.filter(v => isSameDay(new Date(v.created_at), sundayDate));
+      const visitorsCount = dayVis.filter(v => v.is_visitor).length;
+      sundays.push({
+        date: sundayDate,
+        total: dayVis.length,
+        members: dayVis.length - visitorsCount,
+        visitors: visitorsCount,
+      });
+    }
+    return sundays;
+  }, [visitors]);
+
   if (authLoading) return null;
   if (!canAccess) return null;
 
@@ -143,6 +164,46 @@ export default function Visitantes() {
           </Button>
         }
       />
+
+      {/* Sunday summary */}
+      {!dataLoading && sundayStats.length > 0 && (
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
+              <Church className="h-4 w-4 text-muted-foreground" />
+              Resumo dos Domingos
+            </h3>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {sundayStats.map((s, i) => {
+                const isSelected = isSameDay(selectedDate, s.date);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedDate(s.date)}
+                    className={cn(
+                      'flex-shrink-0 rounded-lg border p-3 text-center min-w-[90px] transition-colors',
+                      isSelected
+                        ? 'border-primary bg-primary/10'
+                        : 'hover:bg-muted'
+                    )}
+                  >
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {format(s.date, 'dd/MM')}
+                    </p>
+                    <p className={cn('text-xl font-bold', isSelected ? 'text-primary' : '')}>
+                      {s.total}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">acessos</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {s.members}m · {s.visitors}v
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Date filter */}
       <div className="flex flex-wrap items-center gap-3 mb-4">

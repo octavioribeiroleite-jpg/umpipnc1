@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Vote,
   Heart,
+  Globe,
 } from 'lucide-react';
 import {
   Sheet,
@@ -43,6 +44,7 @@ const navItems = [
 
 const adminItems = [
   { to: '/dizimos', icon: Heart, label: 'Dízimos' },
+  { to: '/visitantes', icon: Globe, label: 'Visitantes' },
   { to: '/usuarios', icon: UserCheck, label: 'Usuários' },
   { to: '/sugestoes', icon: MessageSquare, label: 'Sugestões do Pastor' },
 ];
