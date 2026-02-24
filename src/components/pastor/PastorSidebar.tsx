@@ -11,6 +11,7 @@ import {
   Users,
   Heart,
   Globe,
+  Vote,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +40,7 @@ export function PastorSidebar() {
     { path: '/pastor/calendario', label: 'Calendário', icon: Calendar },
     { path: '/pastor/comunicados', label: 'Comunicados', icon: Megaphone },
     { path: '/pastor/sugestoes', label: 'Sugestões', icon: MessageSquare },
+    { path: '/eleicoes', label: 'Eleições', icon: Vote },
     { path: '/dizimos', label: 'Dízimos', icon: Heart },
     { path: '/visitantes', label: 'Visitantes', icon: Globe },
   ];
