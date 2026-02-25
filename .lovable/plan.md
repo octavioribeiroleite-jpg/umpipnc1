@@ -1,47 +1,63 @@
 
 
-# Restringir Eleições para Admin/Pastor e ajustar Dashboard da Diretoria
+# Dizimos para todos + Visitantes inteligentes (pessoas unicas)
 
-## O que muda
+## 1. Dizimos visivel para todos, configuracao restrita
 
-O item "Eleições" sai do menu geral (acessível a toda diretoria) e passa a ser exclusivo para Admin e Pastor. A página de Eleições também ganha proteção de acesso.
-
-## 1. Mover "Eleições" para menus restritos
+### `src/pages/Dizimos.tsx`
+- Remover a restricao `!isAdmin && !isPastor` — qualquer usuario autenticado acessa
+- Se `isAdmin || isPastor`: mostrar `DizimosTab` (formulario de configuracao)
+- Senao: mostrar `MembroDizimos` (visao somente-leitura com botao copiar PIX)
 
 ### `src/components/layout/AppSidebar.tsx`
-- Remover `{ icon: Vote, label: 'Eleições', path: '/eleicoes' }` do array `menuItems` (geral)
-- Adicionar ao array `adminMenuItems` (já restrito a `isAdmin`)
+- Mover `{ icon: Heart, label: 'Dizimos', path: '/dizimos' }` de `adminMenuItems` para `menuItems`
 
 ### `src/components/layout/MobileHeader.tsx`
-- Remover `{ to: '/eleicoes', icon: Vote, label: 'Eleições' }` do array `navItems` (geral)
-- Adicionar ao array `adminItems` (já restrito a `isAdmin`)
+- Mover `{ to: '/dizimos', icon: Heart, label: 'Dizimos' }` de `adminItems` para `navItems`
 
 ### `src/components/layout/MobileBottomNav.tsx`
-- Mover `{ to: '/eleicoes', icon: Vote, label: 'Eleições' }` de `moreNavItems` (seção geral) para dentro do bloco condicional `isAdmin`
+- Mover `{ to: '/dizimos', icon: Heart, label: 'Dizimos' }` do bloco condicional `isAdmin` para a lista geral de `moreNavItems`
 
-### `src/components/pastor/PastorSidebar.tsx`
-- Adicionar `{ path: '/eleicoes', label: 'Eleições', icon: Vote }` aos itens do menu do pastor
+A seguranca dos dados continua garantida: a tabela `settings` so permite escrita para admins (RLS), entao mesmo que a diretoria acesse a pagina, so vera a chave PIX para copiar, sem poder editar.
 
-### `src/components/pastor/PastorMobileNav.tsx` e `PastorMobileHeader.tsx`
-- Adicionar item "Eleições" na navegação mobile do pastor
+## 2. Visitantes: contar pessoas unicas por dia, nao acessos
 
-## 2. Proteger a página de Eleições
+O problema atual: se uma pessoa acessa o portal 3 vezes no domingo, conta como 3. O correto e contar como 1 pessoa.
 
-### `src/pages/Eleicoes.tsx`
-- Importar `isAdmin` e `isPastor` do `useAuth()`
-- Adicionar verificação: se o usuário não é admin nem pastor, redirecionar para `/` (ou mostrar mensagem de acesso negado)
+### `src/pages/Visitantes.tsx`
 
-## 3. Ajustar descrição do Dashboard
+**`dayVisitors` (memo)** — deduplificar por `full_name|device_id`, manter apenas o primeiro registro de cada pessoa no dia:
+```text
+const seen = new Map<string, PortalVisitor>();
+filtered.forEach(v => {
+  const key = `${v.full_name}|${v.device_id}`;
+  if (!seen.has(key)) seen.set(key, v);
+});
+return Array.from(seen.values());
+```
 
-### `src/pages/Index.tsx`
-- Alterar a descrição do `PageHeader` de "Visão geral do painel da Diretoria de Jovens" para algo mais genérico ou condicional, já que admins e diretoria veem o mesmo dashboard
+**`sundayStats` (memo)** — mesma deduplicacao: contar pessoas unicas por domingo usando `Set` de `full_name|device_id`:
+```text
+const daySeen = new Set<string>();
+dayVis.forEach(v => daySeen.add(`${v.full_name}|${v.device_id}`));
+// total = daySeen.size (nao dayVis.length)
+```
+
+**`recurringVisitors` (memo)** — contar dias distintos (nao registros totais):
+```text
+const daySet = new Set(g.dates.map(d => format(new Date(d), 'yyyy-MM-dd')));
+visitCount = daySet.size; // dias em que veio, nao cliques
+```
+
+**Labels da UI** — trocar "acessos" por "pessoas":
+- Cards de domingo: "12 pessoas" em vez de "12 acessos"
+- Cards de resumo do dia: "Total de pessoas" em vez de "Total de acessos"
+- Titulo da tabela: "Pessoas do dia" em vez de "Acessos do dia"
 
 ## Arquivos modificados
+- `src/pages/Dizimos.tsx`
 - `src/components/layout/AppSidebar.tsx`
 - `src/components/layout/MobileHeader.tsx`
 - `src/components/layout/MobileBottomNav.tsx`
-- `src/components/pastor/PastorSidebar.tsx`
-- `src/components/pastor/PastorMobileNav.tsx`
-- `src/components/pastor/PastorMobileHeader.tsx`
-- `src/pages/Eleicoes.tsx`
+- `src/pages/Visitantes.tsx`
 
