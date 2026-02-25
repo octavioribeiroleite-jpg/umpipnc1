@@ -87,7 +87,13 @@ export default function Visitantes() {
 
   // Visitors for the selected day
   const dayVisitors = useMemo(() => {
-    return visitors.filter(v => isSameDay(new Date(v.created_at), selectedDate));
+    const filtered = visitors.filter(v => isSameDay(new Date(v.created_at), selectedDate));
+    const seen = new Map<string, PortalVisitor>();
+    filtered.forEach(v => {
+      const key = `${v.full_name}|${v.device_id}`;
+      if (!seen.has(key)) seen.set(key, v);
+    });
+    return Array.from(seen.values());
   }, [visitors, selectedDate]);
 
   // Device first-seen map (across all data)
@@ -111,11 +117,14 @@ export default function Visitantes() {
       groups.get(key)!.dates.push(v.created_at);
     });
     return Array.from(groups.values())
-      .filter(g => g.dates.length >= 2)
-      .map(g => ({
-        fullName: g.fullName, deviceId: g.deviceId, isVisitor: g.isVisitor, societyId: g.societyId,
-        visitCount: g.dates.length, firstVisit: g.dates[g.dates.length - 1], lastVisit: g.dates[0],
-      }))
+      .map(g => {
+        const daySet = new Set(g.dates.map(d => format(new Date(d), 'yyyy-MM-dd')));
+        return {
+          fullName: g.fullName, deviceId: g.deviceId, isVisitor: g.isVisitor, societyId: g.societyId,
+          visitCount: daySet.size, firstVisit: g.dates[g.dates.length - 1], lastVisit: g.dates[0],
+        };
+      })
+      .filter(rv => rv.visitCount >= 2)
       .sort((a, b) => new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime());
   }, [visitors]);
 
@@ -130,17 +139,24 @@ export default function Visitantes() {
   const sundayStats = useMemo(() => {
     const sundays: { date: Date; total: number; members: number; visitors: number }[] = [];
     const today = new Date();
-    // Find last Sunday (or today if Sunday)
-    const dayOfWeek = getDay(today); // 0 = Sunday
+    const dayOfWeek = getDay(today);
     let lastSunday = startOfDay(subDays(today, dayOfWeek === 0 ? 0 : dayOfWeek));
     for (let i = 0; i < 8; i++) {
       const sundayDate = subDays(lastSunday, i * 7);
       const dayVis = visitors.filter(v => isSameDay(new Date(v.created_at), sundayDate));
-      const visitorsCount = dayVis.filter(v => v.is_visitor).length;
+      // Deduplicate by person
+      const peopleSeen = new Set<string>();
+      const visitorPeople = new Set<string>();
+      dayVis.forEach(v => {
+        const key = `${v.full_name}|${v.device_id}`;
+        peopleSeen.add(key);
+        if (v.is_visitor) visitorPeople.add(key);
+      });
+      const visitorsCount = visitorPeople.size;
       sundays.push({
         date: sundayDate,
-        total: dayVis.length,
-        members: dayVis.length - visitorsCount,
+        total: peopleSeen.size,
+        members: peopleSeen.size - visitorsCount,
         visitors: visitorsCount,
       });
     }
@@ -193,7 +209,7 @@ export default function Visitantes() {
                     <p className={cn('text-xl font-bold', isSelected ? 'text-primary' : '')}>
                       {s.total}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">acessos</p>
+                    <p className="text-[10px] text-muted-foreground">pessoas</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       {s.members}m · {s.visitors}v
                     </p>
@@ -243,7 +259,7 @@ export default function Visitantes() {
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold">{dayStats.total}</p>
-                <p className="text-xs text-muted-foreground">Total de acessos</p>
+                <p className="text-xs text-muted-foreground">Total de pessoas</p>
               </CardContent>
             </Card>
             <Card>
@@ -265,11 +281,11 @@ export default function Visitantes() {
             <CardContent className="p-4">
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
                 <Eye className="h-4 w-4 text-muted-foreground" />
-                Acessos do dia ({dayVisitors.length})
+                Pessoas do dia ({dayVisitors.length})
               </h3>
               {dayVisitors.length === 0 ? (
                 <p className="text-center text-muted-foreground py-6 text-sm">
-                  Nenhum acesso neste dia.
+                  Nenhuma pessoa neste dia.
                 </p>
               ) : (
                 <Table>
@@ -332,7 +348,7 @@ export default function Visitantes() {
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-sm truncate">{rv.fullName}</span>
                         <Badge variant="secondary" className="text-[10px] shrink-0">
-                          {rv.visitCount} visitas
+                          {rv.visitCount} dias
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
