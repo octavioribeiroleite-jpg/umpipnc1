@@ -1,24 +1,25 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DizimosTab } from '@/components/financas/DizimosTab';
+import { MembroDizimos } from '@/components/membro/MembroDizimos';
 
 export default function Dizimos() {
   const { isAdmin, isPastor } = useAuth();
 
-  if (!isAdmin && !isPastor) {
-    return <Navigate to="/" replace />;
-  }
+  const canConfigure = isAdmin || isPastor;
 
   const content = (
     <>
       <PageHeader
         title="Dízimos e Ofertas"
-        description="Configuração da chave PIX para dízimos e ofertas da igreja"
+        description={canConfigure
+          ? "Configuração da chave PIX para dízimos e ofertas da igreja"
+          : "Informações para dízimos e ofertas da igreja"
+        }
       />
-      <DizimosTab />
+      {canConfigure ? <DizimosTab /> : <MembroDizimos />}
     </>
   );
 

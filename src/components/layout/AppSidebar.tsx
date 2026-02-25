@@ -31,13 +31,12 @@ const menuItems = [
   { icon: DollarSign, label: 'Finanças', path: '/financas' },
   { icon: FolderOpen, label: 'Arquivos', path: '/arquivos' },
   { icon: ClipboardCheck, label: 'Plenárias', path: '/plenarias' },
-  
+  { icon: Heart, label: 'Dízimos', path: '/dizimos' },
   { icon: MessageSquare, label: 'Comunicados', path: '/comunicados' },
 ];
 
 const adminMenuItems = [
   { icon: Vote, label: 'Eleições', path: '/eleicoes' },
-  { icon: Heart, label: 'Dízimos', path: '/dizimos' },
   { icon: Globe, label: 'Visitantes', path: '/visitantes' },
   { icon: UserCheck, label: 'Usuários', path: '/usuarios' },
   { icon: MessageSquare, label: 'Sugestões do Pastor', path: '/sugestoes' },
