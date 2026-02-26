@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -18,13 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,27 +33,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Plus, Trash2, Edit, Loader2, Upload, FileImage, X } from 'lucide-react';
 
-interface Category {
-  id: string;
-  name: string;
-  type: string;
-  color: string;
-}
-
 interface Transaction {
   id: string;
   description: string;
   amount: number;
   date: string;
   type: string;
-  category_id: string | null;
   receipt_url: string | null;
 }
 
 export function GastosTab() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
@@ -73,13 +56,11 @@ export function GastosTab() {
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
-    category_id: '',
     date: new Date().toISOString().split('T')[0],
   });
   
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
-  const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
@@ -88,16 +69,13 @@ export function GastosTab() {
   const fetchData = async () => {
     setLoading(true);
     let txQuery = supabase.from('transactions').select('*').eq('type', 'saida').order('date', { ascending: false });
-    let catQuery = supabase.from('financial_categories').select('*').eq('type', 'saida');
 
     if (societyId) {
       txQuery = txQuery.eq('society_id', societyId);
-      catQuery = catQuery.or(`society_id.eq.${societyId},society_id.is.null`);
     }
 
-    const [txRes, catRes] = await Promise.all([txQuery, catQuery]);
-    if (!txRes.error) setTransactions(txRes.data || []);
-    if (!catRes.error) setCategories(catRes.data || []);
+    const { data, error } = await txQuery;
+    if (!error) setTransactions(data || []);
     setLoading(false);
   };
 
@@ -105,19 +83,9 @@ export function GastosTab() {
     fetchData();
   }, [societyId]);
 
-  const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return 'Sem categoria';
-    return categories.find((c) => c.id === categoryId)?.name || 'Sem categoria';
-  };
-
-  const getCategoryColor = (categoryId: string | null) => {
-    if (!categoryId) return '#6b7280';
-    return categories.find((c) => c.id === categoryId)?.color || '#6b7280';
-  };
-
   const openNewDialog = () => {
     setEditingTransaction(null);
-    setFormData({ description: '', amount: '', category_id: '', date: new Date().toISOString().split('T')[0] });
+    setFormData({ description: '', amount: '', date: new Date().toISOString().split('T')[0] });
     setReceiptFile(null);
     setReceiptPreview(null);
     setDialogOpen(true);
@@ -125,7 +93,7 @@ export function GastosTab() {
 
   const openEditDialog = (tx: Transaction) => {
     setEditingTransaction(tx);
-    setFormData({ description: tx.description, amount: tx.amount.toString(), category_id: tx.category_id || '', date: tx.date });
+    setFormData({ description: tx.description, amount: tx.amount.toString(), date: tx.date });
     setReceiptFile(null);
     setReceiptPreview(tx.receipt_url);
     setDialogOpen(true);
@@ -155,11 +123,11 @@ export function GastosTab() {
     }
   };
 
-  const uploadReceipt = async (transactionId: string): Promise<string | null> => {
+  const uploadReceipt = async (id: string): Promise<string | null> => {
     if (!receiptFile) return null;
     
     const fileExt = receiptFile.name.split('.').pop();
-    const fileName = `gastos/${transactionId}.${fileExt}`;
+    const fileName = `gastos/${id}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
       .from('receipts')
@@ -186,7 +154,6 @@ export function GastosTab() {
       return;
     }
     
-    // Validar comprovante obrigatório para novos gastos
     if (!editingTransaction && !receiptFile) {
       toast.error('Comprovante é obrigatório');
       return;
@@ -197,7 +164,6 @@ export function GastosTab() {
       if (editingTransaction) {
         let receiptUrl = editingTransaction.receipt_url;
         
-        // Upload novo comprovante se selecionado
         if (receiptFile) {
           receiptUrl = await uploadReceipt(editingTransaction.id);
         }
@@ -205,14 +171,12 @@ export function GastosTab() {
         const { error } = await supabase.from('transactions').update({
           description: formData.description,
           amount,
-          category_id: formData.category_id || null,
           date: formData.date,
           receipt_url: receiptUrl,
         }).eq('id', editingTransaction.id);
         if (error) throw error;
         toast.success('Gasto atualizado!');
       } else {
-        // Upload do comprovante ANTES do INSERT para evitar UPDATE separado (bloqueado por RLS)
         let receiptUrl: string | null = null;
         if (receiptFile) {
           const tempId = crypto.randomUUID();
@@ -223,7 +187,6 @@ export function GastosTab() {
           description: formData.description,
           amount,
           type: 'saida',
-          category_id: formData.category_id || null,
           date: formData.date,
           created_by: user?.id,
           origin: 'manual',
@@ -303,7 +266,6 @@ export function GastosTab() {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Descrição</TableHead>
-                  <TableHead>Categoria</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -329,17 +291,6 @@ export function GastosTab() {
                         )}
                         {tx.description}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        style={{
-                          backgroundColor: `${getCategoryColor(tx.category_id)}20`,
-                          color: getCategoryColor(tx.category_id),
-                        }}
-                      >
-                        {getCategoryName(tx.category_id)}
-                      </Badge>
                     </TableCell>
                     <TableCell className="text-right font-medium text-destructive">
                       -R$ {tx.amount.toFixed(2).replace('.', ',')}
@@ -395,19 +346,6 @@ export function GastosTab() {
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
               </div>
-            </div>
-            <div>
-              <Label>Categoria</Label>
-              <Select value={formData.category_id} onValueChange={(v) => setFormData({ ...formData, category_id: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             
             {/* Campo de Upload do Comprovante */}
