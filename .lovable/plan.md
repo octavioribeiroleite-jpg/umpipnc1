@@ -1,28 +1,29 @@
 
 
-# Corrigir registro de gastos: categorias vazias + erro ao salvar
+# Wizard passo a passo para registro de gastos
 
-## Problemas identificados
+## Mudança
 
-1. **Categorias não aparecem**: As categorias de gasto no banco têm `society_id = NULL` (são globais). Mas a query filtra por `society_id` quando o usuário pertence a uma sociedade, então nenhuma categoria é retornada.
+Substituir o dialog de formulário único por um wizard de 5 passos com animações de transição suave:
 
-2. **Erro ao registrar**: Após o INSERT da transação, o código faz um UPDATE separado para vincular o comprovante (linha 231). A política RLS de UPDATE exige `society_id = get_user_society_id(auth.uid())`, e esse UPDATE sem WHERE adequado falha.
+### Passos do wizard (dentro do mesmo Dialog)
+1. **Descrição** — campo textarea, botão "Próximo"
+2. **Valor (R$)** — campo numérico, botões "Voltar" e "Próximo"
+3. **Data** — campo de data, botões "Voltar" e "Próximo"
+4. **Comprovante** — upload de imagem/PDF, botões "Voltar" e "Próximo"
+5. **Resumo** — mostra todos os dados preenchidos para conferência, botões "Voltar" e "Confirmar"
 
-## Correções em `src/components/financas/GastosTab.tsx`
+### UI/UX
+- Indicador de progresso no topo (barra ou steps numerados 1-5)
+- Cada passo valida o campo antes de avançar (descrição não vazia, valor > 0, comprovante obrigatório para novo gasto)
+- Animação de slide horizontal entre passos (slide-in da direita ao avançar, slide-in da esquerda ao voltar) usando CSS transitions
+- No resumo: card com descrição, valor formatado, data formatada e thumbnail do comprovante
+- Botão "Confirmar" submete tudo de uma vez (mesma lógica atual do `handleSubmit`)
 
-### 1. Query de categorias — incluir globais (society_id IS NULL)
-Alterar a query de categorias para buscar tanto as da sociedade quanto as globais:
-```
-catQuery = catQuery.or(`society_id.eq.${societyId},society_id.is.null`);
-```
-Em vez de `catQuery.eq('society_id', societyId)`.
+### Edição
+- Ao editar, o wizard abre direto no passo 1 com dados preenchidos, comprovante é opcional
+- Resumo mostra "(manter atual)" se comprovante não foi alterado
 
-### 2. Fluxo de comprovante — upload antes do INSERT
-- Gerar UUID com `crypto.randomUUID()` antes do INSERT
-- Fazer upload do comprovante usando esse UUID como nome do arquivo
-- Incluir `receipt_url` diretamente no INSERT
-- Eliminar o UPDATE separado na linha 231
-
-## Arquivo modificado
-- `src/components/financas/GastosTab.tsx`
+### Arquivo modificado
+- `src/components/financas/GastosTab.tsx` — refatorar o Dialog para usar estado `step` (1-5), renderizar conteúdo condicional por passo, adicionar animações CSS inline com `transition` e `transform`
 
