@@ -79,7 +79,9 @@ Deno.serve(async (req) => {
     if (createError) {
       // If email already exists, try to link existing user to member
       const errMsg = createError.message || ''
-      if ((errMsg.includes('already been registered') || errMsg.includes('already exists')) && member_id) {
+      const isDuplicate = errMsg.includes('already been registered') || errMsg.includes('already exists')
+      
+      if (isDuplicate && member_id) {
         // Find existing user by email
         const { data: existingProfile } = await adminClient
           .from('profiles')
@@ -107,7 +109,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({ error: createError.message }), {
+      const userFriendlyError = isDuplicate
+        ? `Já existe um usuário com o login '${username}'. Escolha outro nome de usuário.`
+        : createError.message
+
+      return new Response(JSON.stringify({ error: userFriendlyError }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
