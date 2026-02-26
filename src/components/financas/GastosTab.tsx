@@ -101,6 +101,7 @@ export function GastosTab() {
     receiptFile: File | null
   ) => {
     setSubmitting(true);
+    let uploadedFilePath: string | null = null;
     try {
       const amount = parseFloat(formData.amount);
 
@@ -121,6 +122,8 @@ export function GastosTab() {
         let receiptUrl: string | null = null;
         if (receiptFile) {
           const tempId = crypto.randomUUID();
+          const fileExt = receiptFile.name.split('.').pop();
+          uploadedFilePath = `gastos/${tempId}.${fileExt}`;
           receiptUrl = await uploadReceipt(tempId, receiptFile);
         }
         const { error } = await supabase.from('transactions').insert({
@@ -139,6 +142,10 @@ export function GastosTab() {
       setDialogOpen(false);
       fetchData();
     } catch (error: any) {
+      // Clean up orphan receipt if upload succeeded but insert failed
+      if (uploadedFilePath) {
+        await supabase.storage.from('receipts').remove([uploadedFilePath]);
+      }
       toast.error('Erro: ' + error.message);
     } finally {
       setSubmitting(false);
