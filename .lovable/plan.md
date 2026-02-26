@@ -1,63 +1,35 @@
 
 
-# Dizimos para todos + Visitantes inteligentes (pessoas unicas)
+# Corrigir erro ao criar usuário duplicado
 
-## 1. Dizimos visivel para todos, configuracao restrita
+## Problema identificado
 
-### `src/pages/Dizimos.tsx`
-- Remover a restricao `!isAdmin && !isPastor` — qualquer usuario autenticado acessa
-- Se `isAdmin || isPastor`: mostrar `DizimosTab` (formulario de configuracao)
-- Senao: mostrar `MembroDizimos` (visao somente-leitura com botao copiar PIX)
+O usuário "Daniel" com email `daniel@ipnc.local` **já existe** no banco de dados. Quando você tenta criar outro usuário com o mesmo nome, o sistema gera o username `daniel`, que resulta no email `daniel@ipnc.local` — já registrado. A edge function retorna erro 400 mas a mensagem não chega clara ao usuário.
 
-### `src/components/layout/AppSidebar.tsx`
-- Mover `{ icon: Heart, label: 'Dizimos', path: '/dizimos' }` de `adminMenuItems` para `menuItems`
+## Causa raiz
 
-### `src/components/layout/MobileHeader.tsx`
-- Mover `{ to: '/dizimos', icon: Heart, label: 'Dizimos' }` de `adminItems` para `navItems`
+1. A edge function `create-user` tenta criar o auth user e recebe erro "already been registered"
+2. Como não tem `member_id` no body (criação via página Usuários), o fallback de vincular membro existente não se aplica
+3. O erro retornado pela function tem formato que o `supabase.functions.invoke` não parseia corretamente — o `error` vem no body JSON mas o status HTTP não é 2xx, então o SDK joga um erro genérico "Edge Function returned a non-2xx status code" sem mostrar a mensagem real
 
-### `src/components/layout/MobileBottomNav.tsx`
-- Mover `{ to: '/dizimos', icon: Heart, label: 'Dizimos' }` do bloco condicional `isAdmin` para a lista geral de `moreNavItems`
+## Correções
 
-A seguranca dos dados continua garantida: a tabela `settings` so permite escrita para admins (RLS), entao mesmo que a diretoria acesse a pagina, so vera a chave PIX para copiar, sem poder editar.
+### 1. `supabase/functions/create-user/index.ts`
+- Melhorar a mensagem de erro para duplicatas: em vez de retornar a mensagem crua do Supabase Auth, retornar "Já existe um usuário com o login 'daniel'. Escolha outro nome de usuário."
 
-## 2. Visitantes: contar pessoas unicas por dia, nao acessos
+### 2. `src/pages/Usuarios.tsx` — `handleCreateUser`
+- Tratar melhor o retorno da edge function: verificar se `data?.error` existe mesmo quando `error` do SDK é null, e vice-versa
+- Adicionar tratamento para o caso de erro HTTP: ler o body da resposta para extrair a mensagem de erro real
 
-O problema atual: se uma pessoa acessa o portal 3 vezes no domingo, conta como 3. O correto e contar como 1 pessoa.
+### 3. `src/pages/Usuarios.tsx` — validação preventiva
+- Antes de chamar a edge function, verificar se o username gerado já existe consultando a tabela `profiles`
+- Se existir, sugerir um username alternativo (ex: `daniel2`) ou mostrar erro imediato
 
-### `src/pages/Visitantes.tsx`
-
-**`dayVisitors` (memo)** — deduplificar por `full_name|device_id`, manter apenas o primeiro registro de cada pessoa no dia:
-```text
-const seen = new Map<string, PortalVisitor>();
-filtered.forEach(v => {
-  const key = `${v.full_name}|${v.device_id}`;
-  if (!seen.has(key)) seen.set(key, v);
-});
-return Array.from(seen.values());
-```
-
-**`sundayStats` (memo)** — mesma deduplicacao: contar pessoas unicas por domingo usando `Set` de `full_name|device_id`:
-```text
-const daySeen = new Set<string>();
-dayVis.forEach(v => daySeen.add(`${v.full_name}|${v.device_id}`));
-// total = daySeen.size (nao dayVis.length)
-```
-
-**`recurringVisitors` (memo)** — contar dias distintos (nao registros totais):
-```text
-const daySet = new Set(g.dates.map(d => format(new Date(d), 'yyyy-MM-dd')));
-visitCount = daySet.size; // dias em que veio, nao cliques
-```
-
-**Labels da UI** — trocar "acessos" por "pessoas":
-- Cards de domingo: "12 pessoas" em vez de "12 acessos"
-- Cards de resumo do dia: "Total de pessoas" em vez de "Total de acessos"
-- Titulo da tabela: "Pessoas do dia" em vez de "Acessos do dia"
+### 4. `src/components/financas/MembrosTab.tsx` — mesma proteção
+- Aplicar a mesma validação preventiva de username duplicado no cadastro de membros
 
 ## Arquivos modificados
-- `src/pages/Dizimos.tsx`
-- `src/components/layout/AppSidebar.tsx`
-- `src/components/layout/MobileHeader.tsx`
-- `src/components/layout/MobileBottomNav.tsx`
-- `src/pages/Visitantes.tsx`
+- `supabase/functions/create-user/index.ts`
+- `src/pages/Usuarios.tsx`
+- `src/components/financas/MembrosTab.tsx`
 
