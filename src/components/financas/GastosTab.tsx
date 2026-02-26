@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -27,11 +27,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Trash2, Edit, Loader2, Upload, FileImage, X } from 'lucide-react';
+import { Plus, Trash2, Edit, Loader2, FileImage } from 'lucide-react';
+import { GastoWizard } from './GastoWizard';
 
 interface Transaction {
   id: string;
@@ -43,131 +41,74 @@ interface Transaction {
 }
 
 export function GastosTab() {
-  const { user } = useAuth();
+  const { user, profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  
-  const [formData, setFormData] = useState({
+
+  const [initialFormData, setInitialFormData] = useState({
     description: '',
     amount: '',
     date: new Date().toISOString().split('T')[0],
   });
-  
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [initialReceiptPreview, setInitialReceiptPreview] = useState<string | null>(null);
 
-  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
 
   const fetchData = async () => {
     setLoading(true);
     let txQuery = supabase.from('transactions').select('*').eq('type', 'saida').order('date', { ascending: false });
-
-    if (societyId) {
-      txQuery = txQuery.eq('society_id', societyId);
-    }
-
+    if (societyId) txQuery = txQuery.eq('society_id', societyId);
     const { data, error } = await txQuery;
     if (!error) setTransactions(data || []);
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [societyId]);
+  useEffect(() => { fetchData(); }, [societyId]);
 
   const openNewDialog = () => {
     setEditingTransaction(null);
-    setFormData({ description: '', amount: '', date: new Date().toISOString().split('T')[0] });
-    setReceiptFile(null);
-    setReceiptPreview(null);
+    setInitialFormData({ description: '', amount: '', date: new Date().toISOString().split('T')[0] });
+    setInitialReceiptPreview(null);
     setDialogOpen(true);
   };
 
   const openEditDialog = (tx: Transaction) => {
     setEditingTransaction(tx);
-    setFormData({ description: tx.description, amount: tx.amount.toString(), date: tx.date });
-    setReceiptFile(null);
-    setReceiptPreview(tx.receipt_url);
+    setInitialFormData({ description: tx.description, amount: tx.amount.toString(), date: tx.date });
+    setInitialReceiptPreview(tx.receipt_url);
     setDialogOpen(true);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Arquivo muito grande. Máximo 5MB.');
-        return;
-      }
-      setReceiptFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReceiptPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeReceipt = () => {
-    setReceiptFile(null);
-    setReceiptPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const uploadReceipt = async (id: string): Promise<string | null> => {
-    if (!receiptFile) return null;
-    
-    const fileExt = receiptFile.name.split('.').pop();
+  const uploadReceipt = async (id: string, file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
     const fileName = `gastos/${id}.${fileExt}`;
-    
     const { error: uploadError } = await supabase.storage
       .from('receipts')
-      .upload(fileName, receiptFile, { upsert: true });
-    
+      .upload(fileName, file, { upsert: true });
     if (uploadError) throw uploadError;
-    
-    const { data: urlData } = supabase.storage
-      .from('receipts')
-      .getPublicUrl(fileName);
-    
+    const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(fileName);
     return urlData.publicUrl;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.description.trim()) {
-      toast.error('Descrição é obrigatória');
-      return;
-    }
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast.error('Valor inválido');
-      return;
-    }
-    
-    if (!editingTransaction && !receiptFile) {
-      toast.error('Comprovante é obrigatório');
-      return;
-    }
-
+  const handleWizardSubmit = async (
+    formData: { description: string; amount: string; date: string },
+    receiptFile: File | null
+  ) => {
     setSubmitting(true);
     try {
+      const amount = parseFloat(formData.amount);
+
       if (editingTransaction) {
         let receiptUrl = editingTransaction.receipt_url;
-        
         if (receiptFile) {
-          receiptUrl = await uploadReceipt(editingTransaction.id);
+          receiptUrl = await uploadReceipt(editingTransaction.id, receiptFile);
         }
-        
         const { error } = await supabase.from('transactions').update({
           description: formData.description,
           amount,
@@ -180,9 +121,8 @@ export function GastosTab() {
         let receiptUrl: string | null = null;
         if (receiptFile) {
           const tempId = crypto.randomUUID();
-          receiptUrl = await uploadReceipt(tempId);
+          receiptUrl = await uploadReceipt(tempId, receiptFile);
         }
-
         const { error } = await supabase.from('transactions').insert({
           description: formData.description,
           amount,
@@ -194,7 +134,6 @@ export function GastosTab() {
           receipt_url: receiptUrl,
         });
         if (error) throw error;
-        
         toast.success('Gasto registrado!');
       }
       setDialogOpen(false);
@@ -219,11 +158,6 @@ export function GastosTab() {
       setDeleteDialogOpen(false);
       setDeletingId(null);
     }
-  };
-
-  const openDeleteDialog = (id: string) => {
-    setDeletingId(id);
-    setDeleteDialogOpen(true);
   };
 
   const totalGastos = transactions.reduce((sum, tx) => sum + tx.amount, 0);
@@ -279,9 +213,9 @@ export function GastosTab() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {tx.receipt_url && (
-                          <a 
-                            href={tx.receipt_url} 
-                            target="_blank" 
+                          <a
+                            href={tx.receipt_url}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:text-primary/80"
                             title="Ver comprovante"
@@ -300,7 +234,7 @@ export function GastosTab() {
                         <Button variant="ghost" size="icon" onClick={() => openEditDialog(tx)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(tx.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => { setDeletingId(tx.id); setDeleteDialogOpen(true); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -314,101 +248,19 @@ export function GastosTab() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingTransaction ? 'Editar Gasto' : 'Novo Gasto'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Descrição *</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descreva o gasto..."
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Valor (R$) *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="0,00"
-                />
-              </div>
-              <div>
-                <Label>Data</Label>
-                <Input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                />
-              </div>
-            </div>
-            
-            {/* Campo de Upload do Comprovante */}
-            <div>
-              <Label>Comprovante {!editingTransaction && '*'}</Label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,.pdf"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              
-              {receiptPreview ? (
-                <div className="mt-2 relative">
-                  <div className="border rounded-lg p-2 bg-muted/50">
-                    {receiptPreview.startsWith('data:image') || receiptPreview.includes('/receipts/') ? (
-                      <img 
-                        src={receiptPreview} 
-                        alt="Preview" 
-                        className="max-h-32 rounded mx-auto object-contain"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center py-4 text-muted-foreground">
-                        <FileImage className="h-8 w-8 mr-2" />
-                        <span>Arquivo selecionado</span>
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6"
-                    onClick={removeReceipt}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full mt-2"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Anexar Comprovante
-                </Button>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                Aceito: imagens ou PDF (máx. 5MB)
-              </p>
-            </div>
-            
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                {editingTransaction ? 'Salvar' : 'Registrar'}
-              </Button>
-            </div>
-          </form>
+          <GastoWizard
+            key={dialogOpen ? 'open' : 'closed'}
+            editing={!!editingTransaction}
+            initialData={initialFormData}
+            initialReceiptPreview={initialReceiptPreview}
+            submitting={submitting}
+            onSubmit={handleWizardSubmit}
+            onCancel={() => setDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 
@@ -416,9 +268,7 @@ export function GastosTab() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Gasto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
