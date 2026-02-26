@@ -92,7 +92,7 @@ export function GastosTab() {
 
     if (societyId) {
       txQuery = txQuery.eq('society_id', societyId);
-      catQuery = catQuery.eq('society_id', societyId);
+      catQuery = catQuery.or(`society_id.eq.${societyId},society_id.is.null`);
     }
 
     const [txRes, catRes] = await Promise.all([txQuery, catQuery]);
@@ -212,8 +212,14 @@ export function GastosTab() {
         if (error) throw error;
         toast.success('Gasto atualizado!');
       } else {
-        // Criar transação primeiro para obter o ID
-        const { data: newTx, error } = await supabase.from('transactions').insert({
+        // Upload do comprovante ANTES do INSERT para evitar UPDATE separado (bloqueado por RLS)
+        let receiptUrl: string | null = null;
+        if (receiptFile) {
+          const tempId = crypto.randomUUID();
+          receiptUrl = await uploadReceipt(tempId);
+        }
+
+        const { error } = await supabase.from('transactions').insert({
           description: formData.description,
           amount,
           type: 'saida',
@@ -222,14 +228,9 @@ export function GastosTab() {
           created_by: user?.id,
           origin: 'manual',
           society_id: societyId || null,
-        }).select().single();
+          receipt_url: receiptUrl,
+        });
         if (error) throw error;
-        
-        // Upload do comprovante
-        if (receiptFile && newTx) {
-          const receiptUrl = await uploadReceipt(newTx.id);
-          await supabase.from('transactions').update({ receipt_url: receiptUrl }).eq('id', newTx.id);
-        }
         
         toast.success('Gasto registrado!');
       }
