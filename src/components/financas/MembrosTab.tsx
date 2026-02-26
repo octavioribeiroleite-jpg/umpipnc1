@@ -158,8 +158,19 @@ export function MembrosTab() {
       }
 
       // 2. Generate credentials and create login
-      const username = generateUsername(formData.name);
+      let username = generateUsername(formData.name);
       const password = generatePassword(formData.name);
+
+      // Preventive check: if username exists, try with suffix
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (existingProfile) {
+        username = username + '2';
+      }
 
       const { data: createData, error: createError } = await supabase.functions.invoke('create-user', {
         body: {
@@ -173,10 +184,10 @@ export function MembrosTab() {
       });
 
       if (createError || createData?.error) {
-        // Member created but login failed - still show success for member
+        const errMsg = createData?.error || createError?.message || 'Erro ao criar login';
         toast({ 
           title: 'Membro cadastrado, mas erro ao criar login', 
-          description: createData?.error || createError?.message,
+          description: errMsg,
           variant: 'destructive' 
         });
       } else {

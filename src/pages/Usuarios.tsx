@@ -332,8 +332,19 @@ export default function Usuarios() {
     if (member.user_id) return;
     setCreatingLogin(member.id);
     try {
-      const username = generateUsername(member.name);
+      let username = generateUsername(member.name);
       const password = generatePassword(member.name);
+
+      // Preventive check: if username exists, try with suffix
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (existingProfile) {
+        username = username + '2';
+      }
 
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
@@ -346,7 +357,10 @@ export default function Usuarios() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const msg = data?.error || error.message || 'Erro ao criar login';
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
 
       toast.success(`Login criado para ${member.name}`);
@@ -431,6 +445,19 @@ export default function Usuarios() {
     }
     setCreating(true);
     try {
+      // Preventive check: verify username doesn't already exist
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', newUsername.toLowerCase())
+        .maybeSingle();
+
+      if (existingProfile) {
+        toast.error(`Já existe um usuário com o login '${newUsername}'. Escolha outro nome de usuário.`);
+        setCreating(false);
+        return;
+      }
+
       const body: Record<string, string> = {
         full_name: newName,
         username: newUsername,
@@ -442,7 +469,12 @@ export default function Usuarios() {
       }
 
       const { data, error } = await supabase.functions.invoke('create-user', { body });
-      if (error) throw error;
+      
+      // Handle non-2xx: SDK puts error in `error` but real message is in `data`
+      if (error) {
+        const msg = data?.error || error.message || 'Erro ao criar usuário';
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
 
       toast.success('Usuário criado com sucesso!');
