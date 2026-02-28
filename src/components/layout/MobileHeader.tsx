@@ -19,6 +19,7 @@ import {
   Vote,
   Heart,
   Globe,
+  ClipboardList,
   BookOpen,
 } from 'lucide-react';
 import {
@@ -42,6 +43,7 @@ const navItems = [
   { to: '/dizimos', icon: Heart, label: 'Dízimos' },
   { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
   { to: '/estudos', icon: BookOpen, label: 'Estudos' },
+  { to: '/secretaria', icon: ClipboardList, label: 'Secretaria EBD' },
 ];
 
 const adminItems = [

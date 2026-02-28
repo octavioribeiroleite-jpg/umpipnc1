@@ -12,6 +12,7 @@ import {
   ChevronRight,
   UserCheck,
   ClipboardCheck,
+  ClipboardList,
   MessageSquare,
   Vote,
   Heart,
@@ -35,6 +36,7 @@ const menuItems = [
   { icon: Heart, label: 'Dízimos', path: '/dizimos' },
   { icon: MessageSquare, label: 'Comunicados', path: '/comunicados' },
   { icon: BookOpen, label: 'Estudos', path: '/estudos' },
+  { icon: ClipboardList, label: 'Secretaria EBD', path: '/secretaria' },
 ];
 
 const adminMenuItems = [
