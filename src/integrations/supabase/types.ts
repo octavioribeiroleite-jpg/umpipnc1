@@ -1393,6 +1393,50 @@ export type Database = {
         }
         Relationships: []
       }
+      study_notes: {
+        Row: {
+          ai_summary: string | null
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          notes: string
+          society_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          created_at?: string
+          created_by: string
+          date?: string
+          id?: string
+          notes?: string
+          society_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_summary?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          notes?: string
+          society_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_notes_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee_id: string | null

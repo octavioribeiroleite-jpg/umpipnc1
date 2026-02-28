@@ -19,6 +19,7 @@ import {
   Vote,
   Heart,
   Globe,
+  BookOpen,
 } from 'lucide-react';
 import {
   Sheet,
@@ -40,6 +41,7 @@ const navItems = [
   { to: '/plenarias', icon: ClipboardCheck, label: 'Plenárias' },
   { to: '/dizimos', icon: Heart, label: 'Dízimos' },
   { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
+  { to: '/estudos', icon: BookOpen, label: 'Estudos' },
 ];
 
 const adminItems = [
