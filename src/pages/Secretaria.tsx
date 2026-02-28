@@ -269,7 +269,8 @@ export default function Secretaria() {
               setAttendance={setAttendance}
               attendanceDate={sundayDate}
               formattedDate={formattedDate}
-              initialProfessorName={professorNome}
+              initialProfessorName={professorNome || undefined}
+              accessLevel={accessLevel!}
             />
           </TabsContent>
 
