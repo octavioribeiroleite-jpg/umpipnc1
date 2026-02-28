@@ -1,62 +1,77 @@
 
 
-# Sistema de Secretaria — Escola Bíblica Dominical (EBD)
+# Melhorias de Segurança — Problemas Identificados e Plano
 
-## Visão geral
+A análise de segurança identificou **6 problemas**. Aqui está o resumo por prioridade e o plano de correção:
 
-Uma nova página `/secretaria` protegida por senha fixa (configurável na tabela `settings`). Ao acessar, exibe cards das turmas da EBD. Ao clicar numa turma, abre a lista de chamada do domingo atual. Um painel unificado mostra a porcentagem geral de presença do dia.
+---
 
-## Estrutura
+## Problemas Críticos (vermelho)
 
-### 1. Banco de dados — 3 novas tabelas
+### 1. Senhas armazenadas em texto puro
+O campo `plain_password` na tabela `profiles` guarda senhas sem criptografia. Qualquer admin ou invasor com acesso ao banco vê todas as senhas.
 
-**`ebd_classes`** — Turmas da EBD
-- `id` (uuid, PK), `name` (text), `order_index` (int), `active` (boolean, default true), `created_at`
+**Correção:**
+- Remover a coluna `plain_password` da tabela `profiles`
+- Remover o armazenamento de senha em texto nas edge functions `create-user` e `update-user-password`
+- Remover a exibição de senhas na página de Usuários (`Usuarios.tsx`)
+- Atualizar o trigger `handle_new_user` para não salvar `plain_password`
 
-**`ebd_students`** — Alunos por turma
-- `id` (uuid, PK), `class_id` (uuid, FK ebd_classes), `name` (text), `active` (boolean, default true), `created_at`
+### 2. Dados financeiros expostos a todos os usuários logados
+Tabelas como `transactions`, `charges`, `membership_payments`, `shirt_sales` etc. têm políticas que permitem qualquer usuário autenticado ver todos os dados financeiros.
 
-**`ebd_attendance`** — Registro de presença
-- `id` (uuid, PK), `student_id` (uuid, FK ebd_students), `class_id` (uuid, FK ebd_classes), `date` (date), `present` (boolean, default false), `marked_by` (uuid, nullable), `created_at`
-- Unique constraint: `(student_id, date)` para evitar duplicatas
+**Correção:**
+- Já foram parcialmente corrigidas (as políticas atuais já usam `society_id` e roles) — preciso verificar se ainda existem políticas `USING (true)` remanescentes
 
-**RLS**: Acesso público para SELECT (a secretaria usa senha fixa, não login). INSERT/UPDATE restrito a autenticados ou via senha validada no app.
+### 3. Função de seed de eventos sem autenticação
+A edge function `seed-calendar-events` não verifica se quem chamou é autenticado ou admin.
 
-> Nota: Como o acesso é por senha fixa (sem login), as tabelas terão RLS com SELECT liberado para `anon` e INSERT/UPDATE também para `anon` — a proteção é feita pela senha no frontend. Alternativa mais segura: validar a senha via edge function.
+**Correção:**
+- Adicionar verificação de autenticação e role de admin na function
 
-### 2. Senha fixa
-- Armazenada na tabela `settings` com key `secretaria_password` (ex: "1234")
-- Configurável pelos admins na página de Configurações
-- Validada no frontend ao entrar na página `/secretaria`
+---
 
-### 3. Nova página — `src/pages/Secretaria.tsx`
+## Problemas Médios (amarelo)
 
-**Tela de senha**: Input simples com botão "Entrar"
+### 4. Bucket de recibos público
+O bucket `receipts` está configurado como público — qualquer pessoa com a URL pode ver recibos financeiros.
 
-**Tela principal (após senha)**:
-- **Painel resumo do domingo**: card no topo mostrando data de hoje, total presentes / total alunos, porcentagem geral, barra de progresso
-- **Grid de turmas**: cards com nome da turma, contador de presentes/total, porcentagem
-- **Ao clicar numa turma**: lista de alunos com checkbox de presença, toggle rápido, auto-save
+**Correção:**
+- Tornar o bucket privado e ajustar políticas de acesso
 
-**Fluxo da chamada**:
-1. Secretário acessa `/secretaria`, digita a senha
-2. Vê as turmas do dia (domingo atual)
-3. Clica numa turma, faz a chamada marcando presentes
-4. O painel atualiza automaticamente os totais
+### 5. Validação de input nas edge functions
+As edge functions não validam formato, tamanho ou conteúdo dos inputs adequadamente.
 
-### 4. Navegação
-- Rota `/secretaria` no `App.tsx`
-- Link no menu lateral e bottom nav com ícone `ClipboardList`
-- Acessível a todos (a proteção é a senha)
+**Correção:**
+- Adicionar validação de UUID, username, senha e role nas functions
 
-### 5. Popular dados iniciais
-- Após receber a lista de turmas e alunos do usuário, inserir via SQL no banco
+### 6. Proteção contra senhas vazadas desabilitada
+O recurso de detecção de senhas comprometidas está desativado.
 
-### Arquivos criados/modificados
-- Migração SQL (3 tabelas + RLS + setting da senha)
-- `src/pages/Secretaria.tsx` (novo)
-- `src/App.tsx` — nova rota
-- `src/components/layout/AppSidebar.tsx` — menu item
-- `src/components/layout/MobileHeader.tsx` — menu item
-- `src/components/layout/MobileBottomNav.tsx` — menu item
+**Correção:**
+- Habilitar a proteção contra senhas vazadas nas configurações de autenticação
+
+---
+
+## Informativo (baixo risco)
+- Função `get_email_by_username` — aceitável para o caso de uso de login
+- Timing de contribuições reveladas — risco mínimo
+
+---
+
+## Ordem de implementação sugerida
+
+1. **Remover `plain_password`** — mais crítico, elimina exposição direta de credenciais
+2. **Proteger `seed-calendar-events`** — endpoint aberto
+3. **Tornar bucket `receipts` privado**
+4. **Adicionar validação de inputs nas edge functions**
+5. **Habilitar proteção contra senhas vazadas**
+
+### Arquivos modificados
+- Migração SQL (remover coluna `plain_password`, atualizar trigger)
+- `supabase/functions/create-user/index.ts`
+- `supabase/functions/update-user-password/index.ts`
+- `supabase/functions/seed-calendar-events/index.ts`
+- `src/pages/Usuarios.tsx` (remover exibição de senha)
+- Migração SQL (tornar bucket privado + políticas)
 
