@@ -37,13 +37,9 @@ interface AttendanceRecord {
 
 type AccessLevel = 'admin' | 'professor';
 
-function getSundayDate(): string {
+function getTodayDate(): string {
   const today = new Date();
-  const day = today.getDay();
-  const diff = day === 0 ? 0 : 7 - day;
-  const sunday = new Date(today);
-  sunday.setDate(today.getDate() + diff);
-  return format(sunday, 'yyyy-MM-dd');
+  return format(today, 'yyyy-MM-dd');
 }
 
 export default function Secretaria() {
@@ -56,8 +52,8 @@ export default function Secretaria() {
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
 
-  const sundayDate = getSundayDate();
-  const formattedDate = "Domingo, " + format(new Date(sundayDate + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const sundayDate = getTodayDate();
+  const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   const handleLogin = async () => {
     setLoading(true);
@@ -214,7 +210,7 @@ export default function Secretaria() {
               students={activeStudents}
               attendance={attendance}
               setAttendance={setAttendance}
-              sundayDate={sundayDate}
+              attendanceDate={sundayDate}
               formattedDate={formattedDate}
             />
           </TabsContent>
