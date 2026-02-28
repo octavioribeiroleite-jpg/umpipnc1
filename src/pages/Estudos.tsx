@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Plus, BookOpen, Sparkles, Copy, ArrowLeft, Loader2, Check } from 'lucide-react';
+import { Plus, BookOpen, Sparkles, Copy, ArrowLeft, Loader2, Check, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface StudyNote {
@@ -40,6 +41,16 @@ export default function Estudos() {
   const [saving, setSaving] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notesRef = useRef<string>('');
+
+  // Yearly report state
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportYear, setReportYear] = useState(String(new Date().getFullYear()));
+  const [report, setReport] = useState<string | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportCopied, setReportCopied] = useState(false);
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 5 }, (_, i) => String(currentYear - i));
 
   const fetchStudies = useCallback(async () => {
     const { data, error } = await supabase
@@ -99,10 +110,8 @@ export default function Estudos() {
 
   const handleSummarize = async () => {
     if (!selectedStudy) return;
-    // Save current notes first
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     await saveNotes(selectedStudy.id, selectedStudy.notes);
-
     setSummarizing(true);
     const { data, error } = await supabase.functions.invoke('summarize-study', {
       body: { studyId: selectedStudy.id },
@@ -134,6 +143,34 @@ export default function Estudos() {
     fetchStudies();
   };
 
+  const handleGenerateReport = async () => {
+    if (!profile?.society_id) {
+      toast.error('Sociedade não encontrada');
+      return;
+    }
+    setGeneratingReport(true);
+    setReport(null);
+    const { data, error } = await supabase.functions.invoke('summarize-yearly-studies', {
+      body: { year: parseInt(reportYear), society_id: profile.society_id },
+    });
+    if (error || data?.error) {
+      toast.error(data?.error || error?.message || 'Erro ao gerar relatório');
+    } else {
+      setReport(data.report);
+      toast.success(`Relatório gerado com ${data.totalStudies} estudos!`);
+    }
+    setGeneratingReport(false);
+  };
+
+  const handleCopyReport = async () => {
+    if (!report) return;
+    await navigator.clipboard.writeText(report);
+    setReportCopied(true);
+    toast.success('Relatório copiado!');
+    setTimeout(() => setReportCopied(false), 2000);
+  };
+
+  // Study detail view
   if (selectedStudy) {
     return (
       <AppLayout>
@@ -168,11 +205,7 @@ export default function Estudos() {
             </CardContent>
           </Card>
 
-          <Button
-            onClick={handleSummarize}
-            disabled={summarizing || !selectedStudy.notes.trim()}
-            className="w-full"
-          >
+          <Button onClick={handleSummarize} disabled={summarizing || !selectedStudy.notes.trim()} className="w-full">
             {summarizing ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando resumo...</>
             ) : (
@@ -206,6 +239,7 @@ export default function Estudos() {
     );
   }
 
+  // Studies list view
   return (
     <AppLayout>
       <div className="p-4 md:p-6 space-y-4 max-w-3xl mx-auto">
@@ -214,40 +248,104 @@ export default function Estudos() {
           description="Anotações dos estudos bíblicos de sexta-feira"
         />
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" /> Novo Estudo
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Novo Estudo</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Tema</label>
-                <Input
-                  placeholder="Ex: O Sermão do Monte"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Data</label>
-                <Input
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                />
-              </div>
-              <Button onClick={handleCreate} disabled={creating || !newTitle.trim()} className="w-full">
-                {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-                Criar Estudo
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" /> Novo Estudo
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Novo Estudo</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tema</label>
+                  <Input
+                    placeholder="Ex: O Sermão do Monte"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Data</label>
+                  <Input
+                    type="date"
+                    value={newDate}
+                    onChange={(e) => setNewDate(e.target.value)}
+                  />
+                </div>
+                <Button onClick={handleCreate} disabled={creating || !newTitle.trim()} className="w-full">
+                  {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                  Criar Estudo
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={reportDialogOpen} onOpenChange={(open) => { setReportDialogOpen(open); if (!open) { setReport(null); } }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full sm:w-auto">
+                <FileText className="h-4 w-4 mr-2" /> Relatório do Ano
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Relatório Anual dos Estudos
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium mb-1 block">Ano</label>
+                    <Select value={reportYear} onValueChange={setReportYear}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {yearOptions.map(y => (
+                          <SelectItem key={y} value={y}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleGenerateReport} disabled={generatingReport}>
+                    {generatingReport ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando...</>
+                    ) : (
+                      <><Sparkles className="h-4 w-4 mr-2" /> Gerar Relatório</>
+                    )}
+                  </Button>
+                </div>
+
+                {report && (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-primary" />
+                          Relatório {reportYear}
+                        </CardTitle>
+                        <Button variant="outline" size="sm" onClick={handleCopyReport}>
+                          {reportCopied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                          {reportCopied ? 'Copiado!' : 'Copiar'}
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <pre className="whitespace-pre-wrap text-sm font-sans leading-relaxed">
+                        {report}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-12">
