@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -48,11 +50,51 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Validate user_id format
+    if (!UUID_REGEX.test(user_id)) {
+      return new Response(JSON.stringify({ error: 'user_id inválido' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (!new_password && !new_full_name && !new_username) {
       return new Response(JSON.stringify({ error: 'Envie pelo menos um campo para alterar' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    // Validate password if provided
+    if (new_password) {
+      if (typeof new_password !== 'string' || new_password.length < 4 || new_password.length > 72) {
+        return new Response(JSON.stringify({ error: 'Senha deve ter entre 4 e 72 caracteres' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    // Validate username if provided
+    if (new_username) {
+      if (typeof new_username !== 'string' || new_username.length < 2 || new_username.length > 30) {
+        return new Response(JSON.stringify({ error: 'Username deve ter entre 2 e 30 caracteres' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      if (!/^[a-zA-Z0-9._-]+$/.test(new_username)) {
+        return new Response(JSON.stringify({ error: 'Username deve conter apenas letras, números, pontos, hífens e underscores' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    // Validate full_name if provided
+    if (new_full_name) {
+      if (typeof new_full_name !== 'string' || new_full_name.trim().length < 2 || new_full_name.length > 100) {
+        return new Response(JSON.stringify({ error: 'Nome deve ter entre 2 e 100 caracteres' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
@@ -64,7 +106,7 @@ Deno.serve(async (req) => {
 
     if (new_password) {
       authUpdate.password = new_password
-      profileUpdate.plain_password = new_password
+      // No longer storing plain_password
     }
 
     if (new_full_name) {

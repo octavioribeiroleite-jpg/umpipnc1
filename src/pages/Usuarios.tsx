@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trash2, UserPlus, Loader2, Pencil, Eye, EyeOff, Copy, ClipboardList, RefreshCw, KeyRound, Users, Shield } from 'lucide-react';
+import { Trash2, UserPlus, Loader2, Pencil, Copy, ClipboardList, RefreshCw, KeyRound, Users, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -34,7 +34,6 @@ interface UserWithRole {
   user_id: string;
   full_name: string;
   username: string;
-  plain_password: string | null;
   active: boolean;
   role: AppRole | null;
   created_at: string;
@@ -51,7 +50,6 @@ interface MemberRow {
   society_id: string | null;
   // From joined profile
   username?: string;
-  plain_password?: string | null;
 }
 
 const roleLabels: Record<AppRole, string> = {
@@ -96,7 +94,7 @@ export default function Usuarios() {
   const [loading, setLoading] = useState(true);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
-  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  
   const [mobileSocietyTab, setMobileSocietyTab] = useState<string>('');
   const [resettingPassword, setResettingPassword] = useState<string | null>(null);
 
@@ -104,7 +102,7 @@ export default function Usuarios() {
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [membersLoading, setMembersLoading] = useState(true);
   const [memberSocietyFilter, setMemberSocietyFilter] = useState<string>('all');
-  const [showMemberPasswords, setShowMemberPasswords] = useState<Record<string, boolean>>({});
+  
   const [creatingLogin, setCreatingLogin] = useState<string | null>(null);
 
   // Reset password result dialog
@@ -174,7 +172,7 @@ export default function Usuarios() {
             user_id: profile.user_id,
             full_name: profile.full_name,
             username: profile.username || '',
-            plain_password: profile.plain_password || null,
+            
             active: profile.active,
             role: userRole?.role as AppRole | null,
             created_at: profile.created_at,
@@ -202,11 +200,11 @@ export default function Usuarios() {
 
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, username, plain_password');
+        .select('user_id, username');
 
-      const profileMap = new Map<string, { username: string; plain_password: string | null }>();
+      const profileMap = new Map<string, { username: string }>();
       (profilesData || []).forEach((p: any) => {
-        profileMap.set(p.user_id, { username: p.username, plain_password: p.plain_password });
+        profileMap.set(p.user_id, { username: p.username });
       });
 
       const enriched: MemberRow[] = (membersData || []).map((m: any) => {
@@ -220,7 +218,6 @@ export default function Usuarios() {
           user_id: m.user_id,
           society_id: m.society_id,
           username: profile?.username,
-          plain_password: profile?.plain_password,
         };
       });
 
@@ -235,15 +232,15 @@ export default function Usuarios() {
 
   // --- Credential helpers ---
   const copyCredentials = (user: UserWithRole) => {
-    const text = `Login: ${user.username}\nSenha: ${user.plain_password || '---'}`;
+    const text = `Login: ${user.username}`;
     navigator.clipboard.writeText(text);
-    toast.success('Credenciais copiadas!');
+    toast.success('Login copiado!');
   };
 
   const copyMemberCredentials = (member: MemberRow) => {
-    const text = `Login: ${member.username || '---'}\nSenha: ${member.plain_password || '---'}`;
+    const text = `Login: ${member.username || '---'}`;
     navigator.clipboard.writeText(text);
-    toast.success('Credenciais copiadas!');
+    toast.success('Login copiado!');
   };
 
   const copyAllCredentials = (societyId: string | null) => {
@@ -251,32 +248,31 @@ export default function Usuarios() {
       .filter((u) => {
         if (societyId === null) return !u.society_id;
         return u.society_id === societyId;
-      })
-      .filter((u) => u.plain_password);
+      });
 
     if (filtered.length === 0) {
-      toast.error('Nenhum usuário com senha disponível');
+      toast.error('Nenhum usuário disponível');
       return;
     }
 
-    const text = `Nome | Login | Senha\n${filtered
-      .map((u) => `${u.full_name} | ${u.username} | ${u.plain_password}`)
+    const text = `Nome | Login\n${filtered
+      .map((u) => `${u.full_name} | ${u.username}`)
       .join('\n')}`;
     navigator.clipboard.writeText(text);
-    toast.success(`${filtered.length} credenciais copiadas!`);
+    toast.success(`${filtered.length} logins copiados!`);
   };
 
   const copyAllMemberCredentials = () => {
-    const filtered = filteredMembers.filter((m) => m.username && m.plain_password);
+    const filtered = filteredMembers.filter((m) => m.username);
     if (filtered.length === 0) {
-      toast.error('Nenhum membro com credenciais disponíveis');
+      toast.error('Nenhum membro com login disponível');
       return;
     }
-    const text = `Nome | Login | Senha\n${filtered
-      .map((m) => `${m.name} | ${m.username} | ${m.plain_password}`)
+    const text = `Nome | Login\n${filtered
+      .map((m) => `${m.name} | ${m.username}`)
       .join('\n')}`;
     navigator.clipboard.writeText(text);
-    toast.success(`${filtered.length} credenciais copiadas!`);
+    toast.success(`${filtered.length} logins copiados!`);
   };
 
   const handleResetPassword = async (user: UserWithRole) => {
@@ -289,9 +285,6 @@ export default function Usuarios() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setUsers((prev) =>
-        prev.map((u) => (u.user_id === user.user_id ? { ...u, plain_password: newPass } : u))
-      );
       setResetResultUser(user.full_name);
       setResetResultPassword(newPass);
       setResetResultOpen(true);
@@ -314,9 +307,6 @@ export default function Usuarios() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setMembers((prev) =>
-        prev.map((m) => (m.user_id === member.user_id ? { ...m, plain_password: newPass } : m))
-      );
       setResetResultUser(member.name);
       setResetResultPassword(newPass);
       setResetResultOpen(true);
@@ -605,13 +595,6 @@ export default function Usuarios() {
         </div>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">Senha:</span>
-          <span className="font-mono text-xs">{showPasswords[user.id] ? user.plain_password || '—' : '••••••'}</span>
-          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setShowPasswords((prev) => ({ ...prev, [user.id]: !prev[user.id] }))}>
-            {showPasswords[user.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-          </Button>
-        </div>
         <Badge className={`${user.role ? roleColors[user.role] : ''} text-[10px] px-1.5 py-0`}>
           {user.role ? roleLabels[user.role] : '—'}
         </Badge>
@@ -629,7 +612,6 @@ export default function Usuarios() {
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Usuário</TableHead>
-            <TableHead>Senha</TableHead>
             <TableHead>Cargo</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -639,14 +621,6 @@ export default function Usuarios() {
             <TableRow key={user.id}>
               <TableCell className="font-medium">{user.full_name}</TableCell>
               <TableCell>{user.username}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  <span className="font-mono text-sm">{showPasswords[user.id] ? user.plain_password || '—' : '••••••'}</span>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowPasswords((prev) => ({ ...prev, [user.id]: !prev[user.id] }))}>
-                    {showPasswords[user.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  </Button>
-                </div>
-              </TableCell>
               <TableCell>
                 <Select value={user.role || ''} onValueChange={(value) => handleRoleChange(user.user_id, value as AppRole)} disabled={updatingUser === user.user_id}>
                   <SelectTrigger className="w-[140px]">
@@ -726,11 +700,6 @@ export default function Usuarios() {
       {member.user_id && (
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">@{member.username}</span>
-          <span className="text-xs text-muted-foreground">|</span>
-          <span className="font-mono text-xs">{showMemberPasswords[member.id] ? member.plain_password || '—' : '••••••'}</span>
-          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setShowMemberPasswords((prev) => ({ ...prev, [member.id]: !prev[member.id] }))}>
-            {showMemberPasswords[member.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-          </Button>
         </div>
       )}
       {!member.user_id && (
@@ -755,7 +724,6 @@ export default function Usuarios() {
             <TableHead>Nome</TableHead>
             <TableHead>Sociedade</TableHead>
             <TableHead>Login</TableHead>
-            <TableHead>Senha</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -776,19 +744,7 @@ export default function Usuarios() {
                 ) : (
                   <span className="text-sm text-muted-foreground italic">—</span>
                 )}
-              </TableCell>
-              <TableCell>
-                {member.user_id ? (
-                  <div className="flex items-center gap-1">
-                    <span className="font-mono text-sm">{showMemberPasswords[member.id] ? member.plain_password || '—' : '••••••'}</span>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowMemberPasswords((prev) => ({ ...prev, [member.id]: !prev[member.id] }))}>
-                      {showMemberPasswords[member.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                    </Button>
-                  </div>
-                ) : (
-                  <span className="text-sm text-muted-foreground italic">—</span>
-                )}
-              </TableCell>
+               </TableCell>
               <TableCell>
                 <Badge variant={member.active ? 'default' : 'secondary'}>
                   {member.active ? 'Ativo' : 'Inativo'}

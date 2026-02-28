@@ -12,13 +12,45 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Verify caller is authenticated and admin
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const callerClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user: caller } } = await callerClient.auth.getUser();
+    if (!caller) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: isAdmin } = await callerClient.rpc("has_role", {
+      _user_id: caller.id,
+      _role: "admin",
+    });
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Apenas admins podem executar esta função" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Admin user for created_by
-    const ADMIN_USER_ID = "1c2648c1-7bb8-433a-997a-32a96c7f314a";
+    const ADMIN_USER_ID = caller.id;
 
     const events = [
       // === JANEIRO 2026 ===
@@ -32,7 +64,6 @@ Deno.serve(async (req) => {
       { title: "Momento de Oração UMP", start_date: "2026-01-18T18:45:00", all_day: false, color: "#3b82f6", description: "Responsável: UMP" },
       { title: "Momento de Oração / Plenária SAF", start_date: "2026-01-25T18:45:00", all_day: false, color: "#ec4899", description: "Responsável: SAF" },
       { title: "Plenária UPH", start_date: "2026-01-25T18:45:00", all_day: false, color: "#10b981", description: "Responsável: UPH" },
-
       // === FEVEREIRO 2026 ===
       { title: "Plenária da UMP", start_date: "2026-02-01T18:45:00", all_day: false, color: "#3b82f6", description: "Responsável: UMP" },
       { title: "Plenária da UPA", start_date: "2026-02-01T18:45:00", all_day: false, color: "#f97316", description: "Responsável: UPA" },
@@ -51,7 +82,6 @@ Deno.serve(async (req) => {
       { title: "Retorno do PG", start_date: "2026-02-24T19:00:00", all_day: false, color: "#6b7280", description: "Responsável: IPNC" },
       { title: "Estudo UMP", start_date: "2026-02-27T19:00:00", all_day: false, color: "#3b82f6", description: "Responsável: UMP" },
       { title: "Abertura das Programações UPH", start_date: "2026-02-28T09:00:00", all_day: false, color: "#10b981", description: "Responsável: UPH" },
-
       // === MARÇO 2026 ===
       { title: "Almoço", start_date: "2026-03-01T12:00:00", all_day: false, color: "#6b7280", description: "Responsável: IPNC" },
       { title: "Ceia do Senhor na Sede", start_date: "2026-03-01", all_day: true, color: "#6b7280", description: "Responsável: IPNC" },
