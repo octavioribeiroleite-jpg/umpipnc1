@@ -1,77 +1,58 @@
 
 
-# Melhorias de Segurança — Problemas Identificados e Plano
+# Secretaria EBD — Reestruturação com Abas, Histórico e Gestao
 
-A análise de segurança identificou **6 problemas**. Aqui está o resumo por prioridade e o plano de correção:
+## Estrutura
 
----
+Refatorar `Secretaria.tsx` em 3 abas (usando o componente `Tabs` existente):
 
-## Problemas Críticos (vermelho)
+### Tab 1 — Chamada (melhorada)
+- Cards de turma sem truncamento (1 coluna mobile, 2 colunas tablet+)
+- Badge de "chamada completa" quando todos alunos foram marcados (presente ou ausente)
+- Ranking visual: turmas ordenadas por % de presença
+- Cores dinâmicas nos cards (verde >70%, amarelo 40-70%, vermelho <40%)
 
-### 1. Senhas armazenadas em texto puro
-O campo `plain_password` na tabela `profiles` guarda senhas sem criptografia. Qualquer admin ou invasor com acesso ao banco vê todas as senhas.
+### Tab 2 — Historico
+- Seletor de periodo: 4 semanas / 3 meses / todo periodo
+- Grafico de linha (recharts) com evolucao da presenca geral por domingo
+- Grafico de barras comparativo entre turmas (media de presenca)
+- Tabela resumo por domingo: data, presentes/total, %
+- Metricas-destaque: media ultimos 4 domingos, melhor/pior domingo, turma com maior/menor frequencia
+- Lista de alunos 100% presenca (destaques) e 0% presenca (alerta)
 
-**Correção:**
-- Remover a coluna `plain_password` da tabela `profiles`
-- Remover o armazenamento de senha em texto nas edge functions `create-user` e `update-user-password`
-- Remover a exibição de senhas na página de Usuários (`Usuarios.tsx`)
-- Atualizar o trigger `handle_new_user` para não salvar `plain_password`
+### Tab 3 — Turmas (gestao)
+- Lista de turmas com contagem ativos/inativos
+- Ao clicar: duas secoes — Ativos e Inativos
+- Acoes: adicionar aluno, desativar (move para inativos), reativar
+- Transferir aluno entre turmas
+- Criar nova turma, renomear turma
 
-### 2. Dados financeiros expostos a todos os usuários logados
-Tabelas como `transactions`, `charges`, `membership_payments`, `shirt_sales` etc. têm políticas que permitem qualquer usuário autenticado ver todos os dados financeiros.
+## Componentes
 
-**Correção:**
-- Já foram parcialmente corrigidas (as políticas atuais já usam `society_id` e roles) — preciso verificar se ainda existem políticas `USING (true)` remanescentes
+- `src/pages/Secretaria.tsx` — shell com Tabs, senha, estado compartilhado
+- `src/components/secretaria/ChamadaTab.tsx` — chamada atual melhorada
+- `src/components/secretaria/HistoricoTab.tsx` — graficos + metricas
+- `src/components/secretaria/TurmasTab.tsx` — gestao de turmas e alunos
 
-### 3. Função de seed de eventos sem autenticação
-A edge function `seed-calendar-events` não verifica se quem chamou é autenticado ou admin.
+## Banco de dados
 
-**Correção:**
-- Adicionar verificação de autenticação e role de admin na function
+Nenhuma alteracao necessaria. Tabelas `ebd_classes`, `ebd_students` (campo `active` ja existe), `ebd_attendance` ja suportam tudo.
 
----
+Para historico: query `ebd_attendance` sem filtro de data (ou com range), agrupada por `date`.
 
-## Problemas Médios (amarelo)
+## Detalhes tecnicos
 
-### 4. Bucket de recibos público
-O bucket `receipts` está configurado como público — qualquer pessoa com a URL pode ver recibos financeiros.
+- Recharts ja instalado — usar `LineChart` e `BarChart`
+- Alunos inativos: `ebd_students` com `active = false` (query separada na aba Turmas)
+- INSERT/UPDATE de alunos via anon (RLS ja permite para `ebd_students` via management role) — como secretaria usa senha fixa sem login, as acoes de gestao precisam de politica anon para INSERT/UPDATE em `ebd_students` e `ebd_classes`, ou alternativamente restringir gestao apenas para usuarios logados
 
-**Correção:**
-- Tornar o bucket privado e ajustar políticas de acesso
+### Ajuste de RLS necessario
+Adicionar politicas anon para INSERT/UPDATE em `ebd_students` e `ebd_classes` para que a gestao funcione via senha fixa (sem login). Alternativa: mostrar aba Turmas como somente-leitura para quem nao esta logado.
 
-### 5. Validação de input nas edge functions
-As edge functions não validam formato, tamanho ou conteúdo dos inputs adequadamente.
-
-**Correção:**
-- Adicionar validação de UUID, username, senha e role nas functions
-
-### 6. Proteção contra senhas vazadas desabilitada
-O recurso de detecção de senhas comprometidas está desativado.
-
-**Correção:**
-- Habilitar a proteção contra senhas vazadas nas configurações de autenticação
-
----
-
-## Informativo (baixo risco)
-- Função `get_email_by_username` — aceitável para o caso de uso de login
-- Timing de contribuições reveladas — risco mínimo
-
----
-
-## Ordem de implementação sugerida
-
-1. **Remover `plain_password`** — mais crítico, elimina exposição direta de credenciais
-2. **Proteger `seed-calendar-events`** — endpoint aberto
-3. **Tornar bucket `receipts` privado**
-4. **Adicionar validação de inputs nas edge functions**
-5. **Habilitar proteção contra senhas vazadas**
-
-### Arquivos modificados
-- Migração SQL (remover coluna `plain_password`, atualizar trigger)
-- `supabase/functions/create-user/index.ts`
-- `supabase/functions/update-user-password/index.ts`
-- `supabase/functions/seed-calendar-events/index.ts`
-- `src/pages/Usuarios.tsx` (remover exibição de senha)
-- Migração SQL (tornar bucket privado + políticas)
+## Arquivos criados/modificados
+- `src/components/secretaria/ChamadaTab.tsx` (novo)
+- `src/components/secretaria/HistoricoTab.tsx` (novo)
+- `src/components/secretaria/TurmasTab.tsx` (novo)
+- `src/pages/Secretaria.tsx` (refatorado)
+- Migracao SQL: adicionar politicas anon para INSERT/UPDATE em `ebd_students` e `ebd_classes`
 
