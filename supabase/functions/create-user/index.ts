@@ -5,6 +5,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Validation helpers
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const VALID_ROLES = ['admin', 'diretoria', 'visualizador', 'pastor']
+
+function validateUsername(username: string): string | null {
+  if (!username || username.length < 2 || username.length > 30) return 'Username deve ter entre 2 e 30 caracteres'
+  if (!/^[a-zA-Z0-9._-]+$/.test(username)) return 'Username deve conter apenas letras, números, pontos, hífens e underscores'
+  return null
+}
+
+function validatePassword(password: string): string | null {
+  if (!password || password.length < 4) return 'Senha deve ter no mínimo 4 caracteres'
+  if (password.length > 72) return 'Senha deve ter no máximo 72 caracteres'
+  return null
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -53,6 +69,45 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Validate inputs
+    if (typeof full_name !== 'string' || full_name.trim().length < 2 || full_name.length > 100) {
+      return new Response(JSON.stringify({ error: 'Nome deve ter entre 2 e 100 caracteres' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const usernameError = validateUsername(username)
+    if (usernameError) {
+      return new Response(JSON.stringify({ error: usernameError }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      return new Response(JSON.stringify({ error: passwordError }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (!VALID_ROLES.includes(role)) {
+      return new Response(JSON.stringify({ error: `Role inválido. Valores aceitos: ${VALID_ROLES.join(', ')}` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (society_id && !UUID_REGEX.test(society_id)) {
+      return new Response(JSON.stringify({ error: 'society_id inválido' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (member_id && !UUID_REGEX.test(member_id)) {
+      return new Response(JSON.stringify({ error: 'member_id inválido' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Diretoria can only create visualizador
     if (!isAdmin && isDiretoria && role !== 'visualizador') {
       return new Response(JSON.stringify({ error: 'Diretoria só pode criar usuários visualizadores' }), {
@@ -72,28 +127,23 @@ Deno.serve(async (req) => {
       user_metadata: {
         full_name,
         username: username.toLowerCase(),
-        plain_password: password,
       },
     })
 
     if (createError) {
-      // If email already exists, try to link existing user to member
       const errMsg = createError.message || ''
       const isDuplicate = errMsg.includes('already been registered') || errMsg.includes('already exists')
       
       if (isDuplicate && member_id) {
-        // Find existing user by email
         const { data: existingProfile } = await adminClient
           .from('profiles')
-          .select('user_id, username, plain_password')
+          .select('user_id, username')
           .eq('email', email)
           .maybeSingle()
 
         if (existingProfile?.user_id) {
-          // Link member to existing user
           await adminClient.from('members').update({ user_id: existingProfile.user_id }).eq('id', member_id)
 
-          // Update profile with society_id if provided
           if (society_id) {
             await adminClient.from('profiles').update({ society_id }).eq('user_id', existingProfile.user_id)
           }
@@ -119,10 +169,9 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Update profile with username, plain_password and society_id
+    // Update profile with username and society_id (no plain_password)
     const profileUpdate: Record<string, unknown> = {
       username: username.toLowerCase(),
-      plain_password: password,
     }
     if (society_id) {
       profileUpdate.society_id = society_id

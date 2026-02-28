@@ -1202,7 +1202,6 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
-          plain_password: string | null
           society_id: string | null
           updated_at: string
           user_id: string
@@ -1216,7 +1215,6 @@ export type Database = {
           full_name: string
           id?: string
           phone?: string | null
-          plain_password?: string | null
           society_id?: string | null
           updated_at?: string
           user_id: string
@@ -1230,7 +1228,6 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
-          plain_password?: string | null
           society_id?: string | null
           updated_at?: string
           user_id?: string
