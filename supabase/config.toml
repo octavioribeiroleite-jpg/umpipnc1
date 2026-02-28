@@ -27,4 +27,7 @@ verify_jwt = false
 [functions.summarize-study]
 verify_jwt = false
 
+[functions.summarize-yearly-studies]
+verify_jwt = false
+
 
