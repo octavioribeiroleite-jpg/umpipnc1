@@ -16,6 +16,7 @@ import {
   Vote,
   Heart,
   Globe,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,6 +34,7 @@ const menuItems = [
   { icon: ClipboardCheck, label: 'Plenárias', path: '/plenarias' },
   { icon: Heart, label: 'Dízimos', path: '/dizimos' },
   { icon: MessageSquare, label: 'Comunicados', path: '/comunicados' },
+  { icon: BookOpen, label: 'Estudos', path: '/estudos' },
 ];
 
 const adminMenuItems = [

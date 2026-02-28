@@ -24,4 +24,7 @@ verify_jwt = false
 [functions.seed-calendar-events]
 verify_jwt = false
 
+[functions.summarize-study]
+verify_jwt = false
+
 
