@@ -1,41 +1,46 @@
 
 
-# Login Secretaria EBD com PIN Numérico
+# Ajustes no fluxo da Secretaria EBD
 
-## Resumo
-Substituir login com usuário/senha por seleção de perfil via cards + teclado numérico de 6 dígitos (estilo banco), agrupados 4+2.
+## 1. Admin entra direto (sem pedir nome)
+- Em `Secretaria.tsx`: admin ja entra direto apos PIN (ja funciona assim, linha 92-93). Nenhuma mudanca necessaria aqui.
 
-## Implementação
+## 2. Fluxo de chamada por turma com Iniciar/Finalizar/Reabrir
 
-### 1. Atualizar senhas no banco
-- UPDATE `settings` → `secretaria_admin_password` = `140723`
-- UPDATE `settings` → `secretaria_professor_password` = `654321`
-- Remover chaves `secretaria_admin_login` e `secretaria_professor_login` (não mais necessárias)
+Refatorar `ChamadaTab.tsx`:
 
-### 2. Refatorar `src/pages/Secretaria.tsx`
-- **Step 1 — Seleção de perfil**: dois cards grandes
-  - Card "Administrador" com ícone Shield
-  - Card "Professor" com ícone GraduationCap
-- **Step 2 — Tela de PIN**: 
-  - Header com nome do perfil + botão voltar
-  - 6 slots visuais agrupados (4 + 2) mostrando pontos preenchidos
-  - Teclado numérico customizado: grid 3x4 (1-9, limpar, 0, apagar)
-  - Validação automática ao completar 6 dígitos
-  - Feedback de erro com shake/vibração visual
-- Remover campos de texto de usuário/senha
-- Remover imports de `User` icon, adicionar `Shield`, `GraduationCap`, `ArrowLeft`, `Delete`
+- **Remover** a tela global de "Iniciar Chamada" (com campo de nome do professor) - isso ja foi tratado no login
+- **Adicionar estado** `chamadaStatus` por turma: `Map<string, 'idle' | 'aberta' | 'finalizada'>`
+- **Ao clicar numa turma**: mostrar o detalhe da turma
+  - Se status `idle`: mostrar botao "Iniciar Chamada" grande (PlayCircle)
+  - Se status `aberta`: mostrar lista de alunos com checkboxes (como hoje) + botao "Finalizar Chamada" no rodape
+  - Se status `finalizada`: mostrar lista de alunos (somente leitura, sem poder editar) + badge "Chamada Finalizada" + botao "Reabrir Chamada"
+- **Responsavel**: mostrar nome do professor no header da turma (vem de `initialProfessorName`)
+- **Admin**: admin nao tem `initialProfessorName`, entao nao exibir campo de responsavel. Admin pode iniciar/finalizar chamada normalmente
 
-### 3. Atualizar `src/pages/Configuracoes.tsx`
-- Trocar campos de login+senha por campos de PIN numérico (maxLength 6, inputMode numeric)
-- Remover campos de login (`secAdminLogin`, `secProfLogin`)
-- Validar que só aceita 6 dígitos numéricos
+### Arquivos a alterar
+- `src/components/secretaria/ChamadaTab.tsx`: refatorar para ter fluxo iniciar/finalizar/reabrir por turma
+- `src/pages/Secretaria.tsx`: passar `accessLevel` como prop para ChamadaTab saber se e admin
 
-### 4. Atualizar RLS policy de `settings`
-- Remover `secretaria_admin_login` e `secretaria_professor_login` da lista de chaves visíveis ao anon
+### Detalhes da UI por turma
 
-### Arquivos modificados
-- `src/pages/Secretaria.tsx` — nova UI com cards + PIN pad
-- `src/pages/Configuracoes.tsx` — campos de PIN numérico
-- Migration SQL — atualizar RLS policy
-- Data update — atualizar senhas para PINs numéricos
+**Estado idle (turma ainda nao teve chamada iniciada):**
+- Card centralizado com icone PlayCircle
+- Texto "Iniciar Chamada" + nome da turma
+- Se professor: mostrar "Responsavel: [nome]"
+- Botao "Iniciar Chamada"
+
+**Estado aberta (chamada em andamento):**
+- Header com nome da turma + stats + badge "Em andamento"
+- Lista de alunos com checkboxes (comportamento atual)
+- Botao fixo no rodape: "Finalizar Chamada" (verde)
+
+**Estado finalizada:**
+- Header com badge "Finalizada"
+- Lista de alunos somente leitura (checkboxes desabilitados)
+- Resumo: X presentes de Y alunos
+- Botao "Reabrir Chamada" (outline/secondary)
+
+**Na grid de turmas (visao principal):**
+- Mostrar badge de status em cada card: "Nao iniciada", "Em andamento", "Finalizada"
 
