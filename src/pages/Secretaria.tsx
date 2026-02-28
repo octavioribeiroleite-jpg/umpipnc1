@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, BarChart3, Settings2 } from 'lucide-react';
+import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -11,6 +11,10 @@ import TurmasTab from '@/components/secretaria/TurmasTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface EbdClass {
   id: string;
@@ -34,7 +38,9 @@ interface AttendanceRecord {
 }
 
 type AccessLevel = 'admin' | 'professor';
-type LoginStep = 'profile' | 'pin';
+type LoginStep = 'profile' | 'pin' | 'name-confirm' | 'name-input';
+
+const PROFESSOR_NAME_KEY = 'ebd_professor_name';
 
 function getTodayDate(): string {
   const today = new Date();
@@ -51,6 +57,8 @@ export default function Secretaria() {
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [professorNome, setProfessorNome] = useState('');
+  const [savedProfessorName, setSavedProfessorName] = useState<string | null>(null);
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -73,7 +81,17 @@ export default function Secretaria() {
       .single();
 
     if (data && data.value === pin) {
-      setAccessLevel(selectedProfile);
+      if (selectedProfile === 'professor') {
+        const saved = localStorage.getItem(PROFESSOR_NAME_KEY);
+        if (saved) {
+          setSavedProfessorName(saved);
+          setLoginStep('name-confirm');
+        } else {
+          setLoginStep('name-input');
+        }
+      } else {
+        setAccessLevel(selectedProfile);
+      }
     } else {
       setPinError(true);
       toast.error('PIN incorreto');
@@ -82,7 +100,31 @@ export default function Secretaria() {
     setLoading(false);
   };
 
+  const handleConfirmName = () => {
+    setProfessorNome(savedProfessorName!);
+    setAccessLevel('professor');
+  };
+
+  const handleDifferentPerson = () => {
+    setSavedProfessorName(null);
+    setProfessorNome('');
+    setLoginStep('name-input');
+  };
+
+  const handleSaveName = () => {
+    if (!professorNome.trim()) return;
+    localStorage.setItem(PROFESSOR_NAME_KEY, professorNome.trim());
+    setProfessorNome(professorNome.trim());
+    setAccessLevel('professor');
+  };
+
   const handleBack = () => {
+    if (loginStep === 'name-confirm' || loginStep === 'name-input') {
+      setLoginStep('pin');
+      setSavedProfessorName(null);
+      setProfessorNome('');
+      return;
+    }
     setLoginStep('profile');
     setSelectedProfile(null);
     setPinError(false);
@@ -110,6 +152,69 @@ export default function Secretaria() {
   if (!accessLevel) {
     if (loginStep === 'profile') {
       return <ProfileSelect onSelect={handleProfileSelect} />;
+    }
+
+    if (loginStep === 'name-confirm' && savedProfessorName) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <Card className="w-full max-w-sm">
+            <CardContent className="pt-6 space-y-5">
+              <div className="text-center space-y-3">
+                <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <UserCheck className="h-8 w-8 text-primary" />
+                </div>
+                <h2 className="font-semibold text-lg">Você é</h2>
+                <p className="text-2xl font-bold text-primary">{savedProfessorName}?</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" onClick={handleDifferentPerson}>
+                  Não sou eu
+                </Button>
+                <Button onClick={handleConfirmName}>
+                  Sim, sou eu!
+                </Button>
+              </div>
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    if (loginStep === 'name-input') {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <Card className="w-full max-w-sm">
+            <CardContent className="pt-6 space-y-5">
+              <div className="text-center space-y-2">
+                <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                  <UserCheck className="h-7 w-7 text-primary" />
+                </div>
+                <h2 className="font-semibold text-lg">Qual o seu nome?</h2>
+                <p className="text-sm text-muted-foreground">Informe seu nome completo para registro</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="professor-nome">Nome completo</Label>
+                <Input
+                  id="professor-nome"
+                  placeholder="Digite seu nome completo"
+                  value={professorNome}
+                  onChange={(e) => setProfessorNome(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <Button className="w-full" disabled={!professorNome.trim()} onClick={handleSaveName}>
+                Continuar
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
     }
 
     return (
@@ -164,6 +269,7 @@ export default function Secretaria() {
               setAttendance={setAttendance}
               attendanceDate={sundayDate}
               formattedDate={formattedDate}
+              initialProfessorName={professorNome}
             />
           </TabsContent>
 

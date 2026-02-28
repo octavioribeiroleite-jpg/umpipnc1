@@ -36,13 +36,14 @@ interface ChamadaTabProps {
   setAttendance: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
   attendanceDate: string;
   formattedDate: string;
+  initialProfessorName?: string;
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate }: ChamadaTabProps) {
+export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName }: ChamadaTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
-  const [chamadaIniciada, setChamadaIniciada] = useState(false);
-  const [professorNome, setProfessorNome] = useState('');
+  const [chamadaIniciada, setChamadaIniciada] = useState(!!initialProfessorName);
+  const [professorNome, setProfessorNome] = useState(initialProfessorName || '');
 
   const toggleAttendance = async (student: EbdStudent, currentlyPresent: boolean) => {
     setSavingStudent(student.id);
