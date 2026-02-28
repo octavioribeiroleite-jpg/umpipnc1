@@ -36,9 +36,9 @@ interface AttendanceRecord {
 function getSundayDate(): string {
   const today = new Date();
   const day = today.getDay();
-  const diff = day === 0 ? 0 : day;
+  const diff = day === 0 ? 0 : 7 - day;
   const sunday = new Date(today);
-  sunday.setDate(today.getDate() - diff);
+  sunday.setDate(today.getDate() + diff);
   return format(sunday, 'yyyy-MM-dd');
 }
 
@@ -52,7 +52,7 @@ export default function Secretaria() {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
 
   const sundayDate = getSundayDate();
-  const formattedDate = format(new Date(sundayDate + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const formattedDate = "Domingo, " + format(new Date(sundayDate + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   const handleLogin = async () => {
     setLoading(true);
@@ -129,7 +129,7 @@ export default function Secretaria() {
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
         <h1 className="font-semibold text-lg">Secretaria EBD</h1>
-        <p className="text-xs text-muted-foreground capitalize">{formattedDate}</p>
+        <p className="text-xs text-muted-foreground">{formattedDate}</p>
       </div>
 
       <div className="p-4 pb-8">
