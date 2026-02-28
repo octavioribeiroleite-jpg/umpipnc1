@@ -67,7 +67,8 @@ Regras:
   4. *Temas recorrentes e padrões* identificados nos estudos
   5. *Versículos e reflexões mais marcantes* extraídos das anotações
   6. *Principais aprendizados e destaques* do ano
-  7. *Mensagem de encerramento* com reflexão e gratidão
+  7. *🧠 Para meditar*: 3-5 perguntas reflexivas consolidadas baseadas nos principais temas do ano, para os jovens refletirem sobre o crescimento espiritual ao longo do período
+  8. *Mensagem de encerramento* com reflexão e gratidão
 - Seja fiel ao conteúdo original das anotações
 - Mantenha o relatório completo mas legível (máximo ~800 palavras)`
           },
