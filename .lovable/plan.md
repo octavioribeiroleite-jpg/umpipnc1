@@ -1,32 +1,15 @@
 
 
-# Relatório Anual dos Estudos Bíblicos
-
-## O que será feito
-
-Adicionar um botão "Relatório do Ano" na página de Estudos que gera um relatório consolidado de todos os estudos do ano, usando IA para criar uma síntese completa.
+# Adicionar seção de meditação semanal nos prompts de resumo
 
 ## Mudanças
 
-### 1. Nova Edge Function — `summarize-yearly-studies`
-- Recebe `year` (ex: 2026) e `society_id`
-- Busca todos os `study_notes` do ano com anotações não vazias
-- Envia para a IA com prompt específico para relatório anual:
-  - Lista todos os temas estudados com datas
-  - Identifica temas recorrentes e padrões
-  - Destaca versículos e reflexões mais importantes
-  - Gera estatísticas (total de estudos, frequência)
-  - Formatado para WhatsApp com emojis
-- Retorna o relatório gerado
+### 1. `supabase/functions/summarize-study/index.ts` (linha 43-51)
+Atualizar o prompt do sistema para incluir uma seção final de "meditação da semana" com perguntas reflexivas para os jovens:
+- Após a reflexão/versículo-chave, adicionar uma seção "🧠 Para meditar na semana" com 2-3 perguntas práticas para os jovens refletirem ao longo da semana sobre o que foi estudado
 
-### 2. UI na página `Estudos.tsx`
-- Botão "Relatório do Ano" ao lado de "Novo Estudo"
-- Select para escolher o ano
-- Dialog/drawer mostrando o relatório gerado com botão "Copiar"
-- Loading state durante geração
+### 2. `supabase/functions/summarize-yearly-studies/index.ts` (prompt do relatório anual)
+Adicionar no prompt do relatório anual uma seção consolidada de reflexões para meditação, baseada nos principais temas do ano.
 
-### Arquivos criados/modificados
-- `supabase/functions/summarize-yearly-studies/index.ts` (novo)
-- `src/pages/Estudos.tsx` — botão + dialog do relatório anual
-- `supabase/config.toml` — registrar nova function
+Nenhuma mudança de banco ou UI — apenas ajuste nos prompts das duas edge functions.
 
