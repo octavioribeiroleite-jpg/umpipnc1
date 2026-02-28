@@ -3,14 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Lock, ClipboardList, BarChart3, Settings2 } from 'lucide-react';
+import { Lock, ClipboardList, BarChart3, Settings2, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import ChamadaTab from '@/components/secretaria/ChamadaTab';
 import HistoricoTab from '@/components/secretaria/HistoricoTab';
 import TurmasTab from '@/components/secretaria/TurmasTab';
+import { Badge } from '@/components/ui/badge';
 
 interface EbdClass {
   id: string;
@@ -33,6 +35,8 @@ interface AttendanceRecord {
   present: boolean;
 }
 
+type AccessLevel = 'admin' | 'professor';
+
 function getSundayDate(): string {
   const today = new Date();
   const day = today.getDay();
@@ -43,7 +47,8 @@ function getSundayDate(): string {
 }
 
 export default function Secretaria() {
-  const [authenticated, setAuthenticated] = useState(false);
+  const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(null);
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<EbdClass[]>([]);
@@ -56,16 +61,37 @@ export default function Secretaria() {
 
   const handleLogin = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data: settings } = await supabase
       .from('settings')
-      .select('value')
-      .eq('key', 'secretaria_password')
-      .single();
+      .select('key, value')
+      .in('key', [
+        'secretaria_admin_login',
+        'secretaria_admin_password',
+        'secretaria_professor_login',
+        'secretaria_professor_password',
+      ]);
 
-    if (data && data.value === password) {
-      setAuthenticated(true);
+    if (!settings || settings.length === 0) {
+      toast.error('Erro ao carregar configurações');
+      setLoading(false);
+      return;
+    }
+
+    const get = (key: string) => settings.find(s => s.key === key)?.value;
+
+    const adminLogin = get('secretaria_admin_login');
+    const adminPass = get('secretaria_admin_password');
+    const profLogin = get('secretaria_professor_login');
+    const profPass = get('secretaria_professor_password');
+
+    const trimUser = username.trim().toLowerCase();
+
+    if (trimUser === adminLogin && password === adminPass) {
+      setAccessLevel('admin');
+    } else if (trimUser === profLogin && password === profPass) {
+      setAccessLevel('professor');
     } else {
-      toast.error('Senha incorreta');
+      toast.error('Usuário ou senha incorretos');
     }
     setLoading(false);
   };
@@ -85,11 +111,11 @@ export default function Secretaria() {
   }, [sundayDate]);
 
   useEffect(() => {
-    if (authenticated) fetchData();
-  }, [authenticated, fetchData]);
+    if (accessLevel) fetchData();
+  }, [accessLevel, fetchData]);
 
-  // Password screen
-  if (!authenticated) {
+  // Login screen
+  if (!accessLevel) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-sm">
@@ -98,7 +124,7 @@ export default function Secretaria() {
               <Lock className="h-6 w-6 text-primary" />
             </div>
             <CardTitle>Secretaria EBD</CardTitle>
-            <p className="text-sm text-muted-foreground">Digite a senha para acessar</p>
+            <p className="text-sm text-muted-foreground">Digite suas credenciais para acessar</p>
           </CardHeader>
           <CardContent>
             <form
@@ -108,14 +134,38 @@ export default function Secretaria() {
               }}
               className="space-y-4"
             >
-              <Input
-                type="password"
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoFocus
-              />
-              <Button className="w-full" disabled={loading || !password}>
+              <div className="space-y-2">
+                <Label htmlFor="username">Usuário</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Usuário"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <Button className="w-full" disabled={loading || !username || !password}>
                 {loading ? 'Verificando...' : 'Entrar'}
               </Button>
             </form>
@@ -125,25 +175,37 @@ export default function Secretaria() {
     );
   }
 
+  const isAdmin = accessLevel === 'admin';
+  const profileLabel = isAdmin ? 'Admsecretaria' : 'Professor';
+
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
-        <h1 className="font-semibold text-lg">Secretaria EBD</h1>
-        <p className="text-xs text-muted-foreground">{formattedDate}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-semibold text-lg">Secretaria EBD</h1>
+            <p className="text-xs text-muted-foreground">{formattedDate}</p>
+          </div>
+          <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
+            {profileLabel}
+          </Badge>
+        </div>
       </div>
 
       <div className="p-4 pb-8">
         <Tabs defaultValue="chamada" className="w-full">
-          <TabsList className="w-full grid grid-cols-3">
+          <TabsList className={`w-full grid ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="chamada" className="flex items-center gap-1.5 text-xs">
               <ClipboardList className="h-3.5 w-3.5" /> Chamada
             </TabsTrigger>
             <TabsTrigger value="historico" className="flex items-center gap-1.5 text-xs">
               <BarChart3 className="h-3.5 w-3.5" /> Histórico
             </TabsTrigger>
-            <TabsTrigger value="turmas" className="flex items-center gap-1.5 text-xs">
-              <Settings2 className="h-3.5 w-3.5" /> Turmas
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="turmas" className="flex items-center gap-1.5 text-xs">
+                <Settings2 className="h-3.5 w-3.5" /> Turmas
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="chamada">
@@ -161,13 +223,15 @@ export default function Secretaria() {
             <HistoricoTab classes={classes} students={activeStudents} />
           </TabsContent>
 
-          <TabsContent value="turmas">
-            <TurmasTab
-              classes={classes}
-              allStudents={allStudents}
-              onRefresh={fetchData}
-            />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="turmas">
+              <TurmasTab
+                classes={classes}
+                allStudents={allStudents}
+                onRefresh={fetchData}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
