@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck } from 'lucide-react';
+import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck, BookOpen, Save, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador';
@@ -72,11 +72,66 @@ export default function Configuracoes() {
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
 
+  // Secretaria EBD credentials state
+  const [secLoading, setSecLoading] = useState(false);
+  const [secSaving, setSecSaving] = useState(false);
+  const [secAdminLogin, setSecAdminLogin] = useState('');
+  const [secAdminPass, setSecAdminPass] = useState('');
+  const [secProfLogin, setSecProfLogin] = useState('');
+  const [secProfPass, setSecProfPass] = useState('');
+  const [showSecAdminPass, setShowSecAdminPass] = useState(false);
+  const [showSecProfPass, setShowSecProfPass] = useState(false);
+
   useEffect(() => {
     if (isAdmin) {
       fetchUsers();
+      fetchSecretariaCredentials();
     }
   }, [isAdmin]);
+
+  const fetchSecretariaCredentials = async () => {
+    setSecLoading(true);
+    const { data } = await supabase
+      .from('settings')
+      .select('key, value')
+      .in('key', ['secretaria_admin_login', 'secretaria_admin_password', 'secretaria_professor_login', 'secretaria_professor_password']);
+    
+    if (data) {
+      const get = (key: string) => data.find(s => s.key === key)?.value || '';
+      setSecAdminLogin(get('secretaria_admin_login'));
+      setSecAdminPass(get('secretaria_admin_password'));
+      setSecProfLogin(get('secretaria_professor_login'));
+      setSecProfPass(get('secretaria_professor_password'));
+    }
+    setSecLoading(false);
+  };
+
+  const saveSecretariaCredentials = async () => {
+    setSecSaving(true);
+    try {
+      const updates = [
+        { key: 'secretaria_admin_login', value: secAdminLogin.trim().toLowerCase() },
+        { key: 'secretaria_admin_password', value: secAdminPass },
+        { key: 'secretaria_professor_login', value: secProfLogin.trim().toLowerCase() },
+        { key: 'secretaria_professor_password', value: secProfPass },
+      ];
+
+      for (const { key, value } of updates) {
+        const { error } = await supabase
+          .from('settings')
+          .update({ value, updated_at: new Date().toISOString() })
+          .eq('key', key);
+        if (error) throw error;
+      }
+
+      toast.success('Credenciais da Secretaria EBD atualizadas!');
+    } catch (error) {
+      console.error('Error saving secretaria credentials:', error);
+      toast.error('Erro ao salvar credenciais');
+    } finally {
+      setSecSaving(false);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -521,6 +576,120 @@ export default function Configuracoes() {
                       </Table>
                     </div>
                   )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Secretaria EBD Credentials (Admin only) */}
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Secretaria EBD
+              </CardTitle>
+              <CardDescription>Gerencie os logins e senhas de acesso à Secretaria EBD</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {secLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  {/* Admin profile */}
+                  <div className="space-y-3">
+                    <h3 className="font-medium text-sm flex items-center gap-2">
+                      <Badge>Admsecretaria</Badge>
+                      Acesso completo
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sec-admin-login">Login</Label>
+                        <Input
+                          id="sec-admin-login"
+                          value={secAdminLogin}
+                          onChange={(e) => setSecAdminLogin(e.target.value)}
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sec-admin-pass">Senha</Label>
+                        <div className="relative">
+                          <Input
+                            id="sec-admin-pass"
+                            type={showSecAdminPass ? 'text' : 'password'}
+                            value={secAdminPass}
+                            onChange={(e) => setSecAdminPass(e.target.value)}
+                            className="pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3"
+                            onClick={() => setShowSecAdminPass(!showSecAdminPass)}
+                          >
+                            {showSecAdminPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Professor profile */}
+                  <div className="space-y-3">
+                    <h3 className="font-medium text-sm flex items-center gap-2">
+                      <Badge variant="secondary">Professor</Badge>
+                      Apenas chamada e histórico
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sec-prof-login">Login</Label>
+                        <Input
+                          id="sec-prof-login"
+                          value={secProfLogin}
+                          onChange={(e) => setSecProfLogin(e.target.value)}
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sec-prof-pass">Senha</Label>
+                        <div className="relative">
+                          <Input
+                            id="sec-prof-pass"
+                            type={showSecProfPass ? 'text' : 'password'}
+                            value={secProfPass}
+                            onChange={(e) => setSecProfPass(e.target.value)}
+                            className="pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3"
+                            onClick={() => setShowSecProfPass(!showSecProfPass)}
+                          >
+                            {showSecProfPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={saveSecretariaCredentials}
+                    disabled={secSaving || !secAdminLogin || !secAdminPass || !secProfLogin || !secProfPass}
+                  >
+                    {secSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Salvar Credenciais
+                  </Button>
                 </>
               )}
             </CardContent>
