@@ -4,9 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EbdClass {
@@ -29,6 +27,8 @@ interface AttendanceRecord {
   present: boolean;
 }
 
+type ChamadaStatus = 'idle' | 'aberta' | 'finalizada';
+
 interface ChamadaTabProps {
   classes: EbdClass[];
   students: EbdStudent[];
@@ -37,13 +37,21 @@ interface ChamadaTabProps {
   attendanceDate: string;
   formattedDate: string;
   initialProfessorName?: string;
+  accessLevel: 'admin' | 'professor';
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName }: ChamadaTabProps) {
+export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel }: ChamadaTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
-  const [chamadaIniciada, setChamadaIniciada] = useState(!!initialProfessorName);
-  const [professorNome, setProfessorNome] = useState(initialProfessorName || '');
+  const [chamadaStatusMap, setChamadaStatusMap] = useState<Record<string, ChamadaStatus>>({});
+
+  const getClassChamadaStatus = (classId: string): ChamadaStatus => {
+    return chamadaStatusMap[classId] || 'idle';
+  };
+
+  const setClassChamadaStatus = (classId: string, status: ChamadaStatus) => {
+    setChamadaStatusMap(prev => ({ ...prev, [classId]: status }));
+  };
 
   const toggleAttendance = async (student: EbdStudent, currentlyPresent: boolean) => {
     setSavingStudent(student.id);
@@ -113,50 +121,67 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     return 'text-red-600';
   };
 
-  // Tela de iniciar chamada
-  if (!chamadaIniciada) {
-    return (
-      <div className="space-y-4 pt-4">
-        <Card>
-          <CardContent className="pt-5 space-y-4">
-            <div className="text-center space-y-2">
-              <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <PlayCircle className="h-7 w-7 text-primary" />
-              </div>
-              <h2 className="font-semibold text-lg">Iniciar Chamada</h2>
-              <p className="text-sm text-muted-foreground">{formattedDate}</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="professor-nome">Seu nome (professor/responsável)</Label>
-              <Input
-                id="professor-nome"
-                placeholder="Digite seu nome"
-                value={professorNome}
-                onChange={(e) => setProfessorNome(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <Button
-              className="w-full"
-              disabled={!professorNome.trim()}
-              onClick={() => setChamadaIniciada(true)}
-            >
-              <PlayCircle className="h-4 w-4 mr-2" />
-              Iniciar Chamada
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const getStatusBadge = (classId: string) => {
+    const status = getClassChamadaStatus(classId);
+    if (status === 'aberta') return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-[10px]">Em andamento</Badge>;
+    if (status === 'finalizada') return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px]">Finalizada</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground text-[10px]">Não iniciada</Badge>;
+  };
 
   // Class detail view
   if (selectedClass) {
     const classStudents = students.filter(s => s.class_id === selectedClass.id).sort((a, b) => a.name.localeCompare(b.name));
     const stats = getClassStats(selectedClass.id);
+    const status = getClassChamadaStatus(selectedClass.id);
+    const isReadOnly = status !== 'aberta';
 
+    // Idle state - show start button
+    if (status === 'idle') {
+      return (
+        <div>
+          <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => setSelectedClass(null)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-semibold text-lg">{selectedClass.name}</h2>
+                <p className="text-xs text-muted-foreground">{stats.total} alunos</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 pt-8">
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div className="text-center space-y-2">
+                  <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <PlayCircle className="h-7 w-7 text-primary" />
+                  </div>
+                  <h2 className="font-semibold text-lg">Iniciar Chamada</h2>
+                  <p className="text-sm text-muted-foreground">{selectedClass.name} — {formattedDate}</p>
+                  {accessLevel === 'professor' && initialProfessorName && (
+                    <p className="text-xs text-muted-foreground">
+                      Responsável: <span className="font-medium text-foreground">{initialProfessorName}</span>
+                    </p>
+                  )}
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => setClassChamadaStatus(selectedClass.id, 'aberta')}
+                >
+                  <PlayCircle className="h-4 w-4 mr-2" />
+                  Iniciar Chamada
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    // Aberta or Finalizada state
     return (
-      <div>
+      <div className="flex flex-col min-h-[calc(100vh-200px)]">
         <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => setSelectedClass(null)}>
@@ -166,32 +191,42 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               <h2 className="font-semibold text-lg">{selectedClass.name}</h2>
               <p className="text-xs text-muted-foreground">{stats.present}/{stats.total} presentes</p>
             </div>
-            {stats.marked === stats.total && stats.total > 0 && (
+            {status === 'aberta' && (
+              <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                Em andamento
+              </Badge>
+            )}
+            {status === 'finalizada' && (
               <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
-                <CheckCircle2 className="h-3 w-3 mr-1" /> Completa
+                <CheckCircle2 className="h-3 w-3 mr-1" /> Finalizada
               </Badge>
             )}
           </div>
+          {accessLevel === 'professor' && initialProfessorName && (
+            <p className="text-xs text-muted-foreground mt-1 ml-11">
+              Responsável: {initialProfessorName}
+            </p>
+          )}
         </div>
 
-        <div className="p-4 space-y-2 pb-8">
+        <div className="p-4 space-y-2 flex-1 pb-24">
           {classStudents.map(student => {
-            const record = attendance.find(a => a.student_id === student.id);
+            const record = attendance.find(a => a.student_id === student.id && a.date === attendanceDate);
             const isPresent = record?.present ?? false;
             const isSaving = savingStudent === student.id;
 
             return (
               <button
                 key={student.id}
-                onClick={() => toggleAttendance(student, isPresent)}
-                disabled={isSaving}
+                onClick={() => !isReadOnly && toggleAttendance(student, isPresent)}
+                disabled={isSaving || isReadOnly}
                 className={`flex items-center gap-3 w-full p-3 rounded-lg border transition-colors text-left ${
                   isPresent
                     ? 'bg-primary/5 border-primary/20'
-                    : 'bg-card border-border hover:bg-muted/50'
-                }`}
+                    : 'bg-card border-border'
+                } ${isReadOnly ? 'opacity-70 cursor-default' : 'hover:bg-muted/50 cursor-pointer'}`}
               >
-                <Checkbox checked={isPresent} className="pointer-events-none" />
+                <Checkbox checked={isPresent} className="pointer-events-none" disabled={isReadOnly} />
                 <span className="flex-1 font-medium text-sm">{student.name}</span>
                 {isPresent ? (
                   <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -206,6 +241,29 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             <p className="text-center text-muted-foreground py-8">Nenhum aluno cadastrado nesta turma.</p>
           )}
         </div>
+
+        {/* Footer action */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-20">
+          {status === 'aberta' && (
+            <Button
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => setClassChamadaStatus(selectedClass.id, 'finalizada')}
+            >
+              <StopCircle className="h-4 w-4 mr-2" />
+              Finalizar Chamada
+            </Button>
+          )}
+          {status === 'finalizada' && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setClassChamadaStatus(selectedClass.id, 'aberta')}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reabrir Chamada
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
@@ -216,14 +274,11 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
   return (
     <div className="space-y-4">
       {/* Professor info */}
-      <div className="flex items-center justify-between">
+      {accessLevel === 'professor' && initialProfessorName && (
         <p className="text-sm text-muted-foreground">
-          Responsável: <span className="font-medium text-foreground">{professorNome}</span>
+          Responsável: <span className="font-medium text-foreground">{initialProfessorName}</span>
         </p>
-        <Button variant="ghost" size="sm" onClick={() => setChamadaIniciada(false)} className="text-xs">
-          Trocar
-        </Button>
-      </div>
+      )}
 
       {/* Summary card */}
       <Card>
@@ -249,7 +304,6 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
         {sortedClasses.map((cls, index) => {
           const stats = getClassStats(cls.id);
           const pct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
-          const isComplete = stats.marked === stats.total && stats.total > 0;
 
           return (
             <Card
@@ -264,9 +318,9 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                   )}
                   <Users className="h-4 w-4 text-primary shrink-0" />
                   <span className="font-medium text-sm">{cls.name}</span>
-                  {isComplete && (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500 ml-auto shrink-0" />
-                  )}
+                  <div className="ml-auto shrink-0">
+                    {getStatusBadge(cls.id)}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">{stats.present}/{stats.total} presentes</span>
