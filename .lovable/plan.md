@@ -1,25 +1,35 @@
 
 
-# Correção da Data na Secretaria EBD
+# Separar Acesso da Secretaria EBD em Dois Perfis
 
-## Problemas identificados
+## Resumo
 
-1. **Data errada**: A função `getSundayDate()` sempre pega o domingo **passado**. Hoje (sábado 28/02) mostra 22/02 ao invés de 01/03. Para uma secretaria de EBD, quando estamos entre segunda e sábado, faz mais sentido mostrar o **próximo domingo** (para preparar a chamada).
-2. **Formatação**: A classe CSS `capitalize` transforma "de fevereiro de" em "De Fevereiro De", ficando visualmente estranho.
+Criar dois perfis de acesso na Secretaria EBD com permissões diferentes:
 
-## Correções
+- **Admsecretaria** (login: `admsecretaria`, senha: `Admnsecretaria123`) — acesso completo: Chamada, Histórico e Turmas (gestão de alunos)
+- **Professor EBD** (login: `professorebd`, senha: `professor123`) — acesso limitado: apenas Chamada e Histórico
 
-### 1. Lógica da data (`src/pages/Secretaria.tsx`)
-- Alterar `getSundayDate()` para retornar o **domingo mais próximo**:
-  - Se hoje é domingo → hoje
-  - Se é outro dia → próximo domingo (avançar)
-- Isso permite a secretária preparar a chamada durante a semana para o domingo que vem
+## Implementação
 
-### 2. Formatação da data (`src/pages/Secretaria.tsx`)
-- Remover a classe `capitalize` do elemento `<p>` que exibe a data
-- Usar formatação manual: capitalizar apenas a primeira letra ("22 de fevereiro de 2026" → "Domingo, 01 de março de 2026")
-- Adicionar o dia da semana "Domingo" no início para deixar claro
+### 1. Armazenar credenciais no banco (tabela `settings`)
+Inserir duas novas chaves na tabela `settings`:
+- `secretaria_admin_password` = `Admnsecretaria123`
+- `secretaria_professor_password` = `professor123`
+
+Atualizar a política de RLS da tabela `settings` para incluir essas chaves no acesso anônimo.
+
+### 2. Atualizar tela de login (`Secretaria.tsx`)
+- Trocar o campo de senha único por dois campos: **usuário** e **senha**
+- Validar contra as credenciais armazenadas
+- Armazenar o nível de acesso (`admin` ou `professor`) no estado
+- Mostrar o perfil logado no header ("Admsecretaria" ou "Professor")
+
+### 3. Controlar visibilidade das abas
+- **Admin**: vê Chamada, Histórico e Turmas
+- **Professor**: vê apenas Chamada e Histórico (aba Turmas oculta)
 
 ### Arquivos modificados
-- `src/pages/Secretaria.tsx` (função `getSundayDate` + formatação da data no header)
+- `src/pages/Secretaria.tsx` — tela de login com usuário/senha + controle de abas
+- Inserção de dados na tabela `settings` (novas credenciais)
+- Atualização da política RLS de `settings` para expor as novas chaves ao anon
 
