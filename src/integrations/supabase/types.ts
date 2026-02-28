@@ -220,6 +220,107 @@ export type Database = {
           },
         ]
       }
+      ebd_attendance: {
+        Row: {
+          class_id: string
+          created_at: string
+          date: string
+          id: string
+          marked_by: string | null
+          present: boolean
+          student_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          date: string
+          id?: string
+          marked_by?: string | null
+          present?: boolean
+          student_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          marked_by?: string | null
+          present?: boolean
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ebd_attendance_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "ebd_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ebd_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "ebd_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ebd_classes: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: []
+      }
+      ebd_students: {
+        Row: {
+          active: boolean
+          class_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          class_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          class_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ebd_students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "ebd_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       election_attendance: {
         Row: {
           election_id: string
