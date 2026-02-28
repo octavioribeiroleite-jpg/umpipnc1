@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EbdClass {
@@ -32,17 +34,19 @@ interface ChamadaTabProps {
   students: EbdStudent[];
   attendance: AttendanceRecord[];
   setAttendance: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
-  sundayDate: string;
+  attendanceDate: string;
   formattedDate: string;
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, sundayDate, formattedDate }: ChamadaTabProps) {
+export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate }: ChamadaTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
+  const [chamadaIniciada, setChamadaIniciada] = useState(false);
+  const [professorNome, setProfessorNome] = useState('');
 
   const toggleAttendance = async (student: EbdStudent, currentlyPresent: boolean) => {
     setSavingStudent(student.id);
-    const existing = attendance.find(a => a.student_id === student.id && a.date === sundayDate);
+    const existing = attendance.find(a => a.student_id === student.id && a.date === attendanceDate);
 
     if (existing) {
       const { error } = await supabase
@@ -61,7 +65,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
         .insert({
           student_id: student.id,
           class_id: student.class_id,
-          date: sundayDate,
+          date: attendanceDate,
           present: true,
         })
         .select()
@@ -76,7 +80,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
 
   const getClassStats = (classId: string) => {
     const classStudents = students.filter(s => s.class_id === classId);
-    const classAttendance = attendance.filter(a => a.class_id === classId && a.date === sundayDate);
+    const classAttendance = attendance.filter(a => a.class_id === classId && a.date === attendanceDate);
     const present = classAttendance.filter(a => a.present).length;
     const marked = classAttendance.length;
     return { total: classStudents.length, present, marked };
@@ -84,11 +88,10 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
 
   const getTotalStats = () => {
     const total = students.length;
-    const present = attendance.filter(a => a.present && a.date === sundayDate).length;
+    const present = attendance.filter(a => a.present && a.date === attendanceDate).length;
     return { total, present, percentage: total > 0 ? Math.round((present / total) * 100) : 0 };
   };
 
-  // Sort classes by attendance percentage (ranking)
   const sortedClasses = [...classes].sort((a, b) => {
     const statsA = getClassStats(a.id);
     const statsB = getClassStats(b.id);
@@ -108,6 +111,43 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     if (pct >= 40) return 'text-yellow-600';
     return 'text-red-600';
   };
+
+  // Tela de iniciar chamada
+  if (!chamadaIniciada) {
+    return (
+      <div className="space-y-4 pt-4">
+        <Card>
+          <CardContent className="pt-5 space-y-4">
+            <div className="text-center space-y-2">
+              <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <PlayCircle className="h-7 w-7 text-primary" />
+              </div>
+              <h2 className="font-semibold text-lg">Iniciar Chamada</h2>
+              <p className="text-sm text-muted-foreground">{formattedDate}</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="professor-nome">Seu nome (professor/responsável)</Label>
+              <Input
+                id="professor-nome"
+                placeholder="Digite seu nome"
+                value={professorNome}
+                onChange={(e) => setProfessorNome(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <Button
+              className="w-full"
+              disabled={!professorNome.trim()}
+              onClick={() => setChamadaIniciada(true)}
+            >
+              <PlayCircle className="h-4 w-4 mr-2" />
+              Iniciar Chamada
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Class detail view
   if (selectedClass) {
@@ -174,6 +214,16 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
   // Main view - classes grid with ranking
   return (
     <div className="space-y-4">
+      {/* Professor info */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Responsável: <span className="font-medium text-foreground">{professorNome}</span>
+        </p>
+        <Button variant="ghost" size="sm" onClick={() => setChamadaIniciada(false)} className="text-xs">
+          Trocar
+        </Button>
+      </div>
+
       {/* Summary card */}
       <Card>
         <CardContent className="pt-5 space-y-3">
@@ -193,7 +243,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
         </CardContent>
       </Card>
 
-      {/* Classes grid - 1 col mobile, 2 col tablet+ */}
+      {/* Classes grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {sortedClasses.map((cls, index) => {
           const stats = getClassStats(cls.id);
