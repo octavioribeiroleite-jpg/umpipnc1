@@ -1,17 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Lock, ClipboardList, BarChart3, Settings2, User } from 'lucide-react';
+import { ClipboardList, BarChart3, Settings2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import ChamadaTab from '@/components/secretaria/ChamadaTab';
 import HistoricoTab from '@/components/secretaria/HistoricoTab';
 import TurmasTab from '@/components/secretaria/TurmasTab';
+import ProfileSelect from '@/components/secretaria/ProfileSelect';
+import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
 
 interface EbdClass {
@@ -36,6 +34,7 @@ interface AttendanceRecord {
 }
 
 type AccessLevel = 'admin' | 'professor';
+type LoginStep = 'profile' | 'pin';
 
 function getTodayDate(): string {
   const today = new Date();
@@ -44,9 +43,10 @@ function getTodayDate(): string {
 
 export default function Secretaria() {
   const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(null);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [loginStep, setLoginStep] = useState<LoginStep>('profile');
+  const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pinError, setPinError] = useState(false);
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
@@ -55,41 +55,37 @@ export default function Secretaria() {
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
-  const handleLogin = async () => {
+  const handleProfileSelect = (profile: 'admin' | 'professor') => {
+    setSelectedProfile(profile);
+    setLoginStep('pin');
+  };
+
+  const handlePinComplete = async (pin: string) => {
     setLoading(true);
-    const { data: settings } = await supabase
+    const settingKey = selectedProfile === 'admin'
+      ? 'secretaria_admin_password'
+      : 'secretaria_professor_password';
+
+    const { data } = await supabase
       .from('settings')
-      .select('key, value')
-      .in('key', [
-        'secretaria_admin_login',
-        'secretaria_admin_password',
-        'secretaria_professor_login',
-        'secretaria_professor_password',
-      ]);
+      .select('value')
+      .eq('key', settingKey)
+      .single();
 
-    if (!settings || settings.length === 0) {
-      toast.error('Erro ao carregar configurações');
-      setLoading(false);
-      return;
-    }
-
-    const get = (key: string) => settings.find(s => s.key === key)?.value;
-
-    const adminLogin = get('secretaria_admin_login');
-    const adminPass = get('secretaria_admin_password');
-    const profLogin = get('secretaria_professor_login');
-    const profPass = get('secretaria_professor_password');
-
-    const trimUser = username.trim().toLowerCase();
-
-    if (trimUser === adminLogin && password === adminPass) {
-      setAccessLevel('admin');
-    } else if (trimUser === profLogin && password === profPass) {
-      setAccessLevel('professor');
+    if (data && data.value === pin) {
+      setAccessLevel(selectedProfile);
     } else {
-      toast.error('Usuário ou senha incorretos');
+      setPinError(true);
+      toast.error('PIN incorreto');
+      setTimeout(() => setPinError(false), 600);
     }
     setLoading(false);
+  };
+
+  const handleBack = () => {
+    setLoginStep('profile');
+    setSelectedProfile(null);
+    setPinError(false);
   };
 
   const fetchData = useCallback(async () => {
@@ -110,69 +106,25 @@ export default function Secretaria() {
     if (accessLevel) fetchData();
   }, [accessLevel, fetchData]);
 
-  // Login screen
+  // Login screens
   if (!accessLevel) {
+    if (loginStep === 'profile') {
+      return <ProfileSelect onSelect={handleProfileSelect} />;
+    }
+
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-sm">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Lock className="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle>Secretaria EBD</CardTitle>
-            <p className="text-sm text-muted-foreground">Digite suas credenciais para acessar</p>
-          </CardHeader>
-          <CardContent>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleLogin();
-              }}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="username">Usuário</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Usuário"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="pl-9"
-                    autoFocus
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-              <Button className="w-full" disabled={loading || !username || !password}>
-                {loading ? 'Verificando...' : 'Entrar'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+      <PinPad
+        profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Professor'}
+        onBack={handleBack}
+        onComplete={handlePinComplete}
+        loading={loading}
+        error={pinError}
+      />
     );
   }
 
   const isAdmin = accessLevel === 'admin';
-  const profileLabel = isAdmin ? 'Admsecretaria' : 'Professor';
+  const profileLabel = isAdmin ? 'Administrador' : 'Professor';
 
   return (
     <div className="min-h-screen bg-background">
