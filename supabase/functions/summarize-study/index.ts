@@ -48,7 +48,8 @@ Regras:
 - Comece com o título/tema do estudo e a data
 - Organize em tópicos numerados ou com bullets
 - Finalize com uma reflexão breve ou versículo-chave mencionado
-- Mantenha conciso (máximo ~300 palavras)`
+- Ao final, adicione uma seção "🧠 *Para meditar na semana*" com 2-3 perguntas práticas e pessoais para os jovens refletirem ao longo da semana sobre o que foi estudado. As perguntas devem provocar autoexame e aplicação prática na vida cotidiana.
+- Mantenha conciso (máximo ~350 palavras)`
           },
           {
             role: "user",
