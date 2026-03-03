@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDiretoriaSession } from '@/contexts/DiretoriaSessionContext';
@@ -39,6 +39,7 @@ export default function Auth() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [societies, setSocieties] = useState<Society[]>([]);
+  const [isExiting, setIsExiting] = useState(false);
 
   // Diretoria PIN flow state
   const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('societies');
@@ -65,6 +66,12 @@ export default function Auth() {
   const { setSession: setMembroSession } = useMembroSession();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Exit transition helper
+  const navigateWithTransition = useCallback((path: string) => {
+    setIsExiting(true);
+    setTimeout(() => navigate(path), 450);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchSocieties = async () => {
@@ -175,7 +182,7 @@ export default function Auth() {
     });
 
     toast({ title: 'Bem-vindo!', description: `Entrando como ${name}` });
-    navigate('/');
+    navigateWithTransition('/');
   };
 
   const handleConfirmName = () => {
@@ -199,13 +206,11 @@ export default function Auth() {
     setSelectedMembroSociety(society);
     setMembersLoading(true);
 
-    // Check localStorage for saved member
     const savedKey = `membro_name_${society.slug}`;
     const savedIdKey = `membro_id_${society.slug}`;
     const saved = localStorage.getItem(savedKey);
     const savedId = localStorage.getItem(savedIdKey);
 
-    // Fetch members
     const { data } = await supabase
       .from('members')
       .select('id, name, society_id')
@@ -217,7 +222,6 @@ export default function Auth() {
     setMembersLoading(false);
 
     if (saved && savedId) {
-      // Check if member still exists
       const exists = (data || []).some((m: any) => m.id === savedId);
       if (exists) {
         setMembroSavedName(saved);
@@ -235,7 +239,6 @@ export default function Auth() {
     setMemberLoginLoading(true);
 
     try {
-      // Get a Supabase session via the member-login edge function
       const { data, error } = await supabase.functions.invoke('member-login', {
         body: { society_slug: selectedMembroSociety.slug },
       });
@@ -251,7 +254,6 @@ export default function Auth() {
         refresh_token: data.session.refresh_token,
       });
 
-      // Save to localStorage
       localStorage.setItem(`membro_name_${selectedMembroSociety.slug}`, member.name);
       localStorage.setItem(`membro_id_${selectedMembroSociety.slug}`, member.id);
 
@@ -265,7 +267,7 @@ export default function Auth() {
       });
 
       toast({ title: 'Bem-vindo!', description: `Olá, ${member.name.split(' ')[0]}!` });
-      navigate('/membro');
+      navigateWithTransition('/membro');
     } catch (err) {
       console.error('Member login error:', err);
       toast({ variant: 'destructive', title: 'Erro ao entrar' });
@@ -303,7 +305,7 @@ export default function Auth() {
       toast({ variant: 'destructive', title: 'Erro ao entrar', description: 'Usuário ou senha incorretos' });
     } else {
       toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
-      navigate('/');
+      navigateWithTransition('/');
     }
 
     setIsLoading(false);
@@ -314,23 +316,46 @@ export default function Auth() {
     m.name.toLowerCase().includes(memberSearch.toLowerCase())
   );
 
+  // ========== VIDEO BG WRAPPER ==========
+  const VideoBgWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className={`min-h-screen relative overflow-hidden transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
+      {/* Video background */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        className="fixed inset-0 w-full h-full object-cover z-0"
+      >
+        <source src="/videos/bg-home.mp4" type="video/mp4" />
+      </video>
+      {/* Dark overlay */}
+      <div className="fixed inset-0 bg-black/60 z-10" />
+      {/* Content */}
+      <div className="relative z-20 min-h-screen flex items-center justify-center p-4">
+        {children}
+      </div>
+    </div>
+  );
+
   // ========== RENDER ==========
 
   // Membro name-confirm
   if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+      <VideoBgWrapper>
         <div className="w-full max-w-sm">
-          <Card className="border-border/50 shadow-xl">
+          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-3">
                 <div className="mx-auto h-16 w-16 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: `${selectedMembroSociety?.color}20` }}>
                   <UserCheck className="h-8 w-8" style={{ color: selectedMembroSociety?.color }} />
                 </div>
-                <h2 className="font-semibold text-lg">Você é</h2>
-                <p className="text-2xl font-bold text-primary">{membroSavedName}?</p>
-                <p className="text-sm text-muted-foreground">{selectedMembroSociety?.name}</p>
+                <h2 className="font-semibold text-lg text-gray-900">Você é</h2>
+                <p className="text-2xl font-bold" style={{ color: selectedMembroSociety?.color }}>{membroSavedName}?</p>
+                <p className="text-sm text-gray-500">{selectedMembroSociety?.name}</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Button variant="outline" onClick={handleDifferentMembro} disabled={memberLoginLoading}>
@@ -347,29 +372,28 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </VideoBgWrapper>
     );
   }
 
   // Membro name-select
   if (step === 'membro' && membroStep === 'name-select') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+      <VideoBgWrapper>
         <div className="w-full max-w-sm">
-          <Card className="border-border/50 shadow-xl">
+          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
             <CardContent className="pt-6 space-y-4">
               <div className="text-center space-y-2">
                 <div className="mx-auto h-14 w-14 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: `${selectedMembroSociety?.color}20` }}>
                   <UserCircle className="h-7 w-7" style={{ color: selectedMembroSociety?.color }} />
                 </div>
-                <h2 className="font-semibold text-lg">Encontre seu nome</h2>
-                <p className="text-sm text-muted-foreground">{selectedMembroSociety?.name}</p>
+                <h2 className="font-semibold text-lg text-gray-900">Encontre seu nome</h2>
+                <p className="text-sm text-gray-500">{selectedMembroSociety?.name}</p>
               </div>
 
-              {/* Search input */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Buscar pelo nome..."
                   value={memberSearch}
@@ -379,14 +403,13 @@ export default function Auth() {
                 />
               </div>
 
-              {/* Members list */}
               <div className="max-h-60 overflow-y-auto space-y-1 border rounded-lg p-1">
                 {membersLoading ? (
                   <div className="py-8 flex justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
                   </div>
                 ) : filteredMembers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">
+                  <p className="text-sm text-gray-500 text-center py-6">
                     {memberSearch ? 'Nenhum membro encontrado' : 'Nenhum membro cadastrado'}
                   </p>
                 ) : (
@@ -424,25 +447,25 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </VideoBgWrapper>
     );
   }
 
   // Diretoria name-confirm
   if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+      <VideoBgWrapper>
         <div className="w-full max-w-sm">
-          <Card className="border-border/50 shadow-xl">
+          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-3">
                 <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                   <UserCheck className="h-8 w-8 text-primary" />
                 </div>
-                <h2 className="font-semibold text-lg">Você é</h2>
+                <h2 className="font-semibold text-lg text-gray-900">Você é</h2>
                 <p className="text-2xl font-bold text-primary">{savedName}?</p>
                 {operatorFunction && (
-                  <p className="text-sm text-muted-foreground">{operatorFunction} — {selectedDiretoriaSociety?.name}</p>
+                  <p className="text-sm text-gray-500">{operatorFunction} — {selectedDiretoriaSociety?.name}</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -459,28 +482,28 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </VideoBgWrapper>
     );
   }
 
   // Diretoria name-input
   if (step === 'diretoria' && diretoriaStep === 'name-input') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+      <VideoBgWrapper>
         <div className="w-full max-w-sm">
-          <Card className="border-border/50 shadow-xl">
+          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-2">
                 <div className="mx-auto h-14 w-14 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: `${selectedDiretoriaSociety?.color}20` }}>
                   <UserCheck className="h-7 w-7" style={{ color: selectedDiretoriaSociety?.color }} />
                 </div>
-                <h2 className="font-semibold text-lg">Identificação</h2>
-                <p className="text-sm text-muted-foreground">Informe seus dados para a {selectedDiretoriaSociety?.name}</p>
+                <h2 className="font-semibold text-lg text-gray-900">Identificação</h2>
+                <p className="text-sm text-gray-500">Informe seus dados para a {selectedDiretoriaSociety?.name}</p>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="operator-name">Nome completo</Label>
+                  <Label htmlFor="operator-name" className="text-gray-700">Nome completo</Label>
                   <Input
                     id="operator-name"
                     placeholder="Digite seu nome completo"
@@ -490,7 +513,7 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="operator-function">Função na diretoria</Label>
+                  <Label htmlFor="operator-function" className="text-gray-700">Função na diretoria</Label>
                   <Select value={operatorFunction} onValueChange={setOperatorFunction}>
                     <SelectTrigger id="operator-function">
                       <SelectValue placeholder="Selecione sua função" />
@@ -512,12 +535,12 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </VideoBgWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+    <VideoBgWrapper>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -525,43 +548,42 @@ export default function Auth() {
             <img
               src={logoIpnc}
               alt="Renovo IPNC"
-              className="h-36 w-36 mx-auto object-contain drop-shadow-lg"
+              className="h-36 w-36 mx-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
             />
           </div>
-          <h1 className="font-display text-3xl font-bold text-foreground animate-fade-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+          <h1 className="font-display text-3xl font-bold text-white animate-fade-up drop-shadow-lg" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
             Bem-vindo
           </h1>
-          <p className="text-muted-foreground text-sm mt-2 animate-fade-up" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
+          <p className="text-white/70 text-sm mt-2 animate-fade-up" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
             Igreja Presbiteriana de Nova Carapina
           </p>
         </div>
 
         {step === 'select' ? (
-          /* Step 1: Three sections */
           <div className="space-y-4 animate-fade-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
             {/* Visitantes */}
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Visitantes</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Visitantes</p>
               <button
-                onClick={() => navigate('/igreja')}
-                className="w-full rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 p-4 flex items-center gap-4 hover:scale-[1.02] hover:shadow-lg hover:border-primary/50 transition-all duration-300 animate-shimmer-border"
+                onClick={() => navigateWithTransition('/igreja')}
+                className="w-full rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm p-4 flex items-center gap-4 hover:scale-[1.02] hover:shadow-lg hover:bg-white/20 transition-all duration-300"
               >
-                <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                  <Church className="h-6 w-6 text-primary" />
+                <div className="h-12 w-12 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <Church className="h-6 w-6 text-white" />
                 </div>
                 <div className="text-left flex-1">
-                  <h3 className="font-semibold text-base text-foreground">Acessar sem login</h3>
-                  <p className="text-xs text-muted-foreground">Programações e avisos da igreja</p>
+                  <h3 className="font-semibold text-base text-white">Acessar sem login</h3>
+                  <p className="text-xs text-white/60">Programações e avisos da igreja</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-primary animate-bounce-right flex-shrink-0" />
+                <ArrowRight className="h-5 w-5 text-white/70 animate-bounce-right flex-shrink-0" />
               </button>
             </div>
 
             {/* Membros */}
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Membros</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Membros</p>
               <Card
-                className="cursor-pointer border-border/50 shadow-md hover:shadow-lg hover:border-primary/40 transition-all duration-200 active:scale-[0.98]"
+                className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
                 onClick={() => { setStep('membro'); setMembroStep('societies'); }}
               >
                 <CardContent className="flex items-center gap-4 p-4">
@@ -569,8 +591,8 @@ export default function Auth() {
                     <UserCircle className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-base">Entrar como membro</h3>
-                    <p className="text-xs text-muted-foreground">Eventos, pagamentos e comunicados</p>
+                    <h3 className="font-semibold text-base text-gray-900">Entrar como membro</h3>
+                    <p className="text-xs text-gray-500">Eventos, pagamentos e comunicados</p>
                   </div>
                 </CardContent>
               </Card>
@@ -578,9 +600,9 @@ export default function Auth() {
 
             {/* Diretoria */}
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Diretoria</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Diretoria</p>
               <Card
-                className="cursor-pointer border-border/50 shadow-md hover:shadow-lg hover:border-primary/40 transition-all duration-200 active:scale-[0.98]"
+                className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
                 onClick={() => { setStep('diretoria'); setDiretoriaStep('societies'); }}
               >
                 <CardContent className="flex items-center gap-4 p-4">
@@ -588,8 +610,8 @@ export default function Auth() {
                     <Lock className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-base">Entrar com PIN</h3>
-                    <p className="text-xs text-muted-foreground">Pastor, Presidente, Tesoureiro e demais cargos</p>
+                    <h3 className="font-semibold text-base text-gray-900">Entrar com PIN</h3>
+                    <p className="text-xs text-gray-500">Pastor, Presidente, Tesoureiro e demais cargos</p>
                   </div>
                 </CardContent>
               </Card>
@@ -597,37 +619,36 @@ export default function Auth() {
 
             {/* Secretaria EBD */}
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Secretaria EBD</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Secretaria EBD</p>
               <Card
-                className="cursor-pointer border-border/50 shadow-md hover:shadow-lg hover:border-primary/40 transition-all duration-200 active:scale-[0.98]"
-                onClick={() => navigate('/secretaria')}
+                className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
+                onClick={() => navigateWithTransition('/secretaria')}
               >
                 <CardContent className="flex items-center gap-4 p-4">
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <BookOpen className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-base">Escola Dominical</h3>
-                    <p className="text-xs text-muted-foreground">Chamada e frequência da EBD</p>
+                    <h3 className="font-semibold text-base text-gray-900">Escola Dominical</h3>
+                    <p className="text-xs text-gray-500">Chamada e frequência da EBD</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'societies' ? (
-          /* Diretoria: Society cards */
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10" onClick={handleBack}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <h2 className="text-lg font-semibold">Selecione a sociedade</h2>
+              <h2 className="text-lg font-semibold text-white">Selecione a sociedade</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {societies.map((society) => (
                 <Card
                   key={society.id}
-                  className="cursor-pointer border-border/50 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.97]"
+                  className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
                   onClick={() => handleSelectDiretoriaSociety(society)}
                 >
                   <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
@@ -637,14 +658,13 @@ export default function Auth() {
                     >
                       {society.slug.toUpperCase().slice(0, 3)}
                     </div>
-                    <span className="font-semibold text-sm">{society.name}</span>
+                    <span className="font-semibold text-sm text-gray-900">{society.name}</span>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
-          /* Diretoria: PinPad */
           <PinPad
             profileLabel={selectedDiretoriaSociety?.name || 'Diretoria'}
             onBack={handleBack}
@@ -654,19 +674,18 @@ export default function Auth() {
             embedded
           />
         ) : step === 'membro' && membroStep === 'societies' ? (
-          /* Membro: Society cards */
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10" onClick={handleBack}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <h2 className="text-lg font-semibold">Selecione sua sociedade</h2>
+              <h2 className="text-lg font-semibold text-white">Selecione sua sociedade</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {societies.map((society) => (
                 <Card
                   key={society.id}
-                  className="cursor-pointer border-border/50 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.97]"
+                  className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
                   onClick={() => handleSelectMembroSociety(society)}
                 >
                   <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
@@ -676,28 +695,27 @@ export default function Auth() {
                     >
                       {society.slug.toUpperCase().slice(0, 3)}
                     </div>
-                    <span className="font-semibold text-sm">{society.name}</span>
+                    <span className="font-semibold text-sm text-gray-900">{society.name}</span>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
         ) : (
-          /* Login form (for admin/direct access if needed) */
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
-            <Card className="border-border/50 shadow-xl">
+            <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <h2 className="text-lg font-semibold">Entrar</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">Entrar</h2>
                 </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">Usuário</Label>
+                    <Label htmlFor="username" className="text-gray-700">Usuário</Label>
                     <Input
                       id="username"
                       type="text"
@@ -711,7 +729,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
+                    <Label htmlFor="password" className="text-gray-700">Senha</Label>
                     <Input
                       id="password"
                       type="password"
@@ -738,10 +756,10 @@ export default function Auth() {
           </div>
         )}
 
-        <p className="text-center text-xs text-muted-foreground mt-6 animate-fade-up" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
+        <p className="text-center text-xs text-white/40 mt-6 animate-fade-up" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
           © 2025 IPNC - Todos os direitos reservados
         </p>
       </div>
-    </div>
+    </VideoBgWrapper>
   );
 }
