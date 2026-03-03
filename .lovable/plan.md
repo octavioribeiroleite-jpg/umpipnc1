@@ -1,23 +1,39 @@
 
 
-# Tela de carregamento com imagem de fundo
+# Ajustes na Splash Screen
 
-## O que muda
+## Problemas identificados
 
-A splash screen (tela inicial preta com logo pulsando) vai trocar o fundo preto pela imagem do app (`bg-app.png`), manter o logo pulsando, o texto "Igreja Presbiteriana de Nova Carapina" e adicionar "Carregando" embaixo.
+1. **Barra preta no topo**: O `meta theme-color` esta `#1a1a1a` (preto) e o `apple-mobile-web-app-status-bar-style` esta `black-translucent`. A splash nao cobre a area da status bar. Preciso usar a classe `safe-top` ou garantir que o container cubra tudo com padding adequado.
 
-## Alteração
+2. **Logo pequena**: Atualmente `h-28 w-28` (112px). O usuario quer 200% maior, ou seja ~224px. Vou usar `h-56 w-56`.
 
-**`src/pages/Auth.tsx`** (linhas 849-871) — Splash screen:
+3. **Logo mais acima**: Atualmente centralizada verticalmente. Preciso posicionar mais para o topo da tela.
 
-- Trocar `bg-black` por fundo com a imagem `bg-app.png` (cover, center) + overlay semitransparente para legibilidade
-- Manter logo pulsando (`animate-logo-pulse`)
-- Manter título "Igreja Presbiteriana" e "de Nova Carapina"
-- Substituir os 3 pontinhos animados por texto "Carregando..." com animação suave
+4. **Splash muito rapida**: Atualmente depende do video carregar (`videoReady`). Preciso garantir minimo 2 segundos de splash.
 
-**`src/components/pastor/PastorLayout.tsx`** (linhas 23-28) — Loading do pastor:
+5. **Animacoes na transicao**: Ao sair da splash para a tela de selecao, adicionar animacoes mais elaboradas.
 
-- Mesmo padrão: fundo com `bg-app.png`, logo pulsando, texto "Carregando..."
+## Alteracoes
 
-Os demais loadings internos (dentro de tabs/cards) ficam como estão, pois só os de tela cheia precisam dessa identidade visual.
+### `index.html`
+- Mudar `theme-color` para uma cor escura verde que combine com o app (ex: `#1B3A2D` - emerald escuro) para eliminar a barra preta.
+
+### `src/pages/Auth.tsx`
+
+**Splash screen (linhas 849-869)**:
+- Logo: `h-28 w-28` → `h-56 w-56` (200% maior)
+- Posicionar conteudo mais para cima: trocar `items-center justify-center` por `items-center justify-start pt-[20vh]`
+- Garantir que o container usa `safe-top` para cobrir area da status bar
+
+**Timing da splash (linhas 101-112)**:
+- Adicionar timer minimo de 2 segundos: a splash so começa o zoom-out apos `videoReady` E pelo menos 2s terem passado
+- Isso garante que tudo carrega antes de mostrar o conteudo
+
+**Animacao de transicao**:
+- Na saida da splash, usar `scale-110` com fade-out (ja existe)
+- Ao mostrar os cards (`showCards`), adicionar animacoes de entrada mais elaboradas - fade-up escalonado com slide suave
+
+### `src/components/pastor/PastorLayout.tsx` (linhas 23-34)
+- Mesmas mudancas na logo: `h-56 w-56`, posicao mais alta, safe-top
 
