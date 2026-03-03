@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock, BookOpen } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
@@ -589,7 +589,26 @@ export default function Auth() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-base">Entrar com PIN</h3>
-                    <p className="text-xs text-muted-foreground">Pastor, Secretaria, Presidente, Tesoureiro e demais cargos</p>
+                    <p className="text-xs text-muted-foreground">Pastor, Presidente, Tesoureiro e demais cargos</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Secretaria EBD */}
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Secretaria EBD</p>
+              <Card
+                className="cursor-pointer border-border/50 shadow-md hover:shadow-lg hover:border-primary/40 transition-all duration-200 active:scale-[0.98]"
+                onClick={() => navigate('/secretaria')}
+              >
+                <CardContent className="flex items-center gap-4 p-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base">Escola Dominical</h3>
+                    <p className="text-xs text-muted-foreground">Chamada e frequência da EBD</p>
                   </div>
                 </CardContent>
               </Card>
