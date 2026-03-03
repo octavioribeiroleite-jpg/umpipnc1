@@ -121,6 +121,11 @@
 
   body {
     @apply bg-background text-foreground antialiased overflow-x-hidden;
+    background-image: url('/images/bg-app.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
   }
 }
 

@@ -36,14 +36,14 @@ export function PastorLayout({ children }: PastorLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <OfflineBanner />
 
       {/* Desktop layout */}
       {!isMobile && (
         <div className="flex min-h-screen">
           <PastorSidebar />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto bg-background/85 backdrop-blur-sm">
             <div className="max-w-5xl mx-auto px-4 py-6">
               {children}
             </div>
@@ -55,7 +55,7 @@ export function PastorLayout({ children }: PastorLayoutProps) {
       {isMobile && (
         <div className="flex flex-col min-h-screen">
           <PastorMobileHeader />
-          <main className="flex-1 overflow-auto pt-16 px-3 pb-4">
+          <main className="flex-1 overflow-auto pt-16 px-3 pb-4 bg-background/85 backdrop-blur-sm">
             {children}
           </main>
         </div>

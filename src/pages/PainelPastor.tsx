@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
-  DollarSign, Users, ListTodo, Calendar, ChevronRight,
+  Calendar, ChevronRight, Megaphone, Heart, Vote,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -49,8 +49,15 @@ function getGreeting(): string {
   return 'Boa noite';
 }
 
+const quickActions = [
+  { icon: Calendar, label: 'Calendário', path: '/pastor/calendario' },
+  { icon: Megaphone, label: 'Comunicados', path: '/pastor/comunicados' },
+  { icon: Heart, label: 'Dízimos', path: '/dizimos' },
+  { icon: Vote, label: 'Eleições', path: '/eleicoes' },
+];
+
 export default function PainelPastor() {
-  const { user, isPastor, isAdmin } = useAuth();
+  const { user, profile, isPastor, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const [societies, setSocieties] = useState<Society[]>([]);
@@ -121,10 +128,7 @@ export default function PainelPastor() {
     fetchDirectStats();
   }, [user, isPastor, isAdmin, fetchDirectStats]);
 
-  // Global stats
-  const totalMembers = Object.values(societyStats).reduce((s, v) => s + v.membersActive, 0);
-  const totalSaldo = Object.values(societyStats).reduce((s, v) => s + v.saldo, 0);
-  const totalPending = Object.values(societyStats).reduce((s, v) => s + v.tasksPending, 0);
+  const pastorName = profile?.full_name?.split(' ')[0] || 'Pastor';
 
   return (
     <PastorLayout>
@@ -144,71 +148,51 @@ export default function PainelPastor() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {/* 1. Greeting + AI button */}
+        <div className="space-y-5">
+          {/* 1. Greeting + AI */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold">{getGreeting()}, Pastor!</h2>
-              <p className="text-xs text-muted-foreground">
+              <h2 className="text-2xl font-light tracking-tight">{getGreeting()}, {pastorName}</h2>
+              <p className="text-sm text-muted-foreground">
                 {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </p>
             </div>
             <AISummaryDrawer />
           </div>
 
-          {/* 2. Quick Metrics Grid 2x2 */}
-          <div className="grid grid-cols-2 gap-2">
-            <Card className="p-3">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Membros</span>
-              </div>
-              <p className="text-xl font-bold mt-1">{totalMembers}</p>
-            </Card>
-            <Card className="p-3">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs text-muted-foreground">Saldo</span>
-              </div>
-              <p className={`text-xl font-bold mt-1 ${totalSaldo >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                R$ {totalSaldo.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-              </p>
-            </Card>
-            <Card className="p-3">
-              <div className="flex items-center gap-2">
-                <ListTodo className="h-4 w-4 text-warning" />
-                <span className="text-xs text-muted-foreground">Pendentes</span>
-              </div>
-              <p className="text-xl font-bold mt-1">{totalPending}</p>
-            </Card>
-            <Card className="p-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Eventos</span>
-              </div>
-              <p className="text-xl font-bold mt-1">{upcomingEvents.length}</p>
-            </Card>
+          {/* 2. Society Cards Premium */}
+          <div className="space-y-3">
+            {societies.map(s => (
+              <SocietyOverviewCard key={s.id} society={s} stats={societyStats[s.id]} />
+            ))}
           </div>
 
-          {/* 3. Alerts (only real pendencies) */}
-          <AlertsSection />
-
-          {/* 4. Societies compact grid */}
+          {/* 3. Quick Access */}
           <div>
-            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">
-              Sociedades
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+              Acesso Rápido
             </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {societies.map(s => (
-                <SocietyOverviewCard key={s.id} society={s} stats={societyStats[s.id]} />
+            <div className="grid grid-cols-4 gap-2">
+              {quickActions.map(action => (
+                <button
+                  key={action.path}
+                  onClick={() => navigate(action.path)}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/90 hover:shadow-sm transition-all"
+                >
+                  <action.icon className="h-5 w-5 text-primary" />
+                  <span className="text-[11px] font-medium text-muted-foreground">{action.label}</span>
+                </button>
               ))}
             </div>
           </div>
 
-          {/* 5. Upcoming Events (max 3) */}
+          {/* 4. Alerts */}
+          <AlertsSection />
+
+          {/* 5. Upcoming Events */}
           {upcomingEvents.length > 0 && (
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-3">
+            <Card className="bg-card/70 backdrop-blur-sm rounded-xl">
+              <CardHeader className="pb-1 pt-3 px-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-primary" />
@@ -219,9 +203,9 @@ export default function PainelPastor() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="px-3 pb-3 pt-0 space-y-1">
+              <CardContent className="px-4 pb-3 pt-0 space-y-1">
                 {upcomingEvents.slice(0, 3).map(e => (
-                  <div key={e.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
+                  <div key={e.id} className="flex items-center justify-between text-sm py-2 border-b border-border/30 last:border-0">
                     <div className="min-w-0">
                       <p className="font-medium text-xs truncate">{e.title}</p>
                       {e.location && <p className="text-[10px] text-muted-foreground truncate">{e.location}</p>}
