@@ -1,18 +1,23 @@
 
 
-# Reduzir opacidade do fundo
+# Tela de carregamento com imagem de fundo
 
-O problema: os containers de conteudo usam `bg-background/85` (85% opaco), o que cobre demais a imagem de fundo (bg-app.png). Preciso reduzir essa opacidade para deixar a planta mais visivel.
+## O que muda
 
-## Alteracoes
+A splash screen (tela inicial preta com logo pulsando) vai trocar o fundo preto pela imagem do app (`bg-app.png`), manter o logo pulsando, o texto "Igreja Presbiteriana de Nova Carapina" e adicionar "Carregando" embaixo.
 
-Trocar `bg-background/85` por `bg-background/60` nos 3 layouts:
+## Alteração
 
-| Arquivo | Linhas |
-|---|---|
-| `src/components/layout/AppLayout.tsx` | linhas 17, 25 |
-| `src/components/pastor/PastorLayout.tsx` | linhas 46, 58 |
-| `src/components/membro/MembroLayout.tsx` | linha 123 |
+**`src/pages/Auth.tsx`** (linhas 849-871) — Splash screen:
 
-Isso reduz a opacidade de 85% para 60%, permitindo que a imagem de fundo fique mais visivel enquanto mantém legibilidade com o `backdrop-blur-sm`.
+- Trocar `bg-black` por fundo com a imagem `bg-app.png` (cover, center) + overlay semitransparente para legibilidade
+- Manter logo pulsando (`animate-logo-pulse`)
+- Manter título "Igreja Presbiteriana" e "de Nova Carapina"
+- Substituir os 3 pontinhos animados por texto "Carregando..." com animação suave
+
+**`src/components/pastor/PastorLayout.tsx`** (linhas 23-28) — Loading do pastor:
+
+- Mesmo padrão: fundo com `bg-app.png`, logo pulsando, texto "Carregando..."
+
+Os demais loadings internos (dentro de tabs/cards) ficam como estão, pois só os de tela cheia precisam dessa identidade visual.
 
