@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MembroLayout, type MembroTab } from '@/components/membro/MembroLayout';
 import { MembroInicio } from '@/components/membro/MembroInicio';
@@ -13,20 +13,20 @@ import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function MembroHome() {
-  const { user, loading } = useAuth();
+  const { session } = useMembroSession();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<MembroTab>('inicio');
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!session) {
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [session, navigate]);
 
   // Event notifications (7 days)
   useEffect(() => {
-    if (!user) return;
-    const key = `event-notif-${user.id}`;
+    if (!session) return;
+    const key = `event-notif-membro-${session.memberId}`;
     if (sessionStorage.getItem(key)) return;
 
     const fetchUpcoming = async () => {
@@ -58,9 +58,9 @@ export default function MembroHome() {
       }
     };
     fetchUpcoming();
-  }, [user]);
+  }, [session]);
 
-  if (loading || !user) return null;
+  if (!session) return null;
 
   const renderContent = () => {
     switch (activeTab) {

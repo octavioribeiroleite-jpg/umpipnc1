@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,12 +8,12 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export function MembroComunicados() {
-  const { profile } = useAuth();
+  const { session } = useMembroSession();
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!profile) return;
+    if (!session) return;
 
     const fetchAnnouncements = async () => {
       setLoading(true);
@@ -23,15 +23,11 @@ export function MembroComunicados() {
         .order('created_at', { ascending: false })
         .limit(30);
 
-      // Filter: show only church-wide OR targeted to member's society
       const filtered = (data || []).filter((a: any) => {
-        // Church-wide announcements visible to all
         if (a.scope === 'church') return true;
-        // Society-specific: show if member's society is in target list
-        if (a.target_societies && Array.isArray(a.target_societies) && profile.society_id) {
-          return a.target_societies.includes(profile.society_id);
+        if (a.target_societies && Array.isArray(a.target_societies) && session.societyId) {
+          return a.target_societies.includes(session.societyId);
         }
-        // "All societies" (target_societies null, scope=societies) is for diretoria only
         return false;
       });
 
@@ -40,7 +36,7 @@ export function MembroComunicados() {
     };
 
     fetchAnnouncements();
-  }, [profile]);
+  }, [session]);
 
   if (loading) {
     return (
