@@ -47,13 +47,14 @@ export default function Auth() {
   const [showCards, setShowCards] = useState(false);
 
   // Diretoria PIN flow state
-  const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('societies');
+  const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('pin');
   const [selectedDiretoriaSociety, setSelectedDiretoriaSociety] = useState<Society | null>(null);
   const [pinError, setPinError] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
   const [savedName, setSavedName] = useState<string | null>(null);
   const [operatorName, setOperatorName] = useState('');
   const [operatorFunction, setOperatorFunction] = useState('');
+  const [generalPin, setGeneralPin] = useState<string | null>(null);
 
   // Membro flow state
   const [membroStep, setMembroStep] = useState<MembroStep>('societies');
@@ -114,14 +115,14 @@ export default function Auth() {
 
   const handleBack = () => {
     if (step === 'diretoria') {
-      if (diretoriaStep === 'pin') {
-        setDiretoriaStep('societies');
+      if (diretoriaStep === 'societies') {
+        setDiretoriaStep('pin');
+        setGeneralPin(null);
         setSelectedDiretoriaSociety(null);
-        setPinError(false);
         return;
       }
       if (diretoriaStep === 'name-confirm' || diretoriaStep === 'name-input') {
-        setDiretoriaStep('pin');
+        setDiretoriaStep('societies');
         setSavedName(null);
         setOperatorName('');
         setOperatorFunction('');
@@ -139,27 +140,22 @@ export default function Auth() {
       }
     }
     setStep('select');
-  };
-
-  const handleSelectDiretoriaSociety = (society: Society) => {
-    setSelectedDiretoriaSociety(society);
     setDiretoriaStep('pin');
-    setPinError(false);
+    setGeneralPin(null);
   };
 
-  const handlePinComplete = async (pin: string) => {
-    if (!selectedDiretoriaSociety) return;
+  const handleSelectDiretoriaSociety = async (society: Society) => {
+    if (!generalPin) return;
+    setSelectedDiretoriaSociety(society);
     setPinLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('validate-diretoria-pin', {
-        body: { society_slug: selectedDiretoriaSociety.slug, pin },
+        body: { society_slug: society.slug, pin: generalPin },
       });
 
       if (error || !data?.success) {
-        setPinError(true);
-        toast({ variant: 'destructive', title: 'PIN incorreto' });
-        setTimeout(() => setPinError(false), 600);
+        toast({ variant: 'destructive', title: 'Erro ao entrar' });
         setPinLoading(false);
         return;
       }
@@ -170,14 +166,14 @@ export default function Auth() {
       });
 
       // Pastor has a fixed identity — skip name input
-      if (selectedDiretoriaSociety.slug === 'pastor') {
+      if (society.slug === 'pastor') {
         setPinLoading(false);
         finishDiretoriaLogin('Pr. Ronne Peterson Moreira', 'Pastor');
         return;
       }
 
-      const nameKey = `diretoria_name_${selectedDiretoriaSociety.slug}`;
-      const funcKey = `diretoria_function_${selectedDiretoriaSociety.slug}`;
+      const nameKey = `diretoria_name_${society.slug}`;
+      const funcKey = `diretoria_function_${society.slug}`;
       const saved = localStorage.getItem(nameKey);
       const savedFunc = localStorage.getItem(funcKey);
 
@@ -188,6 +184,32 @@ export default function Auth() {
       } else {
         setDiretoriaStep('name-input');
       }
+    } catch (err) {
+      console.error('Society login error:', err);
+      toast({ variant: 'destructive', title: 'Erro ao entrar' });
+    } finally {
+      setPinLoading(false);
+    }
+  };
+
+  const handlePinComplete = async (pin: string) => {
+    setPinLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-diretoria-pin', {
+        body: { pin, validate_only: true },
+      });
+
+      if (error || !data?.success) {
+        setPinError(true);
+        toast({ variant: 'destructive', title: 'PIN incorreto' });
+        setTimeout(() => setPinError(false), 600);
+        setPinLoading(false);
+        return;
+      }
+
+      setGeneralPin(pin);
+      setDiretoriaStep('societies');
     } catch (err) {
       console.error('PIN validation error:', err);
       setPinError(true);
@@ -615,7 +637,7 @@ export default function Auth() {
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Diretoria</p>
               <Card
                 className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
-                onClick={() => { setStep('diretoria'); setDiretoriaStep('societies'); }}
+                onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }}
               >
                 <CardContent className="flex items-center gap-4 p-4">
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -648,6 +670,15 @@ export default function Auth() {
               </Card>
             </div>
           </div>
+        ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
+          <PinPad
+            profileLabel="Diretoria"
+            onBack={handleBack}
+            onComplete={handlePinComplete}
+            loading={pinLoading}
+            error={pinError}
+            embedded
+          />
         ) : step === 'diretoria' && diretoriaStep === 'societies' ? (
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-4">
@@ -656,47 +687,45 @@ export default function Auth() {
               </Button>
               <h2 className="text-lg font-semibold text-white">Selecione a sociedade</h2>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {societies.map((society) => (
+            {pinLoading && (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+              </div>
+            )}
+            {!pinLoading && (
+              <div className="grid grid-cols-2 gap-3">
+                {societies.map((society) => (
+                  <Card
+                    key={society.id}
+                    className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
+                    onClick={() => handleSelectDiretoriaSociety(society)}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
+                      <div
+                        className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+                        style={{ backgroundColor: society.color }}
+                      >
+                        {society.slug.toUpperCase().slice(0, 3)}
+                      </div>
+                      <span className="font-semibold text-sm text-gray-900">{society.name}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+                {/* Pastor virtual card */}
                 <Card
-                  key={society.id}
                   className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
-                  onClick={() => handleSelectDiretoriaSociety(society)}
+                  onClick={() => handleSelectDiretoriaSociety({ id: 'pastor', name: 'Pastor', slug: 'pastor', color: '#1e3a5f' })}
                 >
                   <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
-                    <div
-                      className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-                      style={{ backgroundColor: society.color }}
-                    >
-                      {society.slug.toUpperCase().slice(0, 3)}
+                    <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: '#1e3a5f' }}>
+                      <Church className="h-6 w-6" />
                     </div>
-                    <span className="font-semibold text-sm text-gray-900">{society.name}</span>
+                    <span className="font-semibold text-sm text-gray-900">Pastor</span>
                   </CardContent>
                 </Card>
-              ))}
-              {/* Pastor virtual card */}
-              <Card
-                className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
-                onClick={() => handleSelectDiretoriaSociety({ id: 'pastor', name: 'Pastor', slug: 'pastor', color: '#1e3a5f' })}
-              >
-                <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
-                  <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: '#1e3a5f' }}>
-                    <Church className="h-6 w-6" />
-                  </div>
-                  <span className="font-semibold text-sm text-gray-900">Pastor</span>
-                </CardContent>
-              </Card>
-            </div>
+              </div>
+            )}
           </div>
-        ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
-          <PinPad
-            profileLabel={selectedDiretoriaSociety?.name || 'Diretoria'}
-            onBack={handleBack}
-            onComplete={handlePinComplete}
-            loading={pinLoading}
-            error={pinError}
-            embedded
-          />
         ) : step === 'membro' && membroStep === 'societies' ? (
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-4">
