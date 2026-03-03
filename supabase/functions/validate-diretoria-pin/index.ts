@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 Deno.serve(async (req) => {
@@ -13,47 +13,74 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
-    const { society_slug, pin } = await req.json()
+    const { society_slug, pin, validate_only } = await req.json()
 
-    if (!society_slug || !pin) {
-      return new Response(JSON.stringify({ error: 'society_slug e pin são obrigatórios' }), {
+    if (!pin) {
+      return new Response(JSON.stringify({ error: 'pin é obrigatório' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Validate PIN against settings
-    const settingKey = `diretoria_pin_${society_slug}`
-    const { data: setting, error: settingError } = await adminClient
-      .from('settings')
-      .select('value')
-      .eq('key', settingKey)
-      .single()
+    // Step 1: validate_only mode — just check the general PIN
+    if (validate_only) {
+      const { data: setting, error: settingError } = await adminClient
+        .from('settings')
+        .select('value')
+        .eq('key', 'diretoria_pin_geral')
+        .single()
 
-    if (settingError || !setting) {
-      return new Response(JSON.stringify({ error: 'PIN não configurado para esta sociedade' }), {
-        status: 404,
+      if (settingError || !setting) {
+        return new Response(JSON.stringify({ error: 'PIN geral não configurado' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      if (setting.value !== pin) {
+        return new Response(JSON.stringify({ error: 'PIN incorreto' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      return new Response(JSON.stringify({ success: true, validated: true }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    if (setting.value !== pin) {
+    // Step 2: full login — validate general PIN + create session for society
+    if (!society_slug) {
+      return new Response(JSON.stringify({ error: 'society_slug é obrigatório' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Validate general PIN
+    const { data: generalSetting, error: generalError } = await adminClient
+      .from('settings')
+      .select('value')
+      .eq('key', 'diretoria_pin_geral')
+      .single()
+
+    if (generalError || !generalSetting || generalSetting.value !== pin) {
       return new Response(JSON.stringify({ error: 'PIN incorreto' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // PIN correct — find or create service account
+    // Create/find service account
+    const isPastor = society_slug === 'pastor'
     const serviceEmail = `diretoria-${society_slug}@ipnc.local`
     const servicePassword = `svc_dir_${society_slug}_2025!`
-    const isPastor = society_slug === 'pastor'
 
     // Try to sign in first
-    const { data: signInData, error: signInError } = await adminClient.auth.signInWithPassword({
+    const { data: signInData } = await adminClient.auth.signInWithPassword({
       email: serviceEmail,
       password: servicePassword,
     })

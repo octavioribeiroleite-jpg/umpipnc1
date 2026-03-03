@@ -122,8 +122,7 @@ export default function Configuracoes() {
         const key = `diretoria_pin_${slug}`;
         const { error } = await supabase
           .from('settings')
-          .update({ value, updated_at: new Date().toISOString() })
-          .eq('key', key);
+          .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
         if (error) throw error;
       }
       toast.success('PINs da Diretoria atualizados!');
@@ -723,6 +722,44 @@ export default function Configuracoes() {
                 </div>
               ) : (
                 <>
+                  {/* PIN Geral */}
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                      🔑
+                    </div>
+                    <span className="text-sm font-medium min-w-[60px]">PIN Geral</span>
+                    <Input
+                      value={dirPins['geral'] || ''}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setDirPins(prev => ({ ...prev, geral: v }));
+                      }}
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="000000"
+                      className="max-w-[140px] tracking-widest text-center font-mono"
+                    />
+                  </div>
+                  <hr className="my-2 border-border" />
+                  {/* Pastor */}
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ backgroundColor: '#1e3a5f' }}>
+                      ⛪
+                    </div>
+                    <span className="text-sm font-medium min-w-[60px]">Pastor</span>
+                    <Input
+                      value={dirPins['pastor'] || ''}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setDirPins(prev => ({ ...prev, pastor: v }));
+                      }}
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="000000"
+                      className="max-w-[140px] tracking-widest text-center font-mono"
+                    />
+                  </div>
+                  {/* Sociedades */}
                   {dirSocieties.map((society) => (
                     <div key={society.slug} className="flex items-center gap-3">
                       <div
@@ -747,7 +784,7 @@ export default function Configuracoes() {
                   ))}
                   <Button
                     onClick={saveDiretoriaPins}
-                    disabled={dirPinsSaving || dirSocieties.some(s => (dirPins[s.slug] || '').length !== 6)}
+                    disabled={dirPinsSaving}
                   >
                     {dirPinsSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvar PINs
