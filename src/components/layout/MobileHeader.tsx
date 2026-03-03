@@ -32,6 +32,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { ShareAppDialog } from '@/components/layout/ShareAppDialog';
+import { InstallButton } from '@/components/layout/InstallButton';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
@@ -152,6 +153,7 @@ export function MobileHeader() {
           <img src={logoIpnc} alt="Renovo IPNC" className="h-10 w-10 object-contain" />
           <span className="font-semibold text-foreground text-lg">IPNC</span>
         </div>
+        <InstallButton />
       </div>
     </header>
   );
