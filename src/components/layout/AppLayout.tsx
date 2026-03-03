@@ -9,7 +9,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-screen overflow-x-hidden">
       <OfflineBanner />
       {/* Desktop layout with sidebar */}
       <div className="hidden md:flex min-h-screen">
