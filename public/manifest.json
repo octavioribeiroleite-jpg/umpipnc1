@@ -4,8 +4,8 @@
   "description": "Sistema de gestão - Igreja Presbiteriana de Nova Carapina",
   "start_url": "/",
   "display": "fullscreen",
-  "background_color": "#1a1a1a",
-  "theme_color": "#1a1a1a",
+  "background_color": "#1B3A2D",
+  "theme_color": "#1B3A2D",
   "orientation": "portrait-primary",
   "icons": [
     {
