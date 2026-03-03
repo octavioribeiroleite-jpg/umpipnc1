@@ -169,6 +169,13 @@ export default function Auth() {
         refresh_token: data.session.refresh_token,
       });
 
+      // Pastor has a fixed identity — skip name input
+      if (selectedDiretoriaSociety.slug === 'pastor') {
+        setPinLoading(false);
+        finishDiretoriaLogin('Pr. Ronne Peterson Moreira', 'Pastor');
+        return;
+      }
+
       const nameKey = `diretoria_name_${selectedDiretoriaSociety.slug}`;
       const funcKey = `diretoria_function_${selectedDiretoriaSociety.slug}`;
       const saved = localStorage.getItem(nameKey);
