@@ -425,13 +425,14 @@ export default function Auth() {
             </div>
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
-          /* Diretoria: PinPad */
+          /* Diretoria: PinPad inline */
           <PinPad
             profileLabel={selectedDiretoriaSociety?.name || 'Diretoria'}
             onBack={handleBack}
             onComplete={handlePinComplete}
             loading={pinLoading}
             error={pinError}
+            embedded
           />
         ) : (
           /* Step 2: Login form (Pastor / Membro) */
