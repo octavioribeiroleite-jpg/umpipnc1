@@ -17,6 +17,7 @@ interface RegistroReuniaoEditorProps {
   onProcess: () => void;
   onFinalize: () => void;
   onNotesChange: (notes: string) => void;
+  embedded?: boolean;
 }
 
 export function RegistroReuniaoEditor({
@@ -29,6 +30,7 @@ export function RegistroReuniaoEditor({
   onProcess,
   onFinalize,
   onNotesChange,
+  embedded = false,
 }: RegistroReuniaoEditorProps) {
   const { toast } = useToast();
   const [notes, setNotes] = useState(meetingNotes || '');
@@ -103,17 +105,17 @@ export function RegistroReuniaoEditor({
   const currentStepIndex = processingSteps.findIndex(s => s.id === processingStep);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between flex-wrap gap-2">
+    <>
+      {!embedded && (
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
           <div className="min-w-0">
-            <CardTitle className="flex items-center gap-2 text-base">
+            <h3 className="flex items-center gap-2 text-base font-semibold">
               <FileText className="h-5 w-5 shrink-0" />
               Registro da Reunião
-            </CardTitle>
-            <CardDescription>
+            </h3>
+            <p className="text-sm text-muted-foreground">
               Escreva livremente o que foi discutido. Use títulos para organizar as seções.
-            </CardDescription>
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {isSaving ? (
@@ -133,8 +135,34 @@ export function RegistroReuniaoEditor({
             ) : null}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      )}
+
+      {embedded && (
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+          <p className="text-sm text-muted-foreground">
+            Escreva livremente o que foi discutido. Use títulos para organizar as seções.
+          </p>
+          <div className="flex items-center gap-2">
+            {isSaving ? (
+              <Badge variant="secondary" className="gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Salvando...
+              </Badge>
+            ) : hasUnsavedChanges ? (
+              <Badge variant="outline" className="gap-1">
+                Não salvo
+              </Badge>
+            ) : lastSaved ? (
+              <Badge variant="secondary" className="gap-1 bg-success/10 text-success border-success/20">
+                <Check className="h-3 w-3" />
+                Salvo
+              </Badge>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
         {isProcessing ? (
           <div className="space-y-4 py-8">
             <p className="text-center text-muted-foreground mb-6">
@@ -182,10 +210,10 @@ OBSERVAÇÕES
 - Próxima reunião será dia 20/01 às 19h"
               value={notes}
               onChange={(e) => handleChange(e.target.value)}
-              className="min-h-[250px] font-mono text-sm leading-relaxed resize-y"
+              className="min-h-[250px] font-mono text-sm leading-relaxed resize-y w-full"
             />
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -197,7 +225,7 @@ OBSERVAÇÕES
               </Button>
 
               {canManage && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {isProcessed && (
                     <Button
                       variant="outline"
@@ -214,20 +242,18 @@ OBSERVAÇÕES
                     <Button
                       onClick={onFinalize}
                       className="gap-2"
-                      size="lg"
                     >
-                      <Lock className="h-5 w-5" />
-                      Finalizar Reunião
+                      <Lock className="h-4 w-4" />
+                      Finalizar
                     </Button>
                   ) : (
                     <Button
                       onClick={handleProcess}
                       disabled={!notes.trim() || isProcessing}
                       className="gap-2"
-                      size="lg"
                     >
-                      <Wand2 className="h-5 w-5" />
-                      Processar Reunião
+                      <Wand2 className="h-4 w-4" />
+                      Processar
                     </Button>
                   )}
                 </div>
@@ -241,7 +267,7 @@ OBSERVAÇÕES
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
 }
