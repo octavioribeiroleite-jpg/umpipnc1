@@ -22,8 +22,15 @@ export function PastorLayout({ children }: PastorLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <img src={logoIpnc} alt="Renovo IPNC" className="h-16 w-16 animate-logo-pulse" />
+      <div className="min-h-screen flex items-center justify-center relative">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/bg-app.png)' }} />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative text-center">
+          <img src={logoIpnc} alt="Renovo IPNC" className="h-28 w-28 mx-auto object-contain mb-6 animate-logo-pulse" />
+          <h1 className="text-white text-2xl font-bold tracking-tight mb-1">Igreja Presbiteriana</h1>
+          <p className="text-white/60 text-base mb-8">de Nova Carapina</p>
+          <p className="text-white/50 text-sm animate-pulse">Carregando...</p>
+        </div>
       </div>
     );
   }
