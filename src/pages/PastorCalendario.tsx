@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronLeft, ChevronRight, Loader2, MapPin, Clock, Calendar, Info, Link, BookOpen, ChevronDown, Download } from 'lucide-react';
-import { useEvents, CalendarEvent } from '@/hooks/useEvents';
+import { ChevronLeft, ChevronRight, Loader2, MapPin, Clock, Calendar, Info, Link, BookOpen, ChevronDown, Download, Plus } from 'lucide-react';
+import { useEvents, CalendarEvent, CreateEventInput, UpdateEventInput } from '@/hooks/useEvents';
+import { EventDialog } from '@/components/calendario/EventDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CalendarViewSelector, ViewMode } from '@/components/calendario/CalendarViewSelector';
 import { DayDetailDrawer } from '@/components/calendario/DayDetailDrawer';
@@ -92,7 +93,7 @@ export default function PastorCalendario() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const { events, upcomingEvents, isLoading } = useEvents(month, year);
+  const { events, upcomingEvents, isLoading, createEvent, updateEvent, deleteEvent } = useEvents(month, year);
 
   // Fetch societies for color mapping
   const { data: societies = [] } = useQuery({
@@ -219,9 +220,26 @@ export default function PastorCalendario() {
     });
   };
 
+  const handleNewEvent = (prefillDate?: Date) => {
+    setSelectedEvent(null);
+    setDialogOpen(true);
+  };
+
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setDialogOpen(true);
+  };
+
+  const handleSave = (data: CreateEventInput | UpdateEventInput) => {
+    if ('id' in data && data.id) {
+      updateEvent.mutate(data as UpdateEventInput, { onSuccess: () => setDialogOpen(false) });
+    } else {
+      createEvent.mutate(data as CreateEventInput, { onSuccess: () => setDialogOpen(false) });
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    deleteEvent.mutate(id, { onSuccess: () => setDialogOpen(false) });
   };
 
   const handleDayClick = (day: number) => {
@@ -338,7 +356,13 @@ export default function PastorCalendario() {
   return (
     <PastorLayout>
       <div className="space-y-4 md:space-y-6">
-        <h1 className="text-lg md:text-xl font-bold">Calendário Unificado</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg md:text-xl font-bold">Calendário Unificado</h1>
+          <Button onClick={() => handleNewEvent()} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Evento
+          </Button>
+        </div>
 
         {/* Theme & Guidelines Card - collapsed by default */}
         <Collapsible defaultOpen={false}>
@@ -618,7 +642,6 @@ export default function PastorCalendario() {
         )}
       </div>
 
-      {/* Day Detail Drawer */}
       <DayDetailDrawer
         date={selectedDay}
         events={selectedDayEvents}
@@ -628,80 +651,17 @@ export default function PastorCalendario() {
           setDayDrawerOpen(false);
           handleEventClick(event);
         }}
+        onNewEvent={(date) => handleNewEvent(date)}
       />
 
-      {/* Event Detail Dialog (read-only) */}
-      <ResponsiveDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <ResponsiveDialogContent>
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>{selectedEvent?.title}</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>Detalhes do evento</ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          {selectedEvent && (
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={cn('text-xs', statusStyles[selectedEvent.status])}>
-                  {statusLabels[selectedEvent.status]}
-                </Badge>
-                {selectedEvent.origem === 'reuniao' && (
-                  <Badge variant="secondary" className="text-xs gap-1">
-                    <Link className="h-3 w-3" />
-                    Via reunião
-                  </Badge>
-                )}
-              </div>
-
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="h-4 w-4 flex-shrink-0" />
-                  <span>
-                    {format(new Date(selectedEvent.start_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    {selectedEvent.end_date && (
-                      <> até {format(new Date(selectedEvent.end_date), "dd 'de' MMMM", { locale: ptBR })}</>
-                    )}
-                  </span>
-                </div>
-
-                {!selectedEvent.all_day && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4 flex-shrink-0" />
-                    <span>{format(new Date(selectedEvent.start_date), "HH:mm")}</span>
-                  </div>
-                )}
-
-                {selectedEvent.all_day && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4 flex-shrink-0" />
-                    <span>Dia inteiro</span>
-                  </div>
-                )}
-
-                {selectedEvent.location && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4 flex-shrink-0" />
-                    <span>{selectedEvent.location}</span>
-                  </div>
-                )}
-
-                {selectedSociety && (
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: selectedSociety.color }} />
-                    <span className="font-medium" style={{ color: selectedSociety.color }}>
-                      {selectedSociety.name}
-                    </span>
-                  </div>
-                )}
-
-                {selectedEvent.description && (
-                  <div className="pt-2 border-t">
-                    <p className="text-muted-foreground whitespace-pre-wrap">{selectedEvent.description}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </ResponsiveDialogContent>
-      </ResponsiveDialog>
+      <EventDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        event={selectedEvent}
+        onSave={handleSave}
+        onDelete={selectedEvent ? handleDelete : undefined}
+        isLoading={createEvent.isPending || updateEvent.isPending || deleteEvent.isPending}
+      />
     </PastorLayout>
   );
 }
