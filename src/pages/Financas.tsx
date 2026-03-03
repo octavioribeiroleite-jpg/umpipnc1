@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MensalidadesTab } from '@/components/financas/MensalidadesTab';
@@ -52,19 +53,17 @@ function StatCard({
   }[variant];
 
   return (
-    <Card>
-      <CardContent className="p-3 md:pt-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs md:text-sm text-muted-foreground">{title}</p>
-            <p className={`text-lg md:text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
-          </div>
-          <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-          </div>
+    <AppCard variant="stat">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs md:text-sm text-muted-foreground">{title}</p>
+          <p className={`text-lg md:text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+        </div>
+      </div>
+    </AppCard>
   );
 }
 

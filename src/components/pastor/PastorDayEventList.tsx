@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { PastorEventCard } from './PastorEventCard';
+import { AppCard } from '@/components/ui/app-card';
 import type { CalendarEvent, EventStatus } from '@/hooks/useEvents';
 
 type FilterKey = 'all' | 'aguardando' | 'concluidas' | 'canceladas';
@@ -88,9 +89,9 @@ export function PastorDayEventList({ selectedDate, events, onUpdateStatus, isUpd
 
       {/* Event list */}
       {filteredEvents.length === 0 ? (
-        <div className="rounded-xl border border-border/60 bg-card p-4 text-sm text-muted-foreground text-center">
+        <AppCard className="text-sm text-muted-foreground text-center">
           Nenhum evento para este dia.
-        </div>
+        </AppCard>
       ) : (
         <div className="space-y-2">
           {filteredEvents.map(ev => (

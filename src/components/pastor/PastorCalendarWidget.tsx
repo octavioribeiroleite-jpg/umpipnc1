@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppCard } from '@/components/ui/app-card';
 import type { CalendarEvent } from '@/hooks/useEvents';
 
 interface Props {
@@ -62,7 +63,8 @@ export function PastorCalendarWidget({
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
-    <div className="bg-card rounded-2xl border border-border/60 shadow-sm p-4">
+    <AppCard noPadding>
+      <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-1">
@@ -139,6 +141,7 @@ export function PastorCalendarWidget({
           );
         })}
       </div>
-    </div>
+      </div>
+    </AppCard>
   );
 }
