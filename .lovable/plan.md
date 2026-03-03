@@ -1,39 +1,27 @@
 
 
-# Ajustes na Splash Screen
+# App em tela cheia quando instalado como PWA
 
-## Problemas identificados
+## Diagnóstico
 
-1. **Barra preta no topo**: O `meta theme-color` esta `#1a1a1a` (preto) e o `apple-mobile-web-app-status-bar-style` esta `black-translucent`. A splash nao cobre a area da status bar. Preciso usar a classe `safe-top` ou garantir que o container cubra tudo com padding adequado.
+O `manifest.json` já tem `"display": "fullscreen"`, que deveria ocultar a barra de status. Porém, as cores `background_color` e `theme_color` ainda estão como `#1a1a1a` (preto), o que causa aquela faixa preta visível antes do app renderizar. Além disso, o `apple-mobile-web-app-status-bar-style` está como `black-translucent`, que mostra a barra com fundo preto semi-transparente no iOS.
 
-2. **Logo pequena**: Atualmente `h-28 w-28` (112px). O usuario quer 200% maior, ou seja ~224px. Vou usar `h-56 w-56`.
+**Importante**: Depois de alterar o manifest, o PWA precisa ser **desinstalado e reinstalado** na tela inicial para aplicar as mudanças — o manifest é lido apenas na instalação.
 
-3. **Logo mais acima**: Atualmente centralizada verticalmente. Preciso posicionar mais para o topo da tela.
+## Alterações
 
-4. **Splash muito rapida**: Atualmente depende do video carregar (`videoReady`). Preciso garantir minimo 2 segundos de splash.
-
-5. **Animacoes na transicao**: Ao sair da splash para a tela de selecao, adicionar animacoes mais elaboradas.
-
-## Alteracoes
+### `public/manifest.json`
+- `background_color`: `"#1a1a1a"` → `"#1B3A2D"`
+- `theme_color`: `"#1a1a1a"` → `"#1B3A2D"`
 
 ### `index.html`
-- Mudar `theme-color` para uma cor escura verde que combine com o app (ex: `#1B3A2D` - emerald escuro) para eliminar a barra preta.
+- `apple-mobile-web-app-status-bar-style`: `"black-translucent"` → `"default"` (usa a cor do tema como fundo da barra no iOS)
 
-### `src/pages/Auth.tsx`
+### Após a alteração
+Você vai precisar:
+1. Remover o app da tela inicial
+2. Acessar o site pelo Chrome
+3. Instalar novamente (Adicionar à tela inicial)
 
-**Splash screen (linhas 849-869)**:
-- Logo: `h-28 w-28` → `h-56 w-56` (200% maior)
-- Posicionar conteudo mais para cima: trocar `items-center justify-center` por `items-center justify-start pt-[20vh]`
-- Garantir que o container usa `safe-top` para cobrir area da status bar
-
-**Timing da splash (linhas 101-112)**:
-- Adicionar timer minimo de 2 segundos: a splash so começa o zoom-out apos `videoReady` E pelo menos 2s terem passado
-- Isso garante que tudo carrega antes de mostrar o conteudo
-
-**Animacao de transicao**:
-- Na saida da splash, usar `scale-110` com fade-out (ja existe)
-- Ao mostrar os cards (`showCards`), adicionar animacoes de entrada mais elaboradas - fade-up escalonado com slide suave
-
-### `src/components/pastor/PastorLayout.tsx` (linhas 23-34)
-- Mesmas mudancas na logo: `h-56 w-56`, posicao mais alta, safe-top
+Isso garante que o manifest atualizado seja aplicado e o app abra em tela cheia real, sem barras.
 
