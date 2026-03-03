@@ -120,7 +120,7 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto bg-background/85 backdrop-blur-sm">
+      <main className="flex-1 overflow-auto bg-background/60 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto w-full p-4">
           {children}
         </div>
