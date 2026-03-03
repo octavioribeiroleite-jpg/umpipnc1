@@ -328,7 +328,7 @@ export default function ReuniaoDetalhe() {
           open={openSheet === key}
           onOpenChange={(open) => setOpenSheet(open ? key : null)}
         >
-          <ResponsiveDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <ResponsiveDialogContent className="sm:max-w-4xl">
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>{sheetTitles[key]}</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>

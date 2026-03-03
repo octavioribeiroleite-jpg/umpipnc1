@@ -107,7 +107,7 @@ export function ResponsiveDialogContent({
   if (isMobile) {
     return (
       <DrawerContent className={className}>
-        <div className="mx-auto w-full max-w-md px-4 pb-8">{children}</div>
+        <div className="mx-auto w-full px-4 pb-8 overflow-y-auto max-h-[85vh]">{children}</div>
       </DrawerContent>
     );
   }
