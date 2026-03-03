@@ -43,7 +43,7 @@ const eventSchema = z.object({
   end_date: z.string().optional(),
   end_time: z.string().optional(),
   location: z.string().optional(),
-  status: z.enum(['confirmado', 'pendente', 'cancelado']),
+  status: z.enum(['confirmado', 'pendente', 'cancelado', 'concluido', 'nao_realizado']),
   all_day: z.boolean(),
   color: z.string().optional(),
 });
@@ -87,6 +87,8 @@ const statusLabels: Record<string, string> = {
   confirmado: '✓ Confirmado',
   pendente: '⏳ Pendente',
   cancelado: '✗ Cancelado',
+  concluido: '✅ Concluído',
+  nao_realizado: '❌ Não realizado',
 };
 
 export function EventDialog({
@@ -418,6 +420,8 @@ export function EventDialog({
                       <SelectContent>
                         <SelectItem value="confirmado">✓ Confirmado</SelectItem>
                         <SelectItem value="pendente">⏳ Pendente</SelectItem>
+                        <SelectItem value="concluido">✅ Concluído</SelectItem>
+                        <SelectItem value="nao_realizado">❌ Não realizado</SelectItem>
                         <SelectItem value="cancelado">✗ Cancelado</SelectItem>
                       </SelectContent>
                     </Select>

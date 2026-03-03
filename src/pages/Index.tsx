@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { PastorNotificationBanner } from '@/components/pastor/PastorNotificationBanner';
 import { PastorLoginNotification } from '@/components/pastor/PastorLoginNotification';
-import { useEvents } from '@/hooks/useEvents';
+import { useEvents, EventStatus } from '@/hooks/useEvents';
+import { EventCompletionList } from '@/components/calendario/EventCompletionList';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -135,7 +136,7 @@ export default function Index() {
   const { user, loading, rolesLoaded, isPastor, profile, isAdmin, isManagement, roles } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
   const navigate = useNavigate();
-  const { upcomingEvents, isUpcomingLoading } = useEvents();
+  const { events, upcomingEvents, isUpcomingLoading, updateEvent } = useEvents();
   const [stats, setStats] = useState<Stats>({
     saldo: 0,
     mensalidadesMes: 0,
@@ -445,77 +446,16 @@ export default function Index() {
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Events */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Próximos Eventos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isUpcomingLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-16" />
-                ))}
-              </div>
-            ) : displayedEvents.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                Nenhum evento próximo cadastrado.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {displayedEvents.map((event) => {
-                  const startDate = new Date(event.start_date);
-                  const societyName = colorToSociety[event.color || ''] || '';
-                  return (
-                    <div
-                      key={event.id}
-                      className="p-3 rounded-lg border bg-card"
-                      style={{ borderLeftWidth: 3, borderLeftColor: event.color || 'hsl(var(--primary))' }}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <h4 className="font-medium text-sm leading-snug">{event.title}</h4>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {societyName && (
-                            <span
-                              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                              style={{ backgroundColor: `${event.color || '#6b7280'}15`, color: event.color || '#6b7280' }}
-                            >
-                              {societyName}
-                            </span>
-                          )}
-                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusStyles[event.status]}`}>
-                            {statusLabels[event.status]}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3 shrink-0" />
-                          {event.all_day
-                            ? format(startDate, "dd 'de' MMMM", { locale: ptBR }) + ' • Dia inteiro'
-                            : format(startDate, "dd/MM 'às' HH:mm", { locale: ptBR })
-                          }
-                        </span>
-                        {event.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3 shrink-0" />
-                            {event.location}
-                          </span>
-                        )}
-                        {event.description && (
-                          <p className="text-muted-foreground/70 line-clamp-1 mt-0.5">{event.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            <Button variant="ghost" className="w-full mt-4" onClick={() => navigate('/calendario')}>
-              Ver calendário
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Events with Completion Status */}
+        <EventCompletionList
+          events={events}
+          onUpdateStatus={(id, status) => updateEvent.mutate({ id, status })}
+          isUpdating={updateEvent.isPending}
+          canEdit={isManagement || isAdmin}
+          onViewCalendar={() => navigate('/calendario')}
+          title="Agenda de Eventos"
+          maxItems={5}
+        />
 
 
 

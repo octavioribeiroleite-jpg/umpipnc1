@@ -14,6 +14,8 @@ import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { AlertsSection } from '@/components/pastor/AlertsSection';
 import { SocietyOverviewCard } from '@/components/pastor/SocietyOverviewCard';
 import { AISummaryDrawer } from '@/components/pastor/AISummaryDrawer';
+import { EventCompletionList } from '@/components/calendario/EventCompletionList';
+import { useEvents, EventStatus } from '@/hooks/useEvents';
 import logoIpnc from '@/assets/logo-ipnc.png';
 
 interface Society {
@@ -42,6 +44,12 @@ interface UpcomingEvent {
   location?: string;
 }
 
+// Fetch ALL events (no month filter) for the completion list
+function useAllEvents() {
+  const { events, updateEvent, isLoading } = useEvents();
+  return { allEvents: events, updateEvent, isEventsLoading: isLoading };
+}
+
 function getGreeting(): string {
   const h = new Date().getHours();
   if (h < 12) return 'Bom dia';
@@ -63,6 +71,7 @@ export default function PainelPastor() {
   const [societies, setSocieties] = useState<Society[]>([]);
   const [societyStats, setSocietyStats] = useState<Record<string, SocietyStats>>({});
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const { allEvents, updateEvent, isEventsLoading } = useAllEvents();
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -160,7 +169,18 @@ export default function PainelPastor() {
             <AISummaryDrawer />
           </div>
 
-          {/* 2. Society Cards Premium */}
+          {/* 2. Events - Main Content */}
+          <EventCompletionList
+            events={allEvents}
+            onUpdateStatus={(id, status) => updateEvent.mutate({ id, status })}
+            isUpdating={updateEvent.isPending}
+            canEdit={true}
+            onViewCalendar={() => navigate('/pastor/calendario')}
+            title="Agenda de Eventos"
+            maxItems={5}
+          />
+
+          {/* 3. Society Cards */}
           <div className="space-y-3">
             {societies.map(s => (
               <SocietyOverviewCard key={s.id} society={s} stats={societyStats[s.id]} />
@@ -189,35 +209,6 @@ export default function PainelPastor() {
           {/* 4. Alerts */}
           <AlertsSection />
 
-          {/* 5. Upcoming Events */}
-          {upcomingEvents.length > 0 && (
-            <Card className="bg-card/70 backdrop-blur-sm rounded-xl">
-              <CardHeader className="pb-1 pt-3 px-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    Próximos Eventos
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => navigate('/pastor/calendario')}>
-                    Ver todos <ChevronRight className="h-3 w-3 ml-0.5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="px-4 pb-3 pt-0 space-y-1">
-                {upcomingEvents.slice(0, 3).map(e => (
-                  <div key={e.id} className="flex items-center justify-between text-sm py-2 border-b border-border/30 last:border-0">
-                    <div className="min-w-0">
-                      <p className="font-medium text-xs truncate">{e.title}</p>
-                      {e.location && <p className="text-[10px] text-muted-foreground truncate">{e.location}</p>}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
-                      {format(new Date(e.start_date), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
         </div>
       )}
     </PastorLayout>

@@ -1741,7 +1741,12 @@ export type Database = {
       app_role: "admin" | "diretoria" | "visualizador" | "pastor"
       contribution_status: "draft" | "final" | "revealed"
       event_origin: "reuniao" | "manual"
-      event_status: "confirmado" | "pendente" | "cancelado"
+      event_status:
+        | "confirmado"
+        | "pendente"
+        | "cancelado"
+        | "concluido"
+        | "nao_realizado"
       meeting_status: "aberta" | "fechada"
       suggestion_category:
         | "pauta"
@@ -1886,7 +1891,13 @@ export const Constants = {
       app_role: ["admin", "diretoria", "visualizador", "pastor"],
       contribution_status: ["draft", "final", "revealed"],
       event_origin: ["reuniao", "manual"],
-      event_status: ["confirmado", "pendente", "cancelado"],
+      event_status: [
+        "confirmado",
+        "pendente",
+        "cancelado",
+        "concluido",
+        "nao_realizado",
+      ],
       meeting_status: ["aberta", "fechada"],
       suggestion_category: [
         "pauta",

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export type EventStatus = 'confirmado' | 'pendente' | 'cancelado';
+export type EventStatus = 'confirmado' | 'pendente' | 'cancelado' | 'concluido' | 'nao_realizado';
 export type EventOrigin = 'reuniao' | 'manual';
 
 export interface CalendarEvent {
