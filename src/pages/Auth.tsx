@@ -116,7 +116,6 @@ export default function Auth() {
     setStep('select');
   };
 
-  // --- Diretoria ---
   const handleSelectDiretoriaSociety = (society: Society) => {
     setSelectedDiretoriaSociety(society);
     setDiretoriaStep('pin');
@@ -201,7 +200,6 @@ export default function Auth() {
     finishDiretoriaLogin(operatorName.trim(), operatorFunction);
   };
 
-  // --- Membro ---
   const handleSelectMembroSociety = async (society: Society) => {
     setSelectedMembroSociety(society);
     setMembersLoading(true);
@@ -294,7 +292,6 @@ export default function Auth() {
     setMembroStep('name-select');
   };
 
-  // --- Pastor/Admin login ---
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -311,40 +308,15 @@ export default function Auth() {
     setIsLoading(false);
   };
 
-  // Filtered members for search
   const filteredMembers = members.filter((m) =>
     m.name.toLowerCase().includes(memberSearch.toLowerCase())
   );
 
-  // ========== VIDEO BG WRAPPER ==========
-  const VideoBgWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className={`min-h-screen relative overflow-hidden transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
-      {/* Video background */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        className="fixed inset-0 w-full h-full object-cover z-0"
-      >
-        <source src="/videos/bg-home.mp4" type="video/mp4" />
-      </video>
-      {/* Dark overlay */}
-      <div className="fixed inset-0 bg-black/60 z-10" />
-      {/* Content */}
-      <div className="relative z-20 min-h-screen flex items-center justify-center p-4">
-        {children}
-      </div>
-    </div>
-  );
-
-  // ========== RENDER ==========
-
-  // Membro name-confirm
-  if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
-    return (
-      <VideoBgWrapper>
+  // ========== RENDER CONTENT (conditional by step) ==========
+  const renderContent = () => {
+    // Membro name-confirm
+    if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
+      return (
         <div className="w-full max-w-sm">
           <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
@@ -372,14 +344,12 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
-      </VideoBgWrapper>
-    );
-  }
+      );
+    }
 
-  // Membro name-select
-  if (step === 'membro' && membroStep === 'name-select') {
-    return (
-      <VideoBgWrapper>
+    // Membro name-select
+    if (step === 'membro' && membroStep === 'name-select') {
+      return (
         <div className="w-full max-w-sm">
           <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
             <CardContent className="pt-6 space-y-4">
@@ -447,14 +417,12 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
-      </VideoBgWrapper>
-    );
-  }
+      );
+    }
 
-  // Diretoria name-confirm
-  if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
-    return (
-      <VideoBgWrapper>
+    // Diretoria name-confirm
+    if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
+      return (
         <div className="w-full max-w-sm">
           <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
@@ -482,14 +450,12 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
-      </VideoBgWrapper>
-    );
-  }
+      );
+    }
 
-  // Diretoria name-input
-  if (step === 'diretoria' && diretoriaStep === 'name-input') {
-    return (
-      <VideoBgWrapper>
+    // Diretoria name-input
+    if (step === 'diretoria' && diretoriaStep === 'name-input') {
+      return (
         <div className="w-full max-w-sm">
           <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
@@ -535,12 +501,11 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
-      </VideoBgWrapper>
-    );
-  }
+      );
+    }
 
-  return (
-    <VideoBgWrapper>
+    // Main screen (select / societies / pin / login)
+    return (
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -760,6 +725,31 @@ export default function Auth() {
           © 2025 IPNC - Todos os direitos reservados
         </p>
       </div>
-    </VideoBgWrapper>
+    );
+  };
+
+  // ========== SINGLE RETURN — video never remounts ==========
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Video background — always mounted, never re-created */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        className="fixed inset-0 w-full h-full object-cover z-0"
+      >
+        <source src="/videos/bg-home.mp4" type="video/mp4" />
+      </video>
+
+      {/* Dark overlay — always mounted */}
+      <div className="fixed inset-0 bg-black/60 z-10" />
+
+      {/* Content — transitions apply here only */}
+      <div className={`relative z-20 min-h-screen flex items-center justify-center p-4 transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
+        {renderContent()}
+      </div>
+    </div>
   );
 }
