@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Delete } from 'lucide-react';
+import { ArrowLeft, Delete, LogIn, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PinPadProps {
@@ -29,12 +29,8 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
 
   const handleDigit = useCallback((digit: string) => {
     if (pin.length >= 6 || shaking) return;
-    const newPin = pin + digit;
-    setPin(newPin);
-    if (newPin.length === 6) {
-      onComplete(newPin);
-    }
-  }, [pin, shaking, onComplete]);
+    setPin(prev => prev + digit);
+  }, [pin.length, shaking]);
 
   const handleDelete = useCallback(() => {
     setPin(prev => prev.slice(0, -1));
@@ -138,6 +134,18 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
           <Delete className="h-5 w-5" />
         </Button>
       </div>
+
+      {/* Confirm button */}
+      {pin.length === 6 && (
+        <Button
+          className="w-full h-12 text-base font-semibold gap-2"
+          onClick={() => onComplete(pin)}
+          disabled={loading}
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+          {loading ? 'Verificando...' : 'Confirmar e entrar'}
+        </Button>
+      )}
     </div>
   );
 
