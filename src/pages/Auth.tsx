@@ -206,7 +206,8 @@ export default function Auth() {
     });
 
     toast({ title: 'Bem-vindo!', description: `Entrando como ${name}` });
-    navigateWithTransition('/', { showWelcome: true });
+    const targetPath = selectedDiretoriaSociety.slug === 'pastor' ? '/pastor' : '/';
+    navigateWithTransition(targetPath, { showWelcome: true });
   };
 
   const handleConfirmName = () => {
@@ -666,6 +667,18 @@ export default function Auth() {
                   </CardContent>
                 </Card>
               ))}
+              {/* Pastor virtual card */}
+              <Card
+                className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
+                onClick={() => handleSelectDiretoriaSociety({ id: 'pastor', name: 'Pastor', slug: 'pastor', color: '#1e3a5f' })}
+              >
+                <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
+                  <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: '#1e3a5f' }}>
+                    <Church className="h-6 w-6" />
+                  </div>
+                  <span className="font-semibold text-sm text-gray-900">Pastor</span>
+                </CardContent>
+              </Card>
             </div>
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'pin' ? (

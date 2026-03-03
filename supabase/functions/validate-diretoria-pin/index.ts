@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
     // PIN correct — find or create service account
     const serviceEmail = `diretoria-${society_slug}@ipnc.local`
     const servicePassword = `svc_dir_${society_slug}_2025!`
+    const isPastor = society_slug === 'pastor'
 
     // Try to sign in first
     const { data: signInData, error: signInError } = await adminClient.auth.signInWithPassword({
@@ -68,18 +69,24 @@ Deno.serve(async (req) => {
     }
 
     // Account doesn't exist, create it
-    // Find society
-    const { data: society } = await adminClient
-      .from('societies')
-      .select('id, name')
-      .eq('slug', society_slug)
-      .single()
+    let societyId: string | null = null
+    let societyName = 'Pastor'
 
-    if (!society) {
-      return new Response(JSON.stringify({ error: 'Sociedade não encontrada' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (!isPastor) {
+      const { data: society } = await adminClient
+        .from('societies')
+        .select('id, name')
+        .eq('slug', society_slug)
+        .single()
+
+      if (!society) {
+        return new Response(JSON.stringify({ error: 'Sociedade não encontrada' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      societyId = society.id
+      societyName = society.name
     }
 
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
@@ -87,7 +94,7 @@ Deno.serve(async (req) => {
       password: servicePassword,
       email_confirm: true,
       user_metadata: {
-        full_name: `Diretoria ${society.name}`,
+        full_name: isPastor ? 'Pastor' : `Diretoria ${societyName}`,
         username: `diretoria-${society_slug}`,
       },
     })
@@ -100,16 +107,15 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Update profile with society_id and username
-    await adminClient.from('profiles').update({
-      society_id: society.id,
-      username: `diretoria-${society_slug}`,
-    }).eq('user_id', newUser.user.id)
+    // Update profile
+    const profileUpdate: Record<string, any> = { username: `diretoria-${society_slug}` }
+    if (societyId) profileUpdate.society_id = societyId
+    await adminClient.from('profiles').update(profileUpdate).eq('user_id', newUser.user.id)
 
-    // Assign diretoria role
+    // Assign role
     await adminClient.from('user_roles').insert({
       user_id: newUser.user.id,
-      role: 'diretoria',
+      role: isPastor ? 'pastor' : 'diretoria',
     })
 
     // Now sign in
