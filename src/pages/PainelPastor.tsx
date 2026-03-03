@@ -1,21 +1,23 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   Calendar, ChevronRight, Megaphone, Heart, Vote,
+  CalendarDays, CalendarClock, AlertCircle,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { AlertsSection } from '@/components/pastor/AlertsSection';
 import { SocietyOverviewCard } from '@/components/pastor/SocietyOverviewCard';
 import { AISummaryDrawer } from '@/components/pastor/AISummaryDrawer';
-import { EventCompletionList } from '@/components/calendario/EventCompletionList';
-import { useEvents, EventStatus } from '@/hooks/useEvents';
+import { PastorCalendarWidget } from '@/components/pastor/PastorCalendarWidget';
+import { PastorDayEventList } from '@/components/pastor/PastorDayEventList';
+import { useEvents, type EventStatus } from '@/hooks/useEvents';
 import logoIpnc from '@/assets/logo-ipnc.png';
 
 interface Society {
@@ -36,18 +38,8 @@ interface SocietyStats {
   lastMeetingDate?: string;
 }
 
-interface UpcomingEvent {
-  id: string;
-  title: string;
-  start_date: string;
-  status: string;
-  location?: string;
-}
-
-// Fetch ALL events (no month filter) for the completion list
-function useAllEvents() {
-  const { events, updateEvent, isLoading } = useEvents();
-  return { allEvents: events, updateEvent, isEventsLoading: isLoading };
+function isSameLocalDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
 function getGreeting(): string {
@@ -70,27 +62,73 @@ export default function PainelPastor() {
 
   const [societies, setSocieties] = useState<Society[]>([]);
   const [societyStats, setSocietyStats] = useState<Record<string, SocietyStats>>({});
-  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
-  const { allEvents, updateEvent, isEventsLoading } = useAllEvents();
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Calendar state
+  const now = new Date();
+  const [selectedDate, setSelectedDate] = useState(now);
+  const [currentMonth, setCurrentMonth] = useState(now.getMonth());
+  const [currentYear, setCurrentYear] = useState(now.getFullYear());
+
+  // Events — no month filter so summary chips compute from all
+  const { events: allEvents, updateEvent, isLoading: isEventsLoading } = useEvents();
+
+  // Summary chips
+  const summaryChips = useMemo(() => {
+    const today = new Date();
+    const weekStart = startOfWeek(today, { locale: ptBR });
+    const weekEnd = endOfWeek(today, { locale: ptBR });
+
+    let todayCount = 0;
+    let weekCount = 0;
+    let awaitingCount = 0;
+
+    for (const ev of allEvents) {
+      const d = new Date(ev.start_date);
+      if (isSameLocalDay(d, today)) todayCount++;
+      if (d >= weekStart && d <= weekEnd) weekCount++;
+      if ((ev.status === 'confirmado' || ev.status === 'pendente') && d < today && !isSameLocalDay(d, today)) {
+        awaitingCount++;
+      }
+    }
+    return { todayCount, weekCount, awaitingCount };
+  }, [allEvents]);
+
+  const handlePrevMonth = () => {
+    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
+    else setCurrentMonth(m => m - 1);
+  };
+  const handleNextMonth = () => {
+    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
+    else setCurrentMonth(m => m + 1);
+  };
+  const handleToday = () => {
+    const t = new Date();
+    setSelectedDate(t);
+    setCurrentMonth(t.getMonth());
+    setCurrentYear(t.getFullYear());
+  };
+
+  const handleUpdateStatus = (id: string, status: EventStatus) => {
+    updateEvent.mutate({ id, status });
+  };
+
+  // Fetch society stats (same logic as before)
   const fetchDirectStats = useCallback(async () => {
     setStatsLoading(true);
     try {
-      const [societiesRes, membersRes, tasksRes, transRes, paymentsRes, eventsRes, meetingsRes] = await Promise.all([
+      const [societiesRes, membersRes, tasksRes, transRes, paymentsRes, meetingsRes] = await Promise.all([
         supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name'),
         supabase.from('members').select('id, active, society_id'),
         supabase.from('tasks').select('id, status, society_id'),
         supabase.from('transactions').select('amount, type, society_id'),
         supabase.from('membership_payments').select('amount, status, member_id'),
-        supabase.from('events').select('id, title, start_date, status, location').gte('start_date', new Date().toISOString()).order('start_date', { ascending: true }).limit(5),
         supabase.from('meetings').select('id, date, society_id').order('date', { ascending: false }),
       ]);
 
       const socs = societiesRes.data || [];
       setSocieties(socs);
-      setUpcomingEvents(eventsRes.data || []);
 
       const members = membersRes.data || [];
       const tasks = tasksRes.data || [];
@@ -116,9 +154,7 @@ export default function PainelPastor() {
           tasksDone: socTasks.filter(t => t.status === 'done').length,
           tasksPending: socTasks.filter(t => t.status !== 'done').length,
           saldo: totalMensalidades + totalEntradas - totalSaidas,
-          totalEntradas,
-          totalSaidas,
-          totalMensalidades,
+          totalEntradas, totalSaidas, totalMensalidades,
           lastMeetingDate: lastMeeting?.date,
         };
       }
@@ -169,30 +205,64 @@ export default function PainelPastor() {
             <AISummaryDrawer />
           </div>
 
-          {/* 2. Events - Main Content */}
-          <EventCompletionList
+          {/* 2. Summary chips */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex items-center gap-2 bg-card rounded-xl border border-border/60 shadow-sm p-3">
+              <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="text-lg font-bold leading-none">{summaryChips.todayCount}</p>
+                <p className="text-[10px] text-muted-foreground">Hoje</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-card rounded-xl border border-border/60 shadow-sm p-3">
+              <CalendarClock className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="text-lg font-bold leading-none">{summaryChips.weekCount}</p>
+                <p className="text-[10px] text-muted-foreground">Semana</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-card rounded-xl border border-border/60 shadow-sm p-3">
+              <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+              <div>
+                <p className="text-lg font-bold leading-none">{summaryChips.awaitingCount}</p>
+                <p className="text-[10px] text-muted-foreground">Aguardando</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Calendar */}
+          <PastorCalendarWidget
             events={allEvents}
-            onUpdateStatus={(id, status) => updateEvent.mutate({ id, status })}
-            isUpdating={updateEvent.isPending}
-            canEdit={true}
-            onViewCalendar={() => navigate('/pastor/calendario')}
-            title="Agenda de Eventos"
-            maxItems={5}
+            selectedDate={selectedDate}
+            onDaySelect={setSelectedDate}
+            currentMonth={currentMonth}
+            currentYear={currentYear}
+            onPrevMonth={handlePrevMonth}
+            onNextMonth={handleNextMonth}
+            onToday={handleToday}
           />
 
-          {/* 3. Society Cards */}
+          {/* 4. Day event list */}
+          <PastorDayEventList
+            selectedDate={selectedDate}
+            events={allEvents}
+            onUpdateStatus={handleUpdateStatus}
+            isUpdating={updateEvent.isPending}
+          />
+
+          {/* 5. Society Cards */}
           <div className="space-y-3">
             {societies.map(s => (
               <SocietyOverviewCard key={s.id} society={s} stats={societyStats[s.id]} />
             ))}
           </div>
 
-          {/* 3. Quick Access */}
+          {/* 6. Quick Access — 4 cols */}
           <div>
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
               Acesso Rápido
             </h3>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {quickActions.map(action => (
                 <button
                   key={action.path}
@@ -206,9 +276,8 @@ export default function PainelPastor() {
             </div>
           </div>
 
-          {/* 4. Alerts */}
+          {/* 7. Alerts */}
           <AlertsSection />
-
         </div>
       )}
     </PastorLayout>
