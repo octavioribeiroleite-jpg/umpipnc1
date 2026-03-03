@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
 import { ChevronRight, Users, DollarSign, ListTodo } from 'lucide-react';
 
 interface Society {
@@ -24,9 +24,9 @@ export function SocietyOverviewCard({ society, stats }: Props) {
   const navigate = useNavigate();
 
   return (
-    <Card
-      className="cursor-pointer hover:shadow-md transition-all duration-200 bg-card/70 backdrop-blur-sm rounded-xl border-l-4 p-4"
-      style={{ borderLeftColor: society.color }}
+    <AppCard
+      variant="interactive"
+      colorStripe={society.color}
       onClick={() => navigate(`/pastor/sociedade/${society.slug}`)}
     >
       <div className="flex items-center justify-between">
@@ -64,6 +64,6 @@ export function SocietyOverviewCard({ society, stats }: Props) {
           )}
         </div>
       )}
-    </Card>
+    </AppCard>
   );
 }

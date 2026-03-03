@@ -22,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile layout with hamburger menu */}
       <div className="md:hidden flex flex-col min-h-screen">
         <MobileHeader />
-        <main className="flex-1 overflow-auto pt-14 px-3 pb-4 bg-background/60 backdrop-blur-sm">
+        <main className="flex-1 overflow-auto pt-14 px-4 pb-4 bg-background/60 backdrop-blur-sm">
           {children}
         </main>
       </div>

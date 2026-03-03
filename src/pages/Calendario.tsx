@@ -3,6 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
 import { Plus, ChevronLeft, ChevronRight, Loader2, MapPin, Clock } from 'lucide-react';
 import { useEvents, CalendarEvent, CreateEventInput, UpdateEventInput } from '@/hooks/useEvents';
 import { EventDialog } from '@/components/calendario/EventDialog';
@@ -272,7 +273,7 @@ export default function Calendario() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
-        <Card className="lg:col-span-3">
+        <AppCard noPadding className="lg:col-span-3">
           <CardHeader className="pb-2 md:pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">
@@ -317,10 +318,10 @@ export default function Calendario() {
               </>
             )}
           </CardContent>
-        </Card>
+        </AppCard>
 
         {/* Upcoming Events - hidden on mobile */}
-        <Card className="hidden md:block">
+        <AppCard noPadding className="hidden md:block">
           <CardHeader>
             <CardTitle className="text-lg">Próximos Eventos</CardTitle>
           </CardHeader>
@@ -339,12 +340,12 @@ export default function Calendario() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </AppCard>
       </div>
 
       {/* Monthly Program List */}
       {!isLoading && eventsByDay.length > 0 && (
-        <Card className="mt-4 md:mt-6">
+        <AppCard noPadding className="mt-4 md:mt-6">
           <CardHeader className="pb-3">
             <CardTitle className="text-base md:text-lg">
               Programações de {months[month]}
@@ -410,7 +411,7 @@ export default function Calendario() {
               );
             })}
           </CardContent>
-        </Card>
+        </AppCard>
       )}
 
       {/* Day Detail Drawer */}

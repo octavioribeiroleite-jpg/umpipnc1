@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
+import { SectionTitle } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -65,16 +66,13 @@ export default function PainelPastor() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Calendar state
   const now = new Date();
   const [selectedDate, setSelectedDate] = useState(now);
   const [currentMonth, setCurrentMonth] = useState(now.getMonth());
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
 
-  // Events — no month filter so summary chips compute from all
   const { events: allEvents, updateEvent, isLoading: isEventsLoading } = useEvents();
 
-  // Summary chips
   const summaryChips = useMemo(() => {
     const today = new Date();
     const weekStart = startOfWeek(today, { locale: ptBR });
@@ -184,14 +182,12 @@ export default function PainelPastor() {
           <Progress value={undefined} className="w-48 h-1" />
         </div>
       ) : error ? (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="p-4">
-            <p className="text-destructive text-sm">{error}</p>
-            <Button variant="outline" size="sm" className="mt-2" onClick={() => fetchDirectStats()}>
-              Tentar novamente
-            </Button>
-          </CardContent>
-        </Card>
+        <AppCard className="border-destructive/30 bg-destructive/5">
+          <p className="text-destructive text-sm">{error}</p>
+          <Button variant="outline" size="sm" className="mt-2" onClick={() => fetchDirectStats()}>
+            Tentar novamente
+          </Button>
+        </AppCard>
       ) : (
         <div className="space-y-5">
           {/* 1. Greeting + AI */}
@@ -207,27 +203,33 @@ export default function PainelPastor() {
 
           {/* 2. Summary chips */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="flex items-center gap-2 bg-card rounded-xl border border-border/60 shadow-sm p-3">
-              <CalendarDays className="h-4 w-4 text-primary shrink-0" />
-              <div>
-                <p className="text-lg font-bold leading-none">{summaryChips.todayCount}</p>
-                <p className="text-[10px] text-muted-foreground">Hoje</p>
+            <AppCard variant="stat">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-lg font-bold leading-none">{summaryChips.todayCount}</p>
+                  <p className="text-[10px] text-muted-foreground">Hoje</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 bg-card rounded-xl border border-border/60 shadow-sm p-3">
-              <CalendarClock className="h-4 w-4 text-primary shrink-0" />
-              <div>
-                <p className="text-lg font-bold leading-none">{summaryChips.weekCount}</p>
-                <p className="text-[10px] text-muted-foreground">Semana</p>
+            </AppCard>
+            <AppCard variant="stat">
+              <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-lg font-bold leading-none">{summaryChips.weekCount}</p>
+                  <p className="text-[10px] text-muted-foreground">Semana</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 bg-card rounded-xl border border-border/60 shadow-sm p-3">
-              <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
-              <div>
-                <p className="text-lg font-bold leading-none">{summaryChips.awaitingCount}</p>
-                <p className="text-[10px] text-muted-foreground">Aguardando</p>
+            </AppCard>
+            <AppCard variant="stat">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+                <div>
+                  <p className="text-lg font-bold leading-none">{summaryChips.awaitingCount}</p>
+                  <p className="text-[10px] text-muted-foreground">Aguardando</p>
+                </div>
               </div>
-            </div>
+            </AppCard>
           </div>
 
           {/* 3. Calendar */}
@@ -259,19 +261,18 @@ export default function PainelPastor() {
 
           {/* 6. Quick Access — 4 cols */}
           <div>
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-              Acesso Rápido
-            </h3>
+            <SectionTitle>Acesso Rápido</SectionTitle>
             <div className="grid grid-cols-4 gap-2">
               {quickActions.map(action => (
-                <button
+                <AppCard
                   key={action.path}
+                  variant="interactive"
+                  className="flex flex-col items-center gap-1.5"
                   onClick={() => navigate(action.path)}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/90 hover:shadow-sm transition-all"
                 >
                   <action.icon className="h-5 w-5 text-primary" />
                   <span className="text-[11px] font-medium text-muted-foreground">{action.label}</span>
-                </button>
+                </AppCard>
               ))}
             </div>
           </div>

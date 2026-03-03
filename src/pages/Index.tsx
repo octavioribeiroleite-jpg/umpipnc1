@@ -8,8 +8,10 @@ import { useEvents, EventStatus } from '@/hooks/useEvents';
 import { EventCompletionList } from '@/components/calendario/EventCompletionList';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { AppCard } from '@/components/ui/app-card';
+import { SectionTitle } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -25,7 +27,6 @@ import {
   Clock,
   Shield,
   UserCheck,
-  
 } from 'lucide-react';
 import {
   Dialog,
@@ -62,39 +63,26 @@ function StatCard({
   onClick?: () => void;
 }) {
   return (
-    <Card 
-      className={`overflow-hidden ${onClick ? 'cursor-pointer hover:bg-accent/50 transition-colors' : ''}`}
-      onClick={onClick}
-    >
-      <CardHeader className="flex flex-row items-center justify-between pb-1 p-3 md:p-6 md:pb-2">
-        <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">{title}</CardTitle>
+    <AppCard variant="stat" className={onClick ? 'cursor-pointer hover:shadow-md transition-all' : ''} onClick={onClick}>
+      <div className="flex items-center justify-between pb-1">
+        <span className="text-xs md:text-sm font-medium text-muted-foreground">{title}</span>
         <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
           <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
         </div>
-      </CardHeader>
-      <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-        <div className="text-lg md:text-2xl font-bold">{value}</div>
-        {(description || trend) && (
-          <div className="flex items-center gap-2 mt-1">
-            {trend && (
-              <span
-                className={`flex items-center text-xs font-medium ${
-                  trendUp ? 'text-success' : 'text-destructive'
-                }`}
-              >
-                {trendUp ? (
-                  <ArrowUpRight className="h-3 w-3 mr-0.5" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3 mr-0.5" />
-                )}
-                {trend}
-              </span>
-            )}
-            {description && <span className="text-xs text-muted-foreground">{description}</span>}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+      <div className="text-lg md:text-2xl font-bold">{value}</div>
+      {(description || trend) && (
+        <div className="flex items-center gap-2 mt-1">
+          {trend && (
+            <span className={`flex items-center text-xs font-medium ${trendUp ? 'text-success' : 'text-destructive'}`}>
+              {trendUp ? <ArrowUpRight className="h-3 w-3 mr-0.5" /> : <ArrowDownRight className="h-3 w-3 mr-0.5" />}
+              {trend}
+            </span>
+          )}
+          {description && <span className="text-xs text-muted-foreground">{description}</span>}
+        </div>
+      )}
+    </AppCard>
   );
 }
 
@@ -108,16 +96,12 @@ function QuickAction({
   onClick: () => void;
 }) {
   return (
-    <Button
-      variant="outline"
-      className="h-auto py-3 px-4 md:py-4 md:px-6 flex-col gap-1.5 md:gap-2 md:flex-1 md:min-w-[100px]"
-      onClick={onClick}
-    >
+    <AppCard variant="interactive" className="flex flex-col items-center gap-1.5 md:gap-2 md:flex-1 md:min-w-[100px]" onClick={onClick}>
       <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary/10 flex items-center justify-center">
         <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
       </div>
       <span className="text-xs md:text-sm font-medium whitespace-nowrap">{label}</span>
-    </Button>
+    </AppCard>
   );
 }
 
@@ -154,11 +138,9 @@ export default function Index() {
     if (!loading && !user) {
       navigate('/auth');
     } else if (!loading && user && rolesLoaded) {
-      // Pastor (sem admin) -> /pastor
       if (isPastor && !isAdmin) {
         navigate('/pastor');
       }
-      // Visualizador puro (sem diretoria/admin/pastor) -> /membro
       else if (
         roles.includes('visualizador') &&
         !isAdmin &&
@@ -199,14 +181,12 @@ export default function Index() {
         tasksQuery,
       ]);
 
-      // Calcular mensalidades pagas
       const allPayments = paymentsRes.data || [];
       const totalMensalidades = allPayments.reduce((sum, p) => sum + Number(p.amount), 0);
       const mensalidadesMes = allPayments
         .filter((p) => p.competence === competence)
         .reduce((sum, p) => sum + Number(p.amount), 0);
 
-      // Calcular transações (entradas e saídas)
       const transactions = transactionsRes.data || [];
       const totalEntradas = transactions
         .filter((t) => t.type === 'entrada')
@@ -215,7 +195,6 @@ export default function Index() {
         .filter((t) => t.type === 'saida')
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      // Saldo = Mensalidades Pagas + Transações Entrada - Transações Saída
       const saldo = totalMensalidades + totalEntradas - totalSaidas;
 
       setStats({
@@ -229,7 +208,6 @@ export default function Index() {
     if (user) {
       fetchStats();
 
-      // Fetch pending payment submissions
       const fetchPending = async () => {
         let query = supabase
           .from('member_payment_submissions')
@@ -241,7 +219,6 @@ export default function Index() {
       };
       fetchPending();
 
-      // Fetch diretoria (profiles with role 'diretoria')
       const fetchDiretoria = async () => {
         const { data: roles } = await supabase
           .from('user_roles')
@@ -255,7 +232,6 @@ export default function Index() {
             .in('user_id', userIds)
             .eq('active', true);
           if (profiles) {
-            // Get society names
             const societyIds = [...new Set(profiles.map(p => p.society_id).filter(Boolean))];
             let societyMap: Record<string, string> = {};
             if (societyIds.length > 0) {
@@ -276,7 +252,6 @@ export default function Index() {
       };
       fetchDiretoria();
 
-      // Fetch membros (from members table)
       const fetchMembros = async () => {
         let query = supabase
           .from('members')
@@ -328,9 +303,6 @@ export default function Index() {
 
   const displayedEvents = upcomingEvents.slice(0, 5);
 
-
-
-
   const colorToSociety: Record<string, string> = {
     '#3b82f6': 'UMP',
     '#ec4899': 'SAF',
@@ -351,12 +323,15 @@ export default function Index() {
 
       {/* Pending submissions notification */}
       {pendingSubmissions > 0 && (
-        <div
-          className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/20 text-warning text-sm font-medium cursor-pointer hover:bg-warning/15 transition-colors"
+        <AppCard
+          variant="interactive"
+          className="mb-4 bg-warning/10 border-warning/20"
           onClick={() => navigate('/financas?tab=comprovantes')}
         >
-          📋 {pendingSubmissions} comprovante{pendingSubmissions > 1 ? 's' : ''} de pagamento pendente{pendingSubmissions > 1 ? 's' : ''} de aprovação
-        </div>
+          <span className="text-warning text-sm font-medium">
+            📋 {pendingSubmissions} comprovante{pendingSubmissions > 1 ? 's' : ''} de pagamento pendente{pendingSubmissions > 1 ? 's' : ''} de aprovação
+          </span>
+        </AppCard>
       )}
 
       {/* Stats Grid */}
@@ -386,70 +361,41 @@ export default function Index() {
 
       {/* Diretoria & Membros Cards */}
       <div className="grid grid-cols-2 gap-2 md:gap-4 mb-6 md:mb-8">
-        <Card
-          className="cursor-pointer hover:bg-accent/50 transition-colors"
-          onClick={() => setShowDiretoria(true)}
-        >
-          <CardHeader className="flex flex-row items-center justify-between pb-1 p-3 md:p-6 md:pb-2">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">Diretoria</CardTitle>
+        <AppCard variant="interactive" onClick={() => setShowDiretoria(true)}>
+          <div className="flex items-center justify-between pb-1">
+            <span className="text-xs md:text-sm font-medium text-muted-foreground">Diretoria</span>
             <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Shield className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             </div>
-          </CardHeader>
-          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-            <div className="text-lg md:text-2xl font-bold">{diretoria.length}</div>
-            <span className="text-xs text-muted-foreground">Toque para ver</span>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-lg md:text-2xl font-bold">{diretoria.length}</div>
+          <span className="text-xs text-muted-foreground">Toque para ver</span>
+        </AppCard>
 
-        <Card
-          className="cursor-pointer hover:bg-accent/50 transition-colors"
-          onClick={() => setShowMembros(true)}
-        >
-          <CardHeader className="flex flex-row items-center justify-between pb-1 p-3 md:p-6 md:pb-2">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">Membros</CardTitle>
+        <AppCard variant="interactive" onClick={() => setShowMembros(true)}>
+          <div className="flex items-center justify-between pb-1">
+            <span className="text-xs md:text-sm font-medium text-muted-foreground">Membros</span>
             <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <UserCheck className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             </div>
-          </CardHeader>
-          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-            <div className="text-lg md:text-2xl font-bold">{membros.length}</div>
-            <span className="text-xs text-muted-foreground">Toque para ver</span>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-lg md:text-2xl font-bold">{membros.length}</div>
+          <span className="text-xs text-muted-foreground">Toque para ver</span>
+        </AppCard>
       </div>
 
       <div className="mb-6 md:mb-8">
-        <h2 className="font-display text-base md:text-lg font-semibold mb-3 md:mb-4">Ações Rápidas</h2>
+        <SectionTitle className="text-base md:text-lg font-semibold normal-case tracking-normal">Ações Rápidas</SectionTitle>
         <div className="grid grid-cols-2 md:flex gap-2 md:gap-3 md:flex-wrap">
-          <QuickAction
-            label="Nova Reunião"
-            icon={Users}
-            onClick={() => navigate('/reunioes')}
-          />
-          <QuickAction
-            label="Novo Evento"
-            icon={Calendar}
-            onClick={() => navigate('/calendario')}
-          />
-          <QuickAction
-            label="Finanças"
-            icon={DollarSign}
-            onClick={() => navigate('/financas')}
-          />
-          <QuickAction
-            label="Nova Tarefa"
-            icon={Plus}
-            onClick={() => navigate('/tarefas')}
-          />
-
-
+          <QuickAction label="Nova Reunião" icon={Users} onClick={() => navigate('/reunioes')} />
+          <QuickAction label="Novo Evento" icon={Calendar} onClick={() => navigate('/calendario')} />
+          <QuickAction label="Finanças" icon={DollarSign} onClick={() => navigate('/financas')} />
+          <QuickAction label="Nova Tarefa" icon={Plus} onClick={() => navigate('/tarefas')} />
         </div>
       </div>
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Events with Completion Status */}
         <EventCompletionList
           events={events}
           onUpdateStatus={(id, status) => updateEvent.mutate({ id, status })}
@@ -460,38 +406,31 @@ export default function Index() {
           maxItems={5}
         />
 
-
-
-
         {/* Financial Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Saldo atual</span>
-                <span className={`font-semibold ${stats.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  R$ {stats.saldo.toFixed(2).replace('.', ',')}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Contribuições do mês</span>
-                <span className="font-semibold text-success">
-                  R$ {stats.mensalidadesMes.toFixed(2).replace('.', ',')}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-muted-foreground">Membros ativos</span>
-                <span className="font-semibold">{stats.membrosAtivos}</span>
-              </div>
+        <AppCard>
+          <h3 className="text-lg font-semibold mb-3">Resumo Financeiro</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2 border-b">
+              <span className="text-muted-foreground">Saldo atual</span>
+              <span className={`font-semibold ${stats.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                R$ {stats.saldo.toFixed(2).replace('.', ',')}
+              </span>
             </div>
-            <Button variant="ghost" className="w-full mt-4" onClick={() => navigate('/financas')}>
-              Ver finanças completas
-            </Button>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between items-center py-2 border-b">
+              <span className="text-muted-foreground">Contribuições do mês</span>
+              <span className="font-semibold text-success">
+                R$ {stats.mensalidadesMes.toFixed(2).replace('.', ',')}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-muted-foreground">Membros ativos</span>
+              <span className="font-semibold">{stats.membrosAtivos}</span>
+            </div>
+          </div>
+          <Button variant="ghost" className="w-full mt-4" onClick={() => navigate('/financas')}>
+            Ver finanças completas
+          </Button>
+        </AppCard>
       </div>
 
       {/* Diretoria Dialog */}
