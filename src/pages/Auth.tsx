@@ -43,6 +43,8 @@ export default function Auth() {
   const [isEnteringApp, setIsEnteringApp] = useState(false);
   const [entryMessage, setEntryMessage] = useState('');
   const [videoReady, setVideoReady] = useState(false);
+  const [splashPhase, setSplashPhase] = useState<'loading' | 'zoom-out' | 'done'>('loading');
+  const [showCards, setShowCards] = useState(false);
 
   // Diretoria PIN flow state
   const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('societies');
@@ -94,6 +96,19 @@ export default function Auth() {
     };
     fetchSocieties();
   }, []);
+
+  // Splash → video transition
+  useEffect(() => {
+    if (!videoReady) return;
+    // Video is ready, start zoom-out on splash
+    const t1 = setTimeout(() => setSplashPhase('zoom-out'), 400);
+    // After zoom-out animation, remove splash and show cards
+    const t2 = setTimeout(() => {
+      setSplashPhase('done');
+      setShowCards(true);
+    }, 1200);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [videoReady]);
 
   // ========== HANDLERS ==========
 
@@ -532,7 +547,7 @@ export default function Auth() {
     return (
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className={`text-center mb-8 transition-all duration-700 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+        <div className={`text-center mb-8 transition-all duration-700 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <div className="inline-block animate-logo-pulse mb-4">
             <img
               src={logoIpnc}
@@ -551,7 +566,7 @@ export default function Auth() {
         {step === 'select' ? (
           <div className="space-y-4">
             {/* Visitantes */}
-            <div className={`space-y-2 transition-all duration-500 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: videoReady ? '300ms' : '0ms' }}>
+            <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '200ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Visitantes</p>
               <button
                 onClick={() => navigateWithTransition('/igreja')}
@@ -569,7 +584,7 @@ export default function Auth() {
             </div>
 
             {/* Membros */}
-            <div className={`space-y-2 transition-all duration-500 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: videoReady ? '450ms' : '0ms' }}>
+            <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '350ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Membros</p>
               <Card
                 className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
@@ -588,7 +603,7 @@ export default function Auth() {
             </div>
 
             {/* Diretoria */}
-            <div className={`space-y-2 transition-all duration-500 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: videoReady ? '600ms' : '0ms' }}>
+            <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '500ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Diretoria</p>
               <Card
                 className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
@@ -607,7 +622,7 @@ export default function Auth() {
             </div>
 
             {/* Secretaria EBD */}
-            <div className={`space-y-2 transition-all duration-500 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: videoReady ? '750ms' : '0ms' }}>
+            <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '650ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Secretaria EBD</p>
               <Card
                 className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
@@ -745,7 +760,7 @@ export default function Auth() {
           </div>
         )}
 
-        <p className={`text-center text-xs text-white/40 mt-6 transition-all duration-500 ${videoReady ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: videoReady ? '900ms' : '0ms' }}>
+        <p className={`text-center text-xs text-white/40 mt-6 transition-all duration-500 ${showCards ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
           © 2025 IPNC - Todos os direitos reservados
         </p>
       </div>
@@ -763,17 +778,42 @@ export default function Auth() {
         playsInline
         preload="auto"
         onCanPlay={() => setVideoReady(true)}
-        className={`fixed inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${splashPhase === 'done' ? 'opacity-100' : 'opacity-0'}`}
       >
         <source src="/videos/bg-home.mp4" type="video/mp4" />
       </video>
 
-      {/* Dark overlay — always mounted */}
-      <div className={`fixed inset-0 bg-black/60 z-10 transition-opacity duration-1000 ${videoReady ? 'opacity-100' : 'opacity-0'}`} />
+      {/* Dark overlay */}
+      <div className={`fixed inset-0 bg-black/60 z-10 transition-opacity duration-1000 ${splashPhase === 'done' ? 'opacity-100' : 'opacity-0'}`} />
+
+      {/* Splash screen */}
+      {splashPhase !== 'done' && (
+        <div className={`fixed inset-0 z-30 bg-black flex flex-col items-center justify-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
+          <div className={`text-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'scale-90 opacity-0' : 'scale-100 opacity-100'}`}>
+            <img
+              src={logoIpnc}
+              alt="Renovo IPNC"
+              className="h-28 w-28 mx-auto object-contain mb-6 animate-logo-pulse"
+            />
+            <h1 className="text-white text-2xl font-bold tracking-tight mb-1">
+              Igreja Presbiteriana
+            </h1>
+            <p className="text-white/60 text-base mb-8">
+              de Nova Carapina
+            </p>
+            {/* Loading dots */}
+            <div className="flex items-center justify-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '0ms' }} />
+              <span className="h-2 w-2 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '300ms' }} />
+              <span className="h-2 w-2 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '600ms' }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Content — transitions apply here only */}
       <div className={`relative z-20 min-h-screen flex items-center justify-center p-4 transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
-        {renderContent()}
+        {splashPhase === 'done' && renderContent()}
       </div>
     </div>
   );
