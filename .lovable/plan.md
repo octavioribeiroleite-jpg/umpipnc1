@@ -1,76 +1,34 @@
 
 
-# Entrada de Membros por Nome (sem senha)
+# Vídeo de fundo na tela de login
 
-## Visao Geral
-Substituir o login com usuario/senha dos membros por um fluxo simples: selecionar sociedade, depois escolher o nome da lista de membros cadastrados. Sem autenticacao por senha.
+## Resumo
+Adicionar o vídeo enviado como plano de fundo da tela inicial (`Auth.tsx`), com overlay escuro para legibilidade, e transição suave ao entrar no app.
 
-## Fluxo proposto
+## Mudanças
 
-```text
-┌─────────────────────┐
-│   Tela inicial      │
-│   [Membros]  ←click │
-└─────────┬───────────┘
-          ▼
-┌─────────────────────┐
-│ Selecione sociedade │
-│ [UMP] [SAF] [UPH]  │
-└─────────┬───────────┘
-          ▼
-┌─────────────────────┐
-│ Buscar seu nome     │
-│ [_______________]   │
-│ ○ João Silva        │
-│ ○ Maria Santos      │
-│ ○ Pedro Oliveira    │
-│                     │
-│ [Entrar]            │
-└─────────────────────┘
-```
-
-Ao selecionar, o sistema salva o membro no localStorage para o "Voce e Fulano?" na proxima vez (igual ao fluxo diretoria).
-
-## Mudancas tecnicas
-
-### 1. `src/contexts/MembroSessionContext.tsx` (novo)
-- Criar contexto similar ao `DiretoriaSessionContext`
-- Armazena: `memberId`, `memberName`, `societyId`, `societyName`, `societyColor`
-- Usado pelo `MembroHome` e componentes filhos para identificar o membro logado
+### 1. Copiar vídeo
+- Copiar `user-uploads://82da427d-...mp4` para `public/videos/bg-home.mp4` (público, pois é referenciado por URL no `<video>`)
 
 ### 2. `src/pages/Auth.tsx`
-- Adicionar novo step `'membro'` com sub-steps: `'societies'` → `'name-select'` (e `'name-confirm'` para retorno)
-- No step `name-select`: buscar membros ativos da sociedade selecionada (`supabase.from('members').select('*').eq('society_id', id).eq('active', true)`)
-- Input de busca com filtro local na lista de membros
-- Ao confirmar: setar `MembroSession` e navegar para `/membro`
-- Remover o formulario de login com usuario/senha para membros
+- Adicionar `<video>` fixo cobrindo a tela: `autoPlay muted loop playsInline`, `object-cover`, `fixed inset-0 z-0`
+- Overlay escuro `bg-black/60` em `z-10` para garantir leitura
+- Conteúdo existente em `relative z-20`
+- Ajustar textos e cards para funcionar sobre fundo escuro:
+  - Logo e título em branco
+  - Cards com `bg-white/90 backdrop-blur-sm` (ou `bg-card/90 backdrop-blur`)
+  - Textos auxiliares em `text-white/70`
+- Ao confirmar login (navegar para `/membro`, `/diretoria`, etc.), adicionar uma animação de fade-out (`opacity-0 transition-opacity duration-500`) antes do `navigate()` para transição suave
 
-### 3. Autenticacao backend para membros
-- Membros precisam de alguma sessao Supabase para acessar dados via RLS (eventos, cobrancas, comunicados)
-- Reaproveitar o mesmo mecanismo do PIN da diretoria: ao selecionar o nome, fazer sign-in com a conta de servico da sociedade (`diretoria-{slug}@ipnc.local`) automaticamente
-- Ou criar uma edge function `member-login` que retorna um token de sessao anonimo/limitado
-- A tabela `members` ja e acessivel por quem tem role `visualizador` ou `diretoria` na sociedade, entao o service account da sociedade ja tem acesso
+### 3. Transição ao logar
+- Estado `isExiting` que, ao ser ativado, aplica `opacity-0 scale-105 transition-all duration-500` no container inteiro
+- Após 400ms, executa o `navigate()` real
+- As páginas de destino já têm layout normal sem vídeo
 
-### 4. `src/pages/MembroHome.tsx`
-- Ajustar para aceitar sessao via `MembroSessionContext` em vez de exigir `useAuth().user`
-- Os componentes filhos (`MembroInicio`, `MembroPagamentos`, etc.) usam o `memberId` do contexto para filtrar dados
+## Arquivos
 
-### 5. RLS / Seguranca
-- Como membros compartilham a conta de servico da sociedade, os dados sao isolados por `society_id` via RLS (ja funciona)
-- O filtro por `member_id` especifico e feito no frontend via contexto
-- A tabela `members` ja tem RLS de leitura publica (anon pode ler para a lista de selecao na tela de login)... na verdade precisa verificar. Se nao tiver, adicionar policy SELECT para anon filtrado por `active = true` apenas campos `id, name, society_id`
-
-### 6. Sobre vincular depois no admin
-- Nao e necessario vincular — o membro ja existe na tabela `members` com `society_id`
-- O admin cadastra membros na aba Membros do Financas, e eles ja aparecem na lista de selecao automaticamente
-
-## Resumo de arquivos
-
-| Arquivo | Acao |
+| Arquivo | Ação |
 |---|---|
-| `src/contexts/MembroSessionContext.tsx` | Criar (novo contexto) |
-| `src/pages/Auth.tsx` | Adicionar fluxo membro: sociedade → busca nome → confirma |
-| `src/pages/MembroHome.tsx` | Usar MembroSession em vez de auth obrigatorio |
-| `src/App.tsx` | Registrar MembroSessionProvider |
-| Migration SQL | Adicionar RLS policy para anon SELECT na tabela members (se necessario) |
+| `public/videos/bg-home.mp4` | Copiar vídeo |
+| `src/pages/Auth.tsx` | Adicionar video bg, overlay, transição de saída |
 
