@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowLeft, Loader2, Lock, RotateCcw, Trash2, Pencil,
-  FileText, Bot, ScrollText, MessageCircle, ListChecks, Settings, Check, X
+  FileText, Bot, ScrollText, MessageCircle, ListChecks, Settings, Check
 } from 'lucide-react';
 import { PautaEditor } from '@/components/reunioes/PautaEditor';
 import { RegistroReuniaoEditor } from '@/components/reunioes/RegistroReuniaoEditor';
@@ -18,13 +18,6 @@ import { ResumoIATab } from '@/components/reunioes/ResumoIATab';
 import { AtaViewer } from '@/components/reunioes/AtaViewer';
 import { ComunicacaoTab } from '@/components/reunioes/ComunicacaoTab';
 import { EditMeetingDialog } from '@/components/reunioes/EditMeetingDialog';
-import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
-} from '@/components/ui/responsive-dialog';
 
 interface Meeting {
   id: string;
@@ -257,6 +250,125 @@ export default function ReuniaoDetalhe() {
     acoes: 'Ações da Reunião',
   };
 
+  // When a tool is open, render it inline (full-screen style)
+  if (openSheet) {
+    return (
+      <AppLayout>
+        {/* Back header */}
+        <div className="flex items-center gap-2 mb-4">
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setOpenSheet(null)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-lg font-semibold truncate">{sheetTitles[openSheet]}</h1>
+        </div>
+
+        {/* Full-width content */}
+        <div className="w-full overflow-hidden">
+          {openSheet === 'registro' && (
+            <RegistroReuniaoEditor
+              meetingId={meeting.id}
+              meetingNotes={meeting.meeting_notes}
+              isProcessed={isProcessed}
+              canManage={canManage}
+              isProcessing={processing}
+              processingStep={processingStep}
+              onProcess={handleProcessMeeting}
+              onFinalize={handleFinalizeMeeting}
+              onNotesChange={handleNotesChange}
+              embedded
+            />
+          )}
+
+          {openSheet === 'resumo' && (
+            <ResumoIATab meetingId={meeting.id} isProcessed={isProcessed} />
+          )}
+
+          {openSheet === 'ata' && (
+            hasContent ? (
+              <AtaViewer
+                meeting={meeting}
+                agendaItems={agendaItems}
+                canManage={canManage}
+                onUpdateMinutes={handleUpdateMinutes}
+              />
+            ) : (
+              <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                <p className="text-muted-foreground">
+                  Ainda não processado. Escreva o registro e clique em "Processar Reunião".
+                </p>
+              </div>
+            )
+          )}
+
+          {openSheet === 'whatsapp' && (
+            hasContent ? (
+              <ComunicacaoTab
+                meetingId={meeting.id}
+                canManage={canManage}
+                whatsappMessage={meeting.whatsapp_message}
+                hasFinalMinutes={!!meeting.final_minutes}
+                onMessageUpdated={(msg) => setMeeting(prev => prev ? { ...prev, whatsapp_message: msg } : null)}
+              />
+            ) : (
+              <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                <p className="text-muted-foreground">
+                  Ainda não processado. Escreva o registro e clique em "Processar Reunião".
+                </p>
+              </div>
+            )
+          )}
+
+          {openSheet === 'pauta' && (
+            <PautaEditor
+              meetingId={meeting.id}
+              agendaItems={agendaItems}
+              onUpdate={fetchMeeting}
+              disabled={isClosed}
+              canManage={canManage}
+            />
+          )}
+
+          {openSheet === 'acoes' && canManage && (
+            <div className="space-y-3">
+              {!isClosed && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  onClick={() => { setOpenSheet(null); setEditDialogOpen(true); }}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Editar título e data
+                </Button>
+              )}
+              {isClosed && (
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={handleReopenMeeting}>
+                  <RotateCcw className="h-4 w-4" />
+                  Reabrir reunião
+                </Button>
+              )}
+              {meeting.final_minutes && (
+                <Button variant="outline" className="w-full justify-start gap-2 text-destructive hover:text-destructive" onClick={handleDeleteMinutes}>
+                  <Trash2 className="h-4 w-4" />
+                  Excluir ata e reprocessar
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {meeting && (
+          <EditMeetingDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            meeting={meeting}
+            onUpdate={handleUpdateMeeting}
+          />
+        )}
+      </AppLayout>
+    );
+  }
+
+  // Default: show grid of tool cards
   return (
     <AppLayout>
       {/* Compact header */}
@@ -320,116 +432,6 @@ export default function ReuniaoDetalhe() {
           </Card>
         ))}
       </div>
-
-      {/* Sheets / Dialogs for each tool */}
-      {(['registro', 'resumo', 'ata', 'whatsapp', 'pauta', 'acoes'] as const).map((key) => (
-        <ResponsiveDialog
-          key={key}
-          open={openSheet === key}
-          onOpenChange={(open) => setOpenSheet(open ? key : null)}
-        >
-          <ResponsiveDialogContent className="sm:max-w-4xl">
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>{sheetTitles[key]}</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                {meeting.title}
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
-
-            <div className="mt-2">
-              {key === 'registro' && (
-                <RegistroReuniaoEditor
-                  meetingId={meeting.id}
-                  meetingNotes={meeting.meeting_notes}
-                  isProcessed={isProcessed}
-                  canManage={canManage}
-                  isProcessing={processing}
-                  processingStep={processingStep}
-                  onProcess={handleProcessMeeting}
-                  onFinalize={handleFinalizeMeeting}
-                  onNotesChange={handleNotesChange}
-                />
-              )}
-
-              {key === 'resumo' && (
-                <ResumoIATab meetingId={meeting.id} isProcessed={isProcessed} />
-              )}
-
-              {key === 'ata' && (
-                hasContent ? (
-                  <AtaViewer
-                    meeting={meeting}
-                    agendaItems={agendaItems}
-                    canManage={canManage}
-                    onUpdateMinutes={handleUpdateMinutes}
-                  />
-                ) : (
-                  <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                    <p className="text-muted-foreground">
-                      Ainda não processado. Escreva o registro e clique em "Processar Reunião".
-                    </p>
-                  </div>
-                )
-              )}
-
-              {key === 'whatsapp' && (
-                hasContent ? (
-                  <ComunicacaoTab
-                    meetingId={meeting.id}
-                    canManage={canManage}
-                    whatsappMessage={meeting.whatsapp_message}
-                    hasFinalMinutes={!!meeting.final_minutes}
-                    onMessageUpdated={(msg) => setMeeting(prev => prev ? { ...prev, whatsapp_message: msg } : null)}
-                  />
-                ) : (
-                  <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                    <p className="text-muted-foreground">
-                      Ainda não processado. Escreva o registro e clique em "Processar Reunião".
-                    </p>
-                  </div>
-                )
-              )}
-
-              {key === 'pauta' && (
-                <PautaEditor
-                  meetingId={meeting.id}
-                  agendaItems={agendaItems}
-                  onUpdate={fetchMeeting}
-                  disabled={isClosed}
-                  canManage={canManage}
-                />
-              )}
-
-              {key === 'acoes' && canManage && (
-                <div className="space-y-3">
-                  {!isClosed && (
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-2"
-                      onClick={() => { setOpenSheet(null); setEditDialogOpen(true); }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Editar título e data
-                    </Button>
-                  )}
-                  {isClosed && (
-                    <Button variant="outline" className="w-full justify-start gap-2" onClick={handleReopenMeeting}>
-                      <RotateCcw className="h-4 w-4" />
-                      Reabrir reunião
-                    </Button>
-                  )}
-                  {meeting.final_minutes && (
-                    <Button variant="outline" className="w-full justify-start gap-2 text-destructive hover:text-destructive" onClick={handleDeleteMinutes}>
-                      <Trash2 className="h-4 w-4" />
-                      Excluir ata e reprocessar
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </ResponsiveDialogContent>
-        </ResponsiveDialog>
-      ))}
 
       {meeting && (
         <EditMeetingDialog
