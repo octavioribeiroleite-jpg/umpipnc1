@@ -39,17 +39,21 @@ export interface UpdateEventInput extends Partial<CreateEventInput> {
   id: string;
 }
 
-export function useEvents(month?: number, year?: number) {
+export function useEvents(month?: number, year?: number, societyId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const eventsQuery = useQuery({
-    queryKey: ['events', month, year],
+    queryKey: ['events', month, year, societyId],
     queryFn: async () => {
       let query = supabase
         .from('events')
         .select('*')
         .order('start_date', { ascending: true });
+
+      if (societyId) {
+        query = query.eq('society_id', societyId);
+      }
 
       // Filter by month/year if provided
       if (month !== undefined && year !== undefined) {
@@ -68,16 +72,22 @@ export function useEvents(month?: number, year?: number) {
   });
 
   const upcomingEventsQuery = useQuery({
-    queryKey: ['events', 'upcoming'],
+    queryKey: ['events', 'upcoming', societyId],
     queryFn: async () => {
       const now = new Date().toISOString();
-      const { data, error } = await supabase
+      let query = supabase
         .from('events')
         .select('*')
         .gte('start_date', now)
         .neq('status', 'cancelado')
         .order('start_date', { ascending: true })
         .limit(10);
+
+      if (societyId) {
+        query = query.eq('society_id', societyId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as CalendarEvent[];
