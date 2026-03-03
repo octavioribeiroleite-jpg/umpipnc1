@@ -669,6 +669,17 @@ export default function Auth() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Administrador */}
+            <div className={`transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
+              <button
+                onClick={() => setStep('login')}
+                className="w-full text-center text-xs text-white/40 hover:text-white/70 transition-colors py-2"
+              >
+                <ShieldCheck className="h-3.5 w-3.5 inline mr-1" />
+                Acesso Administrativo
+              </button>
+            </div>
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
           <PinPad
