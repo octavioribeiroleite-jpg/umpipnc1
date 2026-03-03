@@ -42,6 +42,7 @@ export default function Auth() {
   const [isExiting, setIsExiting] = useState(false);
   const [isEnteringApp, setIsEnteringApp] = useState(false);
   const [entryMessage, setEntryMessage] = useState('');
+  const [videoReady, setVideoReady] = useState(false);
 
   // Diretoria PIN flow state
   const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('societies');
@@ -531,7 +532,7 @@ export default function Auth() {
     return (
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className={`text-center mb-8 transition-all duration-700 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <div className="inline-block animate-logo-pulse mb-4">
             <img
               src={logoIpnc}
@@ -539,18 +540,18 @@ export default function Auth() {
               className="h-36 w-36 mx-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
             />
           </div>
-          <h1 className="font-display text-3xl font-bold text-white animate-fade-up drop-shadow-lg" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+          <h1 className="font-display text-3xl font-bold text-white drop-shadow-lg">
             Bem-vindo
           </h1>
-          <p className="text-white/70 text-sm mt-2 animate-fade-up" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
+          <p className="text-white/70 text-sm mt-2">
             Igreja Presbiteriana de Nova Carapina
           </p>
         </div>
 
         {step === 'select' ? (
-          <div className="space-y-4 animate-fade-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
+          <div className="space-y-4">
             {/* Visitantes */}
-            <div className="space-y-2">
+            <div className={`space-y-2 transition-all duration-500 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: videoReady ? '300ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Visitantes</p>
               <button
                 onClick={() => navigateWithTransition('/igreja')}
@@ -568,7 +569,7 @@ export default function Auth() {
             </div>
 
             {/* Membros */}
-            <div className="space-y-2">
+            <div className={`space-y-2 transition-all duration-500 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: videoReady ? '450ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Membros</p>
               <Card
                 className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
@@ -587,7 +588,7 @@ export default function Auth() {
             </div>
 
             {/* Diretoria */}
-            <div className="space-y-2">
+            <div className={`space-y-2 transition-all duration-500 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: videoReady ? '600ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Diretoria</p>
               <Card
                 className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
@@ -606,7 +607,7 @@ export default function Auth() {
             </div>
 
             {/* Secretaria EBD */}
-            <div className="space-y-2">
+            <div className={`space-y-2 transition-all duration-500 ${videoReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: videoReady ? '750ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Secretaria EBD</p>
               <Card
                 className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
@@ -744,7 +745,7 @@ export default function Auth() {
           </div>
         )}
 
-        <p className="text-center text-xs text-white/40 mt-6 animate-fade-up" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
+        <p className={`text-center text-xs text-white/40 mt-6 transition-all duration-500 ${videoReady ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: videoReady ? '900ms' : '0ms' }}>
           © 2025 IPNC - Todos os direitos reservados
         </p>
       </div>
@@ -753,7 +754,7 @@ export default function Auth() {
 
   // ========== SINGLE RETURN — video never remounts ==========
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-black">
       {/* Video background — always mounted, never re-created */}
       <video
         autoPlay
@@ -761,13 +762,14 @@ export default function Auth() {
         loop
         playsInline
         preload="auto"
-        className="fixed inset-0 w-full h-full object-cover z-0"
+        onCanPlay={() => setVideoReady(true)}
+        className={`fixed inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
       >
         <source src="/videos/bg-home.mp4" type="video/mp4" />
       </video>
 
       {/* Dark overlay — always mounted */}
-      <div className="fixed inset-0 bg-black/60 z-10" />
+      <div className={`fixed inset-0 bg-black/60 z-10 transition-opacity duration-1000 ${videoReady ? 'opacity-100' : 'opacity-0'}`} />
 
       {/* Content — transitions apply here only */}
       <div className={`relative z-20 min-h-screen flex items-center justify-center p-4 transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
