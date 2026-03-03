@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
-  Calendar, ChevronRight, Megaphone, Heart, Vote, Image,
+  Calendar, ChevronRight, Megaphone, Heart, Vote,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -60,7 +60,6 @@ function getGreeting(): string {
 const quickActions = [
   { icon: Calendar, label: 'Calendário', path: '/pastor/calendario' },
   { icon: Megaphone, label: 'Comunicados', path: '/pastor/comunicados' },
-  { icon: Image, label: 'Gerar Cartaz', path: '/pastor/cartaz' },
   { icon: Heart, label: 'Dízimos', path: '/dizimos' },
   { icon: Vote, label: 'Eleições', path: '/eleicoes' },
 ];

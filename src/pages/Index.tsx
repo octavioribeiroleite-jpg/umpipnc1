@@ -25,7 +25,7 @@ import {
   Clock,
   Shield,
   UserCheck,
-  Image,
+  
 } from 'lucide-react';
 import {
   Dialog,
@@ -442,11 +442,8 @@ export default function Index() {
             icon={Plus}
             onClick={() => navigate('/tarefas')}
           />
-          <QuickAction
-            label="Gerar Cartaz"
-            icon={Image}
-            onClick={() => navigate('/cartaz')}
-          />
+
+
         </div>
       </div>
 
