@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { ShareAppDialog } from '@/components/layout/ShareAppDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { InstallButton } from '@/components/layout/InstallButton';
 
 interface Society {
   id: string;
@@ -166,6 +167,7 @@ export function PastorMobileHeader() {
           <img src={logoIpnc} alt="IPNC" className="h-10 w-10 object-contain" />
           <span className="font-semibold text-foreground text-lg">Painel do Pastor</span>
         </div>
+        <InstallButton />
       </div>
     </header>
   );
