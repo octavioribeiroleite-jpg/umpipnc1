@@ -1,80 +1,67 @@
 
 
-# Design System Global — Plano de Implementacao
+# Dashboard "Agenda Primeiro" para Diretoria/Sociedades
 
 ## Objetivo
-Padronizar o visual de todas as telas usando o estilo "premium" do Painel do Pastor. Apenas mudancas esteticas (UI). Zero alteracao em logica, dados, permissoes ou funcionalidades.
+Transformar o Dashboard da Diretoria (Index.tsx) para seguir a mesma estética do Painel do Pastor: calendário mensal + lista de programações do dia selecionado. Remover stats financeiros, membros e resumo financeiro do Home (ficam no menu). Filtrar eventos pela society do usuário logado.
 
-## Componentes Base a Criar
+## Alterações
 
-### 1. `src/components/ui/app-card.tsx`
-Card padrao reutilizavel com visual premium consistente.
-- **Estilos fixos**: `rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm`
-- **Props**: `children`, `className`, `onClick`, `noPadding` (sem p-4), `colorStripe` (barra lateral 3px opcional)
-- **Variantes**: `default` (p-4), `stat` (p-3, compacto), `interactive` (cursor-pointer + hover:shadow-md)
+### 1. `src/hooks/useEvents.ts` — Adicionar filtro por `societyId`
+- Aceitar param opcional `societyId?: string`
+- Quando presente, adicionar `.eq('society_id', societyId)` nas queries de `eventsQuery` e `upcomingEventsQuery`
+- Atualizar `queryKey` para incluir `societyId`
 
-### 2. `src/components/ui/app-button.tsx`
-Wrapper fino sobre o `<Button>` existente com presets visuais.
-- `primary`: rounded-xl, h-11, font-semibold
-- `secondary`: bg-white/80, border, rounded-xl
-- `ghost-action`: para acoes dentro de cards (text-xs, sem borda)
+### 2. `src/pages/Index.tsx` — Reestruturação completa do layout
+Substituir o dashboard atual (stats + finanças + membros + EventCompletionList) por layout "agenda primeiro":
 
-### 3. `src/components/ui/typography.tsx`
-Componentes simples para tipografia consistente.
-- `<Title>`: text-xl md:text-2xl font-bold font-display
-- `<Subtitle>`: text-sm text-muted-foreground
-- `<SectionTitle>`: text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3
+**Remover:**
+- Grid de 4 StatCards (saldo, contribuições, membros, tarefas)
+- Cards Diretoria e Membros (+ dialogs)
+- Resumo Financeiro card
+- `EventCompletionList`
+- Fetch de `stats`, `diretoria`, `membros`, `pendingSubmissions`
+- Imports não utilizados (DollarSign, Users, Shield, UserCheck, TrendingUp, etc.)
 
-## Layout
+**Adicionar (mesma estrutura do PainelPastor):**
+- Estado: `selectedDate`, `currentMonth`, `currentYear`
+- `useEvents()` com `societyId` filtrado (quando não admin/pastor)
+- Chips de resumo (Hoje, Semana, Aguardando) — 3 AppCards compactos
+- `PastorCalendarWidget` (reutilizado, funciona para qualquer role)
+- `PastorDayEventList` (reutilizado, mesmo componente)
+- Ações Rápidas reduzidas a 4 colunas: Reunião, Evento, Finanças, Tarefa
+- Manter: `PastorNotificationBanner`, `PastorLoginNotification`, notificação de comprovantes pendentes
 
-### 4. `src/components/layout/AppLayout.tsx`
-- Mobile padding: `px-3` -> `px-4` (uniformizar com PastorLayout)
-- Sem outras mudancas estruturais (bg-background/60 backdrop-blur-sm ja esta correto)
+**Layout final (de cima para baixo):**
+1. PageHeader simplificado (saudação + data)
+2. Banner de comprovantes pendentes (se houver)
+3. 3 chips: Hoje | Semana | Aguardando
+4. Calendário mensal (PastorCalendarWidget)
+5. Programações do dia (PastorDayEventList)
+6. Acesso Rápido (4 botões)
 
-## Refatoracao das Telas (somente classes CSS)
+### 3. Filtro por sociedade — Lógica
+- `const societyId = profile?.society_id` (já existe na linha 122)
+- Passar `societyId` ao `useEvents()` para que só retorne eventos da society logada
+- Admin/Pastor: `societyId = undefined` → vê todos os eventos (mesmo comportamento atual)
+- Diretoria UMP: `societyId = uuid-ump` → só vê eventos da UMP
+- Não altera RLS nem banco — apenas filtro no frontend via query param
 
-### 5. `src/pages/Index.tsx` (Dashboard Diretoria)
-- `StatCard`: trocar `<Card>` por `<AppCard variant="stat">`
-- Cards Diretoria/Membros: trocar `<Card>` por `<AppCard variant="interactive">`
-- QuickActions: trocar `<Button variant="outline">` por `<AppCard variant="interactive">` com layout flex-col
-- Resumo Financeiro: trocar `<Card>` por `<AppCard>`
-- Dialogs: manter como estao (sao modais, nao cards)
+### 4. Componentes reutilizados (sem duplicar)
+- `PastorCalendarWidget` e `PastorDayEventList` já são genéricos — recebem `events` e `selectedDate` como props
+- No Index.tsx, passam os mesmos props com dados filtrados pela society
+- `PastorEventCard` dentro do DayEventList mostra botões de ação apenas se `onUpdateStatus` é passado (já funciona assim)
 
-### 6. `src/pages/PainelPastor.tsx`
-- Summary chips: trocar classes inline por `<AppCard variant="stat">`
-- Quick Access buttons: trocar classes inline por `<AppCard variant="interactive">`
-- Error card: usar `<AppCard>`
+### 5. Dialogs mantidos
+- Os dialogs de Diretoria e Membros serão removidos do Home (ficam acessíveis via menu Membros/Configurações)
 
-### 7. `src/components/pastor/PastorCalendarWidget.tsx`
-- Trocar `bg-card rounded-2xl border border-border/60 shadow-sm` por `<AppCard noPadding>` + padding interno
+## Arquivos modificados
+- `src/hooks/useEvents.ts` — adicionar param `societyId`
+- `src/pages/Index.tsx` — reestruturação completa
 
-### 8. `src/components/pastor/PastorEventCard.tsx`
-- Trocar `bg-card rounded-xl border border-border/60 shadow-sm` por `<AppCard noPadding colorStripe={eventColor}>`
-
-### 9. `src/components/pastor/PastorDayEventList.tsx`
-- Empty state: usar `<AppCard>`
-- Filter buttons: manter estilo atual (ja estao bons)
-
-### 10. `src/components/pastor/SocietyOverviewCard.tsx`
-- Trocar `<Card className="bg-card/70 backdrop-blur-sm rounded-xl border-l-4">` por `<AppCard variant="interactive" colorStripe={society.color}>`
-
-### 11. `src/pages/Financas.tsx`
-- `StatCard`: trocar `<Card>` por `<AppCard variant="stat">`
-
-### 12. `src/pages/Reunioes.tsx`, `Tarefas.tsx`, `Calendario.tsx`, etc.
-- Onde usam `<Card>` diretamente para containers de conteudo, substituir por `<AppCard>`
-- Manter componentes filhos internos intactos
-
-## O que NAO muda
-- Nenhuma logica, query, hook, calculo, permissao, rota ou comportamento
-- Componentes base do shadcn (`card.tsx`, `button.tsx`) ficam intactos
-- Os novos componentes sao wrappers independentes
-- Auth, banco de dados, edge functions — tudo intocado
-
-## Ordem de implementacao
-1. Criar `app-card.tsx`, `app-button.tsx`, `typography.tsx`
-2. Ajustar `AppLayout.tsx` (padding mobile)
-3. Refatorar `Index.tsx` e `PainelPastor.tsx` (dashboards principais)
-4. Refatorar componentes pastor (Calendar, EventCard, DayEventList, SocietyCard)
-5. Refatorar `Financas.tsx`
+## O que NÃO muda
+- Nenhuma lógica de auth, RLS, banco, permissões
+- Nenhum componente base (AppCard, AppButton, etc.)
+- PainelPastor.tsx (permanece igual)
+- Menu lateral e rotas (Finanças, Membros, Tarefas continuam no menu)
 
