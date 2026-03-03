@@ -3,9 +3,9 @@
   "short_name": "IPNC",
   "description": "Sistema de gestão - Igreja Presbiteriana de Nova Carapina",
   "start_url": "/",
-  "display": "fullscreen",
-  "background_color": "#1B3A2D",
-  "theme_color": "#1B3A2D",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait-primary",
   "icons": [
     {
