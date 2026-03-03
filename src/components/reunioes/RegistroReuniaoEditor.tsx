@@ -105,10 +105,10 @@ export function RegistroReuniaoEditor({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="h-5 w-5 shrink-0" />
               Registro da Reunião
             </CardTitle>
             <CardDescription>
@@ -182,7 +182,7 @@ OBSERVAÇÕES
 - Próxima reunião será dia 20/01 às 19h"
               value={notes}
               onChange={(e) => handleChange(e.target.value)}
-              className="min-h-[400px] font-mono text-sm leading-relaxed resize-y"
+              className="min-h-[250px] font-mono text-sm leading-relaxed resize-y"
             />
 
             <div className="flex items-center justify-between pt-2">
