@@ -39,9 +39,9 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-card safe-top">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md safe-top">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto w-full">
           <div className="flex items-center gap-3">
             <Sheet open={open} onOpenChange={setOpen}>
@@ -120,7 +120,7 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto bg-background/85 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto w-full p-4">
           {children}
         </div>

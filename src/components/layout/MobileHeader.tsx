@@ -87,7 +87,7 @@ export function MobileHeader() {
   const allItems = [...navItems, ...(isAdmin ? adminItems : []), { to: '/configuracoes', icon: Settings, label: 'Configurações' }];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border safe-top">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md safe-top">
       <div className="flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-3">
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
