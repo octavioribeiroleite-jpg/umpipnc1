@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck, BookOpen, Save } from 'lucide-react';
+import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck, BookOpen, Save, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador';
@@ -78,12 +78,62 @@ export default function Configuracoes() {
   const [secAdminPin, setSecAdminPin] = useState('');
   const [secProfPin, setSecProfPin] = useState('');
 
+  // Diretoria PINs state
+  const [dirPins, setDirPins] = useState<Record<string, string>>({});
+  const [dirPinsLoading, setDirPinsLoading] = useState(false);
+  const [dirPinsSaving, setDirPinsSaving] = useState(false);
+  const [dirSocieties, setDirSocieties] = useState<{ id: string; name: string; slug: string; color: string }[]>([]);
+
   useEffect(() => {
     if (isAdmin) {
       fetchUsers();
       fetchSecretariaCredentials();
+      fetchDiretoriaPins();
     }
   }, [isAdmin]);
+
+  const fetchDiretoriaPins = async () => {
+    setDirPinsLoading(true);
+    const [societiesRes, settingsRes] = await Promise.all([
+      supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name'),
+      supabase.from('settings').select('key, value').like('key', 'diretoria_pin_%'),
+    ]);
+    if (societiesRes.data) setDirSocieties(societiesRes.data);
+    if (settingsRes.data) {
+      const pins: Record<string, string> = {};
+      settingsRes.data.forEach(s => {
+        const slug = s.key.replace('diretoria_pin_', '');
+        pins[slug] = s.value;
+      });
+      setDirPins(pins);
+    }
+    setDirPinsLoading(false);
+  };
+
+  const saveDiretoriaPins = async () => {
+    const invalid = Object.entries(dirPins).some(([, v]) => !/^\d{6}$/.test(v));
+    if (invalid) {
+      toast.error('Todos os PINs devem ter exatamente 6 dígitos numéricos');
+      return;
+    }
+    setDirPinsSaving(true);
+    try {
+      for (const [slug, value] of Object.entries(dirPins)) {
+        const key = `diretoria_pin_${slug}`;
+        const { error } = await supabase
+          .from('settings')
+          .update({ value, updated_at: new Date().toISOString() })
+          .eq('key', key);
+        if (error) throw error;
+      }
+      toast.success('PINs da Diretoria atualizados!');
+    } catch (error) {
+      console.error('Error saving diretoria PINs:', error);
+      toast.error('Erro ao salvar PINs');
+    } finally {
+      setDirPinsSaving(false);
+    }
+  };
 
   const fetchSecretariaCredentials = async () => {
     setSecLoading(true);
@@ -648,6 +698,58 @@ export default function Configuracoes() {
                     disabled={secSaving || secAdminPin.length !== 6 || secProfPin.length !== 6}
                   >
                     {secSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Salvar PINs
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Diretoria PINs (Admin only) */}
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <KeyRound className="h-5 w-5" />
+                PINs da Diretoria
+              </CardTitle>
+              <CardDescription>Gerencie os PINs de acesso por sociedade</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {dirPinsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  {dirSocieties.map((society) => (
+                    <div key={society.slug} className="flex items-center gap-3">
+                      <div
+                        className="h-8 w-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
+                        style={{ backgroundColor: society.color }}
+                      >
+                        {society.slug.toUpperCase().slice(0, 3)}
+                      </div>
+                      <span className="text-sm font-medium min-w-[60px]">{society.name}</span>
+                      <Input
+                        value={dirPins[society.slug] || ''}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          setDirPins(prev => ({ ...prev, [society.slug]: v }));
+                        }}
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="000000"
+                        className="max-w-[140px] tracking-widest text-center font-mono"
+                      />
+                    </div>
+                  ))}
+                  <Button
+                    onClick={saveDiretoriaPins}
+                    disabled={dirPinsSaving || dirSocieties.some(s => (dirPins[s.slug] || '').length !== 6)}
+                  >
+                    {dirPinsSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvar PINs
                   </Button>
                 </>
