@@ -1,34 +1,37 @@
 
 
-# Vídeo de fundo na tela de login
+# Corrigir vídeo de fundo piscando ao trocar de step
 
-## Resumo
-Adicionar o vídeo enviado como plano de fundo da tela inicial (`Auth.tsx`), com overlay escuro para legibilidade, e transição suave ao entrar no app.
+## Problema
+O `VideoBgWrapper` está definido **dentro** do componente `Auth`, então cada vez que o estado muda (troca de step), o React recria o `<video>` do zero — causando o flash/piscar preto.
 
-## Mudanças
+## Solução
+Extrair o vídeo para **fora** do wrapper condicional. Em vez de cada `return` ter seu próprio `VideoBgWrapper` com um `<video>` novo, a estrutura será:
 
-### 1. Copiar vídeo
-- Copiar `user-uploads://82da427d-...mp4` para `public/videos/bg-home.mp4` (público, pois é referenciado por URL no `<video>`)
+1. **Um único `<video>` e overlay** renderizados uma vez no topo do componente, fora de qualquer condicional
+2. **O conteúdo condicional** renderizado por cima, em `relative z-20`
 
-### 2. `src/pages/Auth.tsx`
-- Adicionar `<video>` fixo cobrindo a tela: `autoPlay muted loop playsInline`, `object-cover`, `fixed inset-0 z-0`
-- Overlay escuro `bg-black/60` em `z-10` para garantir leitura
-- Conteúdo existente em `relative z-20`
-- Ajustar textos e cards para funcionar sobre fundo escuro:
-  - Logo e título em branco
-  - Cards com `bg-white/90 backdrop-blur-sm` (ou `bg-card/90 backdrop-blur`)
-  - Textos auxiliares em `text-white/70`
-- Ao confirmar login (navegar para `/membro`, `/diretoria`, etc.), adicionar uma animação de fade-out (`opacity-0 transition-opacity duration-500`) antes do `navigate()` para transição suave
+### Mudança em `src/pages/Auth.tsx`
+- Remover o componente `VideoBgWrapper` interno
+- No `return` principal (e nos returns condicionais), unificar tudo em um único return com:
+  - `<video>` fixo (sempre presente, nunca remontado)
+  - Overlay fixo
+  - Conteúdo condicional por cima
+- A transição `isExiting` será aplicada apenas no container de conteúdo, não no vídeo
 
-### 3. Transição ao logar
-- Estado `isExiting` que, ao ser ativado, aplica `opacity-0 scale-105 transition-all duration-500` no container inteiro
-- Após 400ms, executa o `navigate()` real
-- As páginas de destino já têm layout normal sem vídeo
+```text
+┌─────────────────────────┐
+│ <video> (sempre montado)│ z-0, fixed
+│ <overlay>               │ z-10, fixed  
+│ <div conteúdo>          │ z-20, relative — muda conforme step
+│   {renderContent()}     │ ← lógica condicional aqui dentro
+│ </div>                  │
+└─────────────────────────┘
+```
 
-## Arquivos
+### Arquivo
 
 | Arquivo | Ação |
 |---|---|
-| `public/videos/bg-home.mp4` | Copiar vídeo |
-| `src/pages/Auth.tsx` | Adicionar video bg, overlay, transição de saída |
+| `src/pages/Auth.tsx` | Refatorar para um único `<video>` persistente |
 
