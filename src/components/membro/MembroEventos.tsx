@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -40,7 +40,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export function MembroEventos() {
-  const { profile } = useAuth();
+  const { session } = useMembroSession();
   const [events, setEvents] = useState<Event[]>([]);
   const [societies, setSocieties] = useState<Record<string, Society>>({});
   const [loading, setLoading] = useState(true);
@@ -106,7 +106,7 @@ export function MembroEventos() {
             {monthEvents.map((event) => {
               const startDate = new Date(event.start_date);
               const endDate = event.end_date ? new Date(event.end_date) : null;
-              const isMySociety = event.society_id === profile?.society_id;
+              const isMySociety = event.society_id === session?.societyId;
               const soc = event.society_id ? societies[event.society_id] : null;
 
               return (

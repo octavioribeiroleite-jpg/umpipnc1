@@ -2,18 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDiretoriaSession } from '@/contexts/DiretoriaSessionContext';
+import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
-
-type RoleCard = 'pastor' | 'diretoria' | 'membro';
 
 interface Society {
   id: string;
@@ -22,38 +21,23 @@ interface Society {
   color: string;
 }
 
+interface Member {
+  id: string;
+  name: string;
+  society_id: string;
+}
+
+type MainStep = 'select' | 'login' | 'diretoria' | 'membro';
 type DiretoriaStep = 'societies' | 'pin' | 'name-confirm' | 'name-input';
+type MembroStep = 'societies' | 'name-select' | 'name-confirm';
 
-const DIRETORIA_FUNCTIONS = ['Presidente', 'Vice-Presidente', 'Secretário(a)', 'Tesoureiro(a)', 'Outro'];
-
-const roleConfig: Record<RoleCard, { label: string; description: string; icon: typeof ShieldCheck; showSociety: boolean }> = {
-  pastor: {
-    label: 'Pastor',
-    description: 'Acompanhamento pastoral das sociedades',
-    icon: ShieldCheck,
-    showSociety: false,
-  },
-  diretoria: {
-    label: 'Diretoria',
-    description: 'Gestão completa da sua sociedade',
-    icon: Users,
-    showSociety: false,
-  },
-  membro: {
-    label: 'Membro',
-    description: 'Eventos e pagamentos da sua sociedade',
-    icon: UserCircle,
-    showSociety: true,
-  },
-};
+const DIRETORIA_FUNCTIONS = ['Presidente', 'Vice-Presidente', 'Secretário(a)', 'Tesoureiro(a)', 'Pastor', 'Secretário(a) EBD', 'Outro'];
 
 export default function Auth() {
-  const [step, setStep] = useState<'select' | 'login' | 'diretoria'>('select');
-  const [selectedRole, setSelectedRole] = useState<RoleCard | null>(null);
+  const [step, setStep] = useState<MainStep>('select');
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedSociety, setSelectedSociety] = useState('');
   const [societies, setSocieties] = useState<Society[]>([]);
 
   // Diretoria PIN flow state
@@ -65,8 +49,20 @@ export default function Auth() {
   const [operatorName, setOperatorName] = useState('');
   const [operatorFunction, setOperatorFunction] = useState('');
 
-  const { signIn, setSelectedSocietyId } = useAuth();
+  // Membro flow state
+  const [membroStep, setMembroStep] = useState<MembroStep>('societies');
+  const [selectedMembroSociety, setSelectedMembroSociety] = useState<Society | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [memberSearch, setMemberSearch] = useState('');
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membroSavedName, setMembroSavedName] = useState<string | null>(null);
+  const [membroSavedId, setMembroSavedId] = useState<string | null>(null);
+  const [memberLoginLoading, setMemberLoginLoading] = useState(false);
+
+  const { signIn } = useAuth();
   const { setSession: setDiretoriaSession } = useDiretoriaSession();
+  const { setSession: setMembroSession } = useMembroSession();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -82,20 +78,7 @@ export default function Auth() {
     fetchSocieties();
   }, []);
 
-  const handleSelectRole = (role: RoleCard) => {
-    if (role === 'diretoria') {
-      setSelectedRole(role);
-      setStep('diretoria');
-      setDiretoriaStep('societies');
-      setSelectedDiretoriaSociety(null);
-      return;
-    }
-    setSelectedRole(role);
-    setStep('login');
-    setUsername('');
-    setPassword('');
-    setSelectedSociety('');
-  };
+  // ========== HANDLERS ==========
 
   const handleBack = () => {
     if (step === 'diretoria') {
@@ -113,10 +96,20 @@ export default function Auth() {
         return;
       }
     }
+    if (step === 'membro') {
+      if (membroStep === 'name-select' || membroStep === 'name-confirm') {
+        setMembroStep('societies');
+        setSelectedMembroSociety(null);
+        setSelectedMember(null);
+        setMemberSearch('');
+        setMembers([]);
+        return;
+      }
+    }
     setStep('select');
-    setSelectedRole(null);
   };
 
+  // --- Diretoria ---
   const handleSelectDiretoriaSociety = (society: Society) => {
     setSelectedDiretoriaSociety(society);
     setDiretoriaStep('pin');
@@ -140,14 +133,11 @@ export default function Auth() {
         return;
       }
 
-      // PIN correct — set Supabase session from the returned token
-      const { session } = data;
       await supabase.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token,
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
       });
 
-      // Check localStorage for saved name
       const nameKey = `diretoria_name_${selectedDiretoriaSociety.slug}`;
       const funcKey = `diretoria_function_${selectedDiretoriaSociety.slug}`;
       const saved = localStorage.getItem(nameKey);
@@ -172,10 +162,8 @@ export default function Auth() {
 
   const finishDiretoriaLogin = (name: string, func: string) => {
     if (!selectedDiretoriaSociety) return;
-    const nameKey = `diretoria_name_${selectedDiretoriaSociety.slug}`;
-    const funcKey = `diretoria_function_${selectedDiretoriaSociety.slug}`;
-    localStorage.setItem(nameKey, name);
-    localStorage.setItem(funcKey, func);
+    localStorage.setItem(`diretoria_name_${selectedDiretoriaSociety.slug}`, name);
+    localStorage.setItem(`diretoria_function_${selectedDiretoriaSociety.slug}`, func);
 
     setDiretoriaSession({
       societyId: selectedDiretoriaSociety.id,
@@ -206,47 +194,241 @@ export default function Auth() {
     finishDiretoriaLogin(operatorName.trim(), operatorFunction);
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // --- Membro ---
+  const handleSelectMembroSociety = async (society: Society) => {
+    setSelectedMembroSociety(society);
+    setMembersLoading(true);
 
-    const config = selectedRole ? roleConfig[selectedRole] : null;
+    // Check localStorage for saved member
+    const savedKey = `membro_name_${society.slug}`;
+    const savedIdKey = `membro_id_${society.slug}`;
+    const saved = localStorage.getItem(savedKey);
+    const savedId = localStorage.getItem(savedIdKey);
 
-    if (config?.showSociety && !selectedSociety) {
-      toast({
-        variant: 'destructive',
-        title: 'Selecione a sociedade',
-        description: 'Escolha sua sociedade antes de entrar.',
-      });
-      return;
+    // Fetch members
+    const { data } = await supabase
+      .from('members')
+      .select('id, name, society_id')
+      .eq('society_id', society.id)
+      .eq('active', true)
+      .order('name');
+
+    setMembers((data || []) as Member[]);
+    setMembersLoading(false);
+
+    if (saved && savedId) {
+      // Check if member still exists
+      const exists = (data || []).some((m: any) => m.id === savedId);
+      if (exists) {
+        setMembroSavedName(saved);
+        setMembroSavedId(savedId);
+        setMembroStep('name-confirm');
+        return;
+      }
     }
 
+    setMembroStep('name-select');
+  };
+
+  const finishMembroLogin = async (member: Member) => {
+    if (!selectedMembroSociety) return;
+    setMemberLoginLoading(true);
+
+    try {
+      // Get a Supabase session via the member-login edge function
+      const { data, error } = await supabase.functions.invoke('member-login', {
+        body: { society_slug: selectedMembroSociety.slug },
+      });
+
+      if (error || !data?.success) {
+        toast({ variant: 'destructive', title: 'Erro ao entrar', description: 'Tente novamente.' });
+        setMemberLoginLoading(false);
+        return;
+      }
+
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+
+      // Save to localStorage
+      localStorage.setItem(`membro_name_${selectedMembroSociety.slug}`, member.name);
+      localStorage.setItem(`membro_id_${selectedMembroSociety.slug}`, member.id);
+
+      setMembroSession({
+        memberId: member.id,
+        memberName: member.name,
+        societyId: selectedMembroSociety.id,
+        societyName: selectedMembroSociety.name,
+        societySlug: selectedMembroSociety.slug,
+        societyColor: selectedMembroSociety.color,
+      });
+
+      toast({ title: 'Bem-vindo!', description: `Olá, ${member.name.split(' ')[0]}!` });
+      navigate('/membro');
+    } catch (err) {
+      console.error('Member login error:', err);
+      toast({ variant: 'destructive', title: 'Erro ao entrar' });
+    } finally {
+      setMemberLoginLoading(false);
+    }
+  };
+
+  const handleSelectMember = () => {
+    if (selectedMember) {
+      finishMembroLogin(selectedMember);
+    }
+  };
+
+  const handleConfirmMembro = () => {
+    if (membroSavedId && membroSavedName && selectedMembroSociety) {
+      finishMembroLogin({ id: membroSavedId, name: membroSavedName, society_id: selectedMembroSociety.id });
+    }
+  };
+
+  const handleDifferentMembro = () => {
+    setMembroSavedName(null);
+    setMembroSavedId(null);
+    setMembroStep('name-select');
+  };
+
+  // --- Pastor/Admin login ---
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
 
     const { error } = await signIn(username, password);
 
     if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao entrar',
-        description: 'Usuário ou senha incorretos',
-      });
+      toast({ variant: 'destructive', title: 'Erro ao entrar', description: 'Usuário ou senha incorretos' });
     } else {
-      if (config?.showSociety) {
-        setSelectedSocietyId(selectedSociety);
-      } else {
-        setSelectedSocietyId(null);
-      }
-      toast({
-        title: 'Bem-vindo!',
-        description: 'Login realizado com sucesso.',
-      });
+      toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
       navigate('/');
     }
 
     setIsLoading(false);
   };
 
-  // Render diretoria name confirmation
+  // Filtered members for search
+  const filteredMembers = members.filter((m) =>
+    m.name.toLowerCase().includes(memberSearch.toLowerCase())
+  );
+
+  // ========== RENDER ==========
+
+  // Membro name-confirm
+  if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+        <div className="w-full max-w-sm">
+          <Card className="border-border/50 shadow-xl">
+            <CardContent className="pt-6 space-y-5">
+              <div className="text-center space-y-3">
+                <div className="mx-auto h-16 w-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${selectedMembroSociety?.color}20` }}>
+                  <UserCheck className="h-8 w-8" style={{ color: selectedMembroSociety?.color }} />
+                </div>
+                <h2 className="font-semibold text-lg">Você é</h2>
+                <p className="text-2xl font-bold text-primary">{membroSavedName}?</p>
+                <p className="text-sm text-muted-foreground">{selectedMembroSociety?.name}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" onClick={handleDifferentMembro} disabled={memberLoginLoading}>
+                  Não sou eu
+                </Button>
+                <Button onClick={handleConfirmMembro} disabled={memberLoginLoading}>
+                  {memberLoginLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                  Sim, sou eu!
+                </Button>
+              </div>
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Membro name-select
+  if (step === 'membro' && membroStep === 'name-select') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+        <div className="w-full max-w-sm">
+          <Card className="border-border/50 shadow-xl">
+            <CardContent className="pt-6 space-y-4">
+              <div className="text-center space-y-2">
+                <div className="mx-auto h-14 w-14 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${selectedMembroSociety?.color}20` }}>
+                  <UserCircle className="h-7 w-7" style={{ color: selectedMembroSociety?.color }} />
+                </div>
+                <h2 className="font-semibold text-lg">Encontre seu nome</h2>
+                <p className="text-sm text-muted-foreground">{selectedMembroSociety?.name}</p>
+              </div>
+
+              {/* Search input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar pelo nome..."
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  className="pl-9"
+                  autoFocus
+                />
+              </div>
+
+              {/* Members list */}
+              <div className="max-h-60 overflow-y-auto space-y-1 border rounded-lg p-1">
+                {membersLoading ? (
+                  <div className="py-8 flex justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredMembers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    {memberSearch ? 'Nenhum membro encontrado' : 'Nenhum membro cadastrado'}
+                  </p>
+                ) : (
+                  filteredMembers.map((member) => (
+                    <button
+                      key={member.id}
+                      onClick={() => setSelectedMember(member)}
+                      className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors ${
+                        selectedMember?.id === member.id
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-muted'
+                      }`}
+                    >
+                      {member.name}
+                    </button>
+                  ))
+                )}
+              </div>
+
+              <Button
+                className="w-full"
+                disabled={!selectedMember || memberLoginLoading}
+                onClick={handleSelectMember}
+              >
+                {memberLoginLoading ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />Entrando...</>
+                ) : (
+                  'Entrar'
+                )}
+              </Button>
+
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Diretoria name-confirm
   if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
@@ -281,7 +463,7 @@ export default function Auth() {
     );
   }
 
-  // Render diretoria name input form
+  // Diretoria name-input
   if (step === 'diretoria' && diretoriaStep === 'name-input') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
@@ -355,45 +537,63 @@ export default function Auth() {
         </div>
 
         {step === 'select' ? (
-          /* Step 1: Role cards */
-          <div className="space-y-3 animate-fade-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
-            <p className="text-center text-sm text-muted-foreground mb-4">Como deseja entrar?</p>
+          /* Step 1: Three sections */
+          <div className="space-y-4 animate-fade-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
+            {/* Visitantes */}
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Visitantes</p>
+              <button
+                onClick={() => navigate('/igreja')}
+                className="w-full rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 p-4 flex items-center gap-4 hover:scale-[1.02] hover:shadow-lg hover:border-primary/50 transition-all duration-300 animate-shimmer-border"
+              >
+                <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                  <Church className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="font-semibold text-base text-foreground">Acessar sem login</h3>
+                  <p className="text-xs text-muted-foreground">Programações e avisos da igreja</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-primary animate-bounce-right flex-shrink-0" />
+              </button>
+            </div>
 
-            {/* Botão acesso sem login */}
-            <button
-              onClick={() => navigate('/igreja')}
-              className="w-full rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 p-4 flex items-center gap-4 hover:scale-[1.02] hover:shadow-lg hover:border-primary/50 transition-all duration-300 animate-shimmer-border"
-            >
-              <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                <Church className="h-6 w-6 text-primary" />
-              </div>
-              <div className="text-left flex-1">
-                <h3 className="font-semibold text-base text-foreground">Acessar sem login</h3>
-                <p className="text-xs text-muted-foreground">Programações e avisos da igreja</p>
-              </div>
-              <ArrowRight className="h-5 w-5 text-primary animate-bounce-right flex-shrink-0" />
-            </button>
-            {(['pastor', 'diretoria', 'membro'] as RoleCard[]).map((role) => {
-              const config = roleConfig[role];
-              const Icon = config.icon;
-              return (
-                <Card
-                  key={role}
-                  className="cursor-pointer border-border/50 shadow-md hover:shadow-lg hover:border-primary/40 transition-all duration-200 active:scale-[0.98]"
-                  onClick={() => handleSelectRole(role)}
-                >
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-base">{config.label}</h3>
-                      <p className="text-xs text-muted-foreground">{config.description}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {/* Membros */}
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Membros</p>
+              <Card
+                className="cursor-pointer border-border/50 shadow-md hover:shadow-lg hover:border-primary/40 transition-all duration-200 active:scale-[0.98]"
+                onClick={() => { setStep('membro'); setMembroStep('societies'); }}
+              >
+                <CardContent className="flex items-center gap-4 p-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <UserCircle className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base">Entrar como membro</h3>
+                    <p className="text-xs text-muted-foreground">Eventos, pagamentos e comunicados</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Diretoria */}
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Diretoria</p>
+              <Card
+                className="cursor-pointer border-border/50 shadow-md hover:shadow-lg hover:border-primary/40 transition-all duration-200 active:scale-[0.98]"
+                onClick={() => { setStep('diretoria'); setDiretoriaStep('societies'); }}
+              >
+                <CardContent className="flex items-center gap-4 p-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Lock className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base">Entrar com PIN</h3>
+                    <p className="text-xs text-muted-foreground">Pastor, Secretaria, Presidente, Tesoureiro e demais cargos</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'societies' ? (
           /* Diretoria: Society cards */
@@ -425,7 +625,7 @@ export default function Auth() {
             </div>
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
-          /* Diretoria: PinPad inline */
+          /* Diretoria: PinPad */
           <PinPad
             profileLabel={selectedDiretoriaSociety?.name || 'Diretoria'}
             onBack={handleBack}
@@ -434,8 +634,37 @@ export default function Auth() {
             error={pinError}
             embedded
           />
+        ) : step === 'membro' && membroStep === 'societies' ? (
+          /* Membro: Society cards */
+          <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
+            <div className="flex items-center gap-2 mb-4">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-lg font-semibold">Selecione sua sociedade</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {societies.map((society) => (
+                <Card
+                  key={society.id}
+                  className="cursor-pointer border-border/50 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.97]"
+                  onClick={() => handleSelectMembroSociety(society)}
+                >
+                  <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
+                    <div
+                      className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+                      style={{ backgroundColor: society.color }}
+                    >
+                      {society.slug.toUpperCase().slice(0, 3)}
+                    </div>
+                    <span className="font-semibold text-sm">{society.name}</span>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         ) : (
-          /* Step 2: Login form (Pastor / Membro) */
+          /* Login form (for admin/direct access if needed) */
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <Card className="border-border/50 shadow-xl">
               <CardHeader className="pb-2">
@@ -443,36 +672,11 @@ export default function Auth() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <h2 className="text-lg font-semibold">
-                    Entrar como {selectedRole && roleConfig[selectedRole].label}
-                  </h2>
+                  <h2 className="text-lg font-semibold">Entrar</h2>
                 </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
-                  {selectedRole && roleConfig[selectedRole].showSociety && (
-                    <div className="space-y-2">
-                      <Label htmlFor="society">Sociedade</Label>
-                      <Select value={selectedSociety} onValueChange={setSelectedSociety}>
-                        <SelectTrigger id="society">
-                          <SelectValue placeholder="Selecione sua sociedade" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {societies.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: s.color }}
-                                />
-                                {s.name}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
                   <div className="space-y-2">
                     <Label htmlFor="username">Usuário</Label>
                     <Input

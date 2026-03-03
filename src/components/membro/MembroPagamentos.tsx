@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMembroSession } from '@/contexts/MembroSessionContext';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -52,11 +52,10 @@ const paymentMethodLabels: Record<string, string> = {
 };
 
 export function MembroPagamentos() {
-  const { user, profile } = useAuth();
+  const { session } = useMembroSession();
   const { toast } = useToast();
   const [charges, setCharges] = useState<Charge[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [memberId, setMemberId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -66,41 +65,30 @@ export function MembroPagamentos() {
   const [selectedType, setSelectedType] = useState('mensalidade');
 
   useEffect(() => {
-    if (user) fetchData();
-  }, [user]);
+    if (session) fetchData();
+  }, [session]);
 
   const fetchData = async () => {
+    if (!session) return;
     setLoading(true);
-    const { data: memberData } = await supabase
-      .from('members')
-      .select('id')
-      .eq('user_id', user!.id)
-      .maybeSingle();
 
-    if (!memberData) {
-      setLoading(false);
-      return;
-    }
+    const [chargesRes, subsRes] = await Promise.all([
+      supabase
+        .from('charges')
+        .select('id, amount, competence, type, status, due_date, paid_at, paid_amount, payment_method, notes')
+        .eq('member_id', session.memberId)
+        .in('status', ['pendente', 'parcial'])
+        .order('due_date', { ascending: true }),
+      supabase
+        .from('member_payment_submissions')
+        .select('*')
+        .eq('member_id', session.memberId)
+        .order('created_at', { ascending: false })
+        .limit(20),
+    ]);
 
-    setMemberId(memberData.id);
-
-    const { data: chargesData } = await supabase
-      .from('charges')
-      .select('id, amount, competence, type, status, due_date, paid_at, paid_amount, payment_method, notes')
-      .eq('member_id', memberData.id)
-      .in('status', ['pendente', 'parcial'])
-      .order('due_date', { ascending: true });
-
-    if (chargesData) setCharges(chargesData as Charge[]);
-
-    const { data: subsData } = await supabase
-      .from('member_payment_submissions')
-      .select('*')
-      .eq('user_id', user!.id)
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (subsData) setSubmissions(subsData as Submission[]);
+    if (chargesRes.data) setCharges(chargesRes.data as Charge[]);
+    if (subsRes.data) setSubmissions(subsRes.data as Submission[]);
     setLoading(false);
   };
 
@@ -116,28 +104,32 @@ export function MembroPagamentos() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedFile || !selectedCompetence || !memberId) {
+    if (!selectedFile || !selectedCompetence || !session) {
       toast({ variant: 'destructive', title: 'Preencha todos os campos', description: 'Selecione a competência e o comprovante.' });
       return;
     }
 
     setSubmitting(true);
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData?.user?.id;
+      if (!userId) throw new Error('Sessão expirada');
+
       const fileExt = selectedFile.name.split('.').pop();
-      const filePath = `member-receipts/${user!.id}/${Date.now()}.${fileExt}`;
+      const filePath = `member-receipts/${session.memberId}/${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage.from('receipts').upload(filePath, selectedFile);
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(filePath);
 
       const { error: insertError } = await supabase.from('member_payment_submissions').insert({
-        member_id: memberId,
-        user_id: user!.id,
+        member_id: session.memberId,
+        user_id: userId,
         competence: selectedCompetence,
         type: selectedType,
         receipt_url: urlData.publicUrl,
         notes: notes || null,
-        society_id: profile?.society_id || null,
+        society_id: session.societyId,
       });
       if (insertError) throw insertError;
 
@@ -158,21 +150,6 @@ export function MembroPagamentos() {
       <div className="space-y-3">
         <h2 className="font-semibold text-lg">Pagamentos</h2>
         {[1, 2].map((i) => <Skeleton key={i} className="h-20" />)}
-      </div>
-    );
-  }
-
-  if (!memberId) {
-    return (
-      <div className="space-y-4">
-        <h2 className="font-semibold text-lg">Pagamentos</h2>
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            <CreditCard className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p>Seu perfil ainda não foi vinculado ao cadastro de membros.</p>
-            <p className="text-xs mt-1">Entre em contato com a diretoria.</p>
-          </CardContent>
-        </Card>
       </div>
     );
   }

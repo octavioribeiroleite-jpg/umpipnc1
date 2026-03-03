@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,57 +12,43 @@ interface MembroInicioProps {
 }
 
 export function MembroInicio({ onTabChange }: MembroInicioProps) {
-  const { profile, society } = useAuth();
+  const { session } = useMembroSession();
   const [pendingCharges, setPendingCharges] = useState<{ count: number; total: number }>({ count: 0, total: 0 });
   const [nextEvent, setNextEvent] = useState<{ title: string; date: string } | null>(null);
   const [recentAnnouncements, setRecentAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!profile) return;
+    if (!session) return;
 
     const fetchData = async () => {
       setLoading(true);
 
-      const membersQuery = supabase
-        .from('members')
-        .select('id')
-        .eq('user_id', profile.user_id)
-        .maybeSingle();
-
-      const eventsQuery = supabase
-        .from('events')
-        .select('title, start_date')
-        .gte('start_date', new Date().toISOString())
-        .neq('status', 'cancelado')
-        .order('start_date', { ascending: true })
-        .limit(1);
-
-      const announcementsQuery = supabase
-        .from('pastor_announcements')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      const [memberRes, eventsRes, announcementsRes] = await Promise.all([
-        membersQuery,
-        eventsQuery,
-        announcementsQuery,
-      ]);
-
-      if (memberRes.data?.id) {
-        const { data: charges } = await supabase
+      const [eventsRes, announcementsRes, chargesRes] = await Promise.all([
+        supabase
+          .from('events')
+          .select('title, start_date')
+          .gte('start_date', new Date().toISOString())
+          .neq('status', 'cancelado')
+          .order('start_date', { ascending: true })
+          .limit(1),
+        supabase
+          .from('pastor_announcements')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
           .from('charges')
           .select('amount')
-          .eq('member_id', memberRes.data.id)
-          .eq('status', 'pendente');
+          .eq('member_id', session.memberId)
+          .eq('status', 'pendente'),
+      ]);
 
-        if (charges) {
-          setPendingCharges({
-            count: charges.length,
-            total: charges.reduce((sum, c) => sum + Number(c.amount), 0),
-          });
-        }
+      if (chargesRes.data) {
+        setPendingCharges({
+          count: chargesRes.data.length,
+          total: chargesRes.data.reduce((sum, c) => sum + Number(c.amount), 0),
+        });
       }
 
       if (eventsRes.data?.[0]) {
@@ -72,12 +58,11 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
         });
       }
 
-      // Filter announcements: church-wide OR targeted to member's society
       if (announcementsRes.data) {
         const filtered = announcementsRes.data.filter((a: any) => {
           if (a.scope === 'church') return true;
-          if (a.target_societies && Array.isArray(a.target_societies) && profile.society_id) {
-            return a.target_societies.includes(profile.society_id);
+          if (a.target_societies && Array.isArray(a.target_societies) && session.societyId) {
+            return a.target_societies.includes(session.societyId);
           }
           return false;
         });
@@ -88,7 +73,7 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
     };
 
     fetchData();
-  }, [profile]);
+  }, [session]);
 
   if (loading) {
     return (
@@ -105,10 +90,10 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
       {/* Compact Welcome */}
       <div className="flex items-baseline gap-2">
         <span className="text-base font-semibold">
-          Olá, {profile?.full_name?.split(' ')[0] || 'Membro'}! 👋
+          Olá, {session?.memberName?.split(' ')[0] || 'Membro'}! 👋
         </span>
-        {society && (
-          <span className="text-xs text-muted-foreground">• {society.name}</span>
+        {session && (
+          <span className="text-xs text-muted-foreground">• {session.societyName}</span>
         )}
       </div>
 

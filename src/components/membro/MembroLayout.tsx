@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Home, Calendar, CreditCard, Bell, Heart, LogOut, Menu } from 'lucide-react';
@@ -23,12 +24,18 @@ const menuItems: { icon: typeof Home; label: string; tab: MembroTab }[] = [
 ];
 
 export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutProps) {
-  const { profile, signOut, society } = useAuth();
+  const { session, clearSession } = useMembroSession();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const handleNav = (tab: MembroTab) => {
     onTabChange(tab);
     setOpen(false);
+  };
+
+  const handleLogout = () => {
+    clearSession();
+    navigate('/auth');
   };
 
   return (
@@ -82,15 +89,15 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
 
                   {/* User section */}
                   <div className="p-4 border-t border-sidebar-border">
-                    {profile && (
+                    {session && (
                       <div className="mb-3 px-2">
-                        <p className="font-medium text-sm truncate">{profile.full_name}</p>
-                        <p className="text-xs text-sidebar-muted truncate">{profile.email}</p>
+                        <p className="font-medium text-sm truncate">{session.memberName}</p>
+                        <p className="text-xs text-sidebar-muted truncate">{session.societyName}</p>
                       </div>
                     )}
                     <Button
                       variant="ghost"
-                      onClick={signOut}
+                      onClick={handleLogout}
                       className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     >
                       <LogOut className="h-5 w-5 mr-3" />
@@ -103,9 +110,9 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
 
             <img src={logoIpnc} alt="IPNC" className="h-8 w-8 object-contain" />
             <div>
-              <p className="font-semibold text-sm leading-tight">{profile?.full_name || 'Membro'}</p>
-              {society && (
-                <p className="text-xs text-muted-foreground">{society.name}</p>
+              <p className="font-semibold text-sm leading-tight">{session?.memberName || 'Membro'}</p>
+              {session && (
+                <p className="text-xs text-muted-foreground">{session.societyName}</p>
               )}
             </div>
           </div>
