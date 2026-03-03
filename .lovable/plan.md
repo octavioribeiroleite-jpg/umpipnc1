@@ -1,47 +1,26 @@
 
 
-# Redesign da Página de Detalhe da Reunião
+# Fix: Content Overflowing Screen on Mobile
 
-## Problema Atual
-A página tem muitos elementos empilhados verticalmente (header, badge de status, alerta de fechada, tabs, conteúdo) que ocupam muito espaço e dificultam a visualização no mobile. As abas inline empurram o conteúdo para baixo.
+## Problem
+The screenshot shows content clipping on the left side of the Drawer on mobile. Two root causes:
 
-## Nova Abordagem
+1. **ResponsiveDialogContent** (line 110): On mobile, wraps children in `max-w-md px-4` which is fine for width, but the inner components (like RegistroReuniaoEditor's Card) have flex layouts that don't wrap and overflow horizontally.
+2. **RegistroReuniaoEditor** CardHeader: The title + badge row uses `flex justify-between` without wrapping, causing horizontal overflow on narrow screens.
+3. **Drawer height**: No max-height set, so tall content can push buttons off-screen.
 
-### Layout Compacto com Sheets/Drawers
+## Changes
 
-Substituir as Tabs por um layout onde:
+### 1. `src/components/ui/responsive-dialog.tsx`
+- Change the mobile DrawerContent wrapper from `max-w-md` to `w-full` and add `overflow-y-auto max-h-[85vh]` so content scrolls within the drawer instead of overflowing.
 
-1. **Header compacto**: título + data + status badge + botão voltar, tudo em uma área condensada
-2. **Alerta de reunião fechada**: manter inline mas mais compacto
-3. **Grid de botões/cards**: substituir as TabsList por uma grade 2x3 de cards clicáveis, cada um representando uma ferramenta:
-   - 📝 Registro
-   - 🤖 Resumo IA  
-   - 📄 Ata
-   - 💬 WhatsApp
-   - 📋 Pauta
-   - ⚙️ Ações (reabrir, excluir ata, editar — apenas para moderador/gestão)
-4. **Ao clicar em um card**: abrir o conteúdo em um **Sheet** (drawer de baixo para cima no mobile, dialog no desktop) que sobrepõe a página, em vez de renderizar inline
+### 2. `src/components/reunioes/RegistroReuniaoEditor.tsx`
+- Make the CardHeader flex layout wrap on small screens (`flex-wrap`) so the title and badge stack instead of overflowing.
+- Reduce the textarea `min-h` from `400px` to `250px` on mobile to fit better in the drawer.
 
-### Arquivos a Alterar
+### 3. `src/index.css`
+- Add `overflow-x: hidden` to `body` as a safety net to prevent any horizontal scroll across the app.
 
-**`src/pages/ReuniaoDetalhe.tsx`**:
-- Remover `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent`
-- Adicionar estado `openSheet: string | null` para controlar qual sheet está aberto
-- Criar grid de cards com ícones (grid-cols-2 gap-3)
-- Cada card abre um `ResponsiveDialog` (drawer no mobile, dialog no desktop) com o conteúdo correspondente
-- Mover ações de gestão (reabrir, excluir ata) para o card "Ações" ou manter no alerta
-- O card "Registro" fica destacado como principal
-
-### Detalhes da UI
-
-**Cards na grid:**
-- Cada card: ícone + título + descrição curta
-- Cards com indicador visual se tem conteúdo (ex: badge "✓" no Ata se já foi gerada)
-- Card "Registro" maior ou destacado como ação principal
-
-**Sheet/Dialog:**
-- Abre quase em tela cheia no mobile (sheet de baixo, altura ~90vh)
-- Header com título + botão fechar
-- Conteúdo scrollável
-- No desktop: dialog com max-w-4xl
+### 4. `src/pages/ReuniaoDetalhe.tsx`
+- Remove `max-w-4xl max-h-[90vh] overflow-y-auto` from ResponsiveDialogContent className since the responsive-dialog component itself will handle sizing per device.
 
