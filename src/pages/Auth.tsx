@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDiretoriaSession } from '@/contexts/DiretoriaSessionContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
+import PinPad from '@/components/secretaria/PinPad';
 
 type RoleCard = 'pastor' | 'diretoria' | 'membro';
 
@@ -19,6 +21,10 @@ interface Society {
   slug: string;
   color: string;
 }
+
+type DiretoriaStep = 'societies' | 'pin' | 'name-confirm' | 'name-input';
+
+const DIRETORIA_FUNCTIONS = ['Presidente', 'Vice-Presidente', 'Secretário(a)', 'Tesoureiro(a)', 'Outro'];
 
 const roleConfig: Record<RoleCard, { label: string; description: string; icon: typeof ShieldCheck; showSociety: boolean }> = {
   pastor: {
@@ -42,7 +48,7 @@ const roleConfig: Record<RoleCard, { label: string; description: string; icon: t
 };
 
 export default function Auth() {
-  const [step, setStep] = useState<'select' | 'login'>('select');
+  const [step, setStep] = useState<'select' | 'login' | 'diretoria'>('select');
   const [selectedRole, setSelectedRole] = useState<RoleCard | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState('');
@@ -50,7 +56,17 @@ export default function Auth() {
   const [selectedSociety, setSelectedSociety] = useState('');
   const [societies, setSocieties] = useState<Society[]>([]);
 
+  // Diretoria PIN flow state
+  const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('societies');
+  const [selectedDiretoriaSociety, setSelectedDiretoriaSociety] = useState<Society | null>(null);
+  const [pinError, setPinError] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
+  const [savedName, setSavedName] = useState<string | null>(null);
+  const [operatorName, setOperatorName] = useState('');
+  const [operatorFunction, setOperatorFunction] = useState('');
+
   const { signIn, setSelectedSocietyId } = useAuth();
+  const { setSession: setDiretoriaSession } = useDiretoriaSession();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -67,6 +83,13 @@ export default function Auth() {
   }, []);
 
   const handleSelectRole = (role: RoleCard) => {
+    if (role === 'diretoria') {
+      setSelectedRole(role);
+      setStep('diretoria');
+      setDiretoriaStep('societies');
+      setSelectedDiretoriaSociety(null);
+      return;
+    }
     setSelectedRole(role);
     setStep('login');
     setUsername('');
@@ -75,8 +98,112 @@ export default function Auth() {
   };
 
   const handleBack = () => {
+    if (step === 'diretoria') {
+      if (diretoriaStep === 'pin') {
+        setDiretoriaStep('societies');
+        setSelectedDiretoriaSociety(null);
+        setPinError(false);
+        return;
+      }
+      if (diretoriaStep === 'name-confirm' || diretoriaStep === 'name-input') {
+        setDiretoriaStep('pin');
+        setSavedName(null);
+        setOperatorName('');
+        setOperatorFunction('');
+        return;
+      }
+    }
     setStep('select');
     setSelectedRole(null);
+  };
+
+  const handleSelectDiretoriaSociety = (society: Society) => {
+    setSelectedDiretoriaSociety(society);
+    setDiretoriaStep('pin');
+    setPinError(false);
+  };
+
+  const handlePinComplete = async (pin: string) => {
+    if (!selectedDiretoriaSociety) return;
+    setPinLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-diretoria-pin', {
+        body: { society_slug: selectedDiretoriaSociety.slug, pin },
+      });
+
+      if (error || !data?.success) {
+        setPinError(true);
+        toast({ variant: 'destructive', title: 'PIN incorreto' });
+        setTimeout(() => setPinError(false), 600);
+        setPinLoading(false);
+        return;
+      }
+
+      // PIN correct — set Supabase session from the returned token
+      const { session } = data;
+      await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
+
+      // Check localStorage for saved name
+      const nameKey = `diretoria_name_${selectedDiretoriaSociety.slug}`;
+      const funcKey = `diretoria_function_${selectedDiretoriaSociety.slug}`;
+      const saved = localStorage.getItem(nameKey);
+      const savedFunc = localStorage.getItem(funcKey);
+
+      if (saved) {
+        setSavedName(saved);
+        setOperatorFunction(savedFunc || '');
+        setDiretoriaStep('name-confirm');
+      } else {
+        setDiretoriaStep('name-input');
+      }
+    } catch (err) {
+      console.error('PIN validation error:', err);
+      setPinError(true);
+      toast({ variant: 'destructive', title: 'Erro ao validar PIN' });
+      setTimeout(() => setPinError(false), 600);
+    } finally {
+      setPinLoading(false);
+    }
+  };
+
+  const finishDiretoriaLogin = (name: string, func: string) => {
+    if (!selectedDiretoriaSociety) return;
+    const nameKey = `diretoria_name_${selectedDiretoriaSociety.slug}`;
+    const funcKey = `diretoria_function_${selectedDiretoriaSociety.slug}`;
+    localStorage.setItem(nameKey, name);
+    localStorage.setItem(funcKey, func);
+
+    setDiretoriaSession({
+      societyId: selectedDiretoriaSociety.id,
+      societySlug: selectedDiretoriaSociety.slug,
+      societyName: selectedDiretoriaSociety.name,
+      societyColor: selectedDiretoriaSociety.color,
+      operatorName: name,
+      operatorFunction: func,
+    });
+
+    toast({ title: 'Bem-vindo!', description: `Entrando como ${name}` });
+    navigate('/');
+  };
+
+  const handleConfirmName = () => {
+    finishDiretoriaLogin(savedName!, operatorFunction);
+  };
+
+  const handleDifferentPerson = () => {
+    setSavedName(null);
+    setOperatorName('');
+    setOperatorFunction('');
+    setDiretoriaStep('name-input');
+  };
+
+  const handleSaveName = () => {
+    if (!operatorName.trim() || !operatorFunction) return;
+    finishDiretoriaLogin(operatorName.trim(), operatorFunction);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -119,6 +246,94 @@ export default function Auth() {
     setIsLoading(false);
   };
 
+  // Render diretoria name confirmation
+  if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+        <div className="w-full max-w-sm">
+          <Card className="border-border/50 shadow-xl">
+            <CardContent className="pt-6 space-y-5">
+              <div className="text-center space-y-3">
+                <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <UserCheck className="h-8 w-8 text-primary" />
+                </div>
+                <h2 className="font-semibold text-lg">Você é</h2>
+                <p className="text-2xl font-bold text-primary">{savedName}?</p>
+                {operatorFunction && (
+                  <p className="text-sm text-muted-foreground">{operatorFunction} — {selectedDiretoriaSociety?.name}</p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" onClick={handleDifferentPerson}>
+                  Não sou eu
+                </Button>
+                <Button onClick={handleConfirmName}>
+                  Sim, sou eu!
+                </Button>
+              </div>
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Render diretoria name input form
+  if (step === 'diretoria' && diretoriaStep === 'name-input') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+        <div className="w-full max-w-sm">
+          <Card className="border-border/50 shadow-xl">
+            <CardContent className="pt-6 space-y-5">
+              <div className="text-center space-y-2">
+                <div className="mx-auto h-14 w-14 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${selectedDiretoriaSociety?.color}20` }}>
+                  <UserCheck className="h-7 w-7" style={{ color: selectedDiretoriaSociety?.color }} />
+                </div>
+                <h2 className="font-semibold text-lg">Identificação</h2>
+                <p className="text-sm text-muted-foreground">Informe seus dados para a {selectedDiretoriaSociety?.name}</p>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="operator-name">Nome completo</Label>
+                  <Input
+                    id="operator-name"
+                    placeholder="Digite seu nome completo"
+                    value={operatorName}
+                    onChange={(e) => setOperatorName(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="operator-function">Função na diretoria</Label>
+                  <Select value={operatorFunction} onValueChange={setOperatorFunction}>
+                    <SelectTrigger id="operator-function">
+                      <SelectValue placeholder="Selecione sua função" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DIRETORIA_FUNCTIONS.map((f) => (
+                        <SelectItem key={f} value={f}>{f}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button className="w-full" disabled={!operatorName.trim() || !operatorFunction} onClick={handleSaveName}>
+                Continuar
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
       <div className="w-full max-w-md">
@@ -158,7 +373,7 @@ export default function Auth() {
               </div>
               <ArrowRight className="h-5 w-5 text-primary animate-bounce-right flex-shrink-0" />
             </button>
-            {(['pastor', 'diretoria', 'membro'] as RoleCard[]).map((role, i) => {
+            {(['pastor', 'diretoria', 'membro'] as RoleCard[]).map((role) => {
               const config = roleConfig[role];
               const Icon = config.icon;
               return (
@@ -180,8 +395,46 @@ export default function Auth() {
               );
             })}
           </div>
+        ) : step === 'diretoria' && diretoriaStep === 'societies' ? (
+          /* Diretoria: Society cards */
+          <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
+            <div className="flex items-center gap-2 mb-4">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-lg font-semibold">Selecione a sociedade</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {societies.map((society) => (
+                <Card
+                  key={society.id}
+                  className="cursor-pointer border-border/50 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.97]"
+                  onClick={() => handleSelectDiretoriaSociety(society)}
+                >
+                  <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
+                    <div
+                      className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+                      style={{ backgroundColor: society.color }}
+                    >
+                      {society.slug.toUpperCase().slice(0, 3)}
+                    </div>
+                    <span className="font-semibold text-sm">{society.name}</span>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
+          /* Diretoria: PinPad */
+          <PinPad
+            profileLabel={selectedDiretoriaSociety?.name || 'Diretoria'}
+            onBack={handleBack}
+            onComplete={handlePinComplete}
+            loading={pinLoading}
+            error={pinError}
+          />
         ) : (
-          /* Step 2: Login form */
+          /* Step 2: Login form (Pastor / Membro) */
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <Card className="border-border/50 shadow-xl">
               <CardHeader className="pb-2">
