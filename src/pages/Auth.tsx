@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDiretoriaSession } from '@/contexts/DiretoriaSessionContext';
@@ -66,6 +66,7 @@ export default function Auth() {
   const [membroSavedName, setMembroSavedName] = useState<string | null>(null);
   const [membroSavedId, setMembroSavedId] = useState<string | null>(null);
   const [memberLoginLoading, setMemberLoginLoading] = useState(false);
+  const splashStartRef = useRef(Date.now());
 
   const { signIn } = useAuth();
   const { setSession: setDiretoriaSession } = useDiretoriaSession();
@@ -98,17 +99,20 @@ export default function Auth() {
     fetchSocieties();
   }, []);
 
-  // Splash → video transition
+  // Splash → video transition (minimum 2s splash)
   useEffect(() => {
     if (!videoReady) return;
-    // Video is ready, start zoom-out on splash
-    const t1 = setTimeout(() => setSplashPhase('zoom-out'), 400);
-    // After zoom-out animation, remove splash and show cards
-    const t2 = setTimeout(() => {
+    const elapsed = Date.now() - splashStartRef.current;
+    const remaining = Math.max(0, 2000 - elapsed);
+    // Wait at least 2s before starting zoom-out
+    const t0 = setTimeout(() => {
+      setSplashPhase('zoom-out');
+    }, remaining);
+    const t1 = setTimeout(() => {
       setSplashPhase('done');
       setShowCards(true);
-    }, 1200);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    }, remaining + 800);
+    return () => { clearTimeout(t0); clearTimeout(t1); };
   }, [videoReady]);
 
   // ========== HANDLERS ==========
@@ -848,15 +852,15 @@ export default function Auth() {
 
       {/* Splash screen */}
       {splashPhase !== 'done' && (
-        <div className={`fixed inset-0 z-30 flex flex-col items-center justify-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
+        <div className={`fixed inset-0 z-30 flex flex-col items-center justify-start pt-[18vh] transition-all duration-700 ${splashPhase === 'zoom-out' ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
           {/* Background image */}
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/bg-app.png)' }} />
+          <div className="absolute inset-0 bg-cover bg-center safe-top" style={{ backgroundImage: 'url(/images/bg-app.png)' }} />
           <div className="absolute inset-0 bg-black/50" />
           <div className={`relative text-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'scale-90 opacity-0' : 'scale-100 opacity-100'}`}>
             <img
               src={logoIpnc}
               alt="Renovo IPNC"
-              className="h-28 w-28 mx-auto object-contain mb-6 animate-logo-pulse"
+              className="h-56 w-56 mx-auto object-contain mb-6 animate-logo-pulse"
             />
             <h1 className="text-white text-2xl font-bold tracking-tight mb-1">
               Igreja Presbiteriana
