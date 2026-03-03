@@ -1,26 +1,55 @@
 
 
-# Fix: Content Overflowing Screen on Mobile
+# Substituir Drawers/Dialogs por Visualização Full-Screen Inline
 
-## Problem
-The screenshot shows content clipping on the left side of the Drawer on mobile. Two root causes:
+## Problema
+O conteúdo dentro dos drawers ainda transborda horizontalmente. Os cards internos (como RegistroReuniaoEditor) têm larguras fixas e padding que ultrapassam a viewport no mobile.
 
-1. **ResponsiveDialogContent** (line 110): On mobile, wraps children in `max-w-md px-4` which is fine for width, but the inner components (like RegistroReuniaoEditor's Card) have flex layouts that don't wrap and overflow horizontally.
-2. **RegistroReuniaoEditor** CardHeader: The title + badge row uses `flex justify-between` without wrapping, causing horizontal overflow on narrow screens.
-3. **Drawer height**: No max-height set, so tall content can push buttons off-screen.
+## Nova Abordagem
+Abandonar completamente o `ResponsiveDialog` (drawer/dialog) e usar uma **visualização inline full-screen** controlada por estado. Quando o usuário clica em um card, o grid desaparece e o conteúdo do card ocupa a página inteira, com um botão "Voltar" no topo — como se fosse uma navegação de página.
 
-## Changes
+## Mudanças
 
-### 1. `src/components/ui/responsive-dialog.tsx`
-- Change the mobile DrawerContent wrapper from `max-w-md` to `w-full` and add `overflow-y-auto max-h-[85vh]` so content scrolls within the drawer instead of overflowing.
+### `src/pages/ReuniaoDetalhe.tsx`
+- Remover todas as importações de `ResponsiveDialog` e componentes relacionados
+- Usar renderização condicional: se `openSheet` é `null`, mostra o header + grid de cards. Se `openSheet` tem valor, mostra o header com botão voltar + título da ferramenta + conteúdo da ferramenta ocupando toda a área
+- Layout:
+  ```text
+  openSheet === null:
+  ┌──────────────────────┐
+  │ ← Título    [Badge]  │
+  │   data/hora           │
+  │ [Alert se fechada]    │
+  │ ┌────────┐ ┌────────┐│
+  │ │Registro│ │Resumo  ││
+  │ ├────────┤ ├────────┤│
+  │ │Ata     │ │WhatsApp││
+  │ ├────────┤ ├────────┤│
+  │ │Pauta   │ │Ações   ││
+  │ └────────┘ └────────┘│
+  └──────────────────────┘
 
-### 2. `src/components/reunioes/RegistroReuniaoEditor.tsx`
-- Make the CardHeader flex layout wrap on small screens (`flex-wrap`) so the title and badge stack instead of overflowing.
-- Reduce the textarea `min-h` from `400px` to `250px` on mobile to fit better in the drawer.
+  openSheet === 'registro':
+  ┌──────────────────────┐
+  │ ← Registro da Reunião│
+  │                       │
+  │ [Conteúdo full-width] │
+  │ [sem Card wrapper]    │
+  │ [scroll natural]      │
+  └──────────────────────┘
+  ```
 
-### 3. `src/index.css`
-- Add `overflow-x: hidden` to `body` as a safety net to prevent any horizontal scroll across the app.
+### `src/components/reunioes/RegistroReuniaoEditor.tsx`
+- Remover o wrapper `<Card>` / `<CardHeader>` / `<CardContent>` para que o conteúdo flua direto sem padding extra
+- Ou: adicionar prop `embedded?: boolean` que quando `true` remove o Card wrapper e renderiza o conteúdo diretamente com `w-full overflow-hidden`
 
-### 4. `src/pages/ReuniaoDetalhe.tsx`
-- Remove `max-w-4xl max-h-[90vh] overflow-y-auto` from ResponsiveDialogContent className since the responsive-dialog component itself will handle sizing per device.
+### Limpeza
+- Remover import de `ResponsiveDialog` do arquivo
+- O `responsive-dialog.tsx` permanece no projeto pois pode ser usado em outros lugares
+
+## Detalhes Técnicos
+- Botão voltar no topo: `<Button variant="ghost" onClick={() => setOpenSheet(null)}><ArrowLeft /> {título}</Button>`
+- Conteúdo renderizado dentro do `<AppLayout>` normal, usando toda a largura disponível
+- Sem max-width, sem padding extra, sem overlay — conteúdo nativo na página
+- Os componentes filhos (AtaViewer, ComunicacaoTab, etc.) herdam `w-full` naturalmente
 
