@@ -36,6 +36,7 @@ import Dizimos from "./pages/Dizimos";
 import Visitantes from "./pages/Visitantes";
 import Estudos from "./pages/Estudos";
 import Secretaria from "./pages/Secretaria";
+import GerarCartaz from "./pages/GerarCartaz";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
@@ -96,6 +97,8 @@ const App = () => (
             <Route path="/visitantes" element={<Visitantes />} />
             <Route path="/estudos" element={<Estudos />} />
             <Route path="/secretaria" element={<Secretaria />} />
+            <Route path="/cartaz" element={<GerarCartaz />} />
+            <Route path="/pastor/cartaz" element={<GerarCartaz />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

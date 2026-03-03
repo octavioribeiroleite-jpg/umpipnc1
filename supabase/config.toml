@@ -30,4 +30,7 @@ verify_jwt = false
 [functions.summarize-yearly-studies]
 verify_jwt = false
 
+[functions.generate-poster]
+verify_jwt = false
+
 

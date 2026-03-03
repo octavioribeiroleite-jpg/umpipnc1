@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
-  Calendar, ChevronRight, Megaphone, Heart, Vote,
+  Calendar, ChevronRight, Megaphone, Heart, Vote, Image,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -60,6 +60,7 @@ function getGreeting(): string {
 const quickActions = [
   { icon: Calendar, label: 'Calendário', path: '/pastor/calendario' },
   { icon: Megaphone, label: 'Comunicados', path: '/pastor/comunicados' },
+  { icon: Image, label: 'Gerar Cartaz', path: '/pastor/cartaz' },
   { icon: Heart, label: 'Dízimos', path: '/dizimos' },
   { icon: Vote, label: 'Eleições', path: '/eleicoes' },
 ];
@@ -192,7 +193,7 @@ export default function PainelPastor() {
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
               Acesso Rápido
             </h3>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {quickActions.map(action => (
                 <button
                   key={action.path}
