@@ -40,6 +40,8 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [societies, setSocieties] = useState<Society[]>([]);
   const [isExiting, setIsExiting] = useState(false);
+  const [isEnteringApp, setIsEnteringApp] = useState(false);
+  const [entryMessage, setEntryMessage] = useState('');
 
   // Diretoria PIN flow state
   const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('societies');
@@ -68,7 +70,14 @@ export default function Auth() {
   const { toast } = useToast();
 
   // Exit transition helper
-  const navigateWithTransition = useCallback((path: string) => {
+  const navigateWithTransition = useCallback((path: string, options?: { showWelcome?: boolean }) => {
+    if (options?.showWelcome) {
+      setIsEnteringApp(true);
+      setEntryMessage('Bem-vindo à Igreja Presbiteriana de Nova Carapina');
+      setTimeout(() => navigate(path), 1200);
+      return;
+    }
+
     setIsExiting(true);
     setTimeout(() => navigate(path), 450);
   }, [navigate]);
@@ -181,7 +190,7 @@ export default function Auth() {
     });
 
     toast({ title: 'Bem-vindo!', description: `Entrando como ${name}` });
-    navigateWithTransition('/');
+    navigateWithTransition('/', { showWelcome: true });
   };
 
   const handleConfirmName = () => {
@@ -265,7 +274,7 @@ export default function Auth() {
       });
 
       toast({ title: 'Bem-vindo!', description: `Olá, ${member.name.split(' ')[0]}!` });
-      navigateWithTransition('/membro');
+      navigateWithTransition('/membro', { showWelcome: true });
     } catch (err) {
       console.error('Member login error:', err);
       toast({ variant: 'destructive', title: 'Erro ao entrar' });
@@ -302,7 +311,7 @@ export default function Auth() {
       toast({ variant: 'destructive', title: 'Erro ao entrar', description: 'Usuário ou senha incorretos' });
     } else {
       toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
-      navigateWithTransition('/');
+      navigateWithTransition('/', { showWelcome: true });
     }
 
     setIsLoading(false);
@@ -314,6 +323,20 @@ export default function Auth() {
 
   // ========== RENDER CONTENT (conditional by step) ==========
   const renderContent = () => {
+    if (isEnteringApp) {
+      return (
+        <div className="w-full max-w-md">
+          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
+            <CardContent className="py-10 text-center space-y-3">
+              <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+              <h2 className="text-xl font-semibold text-gray-900">{entryMessage}</h2>
+              <p className="text-sm text-gray-500">Preparando o aplicativo para você...</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     // Membro name-confirm
     if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
       return (
