@@ -1,46 +1,47 @@
 
 
-# Ajustes no fluxo da Secretaria EBD
+# Redesign da Página de Detalhe da Reunião
 
-## 1. Admin entra direto (sem pedir nome)
-- Em `Secretaria.tsx`: admin ja entra direto apos PIN (ja funciona assim, linha 92-93). Nenhuma mudanca necessaria aqui.
+## Problema Atual
+A página tem muitos elementos empilhados verticalmente (header, badge de status, alerta de fechada, tabs, conteúdo) que ocupam muito espaço e dificultam a visualização no mobile. As abas inline empurram o conteúdo para baixo.
 
-## 2. Fluxo de chamada por turma com Iniciar/Finalizar/Reabrir
+## Nova Abordagem
 
-Refatorar `ChamadaTab.tsx`:
+### Layout Compacto com Sheets/Drawers
 
-- **Remover** a tela global de "Iniciar Chamada" (com campo de nome do professor) - isso ja foi tratado no login
-- **Adicionar estado** `chamadaStatus` por turma: `Map<string, 'idle' | 'aberta' | 'finalizada'>`
-- **Ao clicar numa turma**: mostrar o detalhe da turma
-  - Se status `idle`: mostrar botao "Iniciar Chamada" grande (PlayCircle)
-  - Se status `aberta`: mostrar lista de alunos com checkboxes (como hoje) + botao "Finalizar Chamada" no rodape
-  - Se status `finalizada`: mostrar lista de alunos (somente leitura, sem poder editar) + badge "Chamada Finalizada" + botao "Reabrir Chamada"
-- **Responsavel**: mostrar nome do professor no header da turma (vem de `initialProfessorName`)
-- **Admin**: admin nao tem `initialProfessorName`, entao nao exibir campo de responsavel. Admin pode iniciar/finalizar chamada normalmente
+Substituir as Tabs por um layout onde:
 
-### Arquivos a alterar
-- `src/components/secretaria/ChamadaTab.tsx`: refatorar para ter fluxo iniciar/finalizar/reabrir por turma
-- `src/pages/Secretaria.tsx`: passar `accessLevel` como prop para ChamadaTab saber se e admin
+1. **Header compacto**: título + data + status badge + botão voltar, tudo em uma área condensada
+2. **Alerta de reunião fechada**: manter inline mas mais compacto
+3. **Grid de botões/cards**: substituir as TabsList por uma grade 2x3 de cards clicáveis, cada um representando uma ferramenta:
+   - 📝 Registro
+   - 🤖 Resumo IA  
+   - 📄 Ata
+   - 💬 WhatsApp
+   - 📋 Pauta
+   - ⚙️ Ações (reabrir, excluir ata, editar — apenas para moderador/gestão)
+4. **Ao clicar em um card**: abrir o conteúdo em um **Sheet** (drawer de baixo para cima no mobile, dialog no desktop) que sobrepõe a página, em vez de renderizar inline
 
-### Detalhes da UI por turma
+### Arquivos a Alterar
 
-**Estado idle (turma ainda nao teve chamada iniciada):**
-- Card centralizado com icone PlayCircle
-- Texto "Iniciar Chamada" + nome da turma
-- Se professor: mostrar "Responsavel: [nome]"
-- Botao "Iniciar Chamada"
+**`src/pages/ReuniaoDetalhe.tsx`**:
+- Remover `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent`
+- Adicionar estado `openSheet: string | null` para controlar qual sheet está aberto
+- Criar grid de cards com ícones (grid-cols-2 gap-3)
+- Cada card abre um `ResponsiveDialog` (drawer no mobile, dialog no desktop) com o conteúdo correspondente
+- Mover ações de gestão (reabrir, excluir ata) para o card "Ações" ou manter no alerta
+- O card "Registro" fica destacado como principal
 
-**Estado aberta (chamada em andamento):**
-- Header com nome da turma + stats + badge "Em andamento"
-- Lista de alunos com checkboxes (comportamento atual)
-- Botao fixo no rodape: "Finalizar Chamada" (verde)
+### Detalhes da UI
 
-**Estado finalizada:**
-- Header com badge "Finalizada"
-- Lista de alunos somente leitura (checkboxes desabilitados)
-- Resumo: X presentes de Y alunos
-- Botao "Reabrir Chamada" (outline/secondary)
+**Cards na grid:**
+- Cada card: ícone + título + descrição curta
+- Cards com indicador visual se tem conteúdo (ex: badge "✓" no Ata se já foi gerada)
+- Card "Registro" maior ou destacado como ação principal
 
-**Na grid de turmas (visao principal):**
-- Mostrar badge de status em cada card: "Nao iniciada", "Em andamento", "Finalizada"
+**Sheet/Dialog:**
+- Abre quase em tela cheia no mobile (sheet de baixo, altura ~90vh)
+- Header com título + botão fechar
+- Conteúdo scrollável
+- No desktop: dialog com max-w-4xl
 
