@@ -848,8 +848,11 @@ export default function Auth() {
 
       {/* Splash screen */}
       {splashPhase !== 'done' && (
-        <div className={`fixed inset-0 z-30 bg-black flex flex-col items-center justify-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
-          <div className={`text-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'scale-90 opacity-0' : 'scale-100 opacity-100'}`}>
+        <div className={`fixed inset-0 z-30 flex flex-col items-center justify-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
+          {/* Background image */}
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/bg-app.png)' }} />
+          <div className="absolute inset-0 bg-black/50" />
+          <div className={`relative text-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'scale-90 opacity-0' : 'scale-100 opacity-100'}`}>
             <img
               src={logoIpnc}
               alt="Renovo IPNC"
@@ -861,12 +864,7 @@ export default function Auth() {
             <p className="text-white/60 text-base mb-8">
               de Nova Carapina
             </p>
-            {/* Loading dots */}
-            <div className="flex items-center justify-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '0ms' }} />
-              <span className="h-2 w-2 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '300ms' }} />
-              <span className="h-2 w-2 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '600ms' }} />
-            </div>
+            <p className="text-white/50 text-sm animate-pulse">Carregando...</p>
           </div>
         </div>
       )}
