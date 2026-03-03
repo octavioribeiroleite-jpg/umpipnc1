@@ -92,8 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
-        if (newSession?.user && !profile) {
-          // Only fetch if we don't already have profile data
+        const isNewUser = newSession?.user?.id !== user?.id;
+        if (newSession?.user && (!profile || isNewUser)) {
+          if (isNewUser) {
+            setProfile(null);
+            setRoles([]);
+            setSociety(null);
+          }
           setTimeout(() => {
             if (isMounted) fetchProfileAndRoles(newSession.user.id);
           }, 0);
