@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw, Download } from 'lucide-react';
+import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EbdClass {
@@ -291,8 +292,27 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                 <span className="text-base font-normal text-muted-foreground">/{totalStats.total}</span>
               </p>
             </div>
-            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-lg font-bold text-primary">{totalStats.percentage}%</span>
+            <div className="flex items-center gap-3">
+              {attendance.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => generateEbdAttendancePDF({
+                    classes,
+                    students,
+                    attendance,
+                    date: attendanceDate,
+                    formattedDate,
+                    professorName: initialProfessorName,
+                  })}
+                  title="Baixar PDF da chamada"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
+              <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-lg font-bold text-primary">{totalStats.percentage}%</span>
+              </div>
             </div>
           </div>
           <Progress value={totalStats.percentage} className="h-2" />

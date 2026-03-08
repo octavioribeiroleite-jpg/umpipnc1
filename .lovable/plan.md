@@ -1,55 +1,67 @@
 
 
-# PDF Detalhado da Chamada EBD
+# Dashboard "Agenda Primeiro" para Diretoria/Sociedades
 
 ## Objetivo
-Criar uma função `generateEbdAttendancePDF` que gera um PDF profissional e detalhado com os dados da chamada da EBD, seguindo o mesmo estilo visual dos PDFs existentes (header azul escuro, logo IPNC, barra decorativa, zebra striping).
+Transformar o Dashboard da Diretoria (Index.tsx) para seguir a mesma estética do Painel do Pastor: calendário mensal + lista de programações do dia selecionado. Remover stats financeiros, membros e resumo financeiro do Home (ficam no menu). Filtrar eventos pela society do usuário logado.
 
-## Arquivo a criar
+## Alterações
 
-### `src/utils/generateEbdPDF.ts`
+### 1. `src/hooks/useEvents.ts` — Adicionar filtro por `societyId`
+- Aceitar param opcional `societyId?: string`
+- Quando presente, adicionar `.eq('society_id', societyId)` nas queries de `eventsQuery` e `upcomingEventsQuery`
+- Atualizar `queryKey` para incluir `societyId`
 
-**Estrutura do PDF:**
+### 2. `src/pages/Index.tsx` — Reestruturação completa do layout
+Substituir o dashboard atual (stats + finanças + membros + EventCompletionList) por layout "agenda primeiro":
 
-1. **Header** — Barra azul escura com logo IPNC + "Relatório de Chamada — EBD" + data formatada
-2. **Resumo Geral** — Box com estatísticas: Total de alunos, Presentes, Ausentes, % geral, barra de progresso visual
-3. **Ranking de Turmas** — Tabela ordenada por % presença:
-   - Nome da turma | Presentes/Total | % | Barra visual
-   - Troféu na turma com maior presença
-   - Cores: verde (>70%), amarelo (40-70%), vermelho (<40%)
-4. **Detalhamento por Turma** — Para cada turma:
-   - Header com nome e stats
-   - Lista de presentes (bolinha verde + nome)
-   - Lista de ausentes (bolinha vermelha + nome)
-   - Zebra striping alternado
-5. **Rodapé** — "Gerado em dd/MM/yyyy às HH:mm" + "Página X de Y"
+**Remover:**
+- Grid de 4 StatCards (saldo, contribuições, membros, tarefas)
+- Cards Diretoria e Membros (+ dialogs)
+- Resumo Financeiro card
+- `EventCompletionList`
+- Fetch de `stats`, `diretoria`, `membros`, `pendingSubmissions`
+- Imports não utilizados (DollarSign, Users, Shield, UserCheck, TrendingUp, etc.)
 
-**Parâmetros:**
-```typescript
-interface GenerateEbdPDFParams {
-  classes: { id: string; name: string; order_index: number }[];
-  students: { id: string; class_id: string; name: string }[];
-  attendance: { student_id: string; class_id: string; date: string; present: boolean }[];
-  date: string;        // yyyy-MM-dd
-  formattedDate: string; // "08 de março de 2026"
-  professorName?: string;
-}
-```
+**Adicionar (mesma estrutura do PainelPastor):**
+- Estado: `selectedDate`, `currentMonth`, `currentYear`
+- `useEvents()` com `societyId` filtrado (quando não admin/pastor)
+- Chips de resumo (Hoje, Semana, Aguardando) — 3 AppCards compactos
+- `PastorCalendarWidget` (reutilizado, funciona para qualquer role)
+- `PastorDayEventList` (reutilizado, mesmo componente)
+- Ações Rápidas reduzidas a 4 colunas: Reunião, Evento, Finanças, Tarefa
+- Manter: `PastorNotificationBanner`, `PastorLoginNotification`, notificação de comprovantes pendentes
 
-## Arquivo a modificar
+**Layout final (de cima para baixo):**
+1. PageHeader simplificado (saudação + data)
+2. Banner de comprovantes pendentes (se houver)
+3. 3 chips: Hoje | Semana | Aguardando
+4. Calendário mensal (PastorCalendarWidget)
+5. Programações do dia (PastorDayEventList)
+6. Acesso Rápido (4 botões)
 
-### `src/components/secretaria/ChamadaTab.tsx`
-- Adicionar botão "Baixar PDF" (ícone Download) ao lado do card de resumo geral
-- Chamar `generateEbdAttendancePDF()` com os dados atuais (classes, students, attendance, date)
-- Botão só aparece quando há dados de presença
+### 3. Filtro por sociedade — Lógica
+- `const societyId = profile?.society_id` (já existe na linha 122)
+- Passar `societyId` ao `useEvents()` para que só retorne eventos da society logada
+- Admin/Pastor: `societyId = undefined` → vê todos os eventos (mesmo comportamento atual)
+- Diretoria UMP: `societyId = uuid-ump` → só vê eventos da UMP
+- Não altera RLS nem banco — apenas filtro no frontend via query param
 
-## Estilo visual
-Reutiliza o mesmo padrão dos PDFs existentes (`generateCalendarPDF.ts` e `PlenariaDetalhe.tsx`):
-- Header: `fillColor(30, 58, 95)` com texto branco
-- Logo: `logoBase64` do asset IPNC
-- Barra decorativa: `drawColor(52, 152, 219)`
-- Seções: headers coloridos (verde presentes, vermelho ausentes)
-- Zebra striping nas listas
-- Font: helvetica, tamanhos 7-18
-- Paginação automática com `checkPage()`
+### 4. Componentes reutilizados (sem duplicar)
+- `PastorCalendarWidget` e `PastorDayEventList` já são genéricos — recebem `events` e `selectedDate` como props
+- No Index.tsx, passam os mesmos props com dados filtrados pela society
+- `PastorEventCard` dentro do DayEventList mostra botões de ação apenas se `onUpdateStatus` é passado (já funciona assim)
+
+### 5. Dialogs mantidos
+- Os dialogs de Diretoria e Membros serão removidos do Home (ficam acessíveis via menu Membros/Configurações)
+
+## Arquivos modificados
+- `src/hooks/useEvents.ts` — adicionar param `societyId`
+- `src/pages/Index.tsx` — reestruturação completa
+
+## O que NÃO muda
+- Nenhuma lógica de auth, RLS, banco, permissões
+- Nenhum componente base (AppCard, AppButton, etc.)
+- PainelPastor.tsx (permanece igual)
+- Menu lateral e rotas (Finanças, Membros, Tarefas continuam no menu)
 
