@@ -119,15 +119,17 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       }
 
       const presentCount = dayAtt.filter(a => a.present).length;
+      const classStudentMap = new Map<string, number>();
+      students.forEach(s => classStudentMap.set(s.class_id, (classStudentMap.get(s.class_id) || 0) + 1));
       const classSummary: ClassSummaryItem[] = classes.map(cls => {
-        const cr = dayAtt.filter(a => a.class_id === cls.id);
-        const cp = cr.filter(a => a.present).length;
-        return { classId: cls.id, className: cls.name, total: cr.length, present: cp, percentage: cr.length > 0 ? Math.round((cp / cr.length) * 100) : 0 };
+        const classTotal = classStudentMap.get(cls.id) || 0;
+        const cp = dayAtt.filter(a => a.class_id === cls.id && a.present).length;
+        return { classId: cls.id, className: cls.name, total: classTotal, present: cp, percentage: classTotal > 0 ? Math.round((cp / classTotal) * 100) : 0 };
       }).filter(cs => cs.total > 0);
 
-      return { date, isClosed: false, totalStudents: dayAtt.length, presentStudents: presentCount, classSummary, markedByNames };
+      return { date, isClosed: false, totalStudents: totalMembers, presentStudents: presentCount, classSummary, markedByNames };
     });
-  }, [allAttendance, closures, classes]);
+  }, [allAttendance, closures, classes, students, totalMembers]);
 
   const getPercentColor = (pct: number) => {
     if (pct > 70) return 'text-green-600';
