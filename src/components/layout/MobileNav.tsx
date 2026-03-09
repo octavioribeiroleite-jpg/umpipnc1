@@ -116,12 +116,13 @@ export function MobileNav() {
                 )}
                 <Button
                   variant="ghost"
-                  onClick={handleSignOut}
+                  onClick={requestExit}
                   className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 >
                   <LogOut className="h-5 w-5 mr-3" />
                   <span>Sair</span>
                 </Button>
+                <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={doSignOut} />
               </div>
             </div>
           </SheetContent>

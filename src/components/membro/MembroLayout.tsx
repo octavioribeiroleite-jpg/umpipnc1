@@ -102,12 +102,13 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
                     )}
                     <Button
                       variant="ghost"
-                      onClick={handleLogout}
+                      onClick={requestExit}
                       className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     >
                       <LogOut className="h-5 w-5 mr-3" />
                       <span>Sair</span>
                     </Button>
+                    <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={doLogout} />
                   </div>
                 </div>
               </SheetContent>
