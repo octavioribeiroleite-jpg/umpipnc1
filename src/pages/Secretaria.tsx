@@ -156,9 +156,9 @@ function SecretariaAniversariantes() {
       />
 
       <NextBirthdayCard birthday={nextBirthday} />
-      <TodayBirthdays birthdays={filteredToday} />
-      <WeekBirthdays birthdays={filteredWeek} />
-      <MonthBirthdays birthdays={filteredMonth} month={currentMonth} />
+      <TodayBirthdays birthdays={filteredToday} showActions onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
+      <WeekBirthdays birthdays={filteredWeek} showActions onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
+      <MonthBirthdays birthdays={filteredMonth} month={currentMonth} showActions onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
 
       {pendingReview.length > 0 && (
         <div className="space-y-2">
@@ -171,7 +171,7 @@ function SecretariaAniversariantes() {
         </div>
       )}
 
-      <YearCalendar birthdays={filteredAll} />
+      <YearCalendar birthdays={filteredAll} onEdit={handleEdit} />
       <BirthdayNotifications />
 
       <BirthdayFormDialog

@@ -1,4 +1,4 @@
-import { Cake } from 'lucide-react';
+import { Cake, Edit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Birthday } from '@/hooks/useBirthdays';
 
@@ -6,9 +6,10 @@ const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julh
 
 interface Props {
   birthdays: Birthday[];
+  onEdit?: (b: Birthday) => void;
 }
 
-export function YearCalendar({ birthdays }: Props) {
+export function YearCalendar({ birthdays, onEdit }: Props) {
   const byMonth = MONTH_NAMES.map((name, idx) => ({
     name,
     month: idx + 1,
@@ -33,11 +34,16 @@ export function YearCalendar({ birthdays }: Props) {
             ) : (
               <div className="space-y-0.5">
                 {m.items.map(b => (
-                  <p key={b.id} className="text-xs truncate">
+                  <div
+                    key={b.id}
+                    className={`text-xs truncate flex items-center gap-1 ${onEdit ? 'cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 py-0.5' : ''}`}
+                    onClick={() => onEdit?.(b)}
+                  >
                     <span className="font-medium text-muted-foreground">{String(b.dia).padStart(2, '0')}</span>
-                    <span className="mx-1 text-muted-foreground">—</span>
-                    <span>{b.nome}</span>
-                  </p>
+                    <span className="text-muted-foreground">—</span>
+                    <span className="flex-1 truncate">{b.nome}</span>
+                    {onEdit && <Edit className="h-3 w-3 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100" />}
+                  </div>
                 ))}
               </div>
             )}

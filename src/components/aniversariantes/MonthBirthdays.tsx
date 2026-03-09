@@ -6,10 +6,14 @@ const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julh
 
 interface Props {
   birthdays: Birthday[];
-  month: number; // 1-12
+  month: number;
+  showActions?: boolean;
+  onEdit?: (b: Birthday) => void;
+  onToggleActive?: (b: Birthday) => void;
+  onDelete?: (b: Birthday) => void;
 }
 
-export function MonthBirthdays({ birthdays, month }: Props) {
+export function MonthBirthdays({ birthdays, month, showActions, onEdit, onToggleActive, onDelete }: Props) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -22,7 +26,7 @@ export function MonthBirthdays({ birthdays, month }: Props) {
       ) : (
         <div className="space-y-1.5">
           {birthdays.map(b => (
-            <BirthdayCard key={b.id} birthday={b} />
+            <BirthdayCard key={b.id} birthday={b} showActions={showActions} onEdit={onEdit} onToggleActive={onToggleActive} onDelete={onDelete} />
           ))}
         </div>
       )}
