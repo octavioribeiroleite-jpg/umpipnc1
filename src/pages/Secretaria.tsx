@@ -218,6 +218,7 @@ export default function Secretaria() {
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
   const [currentView, setCurrentView] = useState<CurrentView>('home');
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
