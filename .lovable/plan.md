@@ -1,67 +1,54 @@
 
 
-# Dashboard "Agenda Primeiro" para Diretoria/Sociedades
+# Historico Completo de Chamadas EBD
 
-## Objetivo
-Transformar o Dashboard da Diretoria (Index.tsx) para seguir a mesma estética do Painel do Pastor: calendário mensal + lista de programações do dia selecionado. Remover stats financeiros, membros e resumo financeiro do Home (ficam no menu). Filtrar eventos pela society do usuário logado.
+## Problema
+O historico atual so mostra dias **fechados** (com registro em `ebd_day_closures`). Dias com chamada feita mas nao fechados nao aparecem como cards. Isso significa que a chamada de hoje so aparecera no historico se o admin clicar "Fechar Dia".
 
-## Alterações
+## Solucao
+Refatorar o `HistoricoTab` para mostrar **todos os dias com registros de presenca**, independente de estarem fechados ou nao. Cada dia vira um card visual com:
+- Data formatada
+- Total presentes / total alunos + percentual
+- Badge: "Fechado" (laranja/verde) ou "Aberto" (azul)
+- Botao expandir para ver turmas
+- Botao baixar PDF
+- Para dias abertos, calcular stats direto do `ebd_attendance`
 
-### 1. `src/hooks/useEvents.ts` — Adicionar filtro por `societyId`
-- Aceitar param opcional `societyId?: string`
-- Quando presente, adicionar `.eq('society_id', societyId)` nas queries de `eventsQuery` e `upcomingEventsQuery`
-- Atualizar `queryKey` para incluir `societyId`
+## Mudancas em `src/components/secretaria/HistoricoTab.tsx`
 
-### 2. `src/pages/Index.tsx` — Reestruturação completa do layout
-Substituir o dashboard atual (stats + finanças + membros + EventCompletionList) por layout "agenda primeiro":
+### Logica de dados
+1. Agrupar `ebd_attendance` por data unica (`date`) para descobrir todos os dias com chamada
+2. Para cada dia:
+   - Se tem registro em `ebd_day_closures` → usar os dados do closure (ja calculados)
+   - Se nao tem closure → calcular stats em tempo real a partir do attendance (presentes por turma, totais)
+3. Ordenar por data desc
+4. Mesclar ambas as fontes em uma lista unificada de "DayRecord"
 
-**Remover:**
-- Grid de 4 StatCards (saldo, contribuições, membros, tarefas)
-- Cards Diretoria e Membros (+ dialogs)
-- Resumo Financeiro card
-- `EventCompletionList`
-- Fetch de `stats`, `diretoria`, `membros`, `pendingSubmissions`
-- Imports não utilizados (DollarSign, Users, Shield, UserCheck, TrendingUp, etc.)
+### Interface unificada
+```typescript
+interface DayRecord {
+  date: string;
+  isClosed: boolean;
+  closureId?: string;
+  closedBy?: string;
+  totalStudents: number;
+  presentStudents: number;
+  classSummary: ClassSummaryItem[];
+}
+```
 
-**Adicionar (mesma estrutura do PainelPastor):**
-- Estado: `selectedDate`, `currentMonth`, `currentYear`
-- `useEvents()` com `societyId` filtrado (quando não admin/pastor)
-- Chips de resumo (Hoje, Semana, Aguardando) — 3 AppCards compactos
-- `PastorCalendarWidget` (reutilizado, funciona para qualquer role)
-- `PastorDayEventList` (reutilizado, mesmo componente)
-- Ações Rápidas reduzidas a 4 colunas: Reunião, Evento, Finanças, Tarefa
-- Manter: `PastorNotificationBanner`, `PastorLoginNotification`, notificação de comprovantes pendentes
+### Cards visuais (substitui a secao atual "Dias fechados")
+- Titulo: data formatada ("08 de marco")
+- Badge: "Fechado" ou "Em aberto"
+- Presentes/Total + percentual grande + barra de progresso
+- Expandir: lista de turmas com presenca individual
+- Botao PDF (funciona tanto para dias fechados quanto abertos)
 
-**Layout final (de cima para baixo):**
-1. PageHeader simplificado (saudação + data)
-2. Banner de comprovantes pendentes (se houver)
-3. 3 chips: Hoje | Semana | Aguardando
-4. Calendário mensal (PastorCalendarWidget)
-5. Programações do dia (PastorDayEventList)
-6. Acesso Rápido (4 botões)
+### Graficos e metricas
+- Permanecem iguais, ja funcionam com dados do `ebd_attendance` direto
 
-### 3. Filtro por sociedade — Lógica
-- `const societyId = profile?.society_id` (já existe na linha 122)
-- Passar `societyId` ao `useEvents()` para que só retorne eventos da society logada
-- Admin/Pastor: `societyId = undefined` → vê todos os eventos (mesmo comportamento atual)
-- Diretoria UMP: `societyId = uuid-ump` → só vê eventos da UMP
-- Não altera RLS nem banco — apenas filtro no frontend via query param
-
-### 4. Componentes reutilizados (sem duplicar)
-- `PastorCalendarWidget` e `PastorDayEventList` já são genéricos — recebem `events` e `selectedDate` como props
-- No Index.tsx, passam os mesmos props com dados filtrados pela society
-- `PastorEventCard` dentro do DayEventList mostra botões de ação apenas se `onUpdateStatus` é passado (já funciona assim)
-
-### 5. Dialogs mantidos
-- Os dialogs de Diretoria e Membros serão removidos do Home (ficam acessíveis via menu Membros/Configurações)
-
-## Arquivos modificados
-- `src/hooks/useEvents.ts` — adicionar param `societyId`
-- `src/pages/Index.tsx` — reestruturação completa
-
-## O que NÃO muda
-- Nenhuma lógica de auth, RLS, banco, permissões
-- Nenhum componente base (AppCard, AppButton, etc.)
-- PainelPastor.tsx (permanece igual)
-- Menu lateral e rotas (Finanças, Membros, Tarefas continuam no menu)
+## O que NAO muda
+- Nenhuma tabela nova ou migracao
+- ChamadaTab, Secretaria.tsx, fluxo de fechar/reabrir dia intactos
+- Logica de PDF continua igual
 
