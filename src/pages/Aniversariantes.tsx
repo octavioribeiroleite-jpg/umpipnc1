@@ -121,11 +121,11 @@ export default function Aniversariantes() {
 
         <NextBirthdayCard birthday={nextBirthday} />
 
-        <TodayBirthdays birthdays={filteredToday} />
+        <TodayBirthdays birthdays={filteredToday} showActions={canManage} onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
 
-        <WeekBirthdays birthdays={filteredWeek} />
+        <WeekBirthdays birthdays={filteredWeek} showActions={canManage} onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
 
-        <MonthBirthdays birthdays={filteredMonth} month={currentMonth} />
+        <MonthBirthdays birthdays={filteredMonth} month={currentMonth} showActions={canManage} onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
 
         {/* Pending review */}
         {pendingReview.length > 0 && canManage && (
@@ -139,7 +139,7 @@ export default function Aniversariantes() {
           </div>
         )}
 
-        <YearCalendar birthdays={filteredAll} />
+        <YearCalendar birthdays={filteredAll} onEdit={canManage ? handleEdit : undefined} />
 
         <BirthdayNotifications />
       </div>
