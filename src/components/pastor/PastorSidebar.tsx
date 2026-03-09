@@ -28,15 +28,14 @@ interface Society {
 export function PastorSidebar() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
+  const [societies, setSocieties] = useState<Society[]>([]);
 
   const doSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
-  const { profile, signOut } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
   const [societies, setSocieties] = useState<Society[]>([]);
 
   useEffect(() => {
