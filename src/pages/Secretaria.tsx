@@ -153,9 +153,11 @@ export default function Secretaria() {
     if (closureRes.data) {
       setDayIsClosed(true);
       setClosureId(closureRes.data.id);
+      setVisitorCount((closureRes.data as any).visitor_count ?? 0);
     } else {
       setDayIsClosed(false);
       setClosureId(null);
+      setVisitorCount(0);
     }
   }, [sundayDate]);
 
