@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
