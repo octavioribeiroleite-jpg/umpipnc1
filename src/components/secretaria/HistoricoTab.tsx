@@ -64,6 +64,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
   const [closingDay, setClosingDay] = useState(false);
+  const [openDialog, setOpenDialog] = useState<'perfect' | 'lowFreq' | 'absent' | null>(null);
 
   const fetchHistory = async () => {
     setLoading(true);
