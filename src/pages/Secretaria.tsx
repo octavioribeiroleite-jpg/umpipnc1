@@ -26,6 +26,7 @@ import { WeekBirthdays } from '@/components/aniversariantes/WeekBirthdays';
 import { MonthBirthdays } from '@/components/aniversariantes/MonthBirthdays';
 import { YearCalendar } from '@/components/aniversariantes/YearCalendar';
 import { BirthdayNotifications } from '@/components/aniversariantes/BirthdayNotifications';
+import { WeekAnnouncementCard } from '@/components/aniversariantes/WeekAnnouncementCard';
 import { BirthdayFilters } from '@/components/aniversariantes/BirthdayFilters';
 import { BirthdayFormDialog } from '@/components/aniversariantes/BirthdayFormDialog';
 import { BirthdayCard } from '@/components/aniversariantes/BirthdayCard';
