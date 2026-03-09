@@ -549,39 +549,8 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         </Card>
       )}
 
-      {perfectStudents.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Award className="h-4 w-4 text-yellow-500" /> 100% de presença
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {perfectStudents.map(s => (
-                <Badge key={s.id} className="bg-green-500/10 text-green-700 border-green-500/20">{s.name}</Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {absentStudents.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" /> 0% de presença (alerta)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {absentStudents.map(s => (
-                <Badge key={s.id} variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20">{s.name}</Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {allAttendance.length === 0 && (
         <p className="text-center text-muted-foreground py-8">Nenhum registro de presença encontrado para este período.</p>
