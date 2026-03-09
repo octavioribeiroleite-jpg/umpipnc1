@@ -220,6 +220,11 @@ export default function Secretaria() {
   const [visitorCount, setVisitorCount] = useState(0);
   const [currentView, setCurrentView] = useState<CurrentView>('home');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const { weekBirthdays, todayBirthdays } = useBirthdays();
+  const allWeekAnnouncements = [
+    ...todayBirthdays.map(b => ({ ...b, daysUntil: 0 })),
+    ...weekBirthdays,
+  ];
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
