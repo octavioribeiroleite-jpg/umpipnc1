@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck, LogOut, Cake, Home } from 'lucide-react';
+import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck, LogOut, Cake, Home, Plus } from 'lucide-react';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,7 +17,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AppCard } from '@/components/ui/app-card';
-import Aniversariantes from './Aniversariantes';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useBirthdays } from '@/hooks/useBirthdays';
+import type { Birthday, BirthdayInsert } from '@/hooks/useBirthdays';
+import { NextBirthdayCard } from '@/components/aniversariantes/NextBirthdayCard';
+import { TodayBirthdays } from '@/components/aniversariantes/TodayBirthdays';
+import { WeekBirthdays } from '@/components/aniversariantes/WeekBirthdays';
+import { MonthBirthdays } from '@/components/aniversariantes/MonthBirthdays';
+import { YearCalendar } from '@/components/aniversariantes/YearCalendar';
+import { BirthdayNotifications } from '@/components/aniversariantes/BirthdayNotifications';
+import { BirthdayFilters } from '@/components/aniversariantes/BirthdayFilters';
+import { BirthdayFormDialog } from '@/components/aniversariantes/BirthdayFormDialog';
+import { BirthdayCard } from '@/components/aniversariantes/BirthdayCard';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface EbdClass {
   id: string;
@@ -49,6 +70,133 @@ const PROFESSOR_NAME_KEY = 'ebd_professor_name';
 function getTodayDate(): string {
   const today = new Date();
   return format(today, 'yyyy-MM-dd');
+}
+
+// Embedded birthdays component
+function SecretariaAniversariantes() {
+  const {
+    activeBirthdays, todayBirthdays, weekBirthdays, monthBirthdays, nextBirthday,
+    departments, isLoading, createBirthday, updateBirthday, deleteBirthday, birthdays,
+  } = useBirthdays();
+
+  const [search, setSearch] = useState('');
+  const [department, setDepartment] = useState('all');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingBirthday, setEditingBirthday] = useState<Birthday | null>(null);
+  const [deletingBirthday, setDeletingBirthday] = useState<Birthday | null>(null);
+
+  const currentMonth = new Date().getMonth() + 1;
+
+  const filter = <T extends Birthday>(list: T[]): T[] => {
+    let filtered = list;
+    if (search) filtered = filtered.filter(b => b.nome.toLowerCase().includes(search.toLowerCase()));
+    if (department !== 'all') filtered = filtered.filter(b => b.departamento === department);
+    return filtered;
+  };
+
+  const filteredToday = filter(todayBirthdays);
+  const filteredWeek = filter(weekBirthdays);
+  const filteredMonth = filter(monthBirthdays);
+  const filteredAll = filter(activeBirthdays);
+  const pendingReview = birthdays.filter(b => b.pendente_revisao);
+
+  const handleSave = (data: BirthdayInsert) => {
+    if (editingBirthday) {
+      updateBirthday.mutate({ id: editingBirthday.id, ...data }, {
+        onSuccess: () => { toast.success('Atualizado!'); setFormOpen(false); setEditingBirthday(null); },
+        onError: () => toast.error('Erro ao atualizar.'),
+      });
+    } else {
+      createBirthday.mutate(data, {
+        onSuccess: () => { toast.success('Cadastrado!'); setFormOpen(false); },
+        onError: () => toast.error('Erro ao cadastrar.'),
+      });
+    }
+  };
+
+  const handleEdit = (b: Birthday) => { setEditingBirthday(b); setFormOpen(true); };
+  const handleToggleActive = (b: Birthday) => {
+    updateBirthday.mutate({ id: b.id, ativo: !b.ativo }, {
+      onSuccess: () => toast.success(b.ativo ? 'Inativado' : 'Ativado'),
+    });
+  };
+  const handleDelete = () => {
+    if (!deletingBirthday) return;
+    deleteBirthday.mutate(deletingBirthday.id, {
+      onSuccess: () => { toast.success('Excluído!'); setDeletingBirthday(null); },
+      onError: () => toast.error('Erro ao excluir.'),
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{activeBirthdays.length} cadastrados</p>
+        <Button size="sm" onClick={() => { setEditingBirthday(null); setFormOpen(true); }}>
+          <Plus className="h-4 w-4 mr-1" /> Novo
+        </Button>
+      </div>
+
+      <BirthdayFilters
+        search={search}
+        onSearchChange={setSearch}
+        department={department}
+        onDepartmentChange={setDepartment}
+        departments={departments}
+      />
+
+      <NextBirthdayCard birthday={nextBirthday} />
+      <TodayBirthdays birthdays={filteredToday} />
+      <WeekBirthdays birthdays={filteredWeek} />
+      <MonthBirthdays birthdays={filteredMonth} month={currentMonth} />
+
+      {pendingReview.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="font-semibold text-sm text-amber-600 dark:text-amber-400">⚠️ Registros pendentes ({pendingReview.length})</h2>
+          <div className="space-y-1.5">
+            {pendingReview.map(b => (
+              <BirthdayCard key={b.id} birthday={b} showActions onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <YearCalendar birthdays={filteredAll} />
+      <BirthdayNotifications />
+
+      <BirthdayFormDialog
+        open={formOpen}
+        onOpenChange={v => { setFormOpen(v); if (!v) setEditingBirthday(null); }}
+        birthday={editingBirthday}
+        onSave={handleSave}
+        isSaving={createBirthday.isPending || updateBirthday.isPending}
+      />
+
+      <AlertDialog open={!!deletingBirthday} onOpenChange={v => !v && setDeletingBirthday(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir aniversariante?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {deletingBirthday?.nome}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
 }
 
 export default function Secretaria() {
@@ -499,160 +647,6 @@ export default function Secretaria() {
           <SecretariaAniversariantes />
         )}
       </div>
-    </div>
-  );
-}
-
-// Embedded version of Aniversariantes without AppLayout
-function SecretariaAniversariantes() {
-  const { isManagement, isAdmin } = { isManagement: true, isAdmin: true }; // Within Secretaria, always allow management
-  const canManage = true;
-  
-  const {
-    activeBirthdays, todayBirthdays, weekBirthdays, monthBirthdays, nextBirthday,
-    departments, isLoading, createBirthday, updateBirthday, deleteBirthday, birthdays,
-  } = require('@/hooks/useBirthdays').useBirthdays();
-
-  const [search, setSearch] = useState('');
-  const [department, setDepartment] = useState('all');
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingBirthday, setEditingBirthday] = useState<any | null>(null);
-  const [deletingBirthday, setDeletingBirthday] = useState<any | null>(null);
-
-  const { NextBirthdayCard } = require('@/components/aniversariantes/NextBirthdayCard');
-  const { TodayBirthdays } = require('@/components/aniversariantes/TodayBirthdays');
-  const { WeekBirthdays } = require('@/components/aniversariantes/WeekBirthdays');
-  const { MonthBirthdays } = require('@/components/aniversariantes/MonthBirthdays');
-  const { YearCalendar } = require('@/components/aniversariantes/YearCalendar');
-  const { BirthdayNotifications } = require('@/components/aniversariantes/BirthdayNotifications');
-  const { BirthdayFilters } = require('@/components/aniversariantes/BirthdayFilters');
-  const { BirthdayFormDialog } = require('@/components/aniversariantes/BirthdayFormDialog');
-  const { BirthdayCard } = require('@/components/aniversariantes/BirthdayCard');
-  const { Skeleton } = require('@/components/ui/skeleton');
-  const { Plus } = require('lucide-react');
-  const {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-  } = require('@/components/ui/alert-dialog');
-
-  const currentMonth = new Date().getMonth() + 1;
-
-  const filter = <T extends any>(list: T[]): T[] => {
-    let filtered = list;
-    if (search) filtered = filtered.filter((b: any) => b.nome.toLowerCase().includes(search.toLowerCase()));
-    if (department !== 'all') filtered = filtered.filter((b: any) => b.departamento === department);
-    return filtered;
-  };
-
-  const filteredToday = filter(todayBirthdays);
-  const filteredWeek = filter(weekBirthdays);
-  const filteredMonth = filter(monthBirthdays);
-  const filteredAll = filter(activeBirthdays);
-  const pendingReview = birthdays.filter((b: any) => b.pendente_revisao);
-
-  const handleSave = (data: any) => {
-    if (editingBirthday) {
-      updateBirthday.mutate({ id: editingBirthday.id, ...data }, {
-        onSuccess: () => { toast.success('Atualizado!'); setFormOpen(false); setEditingBirthday(null); },
-        onError: () => toast.error('Erro ao atualizar.'),
-      });
-    } else {
-      createBirthday.mutate(data, {
-        onSuccess: () => { toast.success('Cadastrado!'); setFormOpen(false); },
-        onError: () => toast.error('Erro ao cadastrar.'),
-      });
-    }
-  };
-
-  const handleEdit = (b: any) => { setEditingBirthday(b); setFormOpen(true); };
-  const handleToggleActive = (b: any) => {
-    updateBirthday.mutate({ id: b.id, ativo: !b.ativo }, {
-      onSuccess: () => toast.success(b.ativo ? 'Inativado' : 'Ativado'),
-    });
-  };
-  const handleDelete = () => {
-    if (!deletingBirthday) return;
-    deleteBirthday.mutate(deletingBirthday.id, {
-      onSuccess: () => { toast.success('Excluído!'); setDeletingBirthday(null); },
-      onError: () => toast.error('Erro ao excluir.'),
-    });
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-32 w-full" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{activeBirthdays.length} cadastrados</p>
-        {canManage && (
-          <Button size="sm" onClick={() => { setEditingBirthday(null); setFormOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> Novo
-          </Button>
-        )}
-      </div>
-
-      <BirthdayFilters
-        search={search}
-        onSearchChange={setSearch}
-        department={department}
-        onDepartmentChange={setDepartment}
-        departments={departments}
-      />
-
-      <NextBirthdayCard birthday={nextBirthday} />
-      <TodayBirthdays birthdays={filteredToday} />
-      <WeekBirthdays birthdays={filteredWeek} />
-      <MonthBirthdays birthdays={filteredMonth} month={currentMonth} />
-
-      {pendingReview.length > 0 && canManage && (
-        <div className="space-y-2">
-          <h2 className="font-semibold text-sm text-amber-600 dark:text-amber-400">⚠️ Registros pendentes ({pendingReview.length})</h2>
-          <div className="space-y-1.5">
-            {pendingReview.map((b: any) => (
-              <BirthdayCard key={b.id} birthday={b} showActions={canManage} onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <YearCalendar birthdays={filteredAll} />
-      <BirthdayNotifications />
-
-      <BirthdayFormDialog
-        open={formOpen}
-        onOpenChange={(v: boolean) => { setFormOpen(v); if (!v) setEditingBirthday(null); }}
-        birthday={editingBirthday}
-        onSave={handleSave}
-        isSaving={createBirthday.isPending || updateBirthday.isPending}
-      />
-
-      <AlertDialog open={!!deletingBirthday} onOpenChange={(v: boolean) => !v && setDeletingBirthday(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir aniversariante?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir {deletingBirthday?.nome}?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
