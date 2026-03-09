@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck, LogOut } from 'lucide-react';
+import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck, LogOut, Cake, Home } from 'lucide-react';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,6 +16,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { AppCard } from '@/components/ui/app-card';
+import Aniversariantes from './Aniversariantes';
 
 interface EbdClass {
   id: string;
@@ -41,6 +42,7 @@ interface AttendanceRecord {
 
 type AccessLevel = 'admin' | 'professor';
 type LoginStep = 'profile' | 'pin' | 'name-confirm' | 'name-input';
+type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes';
 
 const PROFESSOR_NAME_KEY = 'ebd_professor_name';
 
@@ -66,6 +68,7 @@ export default function Secretaria() {
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
+  const [currentView, setCurrentView] = useState<CurrentView>('home');
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -166,7 +169,6 @@ export default function Secretaria() {
   }, [accessLevel, fetchData]);
 
   const handleCloseDay = async () => {
-    // Build class summary
     const classSummary = classes.map(cls => {
       const classStudents = activeStudents.filter(s => s.class_id === cls.id);
       const classAttendance = attendance.filter(a => a.class_id === cls.id && a.date === sundayDate);
@@ -308,6 +310,127 @@ export default function Secretaria() {
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
+    setCurrentView('home');
+  };
+
+  const handleBackToHome = () => {
+    setCurrentView('home');
+  };
+
+  // Calculate stats for home cards
+  const presentCount = attendance.filter(a => a.present && a.date === sundayDate).length;
+  const totalCount = activeStudents.length;
+
+  // Home view with cards
+  if (currentView === 'home') {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 safe-top">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="font-semibold text-lg">Secretaria EBD</h1>
+                <p className="text-xs text-muted-foreground">{formattedDate}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
+                {profileLabel}
+              </Badge>
+              <button
+                onClick={handleExitApp}
+                className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                title="Sair da Secretaria"
+              >
+                <LogOut className="h-4.5 w-4.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Status card */}
+          <AppCard className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Presença de Hoje</p>
+                <p className="text-2xl font-bold">{presentCount}/{totalCount}</p>
+                {visitorCount > 0 && (
+                  <p className="text-xs text-muted-foreground">+{visitorCount} visitante{visitorCount > 1 ? 's' : ''}</p>
+                )}
+              </div>
+              <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${dayIsClosed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                {dayIsClosed ? '✓ Dia fechado' : 'Em andamento'}
+              </div>
+            </div>
+          </AppCard>
+
+          {/* Menu cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <AppCard
+              variant="interactive"
+              className="flex flex-col items-center gap-3 py-6"
+              onClick={() => setCurrentView('chamada')}
+            >
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <ClipboardList className="h-7 w-7 text-primary" />
+              </div>
+              <span className="font-medium text-sm">Chamada</span>
+            </AppCard>
+
+            <AppCard
+              variant="interactive"
+              className="flex flex-col items-center gap-3 py-6"
+              onClick={() => setCurrentView('historico')}
+            >
+              <div className="h-14 w-14 rounded-2xl bg-sky-500/10 flex items-center justify-center">
+                <BarChart3 className="h-7 w-7 text-sky-500" />
+              </div>
+              <span className="font-medium text-sm">Histórico</span>
+            </AppCard>
+
+            <AppCard
+              variant="interactive"
+              className="flex flex-col items-center gap-3 py-6"
+              onClick={() => setCurrentView('aniversariantes')}
+            >
+              <div className="h-14 w-14 rounded-2xl bg-pink-500/10 flex items-center justify-center">
+                <Cake className="h-7 w-7 text-pink-500" />
+              </div>
+              <span className="font-medium text-sm">Aniversariantes</span>
+            </AppCard>
+
+            {isAdmin && (
+              <AppCard
+                variant="interactive"
+                className="flex flex-col items-center gap-3 py-6"
+                onClick={() => setCurrentView('turmas')}
+              >
+                <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                  <Settings2 className="h-7 w-7 text-amber-500" />
+                </div>
+                <span className="font-medium text-sm">Turmas</span>
+              </AppCard>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Sub-views with back button
+  const viewTitles: Record<CurrentView, string> = {
+    home: 'Secretaria EBD',
+    chamada: 'Chamada',
+    historico: 'Histórico',
+    turmas: 'Turmas',
+    aniversariantes: 'Aniversariantes',
   };
 
   return (
@@ -316,80 +439,220 @@ export default function Secretaria() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
+              onClick={handleBackToHome}
               className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="font-semibold text-lg">Secretaria EBD</h1>
+              <h1 className="font-semibold text-lg">{viewTitles[currentView]}</h1>
               <p className="text-xs text-muted-foreground">{formattedDate}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleBackToHome}
+              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+              title="Voltar ao menu"
+            >
+              <Home className="h-4.5 w-4.5" />
+            </button>
             <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
               {profileLabel}
             </Badge>
-            <button
-              onClick={handleExitApp}
-              className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
-              title="Sair da Secretaria"
-            >
-              <LogOut className="h-4.5 w-4.5" />
-            </button>
           </div>
         </div>
       </div>
 
       <div className="p-4 pb-8">
-        <Tabs defaultValue="chamada" className="w-full">
-          <TabsList className={`w-full grid ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
-            <TabsTrigger value="chamada" className="flex items-center gap-1.5 text-xs">
-              <ClipboardList className="h-3.5 w-3.5" /> Chamada
-            </TabsTrigger>
-            <TabsTrigger value="historico" className="flex items-center gap-1.5 text-xs">
-              <BarChart3 className="h-3.5 w-3.5" /> Histórico
-            </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="turmas" className="flex items-center gap-1.5 text-xs">
-                <Settings2 className="h-3.5 w-3.5" /> Turmas
-              </TabsTrigger>
-            )}
-          </TabsList>
+        {currentView === 'chamada' && (
+          <ChamadaTab
+            classes={classes}
+            students={activeStudents}
+            attendance={attendance}
+            setAttendance={setAttendance}
+            attendanceDate={sundayDate}
+            formattedDate={formattedDate}
+            initialProfessorName={professorNome || undefined}
+            accessLevel={accessLevel!}
+            dayIsClosed={dayIsClosed}
+            onCloseDay={handleCloseDay}
+            onReopenDay={handleReopenDay}
+            visitorCount={visitorCount}
+            setVisitorCount={setVisitorCount}
+          />
+        )}
 
-          <TabsContent value="chamada">
-            <ChamadaTab
-              classes={classes}
-              students={activeStudents}
-              attendance={attendance}
-              setAttendance={setAttendance}
-              attendanceDate={sundayDate}
-              formattedDate={formattedDate}
-              initialProfessorName={professorNome || undefined}
-              accessLevel={accessLevel!}
-              dayIsClosed={dayIsClosed}
-              onCloseDay={handleCloseDay}
-              onReopenDay={handleReopenDay}
-              visitorCount={visitorCount}
-              setVisitorCount={setVisitorCount}
-            />
-          </TabsContent>
+        {currentView === 'historico' && (
+          <HistoricoTab classes={classes} students={activeStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
+        )}
 
-          <TabsContent value="historico">
-            <HistoricoTab classes={classes} students={activeStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
-          </TabsContent>
+        {currentView === 'turmas' && isAdmin && (
+          <TurmasTab
+            classes={classes}
+            allStudents={allStudents}
+            onRefresh={fetchData}
+          />
+        )}
 
-          {isAdmin && (
-            <TabsContent value="turmas">
-              <TurmasTab
-                classes={classes}
-                allStudents={allStudents}
-                onRefresh={fetchData}
-              />
-            </TabsContent>
-          )}
-        </Tabs>
+        {currentView === 'aniversariantes' && (
+          <SecretariaAniversariantes />
+        )}
       </div>
+    </div>
+  );
+}
+
+// Embedded version of Aniversariantes without AppLayout
+function SecretariaAniversariantes() {
+  const { isManagement, isAdmin } = { isManagement: true, isAdmin: true }; // Within Secretaria, always allow management
+  const canManage = true;
+  
+  const {
+    activeBirthdays, todayBirthdays, weekBirthdays, monthBirthdays, nextBirthday,
+    departments, isLoading, createBirthday, updateBirthday, deleteBirthday, birthdays,
+  } = require('@/hooks/useBirthdays').useBirthdays();
+
+  const [search, setSearch] = useState('');
+  const [department, setDepartment] = useState('all');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingBirthday, setEditingBirthday] = useState<any | null>(null);
+  const [deletingBirthday, setDeletingBirthday] = useState<any | null>(null);
+
+  const { NextBirthdayCard } = require('@/components/aniversariantes/NextBirthdayCard');
+  const { TodayBirthdays } = require('@/components/aniversariantes/TodayBirthdays');
+  const { WeekBirthdays } = require('@/components/aniversariantes/WeekBirthdays');
+  const { MonthBirthdays } = require('@/components/aniversariantes/MonthBirthdays');
+  const { YearCalendar } = require('@/components/aniversariantes/YearCalendar');
+  const { BirthdayNotifications } = require('@/components/aniversariantes/BirthdayNotifications');
+  const { BirthdayFilters } = require('@/components/aniversariantes/BirthdayFilters');
+  const { BirthdayFormDialog } = require('@/components/aniversariantes/BirthdayFormDialog');
+  const { BirthdayCard } = require('@/components/aniversariantes/BirthdayCard');
+  const { Skeleton } = require('@/components/ui/skeleton');
+  const { Plus } = require('lucide-react');
+  const {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+  } = require('@/components/ui/alert-dialog');
+
+  const currentMonth = new Date().getMonth() + 1;
+
+  const filter = <T extends any>(list: T[]): T[] => {
+    let filtered = list;
+    if (search) filtered = filtered.filter((b: any) => b.nome.toLowerCase().includes(search.toLowerCase()));
+    if (department !== 'all') filtered = filtered.filter((b: any) => b.departamento === department);
+    return filtered;
+  };
+
+  const filteredToday = filter(todayBirthdays);
+  const filteredWeek = filter(weekBirthdays);
+  const filteredMonth = filter(monthBirthdays);
+  const filteredAll = filter(activeBirthdays);
+  const pendingReview = birthdays.filter((b: any) => b.pendente_revisao);
+
+  const handleSave = (data: any) => {
+    if (editingBirthday) {
+      updateBirthday.mutate({ id: editingBirthday.id, ...data }, {
+        onSuccess: () => { toast.success('Atualizado!'); setFormOpen(false); setEditingBirthday(null); },
+        onError: () => toast.error('Erro ao atualizar.'),
+      });
+    } else {
+      createBirthday.mutate(data, {
+        onSuccess: () => { toast.success('Cadastrado!'); setFormOpen(false); },
+        onError: () => toast.error('Erro ao cadastrar.'),
+      });
+    }
+  };
+
+  const handleEdit = (b: any) => { setEditingBirthday(b); setFormOpen(true); };
+  const handleToggleActive = (b: any) => {
+    updateBirthday.mutate({ id: b.id, ativo: !b.ativo }, {
+      onSuccess: () => toast.success(b.ativo ? 'Inativado' : 'Ativado'),
+    });
+  };
+  const handleDelete = () => {
+    if (!deletingBirthday) return;
+    deleteBirthday.mutate(deletingBirthday.id, {
+      onSuccess: () => { toast.success('Excluído!'); setDeletingBirthday(null); },
+      onError: () => toast.error('Erro ao excluir.'),
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{activeBirthdays.length} cadastrados</p>
+        {canManage && (
+          <Button size="sm" onClick={() => { setEditingBirthday(null); setFormOpen(true); }}>
+            <Plus className="h-4 w-4 mr-1" /> Novo
+          </Button>
+        )}
+      </div>
+
+      <BirthdayFilters
+        search={search}
+        onSearchChange={setSearch}
+        department={department}
+        onDepartmentChange={setDepartment}
+        departments={departments}
+      />
+
+      <NextBirthdayCard birthday={nextBirthday} />
+      <TodayBirthdays birthdays={filteredToday} />
+      <WeekBirthdays birthdays={filteredWeek} />
+      <MonthBirthdays birthdays={filteredMonth} month={currentMonth} />
+
+      {pendingReview.length > 0 && canManage && (
+        <div className="space-y-2">
+          <h2 className="font-semibold text-sm text-amber-600 dark:text-amber-400">⚠️ Registros pendentes ({pendingReview.length})</h2>
+          <div className="space-y-1.5">
+            {pendingReview.map((b: any) => (
+              <BirthdayCard key={b.id} birthday={b} showActions={canManage} onEdit={handleEdit} onToggleActive={handleToggleActive} onDelete={setDeletingBirthday} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <YearCalendar birthdays={filteredAll} />
+      <BirthdayNotifications />
+
+      <BirthdayFormDialog
+        open={formOpen}
+        onOpenChange={(v: boolean) => { setFormOpen(v); if (!v) setEditingBirthday(null); }}
+        birthday={editingBirthday}
+        onSave={handleSave}
+        isSaving={createBirthday.isPending || updateBirthday.isPending}
+      />
+
+      <AlertDialog open={!!deletingBirthday} onOpenChange={(v: boolean) => !v && setDeletingBirthday(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir aniversariante?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {deletingBirthday?.nome}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
