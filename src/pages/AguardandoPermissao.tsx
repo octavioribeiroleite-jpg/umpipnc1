@@ -100,7 +100,6 @@ export default function AguardandoPermissao() {
               Sair da conta
             </Button>
             <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
-            </Button>
 
             {/* Contact info */}
             <p className="text-xs text-muted-foreground mt-6">
