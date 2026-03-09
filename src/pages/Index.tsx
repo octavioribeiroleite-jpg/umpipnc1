@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { AppCard } from '@/components/ui/app-card';
 import { SectionTitle } from '@/components/ui/typography';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HomeBirthdayCard } from '@/components/aniversariantes/HomeBirthdayCard';
 import {
   DollarSign,
   Users,
