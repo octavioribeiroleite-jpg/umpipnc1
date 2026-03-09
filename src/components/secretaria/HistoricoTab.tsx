@@ -359,6 +359,14 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
               </div>
             </div>
             <Progress value={pct} className="h-2" />
+            {freshRecord.visitorCount > 0 && (
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5" /> Visitantes
+                </span>
+                <span className="text-sm font-medium">{freshRecord.visitorCount}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
