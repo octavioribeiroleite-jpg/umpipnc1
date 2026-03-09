@@ -582,32 +582,29 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       </ResponsiveDialog>
 
       {barData.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Comparativo entre turmas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Comparativo entre turmas</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {barData.map((cls) => {
-              const barColor = cls.media >= 70 ? 'bg-green-500' : cls.media >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+              const bgColor = cls.media >= 70 ? 'bg-green-500/10 border-green-500/30' : cls.media >= 40 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-red-500/10 border-red-500/30';
+              const textColor = cls.media >= 70 ? 'text-green-600' : cls.media >= 40 ? 'text-yellow-600' : 'text-red-600';
               return (
-                <div key={cls.name} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium truncate max-w-[60%]">{cls.name}</span>
-                    <span className={`text-xs font-bold ${cls.media >= 70 ? 'text-green-600' : cls.media >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-                      {cls.media}%
-                    </span>
+                <button
+                  key={cls.classId}
+                  onClick={() => setSelectedClassId(cls.classId)}
+                  className={`rounded-xl border p-4 text-left hover:bg-accent/40 transition-all active:scale-[0.97] ${bgColor}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Users className={`h-4 w-4 ${textColor}`} />
+                    <span className={`text-2xl font-bold ${textColor}`}>{cls.media}%</span>
                   </div>
-                  <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                      style={{ width: `${cls.media}%` }}
-                    />
-                  </div>
-                </div>
+                  <p className="text-sm font-medium truncate">{cls.name}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">média de presença</p>
+                </button>
               );
             })}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
 
