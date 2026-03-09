@@ -175,26 +175,30 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   };
 
   const { lineData, barData, metrics, perfectStudents, absentStudents } = useMemo(() => {
-    const dates = [...new Set(allAttendance.map(a => a.date))].sort();
-    const byDate = new Map<string, { present: number; total: number }>();
-    dates.forEach(date => {
+    const sundayDates = [...new Set(allAttendance.map(a => a.date))]
+      .filter(date => new Date(date + 'T12:00:00').getDay() === 0)
+      .sort();
+
+    const lineData = sundayDates.map(date => {
       const d = allAttendance.filter(a => a.date === date);
-      byDate.set(date, { present: d.filter(a => a.present).length, total: d.length });
+      const present = d.filter(a => a.present).length;
+      return { date: format(new Date(date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: totalMembers > 0 ? Math.round((present / totalMembers) * 100) : 0 };
     });
 
-    const lineData = dates.map(date => {
-      const d = byDate.get(date)!;
-      return { date: format(new Date(date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: d.total > 0 ? Math.round((d.present / d.total) * 100) : 0 };
+    const classStudentCounts = new Map<string, number>();
+    students.forEach(s => {
+      classStudentCounts.set(s.class_id, (classStudentCounts.get(s.class_id) || 0) + 1);
     });
 
     const barData = classes.map(cls => {
+      const classTotal = classStudentCounts.get(cls.id) || 0;
       const cr = allAttendance.filter(a => a.class_id === cls.id);
-      const cd = [...new Set(cr.map(a => a.date))];
+      const cd = [...new Set(cr.map(a => a.date))].filter(d => new Date(d + 'T12:00:00').getDay() === 0);
       let avgPct = 0;
-      if (cd.length > 0) {
+      if (cd.length > 0 && classTotal > 0) {
         avgPct = Math.round(cd.reduce((sum, date) => {
-          const dr = cr.filter(a => a.date === date);
-          return sum + (dr.length > 0 ? (dr.filter(a => a.present).length / dr.length) * 100 : 0);
+          const present = cr.filter(a => a.date === date && a.present).length;
+          return sum + (present / classTotal) * 100;
         }, 0) / cd.length);
       }
       return { name: cls.name, media: avgPct };
@@ -207,19 +211,20 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     const bestClass = barData.length > 0 ? barData[0] : null;
 
     const studentMap = new Map<string, { present: number; total: number }>();
-    allAttendance.forEach(a => {
+    allAttendance.filter(a => new Date(a.date + 'T12:00:00').getDay() === 0).forEach(a => {
       if (!studentMap.has(a.student_id)) studentMap.set(a.student_id, { present: 0, total: 0 });
       const s = studentMap.get(a.student_id)!;
       s.total++;
       if (a.present) s.present++;
     });
 
-    const totalDates = dates.length;
-    const perfectStudents = students.filter(s => { const r = studentMap.get(s.id); return r && r.present === totalDates && totalDates > 0; });
+    const totalSundays = sundayDates.length;
+    const avgAll = totalSundays > 0 ? Math.round(lineData.reduce((s, d) => s + d.presenca, 0) / totalSundays) : 0;
+    const perfectStudents = students.filter(s => { const r = studentMap.get(s.id); return r && r.present === totalSundays && totalSundays > 0; });
     const absentStudents = students.filter(s => { const r = studentMap.get(s.id); return !r || r.present === 0; });
 
-    return { lineData, barData, metrics: { avgLast4, best, worst, bestClass }, perfectStudents, absentStudents };
-  }, [allAttendance, classes, students]);
+    return { lineData, barData, metrics: { avgLast4, best, worst, bestClass, totalSundays, avgAll }, perfectStudents, absentStudents };
+  }, [allAttendance, classes, students, totalMembers]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando histórico...</div>;
