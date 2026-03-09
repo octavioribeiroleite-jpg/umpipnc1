@@ -57,7 +57,7 @@ interface ChamadaTabProps {
   setVisitorCount?: React.Dispatch<React.SetStateAction<number>>;
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay }: ChamadaTabProps) {
+export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, visitorCount = 0, setVisitorCount }: ChamadaTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
   const [chamadaStatusMap, setChamadaStatusMap] = useState<Record<string, ChamadaStatus>>({});
