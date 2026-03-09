@@ -38,6 +38,7 @@ const menuItems = [
   { icon: MessageSquare, label: 'Comunicados', path: '/comunicados' },
   { icon: BookOpen, label: 'Estudos', path: '/estudos' },
   { icon: ClipboardList, label: 'Secretaria EBD', path: '/secretaria' },
+  { icon: Cake, label: 'Aniversariantes', path: '/aniversariantes' },
 ];
 
 const adminMenuItems = [

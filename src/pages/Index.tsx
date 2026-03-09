@@ -219,6 +219,9 @@ export default function Index() {
         />
       </div>
 
+      {/* Birthdays card */}
+      <HomeBirthdayCard />
+
       {/* Day event list */}
       <div className="mb-6">
         <PastorDayEventList

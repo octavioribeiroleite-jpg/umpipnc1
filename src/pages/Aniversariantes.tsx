@@ -44,7 +44,7 @@ export default function Aniversariantes() {
 
   const currentMonth = new Date().getMonth() + 1;
 
-  const filter = (list: Birthday[]) => {
+  const filter = <T extends Birthday>(list: T[]): T[] => {
     let filtered = list;
     if (search) filtered = filtered.filter(b => b.nome.toLowerCase().includes(search.toLowerCase()));
     if (department !== 'all') filtered = filtered.filter(b => b.departamento === department);
