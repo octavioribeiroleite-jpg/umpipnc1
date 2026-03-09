@@ -65,6 +65,7 @@ export default function Secretaria() {
   const [savedProfessorName, setSavedProfessorName] = useState<string | null>(null);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
+  const [visitorCount, setVisitorCount] = useState(0);
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
