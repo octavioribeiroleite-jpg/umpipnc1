@@ -4,9 +4,13 @@ import type { Birthday } from '@/hooks/useBirthdays';
 
 interface Props {
   birthdays: Birthday[];
+  showActions?: boolean;
+  onEdit?: (b: Birthday) => void;
+  onToggleActive?: (b: Birthday) => void;
+  onDelete?: (b: Birthday) => void;
 }
 
-export function TodayBirthdays({ birthdays }: Props) {
+export function TodayBirthdays({ birthdays, showActions, onEdit, onToggleActive, onDelete }: Props) {
   if (birthdays.length === 0) return null;
 
   return (
@@ -17,7 +21,7 @@ export function TodayBirthdays({ birthdays }: Props) {
       </div>
       <div className="space-y-2">
         {birthdays.map(b => (
-          <BirthdayCard key={b.id} birthday={b} highlight="today" />
+          <BirthdayCard key={b.id} birthday={b} highlight="today" showActions={showActions} onEdit={onEdit} onToggleActive={onToggleActive} onDelete={onDelete} />
         ))}
       </div>
     </div>
