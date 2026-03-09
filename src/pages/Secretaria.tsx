@@ -343,7 +343,7 @@ export default function Secretaria() {
           </TabsContent>
 
           <TabsContent value="historico">
-            <HistoricoTab classes={classes} students={activeStudents} />
+            <HistoricoTab classes={classes} students={activeStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
           </TabsContent>
 
           {isAdmin && (
