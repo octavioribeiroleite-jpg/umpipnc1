@@ -183,16 +183,10 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     setSelectedDay(prev => prev ? { ...prev, isClosed: true } : null);
   };
 
-  const { lineData, barData, metrics, perfectStudents, absentStudents } = useMemo(() => {
+  const { barData, metrics, perfectStudents, absentStudents, lowFreqStudents } = useMemo(() => {
     const sundayDates = [...new Set(allAttendance.map(a => a.date))]
       .filter(date => new Date(date + 'T12:00:00').getDay() === 0)
       .sort();
-
-    const lineData = sundayDates.map(date => {
-      const d = allAttendance.filter(a => a.date === date);
-      const present = d.filter(a => a.present).length;
-      return { date: format(new Date(date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: totalMembers > 0 ? Math.round((present / totalMembers) * 100) : 0 };
-    });
 
     const classStudentCounts = new Map<string, number>();
     students.forEach(s => {
@@ -213,10 +207,6 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       return { name: cls.name, media: avgPct };
     }).sort((a, b) => b.media - a.media);
 
-    const last4 = lineData.slice(-4);
-    const avgLast4 = last4.length > 0 ? Math.round(last4.reduce((s, d) => s + d.presenca, 0) / last4.length) : 0;
-    const best = lineData.length > 0 ? lineData.reduce((a, b) => a.presenca > b.presenca ? a : b) : null;
-    const worst = lineData.length > 0 ? lineData.reduce((a, b) => a.presenca < b.presenca ? a : b) : null;
     const bestClass = barData.length > 0 ? barData[0] : null;
 
     const studentMap = new Map<string, { present: number; total: number }>();
@@ -228,11 +218,50 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     });
 
     const totalSundays = sundayDates.length;
-    const avgAll = totalSundays > 0 ? Math.round(lineData.reduce((s, d) => s + d.presenca, 0) / totalSundays) : 0;
     const perfectStudents = students.filter(s => { const r = studentMap.get(s.id); return r && r.present === totalSundays && totalSundays > 0; });
     const absentStudents = students.filter(s => { const r = studentMap.get(s.id); return !r || r.present === 0; });
+    
+    // New: Low frequency students (<30% excluding never attended)
+    const lowFreqStudents = students.filter(s => {
+      const r = studentMap.get(s.id);
+      if (!r || r.present === 0) return false; // exclude never attended
+      const freq = r.total > 0 ? (r.present / r.total) : 0;
+      return freq < 0.30;
+    });
 
-    return { lineData, barData, metrics: { avgLast4, best, worst, bestClass, totalSundays, avgAll }, perfectStudents, absentStudents };
+    const avgAll = totalSundays > 0 && totalMembers > 0 
+      ? Math.round(sundayDates.reduce((sum, date) => {
+          const dayPresence = allAttendance.filter(a => a.date === date && a.present).length;
+          return sum + (dayPresence / totalMembers) * 100;
+        }, 0) / totalSundays)
+      : 0;
+
+    const presencesPerDay = sundayDates.map(date => {
+      const present = allAttendance.filter(a => a.date === date && a.present).length;
+      return { date, presenca: totalMembers > 0 ? Math.round((present / totalMembers) * 100) : 0 };
+    });
+
+    const best = presencesPerDay.length > 0 
+      ? presencesPerDay.reduce((a, b) => a.presenca > b.presenca ? a : b)
+      : null;
+    
+    const worst = presencesPerDay.length > 0 
+      ? presencesPerDay.reduce((a, b) => a.presenca < b.presenca ? a : b)
+      : null;
+
+    return { 
+      barData, 
+      metrics: { 
+        best: best ? { date: format(new Date(best.date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: best.presenca } : null, 
+        worst: worst ? { date: format(new Date(worst.date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: worst.presenca } : null, 
+        bestClass, 
+        totalSundays, 
+        avgAll 
+      }, 
+      perfectStudents, 
+      absentStudents,
+      lowFreqStudents
+    };
   }, [allAttendance, classes, students, totalMembers]);
 
   if (loading) {
