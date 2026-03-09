@@ -1,4 +1,5 @@
 import { ReactNode, useState } from 'react';
+import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 import { useNavigate } from 'react-router-dom';
 import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
@@ -35,7 +36,9 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
     setOpen(false);
   };
 
-  const handleLogout = () => {
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
+
+  const doLogout = () => {
     clearSession();
     navigate('/auth');
   };
@@ -99,12 +102,13 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
                     )}
                     <Button
                       variant="ghost"
-                      onClick={handleLogout}
+                      onClick={requestExit}
                       className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     >
                       <LogOut className="h-5 w-5 mr-3" />
                       <span>Sair</span>
                     </Button>
+                    <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={doLogout} />
                   </div>
                 </div>
               </SheetContent>

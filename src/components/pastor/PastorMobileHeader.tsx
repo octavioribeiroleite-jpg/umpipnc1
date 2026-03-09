@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -66,7 +67,9 @@ export function PastorMobileHeader() {
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleSignOut = async () => {
+  const { showConfirm: showExitConfirm, setShowConfirm: setShowExitConfirm, requestExit } = useExitConfirm();
+
+  const doSignOut = async () => {
     await signOut();
     navigate('/auth');
     setSheetOpen(false);
@@ -166,12 +169,13 @@ export function PastorMobileHeader() {
                     </div>
                   </div>
                   <button
-                    onClick={handleSignOut}
+                    onClick={requestExit}
                     className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     Sair
                   </button>
+                  <ExitConfirmDialog open={showExitConfirm} onOpenChange={setShowExitConfirm} onConfirm={doSignOut} />
                 </div>
               )}
             </SheetContent>

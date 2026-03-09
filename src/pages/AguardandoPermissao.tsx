@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +9,8 @@ import { Church, Clock, Calendar, Users, CheckSquare, DollarSign, FileText, LogO
 export default function AguardandoPermissao() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
 
   const handleSignOut = async () => {
     await signOut();
@@ -91,11 +94,12 @@ export default function AguardandoPermissao() {
             <Button 
               variant="outline" 
               className="mt-8 w-full"
-              onClick={handleSignOut}
+              onClick={requestExit}
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sair da conta
             </Button>
+            <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
 
             {/* Contact info */}
             <p className="text-xs text-muted-foreground mt-6">

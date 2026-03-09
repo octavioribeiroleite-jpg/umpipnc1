@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -28,7 +29,13 @@ export function PastorSidebar() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
   const [societies, setSocieties] = useState<Society[]>([]);
+
+  const doSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   useEffect(() => {
     supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
@@ -111,11 +118,12 @@ export function PastorSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-          onClick={async () => { await signOut(); navigate('/auth'); }}
+          onClick={requestExit}
         >
           <LogOut className="h-4 w-4 mr-2" />
           Sair
         </Button>
+        <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={doSignOut} />
       </div>
     </aside>
   );

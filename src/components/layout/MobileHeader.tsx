@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -75,6 +76,8 @@ export function MobileHeader() {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
 
   const handleSignOut = async () => {
     await signOut();
@@ -154,12 +157,13 @@ export function MobileHeader() {
                     </div>
                   </div>
                   <button
-                    onClick={handleSignOut}
+                    onClick={requestExit}
                     className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     Sair
                   </button>
+                  <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
                 </div>
               )}
             </SheetContent>
