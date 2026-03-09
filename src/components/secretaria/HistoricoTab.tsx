@@ -535,18 +535,30 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Comparativo entre turmas</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={100} />
-                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(value: number) => [`${value}%`, 'Média']} />
-                  <Bar dataKey="media" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+          <CardContent className="space-y-3">
+            {barData.map((cls, i) => {
+              const colors = [
+                'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500',
+                'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500',
+              ];
+              const barColor = cls.media >= 70 ? 'bg-green-500' : cls.media >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+              return (
+                <div key={cls.name} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium truncate max-w-[60%]">{cls.name}</span>
+                    <span className={`text-xs font-bold ${cls.media >= 70 ? 'text-green-600' : cls.media >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                      {cls.media}%
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                      style={{ width: `${cls.media}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}
