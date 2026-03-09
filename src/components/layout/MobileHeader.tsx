@@ -61,6 +61,9 @@ export function MobileHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
+  useSwipeBack();
+
+  const isHome = location.pathname === '/';
 
   const getInitials = (name: string) => {
     return name
