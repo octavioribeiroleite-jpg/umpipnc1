@@ -65,6 +65,7 @@ export default function Secretaria() {
   const [savedProfessorName, setSavedProfessorName] = useState<string | null>(null);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
+  const [visitorCount, setVisitorCount] = useState(0);
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -152,9 +153,11 @@ export default function Secretaria() {
     if (closureRes.data) {
       setDayIsClosed(true);
       setClosureId(closureRes.data.id);
+      setVisitorCount((closureRes.data as any).visitor_count ?? 0);
     } else {
       setDayIsClosed(false);
       setClosureId(null);
+      setVisitorCount(0);
     }
   }, [sundayDate]);
 
@@ -189,7 +192,8 @@ export default function Secretaria() {
         total_students: totalStudents,
         present_students: presentStudents,
         class_summary: classSummary,
-      });
+        visitor_count: visitorCount,
+      } as any);
 
     if (error) {
       toast.error('Erro ao fechar o dia');
@@ -366,6 +370,8 @@ export default function Secretaria() {
               dayIsClosed={dayIsClosed}
               onCloseDay={handleCloseDay}
               onReopenDay={handleReopenDay}
+              visitorCount={visitorCount}
+              setVisitorCount={setVisitorCount}
             />
           </TabsContent>
 

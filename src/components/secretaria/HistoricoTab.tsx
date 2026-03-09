@@ -46,6 +46,7 @@ interface DayRecord {
   presentStudents: number;
   classSummary: ClassSummaryItem[];
   markedByNames: string[];
+  visitorCount: number;
 }
 
 interface StudentStats {
@@ -131,6 +132,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           presentStudents: closure.present_students,
           classSummary: closure.class_summary,
           markedByNames: closure.closed_by ? [closure.closed_by, ...markedByNames.filter(n => n !== closure.closed_by)] : markedByNames,
+          visitorCount: (closure as any).visitor_count ?? 0,
         };
       }
 
@@ -143,7 +145,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         return { classId: cls.id, className: cls.name, total: classTotal, present: cp, percentage: classTotal > 0 ? Math.round((cp / classTotal) * 100) : 0 };
       }).filter(cs => cs.total > 0);
 
-      return { date, isClosed: false, totalStudents: totalMembers, presentStudents: presentCount, classSummary, markedByNames };
+      return { date, isClosed: false, totalStudents: totalMembers, presentStudents: presentCount, classSummary, markedByNames, visitorCount: 0 };
     });
   }, [allAttendance, closures, classes, students, totalMembers]);
 
@@ -357,6 +359,14 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
               </div>
             </div>
             <Progress value={pct} className="h-2" />
+            {freshRecord.visitorCount > 0 && (
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5" /> Visitantes
+                </span>
+                <span className="text-sm font-medium">{freshRecord.visitorCount}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -474,7 +484,10 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
                           Em aberto
                         </Badge>
                       )}
-                      <span className="text-xs text-muted-foreground">{record.presentStudents}/{record.totalStudents}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {record.presentStudents}/{record.totalStudents}
+                        {record.visitorCount > 0 && ` +${record.visitorCount}v`}
+                      </span>
                     </div>
                   </div>
 

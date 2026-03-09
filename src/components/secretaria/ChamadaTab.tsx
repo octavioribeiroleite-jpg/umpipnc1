@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw, Download, Lock, LockOpen } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw, Download, Lock, LockOpen, UserPlus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -52,9 +53,11 @@ interface ChamadaTabProps {
   dayIsClosed?: boolean;
   onCloseDay?: () => Promise<void>;
   onReopenDay?: () => Promise<void>;
+  visitorCount?: number;
+  setVisitorCount?: React.Dispatch<React.SetStateAction<number>>;
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay }: ChamadaTabProps) {
+export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, visitorCount = 0, setVisitorCount }: ChamadaTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
   const [chamadaStatusMap, setChamadaStatusMap] = useState<Record<string, ChamadaStatus>>({});
@@ -117,7 +120,8 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
   const getTotalStats = () => {
     const total = students.length;
     const present = attendance.filter(a => a.present && a.date === attendanceDate).length;
-    return { total, present, percentage: total > 0 ? Math.round((present / total) * 100) : 0 };
+    const totalWithVisitors = present + visitorCount;
+    return { total, present, percentage: total > 0 ? Math.round((present / total) * 100) : 0, totalWithVisitors };
   };
 
   const sortedClasses = [...classes].sort((a, b) => {
@@ -377,6 +381,31 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             </div>
           </div>
           <Progress value={totalStats.percentage} className="h-2" />
+
+          {/* Visitor count */}
+          <div className="flex items-center gap-3 pt-1">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <UserPlus className="h-4 w-4" />
+              <span className="text-sm">Visitantes</span>
+            </div>
+            {dayIsClosed ? (
+              <span className="text-sm font-medium">{visitorCount}</span>
+            ) : (
+              <Input
+                type="number"
+                min={0}
+                max={999}
+                value={visitorCount}
+                onChange={(e) => setVisitorCount?.(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-20 h-8 text-center text-sm"
+              />
+            )}
+            {visitorCount > 0 && (
+              <span className="text-xs text-muted-foreground ml-auto">
+                Total geral: <span className="font-semibold text-foreground">{totalStats.totalWithVisitors}</span>
+              </span>
+            )}
+          </div>
 
           {/* Close/Reopen day button for admin */}
           {isAdmin && !dayIsClosed && attendance.length > 0 && onCloseDay && (
