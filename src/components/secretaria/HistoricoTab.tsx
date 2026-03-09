@@ -409,50 +409,100 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         </div>
       )}
 
-      {/* Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Média últimos 4 domingos</p>
-            <p className="text-2xl font-bold text-primary">{metrics.avgLast4}%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Melhor domingo</p>
-            {metrics.best ? (
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                <span className="text-lg font-bold text-green-600">{metrics.best.presenca}%</span>
-                <span className="text-xs text-muted-foreground ml-1">{metrics.best.date}</span>
+      {/* Resumo Geral */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" /> Resumo geral
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <p className="text-2xl font-bold text-primary">{metrics.totalSundays}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Domingos registrados</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-primary">{totalMembers}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Alunos cadastrados</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-primary">{metrics.avgAll}%</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Média geral</p>
+            </div>
+          </div>
+
+          <div className="h-px bg-border" />
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Melhor domingo</p>
+              {metrics.best ? (
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-sm font-bold text-green-600">{metrics.best.presenca}%</span>
+                  <span className="text-[10px] text-muted-foreground">{metrics.best.date}</span>
+                </div>
+              ) : <span className="text-xs text-muted-foreground">—</span>}
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Pior domingo</p>
+              {metrics.worst ? (
+                <div className="flex items-center gap-1">
+                  <TrendingDown className="h-3.5 w-3.5 text-red-500" />
+                  <span className="text-sm font-bold text-red-500">{metrics.worst.presenca}%</span>
+                  <span className="text-[10px] text-muted-foreground">{metrics.worst.date}</span>
+                </div>
+              ) : <span className="text-xs text-muted-foreground">—</span>}
+            </div>
+          </div>
+
+          {metrics.bestClass && (
+            <>
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Melhor turma</p>
+                  <p className="text-sm font-medium">{metrics.bestClass.name}</p>
+                </div>
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-sm font-bold">{metrics.bestClass.media}%</Badge>
               </div>
-            ) : <span className="text-muted-foreground">—</span>}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Pior domingo</p>
-            {metrics.worst ? (
-              <div className="flex items-center gap-1">
-                <TrendingDown className="h-4 w-4 text-red-500" />
-                <span className="text-lg font-bold text-red-600">{metrics.worst.presenca}%</span>
-                <span className="text-xs text-muted-foreground ml-1">{metrics.worst.date}</span>
+            </>
+          )}
+
+          {perfectStudents.length > 0 && (
+            <>
+              <div className="h-px bg-border" />
+              <div className="space-y-2">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                  <Award className="h-3 w-3 text-yellow-500" /> 100% de presença
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {perfectStudents.map(s => (
+                    <Badge key={s.id} variant="secondary" className="text-xs bg-green-500/10 text-green-700 border-green-500/20">{s.name}</Badge>
+                  ))}
+                </div>
               </div>
-            ) : <span className="text-muted-foreground">—</span>}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Melhor turma</p>
-            {metrics.bestClass ? (
-              <div>
-                <span className="text-lg font-bold text-primary">{metrics.bestClass.media}%</span>
-                <p className="text-xs text-muted-foreground truncate">{metrics.bestClass.name}</p>
+            </>
+          )}
+
+          {absentStudents.length > 0 && (
+            <>
+              <div className="h-px bg-border" />
+              <div className="space-y-2">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3 text-red-500" /> Nunca compareceram
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {absentStudents.map(s => (
+                    <Badge key={s.id} variant="secondary" className="text-xs bg-red-500/10 text-red-700 border-red-500/20">{s.name}</Badge>
+                  ))}
+                </div>
               </div>
-            ) : <span className="text-muted-foreground">—</span>}
-          </CardContent>
-        </Card>
-      </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       {lineData.length > 1 && (
