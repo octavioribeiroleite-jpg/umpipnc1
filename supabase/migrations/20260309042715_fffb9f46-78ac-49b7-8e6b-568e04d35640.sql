@@ -1,0 +1,1 @@
+ALTER TABLE public.ebd_day_closures ADD COLUMN visitor_count integer NOT NULL DEFAULT 0;

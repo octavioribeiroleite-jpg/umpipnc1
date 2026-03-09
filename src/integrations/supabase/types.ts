@@ -300,6 +300,7 @@ export type Database = {
           notes: string | null
           present_students: number
           total_students: number
+          visitor_count: number
         }
         Insert: {
           class_summary?: Json
@@ -311,6 +312,7 @@ export type Database = {
           notes?: string | null
           present_students?: number
           total_students?: number
+          visitor_count?: number
         }
         Update: {
           class_summary?: Json
@@ -322,6 +324,7 @@ export type Database = {
           notes?: string | null
           present_students?: number
           total_students?: number
+          visitor_count?: number
         }
         Relationships: []
       }
