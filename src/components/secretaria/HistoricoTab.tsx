@@ -507,40 +507,44 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
               </div>
             </>
           )}
-
-          {perfectStudents.length > 0 && (
-            <>
-              <div className="h-px bg-border" />
-              <div className="space-y-2">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                  <Award className="h-3 w-3 text-yellow-500" /> 100% de presença
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {perfectStudents.map(s => (
-                    <Badge key={s.id} variant="secondary" className="text-xs bg-green-500/10 text-green-700 border-green-500/20">{s.name}</Badge>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {absentStudents.length > 0 && (
-            <>
-              <div className="h-px bg-border" />
-              <div className="space-y-2">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3 text-red-500" /> Nunca compareceram
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {absentStudents.map(s => (
-                    <Badge key={s.id} variant="secondary" className="text-xs bg-red-500/10 text-red-700 border-red-500/20">{s.name}</Badge>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
         </CardContent>
       </Card>
+
+      {/* Clickable student highlight cards */}
+      <div className="grid grid-cols-3 gap-2">
+        {/* 100% Presença */}
+        <button
+          onClick={() => perfectStudents.length > 0 && setOpenDialog('perfect')}
+          disabled={perfectStudents.length === 0}
+          className="rounded-xl border bg-card p-3 text-left hover:bg-accent/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]"
+        >
+          <Award className="h-5 w-5 text-yellow-500 mb-1.5" />
+          <p className="text-2xl font-bold text-green-600">{perfectStudents.length}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">100% presença</p>
+        </button>
+
+        {/* Frequência Baixa */}
+        <button
+          onClick={() => lowFreqStudents.length > 0 && setOpenDialog('lowFreq')}
+          disabled={lowFreqStudents.length === 0}
+          className="rounded-xl border bg-card p-3 text-left hover:bg-accent/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]"
+        >
+          <TrendingDown className="h-5 w-5 text-yellow-500 mb-1.5" />
+          <p className="text-2xl font-bold text-yellow-600">{lowFreqStudents.length}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Freq. baixa &lt;30%</p>
+        </button>
+
+        {/* Nunca compareceram */}
+        <button
+          onClick={() => absentStudents.length > 0 && setOpenDialog('absent')}
+          disabled={absentStudents.length === 0}
+          className="rounded-xl border bg-card p-3 text-left hover:bg-accent/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]"
+        >
+          <AlertTriangle className="h-5 w-5 text-red-500 mb-1.5" />
+          <p className="text-2xl font-bold text-red-600">{absentStudents.length}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Nunca vieram</p>
+        </button>
+      </div>
 
       {/* Charts */}
       {lineData.length > 1 && (
