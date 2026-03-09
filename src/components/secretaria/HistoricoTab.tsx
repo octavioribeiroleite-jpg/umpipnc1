@@ -89,11 +89,18 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
 
   useEffect(() => { fetchHistory(); }, [period]);
 
+  const totalMembers = students.length;
+
   const dayRecords = useMemo<DayRecord[]>(() => {
     const closureMap = new Map(closures.map(c => [c.date, c]));
     const dates = [...new Set(allAttendance.map(a => a.date))].sort().reverse();
 
-    return dates.map(date => {
+    return dates
+      .filter(date => {
+        const d = new Date(date + 'T12:00:00');
+        return d.getDay() === 0; // Only Sundays
+      })
+      .map(date => {
       const closure = closureMap.get(date);
       const dayAtt = allAttendance.filter(a => a.date === date);
       const markedByNames = [...new Set(dayAtt.map(a => a.marked_by).filter(Boolean))] as string[];
@@ -168,26 +175,30 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   };
 
   const { lineData, barData, metrics, perfectStudents, absentStudents } = useMemo(() => {
-    const dates = [...new Set(allAttendance.map(a => a.date))].sort();
-    const byDate = new Map<string, { present: number; total: number }>();
-    dates.forEach(date => {
+    const sundayDates = [...new Set(allAttendance.map(a => a.date))]
+      .filter(date => new Date(date + 'T12:00:00').getDay() === 0)
+      .sort();
+
+    const lineData = sundayDates.map(date => {
       const d = allAttendance.filter(a => a.date === date);
-      byDate.set(date, { present: d.filter(a => a.present).length, total: d.length });
+      const present = d.filter(a => a.present).length;
+      return { date: format(new Date(date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: totalMembers > 0 ? Math.round((present / totalMembers) * 100) : 0 };
     });
 
-    const lineData = dates.map(date => {
-      const d = byDate.get(date)!;
-      return { date: format(new Date(date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: d.total > 0 ? Math.round((d.present / d.total) * 100) : 0 };
+    const classStudentCounts = new Map<string, number>();
+    students.forEach(s => {
+      classStudentCounts.set(s.class_id, (classStudentCounts.get(s.class_id) || 0) + 1);
     });
 
     const barData = classes.map(cls => {
+      const classTotal = classStudentCounts.get(cls.id) || 0;
       const cr = allAttendance.filter(a => a.class_id === cls.id);
-      const cd = [...new Set(cr.map(a => a.date))];
+      const cd = [...new Set(cr.map(a => a.date))].filter(d => new Date(d + 'T12:00:00').getDay() === 0);
       let avgPct = 0;
-      if (cd.length > 0) {
+      if (cd.length > 0 && classTotal > 0) {
         avgPct = Math.round(cd.reduce((sum, date) => {
-          const dr = cr.filter(a => a.date === date);
-          return sum + (dr.length > 0 ? (dr.filter(a => a.present).length / dr.length) * 100 : 0);
+          const present = cr.filter(a => a.date === date && a.present).length;
+          return sum + (present / classTotal) * 100;
         }, 0) / cd.length);
       }
       return { name: cls.name, media: avgPct };
@@ -200,19 +211,20 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     const bestClass = barData.length > 0 ? barData[0] : null;
 
     const studentMap = new Map<string, { present: number; total: number }>();
-    allAttendance.forEach(a => {
+    allAttendance.filter(a => new Date(a.date + 'T12:00:00').getDay() === 0).forEach(a => {
       if (!studentMap.has(a.student_id)) studentMap.set(a.student_id, { present: 0, total: 0 });
       const s = studentMap.get(a.student_id)!;
       s.total++;
       if (a.present) s.present++;
     });
 
-    const totalDates = dates.length;
-    const perfectStudents = students.filter(s => { const r = studentMap.get(s.id); return r && r.present === totalDates && totalDates > 0; });
+    const totalSundays = sundayDates.length;
+    const avgAll = totalSundays > 0 ? Math.round(lineData.reduce((s, d) => s + d.presenca, 0) / totalSundays) : 0;
+    const perfectStudents = students.filter(s => { const r = studentMap.get(s.id); return r && r.present === totalSundays && totalSundays > 0; });
     const absentStudents = students.filter(s => { const r = studentMap.get(s.id); return !r || r.present === 0; });
 
-    return { lineData, barData, metrics: { avgLast4, best, worst, bestClass }, perfectStudents, absentStudents };
-  }, [allAttendance, classes, students]);
+    return { lineData, barData, metrics: { avgLast4, best, worst, bestClass, totalSundays, avgAll }, perfectStudents, absentStudents };
+  }, [allAttendance, classes, students, totalMembers]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando histórico...</div>;
@@ -220,7 +232,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
 
   // ─── DETAIL VIEW (full-screen) ───
   if (selectedDay) {
-    const pct = selectedDay.totalStudents > 0 ? Math.round((selectedDay.presentStudents / selectedDay.totalStudents) * 100) : 0;
+    const pct = totalMembers > 0 ? Math.round((selectedDay.presentStudents / totalMembers) * 100) : 0;
     const dateFormatted = format(new Date(selectedDay.date + 'T12:00:00'), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     // Refresh from latest dayRecords
     const freshRecord = dayRecords.find(d => d.date === selectedDay.date) || selectedDay;
@@ -351,7 +363,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       {dayRecords.length > 0 && (
         <div className="space-y-2">
           {dayRecords.map(record => {
-            const pct = record.totalStudents > 0 ? Math.round((record.presentStudents / record.totalStudents) * 100) : 0;
+            const pct = totalMembers > 0 ? Math.round((record.presentStudents / totalMembers) * 100) : 0;
             const dateObj = new Date(record.date + 'T12:00:00');
             const dayName = format(dateObj, 'EEEE', { locale: ptBR });
             const dayNum = format(dateObj, 'dd');
@@ -397,50 +409,100 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         </div>
       )}
 
-      {/* Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Média últimos 4 domingos</p>
-            <p className="text-2xl font-bold text-primary">{metrics.avgLast4}%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Melhor domingo</p>
-            {metrics.best ? (
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                <span className="text-lg font-bold text-green-600">{metrics.best.presenca}%</span>
-                <span className="text-xs text-muted-foreground ml-1">{metrics.best.date}</span>
+      {/* Resumo Geral */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" /> Resumo geral
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <p className="text-2xl font-bold text-primary">{metrics.totalSundays}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Domingos registrados</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-primary">{totalMembers}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Alunos cadastrados</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-primary">{metrics.avgAll}%</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Média geral</p>
+            </div>
+          </div>
+
+          <div className="h-px bg-border" />
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Melhor domingo</p>
+              {metrics.best ? (
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-sm font-bold text-green-600">{metrics.best.presenca}%</span>
+                  <span className="text-[10px] text-muted-foreground">{metrics.best.date}</span>
+                </div>
+              ) : <span className="text-xs text-muted-foreground">—</span>}
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Pior domingo</p>
+              {metrics.worst ? (
+                <div className="flex items-center gap-1">
+                  <TrendingDown className="h-3.5 w-3.5 text-red-500" />
+                  <span className="text-sm font-bold text-red-500">{metrics.worst.presenca}%</span>
+                  <span className="text-[10px] text-muted-foreground">{metrics.worst.date}</span>
+                </div>
+              ) : <span className="text-xs text-muted-foreground">—</span>}
+            </div>
+          </div>
+
+          {metrics.bestClass && (
+            <>
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Melhor turma</p>
+                  <p className="text-sm font-medium">{metrics.bestClass.name}</p>
+                </div>
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-sm font-bold">{metrics.bestClass.media}%</Badge>
               </div>
-            ) : <span className="text-muted-foreground">—</span>}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Pior domingo</p>
-            {metrics.worst ? (
-              <div className="flex items-center gap-1">
-                <TrendingDown className="h-4 w-4 text-red-500" />
-                <span className="text-lg font-bold text-red-600">{metrics.worst.presenca}%</span>
-                <span className="text-xs text-muted-foreground ml-1">{metrics.worst.date}</span>
+            </>
+          )}
+
+          {perfectStudents.length > 0 && (
+            <>
+              <div className="h-px bg-border" />
+              <div className="space-y-2">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                  <Award className="h-3 w-3 text-yellow-500" /> 100% de presença
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {perfectStudents.map(s => (
+                    <Badge key={s.id} variant="secondary" className="text-xs bg-green-500/10 text-green-700 border-green-500/20">{s.name}</Badge>
+                  ))}
+                </div>
               </div>
-            ) : <span className="text-muted-foreground">—</span>}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground mb-1">Melhor turma</p>
-            {metrics.bestClass ? (
-              <div>
-                <span className="text-lg font-bold text-primary">{metrics.bestClass.media}%</span>
-                <p className="text-xs text-muted-foreground truncate">{metrics.bestClass.name}</p>
+            </>
+          )}
+
+          {absentStudents.length > 0 && (
+            <>
+              <div className="h-px bg-border" />
+              <div className="space-y-2">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3 text-red-500" /> Nunca compareceram
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {absentStudents.map(s => (
+                    <Badge key={s.id} variant="secondary" className="text-xs bg-red-500/10 text-red-700 border-red-500/20">{s.name}</Badge>
+                  ))}
+                </div>
               </div>
-            ) : <span className="text-muted-foreground">—</span>}
-          </CardContent>
-        </Card>
-      </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       {lineData.length > 1 && (
@@ -487,39 +549,8 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         </Card>
       )}
 
-      {perfectStudents.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Award className="h-4 w-4 text-yellow-500" /> 100% de presença
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {perfectStudents.map(s => (
-                <Badge key={s.id} className="bg-green-500/10 text-green-700 border-green-500/20">{s.name}</Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {absentStudents.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" /> 0% de presença (alerta)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {absentStudents.map(s => (
-                <Badge key={s.id} variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20">{s.name}</Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {allAttendance.length === 0 && (
         <p className="text-center text-muted-foreground py-8">Nenhum registro de presença encontrado para este período.</p>
