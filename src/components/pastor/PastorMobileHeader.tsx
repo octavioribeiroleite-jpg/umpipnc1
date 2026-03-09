@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
