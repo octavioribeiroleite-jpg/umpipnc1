@@ -289,6 +289,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ebd_day_closures: {
+        Row: {
+          class_summary: Json
+          closed_at: string
+          closed_by: string
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          present_students: number
+          total_students: number
+        }
+        Insert: {
+          class_summary?: Json
+          closed_at?: string
+          closed_by: string
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          present_students?: number
+          total_students?: number
+        }
+        Update: {
+          class_summary?: Json
+          closed_at?: string
+          closed_by?: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          present_students?: number
+          total_students?: number
+        }
+        Relationships: []
+      }
       ebd_students: {
         Row: {
           active: boolean

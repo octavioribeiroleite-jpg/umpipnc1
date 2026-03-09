@@ -4,9 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw, Download } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw, Download, Lock, LockOpen } from 'lucide-react';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface EbdClass {
   id: string;
@@ -39,12 +49,20 @@ interface ChamadaTabProps {
   formattedDate: string;
   initialProfessorName?: string;
   accessLevel: 'admin' | 'professor';
+  dayIsClosed?: boolean;
+  onCloseDay?: () => Promise<void>;
+  onReopenDay?: () => Promise<void>;
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel }: ChamadaTabProps) {
+export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay }: ChamadaTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
   const [chamadaStatusMap, setChamadaStatusMap] = useState<Record<string, ChamadaStatus>>({});
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [showReopenConfirm, setShowReopenConfirm] = useState(false);
+  const [closingDay, setClosingDay] = useState(false);
+
+  const isAdmin = accessLevel === 'admin';
 
   const getClassChamadaStatus = (classId: string): ChamadaStatus => {
     return chamadaStatusMap[classId] || 'idle';
@@ -129,15 +147,35 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     return <Badge variant="outline" className="text-muted-foreground text-[10px]">Não iniciada</Badge>;
   };
 
+  const handleCloseDay = async () => {
+    setClosingDay(true);
+    try {
+      await onCloseDay?.();
+    } finally {
+      setClosingDay(false);
+      setShowCloseConfirm(false);
+    }
+  };
+
+  const handleReopenDay = async () => {
+    setClosingDay(true);
+    try {
+      await onReopenDay?.();
+    } finally {
+      setClosingDay(false);
+      setShowReopenConfirm(false);
+    }
+  };
+
   // Class detail view
   if (selectedClass) {
     const classStudents = students.filter(s => s.class_id === selectedClass.id).sort((a, b) => a.name.localeCompare(b.name));
     const stats = getClassStats(selectedClass.id);
     const status = getClassChamadaStatus(selectedClass.id);
-    const isReadOnly = status !== 'aberta';
+    const isReadOnly = status !== 'aberta' || !!dayIsClosed;
 
     // Idle state - show start button
-    if (status === 'idle') {
+    if (status === 'idle' && !dayIsClosed) {
       return (
         <div>
           <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
@@ -180,7 +218,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
       );
     }
 
-    // Aberta or Finalizada state
+    // Aberta or Finalizada state (or day closed)
     return (
       <div className="flex flex-col min-h-[calc(100vh-200px)]">
         <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
@@ -192,12 +230,15 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               <h2 className="font-semibold text-lg">{selectedClass.name}</h2>
               <p className="text-xs text-muted-foreground">{stats.present}/{stats.total} presentes</p>
             </div>
-            {status === 'aberta' && (
+            {dayIsClosed ? (
+              <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20">
+                <Lock className="h-3 w-3 mr-1" /> Dia Fechado
+              </Badge>
+            ) : status === 'aberta' ? (
               <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
                 Em andamento
               </Badge>
-            )}
-            {status === 'finalizada' && (
+            ) : (
               <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
                 <CheckCircle2 className="h-3 w-3 mr-1" /> Finalizada
               </Badge>
@@ -244,27 +285,29 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
         </div>
 
         {/* Footer action */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-20">
-          {status === 'aberta' && (
-            <Button
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => setClassChamadaStatus(selectedClass.id, 'finalizada')}
-            >
-              <StopCircle className="h-4 w-4 mr-2" />
-              Finalizar Chamada
-            </Button>
-          )}
-          {status === 'finalizada' && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setClassChamadaStatus(selectedClass.id, 'aberta')}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reabrir Chamada
-            </Button>
-          )}
-        </div>
+        {!dayIsClosed && (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-20">
+            {status === 'aberta' && (
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => setClassChamadaStatus(selectedClass.id, 'finalizada')}
+              >
+                <StopCircle className="h-4 w-4 mr-2" />
+                Finalizar Chamada
+              </Button>
+            )}
+            {status === 'finalizada' && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setClassChamadaStatus(selectedClass.id, 'aberta')}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reabrir Chamada
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -281,6 +324,24 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
         </p>
       )}
 
+      {/* Day closed banner */}
+      {dayIsClosed && (
+        <div className="flex items-center gap-2 p-3 rounded-lg border border-orange-500/30 bg-orange-500/5">
+          <Lock className="h-4 w-4 text-orange-600 shrink-0" />
+          <p className="text-sm text-orange-700 font-medium">Dia fechado — chamada encerrada</p>
+          {isAdmin && onReopenDay && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto text-xs text-orange-600 hover:text-orange-700"
+              onClick={() => setShowReopenConfirm(true)}
+            >
+              <LockOpen className="h-3.5 w-3.5 mr-1" /> Reabrir
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Summary card */}
       <Card>
         <CardContent className="pt-5 space-y-3">
@@ -292,7 +353,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                 <span className="text-base font-normal text-muted-foreground">/{totalStats.total}</span>
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {attendance.length > 0 && (
                 <Button
                   variant="outline"
@@ -316,6 +377,18 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             </div>
           </div>
           <Progress value={totalStats.percentage} className="h-2" />
+
+          {/* Close/Reopen day button for admin */}
+          {isAdmin && !dayIsClosed && attendance.length > 0 && onCloseDay && (
+            <Button
+              variant="outline"
+              className="w-full mt-2 border-orange-500/30 text-orange-600 hover:bg-orange-500/5 hover:text-orange-700"
+              onClick={() => setShowCloseConfirm(true)}
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Fechar Dia
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -339,7 +412,11 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                   <Users className="h-4 w-4 text-primary shrink-0" />
                   <span className="font-medium text-sm">{cls.name}</span>
                   <div className="ml-auto shrink-0">
-                    {getStatusBadge(cls.id)}
+                    {dayIsClosed ? (
+                      <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-[10px]">Fechado</Badge>
+                    ) : (
+                      getStatusBadge(cls.id)
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -356,6 +433,42 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
       {classes.length === 0 && (
         <p className="text-center text-muted-foreground py-8">Nenhuma turma cadastrada ainda.</p>
       )}
+
+      {/* Close day confirmation */}
+      <AlertDialog open={showCloseConfirm} onOpenChange={setShowCloseConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Fechar dia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai registrar o resumo da chamada de hoje no histórico. A chamada não poderá mais ser editada até ser reaberta.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={closingDay}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCloseDay} disabled={closingDay}>
+              {closingDay ? 'Fechando...' : 'Fechar Dia'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reopen day confirmation */}
+      <AlertDialog open={showReopenConfirm} onOpenChange={setShowReopenConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reabrir dia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai permitir editar a chamada novamente. O registro do histórico será removido.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={closingDay}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReopenDay} disabled={closingDay}>
+              {closingDay ? 'Reabrindo...' : 'Reabrir Dia'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, Award, AlertTriangle, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, Award, AlertTriangle, Calendar, Lock, Download, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 
 interface EbdClass {
   id: string;
@@ -21,6 +23,23 @@ interface EbdStudent {
   name: string;
 }
 
+interface ClassSummaryItem {
+  classId: string;
+  className: string;
+  total: number;
+  present: number;
+  percentage: number;
+}
+
+interface DayClosure {
+  id: string;
+  date: string;
+  closed_by: string;
+  total_students: number;
+  present_students: number;
+  class_summary: ClassSummaryItem[];
+}
+
 type PeriodFilter = '4weeks' | '3months' | 'all';
 
 interface HistoricoTabProps {
@@ -31,35 +50,79 @@ interface HistoricoTabProps {
 export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
   const [period, setPeriod] = useState<PeriodFilter>('4weeks');
   const [allAttendance, setAllAttendance] = useState<{ student_id: string; class_id: string; date: string; present: boolean }[]>([]);
+  const [closures, setClosures] = useState<DayClosure[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedClosure, setExpandedClosure] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchHistory = async () => {
       setLoading(true);
-      let query = supabase.from('ebd_attendance').select('student_id, class_id, date, present');
+      let attendanceQuery = supabase.from('ebd_attendance').select('student_id, class_id, date, present');
+      let closureQuery = supabase.from('ebd_day_closures').select('*').order('date', { ascending: false });
 
       if (period === '4weeks') {
-        query = query.gte('date', format(subWeeks(new Date(), 4), 'yyyy-MM-dd'));
+        const cutoff = format(subWeeks(new Date(), 4), 'yyyy-MM-dd');
+        attendanceQuery = attendanceQuery.gte('date', cutoff);
+        closureQuery = closureQuery.gte('date', cutoff);
       } else if (period === '3months') {
-        query = query.gte('date', format(subMonths(new Date(), 3), 'yyyy-MM-dd'));
+        const cutoff = format(subMonths(new Date(), 3), 'yyyy-MM-dd');
+        attendanceQuery = attendanceQuery.gte('date', cutoff);
+        closureQuery = closureQuery.gte('date', cutoff);
       }
 
-      const { data } = await query.order('date', { ascending: true });
-      setAllAttendance(data || []);
+      const [{ data: attData }, { data: closureData }] = await Promise.all([
+        attendanceQuery.order('date', { ascending: true }),
+        closureQuery,
+      ]);
+
+      setAllAttendance(attData || []);
+      setClosures((closureData || []).map((c: any) => ({
+        ...c,
+        class_summary: (c.class_summary || []) as ClassSummaryItem[],
+      })));
       setLoading(false);
     };
     fetchHistory();
   }, [period]);
 
-  const { lineData, barData, tableData, metrics, perfectStudents, absentStudents } = useMemo(() => {
-    // Group by date
+  const getPercentColor = (pct: number) => {
+    if (pct > 70) return 'text-green-600';
+    if (pct >= 40) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getColorClass = (pct: number) => {
+    if (pct > 70) return 'border-green-500/30 bg-green-500/5';
+    if (pct >= 40) return 'border-yellow-500/30 bg-yellow-500/5';
+    return 'border-red-500/30 bg-red-500/5';
+  };
+
+  const handleDownloadPDF = async (closure: DayClosure) => {
+    // Fetch attendance for that specific date to generate full PDF
+    const { data: dayAttendance } = await supabase
+      .from('ebd_attendance')
+      .select('*')
+      .eq('date', closure.date);
+
+    if (dayAttendance) {
+      const dateObj = new Date(closure.date + 'T12:00:00');
+      generateEbdAttendancePDF({
+        classes,
+        students,
+        attendance: dayAttendance,
+        date: closure.date,
+        formattedDate: format(dateObj, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
+      });
+    }
+  };
+
+  const { lineData, barData, metrics, perfectStudents, absentStudents } = useMemo(() => {
     const byDate = new Map<string, { present: number; total: number }>();
     const dates = [...new Set(allAttendance.map(a => a.date))].sort();
 
     dates.forEach(date => {
       const dayRecords = allAttendance.filter(a => a.date === date);
       const present = dayRecords.filter(a => a.present).length;
-      // total students who had any record that day
       const total = dayRecords.length;
       byDate.set(date, { present, total });
     });
@@ -75,7 +138,6 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
       };
     });
 
-    // Bar data: average per class
     const barData = classes.map(cls => {
       const classRecords = allAttendance.filter(a => a.class_id === cls.id);
       const classDates = [...new Set(classRecords.map(a => a.date))];
@@ -91,32 +153,16 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
       return { name: cls.name, media: avgPct };
     }).sort((a, b) => b.media - a.media);
 
-    // Table data
-    const tableData = dates.map(date => {
-      const d = byDate.get(date)!;
-      return {
-        date,
-        formatted: format(new Date(date + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR }),
-        present: d.present,
-        total: d.total,
-        pct: d.total > 0 ? Math.round((d.present / d.total) * 100) : 0,
-      };
-    }).reverse();
-
-    // Metrics
     const last4 = lineData.slice(-4);
     const avgLast4 = last4.length > 0 ? Math.round(last4.reduce((s, d) => s + d.presenca, 0) / last4.length) : 0;
     const best = lineData.length > 0 ? lineData.reduce((a, b) => a.presenca > b.presenca ? a : b) : null;
     const worst = lineData.length > 0 ? lineData.reduce((a, b) => a.presenca < b.presenca ? a : b) : null;
     const bestClass = barData.length > 0 ? barData[0] : null;
-    const worstClass = barData.length > 0 ? barData[barData.length - 1] : null;
 
-    // Perfect and absent students
     const studentDates = new Map<string, { present: number; total: number }>();
     allAttendance.forEach(a => {
-      const key = a.student_id;
-      if (!studentDates.has(key)) studentDates.set(key, { present: 0, total: 0 });
-      const s = studentDates.get(key)!;
+      if (!studentDates.has(a.student_id)) studentDates.set(a.student_id, { present: 0, total: 0 });
+      const s = studentDates.get(a.student_id)!;
       s.total++;
       if (a.present) s.present++;
     });
@@ -135,8 +181,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
     return {
       lineData,
       barData,
-      tableData,
-      metrics: { avgLast4, best, worst, bestClass, worstClass },
+      metrics: { avgLast4, best, worst, bestClass },
       perfectStudents,
       absentStudents,
     };
@@ -165,6 +210,82 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
           </Button>
         ))}
       </div>
+
+      {/* Closed day cards */}
+      {closures.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+            <Lock className="h-3.5 w-3.5" /> Dias fechados
+          </h3>
+          {closures.map(closure => {
+            const pct = closure.total_students > 0
+              ? Math.round((closure.present_students / closure.total_students) * 100)
+              : 0;
+            const isExpanded = expandedClosure === closure.id;
+            const dateFormatted = format(new Date(closure.date + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR });
+            const yearFormatted = format(new Date(closure.date + 'T12:00:00'), 'yyyy');
+
+            return (
+              <Card key={closure.id} className={`${getColorClass(pct)} transition-all`}>
+                <CardContent className="pt-4 pb-4 space-y-3">
+                  {/* Header row */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm capitalize">{dateFormatted}</p>
+                      <p className="text-xs text-muted-foreground">{yearFormatted}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <p className={`text-xl font-bold ${getPercentColor(pct)}`}>{pct}%</p>
+                        <p className="text-xs text-muted-foreground">{closure.present_students}/{closure.total_students}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Progress value={pct} className="h-1.5" />
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs flex-1"
+                      onClick={() => setExpandedClosure(isExpanded ? null : closure.id)}
+                    >
+                      {isExpanded ? <ChevronUp className="h-3.5 w-3.5 mr-1" /> : <ChevronDown className="h-3.5 w-3.5 mr-1" />}
+                      {isExpanded ? 'Menos detalhes' : 'Ver turmas'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => handleDownloadPDF(closure)}
+                    >
+                      <Download className="h-3.5 w-3.5 mr-1" /> PDF
+                    </Button>
+                  </div>
+
+                  {/* Expanded: class breakdown */}
+                  {isExpanded && closure.class_summary.length > 0 && (
+                    <div className="space-y-2 pt-1 border-t border-border/50">
+                      {[...closure.class_summary].sort((a, b) => b.percentage - a.percentage).map((cs, i) => (
+                        <div key={cs.classId || i} className="flex items-center gap-2">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-xs flex-1 truncate">{cs.className}</span>
+                          <span className="text-xs text-muted-foreground">{cs.present}/{cs.total}</span>
+                          <span className={`text-xs font-semibold ${getPercentColor(cs.percentage)} min-w-[32px] text-right`}>
+                            {cs.percentage}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Metrics cards */}
       <div className="grid grid-cols-2 gap-3">
@@ -211,7 +332,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       </div>
 
-      {/* Line chart - attendance evolution */}
+      {/* Line chart */}
       {lineData.length > 1 && (
         <Card>
           <CardHeader className="pb-2">
@@ -238,7 +359,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       )}
 
-      {/* Bar chart - class comparison */}
+      {/* Bar chart */}
       {barData.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -263,38 +384,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       )}
 
-      {/* Summary table */}
-      {tableData.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Resumo por domingo</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead className="text-center">Presentes</TableHead>
-                  <TableHead className="text-center">Total</TableHead>
-                  <TableHead className="text-right">%</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tableData.map(row => (
-                  <TableRow key={row.date}>
-                    <TableCell className="text-sm">{row.formatted}</TableCell>
-                    <TableCell className="text-center">{row.present}</TableCell>
-                    <TableCell className="text-center">{row.total}</TableCell>
-                    <TableCell className="text-right font-semibold">{row.pct}%</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Highlights: perfect attendance */}
+      {/* Perfect attendance */}
       {perfectStudents.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -314,7 +404,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       )}
 
-      {/* Alerts: 0% attendance */}
+      {/* 0% attendance */}
       {absentStudents.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -334,7 +424,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       )}
 
-      {allAttendance.length === 0 && (
+      {allAttendance.length === 0 && closures.length === 0 && (
         <p className="text-center text-muted-foreground py-8">Nenhum registro de presença encontrado para este período.</p>
       )}
     </div>
