@@ -28,6 +28,7 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
   const { session, clearSession } = useMembroSession();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  useSwipeBack();
 
   const handleNav = (tab: MembroTab) => {
     onTabChange(tab);
