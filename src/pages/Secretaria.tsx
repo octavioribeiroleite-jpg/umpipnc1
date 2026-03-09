@@ -59,6 +59,8 @@ export default function Secretaria() {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [professorNome, setProfessorNome] = useState('');
   const [savedProfessorName, setSavedProfessorName] = useState<string | null>(null);
+  const [dayIsClosed, setDayIsClosed] = useState(false);
+  const [closureId, setClosureId] = useState<string | null>(null);
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -131,22 +133,85 @@ export default function Secretaria() {
   };
 
   const fetchData = useCallback(async () => {
-    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes] = await Promise.all([
+    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes] = await Promise.all([
       supabase.from('ebd_classes').select('*').eq('active', true).order('order_index'),
       supabase.from('ebd_students').select('*').eq('active', true).order('name'),
       supabase.from('ebd_students').select('*').order('name'),
       supabase.from('ebd_attendance').select('*').eq('date', sundayDate),
+      supabase.from('ebd_day_closures').select('*').eq('date', sundayDate).maybeSingle(),
     ]);
 
     if (classesRes.data) setClasses(classesRes.data);
     if (activeStudentsRes.data) setActiveStudents(activeStudentsRes.data);
     if (allStudentsRes.data) setAllStudents(allStudentsRes.data);
     if (attendanceRes.data) setAttendance(attendanceRes.data);
+    if (closureRes.data) {
+      setDayIsClosed(true);
+      setClosureId(closureRes.data.id);
+    } else {
+      setDayIsClosed(false);
+      setClosureId(null);
+    }
   }, [sundayDate]);
 
   useEffect(() => {
     if (accessLevel) fetchData();
   }, [accessLevel, fetchData]);
+
+  const handleCloseDay = async () => {
+    // Build class summary
+    const classSummary = classes.map(cls => {
+      const classStudents = activeStudents.filter(s => s.class_id === cls.id);
+      const classAttendance = attendance.filter(a => a.class_id === cls.id && a.date === sundayDate);
+      const present = classAttendance.filter(a => a.present).length;
+      const total = classStudents.length;
+      return {
+        classId: cls.id,
+        className: cls.name,
+        total,
+        present,
+        percentage: total > 0 ? Math.round((present / total) * 100) : 0,
+      };
+    });
+
+    const totalStudents = activeStudents.length;
+    const presentStudents = attendance.filter(a => a.present && a.date === sundayDate).length;
+
+    const { error } = await supabase
+      .from('ebd_day_closures')
+      .insert({
+        date: sundayDate,
+        closed_by: professorNome || 'Administrador',
+        total_students: totalStudents,
+        present_students: presentStudents,
+        class_summary: classSummary,
+      });
+
+    if (error) {
+      toast.error('Erro ao fechar o dia');
+      return;
+    }
+
+    toast.success('Dia fechado com sucesso!');
+    await fetchData();
+  };
+
+  const handleReopenDay = async () => {
+    if (!closureId) return;
+
+    const { error } = await supabase
+      .from('ebd_day_closures')
+      .delete()
+      .eq('id', closureId);
+
+    if (error) {
+      toast.error('Erro ao reabrir o dia');
+      return;
+    }
+
+    toast.success('Dia reaberto!');
+    await fetchData();
+  };
 
   // Login screens
   if (!accessLevel) {
@@ -271,6 +336,9 @@ export default function Secretaria() {
               formattedDate={formattedDate}
               initialProfessorName={professorNome || undefined}
               accessLevel={accessLevel!}
+              dayIsClosed={dayIsClosed}
+              onCloseDay={handleCloseDay}
+              onReopenDay={handleReopenDay}
             />
           </TabsContent>
 
