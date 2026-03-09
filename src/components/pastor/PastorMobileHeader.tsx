@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import {
+  ArrowLeft,
   Menu,
   LogOut,
   LayoutDashboard,
