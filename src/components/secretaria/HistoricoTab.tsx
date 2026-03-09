@@ -484,7 +484,10 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
                           Em aberto
                         </Badge>
                       )}
-                      <span className="text-xs text-muted-foreground">{record.presentStudents}/{record.totalStudents}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {record.presentStudents}/{record.totalStudents}
+                        {record.visitorCount > 0 && ` +${record.visitorCount}v`}
+                      </span>
                     </div>
                   </div>
 

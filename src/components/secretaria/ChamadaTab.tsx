@@ -382,6 +382,31 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           </div>
           <Progress value={totalStats.percentage} className="h-2" />
 
+          {/* Visitor count */}
+          <div className="flex items-center gap-3 pt-1">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <UserPlus className="h-4 w-4" />
+              <span className="text-sm">Visitantes</span>
+            </div>
+            {dayIsClosed ? (
+              <span className="text-sm font-medium">{visitorCount}</span>
+            ) : (
+              <Input
+                type="number"
+                min={0}
+                max={999}
+                value={visitorCount}
+                onChange={(e) => setVisitorCount?.(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-20 h-8 text-center text-sm"
+              />
+            )}
+            {visitorCount > 0 && (
+              <span className="text-xs text-muted-foreground ml-auto">
+                Total geral: <span className="font-semibold text-foreground">{totalStats.totalWithVisitors}</span>
+              </span>
+            )}
+          </div>
+
           {/* Close/Reopen day button for admin */}
           {isAdmin && !dayIsClosed && attendance.length > 0 && onCloseDay && (
             <Button

@@ -370,6 +370,8 @@ export default function Secretaria() {
               dayIsClosed={dayIsClosed}
               onCloseDay={handleCloseDay}
               onReopenDay={handleReopenDay}
+              visitorCount={visitorCount}
+              setVisitorCount={setVisitorCount}
             />
           </TabsContent>
 
