@@ -48,6 +48,14 @@ interface DayRecord {
   markedByNames: string[];
 }
 
+interface StudentStats {
+  id: string;
+  name: string;
+  present: number;
+  total: number;
+  percentage: number;
+}
+
 type PeriodFilter = '4weeks' | '3months' | 'all';
 
 interface HistoricoTabProps {
