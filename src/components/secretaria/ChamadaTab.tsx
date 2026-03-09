@@ -392,11 +392,15 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               <span className="text-sm font-medium">{visitorCount}</span>
             ) : (
               <Input
-                type="number"
-                min={0}
-                max={999}
-                value={visitorCount}
-                onChange={(e) => setVisitorCount?.(Math.max(0, parseInt(e.target.value) || 0))}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={visitorCount === 0 ? '' : String(visitorCount)}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setVisitorCount?.(val === '' ? 0 : Math.min(999, parseInt(val)));
+                }}
+                placeholder="0"
                 className="w-20 h-8 text-center text-sm"
               />
             )}
