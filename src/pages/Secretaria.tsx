@@ -490,7 +490,7 @@ export default function Secretaria() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate(-1)}
+                onClick={handleExitApp}
                 className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
