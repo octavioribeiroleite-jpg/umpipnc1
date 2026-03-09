@@ -111,7 +111,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           isClosed: true,
           closureId: closure.id,
           closedBy: closure.closed_by,
-          totalStudents: closure.total_students,
+          totalStudents: totalMembers,
           presentStudents: closure.present_students,
           classSummary: closure.class_summary,
           markedByNames: closure.closed_by ? [closure.closed_by, ...markedByNames.filter(n => n !== closure.closed_by)] : markedByNames,
