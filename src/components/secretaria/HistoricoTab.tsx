@@ -232,7 +232,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
 
   // ─── DETAIL VIEW (full-screen) ───
   if (selectedDay) {
-    const pct = selectedDay.totalStudents > 0 ? Math.round((selectedDay.presentStudents / selectedDay.totalStudents) * 100) : 0;
+    const pct = totalMembers > 0 ? Math.round((selectedDay.presentStudents / totalMembers) * 100) : 0;
     const dateFormatted = format(new Date(selectedDay.date + 'T12:00:00'), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     // Refresh from latest dayRecords
     const freshRecord = dayRecords.find(d => d.date === selectedDay.date) || selectedDay;
