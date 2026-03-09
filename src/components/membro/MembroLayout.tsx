@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMembroSession } from '@/contexts/MembroSessionContext';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Home, Calendar, CreditCard, Bell, Heart, LogOut, Menu } from 'lucide-react';
