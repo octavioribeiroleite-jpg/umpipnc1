@@ -84,6 +84,7 @@ function SecretariaAniversariantes() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingBirthday, setEditingBirthday] = useState<Birthday | null>(null);
   const [deletingBirthday, setDeletingBirthday] = useState<Birthday | null>(null);
+  
 
   const currentMonth = new Date().getMonth() + 1;
 
@@ -217,6 +218,7 @@ export default function Secretaria() {
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
   const [currentView, setCurrentView] = useState<CurrentView>('home');
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -455,6 +457,11 @@ export default function Secretaria() {
   const profileLabel = isAdmin ? 'Administrador' : 'Professor';
 
   const handleExitApp = () => {
+    setShowExitConfirm(true);
+  };
+
+  const confirmExit = () => {
+    setShowExitConfirm(false);
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
@@ -647,6 +654,21 @@ export default function Secretaria() {
           <SecretariaAniversariantes />
         )}
       </div>
+
+      <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sair da Secretaria?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você será desconectado e voltará para a tela de login da secretaria.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmExit}>Sair</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
