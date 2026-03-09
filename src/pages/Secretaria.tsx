@@ -26,6 +26,7 @@ import { WeekBirthdays } from '@/components/aniversariantes/WeekBirthdays';
 import { MonthBirthdays } from '@/components/aniversariantes/MonthBirthdays';
 import { YearCalendar } from '@/components/aniversariantes/YearCalendar';
 import { BirthdayNotifications } from '@/components/aniversariantes/BirthdayNotifications';
+import { WeekAnnouncementCard } from '@/components/aniversariantes/WeekAnnouncementCard';
 import { BirthdayFilters } from '@/components/aniversariantes/BirthdayFilters';
 import { BirthdayFormDialog } from '@/components/aniversariantes/BirthdayFormDialog';
 import { BirthdayCard } from '@/components/aniversariantes/BirthdayCard';
@@ -219,6 +220,11 @@ export default function Secretaria() {
   const [visitorCount, setVisitorCount] = useState(0);
   const [currentView, setCurrentView] = useState<CurrentView>('home');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const { weekBirthdays, todayBirthdays } = useBirthdays();
+  const allWeekAnnouncements = [
+    ...todayBirthdays.map(b => ({ ...b, daysUntil: 0 })),
+    ...weekBirthdays,
+  ];
 
   const sundayDate = getTodayDate();
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -525,6 +531,9 @@ export default function Secretaria() {
               </div>
             </div>
           </AppCard>
+
+          {/* Birthday announcement card */}
+          <WeekAnnouncementCard birthdays={allWeekAnnouncements} />
 
           {/* Menu cards */}
           <div className="grid grid-cols-2 gap-3">

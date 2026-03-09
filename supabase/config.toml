@@ -36,4 +36,7 @@ verify_jwt = false
 [functions.generate-birthday-reminders]
 verify_jwt = false
 
+[functions.generate-birthday-announcement]
+verify_jwt = false
+
 
