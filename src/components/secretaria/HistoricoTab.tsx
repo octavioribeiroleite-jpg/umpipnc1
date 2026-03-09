@@ -213,7 +213,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           return sum + (present / classTotal) * 100;
         }, 0) / cd.length);
       }
-      return { name: cls.name, media: avgPct };
+      return { classId: cls.id, name: cls.name, media: avgPct };
     }).sort((a, b) => b.media - a.media);
 
     const bestClass = barData.length > 0 ? barData[0] : null;
