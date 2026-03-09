@@ -77,6 +77,8 @@ export function MobileHeader() {
       .slice(0, 2);
   };
 
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
