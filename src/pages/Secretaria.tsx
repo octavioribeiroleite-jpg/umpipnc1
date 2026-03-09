@@ -192,7 +192,8 @@ export default function Secretaria() {
         total_students: totalStudents,
         present_students: presentStudents,
         class_summary: classSummary,
-      });
+        visitor_count: visitorCount,
+      } as any);
 
     if (error) {
       toast.error('Erro ao fechar o dia');
