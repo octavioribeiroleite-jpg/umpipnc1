@@ -36,6 +36,7 @@ import Dizimos from "./pages/Dizimos";
 import Visitantes from "./pages/Visitantes";
 import Estudos from "./pages/Estudos";
 import Secretaria from "./pages/Secretaria";
+import Aniversariantes from "./pages/Aniversariantes";
 
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
