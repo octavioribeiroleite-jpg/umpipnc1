@@ -138,7 +138,7 @@ export function AppSidebar() {
         )}
         <Button
           variant="ghost"
-          onClick={handleSignOut}
+          onClick={requestExit}
           className={cn(
             'w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
             collapsed && 'justify-center'
@@ -147,6 +147,7 @@ export function AppSidebar() {
           <LogOut className={cn('h-5 w-5', collapsed ? '' : 'mr-3')} />
           {!collapsed && <span>Sair</span>}
         </Button>
+        <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
       </div>
     </aside>
   );

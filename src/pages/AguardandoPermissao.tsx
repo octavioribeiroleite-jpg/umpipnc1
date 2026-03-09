@@ -94,10 +94,12 @@ export default function AguardandoPermissao() {
             <Button 
               variant="outline" 
               className="mt-8 w-full"
-              onClick={handleSignOut}
+              onClick={requestExit}
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sair da conta
+            </Button>
+            <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
             </Button>
 
             {/* Contact info */}

@@ -120,11 +120,12 @@ export function PastorSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-          onClick={async () => { await signOut(); navigate('/auth'); }}
+          onClick={requestExit}
         >
           <LogOut className="h-4 w-4 mr-2" />
           Sair
         </Button>
+        <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={doSignOut} />
       </div>
     </aside>
   );
