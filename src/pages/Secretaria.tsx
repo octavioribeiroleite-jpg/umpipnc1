@@ -84,7 +84,7 @@ function SecretariaAniversariantes() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingBirthday, setEditingBirthday] = useState<Birthday | null>(null);
   const [deletingBirthday, setDeletingBirthday] = useState<Birthday | null>(null);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  
 
   const currentMonth = new Date().getMonth() + 1;
 
