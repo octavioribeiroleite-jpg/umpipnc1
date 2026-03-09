@@ -546,29 +546,31 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         </button>
       </div>
 
-      {/* Charts */}
-      {lineData.length > 1 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Calendar className="h-4 w-4" /> Evolução da presença
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={lineData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} className="fill-muted-foreground" />
-                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(value: number) => [`${value}%`, 'Presença']} />
-                  <Line type="monotone" dataKey="presenca" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
+      <ResponsiveDialog open={openDialog !== null} onOpenChange={(open) => !open && setOpenDialog(null)}>
+        <ResponsiveDialogContent className="sm:max-w-md">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>
+              {openDialog === 'perfect' && 'Alunos com 100% de presença'}
+              {openDialog === 'lowFreq' && 'Alunos com frequência baixa (<30%)'}
+              {openDialog === 'absent' && 'Alunos que nunca compareceram'}
+            </ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+
+          <ScrollArea className="max-h-[60vh] pr-1">
+            <div className="space-y-2 py-2">
+              {(openDialog === 'perfect' ? perfectStudents : openDialog === 'lowFreq' ? lowFreqStudents : absentStudents).length > 0 ? (
+                (openDialog === 'perfect' ? perfectStudents : openDialog === 'lowFreq' ? lowFreqStudents : absentStudents).map((student) => (
+                  <div key={student.id} className="rounded-lg border bg-background px-3 py-2 text-sm font-medium">
+                    {student.name}
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum aluno nesta categoria.</p>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </ScrollArea>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {barData.length > 0 && (
         <Card>
@@ -576,11 +578,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
             <CardTitle className="text-sm">Comparativo entre turmas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {barData.map((cls, i) => {
-              const colors = [
-                'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500',
-                'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500',
-              ];
+            {barData.map((cls) => {
               const barColor = cls.media >= 70 ? 'bg-green-500' : cls.media >= 40 ? 'bg-yellow-500' : 'bg-red-500';
               return (
                 <div key={cls.name} className="space-y-1">
