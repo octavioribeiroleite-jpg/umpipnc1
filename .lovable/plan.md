@@ -1,67 +1,58 @@
 
 
-# Dashboard "Agenda Primeiro" para Diretoria/Sociedades
+# Fechamento de Dia e Historico com Cards de Resumo
 
 ## Objetivo
-Transformar o Dashboard da Diretoria (Index.tsx) para seguir a mesma estética do Painel do Pastor: calendário mensal + lista de programações do dia selecionado. Remover stats financeiros, membros e resumo financeiro do Home (ficam no menu). Filtrar eventos pela society do usuário logado.
+Permitir que o administrador "feche o dia" da chamada EBD, persistindo o resumo no banco. A aba Historico passa a exibir cards por domingo fechado com as informacoes principais.
 
-## Alterações
+## Mudancas
 
-### 1. `src/hooks/useEvents.ts` — Adicionar filtro por `societyId`
-- Aceitar param opcional `societyId?: string`
-- Quando presente, adicionar `.eq('society_id', societyId)` nas queries de `eventsQuery` e `upcomingEventsQuery`
-- Atualizar `queryKey` para incluir `societyId`
+### 1. Nova tabela `ebd_day_closures`
+```sql
+CREATE TABLE ebd_day_closures (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  date date NOT NULL UNIQUE,
+  closed_by text NOT NULL,
+  closed_at timestamptz NOT NULL DEFAULT now(),
+  total_students int NOT NULL DEFAULT 0,
+  present_students int NOT NULL DEFAULT 0,
+  class_summary jsonb NOT NULL DEFAULT '[]',
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE ebd_day_closures ENABLE ROW LEVEL SECURITY;
+-- Mesmas politicas das outras tabelas EBD (anon pode ler, management gerencia)
+```
+`class_summary` guarda array JSON: `[{ classId, className, total, present, percentage }]`
 
-### 2. `src/pages/Index.tsx` — Reestruturação completa do layout
-Substituir o dashboard atual (stats + finanças + membros + EventCompletionList) por layout "agenda primeiro":
+### 2. `src/components/secretaria/ChamadaTab.tsx`
+- Receber nova prop `onCloseDay: () => Promise<void>` e `dayIsClosed: boolean`
+- Quando `dayIsClosed`, mostrar badge "Dia Fechado" no resumo e desabilitar edicoes
+- Botao "Fechar Dia" (admin only) no card de resumo geral — abre confirmacao, chama `onCloseDay`
+- Botao "Reabrir Dia" (admin only) se ja fechado
 
-**Remover:**
-- Grid de 4 StatCards (saldo, contribuições, membros, tarefas)
-- Cards Diretoria e Membros (+ dialogs)
-- Resumo Financeiro card
-- `EventCompletionList`
-- Fetch de `stats`, `diretoria`, `membros`, `pendingSubmissions`
-- Imports não utilizados (DollarSign, Users, Shield, UserCheck, TrendingUp, etc.)
+### 3. `src/pages/Secretaria.tsx`
+- Fetch `ebd_day_closures` para o dia atual junto com os outros dados
+- Implementar `handleCloseDay`: calcula stats por turma, insere em `ebd_day_closures`
+- Implementar `handleReopenDay`: deleta registro de `ebd_day_closures`
+- Passar `dayIsClosed` e `onCloseDay` / `onReopenDay` para ChamadaTab
 
-**Adicionar (mesma estrutura do PainelPastor):**
-- Estado: `selectedDate`, `currentMonth`, `currentYear`
-- `useEvents()` com `societyId` filtrado (quando não admin/pastor)
-- Chips de resumo (Hoje, Semana, Aguardando) — 3 AppCards compactos
-- `PastorCalendarWidget` (reutilizado, funciona para qualquer role)
-- `PastorDayEventList` (reutilizado, mesmo componente)
-- Ações Rápidas reduzidas a 4 colunas: Reunião, Evento, Finanças, Tarefa
-- Manter: `PastorNotificationBanner`, `PastorLoginNotification`, notificação de comprovantes pendentes
+### 4. `src/components/secretaria/HistoricoTab.tsx` — Cards de resumo por dia
+- Fetch de `ebd_day_closures` ordenado por data desc
+- Substituir a tabela simples por cards visuais para cada domingo fechado:
+  - Data formatada (titulo)
+  - Presentes/Total + percentual (destaque)
+  - Mini lista das turmas com % (do class_summary)
+  - Badge de status (Fechado)
+  - Botao para baixar PDF daquele dia
+- Manter graficos e metricas existentes abaixo dos cards
 
-**Layout final (de cima para baixo):**
-1. PageHeader simplificado (saudação + data)
-2. Banner de comprovantes pendentes (se houver)
-3. 3 chips: Hoje | Semana | Aguardando
-4. Calendário mensal (PastorCalendarWidget)
-5. Programações do dia (PastorDayEventList)
-6. Acesso Rápido (4 botões)
+### 5. RLS da nova tabela
+- SELECT: anyone (true) — mesmo padrao das outras tabelas EBD
+- INSERT/UPDATE/DELETE: anon + authenticated (mesmo padrao permissivo das tabelas ebd_*)
 
-### 3. Filtro por sociedade — Lógica
-- `const societyId = profile?.society_id` (já existe na linha 122)
-- Passar `societyId` ao `useEvents()` para que só retorne eventos da society logada
-- Admin/Pastor: `societyId = undefined` → vê todos os eventos (mesmo comportamento atual)
-- Diretoria UMP: `societyId = uuid-ump` → só vê eventos da UMP
-- Não altera RLS nem banco — apenas filtro no frontend via query param
-
-### 4. Componentes reutilizados (sem duplicar)
-- `PastorCalendarWidget` e `PastorDayEventList` já são genéricos — recebem `events` e `selectedDate` como props
-- No Index.tsx, passam os mesmos props com dados filtrados pela society
-- `PastorEventCard` dentro do DayEventList mostra botões de ação apenas se `onUpdateStatus` é passado (já funciona assim)
-
-### 5. Dialogs mantidos
-- Os dialogs de Diretoria e Membros serão removidos do Home (ficam acessíveis via menu Membros/Configurações)
-
-## Arquivos modificados
-- `src/hooks/useEvents.ts` — adicionar param `societyId`
-- `src/pages/Index.tsx` — reestruturação completa
-
-## O que NÃO muda
-- Nenhuma lógica de auth, RLS, banco, permissões
-- Nenhum componente base (AppCard, AppButton, etc.)
-- PainelPastor.tsx (permanece igual)
-- Menu lateral e rotas (Finanças, Membros, Tarefas continuam no menu)
+## O que NAO muda
+- Nenhuma logica de auth, login por PIN, ou fluxo de professor
+- Tabelas existentes (ebd_attendance, ebd_classes, ebd_students) intactas
+- PDF existente continua funcionando
 
