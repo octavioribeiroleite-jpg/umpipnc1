@@ -363,7 +363,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       {dayRecords.length > 0 && (
         <div className="space-y-2">
           {dayRecords.map(record => {
-            const pct = record.totalStudents > 0 ? Math.round((record.presentStudents / record.totalStudents) * 100) : 0;
+            const pct = totalMembers > 0 ? Math.round((record.presentStudents / totalMembers) * 100) : 0;
             const dateObj = new Date(record.date + 'T12:00:00');
             const dayName = format(dateObj, 'EEEE', { locale: ptBR });
             const dayNum = format(dateObj, 'dd');
