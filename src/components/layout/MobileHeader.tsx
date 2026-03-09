@@ -23,6 +23,7 @@ import {
   Globe,
   ClipboardList,
   BookOpen,
+  Cake,
 } from 'lucide-react';
 import {
   Sheet,
