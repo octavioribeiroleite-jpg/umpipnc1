@@ -93,6 +93,45 @@ export type Database = {
           },
         ]
       }
+      aniversariantes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          departamento: string | null
+          dia: number
+          id: string
+          mes: number
+          nome: string
+          observacao: string | null
+          pendente_revisao: boolean
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          departamento?: string | null
+          dia: number
+          id?: string
+          mes: number
+          nome: string
+          observacao?: string | null
+          pendente_revisao?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          departamento?: string | null
+          dia?: number
+          id?: string
+          mes?: number
+          nome?: string
+          observacao?: string | null
+          pendente_revisao?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       charges: {
         Row: {
           amount: number
@@ -996,6 +1035,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notificacoes_aniversarios: {
+        Row: {
+          created_at: string
+          id: string
+          lida: boolean
+          mensagem: string
+          payload: Json | null
+          referencia_data: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem: string
+          payload?: Json | null
+          referencia_data: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          payload?: Json | null
+          referencia_data?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: []
       }
       pastor_announcements: {
         Row: {

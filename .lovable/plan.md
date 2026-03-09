@@ -1,134 +1,67 @@
 
 
-# Plano: Funcionalidade Completa de Aniversariantes
+# Dashboard "Agenda Primeiro" para Diretoria/Sociedades
 
-## 1. Banco de Dados (Migrations)
+## Objetivo
+Transformar o Dashboard da Diretoria (Index.tsx) para seguir a mesma estética do Painel do Pastor: calendário mensal + lista de programações do dia selecionado. Remover stats financeiros, membros e resumo financeiro do Home (ficam no menu). Filtrar eventos pela society do usuário logado.
 
-### Tabela `aniversariantes`
-```sql
-CREATE TABLE public.aniversariantes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  nome text NOT NULL,
-  dia integer NOT NULL,
-  mes integer NOT NULL,
-  departamento text DEFAULT 'IPNC',
-  observacao text,
-  ativo boolean NOT NULL DEFAULT true,
-  pendente_revisao boolean NOT NULL DEFAULT false,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
+## Alterações
 
-ALTER TABLE public.aniversariantes ENABLE ROW LEVEL SECURITY;
--- Politicas: leitura para anon/authenticated, gestao para management
-```
+### 1. `src/hooks/useEvents.ts` — Adicionar filtro por `societyId`
+- Aceitar param opcional `societyId?: string`
+- Quando presente, adicionar `.eq('society_id', societyId)` nas queries de `eventsQuery` e `upcomingEventsQuery`
+- Atualizar `queryKey` para incluir `societyId`
 
-### Tabela `notificacoes_aniversarios`
-```sql
-CREATE TABLE public.notificacoes_aniversarios (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  titulo text NOT NULL,
-  mensagem text NOT NULL,
-  tipo text NOT NULL, -- 'semanal' ou 'diario'
-  referencia_data date NOT NULL,
-  lida boolean NOT NULL DEFAULT false,
-  payload jsonb DEFAULT '{}',
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+### 2. `src/pages/Index.tsx` — Reestruturação completa do layout
+Substituir o dashboard atual (stats + finanças + membros + EventCompletionList) por layout "agenda primeiro":
 
-ALTER TABLE public.notificacoes_aniversarios ENABLE ROW LEVEL SECURITY;
-```
+**Remover:**
+- Grid de 4 StatCards (saldo, contribuições, membros, tarefas)
+- Cards Diretoria e Membros (+ dialogs)
+- Resumo Financeiro card
+- `EventCompletionList`
+- Fetch de `stats`, `diretoria`, `membros`, `pendingSubmissions`
+- Imports não utilizados (DollarSign, Users, Shield, UserCheck, TrendingUp, etc.)
 
-### Seed dos dados
-Usar a ferramenta de insert para inserir os ~140 registros fornecidos, com `pendente_revisao = true` nos 6 registros indicados.
+**Adicionar (mesma estrutura do PainelPastor):**
+- Estado: `selectedDate`, `currentMonth`, `currentYear`
+- `useEvents()` com `societyId` filtrado (quando não admin/pastor)
+- Chips de resumo (Hoje, Semana, Aguardando) — 3 AppCards compactos
+- `PastorCalendarWidget` (reutilizado, funciona para qualquer role)
+- `PastorDayEventList` (reutilizado, mesmo componente)
+- Ações Rápidas reduzidas a 4 colunas: Reunião, Evento, Finanças, Tarefa
+- Manter: `PastorNotificationBanner`, `PastorLoginNotification`, notificação de comprovantes pendentes
 
-## 2. Edge Function: `generate-birthday-reminders`
+**Layout final (de cima para baixo):**
+1. PageHeader simplificado (saudação + data)
+2. Banner de comprovantes pendentes (se houver)
+3. 3 chips: Hoje | Semana | Aguardando
+4. Calendário mensal (PastorCalendarWidget)
+5. Programações do dia (PastorDayEventList)
+6. Acesso Rápido (4 botões)
 
-- Executada via pg_cron (segunda-feira + diariamente as 08:00 BRT)
-- Consulta aniversariantes do dia e da semana
-- Insere notificacoes na tabela `notificacoes_aniversarios`
-- Evita duplicatas verificando `referencia_data` + `tipo`
+### 3. Filtro por sociedade — Lógica
+- `const societyId = profile?.society_id` (já existe na linha 122)
+- Passar `societyId` ao `useEvents()` para que só retorne eventos da society logada
+- Admin/Pastor: `societyId = undefined` → vê todos os eventos (mesmo comportamento atual)
+- Diretoria UMP: `societyId = uuid-ump` → só vê eventos da UMP
+- Não altera RLS nem banco — apenas filtro no frontend via query param
 
-## 3. Paginas e Componentes
+### 4. Componentes reutilizados (sem duplicar)
+- `PastorCalendarWidget` e `PastorDayEventList` já são genéricos — recebem `events` e `selectedDate` como props
+- No Index.tsx, passam os mesmos props com dados filtrados pela society
+- `PastorEventCard` dentro do DayEventList mostra botões de ação apenas se `onUpdateStatus` é passado (já funciona assim)
 
-### Nova rota: `/aniversariantes`
-Arquivo: `src/pages/Aniversariantes.tsx`
+### 5. Dialogs mantidos
+- Os dialogs de Diretoria e Membros serão removidos do Home (ficam acessíveis via menu Membros/Configurações)
 
-### Componentes em `src/components/aniversariantes/`:
-- **`NextBirthdayCard.tsx`** -- Card topo com proximo aniversariante, DD/MM, "faltam X dias"
-- **`TodayBirthdays.tsx`** -- Lista de aniversariantes de hoje com botao "Copiar mensagem"
-- **`WeekBirthdays.tsx`** -- Proximos 7 dias, formato DD/MM -- Nome
-- **`MonthBirthdays.tsx`** -- Aniversariantes do mes atual
-- **`YearCalendar.tsx`** -- Calendario anual agrupado por mes (jan-dez)
-- **`BirthdayNotifications.tsx`** -- Lista de notificacoes com marcar como lido
-- **`BirthdayFilters.tsx`** -- Campo de busca + filtro departamento
-- **`BirthdayFormDialog.tsx`** -- Dialog CRUD (criar/editar) com validacao de dia/mes
-- **`BirthdayCard.tsx`** -- Card individual reutilizavel com badge "Revisar cadastro"
+## Arquivos modificados
+- `src/hooks/useEvents.ts` — adicionar param `societyId`
+- `src/pages/Index.tsx` — reestruturação completa
 
-### Alteracoes existentes:
-- **`src/pages/Index.tsx`** -- Adicionar card "Aniversarios da semana" com ate 5 nomes e botao "Ver todos"
-- **`src/App.tsx`** -- Adicionar rota `/aniversariantes`
-- **`src/components/layout/MobileBottomNav.tsx`** -- Adicionar item "Aniversariantes" no menu "Mais"
-- **`src/components/layout/AppSidebar.tsx`** -- Adicionar item no sidebar desktop
-- **`src/components/layout/MobileHeader.tsx`** -- Adicionar item na navegacao mobile
-
-## 4. Regras de Negocio
-
-- Aniversario e recorrente (somente dia/mes, sem ano)
-- Ordenacao sempre por mes/dia
-- "Proximo aniversariante" calcula dias ate o proximo DD/MM a partir de hoje (considerando virada de ano)
-- Fuso America/Sao_Paulo para calculo de "hoje"
-- Busca por nome filtra em tempo real (client-side)
-- Filtro por departamento aplica em todas as secoes
-- Registros com `pendente_revisao = true` exibem badge laranja "Revisar cadastro"
-- Validacao: dia valido para o mes (1-28/29/30/31)
-- Nomes duplicados com datas diferentes: mantidos, ambos marcados para revisao
-- Copiar mensagem: "Hoje celebramos o aniversario de [nome]. Que Deus abencoe sua vida com graca, saude e paz."
-
-## 5. Logica dos Lembretes
-
-- Edge function `generate-birthday-reminders` invocada via pg_cron
-- Cron diario as 08:00 BRT: gera lembrete tipo "diario" se houver aniversariante no dia
-- Cron semanal (segunda 08:00 BRT): gera lembrete tipo "semanal" com lista dos proximos 7 dias
-- Notificacoes salvas em `notificacoes_aniversarios`
-- Badge de nao-lidas exibido no card da Home e na pagina de aniversariantes
-
-## 6. Estrategia de Importacao
-
-- INSERT direto via ferramenta de dados com os 140+ registros fornecidos
-- Os 6 registros de Izabel, Gabriel e Sandra marcados com `pendente_revisao = true`
-
-## 7. Estilo
-
-- Usa componentes existentes: AppLayout, AppCard, PageHeader, Badge, Dialog, Input, Button, Tabs
-- Icones: Cake, Calendar, Gift, Search, Copy (lucide-react)
-- Cards arredondados, fundo claro, hierarquia clara
-- Responsivo mobile-first
-- Destaques discretos: verde para hoje, azul para semana, laranja para revisao
-
-## 8. Arquivos Criados/Alterados
-
-**Criados:**
-- `src/pages/Aniversariantes.tsx`
-- `src/components/aniversariantes/NextBirthdayCard.tsx`
-- `src/components/aniversariantes/TodayBirthdays.tsx`
-- `src/components/aniversariantes/WeekBirthdays.tsx`
-- `src/components/aniversariantes/MonthBirthdays.tsx`
-- `src/components/aniversariantes/YearCalendar.tsx`
-- `src/components/aniversariantes/BirthdayNotifications.tsx`
-- `src/components/aniversariantes/BirthdayFilters.tsx`
-- `src/components/aniversariantes/BirthdayFormDialog.tsx`
-- `src/components/aniversariantes/BirthdayCard.tsx`
-- `src/hooks/useBirthdays.ts`
-- `src/hooks/useBirthdayNotifications.ts`
-- `supabase/functions/generate-birthday-reminders/index.ts`
-- 1 migration SQL (tabelas + RLS)
-
-**Alterados:**
-- `src/App.tsx` (nova rota)
-- `src/pages/Index.tsx` (card aniversarios da semana)
-- `src/components/layout/MobileBottomNav.tsx` (menu item)
-- `src/components/layout/AppSidebar.tsx` (menu item)
-- `src/components/layout/MobileHeader.tsx` (menu item)
-- `supabase/config.toml` (edge function config)
+## O que NÃO muda
+- Nenhuma lógica de auth, RLS, banco, permissões
+- Nenhum componente base (AppCard, AppButton, etc.)
+- PainelPastor.tsx (permanece igual)
+- Menu lateral e rotas (Finanças, Membros, Tarefas continuam no menu)
 

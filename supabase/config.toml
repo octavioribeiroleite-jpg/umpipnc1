@@ -33,4 +33,7 @@ verify_jwt = false
 [functions.generate-poster]
 verify_jwt = false
 
+[functions.generate-birthday-reminders]
+verify_jwt = false
+
 

@@ -23,6 +23,7 @@ import {
   Globe,
   ClipboardList,
   BookOpen,
+  Cake,
 } from 'lucide-react';
 import {
   Sheet,
@@ -47,6 +48,7 @@ const navItems = [
   { to: '/arquivos', icon: FolderOpen, label: 'Arquivos' },
   { to: '/estudos', icon: BookOpen, label: 'Estudos' },
   { to: '/secretaria', icon: ClipboardList, label: 'Secretaria EBD' },
+  { to: '/aniversariantes', icon: Cake, label: 'Aniversariantes' },
 ];
 
 const adminItems = [

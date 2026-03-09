@@ -18,6 +18,7 @@ import {
   Heart,
   Globe,
   BookOpen,
+  Cake,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +38,7 @@ const menuItems = [
   { icon: MessageSquare, label: 'Comunicados', path: '/comunicados' },
   { icon: BookOpen, label: 'Estudos', path: '/estudos' },
   { icon: ClipboardList, label: 'Secretaria EBD', path: '/secretaria' },
+  { icon: Cake, label: 'Aniversariantes', path: '/aniversariantes' },
 ];
 
 const adminMenuItems = [
