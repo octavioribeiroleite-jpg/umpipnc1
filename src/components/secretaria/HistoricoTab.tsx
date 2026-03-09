@@ -612,6 +612,47 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           </ScrollArea>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
+      
+      {/* Class Students Dialog */}
+      <ResponsiveDialog open={selectedClassId !== null} onOpenChange={(open) => !open && setSelectedClassId(null)}>
+        <ResponsiveDialogContent className="sm:max-w-lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Alunos da turma: {selectedClass?.name}
+            </ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+
+          <ScrollArea className="max-h-[60vh] pr-1">
+            <div className="space-y-3 py-2">
+              {studentStats.length > 0 ? (
+                studentStats.map((student) => {
+                  const bgColor = student.percentage >= 70 ? 'bg-green-50 border-green-200' : student.percentage >= 40 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200';
+                  const textColor = student.percentage >= 70 ? 'text-green-600' : student.percentage >= 40 ? 'text-yellow-600' : 'text-red-600';
+                  
+                  return (
+                    <div key={student.id} className={`rounded-lg border p-3 ${bgColor}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">{student.name}</span>
+                        <span className={`text-lg font-bold ${textColor}`}>{student.percentage}%</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                        <span>{student.present}/{student.total} domingos</span>
+                        <span className={student.percentage >= 70 ? 'text-green-600' : student.percentage >= 40 ? 'text-yellow-600' : 'text-red-600'}>
+                          {student.percentage >= 70 ? 'Boa frequência' : student.percentage >= 40 ? 'Frequência regular' : 'Precisa de atenção'}
+                        </span>
+                      </div>
+                      <Progress value={student.percentage} className="h-1.5" />
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum aluno nesta turma.</p>
+              )}
+            </div>
+          </ScrollArea>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {barData.length > 0 && (
         <div>
