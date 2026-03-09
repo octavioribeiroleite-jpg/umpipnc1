@@ -50,6 +50,8 @@ function getTodayDate(): string {
 }
 
 export default function Secretaria() {
+  const navigate = useNavigate();
+  useSwipeBack();
   const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>('profile');
   const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(null);
