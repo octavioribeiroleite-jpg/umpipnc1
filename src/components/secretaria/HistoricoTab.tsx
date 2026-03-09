@@ -3,10 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, Award, AlertTriangle, Calendar, Lock, Download, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, TrendingDown, Award, AlertTriangle, Calendar, Lock, Download, Users, ChevronDown, ChevronUp, CircleDot } from 'lucide-react';
 import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
@@ -31,13 +30,14 @@ interface ClassSummaryItem {
   percentage: number;
 }
 
-interface DayClosure {
-  id: string;
+interface DayRecord {
   date: string;
-  closed_by: string;
-  total_students: number;
-  present_students: number;
-  class_summary: ClassSummaryItem[];
+  isClosed: boolean;
+  closureId?: string;
+  closedBy?: string;
+  totalStudents: number;
+  presentStudents: number;
+  classSummary: ClassSummaryItem[];
 }
 
 type PeriodFilter = '4weeks' | '3months' | 'all';
@@ -50,9 +50,9 @@ interface HistoricoTabProps {
 export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
   const [period, setPeriod] = useState<PeriodFilter>('4weeks');
   const [allAttendance, setAllAttendance] = useState<{ student_id: string; class_id: string; date: string; present: boolean }[]>([]);
-  const [closures, setClosures] = useState<DayClosure[]>([]);
+  const [closures, setClosures] = useState<{ id: string; date: string; closed_by: string; total_students: number; present_students: number; class_summary: ClassSummaryItem[] }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedClosure, setExpandedClosure] = useState<string | null>(null);
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -85,6 +85,53 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
     fetchHistory();
   }, [period]);
 
+  // Build unified day records from attendance + closures
+  const dayRecords = useMemo<DayRecord[]>(() => {
+    const closureMap = new Map(closures.map(c => [c.date, c]));
+    const dates = [...new Set(allAttendance.map(a => a.date))].sort().reverse();
+
+    return dates.map(date => {
+      const closure = closureMap.get(date);
+      if (closure) {
+        return {
+          date,
+          isClosed: true,
+          closureId: closure.id,
+          closedBy: closure.closed_by,
+          totalStudents: closure.total_students,
+          presentStudents: closure.present_students,
+          classSummary: closure.class_summary,
+        };
+      }
+
+      // Calculate from raw attendance
+      const dayRecords = allAttendance.filter(a => a.date === date);
+      const presentCount = dayRecords.filter(a => a.present).length;
+      const totalCount = dayRecords.length;
+
+      const classSummary: ClassSummaryItem[] = classes.map(cls => {
+        const classRecords = dayRecords.filter(a => a.class_id === cls.id);
+        const classPresent = classRecords.filter(a => a.present).length;
+        const classTotal = classRecords.length;
+        return {
+          classId: cls.id,
+          className: cls.name,
+          total: classTotal,
+          present: classPresent,
+          percentage: classTotal > 0 ? Math.round((classPresent / classTotal) * 100) : 0,
+        };
+      }).filter(cs => cs.total > 0);
+
+      return {
+        date,
+        isClosed: false,
+        totalStudents: totalCount,
+        presentStudents: presentCount,
+        classSummary,
+      };
+    });
+  }, [allAttendance, closures, classes]);
+
   const getPercentColor = (pct: number) => {
     if (pct > 70) return 'text-green-600';
     if (pct >= 40) return 'text-yellow-600';
@@ -97,34 +144,32 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
     return 'border-red-500/30 bg-red-500/5';
   };
 
-  const handleDownloadPDF = async (closure: DayClosure) => {
-    // Fetch attendance for that specific date to generate full PDF
+  const handleDownloadPDF = async (record: DayRecord) => {
     const { data: dayAttendance } = await supabase
       .from('ebd_attendance')
       .select('*')
-      .eq('date', closure.date);
+      .eq('date', record.date);
 
     if (dayAttendance) {
-      const dateObj = new Date(closure.date + 'T12:00:00');
+      const dateObj = new Date(record.date + 'T12:00:00');
       generateEbdAttendancePDF({
         classes,
         students,
         attendance: dayAttendance,
-        date: closure.date,
+        date: record.date,
         formattedDate: format(dateObj, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
       });
     }
   };
 
   const { lineData, barData, metrics, perfectStudents, absentStudents } = useMemo(() => {
-    const byDate = new Map<string, { present: number; total: number }>();
     const dates = [...new Set(allAttendance.map(a => a.date))].sort();
+    const byDate = new Map<string, { present: number; total: number }>();
 
     dates.forEach(date => {
-      const dayRecords = allAttendance.filter(a => a.date === date);
-      const present = dayRecords.filter(a => a.present).length;
-      const total = dayRecords.length;
-      byDate.set(date, { present, total });
+      const dayRecs = allAttendance.filter(a => a.date === date);
+      const present = dayRecs.filter(a => a.present).length;
+      byDate.set(date, { present, total: dayRecs.length });
     });
 
     const lineData = dates.map(date => {
@@ -144,9 +189,9 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
       let avgPct = 0;
       if (classDates.length > 0) {
         const total = classDates.reduce((sum, date) => {
-          const dayRecords = classRecords.filter(a => a.date === date);
-          const present = dayRecords.filter(a => a.present).length;
-          return sum + (dayRecords.length > 0 ? (present / dayRecords.length) * 100 : 0);
+          const dayRecs = classRecords.filter(a => a.date === date);
+          const present = dayRecs.filter(a => a.present).length;
+          return sum + (dayRecs.length > 0 ? (present / dayRecs.length) * 100 : 0);
         }, 0);
         avgPct = Math.round(total / classDates.length);
       }
@@ -178,13 +223,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
       return !rec || rec.present === 0;
     });
 
-    return {
-      lineData,
-      barData,
-      metrics: { avgLast4, best, worst, bestClass },
-      perfectStudents,
-      absentStudents,
-    };
+    return { lineData, barData, metrics: { avgLast4, best, worst, bestClass }, perfectStudents, absentStudents };
   }, [allAttendance, classes, students]);
 
   if (loading) {
@@ -195,11 +234,11 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
     <div className="space-y-4">
       {/* Period selector */}
       <div className="flex gap-2">
-        {[
+        {([
           { key: '4weeks' as PeriodFilter, label: '4 semanas' },
           { key: '3months' as PeriodFilter, label: '3 meses' },
           { key: 'all' as PeriodFilter, label: 'Todo período' },
-        ].map(p => (
+        ]).map(p => (
           <Button
             key={p.key}
             variant={period === p.key ? 'default' : 'outline'}
@@ -211,34 +250,43 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         ))}
       </div>
 
-      {/* Closed day cards */}
-      {closures.length > 0 && (
+      {/* Day record cards */}
+      {dayRecords.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-            <Lock className="h-3.5 w-3.5" /> Dias fechados
+            <Calendar className="h-3.5 w-3.5" /> Chamadas registradas
           </h3>
-          {closures.map(closure => {
-            const pct = closure.total_students > 0
-              ? Math.round((closure.present_students / closure.total_students) * 100)
+          {dayRecords.map(record => {
+            const pct = record.totalStudents > 0
+              ? Math.round((record.presentStudents / record.totalStudents) * 100)
               : 0;
-            const isExpanded = expandedClosure === closure.id;
-            const dateFormatted = format(new Date(closure.date + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR });
-            const yearFormatted = format(new Date(closure.date + 'T12:00:00'), 'yyyy');
+            const isExpanded = expandedDay === record.date;
+            const dateFormatted = format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR });
+            const yearFormatted = format(new Date(record.date + 'T12:00:00'), 'yyyy');
 
             return (
-              <Card key={closure.id} className={`${getColorClass(pct)} transition-all`}>
+              <Card key={record.date} className={`${getColorClass(pct)} transition-all`}>
                 <CardContent className="pt-4 pb-4 space-y-3">
                   {/* Header row */}
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-sm capitalize">{dateFormatted}</p>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm capitalize">{dateFormatted}</p>
+                        {record.isClosed ? (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500/40 text-green-700 bg-green-500/10">
+                            <Lock className="h-2.5 w-2.5 mr-0.5" /> Fechado
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500/40 text-blue-700 bg-blue-500/10">
+                            <CircleDot className="h-2.5 w-2.5 mr-0.5" /> Em aberto
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">{yearFormatted}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-right">
-                        <p className={`text-xl font-bold ${getPercentColor(pct)}`}>{pct}%</p>
-                        <p className="text-xs text-muted-foreground">{closure.present_students}/{closure.total_students}</p>
-                      </div>
+                    <div className="text-right">
+                      <p className={`text-xl font-bold ${getPercentColor(pct)}`}>{pct}%</p>
+                      <p className="text-xs text-muted-foreground">{record.presentStudents}/{record.totalStudents}</p>
                     </div>
                   </div>
 
@@ -250,7 +298,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
                       variant="ghost"
                       size="sm"
                       className="text-xs flex-1"
-                      onClick={() => setExpandedClosure(isExpanded ? null : closure.id)}
+                      onClick={() => setExpandedDay(isExpanded ? null : record.date)}
                     >
                       {isExpanded ? <ChevronUp className="h-3.5 w-3.5 mr-1" /> : <ChevronDown className="h-3.5 w-3.5 mr-1" />}
                       {isExpanded ? 'Menos detalhes' : 'Ver turmas'}
@@ -259,16 +307,16 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
                       variant="outline"
                       size="sm"
                       className="text-xs"
-                      onClick={() => handleDownloadPDF(closure)}
+                      onClick={() => handleDownloadPDF(record)}
                     >
                       <Download className="h-3.5 w-3.5 mr-1" /> PDF
                     </Button>
                   </div>
 
                   {/* Expanded: class breakdown */}
-                  {isExpanded && closure.class_summary.length > 0 && (
+                  {isExpanded && record.classSummary.length > 0 && (
                     <div className="space-y-2 pt-1 border-t border-border/50">
-                      {[...closure.class_summary].sort((a, b) => b.percentage - a.percentage).map((cs, i) => (
+                      {[...record.classSummary].sort((a, b) => b.percentage - a.percentage).map((cs, i) => (
                         <div key={cs.classId || i} className="flex items-center gap-2">
                           <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           <span className="text-xs flex-1 truncate">{cs.className}</span>
@@ -424,7 +472,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       )}
 
-      {allAttendance.length === 0 && closures.length === 0 && (
+      {allAttendance.length === 0 && dayRecords.length === 0 && (
         <p className="text-center text-muted-foreground py-8">Nenhum registro de presença encontrado para este período.</p>
       )}
     </div>
