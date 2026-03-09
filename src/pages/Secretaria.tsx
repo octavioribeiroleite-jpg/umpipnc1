@@ -300,17 +300,40 @@ export default function Secretaria() {
   const isAdmin = accessLevel === 'admin';
   const profileLabel = isAdmin ? 'Administrador' : 'Professor';
 
+  const handleExitApp = () => {
+    setAccessLevel(null);
+    setLoginStep('profile');
+    setSelectedProfile(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
+      <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 safe-top">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-semibold text-lg">Secretaria EBD</h1>
-            <p className="text-xs text-muted-foreground">{formattedDate}</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="font-semibold text-lg">Secretaria EBD</h1>
+              <p className="text-xs text-muted-foreground">{formattedDate}</p>
+            </div>
           </div>
-          <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
-            {profileLabel}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
+              {profileLabel}
+            </Badge>
+            <button
+              onClick={handleExitApp}
+              className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+              title="Sair da Secretaria"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+            </button>
+          </div>
         </div>
       </div>
 
