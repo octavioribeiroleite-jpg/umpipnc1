@@ -66,7 +66,9 @@ export function PastorMobileHeader() {
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleSignOut = async () => {
+  const { showConfirm: showExitConfirm, setShowConfirm: setShowExitConfirm, requestExit } = useExitConfirm();
+
+  const doSignOut = async () => {
     await signOut();
     navigate('/auth');
     setSheetOpen(false);

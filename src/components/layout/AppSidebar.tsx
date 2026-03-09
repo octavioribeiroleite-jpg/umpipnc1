@@ -59,6 +59,8 @@ export function AppSidebar() {
   const { profile, signOut, isAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');

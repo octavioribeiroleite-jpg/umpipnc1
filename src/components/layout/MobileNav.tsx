@@ -42,7 +42,9 @@ export function MobileNav() {
     setOpen(false);
   };
 
-  const handleSignOut = async () => {
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
+
+  const doSignOut = async () => {
     await signOut();
     navigate('/auth');
     setOpen(false);

@@ -10,6 +10,8 @@ export default function AguardandoPermissao() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');

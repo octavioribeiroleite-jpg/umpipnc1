@@ -36,7 +36,9 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
     setOpen(false);
   };
 
-  const handleLogout = () => {
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
+
+  const doLogout = () => {
     clearSession();
     navigate('/auth');
   };

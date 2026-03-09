@@ -157,12 +157,13 @@ export function MobileHeader() {
                     </div>
                   </div>
                   <button
-                    onClick={handleSignOut}
+                    onClick={requestExit}
                     className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     Sair
                   </button>
+                  <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
                 </div>
               )}
             </SheetContent>
