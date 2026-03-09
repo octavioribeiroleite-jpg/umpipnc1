@@ -89,11 +89,18 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
 
   useEffect(() => { fetchHistory(); }, [period]);
 
+  const totalMembers = students.length;
+
   const dayRecords = useMemo<DayRecord[]>(() => {
     const closureMap = new Map(closures.map(c => [c.date, c]));
     const dates = [...new Set(allAttendance.map(a => a.date))].sort().reverse();
 
-    return dates.map(date => {
+    return dates
+      .filter(date => {
+        const d = new Date(date + 'T12:00:00');
+        return d.getDay() === 0; // Only Sundays
+      })
+      .map(date => {
       const closure = closureMap.get(date);
       const dayAtt = allAttendance.filter(a => a.date === date);
       const markedByNames = [...new Set(dayAtt.map(a => a.marked_by).filter(Boolean))] as string[];
