@@ -48,6 +48,14 @@ interface DayRecord {
   markedByNames: string[];
 }
 
+interface StudentStats {
+  id: string;
+  name: string;
+  present: number;
+  total: number;
+  percentage: number;
+}
+
 type PeriodFilter = '4weeks' | '3months' | 'all';
 
 interface HistoricoTabProps {
@@ -65,6 +73,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
   const [closingDay, setClosingDay] = useState(false);
   const [openDialog, setOpenDialog] = useState<'perfect' | 'lowFreq' | 'absent' | null>(null);
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -204,7 +213,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           return sum + (present / classTotal) * 100;
         }, 0) / cd.length);
       }
-      return { name: cls.name, media: avgPct };
+      return { classId: cls.id, name: cls.name, media: avgPct };
     }).sort((a, b) => b.media - a.media);
 
     const bestClass = barData.length > 0 ? barData[0] : null;
@@ -263,6 +272,38 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       lowFreqStudents
     };
   }, [allAttendance, classes, students, totalMembers]);
+
+  // Student stats for selected class
+  const studentStats = useMemo<StudentStats[]>(() => {
+    if (!selectedClassId) return [];
+    
+    const sundayDates = [...new Set(allAttendance.map(a => a.date))]
+      .filter(date => new Date(date + 'T12:00:00').getDay() === 0)
+      .sort();
+    
+    const classStudents = students.filter(s => s.class_id === selectedClassId);
+    
+    return classStudents.map(student => {
+      const studentAttendance = allAttendance.filter(a => 
+        a.student_id === student.id && 
+        sundayDates.includes(a.date)
+      );
+      
+      const present = studentAttendance.filter(a => a.present).length;
+      const total = sundayDates.length;
+      const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+      
+      return {
+        id: student.id,
+        name: student.name,
+        present,
+        total,
+        percentage
+      };
+    }).sort((a, b) => a.percentage - b.percentage); // Sort by lowest frequency first
+  }, [selectedClassId, allAttendance, students]);
+  
+  const selectedClass = classes.find(c => c.id === selectedClassId);
 
   if (loading) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando histórico...</div>;
@@ -571,34 +612,72 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           </ScrollArea>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
+      
+      {/* Class Students Dialog */}
+      <ResponsiveDialog open={selectedClassId !== null} onOpenChange={(open) => !open && setSelectedClassId(null)}>
+        <ResponsiveDialogContent className="sm:max-w-lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Alunos da turma: {selectedClass?.name}
+            </ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+
+          <ScrollArea className="max-h-[60vh] pr-1">
+            <div className="space-y-3 py-2">
+              {studentStats.length > 0 ? (
+                studentStats.map((student) => {
+                  const bgColor = student.percentage >= 70 ? 'bg-green-50 border-green-200' : student.percentage >= 40 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200';
+                  const textColor = student.percentage >= 70 ? 'text-green-600' : student.percentage >= 40 ? 'text-yellow-600' : 'text-red-600';
+                  
+                  return (
+                    <div key={student.id} className={`rounded-lg border p-3 ${bgColor}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">{student.name}</span>
+                        <span className={`text-lg font-bold ${textColor}`}>{student.percentage}%</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                        <span>{student.present}/{student.total} domingos</span>
+                        <span className={student.percentage >= 70 ? 'text-green-600' : student.percentage >= 40 ? 'text-yellow-600' : 'text-red-600'}>
+                          {student.percentage >= 70 ? 'Boa frequência' : student.percentage >= 40 ? 'Frequência regular' : 'Precisa de atenção'}
+                        </span>
+                      </div>
+                      <Progress value={student.percentage} className="h-1.5" />
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum aluno nesta turma.</p>
+              )}
+            </div>
+          </ScrollArea>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {barData.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Comparativo entre turmas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Comparativo entre turmas</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {barData.map((cls) => {
-              const barColor = cls.media >= 70 ? 'bg-green-500' : cls.media >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+              const bgColor = cls.media >= 70 ? 'bg-green-500/10 border-green-500/30' : cls.media >= 40 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-red-500/10 border-red-500/30';
+              const textColor = cls.media >= 70 ? 'text-green-600' : cls.media >= 40 ? 'text-yellow-600' : 'text-red-600';
               return (
-                <div key={cls.name} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium truncate max-w-[60%]">{cls.name}</span>
-                    <span className={`text-xs font-bold ${cls.media >= 70 ? 'text-green-600' : cls.media >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-                      {cls.media}%
-                    </span>
+                <button
+                  key={cls.classId}
+                  onClick={() => setSelectedClassId(cls.classId)}
+                  className={`rounded-xl border p-4 text-left hover:bg-accent/40 transition-all active:scale-[0.97] ${bgColor}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Users className={`h-4 w-4 ${textColor}`} />
+                    <span className={`text-2xl font-bold ${textColor}`}>{cls.media}%</span>
                   </div>
-                  <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                      style={{ width: `${cls.media}%` }}
-                    />
-                  </div>
-                </div>
+                  <p className="text-sm font-medium truncate">{cls.name}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">média de presença</p>
+                </button>
               );
             })}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
 
