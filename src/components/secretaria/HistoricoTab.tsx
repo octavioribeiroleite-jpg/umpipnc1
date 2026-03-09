@@ -145,7 +145,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         return { classId: cls.id, className: cls.name, total: classTotal, present: cp, percentage: classTotal > 0 ? Math.round((cp / classTotal) * 100) : 0 };
       }).filter(cs => cs.total > 0);
 
-      return { date, isClosed: false, totalStudents: totalMembers, presentStudents: presentCount, classSummary, markedByNames };
+      return { date, isClosed: false, totalStudents: totalMembers, presentStudents: presentCount, classSummary, markedByNames, visitorCount: 0 };
     });
   }, [allAttendance, closures, classes, students, totalMembers]);
 
