@@ -273,6 +273,38 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     };
   }, [allAttendance, classes, students, totalMembers]);
 
+  // Student stats for selected class
+  const studentStats = useMemo<StudentStats[]>(() => {
+    if (!selectedClassId) return [];
+    
+    const sundayDates = [...new Set(allAttendance.map(a => a.date))]
+      .filter(date => new Date(date + 'T12:00:00').getDay() === 0)
+      .sort();
+    
+    const classStudents = students.filter(s => s.class_id === selectedClassId);
+    
+    return classStudents.map(student => {
+      const studentAttendance = allAttendance.filter(a => 
+        a.student_id === student.id && 
+        sundayDates.includes(a.date)
+      );
+      
+      const present = studentAttendance.filter(a => a.present).length;
+      const total = sundayDates.length;
+      const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+      
+      return {
+        id: student.id,
+        name: student.name,
+        present,
+        total,
+        percentage
+      };
+    }).sort((a, b) => a.percentage - b.percentage); // Sort by lowest frequency first
+  }, [selectedClassId, allAttendance, students]);
+  
+  const selectedClass = classes.find(c => c.id === selectedClassId);
+
   if (loading) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando histórico...</div>;
   }
