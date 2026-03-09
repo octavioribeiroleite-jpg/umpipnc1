@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck } from 'lucide-react';
+import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck, LogOut } from 'lucide-react';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
