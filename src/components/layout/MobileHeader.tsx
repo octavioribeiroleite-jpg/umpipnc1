@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import {
+  ArrowLeft,
   Menu,
   LogOut,
   Home,
