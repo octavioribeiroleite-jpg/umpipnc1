@@ -53,6 +53,9 @@ export function PastorMobileHeader() {
   const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [societies, setSocieties] = useState<Society[]>([]);
+  useSwipeBack();
+
+  const isPastorHome = location.pathname === '/pastor';
 
   useEffect(() => {
     supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
