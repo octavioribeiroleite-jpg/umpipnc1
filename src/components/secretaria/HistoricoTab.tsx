@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, Award, AlertTriangle, Calendar, Lock, Download, Users, ChevronDown, ChevronUp, CircleDot } from 'lucide-react';
+import { TrendingUp, TrendingDown, Award, AlertTriangle, Calendar, Lock, Download, Users, ArrowLeft, CircleDot, ChevronRight, User } from 'lucide-react';
 import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
+import { toast } from 'sonner';
 
 interface EbdClass {
   id: string;
@@ -38,6 +39,7 @@ interface DayRecord {
   totalStudents: number;
   presentStudents: number;
   classSummary: ClassSummaryItem[];
+  markedByNames: string[];
 }
 
 type PeriodFilter = '4weeks' | '3months' | 'all';
@@ -45,53 +47,57 @@ type PeriodFilter = '4weeks' | '3months' | 'all';
 interface HistoricoTabProps {
   classes: EbdClass[];
   students: EbdStudent[];
+  accessLevel: 'admin' | 'professor';
+  onRefreshParent?: () => Promise<void>;
 }
 
-export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
+export default function HistoricoTab({ classes, students, accessLevel, onRefreshParent }: HistoricoTabProps) {
   const [period, setPeriod] = useState<PeriodFilter>('4weeks');
-  const [allAttendance, setAllAttendance] = useState<{ student_id: string; class_id: string; date: string; present: boolean }[]>([]);
+  const [allAttendance, setAllAttendance] = useState<{ student_id: string; class_id: string; date: string; present: boolean; marked_by: string | null }[]>([]);
   const [closures, setClosures] = useState<{ id: string; date: string; closed_by: string; total_students: number; present_students: number; class_summary: ClassSummaryItem[] }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
+  const [closingDay, setClosingDay] = useState(false);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      setLoading(true);
-      let attendanceQuery = supabase.from('ebd_attendance').select('student_id, class_id, date, present');
-      let closureQuery = supabase.from('ebd_day_closures').select('*').order('date', { ascending: false });
+  const fetchHistory = async () => {
+    setLoading(true);
+    let attendanceQuery = supabase.from('ebd_attendance').select('student_id, class_id, date, present, marked_by');
+    let closureQuery = supabase.from('ebd_day_closures').select('*').order('date', { ascending: false });
 
-      if (period === '4weeks') {
-        const cutoff = format(subWeeks(new Date(), 4), 'yyyy-MM-dd');
-        attendanceQuery = attendanceQuery.gte('date', cutoff);
-        closureQuery = closureQuery.gte('date', cutoff);
-      } else if (period === '3months') {
-        const cutoff = format(subMonths(new Date(), 3), 'yyyy-MM-dd');
-        attendanceQuery = attendanceQuery.gte('date', cutoff);
-        closureQuery = closureQuery.gte('date', cutoff);
-      }
+    if (period === '4weeks') {
+      const cutoff = format(subWeeks(new Date(), 4), 'yyyy-MM-dd');
+      attendanceQuery = attendanceQuery.gte('date', cutoff);
+      closureQuery = closureQuery.gte('date', cutoff);
+    } else if (period === '3months') {
+      const cutoff = format(subMonths(new Date(), 3), 'yyyy-MM-dd');
+      attendanceQuery = attendanceQuery.gte('date', cutoff);
+      closureQuery = closureQuery.gte('date', cutoff);
+    }
 
-      const [{ data: attData }, { data: closureData }] = await Promise.all([
-        attendanceQuery.order('date', { ascending: true }),
-        closureQuery,
-      ]);
+    const [{ data: attData }, { data: closureData }] = await Promise.all([
+      attendanceQuery.order('date', { ascending: true }),
+      closureQuery,
+    ]);
 
-      setAllAttendance(attData || []);
-      setClosures((closureData || []).map((c: any) => ({
-        ...c,
-        class_summary: (c.class_summary || []) as ClassSummaryItem[],
-      })));
-      setLoading(false);
-    };
-    fetchHistory();
-  }, [period]);
+    setAllAttendance(attData || []);
+    setClosures((closureData || []).map((c: any) => ({
+      ...c,
+      class_summary: (c.class_summary || []) as ClassSummaryItem[],
+    })));
+    setLoading(false);
+  };
 
-  // Build unified day records from attendance + closures
+  useEffect(() => { fetchHistory(); }, [period]);
+
   const dayRecords = useMemo<DayRecord[]>(() => {
     const closureMap = new Map(closures.map(c => [c.date, c]));
     const dates = [...new Set(allAttendance.map(a => a.date))].sort().reverse();
 
     return dates.map(date => {
       const closure = closureMap.get(date);
+      const dayAtt = allAttendance.filter(a => a.date === date);
+      const markedByNames = [...new Set(dayAtt.map(a => a.marked_by).filter(Boolean))] as string[];
+
       if (closure) {
         return {
           date,
@@ -101,34 +107,18 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
           totalStudents: closure.total_students,
           presentStudents: closure.present_students,
           classSummary: closure.class_summary,
+          markedByNames: closure.closed_by ? [closure.closed_by, ...markedByNames.filter(n => n !== closure.closed_by)] : markedByNames,
         };
       }
 
-      // Calculate from raw attendance
-      const dayRecords = allAttendance.filter(a => a.date === date);
-      const presentCount = dayRecords.filter(a => a.present).length;
-      const totalCount = dayRecords.length;
-
+      const presentCount = dayAtt.filter(a => a.present).length;
       const classSummary: ClassSummaryItem[] = classes.map(cls => {
-        const classRecords = dayRecords.filter(a => a.class_id === cls.id);
-        const classPresent = classRecords.filter(a => a.present).length;
-        const classTotal = classRecords.length;
-        return {
-          classId: cls.id,
-          className: cls.name,
-          total: classTotal,
-          present: classPresent,
-          percentage: classTotal > 0 ? Math.round((classPresent / classTotal) * 100) : 0,
-        };
+        const cr = dayAtt.filter(a => a.class_id === cls.id);
+        const cp = cr.filter(a => a.present).length;
+        return { classId: cls.id, className: cls.name, total: cr.length, present: cp, percentage: cr.length > 0 ? Math.round((cp / cr.length) * 100) : 0 };
       }).filter(cs => cs.total > 0);
 
-      return {
-        date,
-        isClosed: false,
-        totalStudents: totalCount,
-        presentStudents: presentCount,
-        classSummary,
-      };
+      return { date, isClosed: false, totalStudents: dayAtt.length, presentStudents: presentCount, classSummary, markedByNames };
     });
   }, [allAttendance, closures, classes]);
 
@@ -138,62 +128,67 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
     return 'text-red-600';
   };
 
-  const getColorClass = (pct: number) => {
-    if (pct > 70) return 'border-green-500/30 bg-green-500/5';
-    if (pct >= 40) return 'border-yellow-500/30 bg-yellow-500/5';
-    return 'border-red-500/30 bg-red-500/5';
-  };
-
   const handleDownloadPDF = async (record: DayRecord) => {
-    const { data: dayAttendance } = await supabase
-      .from('ebd_attendance')
-      .select('*')
-      .eq('date', record.date);
-
+    const { data: dayAttendance } = await supabase.from('ebd_attendance').select('*').eq('date', record.date);
     if (dayAttendance) {
       const dateObj = new Date(record.date + 'T12:00:00');
-      generateEbdAttendancePDF({
-        classes,
-        students,
-        attendance: dayAttendance,
-        date: record.date,
-        formattedDate: format(dateObj, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
-      });
+      generateEbdAttendancePDF({ classes, students, attendance: dayAttendance, date: record.date, formattedDate: format(dateObj, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) });
     }
+  };
+
+  const handleCloseDay = async (record: DayRecord) => {
+    setClosingDay(true);
+    const { data: dayAttendance } = await supabase.from('ebd_attendance').select('*').eq('date', record.date);
+    if (!dayAttendance) { setClosingDay(false); return; }
+
+    const classSummary = classes.map(cls => {
+      const cr = dayAttendance.filter(a => a.class_id === cls.id);
+      const cp = cr.filter(a => a.present).length;
+      return { classId: cls.id, className: cls.name, total: cr.length, present: cp, percentage: cr.length > 0 ? Math.round((cp / cr.length) * 100) : 0 };
+    }).filter(cs => cs.total > 0);
+
+    const presentStudents = dayAttendance.filter(a => a.present).length;
+
+    const { error } = await supabase.from('ebd_day_closures').insert({
+      date: record.date,
+      closed_by: 'Administrador',
+      total_students: dayAttendance.length,
+      present_students: presentStudents,
+      class_summary: classSummary,
+    });
+
+    setClosingDay(false);
+    if (error) { toast.error('Erro ao fechar o dia'); return; }
+
+    toast.success('Dia fechado com sucesso!');
+    await fetchHistory();
+    if (onRefreshParent) await onRefreshParent();
+    // Update selected day
+    setSelectedDay(prev => prev ? { ...prev, isClosed: true } : null);
   };
 
   const { lineData, barData, metrics, perfectStudents, absentStudents } = useMemo(() => {
     const dates = [...new Set(allAttendance.map(a => a.date))].sort();
     const byDate = new Map<string, { present: number; total: number }>();
-
     dates.forEach(date => {
-      const dayRecs = allAttendance.filter(a => a.date === date);
-      const present = dayRecs.filter(a => a.present).length;
-      byDate.set(date, { present, total: dayRecs.length });
+      const d = allAttendance.filter(a => a.date === date);
+      byDate.set(date, { present: d.filter(a => a.present).length, total: d.length });
     });
 
     const lineData = dates.map(date => {
       const d = byDate.get(date)!;
-      return {
-        date: format(new Date(date + 'T12:00:00'), 'dd/MM', { locale: ptBR }),
-        fullDate: date,
-        presenca: d.total > 0 ? Math.round((d.present / d.total) * 100) : 0,
-        presentes: d.present,
-        total: d.total,
-      };
+      return { date: format(new Date(date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: d.total > 0 ? Math.round((d.present / d.total) * 100) : 0 };
     });
 
     const barData = classes.map(cls => {
-      const classRecords = allAttendance.filter(a => a.class_id === cls.id);
-      const classDates = [...new Set(classRecords.map(a => a.date))];
+      const cr = allAttendance.filter(a => a.class_id === cls.id);
+      const cd = [...new Set(cr.map(a => a.date))];
       let avgPct = 0;
-      if (classDates.length > 0) {
-        const total = classDates.reduce((sum, date) => {
-          const dayRecs = classRecords.filter(a => a.date === date);
-          const present = dayRecs.filter(a => a.present).length;
-          return sum + (dayRecs.length > 0 ? (present / dayRecs.length) * 100 : 0);
-        }, 0);
-        avgPct = Math.round(total / classDates.length);
+      if (cd.length > 0) {
+        avgPct = Math.round(cd.reduce((sum, date) => {
+          const dr = cr.filter(a => a.date === date);
+          return sum + (dr.length > 0 ? (dr.filter(a => a.present).length / dr.length) * 100 : 0);
+        }, 0) / cd.length);
       }
       return { name: cls.name, media: avgPct };
     }).sort((a, b) => b.media - a.media);
@@ -204,24 +199,17 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
     const worst = lineData.length > 0 ? lineData.reduce((a, b) => a.presenca < b.presenca ? a : b) : null;
     const bestClass = barData.length > 0 ? barData[0] : null;
 
-    const studentDates = new Map<string, { present: number; total: number }>();
+    const studentMap = new Map<string, { present: number; total: number }>();
     allAttendance.forEach(a => {
-      if (!studentDates.has(a.student_id)) studentDates.set(a.student_id, { present: 0, total: 0 });
-      const s = studentDates.get(a.student_id)!;
+      if (!studentMap.has(a.student_id)) studentMap.set(a.student_id, { present: 0, total: 0 });
+      const s = studentMap.get(a.student_id)!;
       s.total++;
       if (a.present) s.present++;
     });
 
     const totalDates = dates.length;
-    const perfectStudents = students.filter(s => {
-      const rec = studentDates.get(s.id);
-      return rec && rec.present === totalDates && totalDates > 0;
-    });
-
-    const absentStudents = students.filter(s => {
-      const rec = studentDates.get(s.id);
-      return !rec || rec.present === 0;
-    });
+    const perfectStudents = students.filter(s => { const r = studentMap.get(s.id); return r && r.present === totalDates && totalDates > 0; });
+    const absentStudents = students.filter(s => { const r = studentMap.get(s.id); return !r || r.present === 0; });
 
     return { lineData, barData, metrics: { avgLast4, best, worst, bestClass }, perfectStudents, absentStudents };
   }, [allAttendance, classes, students]);
@@ -230,6 +218,120 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando histórico...</div>;
   }
 
+  // ─── DETAIL VIEW (full-screen) ───
+  if (selectedDay) {
+    const pct = selectedDay.totalStudents > 0 ? Math.round((selectedDay.presentStudents / selectedDay.totalStudents) * 100) : 0;
+    const dateFormatted = format(new Date(selectedDay.date + 'T12:00:00'), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    // Refresh from latest dayRecords
+    const freshRecord = dayRecords.find(d => d.date === selectedDay.date) || selectedDay;
+
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-200">
+        {/* Back button */}
+        <Button variant="ghost" size="sm" onClick={() => setSelectedDay(null)} className="text-xs -ml-2">
+          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar ao histórico
+        </Button>
+
+        {/* Date header */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold capitalize">{dateFormatted}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {freshRecord.isClosed ? (
+              <Badge variant="outline" className="text-xs border-green-500/40 text-green-700 bg-green-500/10">
+                <Lock className="h-3 w-3 mr-1" /> Fechado
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs border-blue-500/40 text-blue-700 bg-blue-500/10">
+                <CircleDot className="h-3 w-3 mr-1" /> Em aberto
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Stats card */}
+        <Card>
+          <CardContent className="pt-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Presença geral</p>
+                <p className="text-3xl font-bold">
+                  {freshRecord.presentStudents}
+                  <span className="text-lg font-normal text-muted-foreground">/{freshRecord.totalStudents}</span>
+                </p>
+              </div>
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className={`text-xl font-bold ${getPercentColor(pct)}`}>{pct}%</span>
+              </div>
+            </div>
+            <Progress value={pct} className="h-2" />
+          </CardContent>
+        </Card>
+
+        {/* Who made the attendance */}
+        {freshRecord.markedByNames.length > 0 && (
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5" /> Responsável(is) pela chamada
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {freshRecord.markedByNames.map((name, i) => (
+                  <Badge key={i} variant="secondary" className="text-xs">
+                    {name}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Class breakdown */}
+        {freshRecord.classSummary.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Users className="h-4 w-4" /> Presença por turma
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[...freshRecord.classSummary].sort((a, b) => b.percentage - a.percentage).map((cs, i) => (
+                <div key={cs.classId || i} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{cs.className}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{cs.present}/{cs.total}</span>
+                      <span className={`text-sm font-bold ${getPercentColor(cs.percentage)}`}>{cs.percentage}%</span>
+                    </div>
+                  </div>
+                  <Progress value={cs.percentage} className="h-1.5" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={() => handleDownloadPDF(freshRecord)}>
+            <Download className="h-4 w-4 mr-2" /> Baixar PDF
+          </Button>
+          {accessLevel === 'admin' && !freshRecord.isClosed && (
+            <Button
+              className="flex-1"
+              disabled={closingDay}
+              onClick={() => handleCloseDay(freshRecord)}
+            >
+              <Lock className="h-4 w-4 mr-2" /> {closingDay ? 'Fechando...' : 'Fechar dia'}
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── LIST VIEW ───
   return (
     <div className="space-y-4">
       {/* Period selector */}
@@ -239,95 +341,55 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
           { key: '3months' as PeriodFilter, label: '3 meses' },
           { key: 'all' as PeriodFilter, label: 'Todo período' },
         ]).map(p => (
-          <Button
-            key={p.key}
-            variant={period === p.key ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setPeriod(p.key)}
-          >
+          <Button key={p.key} variant={period === p.key ? 'default' : 'outline'} size="sm" onClick={() => setPeriod(p.key)}>
             {p.label}
           </Button>
         ))}
       </div>
 
-      {/* Day record cards */}
+      {/* Compact day cards */}
       {dayRecords.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-            <Calendar className="h-3.5 w-3.5" /> Chamadas registradas
-          </h3>
+        <div className="space-y-2">
           {dayRecords.map(record => {
-            const pct = record.totalStudents > 0
-              ? Math.round((record.presentStudents / record.totalStudents) * 100)
-              : 0;
-            const isExpanded = expandedDay === record.date;
-            const dateFormatted = format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR });
-            const yearFormatted = format(new Date(record.date + 'T12:00:00'), 'yyyy');
+            const pct = record.totalStudents > 0 ? Math.round((record.presentStudents / record.totalStudents) * 100) : 0;
+            const dateObj = new Date(record.date + 'T12:00:00');
+            const dayName = format(dateObj, 'EEEE', { locale: ptBR });
+            const dayNum = format(dateObj, 'dd');
+            const monthName = format(dateObj, 'MMM', { locale: ptBR });
 
             return (
-              <Card key={record.date} className={`${getColorClass(pct)} transition-all`}>
-                <CardContent className="pt-4 pb-4 space-y-3">
-                  {/* Header row */}
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm capitalize">{dateFormatted}</p>
-                        {record.isClosed ? (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500/40 text-green-700 bg-green-500/10">
-                            <Lock className="h-2.5 w-2.5 mr-0.5" /> Fechado
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500/40 text-blue-700 bg-blue-500/10">
-                            <CircleDot className="h-2.5 w-2.5 mr-0.5" /> Em aberto
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{yearFormatted}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-xl font-bold ${getPercentColor(pct)}`}>{pct}%</p>
-                      <p className="text-xs text-muted-foreground">{record.presentStudents}/{record.totalStudents}</p>
+              <Card
+                key={record.date}
+                className="cursor-pointer hover:bg-accent/30 transition-colors active:scale-[0.99]"
+                onClick={() => setSelectedDay(record)}
+              >
+                <CardContent className="py-3 px-4 flex items-center gap-3">
+                  {/* Date block */}
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex flex-col items-center justify-center shrink-0">
+                    <span className="text-lg font-bold text-primary leading-none">{dayNum}</span>
+                    <span className="text-[10px] text-primary/70 uppercase">{monthName}</span>
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium capitalize truncate">{dayName}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {record.isClosed ? (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-green-500/40 text-green-700 bg-green-500/10">
+                          Fechado
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-blue-500/40 text-blue-700 bg-blue-500/10">
+                          Em aberto
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">{record.presentStudents}/{record.totalStudents}</span>
                     </div>
                   </div>
 
-                  <Progress value={pct} className="h-1.5" />
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs flex-1"
-                      onClick={() => setExpandedDay(isExpanded ? null : record.date)}
-                    >
-                      {isExpanded ? <ChevronUp className="h-3.5 w-3.5 mr-1" /> : <ChevronDown className="h-3.5 w-3.5 mr-1" />}
-                      {isExpanded ? 'Menos detalhes' : 'Ver turmas'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => handleDownloadPDF(record)}
-                    >
-                      <Download className="h-3.5 w-3.5 mr-1" /> PDF
-                    </Button>
-                  </div>
-
-                  {/* Expanded: class breakdown */}
-                  {isExpanded && record.classSummary.length > 0 && (
-                    <div className="space-y-2 pt-1 border-t border-border/50">
-                      {[...record.classSummary].sort((a, b) => b.percentage - a.percentage).map((cs, i) => (
-                        <div key={cs.classId || i} className="flex items-center gap-2">
-                          <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-xs flex-1 truncate">{cs.className}</span>
-                          <span className="text-xs text-muted-foreground">{cs.present}/{cs.total}</span>
-                          <span className={`text-xs font-semibold ${getPercentColor(cs.percentage)} min-w-[32px] text-right`}>
-                            {cs.percentage}%
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {/* Percentage */}
+                  <span className={`text-lg font-bold ${getPercentColor(pct)}`}>{pct}%</span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 </CardContent>
               </Card>
             );
@@ -335,7 +397,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </div>
       )}
 
-      {/* Metrics cards */}
+      {/* Metrics */}
       <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardContent className="pt-4 pb-4">
@@ -380,7 +442,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       </div>
 
-      {/* Line chart */}
+      {/* Charts */}
       {lineData.length > 1 && (
         <Card>
           <CardHeader className="pb-2">
@@ -395,10 +457,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} className="fill-muted-foreground" />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 8, fontSize: 12 }}
-                    formatter={(value: number) => [`${value}%`, 'Presença']}
-                  />
+                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(value: number) => [`${value}%`, 'Presença']} />
                   <Line type="monotone" dataKey="presenca" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -407,7 +466,6 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       )}
 
-      {/* Bar chart */}
       {barData.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -420,10 +478,7 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={100} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 8, fontSize: 12 }}
-                    formatter={(value: number) => [`${value}%`, 'Média']}
-                  />
+                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(value: number) => [`${value}%`, 'Média']} />
                   <Bar dataKey="media" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -432,7 +487,6 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
         </Card>
       )}
 
-      {/* Perfect attendance */}
       {perfectStudents.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -443,16 +497,13 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {perfectStudents.map(s => (
-                <Badge key={s.id} className="bg-green-500/10 text-green-700 border-green-500/20">
-                  {s.name}
-                </Badge>
+                <Badge key={s.id} className="bg-green-500/10 text-green-700 border-green-500/20">{s.name}</Badge>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* 0% attendance */}
       {absentStudents.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -463,16 +514,14 @@ export default function HistoricoTab({ classes, students }: HistoricoTabProps) {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {absentStudents.map(s => (
-                <Badge key={s.id} variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20">
-                  {s.name}
-                </Badge>
+                <Badge key={s.id} variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20">{s.name}</Badge>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {allAttendance.length === 0 && dayRecords.length === 0 && (
+      {allAttendance.length === 0 && (
         <p className="text-center text-muted-foreground py-8">Nenhum registro de presença encontrado para este período.</p>
       )}
     </div>
