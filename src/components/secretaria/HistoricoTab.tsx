@@ -46,6 +46,7 @@ interface DayRecord {
   presentStudents: number;
   classSummary: ClassSummaryItem[];
   markedByNames: string[];
+  visitorCount: number;
 }
 
 interface StudentStats {
