@@ -4,12 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, Award, AlertTriangle, Calendar, Lock, Download, Users, ArrowLeft, CircleDot, ChevronRight, User } from 'lucide-react';
+import { TrendingUp, TrendingDown, Award, AlertTriangle, Lock, Download, Users, ArrowLeft, CircleDot, ChevronRight, User } from 'lucide-react';
 import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 import { toast } from 'sonner';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EbdClass {
   id: string;
@@ -58,6 +64,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
   const [closingDay, setClosingDay] = useState(false);
+  const [openDialog, setOpenDialog] = useState<'perfect' | 'lowFreq' | 'absent' | null>(null);
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -176,16 +183,10 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     setSelectedDay(prev => prev ? { ...prev, isClosed: true } : null);
   };
 
-  const { lineData, barData, metrics, perfectStudents, absentStudents } = useMemo(() => {
+  const { barData, metrics, perfectStudents, absentStudents, lowFreqStudents } = useMemo(() => {
     const sundayDates = [...new Set(allAttendance.map(a => a.date))]
       .filter(date => new Date(date + 'T12:00:00').getDay() === 0)
       .sort();
-
-    const lineData = sundayDates.map(date => {
-      const d = allAttendance.filter(a => a.date === date);
-      const present = d.filter(a => a.present).length;
-      return { date: format(new Date(date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: totalMembers > 0 ? Math.round((present / totalMembers) * 100) : 0 };
-    });
 
     const classStudentCounts = new Map<string, number>();
     students.forEach(s => {
@@ -206,10 +207,6 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       return { name: cls.name, media: avgPct };
     }).sort((a, b) => b.media - a.media);
 
-    const last4 = lineData.slice(-4);
-    const avgLast4 = last4.length > 0 ? Math.round(last4.reduce((s, d) => s + d.presenca, 0) / last4.length) : 0;
-    const best = lineData.length > 0 ? lineData.reduce((a, b) => a.presenca > b.presenca ? a : b) : null;
-    const worst = lineData.length > 0 ? lineData.reduce((a, b) => a.presenca < b.presenca ? a : b) : null;
     const bestClass = barData.length > 0 ? barData[0] : null;
 
     const studentMap = new Map<string, { present: number; total: number }>();
@@ -221,11 +218,50 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     });
 
     const totalSundays = sundayDates.length;
-    const avgAll = totalSundays > 0 ? Math.round(lineData.reduce((s, d) => s + d.presenca, 0) / totalSundays) : 0;
     const perfectStudents = students.filter(s => { const r = studentMap.get(s.id); return r && r.present === totalSundays && totalSundays > 0; });
     const absentStudents = students.filter(s => { const r = studentMap.get(s.id); return !r || r.present === 0; });
+    
+    // New: Low frequency students (<30% excluding never attended)
+    const lowFreqStudents = students.filter(s => {
+      const r = studentMap.get(s.id);
+      if (!r || r.present === 0) return false; // exclude never attended
+      const freq = r.total > 0 ? (r.present / r.total) : 0;
+      return freq < 0.30;
+    });
 
-    return { lineData, barData, metrics: { avgLast4, best, worst, bestClass, totalSundays, avgAll }, perfectStudents, absentStudents };
+    const avgAll = totalSundays > 0 && totalMembers > 0 
+      ? Math.round(sundayDates.reduce((sum, date) => {
+          const dayPresence = allAttendance.filter(a => a.date === date && a.present).length;
+          return sum + (dayPresence / totalMembers) * 100;
+        }, 0) / totalSundays)
+      : 0;
+
+    const presencesPerDay = sundayDates.map(date => {
+      const present = allAttendance.filter(a => a.date === date && a.present).length;
+      return { date, presenca: totalMembers > 0 ? Math.round((present / totalMembers) * 100) : 0 };
+    });
+
+    const best = presencesPerDay.length > 0 
+      ? presencesPerDay.reduce((a, b) => a.presenca > b.presenca ? a : b)
+      : null;
+    
+    const worst = presencesPerDay.length > 0 
+      ? presencesPerDay.reduce((a, b) => a.presenca < b.presenca ? a : b)
+      : null;
+
+    return { 
+      barData, 
+      metrics: { 
+        best: best ? { date: format(new Date(best.date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: best.presenca } : null, 
+        worst: worst ? { date: format(new Date(worst.date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: worst.presenca } : null, 
+        bestClass, 
+        totalSundays, 
+        avgAll 
+      }, 
+      perfectStudents, 
+      absentStudents,
+      lowFreqStudents
+    };
   }, [allAttendance, classes, students, totalMembers]);
 
   if (loading) {
@@ -471,40 +507,44 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
               </div>
             </>
           )}
-
-          {perfectStudents.length > 0 && (
-            <>
-              <div className="h-px bg-border" />
-              <div className="space-y-2">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                  <Award className="h-3 w-3 text-yellow-500" /> 100% de presença
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {perfectStudents.map(s => (
-                    <Badge key={s.id} variant="secondary" className="text-xs bg-green-500/10 text-green-700 border-green-500/20">{s.name}</Badge>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {absentStudents.length > 0 && (
-            <>
-              <div className="h-px bg-border" />
-              <div className="space-y-2">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3 text-red-500" /> Nunca compareceram
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {absentStudents.map(s => (
-                    <Badge key={s.id} variant="secondary" className="text-xs bg-red-500/10 text-red-700 border-red-500/20">{s.name}</Badge>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
         </CardContent>
       </Card>
+
+      {/* Clickable student highlight cards */}
+      <div className="grid grid-cols-3 gap-2">
+        {/* 100% Presença */}
+        <button
+          onClick={() => perfectStudents.length > 0 && setOpenDialog('perfect')}
+          disabled={perfectStudents.length === 0}
+          className="rounded-xl border bg-card p-3 text-left hover:bg-accent/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]"
+        >
+          <Award className="h-5 w-5 text-yellow-500 mb-1.5" />
+          <p className="text-2xl font-bold text-green-600">{perfectStudents.length}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">100% presença</p>
+        </button>
+
+        {/* Frequência Baixa */}
+        <button
+          onClick={() => lowFreqStudents.length > 0 && setOpenDialog('lowFreq')}
+          disabled={lowFreqStudents.length === 0}
+          className="rounded-xl border bg-card p-3 text-left hover:bg-accent/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]"
+        >
+          <TrendingDown className="h-5 w-5 text-yellow-500 mb-1.5" />
+          <p className="text-2xl font-bold text-yellow-600">{lowFreqStudents.length}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Freq. baixa &lt;30%</p>
+        </button>
+
+        {/* Nunca compareceram */}
+        <button
+          onClick={() => absentStudents.length > 0 && setOpenDialog('absent')}
+          disabled={absentStudents.length === 0}
+          className="rounded-xl border bg-card p-3 text-left hover:bg-accent/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]"
+        >
+          <AlertTriangle className="h-5 w-5 text-red-500 mb-1.5" />
+          <p className="text-2xl font-bold text-red-600">{absentStudents.length}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Nunca vieram</p>
+        </button>
+      </div>
 
       {/* Charts */}
       {lineData.length > 1 && (
