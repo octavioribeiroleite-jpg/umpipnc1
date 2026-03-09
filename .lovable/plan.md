@@ -1,67 +1,40 @@
 
 
-# Dashboard "Agenda Primeiro" para Diretoria/Sociedades
+# Melhorar PinPad — Teclado físico + visual responsivo
 
-## Objetivo
-Transformar o Dashboard da Diretoria (Index.tsx) para seguir a mesma estética do Painel do Pastor: calendário mensal + lista de programações do dia selecionado. Remover stats financeiros, membros e resumo financeiro do Home (ficam no menu). Filtrar eventos pela society do usuário logado.
+## Problemas atuais
+1. Sem suporte a teclado físico (computador não consegue digitar)
+2. Botões sem feedback visual ao clicar (não parece responsivo)
+3. Visual genérico e pouco polido
 
-## Alterações
+## Mudanças em `src/components/secretaria/PinPad.tsx`
 
-### 1. `src/hooks/useEvents.ts` — Adicionar filtro por `societyId`
-- Aceitar param opcional `societyId?: string`
-- Quando presente, adicionar `.eq('society_id', societyId)` nas queries de `eventsQuery` e `upcomingEventsQuery`
-- Atualizar `queryKey` para incluir `societyId`
+### Teclado físico
+- Adicionar `useEffect` com `keydown` listener global:
+  - Teclas `0-9` → `handleDigit()`
+  - `Backspace` → `handleDelete()`
+  - `Enter` (quando 6 dígitos) → `onComplete(pin)`
+- Adicionar `useRef` no container com `tabIndex={0}` e `autoFocus` para garantir foco
 
-### 2. `src/pages/Index.tsx` — Reestruturação completa do layout
-Substituir o dashboard atual (stats + finanças + membros + EventCompletionList) por layout "agenda primeiro":
+### Feedback visual nos botões
+- Adicionar `active:scale-95 active:bg-primary/10 transition-all duration-100` nos botões numéricos
+- Aumentar levemente o tamanho dos botões (`h-14` em vez de `h-12`)
+- Botões com `rounded-xl` e sombra sutil (`shadow-sm`)
+- Hover suave: `hover:bg-accent/50`
 
-**Remover:**
-- Grid de 4 StatCards (saldo, contribuições, membros, tarefas)
-- Cards Diretoria e Membros (+ dialogs)
-- Resumo Financeiro card
-- `EventCompletionList`
-- Fetch de `stats`, `diretoria`, `membros`, `pendingSubmissions`
-- Imports não utilizados (DollarSign, Users, Shield, UserCheck, TrendingUp, etc.)
+### PIN slots mais bonitos
+- Slots maiores: `h-12 w-11` com `rounded-xl`
+- Animação de entrada: dot com `scale-0 → scale-100` ao aparecer (transition)
+- Dot maior: `h-3 w-3`
+- Espaçamento `gap-3`
 
-**Adicionar (mesma estrutura do PainelPastor):**
-- Estado: `selectedDate`, `currentMonth`, `currentYear`
-- `useEvents()` com `societyId` filtrado (quando não admin/pastor)
-- Chips de resumo (Hoje, Semana, Aguardando) — 3 AppCards compactos
-- `PastorCalendarWidget` (reutilizado, funciona para qualquer role)
-- `PastorDayEventList` (reutilizado, mesmo componente)
-- Ações Rápidas reduzidas a 4 colunas: Reunião, Evento, Finanças, Tarefa
-- Manter: `PastorNotificationBanner`, `PastorLoginNotification`, notificação de comprovantes pendentes
+### Botão confirmar
+- Sempre visível quando 6 dígitos, com animação `animate-in fade-in slide-in-from-bottom`
 
-**Layout final (de cima para baixo):**
-1. PageHeader simplificado (saudação + data)
-2. Banner de comprovantes pendentes (se houver)
-3. 3 chips: Hoje | Semana | Aguardando
-4. Calendário mensal (PastorCalendarWidget)
-5. Programações do dia (PastorDayEventList)
-6. Acesso Rápido (4 botões)
+### Layout geral
+- Container com `space-y-6` (mais espaçamento)
+- Header com ícone decorativo (Lock) acima do título
 
-### 3. Filtro por sociedade — Lógica
-- `const societyId = profile?.society_id` (já existe na linha 122)
-- Passar `societyId` ao `useEvents()` para que só retorne eventos da society logada
-- Admin/Pastor: `societyId = undefined` → vê todos os eventos (mesmo comportamento atual)
-- Diretoria UMP: `societyId = uuid-ump` → só vê eventos da UMP
-- Não altera RLS nem banco — apenas filtro no frontend via query param
-
-### 4. Componentes reutilizados (sem duplicar)
-- `PastorCalendarWidget` e `PastorDayEventList` já são genéricos — recebem `events` e `selectedDate` como props
-- No Index.tsx, passam os mesmos props com dados filtrados pela society
-- `PastorEventCard` dentro do DayEventList mostra botões de ação apenas se `onUpdateStatus` é passado (já funciona assim)
-
-### 5. Dialogs mantidos
-- Os dialogs de Diretoria e Membros serão removidos do Home (ficam acessíveis via menu Membros/Configurações)
-
-## Arquivos modificados
-- `src/hooks/useEvents.ts` — adicionar param `societyId`
-- `src/pages/Index.tsx` — reestruturação completa
-
-## O que NÃO muda
-- Nenhuma lógica de auth, RLS, banco, permissões
-- Nenhum componente base (AppCard, AppButton, etc.)
-- PainelPastor.tsx (permanece igual)
-- Menu lateral e rotas (Finanças, Membros, Tarefas continuam no menu)
+## Arquivo modificado
+- `src/components/secretaria/PinPad.tsx` — refatoração visual completa
 
