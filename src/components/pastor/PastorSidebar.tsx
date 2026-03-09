@@ -36,7 +36,6 @@ export function PastorSidebar() {
     await signOut();
     navigate('/auth');
   };
-  const [societies, setSocieties] = useState<Society[]>([]);
 
   useEffect(() => {
     supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
