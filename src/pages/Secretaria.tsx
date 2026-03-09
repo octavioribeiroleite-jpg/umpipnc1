@@ -532,6 +532,9 @@ export default function Secretaria() {
             </div>
           </AppCard>
 
+          {/* Birthday announcement card */}
+          <WeekAnnouncementCard birthdays={allWeekAnnouncements} />
+
           {/* Menu cards */}
           <div className="grid grid-cols-2 gap-3">
             <AppCard
