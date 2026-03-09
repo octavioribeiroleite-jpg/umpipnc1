@@ -120,7 +120,8 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
   const getTotalStats = () => {
     const total = students.length;
     const present = attendance.filter(a => a.present && a.date === attendanceDate).length;
-    return { total, present, percentage: total > 0 ? Math.round((present / total) * 100) : 0 };
+    const totalWithVisitors = present + visitorCount;
+    return { total, present, percentage: total > 0 ? Math.round((present / total) * 100) : 0, totalWithVisitors };
   };
 
   const sortedClasses = [...classes].sort((a, b) => {
