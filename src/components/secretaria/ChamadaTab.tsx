@@ -53,6 +53,8 @@ interface ChamadaTabProps {
   dayIsClosed?: boolean;
   onCloseDay?: () => Promise<void>;
   onReopenDay?: () => Promise<void>;
+  visitorCount?: number;
+  setVisitorCount?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay }: ChamadaTabProps) {
