@@ -3,7 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logoIpnc from '@/assets/logo-ipnc.png';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import {
+  ArrowLeft,
   Menu,
   LogOut,
   Home,
@@ -59,6 +61,9 @@ export function MobileHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
+  useSwipeBack();
+
+  const isHome = location.pathname === '/';
 
   const getInitials = (name: string) => {
     return name
@@ -91,9 +96,17 @@ export function MobileHeader() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md safe-top">
       <div className="flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-3">
+          {!isHome && (
+            <button
+              onClick={() => navigate(-1)}
+              className="p-1.5 -ml-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <button className="p-1.5 -ml-1.5 text-muted-foreground hover:text-foreground transition-colors">
+              <button className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
                 <Menu className="h-6 w-6" />
               </button>
             </SheetTrigger>

@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMembroSession } from '@/contexts/MembroSessionContext';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Home, Calendar, CreditCard, Bell, Heart, LogOut, Menu } from 'lucide-react';
@@ -27,6 +28,7 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
   const { session, clearSession } = useMembroSession();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  useSwipeBack();
 
   const handleNav = (tab: MembroTab) => {
     onTabChange(tab);

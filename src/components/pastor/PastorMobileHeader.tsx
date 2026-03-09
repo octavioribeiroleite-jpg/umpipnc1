@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import {
+  ArrowLeft,
   Menu,
   LogOut,
   LayoutDashboard,
@@ -51,6 +53,9 @@ export function PastorMobileHeader() {
   const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [societies, setSocieties] = useState<Society[]>([]);
+  useSwipeBack();
+
+  const isPastorHome = location.pathname === '/pastor';
 
   useEffect(() => {
     supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
@@ -81,9 +86,17 @@ export function PastorMobileHeader() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md safe-top">
       <div className="flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-3">
+          {!isPastorHome && (
+            <button
+              onClick={() => navigate(-1)}
+              className="p-1.5 -ml-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <button className="p-1.5 -ml-1.5 text-muted-foreground hover:text-foreground transition-colors">
+              <button className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
                 <Menu className="h-6 w-6" />
               </button>
             </SheetTrigger>
