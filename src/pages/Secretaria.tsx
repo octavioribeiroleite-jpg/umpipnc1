@@ -454,7 +454,14 @@ export default function Secretaria() {
   const isAdmin = accessLevel === 'admin';
   const profileLabel = isAdmin ? 'Administrador' : 'Professor';
 
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
   const handleExitApp = () => {
+    setShowExitConfirm(true);
+  };
+
+  const confirmExit = () => {
+    setShowExitConfirm(false);
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
