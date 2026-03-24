@@ -126,6 +126,7 @@ export default function Eleicoes() {
       setName('');
       setPosition('');
       setSocietyId('');
+      setElectionType('cargo');
       fetchElections();
     }
     setCreating(false);
