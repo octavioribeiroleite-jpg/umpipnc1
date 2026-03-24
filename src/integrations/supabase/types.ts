@@ -435,6 +435,7 @@ export type Database = {
           id: string
           name: string
           photo_url: string | null
+          photo_urls: Json
         }
         Insert: {
           display_order?: number
@@ -442,6 +443,7 @@ export type Database = {
           id?: string
           name: string
           photo_url?: string | null
+          photo_urls?: Json
         }
         Update: {
           display_order?: number
@@ -449,6 +451,7 @@ export type Database = {
           id?: string
           name?: string
           photo_url?: string | null
+          photo_urls?: Json
         }
         Relationships: [
           {
