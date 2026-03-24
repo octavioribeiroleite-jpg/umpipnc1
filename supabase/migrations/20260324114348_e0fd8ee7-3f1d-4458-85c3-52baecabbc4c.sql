@@ -1,0 +1,1 @@
+ALTER TABLE public.election_candidates ADD COLUMN photo_urls jsonb NOT NULL DEFAULT '[]'::jsonb;
