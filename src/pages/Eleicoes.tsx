@@ -115,6 +115,7 @@ export default function Eleicoes() {
       position: position.trim(),
       society_id: societyId || null,
       created_by: user!.id,
+      type: electionType,
     } as any);
 
     if (error) {
