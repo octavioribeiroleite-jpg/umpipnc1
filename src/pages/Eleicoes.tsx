@@ -53,7 +53,9 @@ export default function Eleicoes() {
   const [name, setName] = useState('');
   const [position, setPosition] = useState('');
   const [societyId, setSocietyId] = useState<string>('');
+  const [electionType, setElectionType] = useState<'cargo' | 'camisa'>('cargo');
   const [creating, setCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState<'cargo' | 'camisa'>('cargo');
   const { toast } = useToast();
   const { user, isAdmin, isPastor } = useAuth();
   const navigate = useNavigate();
