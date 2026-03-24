@@ -36,6 +36,7 @@ interface Election {
   created_by: string;
   created_at: string;
   vote_count?: number;
+  type?: string;
 }
 
 interface Society {
