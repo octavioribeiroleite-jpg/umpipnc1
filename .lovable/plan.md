@@ -1,67 +1,47 @@
 
 
-# Dashboard "Agenda Primeiro" para Diretoria/Sociedades
+# Plano: Múltiplas Fotos por Modelo de Camisa (Candidato)
 
-## Objetivo
-Transformar o Dashboard da Diretoria (Index.tsx) para seguir a mesma estética do Painel do Pastor: calendário mensal + lista de programações do dia selecionado. Remover stats financeiros, membros e resumo financeiro do Home (ficam no menu). Filtrar eventos pela society do usuário logado.
+## Contexto
+Atualmente cada candidato/modelo tem apenas 1 foto (`photo_url` na tabela `election_candidates`). Para votação de camisas, o usuário quer poder adicionar várias fotos por modelo para que os votantes possam deslizar entre elas.
 
-## Alterações
+## Abordagem
+Adicionar uma coluna `photo_urls` (jsonb array) na tabela `election_candidates` para armazenar múltiplas URLs. Manter `photo_url` existente como fallback para eleições de cargos. Usar o componente Carousel (já existe no projeto) para exibir as fotos.
 
-### 1. `src/hooks/useEvents.ts` — Adicionar filtro por `societyId`
-- Aceitar param opcional `societyId?: string`
-- Quando presente, adicionar `.eq('society_id', societyId)` nas queries de `eventsQuery` e `upcomingEventsQuery`
-- Atualizar `queryKey` para incluir `societyId`
+## 1. Migração de banco de dados
+Adicionar coluna `photo_urls` na tabela `election_candidates`:
+```sql
+ALTER TABLE public.election_candidates 
+  ADD COLUMN photo_urls jsonb NOT NULL DEFAULT '[]'::jsonb;
+```
 
-### 2. `src/pages/Index.tsx` — Reestruturação completa do layout
-Substituir o dashboard atual (stats + finanças + membros + EventCompletionList) por layout "agenda primeiro":
+## 2. `CandidateForm.tsx` -- Upload múltiplo
+- Adicionar prop `type` (`'cargo' | 'camisa'`) para adaptar comportamento
+- Quando tipo = `camisa`:
+  - Permitir upload de múltiplas fotos por modelo
+  - Exibir miniatura com contador de fotos (ex: "3 fotos")
+  - Botão de upload adiciona ao array `photo_urls` em vez de substituir `photo_url`
+  - Botão para remover foto individual do array
+- Quando tipo = `cargo`: comportamento atual inalterado (single photo)
 
-**Remover:**
-- Grid de 4 StatCards (saldo, contribuições, membros, tarefas)
-- Cards Diretoria e Membros (+ dialogs)
-- Resumo Financeiro card
-- `EventCompletionList`
-- Fetch de `stats`, `diretoria`, `membros`, `pendingSubmissions`
-- Imports não utilizados (DollarSign, Users, Shield, UserCheck, TrendingUp, etc.)
+## 3. `VotePublic.tsx` -- Carousel na votação pública
+- Quando o candidato tem `photo_urls` com mais de 1 item, renderizar um Carousel (Embla, já instalado) em vez de imagem estática
+- Indicadores de paginação (dots) abaixo das fotos
+- Swipe/touch habilitado para mobile
+- Na tela de confirmação, mostrar carousel também
 
-**Adicionar (mesma estrutura do PainelPastor):**
-- Estado: `selectedDate`, `currentMonth`, `currentYear`
-- `useEvents()` com `societyId` filtrado (quando não admin/pastor)
-- Chips de resumo (Hoje, Semana, Aguardando) — 3 AppCards compactos
-- `PastorCalendarWidget` (reutilizado, funciona para qualquer role)
-- `PastorDayEventList` (reutilizado, mesmo componente)
-- Ações Rápidas reduzidas a 4 colunas: Reunião, Evento, Finanças, Tarefa
-- Manter: `PastorNotificationBanner`, `PastorLoginNotification`, notificação de comprovantes pendentes
+## 4. `EleicaoDetalhe.tsx` / `ResultPanel.tsx`
+- Exibir primeira foto como thumbnail (sem carousel) nos painéis admin
+- Mostrar badge com quantidade de fotos
 
-**Layout final (de cima para baixo):**
-1. PageHeader simplificado (saudação + data)
-2. Banner de comprovantes pendentes (se houver)
-3. 3 chips: Hoje | Semana | Aguardando
-4. Calendário mensal (PastorCalendarWidget)
-5. Programações do dia (PastorDayEventList)
-6. Acesso Rápido (4 botões)
-
-### 3. Filtro por sociedade — Lógica
-- `const societyId = profile?.society_id` (já existe na linha 122)
-- Passar `societyId` ao `useEvents()` para que só retorne eventos da society logada
-- Admin/Pastor: `societyId = undefined` → vê todos os eventos (mesmo comportamento atual)
-- Diretoria UMP: `societyId = uuid-ump` → só vê eventos da UMP
-- Não altera RLS nem banco — apenas filtro no frontend via query param
-
-### 4. Componentes reutilizados (sem duplicar)
-- `PastorCalendarWidget` e `PastorDayEventList` já são genéricos — recebem `events` e `selectedDate` como props
-- No Index.tsx, passam os mesmos props com dados filtrados pela society
-- `PastorEventCard` dentro do DayEventList mostra botões de ação apenas se `onUpdateStatus` é passado (já funciona assim)
-
-### 5. Dialogs mantidos
-- Os dialogs de Diretoria e Membros serão removidos do Home (ficam acessíveis via menu Membros/Configurações)
-
-## Arquivos modificados
-- `src/hooks/useEvents.ts` — adicionar param `societyId`
-- `src/pages/Index.tsx` — reestruturação completa
+## Arquivos alterados
+- **1 migration SQL**: adicionar `photo_urls` jsonb
+- **`src/components/eleicoes/CandidateForm.tsx`**: upload múltiplo para tipo camisa
+- **`src/pages/VotePublic.tsx`**: carousel de fotos na votação
+- **`src/pages/EleicaoDetalhe.tsx`**: passar prop `type` ao CandidateForm
 
 ## O que NÃO muda
-- Nenhuma lógica de auth, RLS, banco, permissões
-- Nenhum componente base (AppCard, AppButton, etc.)
-- PainelPastor.tsx (permanece igual)
-- Menu lateral e rotas (Finanças, Membros, Tarefas continuam no menu)
+- Eleições de cargo continuam com foto única
+- Nenhuma tabela nova
+- Nenhuma rota nova
 
