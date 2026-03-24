@@ -124,6 +124,7 @@ export default function EleicaoDetalhe() {
               candidates={candidates}
               onRefresh={fetchAll}
               disabled={!isDraft}
+              type={electionType as 'cargo' | 'camisa'}
             />
           </AccordionContent>
         </AccordionItem>
