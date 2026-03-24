@@ -159,30 +159,42 @@ export default function Eleicoes() {
 
       <FAB onClick={() => setDialogOpen(true)} />
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : elections.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Vote className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-1">Nenhuma eleição registrada</h3>
-            <p className="text-muted-foreground text-sm">Crie uma nova eleição para começar.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-3">
-          {elections.map((e) => (
-            <ElectionCard
-              key={e.id}
-              election={e}
-              onClick={() => navigate(`/eleicoes/${e.id}`)}
-              onDelete={(id) => setDeleteId(id)}
-            />
-          ))}
-        </div>
-      )}
+      {/* Tabs for filtering */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'cargo' | 'camisa')} className="mb-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="cargo"><Vote className="h-4 w-4 mr-1.5" /> Cargos</TabsTrigger>
+          <TabsTrigger value="camisa"><Shirt className="h-4 w-4 mr-1.5" /> Camisas</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {(() => {
+        const filtered = elections.filter(e => (e.type || 'cargo') === activeTab);
+        if (loading) return (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        );
+        if (filtered.length === 0) return (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              {activeTab === 'camisa' ? <Shirt className="h-12 w-12 text-muted-foreground mb-4" /> : <Vote className="h-12 w-12 text-muted-foreground mb-4" />}
+              <h3 className="text-lg font-semibold mb-1">
+                {activeTab === 'camisa' ? 'Nenhuma votação de camisa' : 'Nenhuma eleição registrada'}
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {activeTab === 'camisa' ? 'Crie uma votação para escolher o modelo da camisa.' : 'Crie uma nova eleição para começar.'}
+              </p>
+            </CardContent>
+          </Card>
+        );
+        return (
+          <div className="grid gap-3">
+            {filtered.map((e) => (
+              <ElectionCard key={e.id} election={e} onClick={() => navigate(`/eleicoes/${e.id}`)} onDelete={(id) => setDeleteId(id)} />
+            ))}
+          </div>
+        );
+      })()}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
