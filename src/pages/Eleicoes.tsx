@@ -199,19 +199,31 @@ export default function Eleicoes() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nova Eleição</DialogTitle>
+            <DialogTitle>{electionType === 'camisa' ? 'Nova Votação de Camisa' : 'Nova Eleição'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Nome da Eleição</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Eleição Diretoria 2025" />
+              <Label>Tipo</Label>
+              <Select value={electionType} onValueChange={(v) => setElectionType(v as 'cargo' | 'camisa')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cargo">Eleição de Cargo</SelectItem>
+                  <SelectItem value="camisa">Votação de Camisa</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label>Cargo</Label>
-              <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder="Ex: Presidente" />
+              <Label>{electionType === 'camisa' ? 'Nome da Votação' : 'Nome da Eleição'}</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Camisa UMP 2025' : 'Ex: Eleição Diretoria 2025'} />
             </div>
             <div>
-              <Label>Sociedade (opcional)</Label>
+              <Label>{electionType === 'camisa' ? 'Descrição' : 'Cargo'}</Label>
+              <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
+            </div>
+            <div>
+              <Label>Sociedade {electionType === 'cargo' ? '(opcional)' : ''}</Label>
               <Select value={societyId} onValueChange={setSocietyId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Geral (toda a igreja)" />
