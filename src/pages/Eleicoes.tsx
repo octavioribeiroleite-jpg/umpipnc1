@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Vote, Loader2, Trash2 } from 'lucide-react';
+import { Plus, Vote, Loader2, Trash2, Shirt } from 'lucide-react';
 import { FAB } from '@/components/ui/fab';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
