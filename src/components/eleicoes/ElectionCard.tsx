@@ -26,17 +26,19 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 
 export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps) {
   const status = statusConfig[election.status] || statusConfig.draft;
+  const isCamisa = election.type === 'camisa';
 
   return (
     <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={onClick}>
       <CardContent className="flex items-center justify-between p-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
+            {isCamisa && <Shirt className="h-4 w-4 text-primary shrink-0" />}
             <h3 className="font-semibold truncate">{election.name}</h3>
             <Badge variant={status.variant}>{status.label}</Badge>
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span>Cargo: {election.position}</span>
+            <span>{isCamisa ? election.position : `Cargo: ${election.position}`}</span>
             {election.total_present > 0 && (
               <span className="flex items-center gap-1">
                 <Users className="h-3.5 w-3.5" />
