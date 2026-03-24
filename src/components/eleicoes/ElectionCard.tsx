@@ -12,6 +12,7 @@ interface ElectionCardProps {
     total_present: number;
     vote_count?: number;
     created_at: string;
+    type?: string;
   };
   onClick: () => void;
   onDelete: (id: string) => void;
