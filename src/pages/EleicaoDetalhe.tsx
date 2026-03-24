@@ -55,7 +55,12 @@ export default function EleicaoDetalhe() {
 
     setElection(elRes.data as any);
     setAttendance((atRes.data as any[]) || []);
-    setCandidates((caRes.data as any[]) || []);
+    // Parse photo_urls from jsonb
+    const parsedCandidates = ((caRes.data as any[]) || []).map((c: any) => ({
+      ...c,
+      photo_urls: Array.isArray(c.photo_urls) ? c.photo_urls : [],
+    }));
+    setCandidates(parsedCandidates);
     setDevices((devRes.data as any[]) || []);
     setLoading(false);
   };
