@@ -81,6 +81,7 @@ export default function EleicaoDetalhe() {
   const isDraft = election.status === 'draft';
   const votingMode = (election as any).voting_mode || 'shared';
   const showDevices = votingMode === 'both' || votingMode === 'shared';
+  const electionType = ((election as any).type as string) || 'cargo';
 
   // Accordion default open based on status
   const defaultOpen = (() => {
