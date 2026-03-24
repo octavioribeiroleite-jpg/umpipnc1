@@ -115,7 +115,7 @@ export default function EleicaoDetalhe() {
         <AccordionItem value="candidatos" className="border rounded-lg px-3">
           <AccordionTrigger className="py-3 text-sm font-medium">
             <span className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4" /> Candidatos
+              <UserCheck className="h-4 w-4" /> {electionType === 'camisa' ? 'Modelos' : 'Candidatos'}
             </span>
           </AccordionTrigger>
           <AccordionContent>
