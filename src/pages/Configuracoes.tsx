@@ -525,6 +525,7 @@ export default function Configuracoes() {
                           Usuários Ativos ({users.filter(u => u.role !== null).length})
                         </h3>
                       </div>
+                      <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -621,6 +622,7 @@ export default function Configuracoes() {
                           ))}
                         </TableBody>
                       </Table>
+                      </div>
                     </div>
                   )}
                 </>
