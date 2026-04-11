@@ -135,7 +135,7 @@ export default function DiretoriaComunicados() {
           <EmptyState
             icon={<Megaphone className="h-12 w-12" />}
             title="Nenhum comunicado"
-            description="Clique em "Novo Comunicado" para enviar um aviso."
+            description={'Clique em "Novo Comunicado" para enviar um aviso.'}
           />
         ) : (
           <div className="space-y-3">
