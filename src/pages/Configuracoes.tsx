@@ -505,6 +505,7 @@ export default function Configuracoes() {
                           ))}
                         </TableBody>
                       </Table>
+                      </div>
                     </div>
                   ) : (
                     <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 flex items-center gap-3">
