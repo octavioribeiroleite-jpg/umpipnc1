@@ -607,6 +607,7 @@ export default function Usuarios() {
       return <p className="text-center text-muted-foreground py-8">Nenhum usuário nesta sociedade</p>;
     }
     return (
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -665,6 +666,7 @@ export default function Usuarios() {
           ))}
         </TableBody>
       </Table>
+      </div>
     );
   };
 
@@ -718,6 +720,7 @@ export default function Usuarios() {
       return <p className="text-center text-muted-foreground py-8">Nenhum membro encontrado</p>;
     }
     return (
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -770,6 +773,7 @@ export default function Usuarios() {
           ))}
         </TableBody>
       </Table>
+      </div>
     );
   };
 
