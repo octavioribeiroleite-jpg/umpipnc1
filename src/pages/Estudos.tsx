@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -348,46 +351,43 @@ export default function Estudos() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="space-y-3">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
           </div>
         ) : studies.length === 0 ? (
-          <Card className="py-12">
-            <CardContent className="flex flex-col items-center text-center">
-              <BookOpen className="h-12 w-12 text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">Nenhum estudo registrado ainda.</p>
-              <p className="text-sm text-muted-foreground">Crie o primeiro para começar a anotar!</p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<BookOpen className="h-12 w-12" />}
+            title="Nenhum estudo registrado ainda"
+            description="Crie o primeiro para começar a anotar!"
+          />
         ) : (
           <div className="grid gap-3">
             {studies.map((study) => (
-              <Card
+              <AppCard
                 key={study.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                variant="interactive"
                 onClick={() => { setSelectedStudy(study); notesRef.current = study.notes; }}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold truncate">{study.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(study.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {study.ai_summary && (
-                        <Badge variant="secondary" className="text-xs">
-                          <Sparkles className="h-3 w-3 mr-1" /> Resumo
-                        </Badge>
-                      )}
-                    </div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold truncate">{study.title}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(study.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </p>
                   </div>
-                  {study.notes && (
-                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{study.notes}</p>
-                  )}
-                </CardContent>
-              </Card>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {study.ai_summary && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Sparkles className="h-3 w-3 mr-1" /> Resumo
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                {study.notes && (
+                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{study.notes}</p>
+                )}
+              </AppCard>
             ))}
           </div>
         )}

@@ -101,14 +101,17 @@ export default function Aniversariantes() {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-1">
-        <PageHeader title="Aniversariantes 🎂" description={`${activeBirthdays.length} cadastrados`} />
-        {canManage && (
-          <Button size="sm" onClick={() => { setEditingBirthday(null); setFormOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> Novo
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Aniversariantes 🎂"
+        description={`${activeBirthdays.length} cadastrados`}
+        action={
+          canManage ? (
+            <Button size="sm" onClick={() => { setEditingBirthday(null); setFormOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Novo
+            </Button>
+          ) : undefined
+        }
+      />
 
       <div className="space-y-5">
         <BirthdayFilters

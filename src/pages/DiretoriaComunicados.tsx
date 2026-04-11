@@ -3,7 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Card, CardContent } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,24 +127,22 @@ export default function DiretoriaComunicados() {
         </Drawer>
 
         {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <div className="space-y-3">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
           </div>
         ) : announcements.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center space-y-3">
-              <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50" />
-              <p className="font-medium">Nenhum comunicado</p>
-              <p className="text-sm text-muted-foreground">Clique em "Novo Comunicado" para enviar um aviso.</p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<Megaphone className="h-12 w-12" />}
+            title="Nenhum comunicado"
+            description={'Clique em "Novo Comunicado" para enviar um aviso.'}
+          />
         ) : (
           <div className="space-y-3">
             {announcements.map(a => {
               const isExpanded = expandedId === a.id;
               return (
-                <Card key={a.id}>
-                  <CardContent className="p-4">
+                <AppCard key={a.id}>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <p className="font-semibold text-sm">{a.title}</p>
                       {a.priority === 'urgente' && <Badge variant="destructive" className="text-xs">Urgente</Badge>}
@@ -157,8 +157,7 @@ export default function DiretoriaComunicados() {
                     <span className="text-xs text-muted-foreground mt-2 block">
                       {formatDistanceToNow(new Date(a.created_at), { addSuffix: true, locale: ptBR })}
                     </span>
-                  </CardContent>
-                </Card>
+                </AppCard>
               );
             })}
           </div>

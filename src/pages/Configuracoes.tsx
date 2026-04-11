@@ -423,6 +423,7 @@ export default function Configuracoes() {
                           Aguardando Aprovação ({users.filter(u => u.role === null).length})
                         </h3>
                       </div>
+                      <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -504,6 +505,7 @@ export default function Configuracoes() {
                           ))}
                         </TableBody>
                       </Table>
+                      </div>
                     </div>
                   ) : (
                     <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 flex items-center gap-3">
@@ -523,6 +525,7 @@ export default function Configuracoes() {
                           Usuários Ativos ({users.filter(u => u.role !== null).length})
                         </h3>
                       </div>
+                      <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -619,6 +622,7 @@ export default function Configuracoes() {
                           ))}
                         </TableBody>
                       </Table>
+                      </div>
                     </div>
                   )}
                 </>

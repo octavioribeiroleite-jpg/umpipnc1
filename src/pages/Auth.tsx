@@ -376,11 +376,11 @@ export default function Auth() {
     if (isEnteringApp) {
       return (
         <div className="w-full max-w-md">
-          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
+          <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="py-10 text-center space-y-3">
               <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
-              <h2 className="text-xl font-semibold text-gray-900">{entryMessage}</h2>
-              <p className="text-sm text-gray-500">Preparando o aplicativo para você...</p>
+              <h2 className="text-xl font-semibold text-foreground">{entryMessage}</h2>
+              <p className="text-sm text-muted-foreground">Preparando o aplicativo para você...</p>
             </CardContent>
           </Card>
         </div>
@@ -391,16 +391,16 @@ export default function Auth() {
     if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
       return (
         <div className="w-full max-w-sm">
-          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
+          <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-3">
                 <div className="mx-auto h-16 w-16 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: `${selectedMembroSociety?.color}20` }}>
                   <UserCheck className="h-8 w-8" style={{ color: selectedMembroSociety?.color }} />
                 </div>
-                <h2 className="font-semibold text-lg text-gray-900">Você é</h2>
+                <h2 className="font-semibold text-lg text-foreground">Você é</h2>
                 <p className="text-2xl font-bold" style={{ color: selectedMembroSociety?.color }}>{membroSavedName}?</p>
-                <p className="text-sm text-gray-500">{selectedMembroSociety?.name}</p>
+                <p className="text-sm text-muted-foreground">{selectedMembroSociety?.name}</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Button variant="outline" onClick={handleDifferentMembro} disabled={memberLoginLoading}>
@@ -424,19 +424,19 @@ export default function Auth() {
     if (step === 'membro' && membroStep === 'name-select') {
       return (
         <div className="w-full max-w-sm">
-          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
+          <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="pt-6 space-y-4">
               <div className="text-center space-y-2">
                 <div className="mx-auto h-14 w-14 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: `${selectedMembroSociety?.color}20` }}>
                   <UserCircle className="h-7 w-7" style={{ color: selectedMembroSociety?.color }} />
                 </div>
-                <h2 className="font-semibold text-lg text-gray-900">Encontre seu nome</h2>
-                <p className="text-sm text-gray-500">{selectedMembroSociety?.name}</p>
+                <h2 className="font-semibold text-lg text-foreground">Encontre seu nome</h2>
+                <p className="text-sm text-muted-foreground">{selectedMembroSociety?.name}</p>
               </div>
 
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar pelo nome..."
                   value={memberSearch}
@@ -449,10 +449,10 @@ export default function Auth() {
               <div className="max-h-60 overflow-y-auto space-y-1 border rounded-lg p-1">
                 {membersLoading ? (
                   <div className="py-8 flex justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
                 ) : filteredMembers.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-6">
+                  <p className="text-sm text-muted-foreground text-center py-6">
                     {memberSearch ? 'Nenhum membro encontrado' : 'Nenhum membro cadastrado'}
                   </p>
                 ) : (
@@ -497,16 +497,16 @@ export default function Auth() {
     if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
       return (
         <div className="w-full max-w-sm">
-          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
+          <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-3">
                 <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                   <UserCheck className="h-8 w-8 text-primary" />
                 </div>
-                <h2 className="font-semibold text-lg text-gray-900">Você é</h2>
+                <h2 className="font-semibold text-lg text-foreground">Você é</h2>
                 <p className="text-2xl font-bold text-primary">{savedName}?</p>
                 {operatorFunction && (
-                  <p className="text-sm text-gray-500">{operatorFunction} — {selectedDiretoriaSociety?.name}</p>
+                  <p className="text-sm text-muted-foreground">{operatorFunction} — {selectedDiretoriaSociety?.name}</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -530,19 +530,19 @@ export default function Auth() {
     if (step === 'diretoria' && diretoriaStep === 'name-input') {
       return (
         <div className="w-full max-w-sm">
-          <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
+          <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-2">
                 <div className="mx-auto h-14 w-14 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: `${selectedDiretoriaSociety?.color}20` }}>
                   <UserCheck className="h-7 w-7" style={{ color: selectedDiretoriaSociety?.color }} />
                 </div>
-                <h2 className="font-semibold text-lg text-gray-900">Identificação</h2>
-                <p className="text-sm text-gray-500">Informe seus dados para a {selectedDiretoriaSociety?.name}</p>
+                <h2 className="font-semibold text-lg text-foreground">Identificação</h2>
+                <p className="text-sm text-muted-foreground">Informe seus dados para a {selectedDiretoriaSociety?.name}</p>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="operator-name" className="text-gray-700">Nome completo</Label>
+                  <Label htmlFor="operator-name" className="text-foreground/80">Nome completo</Label>
                   <Input
                     id="operator-name"
                     placeholder="Digite seu nome completo"
@@ -552,7 +552,7 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="operator-function" className="text-gray-700">Função na diretoria</Label>
+                  <Label htmlFor="operator-function" className="text-foreground/80">Função na diretoria</Label>
                   <Select value={operatorFunction} onValueChange={setOperatorFunction}>
                     <SelectTrigger id="operator-function">
                       <SelectValue placeholder="Selecione sua função" />
@@ -621,7 +621,7 @@ export default function Auth() {
             <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '350ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Membros</p>
               <Card
-                className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
+                className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.98]"
                 onClick={() => { setStep('membro'); setMembroStep('societies'); }}
               >
                 <CardContent className="flex items-center gap-4 p-4">
@@ -629,8 +629,8 @@ export default function Auth() {
                     <UserCircle className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-base text-gray-900">Entrar como membro</h3>
-                    <p className="text-xs text-gray-500">Eventos, pagamentos e comunicados</p>
+                    <h3 className="font-semibold text-base text-foreground">Entrar como membro</h3>
+                    <p className="text-xs text-muted-foreground">Eventos, pagamentos e comunicados</p>
                   </div>
                 </CardContent>
               </Card>
@@ -640,7 +640,7 @@ export default function Auth() {
             <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '500ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Diretoria</p>
               <Card
-                className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
+                className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.98]"
                 onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }}
               >
                 <CardContent className="flex items-center gap-4 p-4">
@@ -648,8 +648,8 @@ export default function Auth() {
                     <Lock className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-base text-gray-900">Entrar com PIN</h3>
-                    <p className="text-xs text-gray-500">Pastor, Presidente, Tesoureiro e demais cargos</p>
+                    <h3 className="font-semibold text-base text-foreground">Entrar com PIN</h3>
+                    <p className="text-xs text-muted-foreground">Pastor, Presidente, Tesoureiro e demais cargos</p>
                   </div>
                 </CardContent>
               </Card>
@@ -659,7 +659,7 @@ export default function Auth() {
             <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '650ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Secretaria EBD</p>
               <Card
-                className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.98]"
+                className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.98]"
                 onClick={() => navigateWithTransition('/secretaria')}
               >
                 <CardContent className="flex items-center gap-4 p-4">
@@ -667,8 +667,8 @@ export default function Auth() {
                     <BookOpen className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-base text-gray-900">Escola Dominical</h3>
-                    <p className="text-xs text-gray-500">Chamada e frequência da EBD</p>
+                    <h3 className="font-semibold text-base text-foreground">Escola Dominical</h3>
+                    <p className="text-xs text-muted-foreground">Chamada e frequência da EBD</p>
                   </div>
                 </CardContent>
               </Card>
@@ -712,7 +712,7 @@ export default function Auth() {
                 {societies.map((society) => (
                   <Card
                     key={society.id}
-                    className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
+                    className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
                     onClick={() => handleSelectDiretoriaSociety(society)}
                   >
                     <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
@@ -722,20 +722,20 @@ export default function Auth() {
                       >
                         {society.slug.toUpperCase().slice(0, 3)}
                       </div>
-                      <span className="font-semibold text-sm text-gray-900">{society.name}</span>
+                      <span className="font-semibold text-sm text-foreground">{society.name}</span>
                     </CardContent>
                   </Card>
                 ))}
                 {/* Pastor virtual card */}
                 <Card
-                  className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
+                  className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
                   onClick={() => handleSelectDiretoriaSociety({ id: 'pastor', name: 'Pastor', slug: 'pastor', color: '#1e3a5f' })}
                 >
                   <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
                     <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: '#1e3a5f' }}>
                       <Church className="h-6 w-6" />
                     </div>
-                    <span className="font-semibold text-sm text-gray-900">Pastor</span>
+                    <span className="font-semibold text-sm text-foreground">Pastor</span>
                   </CardContent>
                 </Card>
               </div>
@@ -753,7 +753,7 @@ export default function Auth() {
               {societies.map((society) => (
                 <Card
                   key={society.id}
-                  className="cursor-pointer border-white/20 shadow-lg bg-white/90 backdrop-blur-md hover:shadow-xl hover:bg-white/95 transition-all duration-200 active:scale-[0.97]"
+                  className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
                   onClick={() => handleSelectMembroSociety(society)}
                 >
                   <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
@@ -763,7 +763,7 @@ export default function Auth() {
                     >
                       {society.slug.toUpperCase().slice(0, 3)}
                     </div>
-                    <span className="font-semibold text-sm text-gray-900">{society.name}</span>
+                    <span className="font-semibold text-sm text-foreground">{society.name}</span>
                   </CardContent>
                 </Card>
               ))}
@@ -771,19 +771,19 @@ export default function Auth() {
           </div>
         ) : (
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
-            <Card className="border-white/20 shadow-2xl bg-white/90 backdrop-blur-md">
+            <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <h2 className="text-lg font-semibold text-gray-900">Entrar</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Entrar</h2>
                 </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username" className="text-gray-700">Usuário</Label>
+                    <Label htmlFor="username" className="text-foreground/80">Usuário</Label>
                     <Input
                       id="username"
                       type="text"
@@ -797,7 +797,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-gray-700">Senha</Label>
+                    <Label htmlFor="password" className="text-foreground/80">Senha</Label>
                     <Input
                       id="password"
                       type="password"

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Card, CardContent } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -183,8 +183,7 @@ export default function Visitantes() {
 
       {/* Sunday summary */}
       {!dataLoading && sundayStats.length > 0 && (
-        <Card className="mb-4">
-          <CardContent className="p-4">
+        <AppCard className="mb-4">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
               <Church className="h-4 w-4 text-muted-foreground" />
               Resumo dos Domingos
@@ -198,27 +197,18 @@ export default function Visitantes() {
                     onClick={() => setSelectedDate(s.date)}
                     className={cn(
                       'flex-shrink-0 rounded-lg border p-3 text-center min-w-[90px] transition-colors',
-                      isSelected
-                        ? 'border-primary bg-primary/10'
-                        : 'hover:bg-muted'
+                      isSelected ? 'border-primary bg-primary/10' : 'hover:bg-muted'
                     )}
                   >
-                    <p className="text-xs font-medium text-muted-foreground">
-                      {format(s.date, 'dd/MM')}
-                    </p>
-                    <p className={cn('text-xl font-bold', isSelected ? 'text-primary' : '')}>
-                      {s.total}
-                    </p>
+                    <p className="text-xs font-medium text-muted-foreground">{format(s.date, 'dd/MM')}</p>
+                    <p className={cn('text-xl font-bold', isSelected ? 'text-primary' : '')}>{s.total}</p>
                     <p className="text-[10px] text-muted-foreground">pessoas</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {s.members}m · {s.visitors}v
-                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{s.members}m · {s.visitors}v</p>
                   </button>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+        </AppCard>
       )}
 
       {/* Date filter */}
@@ -256,119 +246,107 @@ export default function Visitantes() {
         <div className="space-y-6">
           {/* Day summary cards */}
           <div className="grid grid-cols-3 gap-3">
-            <Card>
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold">{dayStats.total}</p>
-                <p className="text-xs text-muted-foreground">Total de pessoas</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold">{dayStats.members}</p>
-                <p className="text-xs text-muted-foreground">Membros</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold">{dayStats.visitors}</p>
-                <p className="text-xs text-muted-foreground">Visitantes</p>
-              </CardContent>
-            </Card>
+            <AppCard variant="stat">
+                <p className="text-2xl font-bold text-center">{dayStats.total}</p>
+                <p className="text-xs text-muted-foreground text-center">Total de pessoas</p>
+            </AppCard>
+            <AppCard variant="stat">
+                <p className="text-2xl font-bold text-center">{dayStats.members}</p>
+                <p className="text-xs text-muted-foreground text-center">Membros</p>
+            </AppCard>
+            <AppCard variant="stat">
+                <p className="text-2xl font-bold text-center">{dayStats.visitors}</p>
+                <p className="text-xs text-muted-foreground text-center">Visitantes</p>
+            </AppCard>
           </div>
 
           {/* Day access table */}
-          <Card>
-            <CardContent className="p-4">
+          <AppCard>
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
                 <Eye className="h-4 w-4 text-muted-foreground" />
                 Pessoas do dia ({dayVisitors.length})
               </h3>
               {dayVisitors.length === 0 ? (
-                <p className="text-center text-muted-foreground py-6 text-sm">
-                  Nenhuma pessoa neste dia.
-                </p>
+                <p className="text-center text-muted-foreground py-6 text-sm">Nenhuma pessoa neste dia.</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Sociedade</TableHead>
-                      <TableHead>Hora</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dayVisitors.map(v => {
-                      const isFirstAccess = deviceFirstSeen.get(v.device_id) === v.id;
-                      return (
-                        <TableRow key={v.id}>
-                          <TableCell className="font-medium">{v.full_name}</TableCell>
-                          <TableCell>
-                            {v.is_visitor ? (
-                              <Badge variant="outline" className="text-[10px]">Visitante</Badge>
-                            ) : v.society_id && societies[v.society_id] ? (
-                              <Badge variant="outline" className="text-[10px]"
-                                style={{ borderColor: societies[v.society_id].color, color: societies[v.society_id].color }}>
-                                {societies[v.society_id].name}
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground text-xs">
-                            {format(new Date(v.created_at), 'HH:mm')}
-                          </TableCell>
-                          <TableCell>
-                            {isFirstAccess ? (
-                              <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">Novo</Badge>
-                            ) : (
-                              <Badge variant="secondary" className="text-[10px]">Retornou</Badge>
-                            )}
-                          </TableCell>
+                <div className="overflow-x-auto -mx-4">
+                  <div className="min-w-[500px] px-4">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Sociedade</TableHead>
+                          <TableHead>Hora</TableHead>
+                          <TableHead>Status</TableHead>
                         </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {dayVisitors.map(v => {
+                          const isFirstAccess = deviceFirstSeen.get(v.device_id) === v.id;
+                          return (
+                            <TableRow key={v.id}>
+                              <TableCell className="font-medium">{v.full_name}</TableCell>
+                              <TableCell>
+                                {v.is_visitor ? (
+                                  <Badge variant="outline" className="text-[10px]">Visitante</Badge>
+                                ) : v.society_id && societies[v.society_id] ? (
+                                  <Badge variant="outline" className="text-[10px]"
+                                    style={{ borderColor: societies[v.society_id].color, color: societies[v.society_id].color }}>
+                                    {societies[v.society_id].name}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-xs">{format(new Date(v.created_at), 'HH:mm')}</TableCell>
+                              <TableCell>
+                                {isFirstAccess ? (
+                                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">Novo</Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-[10px]">Retornou</Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               )}
-            </CardContent>
-          </Card>
+          </AppCard>
 
           {/* Recurring visitors (global) */}
           {recurringVisitors.length > 0 && (
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
-                  <RefreshCw className="h-4 w-4 text-muted-foreground" />
-                  Visitantes recorrentes ({recurringVisitors.length})
-                </h3>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {recurringVisitors.slice(0, 20).map((rv, i) => (
-                    <div key={i} className="rounded-lg border p-3 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm truncate">{rv.fullName}</span>
-                        <Badge variant="secondary" className="text-[10px] shrink-0">
-                          {rv.visitCount} dias
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {rv.isVisitor ? (
-                          <Badge variant="outline" className="text-[10px]">Visitante</Badge>
-                        ) : rv.societyId && societies[rv.societyId] ? (
-                          <Badge variant="outline" className="text-[10px]"
-                            style={{ borderColor: societies[rv.societyId].color, color: societies[rv.societyId].color }}>
-                            {societies[rv.societyId].name}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        Primeira: {format(new Date(rv.firstVisit), 'dd/MM/yyyy')} · Última: {format(new Date(rv.lastVisit), 'dd/MM/yyyy')}
-                      </div>
+            <AppCard>
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
+                <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                Visitantes recorrentes ({recurringVisitors.length})
+              </h3>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {recurringVisitors.slice(0, 20).map((rv, i) => (
+                  <div key={i} className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm truncate">{rv.fullName}</span>
+                      <Badge variant="secondary" className="text-[10px] shrink-0">{rv.visitCount} dias</Badge>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    <div className="flex items-center gap-2">
+                      {rv.isVisitor ? (
+                        <Badge variant="outline" className="text-[10px]">Visitante</Badge>
+                      ) : rv.societyId && societies[rv.societyId] ? (
+                        <Badge variant="outline" className="text-[10px]"
+                          style={{ borderColor: societies[rv.societyId].color, color: societies[rv.societyId].color }}>
+                          {societies[rv.societyId].name}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      Primeira: {format(new Date(rv.firstVisit), 'dd/MM/yyyy')} · Última: {format(new Date(rv.lastVisit), 'dd/MM/yyyy')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </AppCard>
           )}
         </div>
       )}
