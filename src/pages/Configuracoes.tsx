@@ -423,6 +423,7 @@ export default function Configuracoes() {
                           Aguardando Aprovação ({users.filter(u => u.role === null).length})
                         </h3>
                       </div>
+                      <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
