@@ -86,6 +86,26 @@ export function RelatoriosTab() {
     fetchData();
   }, [selectedYear, societyId]);
 
+  // Load signed URLs for receipt images
+  useEffect(() => {
+    const loadSignedUrls = async () => {
+      const withReceipts = transactions.filter(t => t.receipt_url && !t.receipt_url.includes('.pdf'));
+      const urls: Record<string, string> = {};
+      await Promise.all(
+        withReceipts.map(async (tx) => {
+          try {
+            const signed = await getSignedUrl(tx.receipt_url!);
+            urls[tx.id] = signed;
+          } catch (e) {
+            console.warn('Failed to get signed url for', tx.id);
+          }
+        })
+      );
+      setSignedUrls(urls);
+    };
+    if (transactions.length > 0) loadSignedUrls();
+  }, [transactions]);
+
   const fetchData = async () => {
     if (!societyId) return;
     setLoading(true);
