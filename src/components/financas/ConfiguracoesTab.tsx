@@ -267,7 +267,7 @@ export function ConfiguracoesTab() {
       );
 
       const newCharges: any[] = [];
-      const monthlyAmount = existingSettings.monthly_fee > 0 ? existingSettings.monthly_fee / 12 : 0;
+      const monthlyAmount = existingSettings.monthly_fee > 0 ? existingSettings.monthly_fee : 0;
 
       for (let monthIdx = 0; monthIdx < 12; monthIdx++) {
         const competence = `${MONTHS[monthIdx]}/${chargeYear}`;
