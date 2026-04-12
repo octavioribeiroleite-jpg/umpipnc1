@@ -1,45 +1,32 @@
 
 
-# Plano: Resumo Financeiro Completo na Aba de Cobranças
+## Plan: AI-Organized Plenary Minutes
 
-## Contexto
-A aba de Cobranças mostra apenas contagem de pagos/pendentes/isentos. O usuario quer ver valores monetarios: quanto ja recebeu, quanto falta receber, dividido entre mensalidade e per capita.
+The user wants the plenary notes to be permanently saved and organized by AI to produce a polished final document (ata).
 
-## Alteracoes em `src/components/financas/CobrancasTab.tsx`
+### What will be built
 
-### 1. Calcular totais financeiros a partir dos dados existentes
-- Total mensalidades a receber (soma `amount` onde `type = 'mensalidade'`)
-- Total mensalidades recebido (soma `paid_amount` onde `type = 'mensalidade'` e `status = 'pago'`)
-- Total mensalidades pendente (diferenca)
-- Mesma logica para per capita
-- Total geral (mensalidade + per capita)
+1. **Add `final_minutes` column to `plenaries` table** -- store the AI-organized version separately from raw notes.
 
-### 2. Novo card de resumo financeiro acima dos mini-cards de status
-Layout:
+2. **Create edge function `organize-plenary`** -- receives the plenary ID, fetches raw notes + attendance data, calls Lovable AI (Gemini Flash) to organize everything into a structured "Ata da Plenária" with sections (Pauta, Deliberações, Informes, etc.), and saves the result to `final_minutes`.
 
-```text
-┌─────────────────────────────────────────┐
-│ Resumo Financeiro - Abril/2026          │
-│                                         │
-│ MENSALIDADE          PER CAPITA         │
-│ Previsto: R$ 600     Previsto: R$ 300   │
-│ Recebido: R$ 400     Recebido: R$ 200  │
-│ Pendente: R$ 200     Pendente: R$ 100   │
-│                                         │
-│ TOTAL                                   │
-│ Previsto: R$ 900                        │
-│ Recebido: R$ 600  |  Pendente: R$ 300  │
-└─────────────────────────────────────────┘
-```
+3. **Update `PlenariaDetalhe.tsx` UI**:
+   - Add a "Organizar com IA" button below the notes textarea (visible to management).
+   - When clicked, calls the edge function; shows loading state.
+   - Once generated, display the organized minutes in a read-only card below, with option to edit and re-save.
+   - The PDF generation will use `final_minutes` (if available) instead of raw `notes` for a polished report.
 
-- Cores: recebido em verde, pendente em vermelho/laranja
-- Formato compacto no mobile (grid 2 colunas para mensalidade/percapita, 1 coluna para total)
-- Valores formatados em R$ com virgula
+### Technical details
 
-### 3. Mini-cards de status existentes
-- Manter como estao (filtros rapidos por Pagos/Pendentes/Isentos)
-- Apenas reposicionar abaixo do novo resumo
-
-## Arquivo alterado
-- `src/components/financas/CobrancasTab.tsx`
+- **Migration**: `ALTER TABLE plenaries ADD COLUMN final_minutes text;`
+- **Edge function** (`supabase/functions/organize-plenary/index.ts`):
+  - Validates auth + management role
+  - Fetches plenary data (title, date, notes) and attendance (present/absent names)
+  - Sends to Lovable AI Gateway with a system prompt instructing structured organization
+  - Saves result to `plenaries.final_minutes`
+- **UI changes** in `PlenariaDetalhe.tsx`:
+  - New state: `organizingAI`, `finalMinutes`
+  - "Organizar com IA" button triggers `supabase.functions.invoke('organize-plenary', { body: { plenaryId } })`
+  - Display organized minutes with edit capability
+  - PDF uses `finalMinutes` when available
 
