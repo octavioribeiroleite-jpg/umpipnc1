@@ -100,7 +100,9 @@ export function CobrancasTab() {
   const fetchData = async () => {
     setLoading(true);
     let membersQuery = supabase.from('members').select('id, name').eq('active', true).order('name');
-    let chargesQuery = supabase.from('charges').select('*').eq('competence', competence);
+    
+    // Fetch monthly charges (percapita) AND annual charges (mensalidade with competence = year)
+    let chargesQuery = supabase.from('charges').select('*').in('competence', [competence, selectedYear]);
 
     if (societyId) {
       membersQuery = membersQuery.eq('society_id', societyId);
