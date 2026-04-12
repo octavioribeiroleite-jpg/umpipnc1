@@ -107,7 +107,59 @@ export function ConfiguracoesTab() {
         if (error) throw error;
       }
 
-      toast.success('Configurações salvas!');
+      // Update pending charges with new values
+      const monthlyFee = parseFloat(formData.monthly_fee) || 0;
+      const perCapita = parseFloat(formData.per_capita) || 0;
+      const dueDay = Math.min(parseInt(formData.due_day) || 10, 28);
+
+      let updatedCount = 0;
+
+      if (monthlyFee > 0) {
+        const { data: pendingMensalidades } = await supabase
+          .from('charges')
+          .select('id, due_date')
+          .eq('society_id', societyId)
+          .eq('type', 'mensalidade')
+          .eq('status', 'pendente');
+
+        if (pendingMensalidades && pendingMensalidades.length > 0) {
+          for (const charge of pendingMensalidades) {
+            const oldDate = new Date(charge.due_date);
+            const newDueDate = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`;
+            await supabase
+              .from('charges')
+              .update({ amount: monthlyFee / 12, due_date: newDueDate })
+              .eq('id', charge.id);
+          }
+          updatedCount += pendingMensalidades.length;
+        }
+      }
+
+      if (perCapita > 0) {
+        const { data: pendingPercapita } = await supabase
+          .from('charges')
+          .select('id, due_date')
+          .eq('society_id', societyId)
+          .eq('type', 'percapita')
+          .eq('status', 'pendente');
+
+        if (pendingPercapita && pendingPercapita.length > 0) {
+          for (const charge of pendingPercapita) {
+            const oldDate = new Date(charge.due_date);
+            const newDueDate = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`;
+            await supabase
+              .from('charges')
+              .update({ amount: perCapita, due_date: newDueDate })
+              .eq('id', charge.id);
+          }
+          updatedCount += pendingPercapita.length;
+        }
+      }
+
+      const msg = updatedCount > 0
+        ? `Configurações salvas! ${updatedCount} cobrança(s) pendente(s) atualizada(s).`
+        : 'Configurações salvas!';
+      toast.success(msg);
       fetchSettings();
     } catch (error: any) {
       toast.error('Erro ao salvar: ' + error.message);
