@@ -185,7 +185,7 @@ export function ConfiguracoesTab() {
             const newDueDate = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`;
             await supabase
               .from('charges')
-              .update({ amount: monthlyFee / 12, due_date: newDueDate })
+              .update({ amount: monthlyFee, due_date: newDueDate })
               .eq('id', charge.id);
           }
           updatedCount += pendingMensalidades.length;
@@ -267,7 +267,7 @@ export function ConfiguracoesTab() {
       );
 
       const newCharges: any[] = [];
-      const monthlyAmount = existingSettings.monthly_fee > 0 ? existingSettings.monthly_fee / 12 : 0;
+      const monthlyAmount = existingSettings.monthly_fee > 0 ? existingSettings.monthly_fee : 0;
 
       for (let monthIdx = 0; monthIdx < 12; monthIdx++) {
         const competence = `${MONTHS[monthIdx]}/${chargeYear}`;
@@ -279,7 +279,7 @@ export function ConfiguracoesTab() {
               member_id: member.id,
               competence,
               type: 'mensalidade',
-              amount: Math.round(monthlyAmount * 100) / 100,
+              amount: monthlyAmount,
               due_date: dueDate,
               status: 'pendente',
               society_id: societyId,
@@ -369,7 +369,7 @@ export function ConfiguracoesTab() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Mensalidade Anual (R$)</Label>
+              <Label>Mensalidade (R$)</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -377,11 +377,6 @@ export function ConfiguracoesTab() {
                 value={formData.monthly_fee}
                 onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
               />
-              {formData.monthly_fee && parseFloat(formData.monthly_fee) > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Mensal: R$ {(parseFloat(formData.monthly_fee) / 12).toFixed(2).replace('.', ',')}
-                </p>
-              )}
             </div>
             <div className="space-y-2">
               <Label>Per Capita Mensal (R$)</Label>
