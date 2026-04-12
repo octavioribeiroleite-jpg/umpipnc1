@@ -556,17 +556,34 @@ export default function PlenariaDetalhe() {
               Chamada de Presença
             </CardTitle>
             {attendance.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setAttendanceCollapsed(!attendanceCollapsed)}
-              >
-                {attendanceCollapsed ? (
-                  <><ChevronDown className="h-4 w-4 mr-1" /> Expandir</>
-                ) : (
-                  <><ChevronUp className="h-4 w-4 mr-1" /> Recolher</>
+              <div className="flex items-center gap-1">
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSyncMembers}
+                    disabled={syncing}
+                  >
+                    {syncing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <UserPlus className="h-4 w-4 mr-1" />
+                    )}
+                    Adicionar
+                  </Button>
                 )}
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAttendanceCollapsed(!attendanceCollapsed)}
+                >
+                  {attendanceCollapsed ? (
+                    <><ChevronDown className="h-4 w-4 mr-1" /> Expandir</>
+                  ) : (
+                    <><ChevronUp className="h-4 w-4 mr-1" /> Recolher</>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
