@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { AppSidebar } from './AppSidebar';
 import { MobileHeader } from './MobileHeader';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { PullToRefresh } from './PullToRefresh';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -23,7 +24,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="md:hidden flex flex-col min-h-screen">
         <MobileHeader />
         <main className="flex-1 overflow-auto pt-14 px-4 pb-4 bg-background/60 backdrop-blur-sm">
-          {children}
+          <PullToRefresh>
+            {children}
+          </PullToRefresh>
         </main>
       </div>
     </div>
