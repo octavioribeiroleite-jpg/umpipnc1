@@ -1,0 +1,1 @@
+ALTER TABLE public.plenaries ADD COLUMN final_minutes text;
