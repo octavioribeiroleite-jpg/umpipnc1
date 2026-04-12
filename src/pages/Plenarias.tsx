@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +22,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { MembrosTab } from '@/components/plenarias/MembrosTab';
 
 interface Plenary {
   id: string;
@@ -33,6 +35,8 @@ interface Plenary {
 }
 
 export default function Plenarias() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'plenarias';
   const [plenaries, setPlenaries] = useState<Plenary[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -115,69 +119,93 @@ export default function Plenarias() {
     setDeleteId(null);
   };
 
+  const handleTabChange = (tab: string) => {
+    setSearchParams({ tab });
+  };
+
   return (
     <AppLayout>
       <PageHeader
         title="Plenárias"
-        description="Chamada de presença para plenárias da UMP"
-        action={
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Nova Plenária
-          </Button>
-        }
+        description="Chamada de presença e gestão de membros"
       />
 
-      {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-      ) : plenaries.length === 0 ? (
-        <EmptyState
-          icon={<ClipboardCheck className="h-12 w-12" />}
-          title="Nenhuma plenária registrada"
-          description="Crie uma nova plenária para iniciar a chamada."
-        />
-      ) : (
-        <div className="grid gap-3">
-          {plenaries.map((p) => {
-            const pct = p.total_count ? Math.round((p.present_count! / p.total_count) * 100) : 0;
-            return (
-              <AppCard
-                key={p.id}
-                variant="interactive"
-                onClick={() => navigate(`/plenarias/${p.id}`)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{p.title}</h3>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {format(new Date(p.date), "dd/MM/yyyy", { locale: ptBR })}
-                      </span>
-                      {p.total_count! > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3.5 w-3.5" />
-                          {p.present_count}/{p.total_count} ({pct}%)
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive shrink-0"
-                    onClick={(e) => { e.stopPropagation(); setDeleteId(p.id); }}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="plenarias" className="flex items-center gap-2">
+            <ClipboardCheck className="h-4 w-4" />
+            Plenárias
+          </TabsTrigger>
+          <TabsTrigger value="membros" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Membros
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="plenarias" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Nova Plenária
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : plenaries.length === 0 ? (
+            <EmptyState
+              icon={<ClipboardCheck className="h-12 w-12" />}
+              title="Nenhuma plenária registrada"
+              description="Crie uma nova plenária para iniciar a chamada."
+            />
+          ) : (
+            <div className="grid gap-3">
+              {plenaries.map((p) => {
+                const pct = p.total_count ? Math.round((p.present_count! / p.total_count) * 100) : 0;
+                return (
+                  <AppCard
+                    key={p.id}
+                    variant="interactive"
+                    onClick={() => navigate(`/plenarias/${p.id}`)}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </AppCard>
-            );
-          })}
-        </div>
-      )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold truncate">{p.title}</h3>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {format(new Date(p.date), "dd/MM/yyyy", { locale: ptBR })}
+                          </span>
+                          {p.total_count! > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3.5 w-3.5" />
+                              {p.present_count}/{p.total_count} ({pct}%)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive shrink-0"
+                        onClick={(e) => { e.stopPropagation(); setDeleteId(p.id); }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </AppCard>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="membros">
+          <MembrosTab />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
