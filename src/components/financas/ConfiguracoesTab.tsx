@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Settings, Save, Users, CalendarDays } from 'lucide-react';
+import { Settings, Save, Users, CalendarDays, AlertTriangle } from 'lucide-react';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -19,11 +20,10 @@ const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 export function ConfiguracoesTab() {
-  const { user, profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [selectedYear, setSelectedYear] = useState(currentYear.toString());
   const [chargeMonth, setChargeMonth] = useState(MONTHS[new Date().getMonth()]);
   const [chargeYear, setChargeYear] = useState(currentYear.toString());
   const [formData, setFormData] = useState({
@@ -36,21 +36,19 @@ export function ConfiguracoesTab() {
   const [activeMembers, setActiveMembers] = useState(0);
 
   useEffect(() => {
-    fetchSettings();
-    fetchActiveMembers();
-  }, [selectedYear, societyId]);
+    if (societyId) {
+      fetchSettings();
+      fetchActiveMembers();
+    }
+  }, [societyId]);
 
   const fetchSettings = async () => {
-    let query = supabase
+    const { data } = await supabase
       .from('financial_settings')
       .select('*')
-      .eq('competence', selectedYear);
-
-    if (societyId) {
-      query = query.eq('society_id', societyId);
-    }
-
-    const { data } = await query.maybeSingle();
+      .eq('competence', 'geral')
+      .eq('society_id', societyId!)
+      .maybeSingle();
 
     if (data) {
       setExistingSettings(data);
@@ -67,20 +65,19 @@ export function ConfiguracoesTab() {
   };
 
   const fetchActiveMembers = async () => {
-    let query = supabase
+    const { count } = await supabase
       .from('members')
       .select('*', { count: 'exact', head: true })
-      .eq('active', true);
-
-    if (societyId) {
-      query = query.eq('society_id', societyId);
-    }
-
-    const { count } = await query;
+      .eq('active', true)
+      .eq('society_id', societyId!);
     setActiveMembers(count || 0);
   };
 
   const handleSave = async () => {
+    if (!societyId) {
+      toast.error('Sessão inválida. Faça login novamente.');
+      return;
+    }
     if (!formData.monthly_fee && !formData.per_capita) {
       toast.error('Informe pelo menos um valor (mensalidade ou per capita)');
       return;
@@ -88,17 +85,13 @@ export function ConfiguracoesTab() {
 
     setLoading(true);
     try {
-      const monthlyFee = parseFloat(formData.monthly_fee) || 0;
-      const perCapita = parseFloat(formData.per_capita) || 0;
-      const dueDay = Math.min(parseInt(formData.due_day) || 10, 28);
-
       const payload = {
-        competence: selectedYear,
-        monthly_fee: monthlyFee,
-        per_capita: perCapita,
-        due_day: dueDay,
+        competence: 'geral',
+        monthly_fee: parseFloat(formData.monthly_fee) || 0,
+        per_capita: parseFloat(formData.per_capita) || 0,
+        due_day: Math.min(parseInt(formData.due_day) || 10, 28),
         notes: formData.notes,
-        society_id: societyId || null,
+        society_id: societyId,
       };
 
       if (existingSettings) {
@@ -114,7 +107,7 @@ export function ConfiguracoesTab() {
         if (error) throw error;
       }
 
-      toast.success('Configurações anuais salvas!');
+      toast.success('Configurações salvas!');
       fetchSettings();
     } catch (error: any) {
       toast.error('Erro ao salvar: ' + error.message);
@@ -124,20 +117,12 @@ export function ConfiguracoesTab() {
   };
 
   const handleGenerateCharges = async () => {
-    // Buscar settings do ano selecionado para geração
-    let settingsQuery = supabase
-      .from('financial_settings')
-      .select('*')
-      .eq('competence', chargeYear);
-
-    if (societyId) {
-      settingsQuery = settingsQuery.eq('society_id', societyId);
+    if (!societyId) {
+      toast.error('Sessão inválida. Faça login novamente.');
+      return;
     }
-
-    const { data: settings } = await settingsQuery.maybeSingle();
-
-    if (!settings) {
-      toast.error(`Salve as configurações do ano ${chargeYear} primeiro`);
+    if (!existingSettings) {
+      toast.error('Salve as configurações primeiro');
       return;
     }
 
@@ -145,16 +130,11 @@ export function ConfiguracoesTab() {
     try {
       const competence = `${chargeMonth}/${chargeYear}`;
 
-      let membersQuery = supabase
+      const { data: members, error: membersError } = await supabase
         .from('members')
         .select('id')
-        .eq('active', true);
-
-      if (societyId) {
-        membersQuery = membersQuery.eq('society_id', societyId);
-      }
-
-      const { data: members, error: membersError } = await membersQuery;
+        .eq('active', true)
+        .eq('society_id', societyId);
 
       if (membersError) throw membersError;
       if (!members || members.length === 0) {
@@ -164,19 +144,14 @@ export function ConfiguracoesTab() {
 
       const monthIndex = MONTHS.indexOf(chargeMonth);
       const year = parseInt(chargeYear);
-      const dueDay = Math.min(settings.due_day, 28);
+      const dueDay = Math.min(existingSettings.due_day, 28);
       const dueDate = new Date(year, monthIndex, dueDay).toISOString().split('T')[0];
 
-      let chargesQuery = supabase
+      const { data: existingCharges } = await supabase
         .from('charges')
         .select('member_id, type')
-        .eq('competence', competence);
-
-      if (societyId) {
-        chargesQuery = chargesQuery.eq('society_id', societyId);
-      }
-
-      const { data: existingCharges } = await chargesQuery;
+        .eq('competence', competence)
+        .eq('society_id', societyId);
 
       const existingMap = new Set(
         (existingCharges || []).map(c => `${c.member_id}-${c.type}`)
@@ -185,26 +160,26 @@ export function ConfiguracoesTab() {
       const newCharges: any[] = [];
 
       for (const member of members) {
-        if (settings.monthly_fee > 0 && !existingMap.has(`${member.id}-mensalidade`)) {
+        if (existingSettings.monthly_fee > 0 && !existingMap.has(`${member.id}-mensalidade`)) {
           newCharges.push({
             member_id: member.id,
             competence,
             type: 'mensalidade',
-            amount: settings.monthly_fee,
+            amount: existingSettings.monthly_fee,
             due_date: dueDate,
             status: 'pendente',
-            society_id: societyId || null,
+            society_id: societyId,
           });
         }
-        if (settings.per_capita > 0 && !existingMap.has(`${member.id}-percapita`)) {
+        if (existingSettings.per_capita > 0 && !existingMap.has(`${member.id}-percapita`)) {
           newCharges.push({
             member_id: member.id,
             competence,
             type: 'percapita',
-            amount: settings.per_capita,
+            amount: existingSettings.per_capita,
             due_date: dueDate,
             status: 'pendente',
-            society_id: societyId || null,
+            society_id: societyId,
           });
         }
       }
@@ -225,34 +200,30 @@ export function ConfiguracoesTab() {
     }
   };
 
+  if (!societyId) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Sessão inválida ou sociedade não selecionada. Faça login novamente pela tela inicial.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Valores Anuais */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Valores Anuais
+            Valores de Cobrança
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label>Ano</Label>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {YEARS.map(year => (
-                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Mensalidade (R$)</Label>
+              <Label>Mensalidade Anual (R$)</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -286,7 +257,7 @@ export function ConfiguracoesTab() {
           <div className="space-y-2">
             <Label>Observações</Label>
             <Textarea
-              placeholder="Observações sobre este ano..."
+              placeholder="Observações gerais..."
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             />
@@ -305,7 +276,6 @@ export function ConfiguracoesTab() {
         </CardContent>
       </Card>
 
-      {/* Gerar Cobranças */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -346,11 +316,17 @@ export function ConfiguracoesTab() {
           <Button
             variant="secondary"
             onClick={handleGenerateCharges}
-            disabled={generating}
+            disabled={generating || !existingSettings}
           >
             <Users className="h-4 w-4 mr-2" />
             {generating ? 'Gerando...' : `Gerar Cobranças (${activeMembers} membros)`}
           </Button>
+
+          {!existingSettings && (
+            <p className="text-sm text-destructive">
+              Salve os valores de cobrança acima antes de gerar.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
