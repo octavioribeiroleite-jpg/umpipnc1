@@ -254,71 +254,44 @@ export function ConfiguracoesTab() {
         return;
       }
 
-      // Mensalidade: single annual charge with competence "Ano"
-      // Per capita: monthly charges with competence "Mês/Ano"
+      // Both mensalidade and percapita are annual single charges
       const competenceAnual = chargeYear;
       
-      const { data: existingMensalidades } = await supabase
+      const { data: existingCharges } = await supabase
         .from('charges')
-        .select('member_id')
+        .select('member_id, type')
         .eq('competence', competenceAnual)
-        .eq('type', 'mensalidade')
         .eq('society_id', societyId);
 
-      const existingMensalidadeSet = new Set(
-        (existingMensalidades || []).map(c => c.member_id)
-      );
-
-      const yearCompetences = MONTHS.map(m => `${m}/${chargeYear}`);
-      const { data: existingPercapita } = await supabase
-        .from('charges')
-        .select('member_id, competence')
-        .in('competence', yearCompetences)
-        .eq('type', 'percapita')
-        .eq('society_id', societyId);
-
-      const existingPercapitaSet = new Set(
-        (existingPercapita || []).map(c => `${c.competence}-${c.member_id}`)
+      const existingSet = new Set(
+        (existingCharges || []).map(c => `${c.member_id}-${c.type}`)
       );
 
       const newCharges: any[] = [];
-      const dueDate = new Date(year, 0, dueDay).toISOString().split('T')[0]; // January due date for mensalidade
+      const dueDate = new Date(year, 0, dueDay).toISOString().split('T')[0];
 
-      // Mensalidade: one charge per member for the whole year
-      if (existingSettings.monthly_fee > 0) {
-        for (const member of members) {
-          if (!existingMensalidadeSet.has(member.id)) {
-            newCharges.push({
-              member_id: member.id,
-              competence: competenceAnual,
-              type: 'mensalidade',
-              amount: existingSettings.monthly_fee,
-              due_date: dueDate,
-              status: 'pendente',
-              society_id: societyId,
-            });
-          }
+      for (const member of members) {
+        if (existingSettings.monthly_fee > 0 && !existingSet.has(`${member.id}-mensalidade`)) {
+          newCharges.push({
+            member_id: member.id,
+            competence: competenceAnual,
+            type: 'mensalidade',
+            amount: existingSettings.monthly_fee,
+            due_date: dueDate,
+            status: 'pendente',
+            society_id: societyId,
+          });
         }
-      }
-
-      // Per capita: monthly charges
-      if (existingSettings.per_capita > 0) {
-        for (let monthIdx = 0; monthIdx < 12; monthIdx++) {
-          const competence = `${MONTHS[monthIdx]}/${chargeYear}`;
-          const monthDueDate = new Date(year, monthIdx, dueDay).toISOString().split('T')[0];
-          for (const member of members) {
-            if (!existingPercapitaSet.has(`${competence}-${member.id}`)) {
-              newCharges.push({
-                member_id: member.id,
-                competence,
-                type: 'percapita',
-                amount: existingSettings.per_capita,
-                due_date: monthDueDate,
-                status: 'pendente',
-                society_id: societyId,
-              });
-            }
-          }
+        if (existingSettings.per_capita > 0 && !existingSet.has(`${member.id}-percapita`)) {
+          newCharges.push({
+            member_id: member.id,
+            competence: competenceAnual,
+            type: 'percapita',
+            amount: existingSettings.per_capita,
+            due_date: dueDate,
+            status: 'pendente',
+            society_id: societyId,
+          });
         }
       }
 
