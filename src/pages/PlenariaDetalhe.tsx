@@ -68,6 +68,8 @@ export default function PlenariaDetalhe() {
   const [organizingAI, setOrganizingAI] = useState(false);
   const [editingFinal, setEditingFinal] = useState(false);
   const [savingFinal, setSavingFinal] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
   const notesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canManage = isManagement;
@@ -207,6 +209,65 @@ export default function PlenariaDetalhe() {
       await fetchData();
     }
     setStarting(false);
+  };
+
+  const handleSyncMembers = async () => {
+    setSyncing(true);
+    const { data: members, error } = await supabase
+      .from('members')
+      .select('id, name')
+      .eq('active', true)
+      .order('name');
+
+    if (error || !members?.length) {
+      toast({ title: 'Nenhum membro ativo encontrado', variant: 'destructive' });
+      setSyncing(false);
+      return;
+    }
+
+    const existingIds = new Set(attendance.map((a) => a.member_id));
+    const newMembers = members.filter((m) => !existingIds.has(m.id));
+
+    if (newMembers.length === 0) {
+      toast({ title: 'Todos os membros já estão na chamada' });
+      setSyncing(false);
+      return;
+    }
+
+    const rows = newMembers.map((m) => ({
+      plenary_id: id!,
+      member_id: m.id,
+      present: false,
+      marked_by: user!.id,
+    }));
+
+    const { error: insertErr } = await supabase
+      .from('plenary_attendance')
+      .upsert(rows, { onConflict: 'plenary_id,member_id', ignoreDuplicates: true });
+
+    if (insertErr) {
+      toast({ title: 'Erro ao adicionar membros', variant: 'destructive' });
+    } else {
+      toast({ title: `${newMembers.length} membro(s) adicionado(s)!` });
+      await fetchData();
+    }
+    setSyncing(false);
+  };
+
+  const handleRemoveMember = async (record: AttendanceRecord) => {
+    setRemoving(record.id);
+    const { error } = await supabase
+      .from('plenary_attendance')
+      .delete()
+      .eq('id', record.id);
+
+    if (error) {
+      toast({ title: 'Erro ao remover membro', variant: 'destructive' });
+    } else {
+      setAttendance((prev) => prev.filter((a) => a.id !== record.id));
+      toast({ title: `${record.member_name} removido da chamada` });
+    }
+    setRemoving(null);
   };
 
   const handleToggle = async (record: AttendanceRecord) => {
