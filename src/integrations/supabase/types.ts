@@ -1202,6 +1202,7 @@ export type Database = {
           created_at: string
           created_by: string
           date: string
+          final_minutes: string | null
           id: string
           notes: string | null
           quorum_required: number
@@ -1211,6 +1212,7 @@ export type Database = {
           created_at?: string
           created_by: string
           date?: string
+          final_minutes?: string | null
           id?: string
           notes?: string | null
           quorum_required?: number
@@ -1220,6 +1222,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           date?: string
+          final_minutes?: string | null
           id?: string
           notes?: string | null
           quorum_required?: number
