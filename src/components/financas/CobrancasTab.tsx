@@ -418,7 +418,7 @@ export function CobrancasTab() {
   const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
   
   const mensalidadeCharges = charges.filter(c => c.type === 'mensalidade' && c.status !== 'isento');
-  const percapitaCharges = charges.filter(c => c.type === 'per_capita' && c.status !== 'isento');
+  const percapitaCharges = charges.filter(c => c.type === 'percapita' && c.status !== 'isento');
   
   const mensalidadePrevisto = mensalidadeCharges.reduce((s, c) => s + Number(c.amount), 0);
   const mensalidadeRecebido = mensalidadeCharges.filter(c => c.status === 'pago').reduce((s, c) => s + Number(c.paid_amount || c.amount), 0);
