@@ -69,6 +69,7 @@ export function RelatoriosTab() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   
   const [chargeStats, setChargeStats] = useState<ChargeStats>({ total: 0, pago: 0, pendente: 0, isento: 0, totalAmount: 0, paidAmount: 0, pendingAmount: 0 });
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
@@ -84,6 +85,26 @@ export function RelatoriosTab() {
   useEffect(() => {
     fetchData();
   }, [selectedYear, societyId]);
+
+  // Load signed URLs for receipt images
+  useEffect(() => {
+    const loadSignedUrls = async () => {
+      const withReceipts = transactions.filter(t => t.receipt_url && !t.receipt_url.includes('.pdf'));
+      const urls: Record<string, string> = {};
+      await Promise.all(
+        withReceipts.map(async (tx) => {
+          try {
+            const signed = await getSignedUrl(tx.receipt_url!);
+            urls[tx.id] = signed;
+          } catch (e) {
+            console.warn('Failed to get signed url for', tx.id);
+          }
+        })
+      );
+      setSignedUrls(urls);
+    };
+    if (transactions.length > 0) loadSignedUrls();
+  }, [transactions]);
 
   const fetchData = async () => {
     if (!societyId) return;
@@ -614,10 +635,14 @@ export function RelatoriosTab() {
                           <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
                           <p className="text-xs mt-2">PDF</p>
                         </div>
+                      ) : signedUrls[tx.id] ? (
+                        <img
+                          src={signedUrls[tx.id]}
+                          alt={tx.description}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                        </div>
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                       )}
                     </div>
                     <div className="p-2">
