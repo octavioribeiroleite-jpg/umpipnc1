@@ -92,7 +92,7 @@ export function CobrancasTab() {
 
   useEffect(() => {
     fetchData();
-  }, [competence]);
+  }, [competence, selectedYear]);
 
   const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
