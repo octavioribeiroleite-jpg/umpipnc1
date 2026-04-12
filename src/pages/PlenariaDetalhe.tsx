@@ -26,6 +26,8 @@ import {
   ChevronUp,
   Sparkles,
   Edit3,
+  UserPlus,
+  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -66,6 +68,8 @@ export default function PlenariaDetalhe() {
   const [organizingAI, setOrganizingAI] = useState(false);
   const [editingFinal, setEditingFinal] = useState(false);
   const [savingFinal, setSavingFinal] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
   const notesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canManage = isManagement;
@@ -205,6 +209,65 @@ export default function PlenariaDetalhe() {
       await fetchData();
     }
     setStarting(false);
+  };
+
+  const handleSyncMembers = async () => {
+    setSyncing(true);
+    const { data: members, error } = await supabase
+      .from('members')
+      .select('id, name')
+      .eq('active', true)
+      .order('name');
+
+    if (error || !members?.length) {
+      toast({ title: 'Nenhum membro ativo encontrado', variant: 'destructive' });
+      setSyncing(false);
+      return;
+    }
+
+    const existingIds = new Set(attendance.map((a) => a.member_id));
+    const newMembers = members.filter((m) => !existingIds.has(m.id));
+
+    if (newMembers.length === 0) {
+      toast({ title: 'Todos os membros já estão na chamada' });
+      setSyncing(false);
+      return;
+    }
+
+    const rows = newMembers.map((m) => ({
+      plenary_id: id!,
+      member_id: m.id,
+      present: false,
+      marked_by: user!.id,
+    }));
+
+    const { error: insertErr } = await supabase
+      .from('plenary_attendance')
+      .upsert(rows, { onConflict: 'plenary_id,member_id', ignoreDuplicates: true });
+
+    if (insertErr) {
+      toast({ title: 'Erro ao adicionar membros', variant: 'destructive' });
+    } else {
+      toast({ title: `${newMembers.length} membro(s) adicionado(s)!` });
+      await fetchData();
+    }
+    setSyncing(false);
+  };
+
+  const handleRemoveMember = async (record: AttendanceRecord) => {
+    setRemoving(record.id);
+    const { error } = await supabase
+      .from('plenary_attendance')
+      .delete()
+      .eq('id', record.id);
+
+    if (error) {
+      toast({ title: 'Erro ao remover membro', variant: 'destructive' });
+    } else {
+      setAttendance((prev) => prev.filter((a) => a.id !== record.id));
+      toast({ title: `${record.member_name} removido da chamada` });
+    }
+    setRemoving(null);
   };
 
   const handleToggle = async (record: AttendanceRecord) => {
@@ -493,17 +556,34 @@ export default function PlenariaDetalhe() {
               Chamada de Presença
             </CardTitle>
             {attendance.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setAttendanceCollapsed(!attendanceCollapsed)}
-              >
-                {attendanceCollapsed ? (
-                  <><ChevronDown className="h-4 w-4 mr-1" /> Expandir</>
-                ) : (
-                  <><ChevronUp className="h-4 w-4 mr-1" /> Recolher</>
+              <div className="flex items-center gap-1">
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSyncMembers}
+                    disabled={syncing}
+                  >
+                    {syncing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <UserPlus className="h-4 w-4 mr-1" />
+                    )}
+                    Adicionar
+                  </Button>
                 )}
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAttendanceCollapsed(!attendanceCollapsed)}
+                >
+                  {attendanceCollapsed ? (
+                    <><ChevronDown className="h-4 w-4 mr-1" /> Expandir</>
+                  ) : (
+                    <><ChevronUp className="h-4 w-4 mr-1" /> Recolher</>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -565,29 +645,47 @@ export default function PlenariaDetalhe() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {filteredAttendance.map((record) => (
-                  <button
-                    key={record.id}
-                    disabled={!canManage || toggling === record.id}
-                    onClick={() => handleToggle(record)}
-                    className={cn(
-                      'flex flex-col items-center justify-center rounded-lg border p-3 text-center transition-all',
-                      'hover:shadow-md disabled:opacity-60',
-                      record.present
-                        ? 'bg-primary/15 border-primary/40 text-primary'
-                        : 'bg-muted/40 border-border text-muted-foreground'
+                  <div key={record.id} className="relative group">
+                    <button
+                      disabled={!canManage || toggling === record.id}
+                      onClick={() => handleToggle(record)}
+                      className={cn(
+                        'w-full flex flex-col items-center justify-center rounded-lg border p-3 text-center transition-all',
+                        'hover:shadow-md disabled:opacity-60',
+                        record.present
+                          ? 'bg-primary/15 border-primary/40 text-primary'
+                          : 'bg-muted/40 border-border text-muted-foreground'
+                      )}
+                    >
+                      {toggling === record.id ? (
+                        <Loader2 className="h-5 w-5 animate-spin mb-1" />
+                      ) : record.present ? (
+                        <CheckCircle2 className="h-5 w-5 mb-1" />
+                      ) : (
+                        <XCircle className="h-5 w-5 mb-1" />
+                      )}
+                      <span className="text-xs font-medium leading-tight truncate w-full">
+                        {record.member_name}
+                      </span>
+                    </button>
+                    {canManage && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveMember(record);
+                        }}
+                        disabled={removing === record.id}
+                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                        title="Remover da chamada"
+                      >
+                        {removing === record.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </button>
                     )}
-                  >
-                    {toggling === record.id ? (
-                      <Loader2 className="h-5 w-5 animate-spin mb-1" />
-                    ) : record.present ? (
-                      <CheckCircle2 className="h-5 w-5 mb-1" />
-                    ) : (
-                      <XCircle className="h-5 w-5 mb-1" />
-                    )}
-                    <span className="text-xs font-medium leading-tight truncate w-full">
-                      {record.member_name}
-                    </span>
-                  </button>
+                  </div>
                 ))}
               </div>
             </>
