@@ -1,44 +1,45 @@
 
 
-# Plano: Simplificar Configurações Financeiras
+# Plano: Resumo Financeiro Completo na Aba de Cobranças
 
-## Problema raiz
-1. Os dados antigos no banco tem `competence = "Janeiro/2026"` e `"Fevereiro/2026"`, mas o codigo atual busca `competence = "2026"` -- nao encontra nada
-2. Ao tentar criar novo registro, `society_id` vai como `null` porque a sessao pode estar expirada ou o perfil nao carregou -- isso viola a politica de RLS
-3. O usuario quer algo mais simples: um unico registro geral de valores, sem ficar trocando ano
+## Contexto
+A aba de Cobranças mostra apenas contagem de pagos/pendentes/isentos. O usuario quer ver valores monetarios: quanto ja recebeu, quanto falta receber, dividido entre mensalidade e per capita.
 
-## Solucao
+## Alteracoes em `src/components/financas/CobrancasTab.tsx`
 
-### 1. Remover seletor de ano -- competencia fixa `"geral"`
-- Usar `competence = "geral"` para salvar/buscar os valores de mensalidade e per-capita
-- Remover o select de ano do card de "Valores"
-- Um unico registro por sociedade com os valores vigentes
+### 1. Calcular totais financeiros a partir dos dados existentes
+- Total mensalidades a receber (soma `amount` onde `type = 'mensalidade'`)
+- Total mensalidades recebido (soma `paid_amount` onde `type = 'mensalidade'` e `status = 'pago'`)
+- Total mensalidades pendente (diferenca)
+- Mesma logica para per capita
+- Total geral (mensalidade + per capita)
 
-### 2. Proteger contra `society_id` nulo
-- Adicionar validacao: se `societyId` for null/undefined, exibir alerta pedindo para relogar
-- Nao permitir salvar nem gerar cobrancas sem `societyId`
-
-### 3. Manter geracao de cobrancas com mes/ano
-- O card "Gerar Cobrancas" continua com seletores de mes e ano
-- Usa os valores do registro `"geral"` para criar as cobrancas no formato `"Abril/2026"`
-
-### 4. Layout simplificado
+### 2. Novo card de resumo financeiro acima dos mini-cards de status
+Layout:
 
 ```text
-┌─────────────────────────────────────┐
-│ Valores de Cobrança                 │
-│ Mensalidade Anual: [____]           │
-│ Per Capita: [____]                  │
-│ Dia Vencimento: [10]                │
-│ Observações: [__________]           │
-│ [Salvar]                            │
-├─────────────────────────────────────┤
-│ Gerar Cobranças                     │
-│ [Mês ▼] [Ano ▼]                    │
-│ [Gerar Cobranças (X membros)]       │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ Resumo Financeiro - Abril/2026          │
+│                                         │
+│ MENSALIDADE          PER CAPITA         │
+│ Previsto: R$ 600     Previsto: R$ 300   │
+│ Recebido: R$ 400     Recebido: R$ 200  │
+│ Pendente: R$ 200     Pendente: R$ 100   │
+│                                         │
+│ TOTAL                                   │
+│ Previsto: R$ 900                        │
+│ Recebido: R$ 600  |  Pendente: R$ 300  │
+└─────────────────────────────────────────┘
 ```
 
+- Cores: recebido em verde, pendente em vermelho/laranja
+- Formato compacto no mobile (grid 2 colunas para mensalidade/percapita, 1 coluna para total)
+- Valores formatados em R$ com virgula
+
+### 3. Mini-cards de status existentes
+- Manter como estao (filtros rapidos por Pagos/Pendentes/Isentos)
+- Apenas reposicionar abaixo do novo resumo
+
 ## Arquivo alterado
-- `src/components/financas/ConfiguracoesTab.tsx`
+- `src/components/financas/CobrancasTab.tsx`
 
