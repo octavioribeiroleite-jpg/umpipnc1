@@ -517,6 +517,38 @@ export function CobrancasTab() {
             />
           </div>
 
+          {/* Financial Summary */}
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-3 mb-4">
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Resumo Financeiro — {competence}</p>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              {/* Mensalidade */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-foreground">Mensalidade</p>
+                <div className="text-xs text-muted-foreground flex justify-between"><span>Previsto</span><span className="font-medium text-foreground">{formatCurrency(mensalidadePrevisto)}</span></div>
+                <div className="text-xs flex justify-between"><span className="text-green-600 dark:text-green-400">Recebido</span><span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(mensalidadeRecebido)}</span></div>
+                <div className="text-xs flex justify-between"><span className="text-destructive">Pendente</span><span className="font-medium text-destructive">{formatCurrency(mensalidadePendente)}</span></div>
+              </div>
+              {/* Per Capita */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-foreground">Per Capita</p>
+                <div className="text-xs text-muted-foreground flex justify-between"><span>Previsto</span><span className="font-medium text-foreground">{formatCurrency(percapitaPrevisto)}</span></div>
+                <div className="text-xs flex justify-between"><span className="text-green-600 dark:text-green-400">Recebido</span><span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(percapitaRecebido)}</span></div>
+                <div className="text-xs flex justify-between"><span className="text-destructive">Pendente</span><span className="font-medium text-destructive">{formatCurrency(percapitaPendente)}</span></div>
+              </div>
+            </div>
+            {/* Total */}
+            <div className="border-t border-border/60 pt-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-semibold text-foreground">Total</span>
+                <span className="font-bold text-foreground">{formatCurrency(totalPrevisto)}</span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Recebido: {formatCurrency(totalRecebido)}</span>
+                <span className="text-xs text-destructive font-medium">Pendente: {formatCurrency(totalPendente)}</span>
+              </div>
+            </div>
+          </div>
+
           {/* Status mini-cards */}
           <div className="grid grid-cols-3 gap-2">
             <button
