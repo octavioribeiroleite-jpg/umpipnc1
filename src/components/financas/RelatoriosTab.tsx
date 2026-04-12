@@ -69,6 +69,7 @@ export function RelatoriosTab() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   
   const [chargeStats, setChargeStats] = useState<ChargeStats>({ total: 0, pago: 0, pendente: 0, isento: 0, totalAmount: 0, paidAmount: 0, pendingAmount: 0 });
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
