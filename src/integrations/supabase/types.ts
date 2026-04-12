@@ -1203,6 +1203,7 @@ export type Database = {
           created_by: string
           date: string
           id: string
+          notes: string | null
           quorum_required: number
           title: string
         }
@@ -1211,6 +1212,7 @@ export type Database = {
           created_by: string
           date?: string
           id?: string
+          notes?: string | null
           quorum_required?: number
           title: string
         }
@@ -1219,6 +1221,7 @@ export type Database = {
           created_by?: string
           date?: string
           id?: string
+          notes?: string | null
           quorum_required?: number
           title?: string
         }

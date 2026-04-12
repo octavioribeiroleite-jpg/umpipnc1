@@ -1,11 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +20,10 @@ import {
   CheckCircle2,
   XCircle,
   Users,
+  FileText,
+  Save,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,6 +35,7 @@ interface Plenary {
   title: string;
   date: string;
   quorum_required: number;
+  notes: string | null;
 }
 
 interface AttendanceRecord {
@@ -42,7 +49,7 @@ export default function PlenariaDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isAdmin, isManagement } = useAuth();
+  const { user, isManagement } = useAuth();
 
   const [plenary, setPlenary] = useState<Plenary | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -50,6 +57,10 @@ export default function PlenariaDetalhe() {
   const [starting, setStarting] = useState(false);
   const [search, setSearch] = useState('');
   const [toggling, setToggling] = useState<string | null>(null);
+  const [notes, setNotes] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [attendanceCollapsed, setAttendanceCollapsed] = useState(false);
+  const notesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canManage = isManagement;
 
@@ -68,8 +79,8 @@ export default function PlenariaDetalhe() {
       return;
     }
     setPlenary(pData as Plenary);
+    setNotes(pData.notes || '');
 
-    // Fetch attendance with member names
     const { data: aData } = await supabase
       .from('plenary_attendance')
       .select('id, member_id, present, members(name)')
@@ -91,9 +102,36 @@ export default function PlenariaDetalhe() {
     if (id) fetchData();
   }, [id]);
 
+  // Auto-save notes with debounce
+  const handleNotesChange = (value: string) => {
+    setNotes(value);
+    if (notesTimeoutRef.current) clearTimeout(notesTimeoutRef.current);
+    notesTimeoutRef.current = setTimeout(() => {
+      saveNotes(value);
+    }, 1500);
+  };
+
+  const saveNotes = async (content: string) => {
+    setSavingNotes(true);
+    const { error } = await supabase
+      .from('plenaries')
+      .update({ notes: content })
+      .eq('id', id!);
+
+    if (error) {
+      toast({ title: 'Erro ao salvar anotações', variant: 'destructive' });
+    }
+    setSavingNotes(false);
+  };
+
+  const handleManualSave = async () => {
+    if (notesTimeoutRef.current) clearTimeout(notesTimeoutRef.current);
+    await saveNotes(notes);
+    toast({ title: 'Anotações salvas!' });
+  };
+
   const handleStartAttendance = async () => {
     setStarting(true);
-    // Get all active members
     const { data: members, error } = await supabase
       .from('members')
       .select('id, name')
@@ -106,7 +144,6 @@ export default function PlenariaDetalhe() {
       return;
     }
 
-    // Insert attendance records (ignore conflicts)
     const rows = members.map((m) => ({
       plenary_id: id!,
       member_id: m.id,
@@ -173,7 +210,6 @@ export default function PlenariaDetalhe() {
     const contentWidth = pageWidth - margin * 2;
     let y = 0;
     let pageNum = 1;
-    const totalPagesPlaceholder = '{total}';
 
     const presentes = attendance.filter((a) => a.present).sort((a, b) => a.member_name.localeCompare(b.member_name));
     const ausentes = attendance.filter((a) => !a.present).sort((a, b) => a.member_name.localeCompare(b.member_name));
@@ -189,7 +225,7 @@ export default function PlenariaDetalhe() {
         pageHeight - 10
       );
       doc.text(
-        `Página ${pageNum} de ${totalPagesPlaceholder}`,
+        `Página ${pageNum}`,
         pageWidth - margin,
         pageHeight - 10,
         { align: 'right' }
@@ -205,13 +241,13 @@ export default function PlenariaDetalhe() {
       }
     };
 
-    // === HEADER: dark blue bar ===
+    // === HEADER ===
     doc.setFillColor(30, 58, 95);
     doc.rect(0, 0, pageWidth, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('Chamada de Presença', pageWidth / 2, 16, { align: 'center' });
+    doc.text('Relatório da Plenária', pageWidth / 2, 16, { align: 'center' });
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text(plenary.title, pageWidth / 2, 25, { align: 'center' });
@@ -223,7 +259,6 @@ export default function PlenariaDetalhe() {
       { align: 'center' }
     );
 
-    // Decorative line
     doc.setDrawColor(52, 152, 219);
     doc.setLineWidth(1);
     doc.line(margin, 43, pageWidth - margin, 43);
@@ -236,7 +271,6 @@ export default function PlenariaDetalhe() {
     doc.setLineWidth(0.3);
     doc.roundedRect(margin, y, contentWidth, 36, 3, 3, 'S');
 
-    // Stats row
     doc.setTextColor(30, 58, 95);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
@@ -257,7 +291,6 @@ export default function PlenariaDetalhe() {
     doc.setTextColor(30, 58, 95);
     doc.text(`${totalMembers}`, col3, statsY + 10);
 
-    // Progress bar
     const barX = margin + contentWidth * 0.72;
     const barW = contentWidth * 0.22;
     const barY = statsY + 1;
@@ -273,7 +306,6 @@ export default function PlenariaDetalhe() {
     doc.setTextColor(80, 80, 80);
     doc.text(`${percentage}%`, barX + barW / 2, barY + barH + 8, { align: 'center' });
 
-    // Quorum badge
     if (quorumReached) {
       doc.setFillColor(39, 174, 96);
     } else {
@@ -289,6 +321,30 @@ export default function PlenariaDetalhe() {
 
     y += 44;
 
+    // === NOTES SECTION (before attendance lists) ===
+    if (notes.trim()) {
+      checkPage(30);
+      doc.setFillColor(30, 58, 95);
+      doc.roundedRect(margin, y, contentWidth, 9, 2, 2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Anotações / Ata', margin + 5, y + 6.5);
+      y += 14;
+
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+
+      const lines = doc.splitTextToSize(notes, contentWidth - 10);
+      for (const line of lines) {
+        checkPage(6);
+        doc.text(line, margin + 5, y);
+        y += 5;
+      }
+      y += 6;
+    }
+
     // === HELPER: render member list ===
     const renderList = (
       title: string,
@@ -298,7 +354,6 @@ export default function PlenariaDetalhe() {
       emptyMsg: string
     ) => {
       checkPage(20);
-      // Section header
       doc.setFillColor(...headerColor);
       doc.roundedRect(margin, y, contentWidth, 9, 2, 2, 'F');
       doc.setTextColor(255, 255, 255);
@@ -318,15 +373,12 @@ export default function PlenariaDetalhe() {
 
       list.forEach((item, i) => {
         checkPage(8);
-        // Zebra striping
         if (i % 2 === 0) {
           doc.setFillColor(245, 247, 250);
           doc.rect(margin, y - 4.5, contentWidth, 7, 'F');
         }
-        // Dot
         doc.setFillColor(...dotColor);
         doc.circle(margin + 6, y - 1.5, 1.5, 'F');
-        // Number + name
         doc.setTextColor(50, 50, 50);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
@@ -338,20 +390,14 @@ export default function PlenariaDetalhe() {
       y += 4;
     };
 
-    // === PRESENT LIST ===
     renderList('Presentes', presentes, [39, 174, 96], [39, 174, 96], 'Nenhum presente registrado.');
-
-    // === ABSENT LIST ===
     renderList('Ausentes', ausentes, [231, 76, 60], [231, 76, 60], 'Nenhum ausente registrado.');
 
-    // Add footer to last page
     addFooter();
 
-    // Replace page number placeholders
     const totalPages = doc.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
-      // This is a workaround: we re-draw the footer with final total
       doc.setFillColor(255, 255, 255);
       doc.rect(pageWidth - margin - 40, pageHeight - 14, 40, 8, 'F');
       doc.setFontSize(8);
@@ -360,7 +406,7 @@ export default function PlenariaDetalhe() {
       doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
     }
 
-    doc.save(`chamada-${plenary.title.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+    doc.save(`plenaria-${plenary.title.replace(/\s+/g, '-').toLowerCase()}.pdf`);
   };
 
   if (loading) {
@@ -388,106 +434,157 @@ export default function PlenariaDetalhe() {
             {format(new Date(plenary.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
-      </div>
-
-      {/* Quorum Card */}
-      {totalMembers > 0 && (
-        <Card className="mb-4">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-muted-foreground" />
-                <span className="font-semibold text-lg">
-                  {presentCount}/{totalMembers}
-                </span>
-                <span className="text-muted-foreground">presentes</span>
-              </div>
-              <Badge variant={quorumReached ? 'default' : 'destructive'}>
-                {quorumReached ? (
-                  <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Quórum atingido</>
-                ) : (
-                  <><XCircle className="h-3.5 w-3.5 mr-1" /> Sem quórum</>
-                )}
-              </Badge>
-            </div>
-            <Progress value={percentage} className="h-3" />
-            <p className="text-center text-sm font-medium">{percentage}%</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {attendance.length === 0 && canManage && (
-          <Button onClick={handleStartAttendance} disabled={starting}>
-            {starting ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <PlayCircle className="h-4 w-4 mr-2" />
-            )}
-            Iniciar Chamada
-          </Button>
-        )}
         {attendance.length > 0 && (
-          <Button variant="outline" onClick={handleDownloadPDF}>
-            <Download className="h-4 w-4 mr-2" /> Baixar PDF
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+            <Download className="h-4 w-4 mr-2" /> PDF
           </Button>
         )}
       </div>
 
-      {/* Search */}
-      {attendance.length > 0 && (
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar membro..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      )}
+      {/* ===== SEÇÃO 1: CHAMADA ===== */}
+      <Card className="mb-4">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="h-5 w-5" />
+              Chamada de Presença
+            </CardTitle>
+            {attendance.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAttendanceCollapsed(!attendanceCollapsed)}
+              >
+                {attendanceCollapsed ? (
+                  <><ChevronDown className="h-4 w-4 mr-1" /> Expandir</>
+                ) : (
+                  <><ChevronUp className="h-4 w-4 mr-1" /> Recolher</>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Quorum summary - always visible */}
+          {totalMembers > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-lg">
+                    {presentCount}/{totalMembers}
+                  </span>
+                  <span className="text-muted-foreground text-sm">presentes</span>
+                </div>
+                <Badge variant={quorumReached ? 'default' : 'destructive'}>
+                  {quorumReached ? (
+                    <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Quórum atingido</>
+                  ) : (
+                    <><XCircle className="h-3.5 w-3.5 mr-1" /> Sem quórum</>
+                  )}
+                </Badge>
+              </div>
+              <Progress value={percentage} className="h-2.5" />
+              <p className="text-center text-sm font-medium text-muted-foreground">{percentage}%</p>
+            </div>
+          )}
 
-      {/* Member grid */}
-      {attendance.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {filteredAttendance.map((record) => (
-            <button
-              key={record.id}
-              disabled={!canManage || toggling === record.id}
-              onClick={() => handleToggle(record)}
-              className={cn(
-                'flex flex-col items-center justify-center rounded-lg border p-3 text-center transition-all',
-                'hover:shadow-md disabled:opacity-60',
-                record.present
-                  ? 'bg-primary/15 border-primary/40 text-primary'
-                  : 'bg-muted/40 border-border text-muted-foreground'
-              )}
-            >
-              {toggling === record.id ? (
-                <Loader2 className="h-5 w-5 animate-spin mb-1" />
-              ) : record.present ? (
-                <CheckCircle2 className="h-5 w-5 mb-1" />
+          {/* Start button */}
+          {attendance.length === 0 && canManage && (
+            <Button onClick={handleStartAttendance} disabled={starting} className="w-full">
+              {starting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                <XCircle className="h-5 w-5 mb-1" />
+                <PlayCircle className="h-4 w-4 mr-2" />
               )}
-              <span className="text-xs font-medium leading-tight truncate w-full">
-                {record.member_name}
-              </span>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-1">Chamada não iniciada</h3>
-            <p className="text-muted-foreground text-sm">
-              Clique em "Iniciar Chamada" para carregar todos os membros ativos.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+              Iniciar Chamada
+            </Button>
+          )}
+
+          {attendance.length === 0 && !canManage && (
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              Chamada não iniciada
+            </div>
+          )}
+
+          {/* Member grid - collapsible */}
+          {attendance.length > 0 && !attendanceCollapsed && (
+            <>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar membro..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {filteredAttendance.map((record) => (
+                  <button
+                    key={record.id}
+                    disabled={!canManage || toggling === record.id}
+                    onClick={() => handleToggle(record)}
+                    className={cn(
+                      'flex flex-col items-center justify-center rounded-lg border p-3 text-center transition-all',
+                      'hover:shadow-md disabled:opacity-60',
+                      record.present
+                        ? 'bg-primary/15 border-primary/40 text-primary'
+                        : 'bg-muted/40 border-border text-muted-foreground'
+                    )}
+                  >
+                    {toggling === record.id ? (
+                      <Loader2 className="h-5 w-5 animate-spin mb-1" />
+                    ) : record.present ? (
+                      <CheckCircle2 className="h-5 w-5 mb-1" />
+                    ) : (
+                      <XCircle className="h-5 w-5 mb-1" />
+                    )}
+                    <span className="text-xs font-medium leading-tight truncate w-full">
+                      {record.member_name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ===== SEÇÃO 2: ANOTAÇÕES / ATA ===== */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="h-5 w-5" />
+              Anotações / Ata
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              {savingNotes && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
+                </span>
+              )}
+              <Button variant="outline" size="sm" onClick={handleManualSave} disabled={savingNotes}>
+                <Save className="h-4 w-4 mr-1" /> Salvar
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            placeholder="Registre aqui as pautas, decisões, informes e tudo que for discutido durante a plenária. Essas anotações serão incluídas no relatório final em PDF."
+            value={notes}
+            onChange={(e) => handleNotesChange(e.target.value)}
+            className="min-h-[200px] resize-y"
+            disabled={!canManage}
+          />
+          <p className="text-xs text-muted-foreground mt-2">
+            As anotações são salvas automaticamente. Elas serão combinadas com a chamada no relatório final.
+          </p>
+        </CardContent>
+      </Card>
     </AppLayout>
   );
 }

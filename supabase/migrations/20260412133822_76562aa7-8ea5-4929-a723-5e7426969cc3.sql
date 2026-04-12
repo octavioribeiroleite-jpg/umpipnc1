@@ -1,0 +1,1 @@
+ALTER TABLE public.plenaries ADD COLUMN notes text DEFAULT null;
