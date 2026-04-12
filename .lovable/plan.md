@@ -1,50 +1,44 @@
 
 
-# Plano: Configurações Financeiras Anuais
+# Plano: Simplificar Configurações Financeiras
 
-## Contexto
-Atualmente as configurações de mensalidade e per-capita são definidas por competência (mês/ano). O usuário quer definir esses valores uma vez por ano e usá-los ao gerar cobranças de qualquer mês.
+## Problema raiz
+1. Os dados antigos no banco tem `competence = "Janeiro/2026"` e `"Fevereiro/2026"`, mas o codigo atual busca `competence = "2026"` -- nao encontra nada
+2. Ao tentar criar novo registro, `society_id` vai como `null` porque a sessao pode estar expirada ou o perfil nao carregou -- isso viola a politica de RLS
+3. O usuario quer algo mais simples: um unico registro geral de valores, sem ficar trocando ano
 
-## Abordagem
-Simplificar a aba de Configurações para trabalhar com **ano** em vez de mês+ano. O `competence` na tabela `financial_settings` passará a ser apenas o ano (ex: `"2026"`). Ao gerar cobranças para um mês específico, o sistema busca as configurações do ano correspondente.
+## Solucao
 
-## 1. Alteração na `ConfiguracoesTab.tsx`
+### 1. Remover seletor de ano -- competencia fixa `"geral"`
+- Usar `competence = "geral"` para salvar/buscar os valores de mensalidade e per-capita
+- Remover o select de ano do card de "Valores"
+- Um unico registro por sociedade com os valores vigentes
 
-- Remover seletor de mês; manter apenas seletor de **ano**
-- Competence passa a ser apenas o ano (ex: `"2026"`)
-- Ao salvar, salva/atualiza `financial_settings` com `competence = "2026"`
-- Remover lógica de atualizar cobranças pendentes ao salvar (isso fica na geração)
-- Manter botão "Gerar Cobranças" mas agora com seletor de mês para **qual mês gerar**
-- Ao gerar cobranças, usa os valores anuais salvos + mês selecionado para calcular `due_date` e `competence` da cobrança (ex: `"Janeiro/2026"`)
+### 2. Proteger contra `society_id` nulo
+- Adicionar validacao: se `societyId` for null/undefined, exibir alerta pedindo para relogar
+- Nao permitir salvar nem gerar cobrancas sem `societyId`
 
-## 2. Layout novo da aba
+### 3. Manter geracao de cobrancas com mes/ano
+- O card "Gerar Cobrancas" continua com seletores de mes e ano
+- Usa os valores do registro `"geral"` para criar as cobrancas no formato `"Abril/2026"`
+
+### 4. Layout simplificado
 
 ```text
 ┌─────────────────────────────────────┐
-│ Valores Anuais                      │
-│ [Ano: 2026 ▼]                       │
-│ Mensalidade: [____]  Per Capita: [____] │
+│ Valores de Cobrança                 │
+│ Mensalidade Anual: [____]           │
+│ Per Capita: [____]                  │
 │ Dia Vencimento: [10]                │
 │ Observações: [__________]           │
-│ [Salvar Configurações]              │
+│ [Salvar]                            │
 ├─────────────────────────────────────┤
 │ Gerar Cobranças                     │
-│ [Mês: Janeiro ▼] [Ano: 2026 ▼]     │
+│ [Mês ▼] [Ano ▼]                    │
 │ [Gerar Cobranças (X membros)]       │
 └─────────────────────────────────────┘
 ```
 
-## 3. Lógica de geração
-
-- Busca `financial_settings` onde `competence = ano`
-- Gera cobranças com `competence = "Mês/Ano"` (formato existente, compatível com CobrancasTab)
-- Usa `due_day` das configurações anuais para calcular `due_date`
-
-## 4. Sem migração de banco
-
-- A tabela `financial_settings` já tem campo `competence` (text). Apenas muda o formato do valor armazenado de `"Janeiro/2026"` para `"2026"`
-- Cobranças continuam com `competence = "Janeiro/2026"` (sem mudança)
-
-## Arquivos alterados
-- **`src/components/financas/ConfiguracoesTab.tsx`**: refatorar para configuração anual + geração por mês
+## Arquivo alterado
+- `src/components/financas/ConfiguracoesTab.tsx`
 
