@@ -279,7 +279,7 @@ export function ConfiguracoesTab() {
               member_id: member.id,
               competence,
               type: 'mensalidade',
-              amount: Math.round(monthlyAmount * 100) / 100,
+              amount: monthlyAmount,
               due_date: dueDate,
               status: 'pendente',
               society_id: societyId,
