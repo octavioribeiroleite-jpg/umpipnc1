@@ -635,10 +635,14 @@ export function RelatoriosTab() {
                           <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
                           <p className="text-xs mt-2">PDF</p>
                         </div>
+                      ) : signedUrls[tx.id] ? (
+                        <img
+                          src={signedUrls[tx.id]}
+                          alt={tx.description}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                        </div>
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                       )}
                     </div>
                     <div className="p-2">
