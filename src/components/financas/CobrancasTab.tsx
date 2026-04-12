@@ -414,6 +414,24 @@ export function CobrancasTab() {
   const totalCharges = charges.length;
   const progressValue = totalCharges > 0 ? Math.round((paidCharges / totalCharges) * 100) : 0;
 
+  // Financial summary calculations
+  const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
+  
+  const mensalidadeCharges = charges.filter(c => c.type === 'mensalidade' && c.status !== 'isento');
+  const percapitaCharges = charges.filter(c => c.type === 'per_capita' && c.status !== 'isento');
+  
+  const mensalidadePrevisto = mensalidadeCharges.reduce((s, c) => s + Number(c.amount), 0);
+  const mensalidadeRecebido = mensalidadeCharges.filter(c => c.status === 'pago').reduce((s, c) => s + Number(c.paid_amount || c.amount), 0);
+  const mensalidadePendente = mensalidadePrevisto - mensalidadeRecebido;
+  
+  const percapitaPrevisto = percapitaCharges.reduce((s, c) => s + Number(c.amount), 0);
+  const percapitaRecebido = percapitaCharges.filter(c => c.status === 'pago').reduce((s, c) => s + Number(c.paid_amount || c.amount), 0);
+  const percapitaPendente = percapitaPrevisto - percapitaRecebido;
+  
+  const totalPrevisto = mensalidadePrevisto + percapitaPrevisto;
+  const totalRecebido = mensalidadeRecebido + percapitaRecebido;
+  const totalPendente = mensalidadePendente + percapitaPendente;
+
   // Determine member variant based on their charges
   const getMemberVariant = (memberId: string): ChargeCardVariant => {
     const memberChargesArr = charges.filter(c => c.member_id === memberId);
