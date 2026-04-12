@@ -42,7 +42,7 @@ export default function PlenariaDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isManagement } = useAuth();
 
   const [plenary, setPlenary] = useState<Plenary | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -51,7 +51,7 @@ export default function PlenariaDetalhe() {
   const [search, setSearch] = useState('');
   const [toggling, setToggling] = useState<string | null>(null);
 
-  const canManage = isAdmin; // simplified; management role checked by RLS
+  const canManage = isManagement;
 
   const fetchData = async () => {
     setLoading(true);
@@ -116,13 +116,14 @@ export default function PlenariaDetalhe() {
 
     const { error: insertErr } = await supabase
       .from('plenary_attendance')
-      .upsert(rows, { onConflict: 'plenary_id,member_id' });
+      .upsert(rows, { onConflict: 'plenary_id,member_id', ignoreDuplicates: true });
 
     if (insertErr) {
-      toast({ title: 'Erro ao iniciar chamada', variant: 'destructive' });
+      console.error('Erro ao iniciar chamada:', insertErr);
+      toast({ title: 'Erro ao iniciar chamada', description: insertErr.message, variant: 'destructive' });
     } else {
       toast({ title: 'Chamada iniciada!' });
-      fetchData();
+      await fetchData();
     }
     setStarting(false);
   };
