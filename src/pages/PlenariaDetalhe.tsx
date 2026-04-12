@@ -24,6 +24,8 @@ import {
   Save,
   ChevronDown,
   ChevronUp,
+  Sparkles,
+  Edit3,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -60,6 +62,10 @@ export default function PlenariaDetalhe() {
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [attendanceCollapsed, setAttendanceCollapsed] = useState(false);
+  const [finalMinutes, setFinalMinutes] = useState('');
+  const [organizingAI, setOrganizingAI] = useState(false);
+  const [editingFinal, setEditingFinal] = useState(false);
+  const [savingFinal, setSavingFinal] = useState(false);
   const notesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canManage = isManagement;
@@ -80,6 +86,7 @@ export default function PlenariaDetalhe() {
     }
     setPlenary(pData as Plenary);
     setNotes(pData.notes || '');
+    setFinalMinutes((pData as any).final_minutes || '');
 
     const { data: aData } = await supabase
       .from('plenary_attendance')
@@ -128,6 +135,41 @@ export default function PlenariaDetalhe() {
     if (notesTimeoutRef.current) clearTimeout(notesTimeoutRef.current);
     await saveNotes(notes);
     toast({ title: 'Anotações salvas!' });
+  };
+
+  const handleOrganizeAI = async () => {
+    setOrganizingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('organize-plenary', {
+        body: { plenaryId: id },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: data.error, variant: 'destructive' });
+      } else {
+        setFinalMinutes(data.final_minutes);
+        setEditingFinal(false);
+        toast({ title: 'Ata organizada com sucesso!' });
+      }
+    } catch (err: any) {
+      toast({ title: 'Erro ao organizar com IA', description: err.message, variant: 'destructive' });
+    }
+    setOrganizingAI(false);
+  };
+
+  const handleSaveFinalMinutes = async () => {
+    setSavingFinal(true);
+    const { error } = await supabase
+      .from('plenaries')
+      .update({ final_minutes: finalMinutes } as any)
+      .eq('id', id!);
+    if (error) {
+      toast({ title: 'Erro ao salvar ata', variant: 'destructive' });
+    } else {
+      setEditingFinal(false);
+      toast({ title: 'Ata salva!' });
+    }
+    setSavingFinal(false);
   };
 
   const handleStartAttendance = async () => {
@@ -321,22 +363,23 @@ export default function PlenariaDetalhe() {
 
     y += 44;
 
-    // === NOTES SECTION (before attendance lists) ===
-    if (notes.trim()) {
+    // === NOTES/ATA SECTION (use finalMinutes if available, otherwise raw notes) ===
+    const ataContent = finalMinutes.trim() || notes.trim();
+    if (ataContent) {
       checkPage(30);
       doc.setFillColor(30, 58, 95);
       doc.roundedRect(margin, y, contentWidth, 9, 2, 2, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
-      doc.text('Anotações / Ata', margin + 5, y + 6.5);
+      doc.text(finalMinutes.trim() ? 'Ata da Plenária' : 'Anotações / Ata', margin + 5, y + 6.5);
       y += 14;
 
       doc.setTextColor(50, 50, 50);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
 
-      const lines = doc.splitTextToSize(notes, contentWidth - 10);
+      const lines = doc.splitTextToSize(ataContent, contentWidth - 10);
       for (const line of lines) {
         checkPage(6);
         doc.text(line, margin + 5, y);
@@ -553,7 +596,7 @@ export default function PlenariaDetalhe() {
       </Card>
 
       {/* ===== SEÇÃO 2: ANOTAÇÕES / ATA ===== */}
-      <Card>
+      <Card className="mb-4">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -583,8 +626,71 @@ export default function PlenariaDetalhe() {
           <p className="text-xs text-muted-foreground mt-2">
             As anotações são salvas automaticamente. Elas serão combinadas com a chamada no relatório final.
           </p>
+          {canManage && notes.trim() && (
+            <Button
+              onClick={handleOrganizeAI}
+              disabled={organizingAI}
+              className="mt-3 w-full"
+              variant="outline"
+            >
+              {organizingAI ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
+              )}
+              {organizingAI ? 'Organizando com IA...' : 'Organizar Ata com IA'}
+            </Button>
+          )}
         </CardContent>
       </Card>
+
+      {/* ===== SEÇÃO 3: ATA ORGANIZADA ===== */}
+      {finalMinutes && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Sparkles className="h-5 w-5" />
+                Ata Organizada
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                {canManage && !editingFinal && (
+                  <Button variant="ghost" size="sm" onClick={() => setEditingFinal(true)}>
+                    <Edit3 className="h-4 w-4 mr-1" /> Editar
+                  </Button>
+                )}
+                {editingFinal && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => setEditingFinal(false)}>
+                      Cancelar
+                    </Button>
+                    <Button size="sm" onClick={handleSaveFinalMinutes} disabled={savingFinal}>
+                      {savingFinal ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+                      Salvar
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editingFinal ? (
+              <Textarea
+                value={finalMinutes}
+                onChange={(e) => setFinalMinutes(e.target.value)}
+                className="min-h-[300px] resize-y"
+              />
+            ) : (
+              <div className="whitespace-pre-wrap text-sm text-foreground bg-muted/30 rounded-lg p-4 border">
+                {finalMinutes}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-2">
+              Esta ata organizada será usada no relatório PDF final.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </AppLayout>
   );
 }
