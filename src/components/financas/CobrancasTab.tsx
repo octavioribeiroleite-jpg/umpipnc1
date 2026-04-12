@@ -414,6 +414,24 @@ export function CobrancasTab() {
   const totalCharges = charges.length;
   const progressValue = totalCharges > 0 ? Math.round((paidCharges / totalCharges) * 100) : 0;
 
+  // Financial summary calculations
+  const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
+  
+  const mensalidadeCharges = charges.filter(c => c.type === 'mensalidade' && c.status !== 'isento');
+  const percapitaCharges = charges.filter(c => c.type === 'per_capita' && c.status !== 'isento');
+  
+  const mensalidadePrevisto = mensalidadeCharges.reduce((s, c) => s + Number(c.amount), 0);
+  const mensalidadeRecebido = mensalidadeCharges.filter(c => c.status === 'pago').reduce((s, c) => s + Number(c.paid_amount || c.amount), 0);
+  const mensalidadePendente = mensalidadePrevisto - mensalidadeRecebido;
+  
+  const percapitaPrevisto = percapitaCharges.reduce((s, c) => s + Number(c.amount), 0);
+  const percapitaRecebido = percapitaCharges.filter(c => c.status === 'pago').reduce((s, c) => s + Number(c.paid_amount || c.amount), 0);
+  const percapitaPendente = percapitaPrevisto - percapitaRecebido;
+  
+  const totalPrevisto = mensalidadePrevisto + percapitaPrevisto;
+  const totalRecebido = mensalidadeRecebido + percapitaRecebido;
+  const totalPendente = mensalidadePendente + percapitaPendente;
+
   // Determine member variant based on their charges
   const getMemberVariant = (memberId: string): ChargeCardVariant => {
     const memberChargesArr = charges.filter(c => c.member_id === memberId);
@@ -497,6 +515,38 @@ export function CobrancasTab() {
                 '[&>div]:bg-destructive'
               )}
             />
+          </div>
+
+          {/* Financial Summary */}
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-3 mb-4">
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Resumo Financeiro — {competence}</p>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              {/* Mensalidade */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-foreground">Mensalidade</p>
+                <div className="text-xs text-muted-foreground flex justify-between"><span>Previsto</span><span className="font-medium text-foreground">{formatCurrency(mensalidadePrevisto)}</span></div>
+                <div className="text-xs flex justify-between"><span className="text-green-600 dark:text-green-400">Recebido</span><span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(mensalidadeRecebido)}</span></div>
+                <div className="text-xs flex justify-between"><span className="text-destructive">Pendente</span><span className="font-medium text-destructive">{formatCurrency(mensalidadePendente)}</span></div>
+              </div>
+              {/* Per Capita */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-foreground">Per Capita</p>
+                <div className="text-xs text-muted-foreground flex justify-between"><span>Previsto</span><span className="font-medium text-foreground">{formatCurrency(percapitaPrevisto)}</span></div>
+                <div className="text-xs flex justify-between"><span className="text-green-600 dark:text-green-400">Recebido</span><span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(percapitaRecebido)}</span></div>
+                <div className="text-xs flex justify-between"><span className="text-destructive">Pendente</span><span className="font-medium text-destructive">{formatCurrency(percapitaPendente)}</span></div>
+              </div>
+            </div>
+            {/* Total */}
+            <div className="border-t border-border/60 pt-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-semibold text-foreground">Total</span>
+                <span className="font-bold text-foreground">{formatCurrency(totalPrevisto)}</span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Recebido: {formatCurrency(totalRecebido)}</span>
+                <span className="text-xs text-destructive font-medium">Pendente: {formatCurrency(totalPendente)}</span>
+              </div>
+            </div>
           </div>
 
           {/* Status mini-cards */}
