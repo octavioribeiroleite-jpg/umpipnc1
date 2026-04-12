@@ -645,29 +645,47 @@ export default function PlenariaDetalhe() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {filteredAttendance.map((record) => (
-                  <button
-                    key={record.id}
-                    disabled={!canManage || toggling === record.id}
-                    onClick={() => handleToggle(record)}
-                    className={cn(
-                      'flex flex-col items-center justify-center rounded-lg border p-3 text-center transition-all',
-                      'hover:shadow-md disabled:opacity-60',
-                      record.present
-                        ? 'bg-primary/15 border-primary/40 text-primary'
-                        : 'bg-muted/40 border-border text-muted-foreground'
+                  <div key={record.id} className="relative group">
+                    <button
+                      disabled={!canManage || toggling === record.id}
+                      onClick={() => handleToggle(record)}
+                      className={cn(
+                        'w-full flex flex-col items-center justify-center rounded-lg border p-3 text-center transition-all',
+                        'hover:shadow-md disabled:opacity-60',
+                        record.present
+                          ? 'bg-primary/15 border-primary/40 text-primary'
+                          : 'bg-muted/40 border-border text-muted-foreground'
+                      )}
+                    >
+                      {toggling === record.id ? (
+                        <Loader2 className="h-5 w-5 animate-spin mb-1" />
+                      ) : record.present ? (
+                        <CheckCircle2 className="h-5 w-5 mb-1" />
+                      ) : (
+                        <XCircle className="h-5 w-5 mb-1" />
+                      )}
+                      <span className="text-xs font-medium leading-tight truncate w-full">
+                        {record.member_name}
+                      </span>
+                    </button>
+                    {canManage && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveMember(record);
+                        }}
+                        disabled={removing === record.id}
+                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                        title="Remover da chamada"
+                      >
+                        {removing === record.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </button>
                     )}
-                  >
-                    {toggling === record.id ? (
-                      <Loader2 className="h-5 w-5 animate-spin mb-1" />
-                    ) : record.present ? (
-                      <CheckCircle2 className="h-5 w-5 mb-1" />
-                    ) : (
-                      <XCircle className="h-5 w-5 mb-1" />
-                    )}
-                    <span className="text-xs font-medium leading-tight truncate w-full">
-                      {record.member_name}
-                    </span>
-                  </button>
+                  </div>
                 ))}
               </div>
             </>
