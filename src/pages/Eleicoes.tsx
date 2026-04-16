@@ -103,16 +103,17 @@ export default function Eleicoes() {
       return;
     }
     setCreating(true);
+    const normalizedSocietyId = societyId && societyId !== 'general' ? societyId : null;
     const { error } = await supabase.from('elections' as any).insert({
       name: name.trim(),
       position: position.trim(),
-      society_id: societyId || null,
+      society_id: normalizedSocietyId,
       created_by: user!.id,
       type: electionType,
     } as any);
 
     if (error) {
-      toast({ title: 'Erro ao criar eleição', variant: 'destructive' });
+      toast({ title: 'Erro ao criar eleição', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Eleição criada!' });
       setDialogOpen(false);
