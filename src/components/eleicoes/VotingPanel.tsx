@@ -247,7 +247,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               </TabsTrigger>
             </TabsList>
             <TabsContent value="celular">
-              <div className="flex items-center gap-3 p-3 border rounded-lg">
+              <div className="flex items-center gap-3 p-3 border border-border/60 bg-muted/40 rounded-lg">
                 <div className="relative cursor-pointer" onClick={() => { setExpandedDeviceToken(null); setQrExpanded(true); }}>
                   <QRCodeSVG value={voteUrl} size={100} />
                   <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
@@ -275,7 +275,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 {devices.map((d) => {
                   const deviceUrl = `${window.location.origin}/vote/${electionId}?mode=urna&token=${d.token}`;
                   return (
-                    <div key={d.id} className="p-3 border rounded-lg space-y-2">
+                    <div key={d.id} className="p-3 border border-border/60 bg-muted/40 rounded-lg space-y-2">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-medium flex items-center gap-1.5">
                           <Monitor className="h-3 w-3" /> {d.label}
@@ -315,7 +315,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             </TabsContent>
           </Tabs>
         ) : (
-          <div className="flex items-center gap-3 p-3 border rounded-lg">
+          <div className="flex items-center gap-3 p-3 border border-border/60 bg-muted/40 rounded-lg">
             <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
               <QRCodeSVG value={voteUrl} size={100} />
               <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
