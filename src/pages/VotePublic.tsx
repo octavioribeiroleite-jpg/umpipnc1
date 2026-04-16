@@ -297,16 +297,9 @@ export default function VotePublic() {
   }
 
   if (voteSuccess) {
+    const isAutoReset = isSharedBehavior || !isIndividual;
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
-        <div className="animate-fade-up">
-          <CheckCircle className="h-24 w-24 text-success mx-auto mb-6" />
-          <h1 className="text-3xl font-bold mb-2">Voto Computado!</h1>
-          <p className="text-muted-foreground text-lg">
-            {isSharedBehavior || !isIndividual ? 'Aguarde para o próximo votante...' : 'Obrigado por votar!'}
-          </p>
-        </div>
-      </div>
+      <SuccessScreen autoReset={isAutoReset} />
     );
   }
 
