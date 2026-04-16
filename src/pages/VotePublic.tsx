@@ -76,6 +76,47 @@ function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name
   );
 }
 
+function SuccessScreen({ autoReset }: { autoReset: boolean }) {
+  const [seconds, setSeconds] = useState(15);
+  useEffect(() => {
+    if (!autoReset) return;
+    const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [autoReset]);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-success/5 p-6 text-center">
+      <div className="animate-fade-up max-w-lg w-full">
+        <div className="relative mx-auto mb-8 w-40 h-40 md:w-48 md:h-48">
+          <div className="absolute inset-0 rounded-full bg-success/20 animate-ping" />
+          <div className="absolute inset-0 rounded-full bg-success/30" />
+          <div className="relative w-full h-full rounded-full bg-success flex items-center justify-center shadow-2xl">
+            <CheckCircle className="h-24 w-24 md:h-28 md:w-28 text-white" strokeWidth={2.5} />
+          </div>
+        </div>
+        <h1 className="text-5xl md:text-7xl font-extrabold text-success mb-4 tracking-tight">
+          VOTO CONFIRMADO
+        </h1>
+        <p className="text-xl md:text-2xl text-foreground font-semibold mb-6">
+          Seu voto foi registrado com sucesso!
+        </p>
+        {autoReset ? (
+          <div className="mt-8">
+            <p className="text-base text-muted-foreground mb-2">
+              Próximo votante em
+            </p>
+            <div className="text-6xl md:text-7xl font-bold text-primary tabular-nums">
+              {seconds}s
+            </div>
+          </div>
+        ) : (
+          <p className="text-lg text-muted-foreground">Obrigado por votar!</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function VotePublic() {
   const { electionId } = useParams<{ electionId: string }>();
   const [searchParams] = useSearchParams();
@@ -175,6 +216,30 @@ export default function VotePublic() {
     setAuthLoading(false);
   };
 
+  const playUrnaSound = () => {
+    try {
+      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.setValueAtTime(1320, now + 0.18);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.35, now + 0.02);
+      gain.gain.setValueAtTime(0.35, now + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.72);
+      setTimeout(() => ctx.close(), 1000);
+    } catch {
+      // navegador pode bloquear áudio sem interação prévia
+    }
+  };
+
   const handleVote = async () => {
     if (!confirmCandidate || !electionId) return;
     setVoting(true);
@@ -193,8 +258,9 @@ export default function VotePublic() {
     setConfirmCandidate(null);
     setVoteSuccess(true);
     setVoting(false);
+    playUrnaSound();
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
-      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); }, 3000);
+      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); }, 15000);
     }
   };
 
@@ -272,16 +338,9 @@ export default function VotePublic() {
   }
 
   if (voteSuccess) {
+    const isAutoReset = isSharedBehavior || !isIndividual;
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
-        <div className="animate-fade-up">
-          <CheckCircle className="h-24 w-24 text-success mx-auto mb-6" />
-          <h1 className="text-3xl font-bold mb-2">Voto Computado!</h1>
-          <p className="text-muted-foreground text-lg">
-            {isSharedBehavior || !isIndividual ? 'Aguarde para o próximo votante...' : 'Obrigado por votar!'}
-          </p>
-        </div>
-      </div>
+      <SuccessScreen autoReset={isAutoReset} />
     );
   }
 
