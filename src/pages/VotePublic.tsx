@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -80,6 +80,7 @@ function SuccessScreen({ autoReset }: { autoReset: boolean }) {
   const [seconds, setSeconds] = useState(15);
   useEffect(() => {
     if (!autoReset) return;
+    setSeconds(15);
     const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(t);
   }, [autoReset]);
@@ -100,7 +101,12 @@ function SuccessScreen({ autoReset }: { autoReset: boolean }) {
         <p className="text-xl md:text-2xl text-foreground font-semibold mb-6">
           Seu voto foi registrado com sucesso!
         </p>
-        {!autoReset && (
+        {autoReset ? (
+          <div className="mt-8 space-y-2">
+            <p className="text-base text-muted-foreground">Próximo votante em</p>
+            <div className="text-6xl md:text-7xl font-bold text-primary tabular-nums">{seconds}s</div>
+          </div>
+        ) : (
           <p className="text-lg text-muted-foreground">Obrigado por votar!</p>
         )}
       </div>
@@ -130,6 +136,7 @@ export default function VotePublic() {
   const [authPassword, setAuthPassword] = useState('');
   const [deviceLabel, setDeviceLabel] = useState('');
   const [invalidToken, setInvalidToken] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
@@ -207,27 +214,51 @@ export default function VotePublic() {
     setAuthLoading(false);
   };
 
-  const playUrnaSound = () => {
+  const primeAudio = async () => {
     try {
-      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext);
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(880, now);
-      osc.frequency.setValueAtTime(1320, now + 0.18);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.35, now + 0.02);
-      gain.gain.setValueAtTime(0.35, now + 0.5);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.72);
-      setTimeout(() => ctx.close(), 1000);
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        audioContextRef.current = new AudioCtx();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
     } catch {
-      // navegador pode bloquear áudio sem interação prévia
+      // ignore
+    }
+  };
+
+  const playUrnaSound = async () => {
+    try {
+      await primeAudio();
+      const ctx = audioContextRef.current;
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'square';
+      osc1.frequency.setValueAtTime(1480, now);
+      gain1.gain.setValueAtTime(0.0001, now);
+      gain1.gain.exponentialRampToValueAtTime(0.28, now + 0.01);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+      osc1.connect(gain1).connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.15);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(1480, now + 0.18);
+      gain2.gain.setValueAtTime(0.0001, now + 0.18);
+      gain2.gain.exponentialRampToValueAtTime(0.28, now + 0.19);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+      osc2.connect(gain2).connect(ctx.destination);
+      osc2.start(now + 0.18);
+      osc2.stop(now + 0.33);
+    } catch {
+      // ignore
     }
   };
 
@@ -249,7 +280,7 @@ export default function VotePublic() {
     setConfirmCandidate(null);
     setVoteSuccess(true);
     setVoting(false);
-    playUrnaSound();
+    void playUrnaSound();
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
       setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); }, 15000);
     }
@@ -350,7 +381,7 @@ export default function VotePublic() {
             <button onClick={() => setConfirmCandidate(null)} className="flex-1 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors">
               Cancelar
             </button>
-            <button onClick={handleVote} disabled={voting} className="flex-1 py-4 rounded-xl bg-primary text-primary-foreground text-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
+            <button onClick={() => { void primeAudio(); void handleVote(); }} disabled={voting} className="flex-1 py-4 rounded-xl bg-primary text-primary-foreground text-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
               {voting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'CONFIRMAR'}
             </button>
           </div>
