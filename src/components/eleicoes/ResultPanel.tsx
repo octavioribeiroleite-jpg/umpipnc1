@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Trophy, CheckCircle, UserCheck } from 'lucide-react';
@@ -38,24 +38,24 @@ export function ResultPanel({ electionId, totalPresent, candidates }: ResultPane
   const isValid = totalVotes === totalPresent;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5" /> Resultado
-          {isValid ? (
-            <Badge className="bg-success text-success-foreground"><CheckCircle className="h-3 w-3 mr-1" /> Válido</Badge>
-          ) : (
-            <Badge variant="destructive">Inválido</Badge>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-3">
-          {results.map((r, i) => {
-            const candidate = candidates.find((c) => c.id === r.candidate_id);
-            const pct = totalVotes > 0 ? Math.round((r.count / totalVotes) * 100) : 0;
-            return (
-              <div key={r.candidate_id} className="flex items-center gap-3 p-3 border rounded-lg">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Trophy className="h-5 w-5 text-warning" />
+        <h3 className="font-semibold text-foreground">Resultado</h3>
+        {isValid ? (
+          <Badge className="bg-success text-success-foreground"><CheckCircle className="h-3 w-3 mr-1" /> Válido</Badge>
+        ) : (
+          <Badge variant="destructive">Inválido</Badge>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        {results.map((r, i) => {
+          const candidate = candidates.find((c) => c.id === r.candidate_id);
+          const pct = totalVotes > 0 ? Math.round((r.count / totalVotes) * 100) : 0;
+          return (
+            <AppCard key={r.candidate_id} noPadding>
+              <div className="flex items-center gap-3 p-3">
                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex items-center justify-center shrink-0">
                   {candidate?.photo_url ? (
                     <img src={candidate.photo_url} alt={candidate?.name} className="w-full h-full object-cover" />
@@ -66,26 +66,26 @@ export function ResultPanel({ electionId, totalPresent, candidates }: ResultPane
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     {i === 0 && <Trophy className="h-4 w-4 text-warning" />}
-                    <span className="font-medium">{candidate?.name || 'Desconhecido'}</span>
+                    <span className="font-medium text-foreground">{candidate?.name || 'Desconhecido'}</span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2 mt-1">
-                    <div className="bg-primary rounded-full h-2" style={{ width: `${pct}%` }} />
+                  <div className="w-full bg-muted rounded-full h-2 mt-1.5">
+                    <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-lg font-bold">{r.count}</p>
+                  <p className="text-lg font-bold text-foreground">{r.count}</p>
                   <p className="text-xs text-muted-foreground">{pct}%</p>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </AppCard>
+          );
+        })}
+      </div>
 
-        <div className="flex gap-4 pt-2 border-t text-sm">
-          <span>Total votos: <strong>{totalVotes}</strong></span>
-          <span>Total presentes: <strong>{totalPresent}</strong></span>
-        </div>
-      </CardContent>
-    </Card>
+      <div className="flex gap-4 pt-2 border-t border-border/50 text-sm text-foreground">
+        <span>Total votos: <strong>{totalVotes}</strong></span>
+        <span>Total presentes: <strong>{totalPresent}</strong></span>
+      </div>
+    </div>
   );
 }

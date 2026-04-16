@@ -206,15 +206,15 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
         {/* Compact counters */}
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="p-2 bg-muted rounded-lg">
-            <p className="text-lg font-bold">{totalPresent}</p>
+          <div className="p-2 bg-muted/60 border border-border/50 rounded-lg">
+            <p className="text-lg font-bold text-foreground">{totalPresent}</p>
             <p className="text-[10px] text-muted-foreground">Presentes</p>
           </div>
-          <div className="p-2 bg-muted rounded-lg">
-            <p className="text-lg font-bold">{voteCount}</p>
+          <div className="p-2 bg-muted/60 border border-border/50 rounded-lg">
+            <p className="text-lg font-bold text-foreground">{voteCount}</p>
             <p className="text-[10px] text-muted-foreground">Votos</p>
           </div>
-          <div className={`p-2 rounded-lg ${diff === 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
+          <div className={`p-2 rounded-lg border ${diff === 0 ? 'bg-success/15 border-success/40' : 'bg-destructive/15 border-destructive/40'}`}>
             <p className={`text-lg font-bold ${diff === 0 ? 'text-success' : 'text-destructive'}`}>
               {diff > 0 ? `+${diff}` : diff}
             </p>
@@ -247,7 +247,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               </TabsTrigger>
             </TabsList>
             <TabsContent value="celular">
-              <div className="flex items-center gap-3 p-3 border rounded-lg">
+              <div className="flex items-center gap-3 p-3 border border-border/60 bg-muted/40 rounded-lg">
                 <div className="relative cursor-pointer" onClick={() => { setExpandedDeviceToken(null); setQrExpanded(true); }}>
                   <QRCodeSVG value={voteUrl} size={100} />
                   <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
@@ -275,7 +275,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 {devices.map((d) => {
                   const deviceUrl = `${window.location.origin}/vote/${electionId}?mode=urna&token=${d.token}`;
                   return (
-                    <div key={d.id} className="p-3 border rounded-lg space-y-2">
+                    <div key={d.id} className="p-3 border border-border/60 bg-muted/40 rounded-lg space-y-2">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-medium flex items-center gap-1.5">
                           <Monitor className="h-3 w-3" /> {d.label}
@@ -315,7 +315,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             </TabsContent>
           </Tabs>
         ) : (
-          <div className="flex items-center gap-3 p-3 border rounded-lg">
+          <div className="flex items-center gap-3 p-3 border border-border/60 bg-muted/40 rounded-lg">
             <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
               <QRCodeSVG value={voteUrl} size={100} />
               <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">

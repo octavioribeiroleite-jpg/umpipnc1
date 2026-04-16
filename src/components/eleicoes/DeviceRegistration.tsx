@@ -72,7 +72,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
       ) : (
         <div className="space-y-2">
           {devices.map((d) => (
-            <div key={d.id} className="flex items-center gap-2 p-2.5 border rounded-lg">
+            <div key={d.id} className="flex items-center gap-2 p-2.5 border border-border/60 bg-muted/40 rounded-lg">
               <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
               <span className="text-sm font-medium flex-1">{d.label}</span>
               {d.activated ? (
