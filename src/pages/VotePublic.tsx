@@ -175,6 +175,30 @@ export default function VotePublic() {
     setAuthLoading(false);
   };
 
+  const playUrnaSound = () => {
+    try {
+      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.setValueAtTime(1320, now + 0.18);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.35, now + 0.02);
+      gain.gain.setValueAtTime(0.35, now + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.72);
+      setTimeout(() => ctx.close(), 1000);
+    } catch {
+      // navegador pode bloquear áudio sem interação prévia
+    }
+  };
+
   const handleVote = async () => {
     if (!confirmCandidate || !electionId) return;
     setVoting(true);
@@ -193,8 +217,9 @@ export default function VotePublic() {
     setConfirmCandidate(null);
     setVoteSuccess(true);
     setVoting(false);
+    playUrnaSound();
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
-      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); }, 3000);
+      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); }, 15000);
     }
   };
 
