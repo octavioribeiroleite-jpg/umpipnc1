@@ -80,6 +80,7 @@ function SuccessScreen({ autoReset }: { autoReset: boolean }) {
   const [seconds, setSeconds] = useState(15);
   useEffect(() => {
     if (!autoReset) return;
+    setSeconds(15);
     const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(t);
   }, [autoReset]);
@@ -100,7 +101,12 @@ function SuccessScreen({ autoReset }: { autoReset: boolean }) {
         <p className="text-xl md:text-2xl text-foreground font-semibold mb-6">
           Seu voto foi registrado com sucesso!
         </p>
-        {!autoReset && (
+        {autoReset ? (
+          <div className="mt-8 space-y-2">
+            <p className="text-base text-muted-foreground">Próximo votante em</p>
+            <div className="text-6xl md:text-7xl font-bold text-primary tabular-nums">{seconds}s</div>
+          </div>
+        ) : (
           <p className="text-lg text-muted-foreground">Obrigado por votar!</p>
         )}
       </div>
