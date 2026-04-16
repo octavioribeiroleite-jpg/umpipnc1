@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { AppCard } from '@/components/ui/app-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash2, Vote, Users, Shirt } from 'lucide-react';
@@ -29,12 +29,12 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
   const isCamisa = election.type === 'camisa';
 
   return (
-    <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={onClick}>
-      <CardContent className="flex items-center justify-between p-3">
+    <AppCard variant="interactive" noPadding onClick={onClick}>
+      <div className="flex items-center justify-between p-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             {isCamisa && <Shirt className="h-4 w-4 text-primary shrink-0" />}
-            <h3 className="font-semibold truncate">{election.name}</h3>
+            <h3 className="font-semibold text-foreground truncate">{election.name}</h3>
             <Badge variant={status.variant}>{status.label}</Badge>
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -61,7 +61,7 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </AppCard>
   );
 }
