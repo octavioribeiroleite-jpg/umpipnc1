@@ -100,16 +100,7 @@ function SuccessScreen({ autoReset }: { autoReset: boolean }) {
         <p className="text-xl md:text-2xl text-foreground font-semibold mb-6">
           Seu voto foi registrado com sucesso!
         </p>
-        {autoReset ? (
-          <div className="mt-8">
-            <p className="text-base text-muted-foreground mb-2">
-              Próximo votante em
-            </p>
-            <div className="text-6xl md:text-7xl font-bold text-primary tabular-nums">
-              {seconds}s
-            </div>
-          </div>
-        ) : (
+        {!autoReset && (
           <p className="text-lg text-muted-foreground">Obrigado por votar!</p>
         )}
       </div>
