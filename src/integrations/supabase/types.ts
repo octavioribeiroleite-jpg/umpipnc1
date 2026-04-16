@@ -547,6 +547,7 @@ export type Database = {
           society_id: string | null
           status: string
           total_present: number
+          type: string
           voting_mode: string
         }
         Insert: {
@@ -558,6 +559,7 @@ export type Database = {
           society_id?: string | null
           status?: string
           total_present?: number
+          type?: string
           voting_mode?: string
         }
         Update: {
@@ -569,6 +571,7 @@ export type Database = {
           society_id?: string | null
           status?: string
           total_present?: number
+          type?: string
           voting_mode?: string
         }
         Relationships: [
@@ -1817,6 +1820,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_elections: { Args: { _user_id: string }; Returns: boolean }
       delete_task: { Args: { task_id: string }; Returns: undefined }
       get_email_by_username: { Args: { _username: string }; Returns: string }
       get_user_society_id: { Args: { _user_id: string }; Returns: string }
