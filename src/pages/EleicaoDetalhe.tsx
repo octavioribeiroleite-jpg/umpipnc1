@@ -112,10 +112,10 @@ export default function EleicaoDetalhe() {
       </div>
 
       <Accordion type="multiple" defaultValue={defaultOpen} className="space-y-2">
-        <AccordionItem value="candidatos" className="border rounded-lg px-3">
-          <AccordionTrigger className="py-3 text-sm font-medium">
+        <AccordionItem value="candidatos" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
+          <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
             <span className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4" /> {electionType === 'camisa' ? 'Modelos' : 'Candidatos'}
+              <UserCheck className="h-4 w-4 text-primary" /> {electionType === 'camisa' ? 'Modelos' : 'Candidatos'}
             </span>
           </AccordionTrigger>
           <AccordionContent>
@@ -129,10 +129,10 @@ export default function EleicaoDetalhe() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="votacao" className="border rounded-lg px-3">
-          <AccordionTrigger className="py-3 text-sm font-medium">
+        <AccordionItem value="votacao" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
+          <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
             <span className="flex items-center gap-2">
-              <Vote className="h-4 w-4" /> Votação
+              <Vote className="h-4 w-4 text-primary" /> Votação
             </span>
           </AccordionTrigger>
           <AccordionContent>
@@ -150,10 +150,10 @@ export default function EleicaoDetalhe() {
         </AccordionItem>
 
         {showDevices && (
-          <AccordionItem value="dispositivos" className="border rounded-lg px-3">
-            <AccordionTrigger className="py-3 text-sm font-medium">
+          <AccordionItem value="dispositivos" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
+            <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
               <span className="flex items-center gap-2">
-                <Monitor className="h-4 w-4" /> Dispositivos Fixos
+                <Monitor className="h-4 w-4 text-primary" /> Dispositivos Fixos
                 {devices.length > 0 && (
                   <span className="text-[10px] text-muted-foreground ml-1">({devices.length})</span>
                 )}
@@ -170,10 +170,10 @@ export default function EleicaoDetalhe() {
           </AccordionItem>
         )}
 
-        <AccordionItem value="chamada" className="border rounded-lg px-3">
-          <AccordionTrigger className="py-3 text-sm font-medium">
+        <AccordionItem value="chamada" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
+          <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
             <span className="flex items-center gap-2">
-              <Users className="h-4 w-4" /> Chamada de Presença
+              <Users className="h-4 w-4 text-primary" /> Chamada de Presença
             </span>
           </AccordionTrigger>
           <AccordionContent>
@@ -188,10 +188,10 @@ export default function EleicaoDetalhe() {
         </AccordionItem>
 
         {election.status === 'finished' && (
-          <AccordionItem value="resultado" className="border rounded-lg px-3">
-            <AccordionTrigger className="py-3 text-sm font-medium">
+          <AccordionItem value="resultado" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
+            <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
               <span className="flex items-center gap-2">
-                <Trophy className="h-4 w-4" /> Resultado
+                <Trophy className="h-4 w-4 text-warning" /> Resultado
               </span>
             </AccordionTrigger>
             <AccordionContent>
