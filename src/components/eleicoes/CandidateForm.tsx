@@ -49,14 +49,14 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
   const handleSinglePhotoUpload = async (candidateId: string, file: File) => {
     setUploading(candidateId);
     const ext = file.name.split('.').pop();
-    const path = `elections/${electionId}/${candidateId}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from('receipts').upload(path, file, { upsert: true });
+    const path = `${electionId}/${candidateId}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from('election-photos').upload(path, file, { upsert: true });
     if (uploadError) {
-      toast({ title: 'Erro no upload', variant: 'destructive' });
+      toast({ title: 'Erro no upload', description: uploadError.message, variant: 'destructive' });
       setUploading(null);
       return;
     }
-    const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(path);
+    const { data: urlData } = supabase.storage.from('election-photos').getPublicUrl(path);
     await supabase.from('election_candidates' as any).update({ photo_url: urlData.publicUrl } as any).eq('id', candidateId);
     setUploading(null);
     onRefresh();
@@ -69,15 +69,15 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
     const currentUrls: string[] = (candidate as any)?.photo_urls || [];
     const ext = file.name.split('.').pop();
     const uniqueId = crypto.randomUUID().slice(0, 8);
-    const path = `elections/${electionId}/${candidateId}_${uniqueId}.${ext}`;
+    const path = `${electionId}/${candidateId}_${uniqueId}.${ext}`;
     
-    const { error: uploadError } = await supabase.storage.from('receipts').upload(path, file, { upsert: true });
+    const { error: uploadError } = await supabase.storage.from('election-photos').upload(path, file, { upsert: true });
     if (uploadError) {
-      toast({ title: 'Erro no upload', variant: 'destructive' });
+      toast({ title: 'Erro no upload', description: uploadError.message, variant: 'destructive' });
       setUploading(null);
       return;
     }
-    const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(path);
+    const { data: urlData } = supabase.storage.from('election-photos').getPublicUrl(path);
     const newUrls = [...currentUrls, urlData.publicUrl];
     
     // Update photo_urls array and set first photo as photo_url fallback
