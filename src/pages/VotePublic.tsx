@@ -279,10 +279,10 @@ export default function VotePublic() {
     const { error } = await supabase.from('election_votes' as any).insert(voteData as any);
     if (error) { setVoting(false); return; }
     if (isIndividual) localStorage.setItem(`voted_${electionId}`, 'true');
+    playUrnaSound();
     setConfirmCandidate(null);
     setVoteSuccess(true);
     setVoting(false);
-    void playUrnaSound();
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
       setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); setConfirmCandidate(null); }, 15000);
     }
