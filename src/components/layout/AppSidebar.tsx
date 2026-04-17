@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import logoIpnc from '@/assets/logo-ipnc.png';
+import { BuildStamp } from '@/components/BuildStamp';
 
 const menuItems = [
   { icon: Home, label: 'Home', path: '/' },
@@ -148,6 +149,7 @@ export function AppSidebar() {
           {!collapsed && <span>Sair</span>}
         </Button>
         <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
+        {!collapsed && <BuildStamp className="mt-3" />}
       </div>
     </aside>
   );

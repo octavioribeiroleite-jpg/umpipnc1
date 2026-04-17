@@ -13,6 +13,7 @@ import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight,
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
+import { BuildStamp } from '@/components/BuildStamp';
 
 interface Society {
   id: string;
@@ -877,6 +878,13 @@ export default function Auth() {
       <div className={`relative z-20 min-h-screen flex items-center justify-center p-4 transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
         {splashPhase === 'done' && renderContent()}
       </div>
+
+      {/* Carimbo de build — sempre visível para diagnóstico de cache */}
+      {splashPhase === 'done' && (
+        <div className="fixed bottom-2 left-0 right-0 z-30 px-4 pointer-events-none safe-bottom">
+          <BuildStamp className="text-white/70" />
+        </div>
+      )}
     </div>
   );
 }
