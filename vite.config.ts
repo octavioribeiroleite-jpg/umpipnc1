@@ -16,4 +16,7 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
 }));

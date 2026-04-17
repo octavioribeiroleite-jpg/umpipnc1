@@ -17,6 +17,7 @@ import {
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import logoIpnc from '@/assets/logo-ipnc.png';
+import { BuildStamp } from '@/components/BuildStamp';
 
 interface Society {
   id: string;
@@ -124,6 +125,7 @@ export function PastorSidebar() {
           Sair
         </Button>
         <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={doSignOut} />
+        <BuildStamp className="mt-3" />
       </div>
     </aside>
   );

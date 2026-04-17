@@ -37,6 +37,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { ShareAppDialog } from '@/components/layout/ShareAppDialog';
 import { InstallButton } from '@/components/layout/InstallButton';
+import { BuildStamp } from '@/components/BuildStamp';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
@@ -166,6 +167,9 @@ export function MobileHeader() {
                   <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
                 </div>
               )}
+              <div className="px-4 pb-3">
+                <BuildStamp />
+              </div>
             </SheetContent>
           </Sheet>
 

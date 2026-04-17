@@ -30,6 +30,7 @@ import { Separator } from '@/components/ui/separator';
 import { ShareAppDialog } from '@/components/layout/ShareAppDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { InstallButton } from '@/components/layout/InstallButton';
+import { BuildStamp } from '@/components/BuildStamp';
 
 interface Society {
   id: string;
@@ -178,6 +179,9 @@ export function PastorMobileHeader() {
                   <ExitConfirmDialog open={showExitConfirm} onOpenChange={setShowExitConfirm} onConfirm={doSignOut} />
                 </div>
               )}
+              <div className="px-4 pb-3">
+                <BuildStamp />
+              </div>
             </SheetContent>
           </Sheet>
 
