@@ -137,8 +137,8 @@ export default function VotePublic() {
   const [authPassword, setAuthPassword] = useState('');
   const [deviceLabel, setDeviceLabel] = useState('');
   const [invalidToken, setInvalidToken] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
@@ -216,34 +216,51 @@ export default function VotePublic() {
     setAuthLoading(false);
   };
 
-  const primeAudio = async () => {
+  const ensureAudio = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(voteConfirmSound);
+      audioRef.current.preload = 'auto';
+      audioRef.current.volume = 0.9;
+      audioRef.current.load();
+    }
+    return audioRef.current;
+  };
+
+  const primeAudio = () => {
+    // CRITICAL: must run synchronously inside a user gesture (no await before play)
     try {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(voteConfirmSound);
-        audioRef.current.preload = 'auto';
-        audioRef.current.volume = 0.9;
+      const a = ensureAudio();
+      if (audioUnlockedRef.current) return;
+      a.muted = true;
+      const p = a.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          a.pause();
+          a.currentTime = 0;
+          a.muted = false;
+          audioUnlockedRef.current = true;
+          console.log('[vote-audio] unlocked');
+        }).catch((err) => {
+          console.warn('[vote-audio] prime failed:', err);
+          a.muted = false;
+        });
       }
-      // Toca e pausa silenciosamente para liberar autoplay no gesto do usuário
-      audioRef.current.muted = true;
-      try { await audioRef.current.play(); } catch { /* ignore */ }
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.muted = false;
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('[vote-audio] prime error:', err);
     }
   };
 
-  const playUrnaSound = async () => {
+  const playUrnaSound = () => {
     try {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(voteConfirmSound);
-        audioRef.current.volume = 0.9;
+      const a = ensureAudio();
+      a.muted = false;
+      a.currentTime = 0;
+      const p = a.play();
+      if (p && typeof p.then === 'function') {
+        p.catch((err) => console.warn('[vote-audio] play failed:', err));
       }
-      audioRef.current.currentTime = 0;
-      await audioRef.current.play();
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('[vote-audio] play error:', err);
     }
   };
 
@@ -262,10 +279,10 @@ export default function VotePublic() {
     const { error } = await supabase.from('election_votes' as any).insert(voteData as any);
     if (error) { setVoting(false); return; }
     if (isIndividual) localStorage.setItem(`voted_${electionId}`, 'true');
+    playUrnaSound();
     setConfirmCandidate(null);
     setVoteSuccess(true);
     setVoting(false);
-    void playUrnaSound();
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
       setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); setConfirmCandidate(null); }, 15000);
     }
