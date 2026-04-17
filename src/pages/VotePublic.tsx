@@ -234,29 +234,61 @@ export default function VotePublic() {
       await primeAudio();
       const ctx = audioContextRef.current;
       if (!ctx) return;
-      const now = ctx.currentTime;
+      const now = ctx.currentTime + 0.02;
 
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'square';
-      osc1.frequency.setValueAtTime(1480, now);
-      gain1.gain.setValueAtTime(0.0001, now);
-      gain1.gain.exponentialRampToValueAtTime(0.28, now + 0.01);
-      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
-      osc1.connect(gain1).connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.15);
+      const scheduleTone = ({
+        start,
+        duration,
+        frequency,
+        volume,
+        type = 'square',
+        detune = 0,
+      }: {
+        start: number;
+        duration: number;
+        frequency: number;
+        volume: number;
+        type?: OscillatorType;
+        detune?: number;
+      }) => {
+        const osc = ctx.createOscillator();
+        const sub = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'square';
-      osc2.frequency.setValueAtTime(1480, now + 0.18);
-      gain2.gain.setValueAtTime(0.0001, now + 0.18);
-      gain2.gain.exponentialRampToValueAtTime(0.28, now + 0.19);
-      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
-      osc2.connect(gain2).connect(ctx.destination);
-      osc2.start(now + 0.18);
-      osc2.stop(now + 0.33);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2200, now + start);
+        filter.Q.value = 0.8;
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, now + start);
+        osc.detune.setValueAtTime(detune, now + start);
+
+        sub.type = 'triangle';
+        sub.frequency.setValueAtTime(frequency / 2, now + start);
+
+        gain.gain.setValueAtTime(0.0001, now + start);
+        gain.gain.exponentialRampToValueAtTime(volume, now + start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(Math.max(volume * 0.55, 0.001), now + start + duration * 0.55);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+
+        osc.connect(filter);
+        sub.connect(filter);
+        filter.connect(gain).connect(ctx.destination);
+
+        osc.start(now + start);
+        sub.start(now + start);
+        osc.stop(now + start + duration);
+        sub.stop(now + start + duration);
+      };
+
+      [
+        { start: 0, frequency: 720, duration: 0.24, volume: 0.12, type: 'square' as OscillatorType },
+        { start: 0.18, frequency: 860, duration: 0.26, volume: 0.14, type: 'square' as OscillatorType },
+        { start: 0.38, frequency: 1040, duration: 0.28, volume: 0.16, type: 'sawtooth' as OscillatorType, detune: 3 },
+        { start: 0.62, frequency: 860, duration: 0.3, volume: 0.15, type: 'square' as OscillatorType },
+        { start: 0.88, frequency: 640, duration: 0.42, volume: 0.18, type: 'square' as OscillatorType },
+      ].forEach(scheduleTone);
     } catch {
       // ignore
     }
