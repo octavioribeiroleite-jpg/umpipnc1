@@ -267,7 +267,7 @@ export default function VotePublic() {
     setVoting(false);
     void playUrnaSound();
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
-      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); }, 15000);
+      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); setConfirmCandidate(null); }, 15000);
     }
   };
 
@@ -322,7 +322,7 @@ export default function VotePublic() {
               <Input id="urna-password" type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Digite sua senha" onKeyDown={(e) => e.key === 'Enter' && handleUrnaAuth()} />
             </div>
             {authError && <p className="text-sm text-destructive text-center">{authError}</p>}
-            <Button onClick={handleUrnaAuth} disabled={authLoading || !authUsername.trim() || !authPassword.trim()} className="w-full" size="lg">
+            <Button onClick={() => { void primeAudio(); void handleUrnaAuth(); }} disabled={authLoading || !authUsername.trim() || !authPassword.trim()} className="w-full" size="lg">
               {authLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogIn className="h-4 w-4 mr-2" />}
               Autenticar
             </Button>
@@ -390,7 +390,7 @@ export default function VotePublic() {
               </p>
             )}
           </div>
-          <button onClick={() => setReadyToVote(true)} className="w-full py-5 rounded-xl bg-primary text-primary-foreground text-xl font-bold hover:bg-primary/90 transition-colors">
+          <button onClick={() => { void primeAudio(); setReadyToVote(true); }} className="w-full py-5 rounded-xl bg-primary text-primary-foreground text-xl font-bold hover:bg-primary/90 transition-colors">
             Iniciar Votação
           </button>
         </div>
