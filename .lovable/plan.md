@@ -1,37 +1,92 @@
 
-O usuário quer um indicador visível de "última atualização" no site para confirmar se uma nova versão foi de fato carregada no navegador. Isso resolve dois problemas: (1) diagnóstico do cache antigo e (2) confiança visual de que o publish chegou.
 
-## Plano
+## Diagnóstico da página atual
 
-Adicionar um carimbo de **build (data/hora)** gerado automaticamente em cada build do Vite e exibi-lo de forma discreta no app.
+Pelo print:
+- **5 accordions empilhados** sem hierarquia clara — o usuário não sabe por onde começar
+- O bloco "Votação" mostra **erros vermelhos longe do botão** que está desabilitado, sem indicar visualmente *o que já foi feito*
+- O modo "Urna Fixa" é a opção padrão mas **"Dispositivos Fixos" está fechado abaixo** — desconecta a causa do efeito
+- "Chamada de Presença" fica por último, mas é **pré-requisito** para iniciar
+- Header é compacto demais e não comunica progresso geral
 
-### Como funciona
+## Proposta de redesenho
 
-1. **`vite.config.ts`** — injetar uma constante global `__BUILD_TIME__` com `new Date().toISOString()` no momento do build, via `define`.
-2. **`src/vite-env.d.ts`** — declarar o tipo `declare const __BUILD_TIME__: string;`.
-3. **Componente `BuildStamp`** (novo, em `src/components/BuildStamp.tsx`) — formata a data em PT-BR com timezone local (ex.: "Atualizado em 17/04/2026 às 14h32") e renderiza pequeno e discreto.
-4. **Exibição**:
-   - Rodapé do menu lateral (mobile) em `MobileHeader.tsx`, abaixo do bloco do usuário.
-   - Rodapé da `AppSidebar` (desktop), abaixo do botão de Sair.
-   - Rodapé do `PastorSidebar` e `PastorMobileHeader` (para o pastor ver também).
-   - Tela `/auth` (rodapé), para confirmar versão antes mesmo de logar — útil no diagnóstico atual.
+Transformar a página em um **wizard guiado por etapas**, mantendo a flexibilidade de voltar a qualquer passo, mas com um indicador visual claro do progresso.
 
-### Junto desta atualização
+### 1. Header reformulado (mais presença)
 
-Como a constante `__BUILD_TIME__` só é gerada quando o build novo realmente chega ao navegador, o próprio carimbo já serve como prova: se aparecer "17/04/2026", a versão nova carregou; se não aparecer ou ficar antiga, ainda há cache preso.
+```text
+┌─────────────────────────────────────────────────┐
+│ ← │  Diáconos                    [Rascunho]    │
+│   │  Eleição de cargo                           │
+│   │  ───────────────────────────────────────   │
+│   │  ●━━━━○━━━━○━━━━○   Etapa 1 de 4: Candidatos
+└─────────────────────────────────────────────────┘
+```
+
+- Stepper horizontal com 4 etapas: **Candidatos → Presença → Dispositivos → Iniciar**
+- Cada etapa: ✓ verde (completa), ● azul (atual), ○ cinza (pendente)
+- Subtítulo dinâmico mostra a próxima ação
+
+### 2. Card único da etapa atual (em vez de 5 accordions abertos)
+
+Mostrar **apenas o card da etapa atual em destaque**, com os outros como "linhas resumo" colapsadas:
+
+```text
+┌─ ✓ Candidatos (3 cadastrados)         editar ─┐
+└────────────────────────────────────────────────┘
+
+┌─ ● ETAPA ATUAL ─────────────────────────────────┐
+│  👥 Chamada de Presença                         │
+│                                                 │
+│  [campo + botões grandes]                       │
+│  Lista de membros com checkbox...               │
+│                                                 │
+│  [Confirmar Presença →]                         │
+└─────────────────────────────────────────────────┘
+
+┌─ ○ Dispositivos Fixos (pendente)               ─┐
+└─────────────────────────────────────────────────┘
+
+┌─ ○ Iniciar Votação (pendente)                  ─┐
+└─────────────────────────────────────────────────┘
+```
+
+Etapas concluídas viram **linha fina verde com ✓ e contador**, clicáveis para reabrir.
+Etapas futuras aparecem **cinza claro, desabilitadas**, mas visíveis para dar noção do todo.
+
+### 3. Modo de votação em destaque visual
+
+No card "Iniciar Votação":
+- Cards de modo **maiores, com ilustração**, não só ícone pequeno
+- Cada modo mostra **automaticamente** o que precisa: ao escolher "Urna Fixa", aparece logo abaixo "→ Cadastre 1 urna" com link direto para a etapa
+- Os erros vermelhos viram **checklist verde/cinza** (✓ feito / ○ falta), posicionado **ao lado do botão**, não embaixo
+
+### 4. Reordenar etapas conforme dependência lógica
+
+Ordem nova (alinhada ao fluxo real):
+1. **Candidatos** — sem isso nada acontece
+2. **Chamada de Presença** — define quórum e total
+3. **Dispositivos Fixos** — só aparece se modo for Urna/Ambos
+4. **Iniciar Votação** — gateway final com checklist
+
+### 5. Pequenos polimentos
+
+- Badge "Rascunho" com ícone de lápis em vez de só texto
+- Background do card ativo levemente destacado (`bg-primary/5`)
+- Animação suave (`transition-all`) ao mudar de etapa
+- No mobile, o stepper vira pontilhado compacto no topo
 
 ### Arquivos a alterar
 
-- `vite.config.ts` (define)
-- `src/vite-env.d.ts` (tipo global)
-- `src/components/BuildStamp.tsx` (novo)
-- `src/components/layout/MobileHeader.tsx`
-- `src/components/layout/AppSidebar.tsx`
-- `src/components/pastor/PastorSidebar.tsx`
-- `src/components/pastor/PastorMobileHeader.tsx`
-- `src/pages/Auth.tsx`
+- `src/pages/EleicaoDetalhe.tsx` — substitui Accordion por novo layout stepper + cards
+- Novo componente `src/components/eleicoes/ElectionStepper.tsx` — indicador de progresso
+- Novo componente `src/components/eleicoes/ElectionStepCard.tsx` — wrapper de cada etapa (ativa/concluída/pendente)
+- Pequeno ajuste em `VotingPanel.tsx` — checklist verde/cinza no lugar dos erros vermelhos
 
 ### Resultado esperado
 
-- Em todo lugar relevante do app aparece "Atualizado em DD/MM/AAAA às HHhMM".
-- Você consegue comparar instantaneamente o carimbo do PC com o do celular ou aba anônima e identificar onde está o cache antigo.
+- Quem abre a página entende em 2 segundos **onde está e o que falta**
+- Impossível tentar iniciar votação sem ver o que está bloqueando
+- Visual mais leve (1 card ativo em vez de 5 abertos) e mais "guiado"
+
