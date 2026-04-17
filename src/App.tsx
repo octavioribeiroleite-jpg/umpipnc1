@@ -40,6 +40,7 @@ import Aniversariantes from "./pages/Aniversariantes";
 
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { UpdateAvailableBanner } from "@/components/UpdateAvailableBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +62,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <UpdateAvailableBanner />
       <PWAInstallPrompt />
       <BrowserRouter>
         <AuthProvider>
