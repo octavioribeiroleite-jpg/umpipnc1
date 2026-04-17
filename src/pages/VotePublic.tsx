@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import voteConfirmSound from '@/assets/vote-confirm.mp3';
 
 interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; }
 interface Candidate { id: string; name: string; photo_url: string | null; photo_urls?: string[]; display_order: number; }
@@ -137,6 +138,7 @@ export default function VotePublic() {
   const [deviceLabel, setDeviceLabel] = useState('');
   const [invalidToken, setInvalidToken] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
@@ -216,14 +218,17 @@ export default function VotePublic() {
 
   const primeAudio = async () => {
     try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-        audioContextRef.current = new AudioCtx();
+      if (!audioRef.current) {
+        audioRef.current = new Audio(voteConfirmSound);
+        audioRef.current.preload = 'auto';
+        audioRef.current.volume = 0.9;
       }
-      if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
-      }
+      // Toca e pausa silenciosamente para liberar autoplay no gesto do usuário
+      audioRef.current.muted = true;
+      try { await audioRef.current.play(); } catch { /* ignore */ }
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.muted = false;
     } catch {
       // ignore
     }
@@ -231,64 +236,12 @@ export default function VotePublic() {
 
   const playUrnaSound = async () => {
     try {
-      await primeAudio();
-      const ctx = audioContextRef.current;
-      if (!ctx) return;
-      const now = ctx.currentTime + 0.02;
-
-      const scheduleTone = ({
-        start,
-        duration,
-        frequency,
-        volume,
-        type = 'square',
-        detune = 0,
-      }: {
-        start: number;
-        duration: number;
-        frequency: number;
-        volume: number;
-        type?: OscillatorType;
-        detune?: number;
-      }) => {
-        const osc = ctx.createOscillator();
-        const sub = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
-
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(2200, now + start);
-        filter.Q.value = 0.8;
-
-        osc.type = type;
-        osc.frequency.setValueAtTime(frequency, now + start);
-        osc.detune.setValueAtTime(detune, now + start);
-
-        sub.type = 'triangle';
-        sub.frequency.setValueAtTime(frequency / 2, now + start);
-
-        gain.gain.setValueAtTime(0.0001, now + start);
-        gain.gain.exponentialRampToValueAtTime(volume, now + start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(Math.max(volume * 0.55, 0.001), now + start + duration * 0.55);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
-
-        osc.connect(filter);
-        sub.connect(filter);
-        filter.connect(gain).connect(ctx.destination);
-
-        osc.start(now + start);
-        sub.start(now + start);
-        osc.stop(now + start + duration);
-        sub.stop(now + start + duration);
-      };
-
-      [
-        { start: 0, frequency: 720, duration: 0.24, volume: 0.12, type: 'square' as OscillatorType },
-        { start: 0.18, frequency: 860, duration: 0.26, volume: 0.14, type: 'square' as OscillatorType },
-        { start: 0.38, frequency: 1040, duration: 0.28, volume: 0.16, type: 'sawtooth' as OscillatorType, detune: 3 },
-        { start: 0.62, frequency: 860, duration: 0.3, volume: 0.15, type: 'square' as OscillatorType },
-        { start: 0.88, frequency: 640, duration: 0.42, volume: 0.18, type: 'square' as OscillatorType },
-      ].forEach(scheduleTone);
+      if (!audioRef.current) {
+        audioRef.current = new Audio(voteConfirmSound);
+        audioRef.current.volume = 0.9;
+      }
+      audioRef.current.currentTime = 0;
+      await audioRef.current.play();
     } catch {
       // ignore
     }
