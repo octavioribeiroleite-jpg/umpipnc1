@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ump-cache-v4';
+const CACHE_NAME = 'ump-cache-v5';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/icons/icon-512x512.png'
@@ -8,7 +8,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS).catch(() => {}))
   );
-  // Do NOT auto-skipWaiting; wait for user action via SKIP_WAITING message
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -39,7 +39,6 @@ function isOAuthRoute(url) {
 }
 
 function isHashedAsset(url) {
-  // Vite-built JS/CSS in /assets/ have content hashes — safe to cache long-term
   return url.pathname.startsWith('/assets/') &&
     /\.(js|css|woff2?|ttf|otf)(\?|$)/.test(url.pathname);
 }
@@ -59,12 +58,13 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   if (isApiRequest(url)) return;
   if (isOAuthRoute(url)) return;
+  if (isNavigationRequest(request)) return;
 
-  // Hashed build assets: cache-first (immutable)
-  if (isHashedAsset(url)) {
+  if (isHashedAsset(url) || isImageAsset(url)) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
+
         return fetch(request).then((response) => {
           if (response.ok) {
             const clone = response.clone();
@@ -74,50 +74,5 @@ self.addEventListener('fetch', (event) => {
         });
       })
     );
-    return;
   }
-
-  // Images: cache-first
-  if (isImageAsset(url)) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        }).catch(() => cached);
-      })
-    );
-    return;
-  }
-
-  // Navigation requests (HTML): network-first, fallback to cache
-  if (isNavigationRequest(request)) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
-    );
-    return;
-  }
-
-  // Other requests: network-first
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok && response.type === 'basic') {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      })
-      .catch(() => caches.match(request))
-  );
 });
