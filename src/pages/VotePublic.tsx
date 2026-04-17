@@ -137,8 +137,8 @@ export default function VotePublic() {
   const [authPassword, setAuthPassword] = useState('');
   const [deviceLabel, setDeviceLabel] = useState('');
   const [invalidToken, setInvalidToken] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
