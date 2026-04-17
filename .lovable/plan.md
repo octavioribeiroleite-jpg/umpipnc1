@@ -1,56 +1,43 @@
 
-Objetivo
 
-- Fazer as melhorias aparecerem no PC ao atualizar a página, sem quebrar o app instalável.
+## Diagnóstico real
 
-Diagnóstico
+Encontrei a causa raiz. O site publicado **já tem** `sw.js` v5 e o HTML/JS atualizado (deploy `04e94f83...`, bundle `index-BGKtDdin.js`). O código novo está no servidor.
 
-- A causa mais provável está no cache do PWA:
-  - `index.html` registra o `sw.js` sempre, inclusive no preview e dentro do iframe do editor.
-  - `public/sw.js` usa cache agressivo para arquivos estáticos.
-  - No mobile já existe um caminho manual de atualização (`PullToRefresh`), mas no desktop não existe equivalente.
-- Resultado: no PC, principalmente no preview, o navegador pode continuar servindo uma versão antiga mesmo após refresh.
+**O problema é o navegador do seu PC**, que ainda tem o **service worker antigo (v3 ou anterior)** instalado e ativo. O SW antigo:
 
-Plano de implementação
+1. Foi registrado da versão anterior do `index.html` (que tinha `register('/sw.js')` inline).
+2. Está servindo o `index.html` em **cache-first** (estratégia antiga, agressiva).
+3. Como ele intercepta o HTML, o navegador **nunca chega a baixar o novo `index.html`** — e portanto nunca baixa o novo `sw.js` v5, nem o novo banner "Atualizar agora", nem o `registerSW.ts`.
+4. Resultado: você está preso num loop de cache antigo. Ctrl+Shift+R no Chrome/Edge **não desinstala SW** — só ignora cache HTTP.
 
-1. Remover o registro inline atual do service worker em `index.html`.
-2. Mover o controle do service worker para `src/main.tsx`, com proteção de ambiente:
-   - não registrar no preview (`id-preview--...`);
-   - não registrar dentro de iframe;
-   - nesses casos, desregistrar service workers antigos e limpar caches `ump-cache*`.
-3. Manter o comportamento instalável no app publicado:
-   - registrar o service worker só fora do preview;
-   - preservar `manifest.json` e o fluxo de instalação já existente.
-4. Melhorar a atualização no desktop:
-   - detectar nova versão disponível;
-   - exibir um aviso/botão “Atualizar agora” no app para recarregar a versão nova no PC, equivalente ao gesto mobile.
-5. Ajustar o `sw.js` para reduzir risco de versão presa em cache:
-   - manter navegação em estratégia segura;
-   - evitar cache indevido em rotas sensíveis;
-   - preservar exclusões como OAuth.
+Por que o "Atualizar agora" não aparece: o componente `UpdateAvailableBanner` está no JS novo, que o seu navegador nunca recebeu, porque o SW antigo serve o HTML velho que carrega o JS velho.
 
-Detalhes técnicos
+## Plano de correção
 
-- Arquivos a revisar:
-  - `index.html`
-  - `src/main.tsx`
-  - `public/sw.js`
-  - possivelmente um novo componente de aviso de atualização, integrado ao `App.tsx` ou layout global
-- Vou preservar o padrão atual do app:
-  - PWA continua instalável
-  - pull-to-refresh mobile continua funcionando
-  - a correção foca no cache e na atualização do desktop/preview
+Estratégia: forçar uma **morte total e definitiva** do service worker antigo, no próximo carregamento, via um pequeno script inline no `index.html` que roda **antes** de qualquer outro código. Esse script:
 
-Validação esperada
+1. Detecta qualquer SW registrado e o **desinstala incondicionalmente**.
+2. Limpa todos os caches `ump-cache*`.
+3. Se encontrou e removeu algo, faz **um único reload** automático para puxar a versão limpa.
+4. Só depois disso o app normal carrega e o `registerSW.ts` registra o SW novo (v5) com a estratégia network-first para HTML.
 
-- No preview do editor, dar refresh no PC e ver a mudança imediatamente.
-- No publicado, uma nova versão deve:
-  - atualizar corretamente ao recarregar;
-  - ou mostrar aviso claro de “nova versão disponível”.
-- Confirmar que a tela de votação continua funcionando normalmente após a correção.
+Como isso roda inline no `<head>`, ele **executa mesmo se o JS antigo estiver em cache** — porque o HTML, ao ser revalidado pelo SW antigo, já foi atualizado no servidor (deploy de hoje). Para garantir 100%, vou adicionar um `<meta http-equiv="Cache-Control" content="no-cache">` para o HTML.
 
-Resultado esperado
+### Arquivos a alterar
 
-- As mudanças feitas no dia passam a aparecer no PC.
-- O preview deixa de ficar preso em versão antiga.
-- O publicado continua instalável, mas com atualização mais confiável.
+1. **`index.html`** — adicionar:
+   - `<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">` 
+   - Script inline de "kill switch" do SW antigo (executa antes de tudo, com flag em `sessionStorage` para evitar loop).
+
+2. **`src/lib/registerSW.ts`** — pequeno ajuste: garantir que, em produção, se houver caches antigos `ump-cache-v1` até `v4`, eles sejam apagados antes de registrar o v5.
+
+3. **`public/sw.js`** — reforçar: bumpar `CACHE_NAME` para `ump-cache-v6` para invalidar qualquer cache de versão intermediária e garantir que clientes que recebem o novo SW realmente troquem de cache.
+
+### Resultado esperado
+
+- Próximo refresh no PC: o kill-switch desinstala o SW velho → reload automático único → app novo carrega com SW v6 → "Atualizar agora" passa a funcionar a partir daí.
+- Publicações futuras: sem necessidade de cache-busting manual.
+- App instalado/PWA: mantido funcional.
+- Tela de votação (som de urna + 15s): aparece imediatamente após o reload automático.
+
