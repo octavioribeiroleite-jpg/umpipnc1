@@ -1,43 +1,37 @@
 
+O usuário quer um indicador visível de "última atualização" no site para confirmar se uma nova versão foi de fato carregada no navegador. Isso resolve dois problemas: (1) diagnóstico do cache antigo e (2) confiança visual de que o publish chegou.
 
-## Diagnóstico real
+## Plano
 
-Encontrei a causa raiz. O site publicado **já tem** `sw.js` v5 e o HTML/JS atualizado (deploy `04e94f83...`, bundle `index-BGKtDdin.js`). O código novo está no servidor.
+Adicionar um carimbo de **build (data/hora)** gerado automaticamente em cada build do Vite e exibi-lo de forma discreta no app.
 
-**O problema é o navegador do seu PC**, que ainda tem o **service worker antigo (v3 ou anterior)** instalado e ativo. O SW antigo:
+### Como funciona
 
-1. Foi registrado da versão anterior do `index.html` (que tinha `register('/sw.js')` inline).
-2. Está servindo o `index.html` em **cache-first** (estratégia antiga, agressiva).
-3. Como ele intercepta o HTML, o navegador **nunca chega a baixar o novo `index.html`** — e portanto nunca baixa o novo `sw.js` v5, nem o novo banner "Atualizar agora", nem o `registerSW.ts`.
-4. Resultado: você está preso num loop de cache antigo. Ctrl+Shift+R no Chrome/Edge **não desinstala SW** — só ignora cache HTTP.
+1. **`vite.config.ts`** — injetar uma constante global `__BUILD_TIME__` com `new Date().toISOString()` no momento do build, via `define`.
+2. **`src/vite-env.d.ts`** — declarar o tipo `declare const __BUILD_TIME__: string;`.
+3. **Componente `BuildStamp`** (novo, em `src/components/BuildStamp.tsx`) — formata a data em PT-BR com timezone local (ex.: "Atualizado em 17/04/2026 às 14h32") e renderiza pequeno e discreto.
+4. **Exibição**:
+   - Rodapé do menu lateral (mobile) em `MobileHeader.tsx`, abaixo do bloco do usuário.
+   - Rodapé da `AppSidebar` (desktop), abaixo do botão de Sair.
+   - Rodapé do `PastorSidebar` e `PastorMobileHeader` (para o pastor ver também).
+   - Tela `/auth` (rodapé), para confirmar versão antes mesmo de logar — útil no diagnóstico atual.
 
-Por que o "Atualizar agora" não aparece: o componente `UpdateAvailableBanner` está no JS novo, que o seu navegador nunca recebeu, porque o SW antigo serve o HTML velho que carrega o JS velho.
+### Junto desta atualização
 
-## Plano de correção
-
-Estratégia: forçar uma **morte total e definitiva** do service worker antigo, no próximo carregamento, via um pequeno script inline no `index.html` que roda **antes** de qualquer outro código. Esse script:
-
-1. Detecta qualquer SW registrado e o **desinstala incondicionalmente**.
-2. Limpa todos os caches `ump-cache*`.
-3. Se encontrou e removeu algo, faz **um único reload** automático para puxar a versão limpa.
-4. Só depois disso o app normal carrega e o `registerSW.ts` registra o SW novo (v5) com a estratégia network-first para HTML.
-
-Como isso roda inline no `<head>`, ele **executa mesmo se o JS antigo estiver em cache** — porque o HTML, ao ser revalidado pelo SW antigo, já foi atualizado no servidor (deploy de hoje). Para garantir 100%, vou adicionar um `<meta http-equiv="Cache-Control" content="no-cache">` para o HTML.
+Como a constante `__BUILD_TIME__` só é gerada quando o build novo realmente chega ao navegador, o próprio carimbo já serve como prova: se aparecer "17/04/2026", a versão nova carregou; se não aparecer ou ficar antiga, ainda há cache preso.
 
 ### Arquivos a alterar
 
-1. **`index.html`** — adicionar:
-   - `<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">` 
-   - Script inline de "kill switch" do SW antigo (executa antes de tudo, com flag em `sessionStorage` para evitar loop).
-
-2. **`src/lib/registerSW.ts`** — pequeno ajuste: garantir que, em produção, se houver caches antigos `ump-cache-v1` até `v4`, eles sejam apagados antes de registrar o v5.
-
-3. **`public/sw.js`** — reforçar: bumpar `CACHE_NAME` para `ump-cache-v6` para invalidar qualquer cache de versão intermediária e garantir que clientes que recebem o novo SW realmente troquem de cache.
+- `vite.config.ts` (define)
+- `src/vite-env.d.ts` (tipo global)
+- `src/components/BuildStamp.tsx` (novo)
+- `src/components/layout/MobileHeader.tsx`
+- `src/components/layout/AppSidebar.tsx`
+- `src/components/pastor/PastorSidebar.tsx`
+- `src/components/pastor/PastorMobileHeader.tsx`
+- `src/pages/Auth.tsx`
 
 ### Resultado esperado
 
-- Próximo refresh no PC: o kill-switch desinstala o SW velho → reload automático único → app novo carrega com SW v6 → "Atualizar agora" passa a funcionar a partir daí.
-- Publicações futuras: sem necessidade de cache-busting manual.
-- App instalado/PWA: mantido funcional.
-- Tela de votação (som de urna + 15s): aparece imediatamente após o reload automático.
-
+- Em todo lugar relevante do app aparece "Atualizado em DD/MM/AAAA às HHhMM".
+- Você consegue comparar instantaneamente o carimbo do PC com o do celular ou aba anônima e identificar onde está o cache antigo.
