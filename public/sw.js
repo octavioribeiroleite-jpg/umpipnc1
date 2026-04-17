@@ -1,24 +1,28 @@
-const CACHE_NAME = 'ump-cache-v3';
+const CACHE_NAME = 'ump-cache-v4';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/icons/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS).catch(() => {}))
   );
-  self.skipWaiting();
+  // Do NOT auto-skipWaiting; wait for user action via SKIP_WAITING message
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 function isApiRequest(url) {
@@ -34,8 +38,14 @@ function isOAuthRoute(url) {
   return url.pathname.startsWith('/~oauth');
 }
 
-function isStaticAsset(url) {
-  return /\.(js|css|woff2?|ttf|otf|png|jpg|jpeg|svg|gif|ico|webp)(\?|$)/.test(url.pathname);
+function isHashedAsset(url) {
+  // Vite-built JS/CSS in /assets/ have content hashes — safe to cache long-term
+  return url.pathname.startsWith('/assets/') &&
+    /\.(js|css|woff2?|ttf|otf)(\?|$)/.test(url.pathname);
+}
+
+function isImageAsset(url) {
+  return /\.(png|jpg|jpeg|svg|gif|ico|webp)(\?|$)/.test(url.pathname);
 }
 
 function isNavigationRequest(request) {
@@ -46,17 +56,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
   if (request.method !== 'GET') return;
-
-  // Skip API calls (React Query handles caching)
   if (isApiRequest(url)) return;
-
-  // Skip OAuth routes
   if (isOAuthRoute(url)) return;
 
-  // Static assets: cache-first
-  if (isStaticAsset(url)) {
+  // Hashed build assets: cache-first (immutable)
+  if (isHashedAsset(url)) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
@@ -66,13 +71,30 @@ self.addEventListener('fetch', (event) => {
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
           return response;
-        }).catch(() => caches.match('/'));
+        });
       })
     );
     return;
   }
 
-  // Navigation requests: network-first, fallback to cache
+  // Images: cache-first
+  if (isImageAsset(url)) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        }).catch(() => cached);
+      })
+    );
+    return;
+  }
+
+  // Navigation requests (HTML): network-first, fallback to cache
   if (isNavigationRequest(request)) {
     event.respondWith(
       fetch(request)
@@ -90,7 +112,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(request)
       .then((response) => {
-        if (response.ok) {
+        if (response.ok && response.type === 'basic') {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
