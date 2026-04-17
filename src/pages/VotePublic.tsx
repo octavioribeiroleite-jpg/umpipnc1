@@ -267,7 +267,7 @@ export default function VotePublic() {
     setVoting(false);
     void playUrnaSound();
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
-      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); }, 15000);
+      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); setConfirmCandidate(null); }, 15000);
     }
   };
 
