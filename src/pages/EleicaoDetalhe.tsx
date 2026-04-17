@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy, Monitor } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy, Monitor, Pencil } from 'lucide-react';
 import { AttendanceList } from '@/components/eleicoes/AttendanceList';
 import { CandidateForm } from '@/components/eleicoes/CandidateForm';
 import { VotingPanel } from '@/components/eleicoes/VotingPanel';
 import { ResultPanel } from '@/components/eleicoes/ResultPanel';
 import { DeviceRegistration } from '@/components/eleicoes/DeviceRegistration';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { ElectionStepper, StepDef } from '@/components/eleicoes/ElectionStepper';
+import { ElectionStepCard } from '@/components/eleicoes/ElectionStepCard';
 
 interface Election {
   id: string;
@@ -37,6 +38,7 @@ export default function EleicaoDetalhe() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeStep, setActiveStep] = useState<string | null>(null);
 
   const fetchAll = async () => {
     if (!id) return;
@@ -55,7 +57,6 @@ export default function EleicaoDetalhe() {
 
     setElection(elRes.data as any);
     setAttendance((atRes.data as any[]) || []);
-    // Parse photo_urls from jsonb
     const parsedCandidates = ((caRes.data as any[]) || []).map((c: any) => ({
       ...c,
       photo_urls: Array.isArray(c.photo_urls) ? c.photo_urls : [],
@@ -66,6 +67,38 @@ export default function EleicaoDetalhe() {
   };
 
   useEffect(() => { fetchAll(); }, [id]);
+
+  const votingMode = (election as any)?.voting_mode || 'shared';
+  const showDevices = votingMode === 'both' || votingMode === 'shared';
+  const electionType = ((election as any)?.type as string) || 'cargo';
+
+  const completion = useMemo(() => {
+    return {
+      candidatos: candidates.length > 0,
+      presenca: (election?.total_present || 0) > 0,
+      dispositivos: !showDevices || devices.length > 0,
+      votacao: election?.status === 'open' || election?.status === 'finished',
+    };
+  }, [candidates, election, devices, showDevices]);
+
+  const steps: StepDef[] = useMemo(() => {
+    const s: StepDef[] = [
+      { key: 'candidatos', label: electionType === 'camisa' ? 'Modelos' : 'Candidatos' },
+      { key: 'presenca', label: 'Presença' },
+    ];
+    if (showDevices) s.push({ key: 'dispositivos', label: 'Dispositivos' });
+    s.push({ key: 'votacao', label: 'Iniciar' });
+    return s;
+  }, [electionType, showDevices]);
+
+  // Determine current step automatically (first non-completed)
+  const autoCurrentIndex = useMemo(() => {
+    const idx = steps.findIndex((s) => !completion[s.key as keyof typeof completion]);
+    return idx === -1 ? steps.length - 1 : idx;
+  }, [steps, completion]);
+
+  const currentStepKey = activeStep || steps[autoCurrentIndex]?.key;
+  const currentIndex = steps.findIndex((s) => s.key === currentStepKey);
 
   if (loading || !election) {
     return (
@@ -79,131 +112,158 @@ export default function EleicaoDetalhe() {
 
   const statusLabel: Record<string, string> = { draft: 'Rascunho', open: 'Em Votação', finished: 'Finalizada' };
   const isDraft = election.status === 'draft';
-  const votingMode = (election as any).voting_mode || 'shared';
-  const showDevices = votingMode === 'both' || votingMode === 'shared';
-  const electionType = ((election as any).type as string) || 'cargo';
+  const presentCount = attendance.filter((a) => a.present).length;
 
-  // Accordion default open based on status
-  const defaultOpen = (() => {
-    switch (election.status) {
-      case 'draft': return ['candidatos', 'votacao'];
-      case 'open': return ['votacao'];
-      case 'finished': return ['resultado'];
-      default: return ['candidatos'];
+  const summaries: Record<string, string> = {
+    candidatos: `${candidates.length} ${electionType === 'camisa' ? 'modelo(s)' : 'candidato(s)'} cadastrado(s)`,
+    presenca: `${election.total_present} presente(s) confirmado(s)`,
+    dispositivos: `${devices.length} dispositivo(s) cadastrado(s)`,
+    votacao: election.status === 'finished' ? 'Votação concluída' : 'Votação em andamento',
+  };
+
+  const stepIcons: Record<string, JSX.Element> = {
+    candidatos: <UserCheck className="h-4 w-4" />,
+    presenca: <Users className="h-4 w-4" />,
+    dispositivos: <Monitor className="h-4 w-4" />,
+    votacao: <Vote className="h-4 w-4" />,
+  };
+
+  const stepTitles: Record<string, string> = {
+    candidatos: electionType === 'camisa' ? 'Modelos' : 'Candidatos',
+    presenca: 'Chamada de Presença',
+    dispositivos: 'Dispositivos Fixos',
+    votacao: 'Iniciar Votação',
+  };
+
+  const renderStepContent = (key: string) => {
+    switch (key) {
+      case 'candidatos':
+        return (
+          <CandidateForm
+            electionId={election.id}
+            candidates={candidates}
+            onRefresh={fetchAll}
+            disabled={!isDraft}
+            type={electionType as 'cargo' | 'camisa'}
+          />
+        );
+      case 'presenca':
+        return (
+          <AttendanceList
+            electionId={election.id}
+            societyId={election.society_id}
+            attendance={attendance}
+            onRefresh={fetchAll}
+            disabled={!isDraft}
+          />
+        );
+      case 'dispositivos':
+        return (
+          <DeviceRegistration
+            electionId={election.id}
+            devices={devices}
+            onRefresh={fetchAll}
+            disabled={!isDraft}
+          />
+        );
+      case 'votacao':
+        return (
+          <VotingPanel
+            electionId={election.id}
+            electionName={election.name}
+            status={election.status}
+            totalPresent={election.total_present}
+            votingMode={votingMode}
+            devices={devices}
+            candidates={candidates}
+            onRefresh={fetchAll}
+          />
+        );
     }
-  })();
+  };
+
+  const handleStepClick = (idx: number) => {
+    setActiveStep(steps[idx].key);
+  };
 
   return (
     <AppLayout>
-      {/* Compact header */}
-      <div className="flex items-center gap-2 mb-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/eleicoes')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-semibold truncate">{election.name}</h1>
-            <Badge variant={election.status === 'open' ? 'default' : 'secondary'} className="shrink-0">
-              {statusLabel[election.status]}
-            </Badge>
+      {/* Header */}
+      <div className="rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm p-3 mb-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/eleicoes')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold truncate">{election.name}</h1>
+              <Badge
+                variant={election.status === 'open' ? 'default' : 'secondary'}
+                className="shrink-0 gap-1"
+              >
+                {election.status === 'draft' && <Pencil className="h-3 w-3" />}
+                {statusLabel[election.status]}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">{election.position}</p>
           </div>
-          <p className="text-xs text-muted-foreground">{election.position}</p>
         </div>
+
+        {election.status !== 'finished' && (
+          <>
+            <ElectionStepper
+              steps={steps}
+              currentIndex={currentIndex >= 0 ? currentIndex : autoCurrentIndex}
+              completed={completion as any}
+              onStepClick={handleStepClick}
+            />
+            <p className="text-[11px] text-muted-foreground text-center mt-1">
+              Etapa {(currentIndex >= 0 ? currentIndex : autoCurrentIndex) + 1} de {steps.length}: {stepTitles[currentStepKey || '']}
+            </p>
+          </>
+        )}
       </div>
 
-      <Accordion type="multiple" defaultValue={defaultOpen} className="space-y-2">
-        <AccordionItem value="candidatos" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
-          <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-            <span className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4 text-primary" /> {electionType === 'camisa' ? 'Modelos' : 'Candidatos'}
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <CandidateForm
-              electionId={election.id}
-              candidates={candidates}
-              onRefresh={fetchAll}
-              disabled={!isDraft}
-              type={electionType as 'cargo' | 'camisa'}
-            />
-          </AccordionContent>
-        </AccordionItem>
+      {/* Step cards */}
+      {election.status !== 'finished' && (
+        <div className="space-y-2">
+          {steps.map((step) => {
+            const isDone = completion[step.key as keyof typeof completion];
+            const isActive = step.key === currentStepKey;
+            const state: 'done' | 'active' | 'pending' = isActive ? 'active' : isDone ? 'done' : 'pending';
+            const stepIdx = steps.findIndex((s) => s.key === step.key);
+            const canOpen = isDone || stepIdx <= autoCurrentIndex;
 
-        <AccordionItem value="votacao" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
-          <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-            <span className="flex items-center gap-2">
-              <Vote className="h-4 w-4 text-primary" /> Votação
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <VotingPanel
-              electionId={election.id}
-              electionName={election.name}
-              status={election.status}
-              totalPresent={election.total_present}
-              votingMode={votingMode}
-              devices={devices}
-              candidates={candidates}
-              onRefresh={fetchAll}
-            />
-          </AccordionContent>
-        </AccordionItem>
+            return (
+              <ElectionStepCard
+                key={step.key}
+                state={state}
+                icon={stepIcons[step.key]}
+                title={stepTitles[step.key]}
+                summary={isDone || isActive ? summaries[step.key] : 'Pendente'}
+                onToggle={!isActive && canOpen ? () => setActiveStep(step.key) : undefined}
+              >
+                {isActive && renderStepContent(step.key)}
+              </ElectionStepCard>
+            );
+          })}
+        </div>
+      )}
 
-        {showDevices && (
-          <AccordionItem value="dispositivos" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
-            <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-              <span className="flex items-center gap-2">
-                <Monitor className="h-4 w-4 text-primary" /> Dispositivos Fixos
-                {devices.length > 0 && (
-                  <span className="text-[10px] text-muted-foreground ml-1">({devices.length})</span>
-                )}
-              </span>
-            </AccordionTrigger>
-            <AccordionContent>
-              <DeviceRegistration
-                electionId={election.id}
-                devices={devices}
-                onRefresh={fetchAll}
-                disabled={!isDraft}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        )}
-
-        <AccordionItem value="chamada" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
-          <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-            <span className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" /> Chamada de Presença
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <AttendanceList
-              electionId={election.id}
-              societyId={election.society_id}
-              attendance={attendance}
-              onRefresh={fetchAll}
-              disabled={!isDraft}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        {election.status === 'finished' && (
-          <AccordionItem value="resultado" className="border-0 rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm px-3">
-            <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-              <span className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-warning" /> Resultado
-              </span>
-            </AccordionTrigger>
-            <AccordionContent>
-              <ResultPanel
-                electionId={election.id}
-                totalPresent={election.total_present}
-                candidates={candidates}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        )}
-      </Accordion>
+      {/* Result */}
+      {election.status === 'finished' && (
+        <div className="rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="h-5 w-5 text-warning" />
+            <h2 className="text-sm font-semibold">Resultado</h2>
+          </div>
+          <ResultPanel
+            electionId={election.id}
+            totalPresent={election.total_present}
+            candidates={candidates}
+          />
+        </div>
+      )}
     </AppLayout>
   );
 }

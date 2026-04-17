@@ -4,7 +4,20 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle } from 'lucide-react';
+
+function ChecklistItem({ done, label }: { done: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      {done ? (
+        <Check className="h-3.5 w-3.5 text-success shrink-0" />
+      ) : (
+        <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      )}
+      <span className={done ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>
+    </div>
+  );
+}
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -170,17 +183,21 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         </div>
 
-        <Button size="sm" onClick={handleStartVoting} disabled={loading || !canStart}>
-          {loading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
-          Iniciar Votação
-        </Button>
-        {!canStart && (
-          <div className="text-xs text-destructive space-y-0.5">
-            {candidates.length === 0 && <p>• Cadastre pelo menos 1 candidato.</p>}
-            {needsDevices && <p>• Cadastre pelo menos 1 dispositivo fixo.</p>}
-            {totalPresent === 0 && <p>• Confirme a presença antes de iniciar.</p>}
+        {/* Checklist + start button */}
+        <div className="space-y-2 pt-2 border-t border-border/50">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Pré-requisitos</p>
+          <div className="space-y-1">
+            <ChecklistItem done={candidates.length > 0} label={`Pelo menos 1 candidato (${candidates.length})`} />
+            <ChecklistItem done={totalPresent > 0} label={`Presença confirmada (${totalPresent})`} />
+            {showDevices && (
+              <ChecklistItem done={devices.length > 0} label={`Dispositivo fixo cadastrado (${devices.length})`} />
+            )}
           </div>
-        )}
+          <Button size="sm" className="w-full mt-2" onClick={handleStartVoting} disabled={loading || !canStart}>
+            {loading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
+            Iniciar Votação
+          </Button>
+        </div>
       </div>
     );
   }
