@@ -233,6 +233,8 @@ export default function EleicaoDetalhe() {
             const state: 'done' | 'active' | 'pending' = isActive ? 'active' : isDone ? 'done' : 'pending';
             const stepIdx = steps.findIndex((s) => s.key === step.key);
             const canOpen = isDone || stepIdx <= autoCurrentIndex;
+            const isLast = stepIdx === steps.length - 1;
+            const nextStep = steps[stepIdx + 1];
 
             return (
               <ElectionStepCard
@@ -242,6 +244,10 @@ export default function EleicaoDetalhe() {
                 title={stepTitles[step.key]}
                 summary={isDone || isActive ? summaries[step.key] : 'Pendente'}
                 onToggle={!isActive && canOpen ? () => setActiveStep(step.key) : undefined}
+                onAdvance={isActive && nextStep ? () => setActiveStep(nextStep.key) : undefined}
+                canAdvance={isDone}
+                advanceLabel={nextStep ? `Avançar: ${stepTitles[nextStep.key]}` : undefined}
+                isLastStep={isLast}
               >
                 {isActive && renderStepContent(step.key)}
               </ElectionStepCard>

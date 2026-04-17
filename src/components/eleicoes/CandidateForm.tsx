@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Upload, UserCheck, Loader2, ImagePlus, X } from 'lucide-react';
+import { ImageCropDialog } from './ImageCropDialog';
 
 interface Candidate {
   id: string;
@@ -25,9 +26,31 @@ interface CandidateFormProps {
 export function CandidateForm({ electionId, candidates, onRefresh, disabled, type = 'cargo' }: CandidateFormProps) {
   const [name, setName] = useState('');
   const [uploading, setUploading] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropTarget, setCropTarget] = useState<string | null>(null);
   const { toast } = useToast();
   const isCamisa = type === 'camisa';
   const label = isCamisa ? 'modelo' : 'candidato';
+
+  const openCropper = (candidateId: string, file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropTarget(candidateId);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCroppedFile = async (file: File) => {
+    if (!cropTarget) return;
+    if (isCamisa) {
+      await handleMultiPhotoUpload(cropTarget, file);
+    } else {
+      await handleSinglePhotoUpload(cropTarget, file);
+    }
+    setCropTarget(null);
+    setCropSrc(null);
+  };
 
   const handleAdd = async () => {
     if (!name.trim()) return;
@@ -174,9 +197,8 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          isCamisa 
-                            ? handleMultiPhotoUpload(c.id, file)
-                            : handleSinglePhotoUpload(c.id, file);
+                          openCropper(c.id, file);
+                          e.target.value = '';
                         }
                       }}
                     />
@@ -197,6 +219,14 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
       {candidates.length === 0 && (
         <p className="text-xs text-muted-foreground text-center py-2">Nenhum {label} cadastrado.</p>
       )}
+
+      <ImageCropDialog
+        open={!!cropSrc}
+        onOpenChange={(o) => { if (!o) { setCropSrc(null); setCropTarget(null); } }}
+        imageSrc={cropSrc}
+        aspect={1}
+        onCropped={handleCroppedFile}
+      />
     </div>
   );
 }

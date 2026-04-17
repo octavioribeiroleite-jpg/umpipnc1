@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
-import { Check, ChevronDown, Lock } from 'lucide-react';
+import { Check, ChevronDown, Lock, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 type State = 'done' | 'active' | 'pending';
 
@@ -10,10 +11,14 @@ interface Props {
   title: string;
   summary?: string;
   onToggle?: () => void;
+  onAdvance?: () => void;
+  canAdvance?: boolean;
+  advanceLabel?: string;
+  isLastStep?: boolean;
   children?: ReactNode;
 }
 
-export function ElectionStepCard({ state, icon, title, summary, onToggle, children }: Props) {
+export function ElectionStepCard({ state, icon, title, summary, onToggle, onAdvance, canAdvance, advanceLabel, isLastStep, children }: Props) {
   if (state === 'active') {
     return (
       <div className="rounded-[18px] bg-primary/5 border-2 border-primary/30 shadow-md backdrop-blur-sm p-4 transition-all">
@@ -23,6 +28,14 @@ export function ElectionStepCard({ state, icon, title, summary, onToggle, childr
           <span className="text-[10px] font-medium text-primary uppercase tracking-wide">Etapa atual</span>
         </div>
         {children}
+        {onAdvance && !isLastStep && (
+          <div className="mt-4 pt-3 border-t border-primary/20 flex justify-end">
+            <Button onClick={onAdvance} disabled={!canAdvance} size="sm" className="gap-1.5">
+              {advanceLabel || 'Avançar'}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
