@@ -127,10 +127,13 @@
     margin: 0;
     padding: 0;
     background-color: #000;
+    /* Prevent any horizontal overflow at the root */
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   body {
-    @apply bg-background text-foreground antialiased overflow-x-hidden;
+    @apply bg-background text-foreground antialiased;
     padding-top: env(safe-area-inset-top, 0);
     padding-bottom: env(safe-area-inset-bottom, 0);
     background-image: url('/images/bg-app.png');
@@ -140,9 +143,16 @@
     background-repeat: no-repeat;
   }
 
+  /* Use 100% (not 100vw) to avoid horizontal scroll caused by scrollbars */
   :root {
     min-height: 100vh;
-    width: 100vw;
+    width: 100%;
+  }
+
+  /* Smooth resize handling for any element with intrinsic min-content */
+  img, svg, video, canvas, audio, iframe, embed, object {
+    max-width: 100%;
+    height: auto;
   }
 }
 

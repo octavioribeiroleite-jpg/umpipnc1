@@ -47,8 +47,8 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md safe-top">
-        <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto w-full">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-3 max-w-2xl mx-auto w-full gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="-ml-2">
@@ -114,11 +114,11 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
               </SheetContent>
             </Sheet>
 
-            <img src={logoIpnc} alt="IPNC" className="h-8 w-8 object-contain" />
-            <div>
-              <p className="font-semibold text-sm leading-tight">{session?.memberName || 'Membro'}</p>
+            <img src={logoIpnc} alt="IPNC" className="h-8 w-8 object-contain flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sm leading-tight truncate">{session?.memberName || 'Membro'}</p>
               {session && (
-                <p className="text-xs text-muted-foreground">{session.societyName}</p>
+                <p className="text-xs text-muted-foreground truncate">{session.societyName}</p>
               )}
             </div>
           </div>
@@ -126,8 +126,8 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto bg-background/60 backdrop-blur-sm">
-        <div className="max-w-2xl mx-auto w-full p-4">
+      <main className="flex-1 overflow-x-hidden bg-background/60 backdrop-blur-sm">
+        <div className="max-w-2xl mx-auto w-full p-3 sm:p-4">
           {children}
         </div>
       </main>

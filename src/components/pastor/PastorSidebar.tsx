@@ -59,7 +59,7 @@ export function PastorSidebar() {
   };
 
   return (
-    <aside className="w-60 min-h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
+    <aside className="w-56 xl:w-60 sticky top-0 h-screen flex-shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
