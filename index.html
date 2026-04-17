@@ -2,8 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Renovo IPNC</title>
+    <script>
+      (function () {
+        try {
+          var KEY = '__sw_killswitch_v6_done__';
+          if (sessionStorage.getItem(KEY)) return;
+          if (!('serviceWorker' in navigator)) return;
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            var hadSW = regs.length > 0;
+            var unregisterAll = Promise.all(regs.map(function (r) { return r.unregister().catch(function(){return false;}); }));
+            var clearCaches = ('caches' in window)
+              ? caches.keys().then(function (keys) {
+                  var old = keys.filter(function (k) { return k.indexOf('ump-cache') === 0 && k !== 'ump-cache-v6'; });
+                  if (old.length > 0) hadSW = true;
+                  return Promise.all(old.map(function (k) { return caches.delete(k); }));
+                }).catch(function(){})
+              : Promise.resolve();
+            Promise.all([unregisterAll, clearCaches]).then(function () {
+              if (hadSW) {
+                sessionStorage.setItem(KEY, '1');
+                window.location.reload();
+              }
+            });
+          }).catch(function(){});
+        } catch (e) {}
+      })();
+    </script>
     <meta name="description" content="Sistema de gestão - Igreja Presbiteriana de Nova Carapina" />
     <meta name="author" content="IPNC" />
     <meta name="theme-color" content="#000000" />
