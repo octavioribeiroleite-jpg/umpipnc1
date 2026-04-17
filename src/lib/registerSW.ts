@@ -1,4 +1,16 @@
-const SW_SCRIPT_URL = "/sw.js?v=2026-04-17-v5";
+const SW_SCRIPT_URL = "/sw.js?v=2026-04-17-v6";
+const CURRENT_CACHE = "ump-cache-v6";
+
+async function purgeOldCaches() {
+  try {
+    if (!("caches" in window)) return;
+    const keys = await caches.keys();
+    const old = keys.filter((k) => k.startsWith("ump-cache") && k !== CURRENT_CACHE);
+    await Promise.all(old.map((k) => caches.delete(k).catch(() => false)));
+  } catch {
+    // ignore
+  }
+}
 const PREVIEW_RELOAD_KEY = "__preview_sw_cleanup_reloaded__";
 
 const isInIframe = (() => {
@@ -88,6 +100,7 @@ export function registerServiceWorker() {
   }
 
   window.addEventListener("load", () => {
+    void purgeOldCaches();
     navigator.serviceWorker
       .register(SW_SCRIPT_URL)
       .then((reg) => {
