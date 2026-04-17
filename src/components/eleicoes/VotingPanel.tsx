@@ -4,7 +4,20 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle } from 'lucide-react';
+
+function ChecklistItem({ done, label }: { done: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      {done ? (
+        <Check className="h-3.5 w-3.5 text-success shrink-0" />
+      ) : (
+        <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      )}
+      <span className={done ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>
+    </div>
+  );
+}
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
