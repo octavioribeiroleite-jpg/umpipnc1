@@ -324,7 +324,7 @@ export default function VotePublic() {
     const { error } = await supabase.from('election_votes' as any).insert(voteData as any);
     if (error) { setVoting(false); return; }
     if (isIndividual) localStorage.setItem(`voted_${electionId}`, 'true');
-    playUrnaSound();
+    void playUrnaSound();
     setConfirmCandidate(null);
     setVoteSuccess(true);
     setVoting(false);
