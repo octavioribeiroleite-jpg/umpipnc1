@@ -1,0 +1,1 @@
+ALTER TABLE public.elections ADD COLUMN IF NOT EXISTS show_result BOOLEAN NOT NULL DEFAULT false;
