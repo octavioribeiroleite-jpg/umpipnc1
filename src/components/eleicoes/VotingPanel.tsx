@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye } from 'lucide-react';
 
 function ChecklistItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -240,7 +240,16 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(`/eleicao/${electionId}/apresentar`, '_blank', 'noopener')}
+          >
+            <Monitor className="h-3.5 w-3.5 mr-1.5" />
+            Abrir tela de apresentação
+            <ExternalLink className="h-3 w-3 ml-1.5 opacity-60" />
+          </Button>
           {diff !== 0 ? (
             <Button variant="destructive" size="sm" onClick={() => setConfirmAction('reset')}>
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reiniciar

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Trophy, UserCheck, CheckCircle, Radio, Lock } from 'lucide-react';
 import { useBufferedVoteCount } from '@/hooks/useBufferedVoteCount';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo-ipnc.png';
 
 interface Election {
   id: string;
