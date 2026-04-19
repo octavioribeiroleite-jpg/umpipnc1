@@ -233,42 +233,21 @@ export default function EleicaoApresentar() {
         ) : (
           /* PROGRESS VIEW (anonymous) */
           <div className="w-full max-w-3xl text-center space-y-8 lg:space-y-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted/60 border border-border/60 text-muted-foreground text-sm">
-              <Lock className="h-4 w-4" />
-              Acompanhamento anônimo • atualiza a cada 5 votos
-            </div>
-
-            <div className="space-y-3 lg:space-y-4">
-              <p className="text-lg lg:text-2xl text-muted-foreground">Votos confirmados</p>
-              <p className="text-7xl lg:text-9xl font-bold tracking-tight tabular-nums">
-                {displayedCount}
-                <span className="text-muted-foreground/60 text-5xl lg:text-7xl">
-                  {' '}
-                  / {totalPresent}
-                </span>
-              </p>
-            </div>
+            <p className="text-7xl lg:text-9xl font-bold tracking-tight tabular-nums">
+              {displayedCount}
+              <span className="text-muted-foreground/60 text-5xl lg:text-7xl">
+                {' '}
+                / {totalPresent}
+              </span>
+            </p>
 
             {/* Progress bar */}
-            <div className="space-y-2">
-              <div className="w-full h-6 lg:h-8 rounded-full bg-muted overflow-hidden border border-border/60">
-                <div
-                  className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700 ease-out"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              <p className="text-base lg:text-lg text-muted-foreground">
-                {Math.round(pct)}% concluído
-              </p>
+            <div className="w-full h-6 lg:h-8 rounded-full bg-muted overflow-hidden border border-border/60">
+              <div
+                className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700 ease-out"
+                style={{ width: `${pct}%` }}
+              />
             </div>
-
-            <p className="text-base lg:text-xl text-muted-foreground italic">
-              {finished
-                ? 'Votação encerrada — aguardando divulgação do resultado.'
-                : election.status === 'open'
-                  ? 'Aguardando votos…'
-                  : 'Votação ainda não foi iniciada.'}
-            </p>
           </div>
         )}
       </main>
