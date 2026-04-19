@@ -222,40 +222,83 @@ export default function VotePublic() {
     if (!audioRef.current) {
       audioRef.current = new Audio(voteConfirmSound);
       audioRef.current.preload = 'auto';
-      audioRef.current.volume = 0.9;
+      audioRef.current.volume = 1.0;
       audioRef.current.load();
     }
     return audioRef.current;
   };
 
+  const ensureAudioContext = async () => {
+    try {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!Ctx) return null;
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new Ctx();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      if (!audioBufferRef.current) {
+        const res = await fetch(voteConfirmSound);
+        const arr = await res.arrayBuffer();
+        audioBufferRef.current = await ctx.decodeAudioData(arr.slice(0));
+      }
+      return ctx;
+    } catch (err) {
+      console.warn('[vote-audio] webaudio init failed:', err);
+      return null;
+    }
+  };
+
   const primeAudio = () => {
-    // CRITICAL: must run synchronously inside a user gesture (no await before play)
+    // CRITICAL: must run synchronously inside a user gesture
     try {
       const a = ensureAudio();
-      if (audioUnlockedRef.current) return;
-      a.muted = true;
-      const p = a.play();
-      if (p && typeof p.then === 'function') {
-        p.then(() => {
-          a.pause();
-          a.currentTime = 0;
-          a.muted = false;
-          audioUnlockedRef.current = true;
-          console.log('[vote-audio] unlocked');
-        }).catch((err) => {
-          console.warn('[vote-audio] prime failed:', err);
-          a.muted = false;
-        });
+      if (!audioUnlockedRef.current) {
+        a.muted = true;
+        const p = a.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            a.pause();
+            a.currentTime = 0;
+            a.muted = false;
+            audioUnlockedRef.current = true;
+            console.log('[vote-audio] html unlocked');
+          }).catch((err) => {
+            console.warn('[vote-audio] prime failed:', err);
+            a.muted = false;
+          });
+        }
       }
+      // Kick off WebAudio init (async, but resume() must be called from gesture)
+      void ensureAudioContext();
     } catch (err) {
       console.warn('[vote-audio] prime error:', err);
     }
   };
 
-  const playUrnaSound = () => {
+  const playUrnaSound = async () => {
+    // Try WebAudio first (allows gain > 1.0 for louder playback)
+    try {
+      const ctx = await ensureAudioContext();
+      if (ctx && audioBufferRef.current) {
+        const src = ctx.createBufferSource();
+        src.buffer = audioBufferRef.current;
+        const gain = ctx.createGain();
+        gain.gain.value = 2.5; // amplify above 100%
+        src.connect(gain).connect(ctx.destination);
+        src.start(0);
+        return;
+      }
+    } catch (err) {
+      console.warn('[vote-audio] webaudio play failed, falling back:', err);
+    }
+    // Fallback: HTMLAudio
     try {
       const a = ensureAudio();
       a.muted = false;
+      a.volume = 1.0;
       a.currentTime = 0;
       const p = a.play();
       if (p && typeof p.then === 'function') {
