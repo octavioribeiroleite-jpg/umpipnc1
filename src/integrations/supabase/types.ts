@@ -544,6 +544,7 @@ export type Database = {
           id: string
           name: string
           position: string
+          show_result: boolean
           society_id: string | null
           status: string
           total_present: number
@@ -556,6 +557,7 @@ export type Database = {
           id?: string
           name: string
           position: string
+          show_result?: boolean
           society_id?: string | null
           status?: string
           total_present?: number
@@ -568,6 +570,7 @@ export type Database = {
           id?: string
           name?: string
           position?: string
+          show_result?: boolean
           society_id?: string | null
           status?: string
           total_present?: number
