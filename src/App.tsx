@@ -31,6 +31,7 @@ import DiretoriaComunicados from "./pages/DiretoriaComunicados";
 import Eleicoes from "./pages/Eleicoes";
 import EleicaoDetalhe from "./pages/EleicaoDetalhe";
 import VotePublic from "./pages/VotePublic";
+import EleicaoApresentar from "./pages/EleicaoApresentar";
 import PortalIgreja from "./pages/PortalIgreja";
 import Dizimos from "./pages/Dizimos";
 import Visitantes from "./pages/Visitantes";
@@ -95,6 +96,7 @@ const App = () => (
             <Route path="/eleicoes" element={<Eleicoes />} />
             <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />
             <Route path="/vote/:electionId" element={<VotePublic />} />
+            <Route path="/eleicao/:id/apresentar" element={<EleicaoApresentar />} />
             <Route path="/dizimos" element={<Dizimos />} />
             <Route path="/igreja" element={<PortalIgreja />} />
             <Route path="/visitantes" element={<Visitantes />} />
