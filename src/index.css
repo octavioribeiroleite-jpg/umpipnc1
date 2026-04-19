@@ -136,11 +136,14 @@
     @apply bg-background text-foreground antialiased;
     padding-top: env(safe-area-inset-top, 0);
     padding-bottom: env(safe-area-inset-bottom, 0);
-    background-image: url('/images/bg-app.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    /* Solid gradient fallback shows instantly while bg-app.png loads */
+    background-color: hsl(var(--background));
+    background-image: linear-gradient(135deg, hsl(152 45% 18%) 0%, hsl(152 60% 12%) 50%, hsl(168 50% 15%) 100%), url('/images/bg-app.png');
+    background-size: cover, cover;
+    background-position: center, center;
+    background-attachment: fixed, fixed;
+    background-repeat: no-repeat, no-repeat;
+    background-blend-mode: normal, normal;
   }
 
   /* Use 100% (not 100vw) to avoid horizontal scroll caused by scrollbars */

@@ -232,21 +232,62 @@ export default function EleicaoApresentar() {
           </div>
         ) : (
           /* PROGRESS VIEW (anonymous) */
-          <div className="w-full max-w-3xl text-center space-y-8 lg:space-y-12">
-            <p className="text-7xl lg:text-9xl font-bold tracking-tight tabular-nums">
-              {displayedCount}
-              <span className="text-muted-foreground/60 text-5xl lg:text-7xl">
-                {' '}
-                / {totalPresent}
-              </span>
-            </p>
+          <div className="w-full max-w-5xl">
+            <div className="rounded-3xl bg-card/95 backdrop-blur-xl border border-border/60 shadow-2xl px-6 py-10 sm:px-12 sm:py-14 lg:px-20 lg:py-20 text-center space-y-8 sm:space-y-12 lg:space-y-16">
+              {/* Status amigável */}
+              <p className="text-base sm:text-xl lg:text-2xl font-medium text-muted-foreground tracking-wide uppercase">
+                {finished
+                  ? 'Votação encerrada'
+                  : displayedCount === 0
+                    ? 'Aguardando votos'
+                    : 'Votação em andamento'}
+              </p>
 
-            {/* Progress bar */}
-            <div className="w-full h-6 lg:h-8 rounded-full bg-muted overflow-hidden border border-border/60">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700 ease-out"
-                style={{ width: `${pct}%` }}
-              />
+              {/* Contador gigante */}
+              <div className="space-y-3">
+                <p
+                  key={displayedCount}
+                  className="font-bold tracking-tight tabular-nums leading-none text-primary animate-fade-up"
+                  style={{
+                    fontSize: 'clamp(5rem, 22vw, 14rem)',
+                    textShadow:
+                      '0 0 40px hsl(var(--primary) / 0.3), 0 4px 12px hsl(var(--primary) / 0.2)',
+                  }}
+                >
+                  {displayedCount}
+                </p>
+                <p className="text-2xl sm:text-4xl lg:text-5xl font-semibold text-muted-foreground/80 tabular-nums">
+                  de {totalPresent}
+                </p>
+              </div>
+
+              {/* Barra de progresso */}
+              <div className="space-y-4">
+                <div className="w-full h-5 sm:h-7 lg:h-8 rounded-full bg-muted/60 overflow-hidden border border-border/60 shadow-inner">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary via-accent to-primary rounded-full transition-all duration-700 ease-out shadow-[0_0_20px_hsl(var(--primary)/0.5)]"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+
+                {/* Infos amigáveis */}
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-base sm:text-lg lg:text-2xl">
+                  <span className="font-semibold text-foreground tabular-nums">
+                    {Math.round(pct)}% concluído
+                  </span>
+                  {!finished && totalPresent - displayedCount > 0 && (
+                    <>
+                      <span className="text-muted-foreground/40">•</span>
+                      <span className="text-muted-foreground tabular-nums">
+                        {totalPresent - displayedCount}{' '}
+                        {totalPresent - displayedCount === 1
+                          ? 'voto restante'
+                          : 'votos restantes'}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}
