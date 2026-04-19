@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy, Monitor, Pencil } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy, Monitor, Pencil, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { AttendanceList } from '@/components/eleicoes/AttendanceList';
 import { CandidateForm } from '@/components/eleicoes/CandidateForm';
 import { VotingPanel } from '@/components/eleicoes/VotingPanel';
@@ -259,9 +259,49 @@ export default function EleicaoDetalhe() {
       {/* Result */}
       {election.status === 'finished' && (
         <div className="rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Trophy className="h-5 w-5 text-warning" />
-            <h2 className="text-sm font-semibold">Resultado</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-warning" />
+              <h2 className="text-sm font-semibold">Resultado</h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(`/eleicao/${election.id}/apresentar`, '_blank', 'noopener')}
+              >
+                <Monitor className="h-3.5 w-3.5 mr-1.5" />
+                Abrir apresentação
+                <ExternalLink className="h-3 w-3 ml-1.5 opacity-60" />
+              </Button>
+              <Button
+                size="sm"
+                variant={(election as any).show_result ? 'secondary' : 'default'}
+                onClick={async () => {
+                  const next = !(election as any).show_result;
+                  await supabase
+                    .from('elections' as any)
+                    .update({ show_result: next } as any)
+                    .eq('id', election.id);
+                  toast({
+                    title: next
+                      ? 'Resultado revelado no projetor'
+                      : 'Resultado ocultado no projetor',
+                  });
+                  fetchAll();
+                }}
+              >
+                {(election as any).show_result ? (
+                  <>
+                    <EyeOff className="h-3.5 w-3.5 mr-1.5" /> Ocultar no projetor
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-3.5 w-3.5 mr-1.5" /> Mostrar resultado
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           <ResultPanel
             electionId={election.id}
