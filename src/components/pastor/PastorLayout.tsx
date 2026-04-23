@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PastorSidebar } from './PastorSidebar';
 import { PastorMobileHeader } from './PastorMobileHeader';
+import { PastorMobileNav } from './PastorMobileNav';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { OfflineBanner } from '@/components/OfflineBanner';
 
@@ -61,11 +62,12 @@ export function PastorLayout({ children }: PastorLayoutProps) {
       {/* Mobile + tablet layout */}
       <div className="lg:hidden flex flex-col min-h-screen">
         <PastorMobileHeader />
-        <main className="flex-1 overflow-x-hidden pt-14 px-3 sm:px-4 pb-4 bg-background/60 backdrop-blur-sm">
+        <main className="flex-1 overflow-x-hidden pt-14 px-3 sm:px-4 pb-24 bg-background/60 backdrop-blur-sm">
           <div className="mx-auto w-full max-w-3xl">
             {children}
           </div>
         </main>
+        <PastorMobileNav />
       </div>
     </div>
   );
