@@ -141,6 +141,7 @@ export default function VotePublic() {
   const audioUnlockedRef = useRef(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const audioReadyRef = useRef<Promise<AudioBuffer | null> | null>(null);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
@@ -240,9 +241,21 @@ export default function VotePublic() {
         await ctx.resume();
       }
       if (!audioBufferRef.current) {
-        const res = await fetch(voteConfirmSound);
-        const arr = await res.arrayBuffer();
-        audioBufferRef.current = await ctx.decodeAudioData(arr.slice(0));
+        if (!audioReadyRef.current) {
+          audioReadyRef.current = fetch(voteConfirmSound)
+            .then((res) => res.arrayBuffer())
+            .then((arr) => ctx.decodeAudioData(arr.slice(0)))
+            .then((buffer) => {
+              audioBufferRef.current = buffer;
+              return buffer;
+            })
+            .catch((err) => {
+              console.warn('[vote-audio] buffer load failed:', err);
+              audioReadyRef.current = null;
+              return null;
+            });
+        }
+        await audioReadyRef.current;
       }
       return ctx;
     } catch (err) {
