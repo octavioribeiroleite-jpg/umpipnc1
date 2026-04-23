@@ -541,6 +541,7 @@ export default function VotePublic() {
   if (confirmCandidate || confirmBlank || confirmSelection) {
     const confirmPhotos = confirmCandidate ? getPhotoUrls(confirmCandidate) : [];
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
+    const confirmationBlankSlots = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? blankSlots : 0);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-6">
@@ -556,6 +557,12 @@ export default function VotePublic() {
                 <div key={choice.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{index + 1}</span>
                   <span className="font-semibold text-foreground">{choice.name}</span>
+                </div>
+              ))}
+              {Array.from({ length: confirmationBlankSlots }).map((_, index) => (
+                <div key={`blank-${index}`} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">{choices.length + index + 1}</span>
+                  <span className="font-semibold text-foreground">Voto em branco</span>
                 </div>
               ))}
             </div>
