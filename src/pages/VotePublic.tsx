@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight, Circle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import voteConfirmSound from '@/assets/vote-confirm.mp3';
 
-interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; }
+interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; }
 interface Candidate { id: string; name: string; photo_url: string | null; photo_urls?: string[]; display_order: number; }
 
 function getDeviceId(): string {
@@ -107,6 +107,25 @@ function CandidateStartPreview({ candidates, isCamisa }: { candidates: Candidate
   );
 }
 
+function computeElectedIds(votes: any[], seatsCount: number, currentRound: number, majorityRule = 'simple') {
+  const elected = new Set<string>();
+  for (let round = 1; round < currentRound; round += 1) {
+    const roundVotes = votes.filter((v) => (v.round_number || 1) === round);
+    const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
+    const needed = Math.floor(totalBallots / 2) + 1;
+    const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
+      if (!v.is_blank && v.candidate_id && !elected.has(v.candidate_id)) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+      return acc;
+    }, {});
+    Object.entries(counts)
+      .filter(([, count]) => majorityRule === 'absolute_50' ? (count as number) >= needed : true)
+      .sort((a, b) => (b[1] as number) - (a[1] as number))
+      .slice(0, Math.max(0, seatsCount - elected.size))
+      .forEach(([candidateId]) => elected.add(candidateId));
+  }
+  return Array.from(elected);
+}
+
 function SuccessScreen({ autoReset }: { autoReset: boolean }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4 sm:p-6 text-center">
@@ -149,6 +168,9 @@ export default function VotePublic() {
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
+  const [selectedCandidates, setSelectedCandidates] = useState<Candidate[]>([]);
+  const [confirmSelection, setConfirmSelection] = useState(false);
+  const [confirmBlank, setConfirmBlank] = useState(false);
   const [voteSuccess, setVoteSuccess] = useState(false);
   const [readyToVote, setReadyToVote] = useState(false);
   const [alreadyVoted, setAlreadyVoted] = useState(false);
@@ -169,6 +191,12 @@ export default function VotePublic() {
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
+  const seatsCount = election?.seats_count || 1;
+  const currentRound = election?.current_round || 1;
+  const maxChoices = Math.max(1, Math.min(election?.max_choices_per_ballot || 1, seatsCount));
+  const isMultiSeat = !isCamisa && maxChoices > 1;
+  const [electedIds, setElectedIds] = useState<string[]>([]);
+  const eligibleCandidates = candidates.filter((c) => !electedIds.includes(c.id));
 
   useEffect(() => {
     ensureAudio();
@@ -209,17 +237,24 @@ export default function VotePublic() {
         photo_urls: Array.isArray(c.photo_urls) ? c.photo_urls : [],
       })));
 
+      const round = elData?.current_round || 1;
+      const seats = elData?.seats_count || 1;
+      const { data: voteRows } = await supabase
+        .from('election_votes' as any).select('*')
+        .eq('election_id', electionId);
+      setElectedIds(computeElectedIds((voteRows as any[]) || [], seats, round, elData?.majority_rule || 'simple'));
+
       if (!isUrnaMode && (elData?.voting_mode === 'individual' || elData?.voting_mode === 'both')) {
         const deviceId = getDeviceId();
-        if (localStorage.getItem(`voted_${electionId}`)) {
+        if (localStorage.getItem(`voted_${electionId}_${round}`)) {
           setAlreadyVoted(true);
         } else {
           const { count } = await supabase
             .from('election_votes' as any).select('*', { count: 'exact', head: true })
-            .eq('election_id', electionId).eq('device_id', deviceId);
+            .eq('election_id', electionId).eq('device_id', deviceId).eq('round_number', round);
           if (count && count > 0) {
             setAlreadyVoted(true);
-            localStorage.setItem(`voted_${electionId}`, 'true');
+            localStorage.setItem(`voted_${electionId}_${round}`, 'true');
           }
         }
       }
@@ -379,24 +414,32 @@ export default function VotePublic() {
   };
 
   const handleVote = async () => {
-    if (!confirmCandidate || !electionId) return;
+    const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
+    if ((!confirmBlank && choices.length === 0) || !electionId) return;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
-    const voteData: any = { election_id: electionId, candidate_id: confirmCandidate.id };
+    const ballotId = crypto.randomUUID();
+    const baseVoteData: any = { election_id: electionId, ballot_id: ballotId, round_number: currentRound };
     if (isIndividual) {
       const deviceId = getDeviceId();
       const { count } = await supabase
         .from('election_votes' as any).select('*', { count: 'exact', head: true })
-        .eq('election_id', electionId).eq('device_id', deviceId);
-      if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setVoting(false); return; }
-      voteData.device_id = deviceId;
+        .eq('election_id', electionId).eq('device_id', deviceId).eq('round_number', currentRound);
+      if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); setVoting(false); return; }
+      baseVoteData.device_id = deviceId;
     }
-    const { error } = await supabase.from('election_votes' as any).insert(voteData as any);
+    const rows = confirmBlank
+      ? [{ ...baseVoteData, candidate_id: null, is_blank: true }]
+      : choices.map((choice) => ({ ...baseVoteData, candidate_id: choice.id, is_blank: false }));
+    const { error } = await supabase.from('election_votes' as any).insert(rows as any);
     if (error) { setVoting(false); return; }
-    if (isIndividual) localStorage.setItem(`voted_${electionId}`, 'true');
+    if (isIndividual) localStorage.setItem(`voted_${electionId}_${currentRound}`, 'true');
     await audioWarmup;
     await playUrnaSound();
     setConfirmCandidate(null);
+    setSelectedCandidates([]);
+    setConfirmBlank(false);
+    setConfirmSelection(false);
     setVoteSuccess(true);
     setVoting(false);
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
@@ -490,18 +533,35 @@ export default function VotePublic() {
   }
 
   // Confirm modal
-  if (confirmCandidate) {
-    const confirmPhotos = getPhotoUrls(confirmCandidate);
+  if (confirmCandidate || confirmBlank || confirmSelection) {
+    const confirmPhotos = confirmCandidate ? getPhotoUrls(confirmCandidate) : [];
+    const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-6">
-          <h2 className="text-xl font-bold">{isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
-          <div className="flex flex-col items-center gap-4">
-            <CandidatePhotos photos={confirmPhotos} name={confirmCandidate.name} size="lg" />
-            <p className="text-2xl font-bold">{confirmCandidate.name}</p>
-          </div>
+          <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto em branco?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
+          {confirmBlank ? (
+            <div className="rounded-2xl border-2 border-border bg-muted/40 p-8">
+              <Circle className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+              <p className="text-2xl font-bold">Voto em branco</p>
+            </div>
+          ) : isMultiSeat ? (
+            <div className="space-y-2 text-left">
+              {choices.map((choice, index) => (
+                <div key={choice.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{index + 1}</span>
+                  <span className="font-semibold text-foreground">{choice.name}</span>
+                </div>
+              ))}
+            </div>
+          ) : confirmCandidate && (
+            <div className="flex flex-col items-center gap-4">
+              <CandidatePhotos photos={confirmPhotos} name={confirmCandidate.name} size="lg" />
+              <p className="text-2xl font-bold">{confirmCandidate.name}</p>
+            </div>
+          )}
           <div className="flex gap-3">
-            <button onClick={() => setConfirmCandidate(null)} className="flex-1 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors">
+            <button onClick={() => { setConfirmCandidate(null); setConfirmBlank(false); setConfirmSelection(false); }} className="flex-1 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors">
               Cancelar
             </button>
             <button onClick={() => { void primeAudio(); void handleVote(); }} disabled={voting} className="flex-1 py-4 rounded-xl bg-primary text-primary-foreground text-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
@@ -532,8 +592,9 @@ export default function VotePublic() {
             )}
           </div>
 
-          <div className="my-6 border-y border-border/70 py-5">
-            <CandidateStartPreview candidates={candidates} isCamisa={isCamisa} />
+          <div className="my-6 rounded-2xl border border-border/70 bg-muted/30 px-4 py-5">
+            <p className="text-sm font-semibold text-foreground">{seatsCount > 1 ? `${seatsCount} vagas disponíveis` : 'Votação segura'}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Os nomes e fotos aparecem somente depois de iniciar o voto.</p>
           </div>
 
           <button onClick={() => { void primeAudio(); setReadyToVote(true); }} className="touch-manipulation w-full rounded-2xl bg-primary px-6 py-5 text-xl font-extrabold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 active:scale-[0.98] sm:text-2xl">
@@ -551,27 +612,73 @@ export default function VotePublic() {
         <div className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold">{election.name}</h1>
           <p className="text-lg text-muted-foreground mt-1">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
-          <p className="text-sm text-muted-foreground mt-1">{isCamisa ? 'Escolha o modelo' : 'Escolha seu candidato'}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isCamisa ? 'Escolha o modelo' : isMultiSeat ? `Escolha até ${maxChoices} candidato(s) • ${selectedCandidates.length}/${maxChoices}` : 'Escolha seu candidato'}
+          </p>
         </div>
 
         <div className={`grid ${isCamisa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 md:grid-cols-3'} gap-3 sm:gap-4 md:gap-6`}>
-          {candidates.map((c) => {
+          {eligibleCandidates.map((c) => {
             const photos = getPhotoUrls(c);
+            const selectedIndex = selectedCandidates.findIndex((candidate) => candidate.id === c.id);
+            const selected = selectedIndex >= 0;
             return (
               <button
                 key={c.id}
-                onClick={() => { void primeAudio(); setConfirmCandidate(c); }}
-                className="touch-manipulation flex min-h-48 flex-col items-center justify-between gap-3 rounded-2xl border-2 border-border bg-card/95 p-3 shadow-sm transition-all hover:border-primary hover:bg-primary/5 active:scale-[0.98] sm:p-4 md:p-6"
+                onClick={() => {
+                  void primeAudio();
+                  if (!isMultiSeat) { setConfirmCandidate(c); return; }
+                  setSelectedCandidates((current) => {
+                    if (current.some((candidate) => candidate.id === c.id)) return current.filter((candidate) => candidate.id !== c.id);
+                    if (current.length >= maxChoices) return current;
+                    return [...current, c];
+                  });
+                }}
+                className={`touch-manipulation relative flex min-h-48 flex-col items-center justify-between gap-3 rounded-2xl border-2 bg-card/95 p-3 shadow-sm transition-all hover:border-primary hover:bg-primary/5 active:scale-[0.98] sm:p-4 md:p-6 ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
               >
+                {isMultiSeat && selected && (
+                  <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-sm">
+                    {selectedIndex + 1}
+                  </span>
+                )}
                 <CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} />
                 <span className="text-sm md:text-base font-semibold text-center">{c.name}</span>
                 <span className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">
-                  VOTAR
+                  {isMultiSeat ? (selected ? 'SELECIONADO' : 'SELECIONAR') : 'VOTAR'}
                 </span>
               </button>
             );
           })}
         </div>
+
+        {isMultiSeat && (
+          <div className="sticky bottom-3 mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
+            <Button
+              className="h-12 w-full text-base font-bold"
+              disabled={selectedCandidates.length === 0}
+              onClick={() => { void primeAudio(); setConfirmSelection(true); }}
+            >
+              Confirmar seleção ({selectedCandidates.length}/{maxChoices})
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 w-full font-semibold"
+              onClick={() => { void primeAudio(); setSelectedCandidates([]); setConfirmBlank(true); }}
+            >
+              Votar em branco
+            </Button>
+          </div>
+        )}
+
+        {!isMultiSeat && !isCamisa && (
+          <Button
+            variant="outline"
+            className="mt-5 h-12 w-full font-semibold"
+            onClick={() => { void primeAudio(); setConfirmBlank(true); }}
+          >
+            Votar em branco
+          </Button>
+        )}
       </div>
     </div>
   );
