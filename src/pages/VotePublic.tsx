@@ -413,24 +413,31 @@ export default function VotePublic() {
   };
 
   const handleVote = async () => {
-    if (!confirmCandidate || !electionId) return;
+    const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
+    if ((!confirmBlank && choices.length === 0) || !electionId) return;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
-    const voteData: any = { election_id: electionId, candidate_id: confirmCandidate.id };
+    const ballotId = crypto.randomUUID();
+    const baseVoteData: any = { election_id: electionId, ballot_id: ballotId, round_number: currentRound };
     if (isIndividual) {
       const deviceId = getDeviceId();
       const { count } = await supabase
         .from('election_votes' as any).select('*', { count: 'exact', head: true })
-        .eq('election_id', electionId).eq('device_id', deviceId);
-      if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setVoting(false); return; }
-      voteData.device_id = deviceId;
+        .eq('election_id', electionId).eq('device_id', deviceId).eq('round_number', currentRound);
+      if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); setVoting(false); return; }
+      baseVoteData.device_id = deviceId;
     }
-    const { error } = await supabase.from('election_votes' as any).insert(voteData as any);
+    const rows = confirmBlank
+      ? [{ ...baseVoteData, candidate_id: null, is_blank: true }]
+      : choices.map((choice) => ({ ...baseVoteData, candidate_id: choice.id, is_blank: false }));
+    const { error } = await supabase.from('election_votes' as any).insert(rows as any);
     if (error) { setVoting(false); return; }
-    if (isIndividual) localStorage.setItem(`voted_${electionId}`, 'true');
+    if (isIndividual) localStorage.setItem(`voted_${electionId}_${currentRound}`, 'true');
     await audioWarmup;
     await playUrnaSound();
     setConfirmCandidate(null);
+    setSelectedCandidates([]);
+    setConfirmBlank(false);
     setVoteSuccess(true);
     setVoting(false);
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
