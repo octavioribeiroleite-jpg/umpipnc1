@@ -135,9 +135,18 @@ export default function VotePublic() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
   const audioReadyRef = useRef<Promise<AudioBuffer | null> | null>(null);
+  const resetTimeoutRef = useRef<number | null>(null);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
+
+  useEffect(() => {
+    ensureAudio();
+    void ensureAudioContext();
+    return () => {
+      if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (isUrnaMode && electionId && urnaToken) {
@@ -290,6 +299,7 @@ export default function VotePublic() {
       if (!Ctx) return;
       const ctx = audioCtxRef.current || new Ctx();
       audioCtxRef.current = ctx;
+      if (ctx.state === 'suspended') void ctx.resume();
       const oscillator = ctx.createOscillator();
       const gain = ctx.createGain();
       oscillator.type = 'sine';
@@ -306,7 +316,20 @@ export default function VotePublic() {
   };
 
   const playUrnaSound = async () => {
-    // Try WebAudio first (allows gain > 1.0 for louder playback)
+    // Try HTMLAudio first: it is the most reliable after the user's confirm tap.
+    try {
+      const a = ensureAudio();
+      a.muted = false;
+      a.volume = 1.0;
+      a.currentTime = 0;
+      const p = a.play();
+      if (p && typeof p.then === 'function') await p;
+      return true;
+    } catch (err) {
+      console.warn('[vote-audio] html play failed, trying webaudio:', err);
+    }
+
+    // Fallback to WebAudio (allows gain > 1.0 for louder playback)
     try {
       const ctx = await ensureAudioContext();
       if (ctx && audioBufferRef.current) {
@@ -320,20 +343,6 @@ export default function VotePublic() {
       }
     } catch (err) {
       console.warn('[vote-audio] webaudio play failed, falling back:', err);
-    }
-    // Fallback: HTMLAudio
-    try {
-      const a = ensureAudio();
-      a.muted = false;
-      a.volume = 1.0;
-      a.currentTime = 0;
-      const p = a.play();
-      if (p && typeof p.then === 'function') {
-        await p;
-      }
-      return true;
-    } catch (err) {
-      console.warn('[vote-audio] play error:', err);
     }
     playFallbackBeep();
     return false;
