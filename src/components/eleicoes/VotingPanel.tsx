@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,6 +48,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [qrExpanded, setQrExpanded] = useState(false);
   const [expandedDeviceToken, setExpandedDeviceToken] = useState<string | null>(null);
   const { toast } = useToast();
+  const inFlightRef = useRef(false);
+  const pendingRef = useRef(false);
 
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
   const [activeTab, setActiveTab] = useState<string>('celular');
@@ -58,11 +60,25 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const canStart = candidates.length > 0 && totalPresent > 0 && !needsDevices;
 
   const fetchVoteCount = async () => {
-    const { count } = await supabase
-      .from('election_votes' as any)
-      .select('*', { count: 'exact', head: true })
-      .eq('election_id', electionId);
-    setVoteCount(count || 0);
+    if (inFlightRef.current) {
+      pendingRef.current = true;
+      return;
+    }
+
+    inFlightRef.current = true;
+    try {
+      const { count } = await supabase
+        .from('election_votes' as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('election_id', electionId);
+      setVoteCount(count || 0);
+    } finally {
+      inFlightRef.current = false;
+      if (pendingRef.current) {
+        pendingRef.current = false;
+        void fetchVoteCount();
+      }
+    }
   };
 
   useEffect(() => {
@@ -86,11 +102,13 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
     const interval = setInterval(() => {
       fetchVoteCount();
-    }, 1000);
+    }, 3000);
 
     return () => {
       clearInterval(interval);
       supabase.removeChannel(channel);
+      inFlightRef.current = false;
+      pendingRef.current = false;
     };
   }, [electionId]);
 

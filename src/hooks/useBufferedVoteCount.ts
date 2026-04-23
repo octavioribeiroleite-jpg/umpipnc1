@@ -21,17 +21,33 @@ export function useBufferedVoteCount(
   const [realCount, setRealCount] = useState(0);
   const [displayedCount, setDisplayedCount] = useState(0);
   const lastReleasedRef = useRef(0);
+  const inFlightRef = useRef(false);
+  const pendingRef = useRef(false);
 
   // Fetch + realtime
   useEffect(() => {
     if (!electionId) return;
 
     const fetchCount = async () => {
-      const { count } = await supabase
-        .from('election_votes' as any)
-        .select('*', { count: 'exact', head: true })
-        .eq('election_id', electionId);
-      setRealCount(count || 0);
+      if (inFlightRef.current) {
+        pendingRef.current = true;
+        return;
+      }
+
+      inFlightRef.current = true;
+      try {
+        const { count } = await supabase
+          .from('election_votes' as any)
+          .select('*', { count: 'exact', head: true })
+          .eq('election_id', electionId);
+        setRealCount(count || 0);
+      } finally {
+        inFlightRef.current = false;
+        if (pendingRef.current) {
+          pendingRef.current = false;
+          void fetchCount();
+        }
+      }
     };
 
     fetchCount();
@@ -50,11 +66,13 @@ export function useBufferedVoteCount(
       )
       .subscribe();
 
-    const interval = setInterval(fetchCount, 2000);
+    const interval = setInterval(fetchCount, 3000);
 
     return () => {
       clearInterval(interval);
       supabase.removeChannel(channel);
+      inFlightRef.current = false;
+      pendingRef.current = false;
     };
   }, [electionId]);
 

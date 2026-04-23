@@ -141,6 +141,7 @@ export default function VotePublic() {
   const audioUnlockedRef = useRef(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const audioReadyRef = useRef<Promise<AudioBuffer | null> | null>(null);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
@@ -240,9 +241,21 @@ export default function VotePublic() {
         await ctx.resume();
       }
       if (!audioBufferRef.current) {
-        const res = await fetch(voteConfirmSound);
-        const arr = await res.arrayBuffer();
-        audioBufferRef.current = await ctx.decodeAudioData(arr.slice(0));
+        if (!audioReadyRef.current) {
+          audioReadyRef.current = fetch(voteConfirmSound)
+            .then((res) => res.arrayBuffer())
+            .then((arr) => ctx.decodeAudioData(arr.slice(0)))
+            .then((buffer) => {
+              audioBufferRef.current = buffer;
+              return buffer;
+            })
+            .catch((err) => {
+              console.warn('[vote-audio] buffer load failed:', err);
+              audioReadyRef.current = null;
+              return null;
+            });
+        }
+        await audioReadyRef.current;
       }
       return ctx;
     } catch (err) {
@@ -278,6 +291,27 @@ export default function VotePublic() {
     }
   };
 
+  const playFallbackBeep = () => {
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = audioCtxRef.current || new Ctx();
+      audioCtxRef.current = ctx;
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.65, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+      oscillator.connect(gain).connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.24);
+    } catch (err) {
+      console.warn('[vote-audio] fallback beep failed:', err);
+    }
+  };
+
   const playUrnaSound = async () => {
     // Try WebAudio first (allows gain > 1.0 for louder playback)
     try {
@@ -289,7 +323,7 @@ export default function VotePublic() {
         gain.gain.value = 2.5; // amplify above 100%
         src.connect(gain).connect(ctx.destination);
         src.start(0);
-        return;
+        return true;
       }
     } catch (err) {
       console.warn('[vote-audio] webaudio play failed, falling back:', err);
@@ -302,11 +336,14 @@ export default function VotePublic() {
       a.currentTime = 0;
       const p = a.play();
       if (p && typeof p.then === 'function') {
-        p.catch((err) => console.warn('[vote-audio] play failed:', err));
+        await p;
       }
+      return true;
     } catch (err) {
       console.warn('[vote-audio] play error:', err);
     }
+    playFallbackBeep();
+    return false;
   };
 
   const handleVote = async () => {
