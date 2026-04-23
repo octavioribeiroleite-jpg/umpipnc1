@@ -1,153 +1,110 @@
 
-Vou ajustar o fluxo das urnas e revisar o problema do primeiro voto sem som / retorno rápido.
+Vou reformular a tela da urna que aparece antes do voto, onde hoje fica apenas o ícone e o botão **“Iniciar Votação”**, e também revisar a sensação dos cliques para ficar mais natural no celular.
 
-## Objetivo
+## Foco da alteração
 
-Deixar a eleição com este fluxo:
-
-```text
-1. Criar eleição
-2. Cadastrar candidatos/modelos
-3. Confirmar presença
-4. Criar urnas pelo nome
-5. Mostrar QR Code de cada urna
-6. Ativar/conectar cada urna
-7. Iniciar votação
-8. Continuar podendo adicionar novas urnas com a votação aberta
-9. Acompanhar se cada urna está conectada durante a votação
-```
-
-## Alterações planejadas
-
-### 1. Permitir criar urnas antes e durante a votação
-
-Hoje a área de dispositivos fica bloqueada quando a votação não está mais em rascunho. Vou alterar para:
-
-- Permitir adicionar novas urnas quando a eleição estiver em `Rascunho`.
-- Permitir adicionar novas urnas também quando a eleição já estiver `Em votação`.
-- Bloquear apenas quando a eleição estiver `Finalizada`.
-
-Assim, se precisar abrir mais uma urna no meio da votação, o administrador poderá cadastrar o nome, gerar o QR Code e ativar normalmente.
-
-### 2. Melhorar a lista de urnas
-
-Na etapa de dispositivos, cada urna cadastrada ficará mais clara:
-
-- Nome da urna em destaque.
-- Status visual ao lado:
-  - `Aguardando ativação`
-  - `Online / conectada`
-- Botão **Mostrar QR Code** ao lado de cada urna.
-- Botão de copiar link.
-- Remoção da urna só enquanto fizer sentido, evitando apagar dispositivos depois que a votação estiver finalizada.
-
-Ao clicar em **Mostrar QR Code**, será aberto um popup com:
-
-- QR Code grande.
-- Nome da urna.
-- Link específico daquela urna.
-- Botão para copiar o link.
-
-### 3. Sincronizar status online da urna
-
-Quando a urna for aberta pelo QR Code e autenticada, ela continuará marcando `activated = true`.
-
-Vou melhorar o painel administrativo para escutar mudanças em tempo real na tabela de urnas da eleição. Assim:
-
-- O administrador cria a urna.
-- Abre o QR Code.
-- A urna é autenticada.
-- O painel muda automaticamente para `Online / conectada`.
-
-Sem precisar atualizar a página.
-
-### 4. Mostrar status das urnas durante a votação
-
-Na área de votação aberta, vou adicionar um bloco fixo de monitoramento das urnas:
+Não vou mexer na tela administrativa de criação da eleição nem na segunda tela de votação. A mudança principal será na **urna pública** em:
 
 ```text
-Urnas conectadas
-Mesa 1       Online
-Entrada      Online
-Galeria      Aguardando ativação
+/vote/:id?mode=urna&token=...
 ```
 
-Esse bloco continuará visível enquanto a votação estiver aberta, para identificar se alguma urna não conectou corretamente.
+Especialmente neste estado:
 
-### 5. Melhorar contraste com fundo branco
+```text
+Urna ativada
+Votação aberta
+Aguardando clicar em "Iniciar Votação"
+```
 
-Vou reformular a área administrativa da votação aberta para ficar com fundo branco e leitura forte.
+## Nova tela “Urna pronta”
 
-Mudanças visuais:
+Vou substituir a tela simples atual por uma tela mais bonita e mais visual, com:
 
-- Painel principal com `bg-white/95` ou equivalente do design system.
-- Cards internos com borda leve e fundo claro.
-- Progresso, presentes, votos e diferença com contraste melhor.
-- Evitar blocos “verde sobre verde”.
-- Status de sucesso ainda pode usar verde, mas só como detalhe visual, não como fundo dominante.
+1. Fundo claro e limpo.
+2. Card central com melhor acabamento.
+3. Título da eleição em destaque.
+4. Nome do cargo ou tipo de votação.
+5. Status claro de que a urna está pronta.
+6. Fotos dos candidatos/modelos em cima, lado a lado.
+7. Botão grande **“Iniciar votação”** embaixo.
 
-Isso será aplicado principalmente em:
+A ideia visual será algo assim:
 
-- Área “Em votação”
-- Cards de progresso
-- Lista de urnas
-- Ações de concluir/reiniciar
-- Área de QR Codes
+```text
+┌─────────────────────────────┐
+│        Urna pronta          │
+│   Eleição: Presidente UMP   │
+│        Cargo: Presidente    │
+│                             │
+│   [foto]  [foto]  [foto]    │
+│   João    Maria   Pedro     │
+│                             │
+│     Iniciar votação         │
+└─────────────────────────────┘
+```
 
-### 6. Revisar o primeiro voto sem som
+## Fotos dos candidatos na tela inicial
 
-O problema provável é que o som está tentando tocar depois de operações assíncronas, como envio do voto para o banco. Em navegadores móveis, áudio iniciado depois de `await` pode ser bloqueado porque saiu do clique direto do usuário.
+Vou usar as fotos já cadastradas dos candidatos/modelos.
 
-Vou ajustar o fluxo para:
+Comportamento planejado:
 
-- Preparar/desbloquear o áudio no clique do usuário, antes do envio assíncrono.
-- Manter o áudio carregado e o contexto de áudio ativo.
-- Depois que o voto for salvo com sucesso, tocar o som usando o áudio já preparado.
-- Manter um fallback de beep caso o arquivo MP3 falhe.
-- Evitar que o primeiro voto seja silencioso.
+- Se tiver 2 candidatos: aparecem lado a lado.
+- Se tiver 3 ou mais: aparecem em uma grade responsiva.
+- No celular pequeno, as fotos ficam compactas para não estourar a tela.
+- Se não houver foto, aparece um placeholder com ícone.
+- Para votação de camisa/modelo, mantém a lógica de imagens do modelo.
 
-### 7. Revisar retorno rápido após o voto
+## Melhor responsividade dos cliques
 
-Vou garantir que, na urna fixa:
+Vou revisar os botões e cards clicáveis da urna para ficarem mais naturais no toque:
 
-- A tela **VOTO CONFIRMADO** permaneça visível pelo tempo correto.
-- A urna não volte rápido demais para “Iniciar votação”.
-- O reset automático só aconteça depois do tempo mínimo configurado.
-- O som tenha chance de tocar antes da tela reiniciar.
+- Botão **Iniciar votação** com área maior de clique.
+- Estados visuais de toque: `active:scale`, sombra e transição suave.
+- Evitar sensação de atraso no clique.
+- Usar `touch-manipulation` nos botões principais.
+- Melhorar feedback visual ao tocar em candidato/modelo.
+- Manter o áudio sendo preparado no clique de iniciar votação, sem prejudicar o som do voto confirmado.
+- Evitar botões pequenos demais em telas de 384px de largura.
 
-A ideia é manter a confirmação estável, clara e com áudio perceptível.
+## Tela principal de escolha do candidato
 
-## Arquivos que serão alterados
+Também vou ajustar levemente a tela onde aparecem os candidatos para votar:
 
-### `src/components/eleicoes/DeviceRegistration.tsx`
+- Cards com melhor contraste.
+- Área clicável maior.
+- Fotos mais bem alinhadas.
+- Botão **VOTAR** com feedback visual mais forte.
+- Espaçamento mais confortável em celular.
+- Manter o fluxo atual:
+  1. Iniciar votação
+  2. Escolher candidato
+  3. Confirmar
+  4. Voto confirmado
+  5. Voltar automaticamente para a tela inicial da urna
 
-- Botão “Mostrar QR Code”.
-- Popup com QR Code por urna.
-- Status visual online/aguardando.
-- Permitir uso em rascunho e em votação aberta.
-- Melhor contraste do card de dispositivos.
-
-### `src/components/eleicoes/VotingPanel.tsx`
-
-- Área “Em votação” com fundo branco.
-- Monitor de urnas durante a votação.
-- Permitir criar/acessar QR Codes de urnas durante votação aberta.
-- Melhorar contraste dos cards de progresso.
-- Ajustar layout para ficar legível no celular e no desktop.
-
-### `src/pages/EleicaoDetalhe.tsx`
-
-- Ajustar regra de bloqueio dos dispositivos: bloquear só se finalizada.
-- Adicionar sincronização em tempo real das urnas da eleição.
-- Atualizar lista de urnas automaticamente quando uma conectar.
+## Arquivo principal que será alterado
 
 ### `src/pages/VotePublic.tsx`
 
-- Melhorar fluxo de áudio do voto confirmado.
-- Garantir que o primeiro voto saia som.
-- Garantir que a tela de confirmação não retorne rápido demais.
-- Manter a tela da urna com fundo branco e alta visibilidade.
+Alterações planejadas:
 
-## Resultado esperado
+- Criar uma apresentação melhor para a tela pré-voto da urna.
+- Adicionar preview dos candidatos/modelos antes de clicar em **Iniciar votação**.
+- Melhorar classes responsivas dos botões e cards.
+- Preservar a lógica atual de segurança:
+  - candidatos ficam visíveis só depois de iniciar;
+  - urna volta para tela inicial após o voto;
+  - áudio continua sendo preparado no clique;
+  - não exibir cronômetro de retorno.
 
-O administrador poderá cadastrar urnas antes de iniciar a votação, ver o QR Code de cada uma, acompanhar quando cada urna ficar online, iniciar a votação somente depois, e ainda adicionar novas urnas durante a votação se necessário. A área administrativa ficará mais clara com fundo branco, e o primeiro voto deverá tocar som corretamente sem retornar rápido demais.
+## Validação depois da implementação
+
+Depois de aplicar, vou verificar especialmente:
+
+- Visual em tela mobile estreita, como 384px.
+- Se os botões respondem naturalmente ao toque.
+- Se a tela de “Iniciar votação” ficou mais bonita.
+- Se as fotos dos candidatos não quebram o layout.
+- Se o fluxo da urna continua funcionando sem mexer na tela de votação administrativa.
