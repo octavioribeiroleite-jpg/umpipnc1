@@ -96,7 +96,7 @@ function CandidateStartPreview({ candidates, isCamisa }: { candidates: Candidate
                   </div>
                 )}
               </div>
-              <p className="mt-2 line-clamp-2 text-xs font-semibold leading-tight text-foreground">
+              <p className="mt-2 h-8 overflow-hidden text-xs font-semibold leading-tight text-foreground">
                 {isCamisa ? candidate.name : candidate.name}
               </p>
             </div>
