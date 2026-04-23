@@ -68,6 +68,25 @@ export default function EleicaoDetalhe() {
 
   useEffect(() => { fetchAll(); }, [id]);
 
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`election-devices-${id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'election_devices',
+        filter: `election_id=eq.${id}`,
+      }, () => {
+        void fetchAll();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
   const votingMode = (election as any)?.voting_mode || 'shared';
   const showDevices = votingMode === 'both' || votingMode === 'shared';
   const electionType = ((election as any)?.type as string) || 'cargo';
@@ -112,6 +131,7 @@ export default function EleicaoDetalhe() {
 
   const statusLabel: Record<string, string> = { draft: 'Rascunho', open: 'Em Votação', finished: 'Finalizada' };
   const isDraft = election.status === 'draft';
+  const devicesLocked = election.status === 'finished';
   const presentCount = attendance.filter((a) => a.present).length;
 
   const summaries: Record<string, string> = {
@@ -163,7 +183,7 @@ export default function EleicaoDetalhe() {
             electionId={election.id}
             devices={devices}
             onRefresh={fetchAll}
-            disabled={!isDraft}
+            disabled={devicesLocked}
           />
         );
       case 'votacao':

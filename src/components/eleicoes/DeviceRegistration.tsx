@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Monitor, Loader2 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, Trash2, Monitor, Loader2, QrCode, Copy, CheckCircle, Clock } from 'lucide-react';
 
 interface Device {
   id: string;
@@ -22,7 +24,15 @@ interface DeviceRegistrationProps {
 export function DeviceRegistration({ electionId, devices, onRefresh, disabled }: DeviceRegistrationProps) {
   const [label, setLabel] = useState('');
   const [adding, setAdding] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const { toast } = useToast();
+
+  const getDeviceUrl = (token: string) => `${window.location.origin}/vote/${electionId}?mode=urna&token=${token}`;
+
+  const copyDeviceLink = async (device: Device) => {
+    await navigator.clipboard.writeText(getDeviceUrl(device.token));
+    toast({ title: 'Link da urna copiado!' });
+  };
 
   const handleAdd = async () => {
     if (!label.trim()) return;
@@ -50,7 +60,9 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
   return (
     <div className="space-y-3">
       {!disabled && (
-        <div className="flex gap-2">
+        <div className="rounded-xl border border-border bg-background p-3 shadow-sm space-y-2">
+          <p className="text-xs font-semibold text-foreground">Adicionar urna</p>
+          <div className="flex gap-2">
           <Input
             placeholder="Rótulo (ex: Mesa 1, Entrada)"
             value={label}
@@ -62,6 +74,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
             {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
             Adicionar
           </Button>
+          </div>
         </div>
       )}
 
@@ -72,24 +85,58 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
       ) : (
         <div className="space-y-2">
           {devices.map((d) => (
-            <div key={d.id} className="flex items-center gap-2 p-2.5 border border-border/60 bg-muted/40 rounded-lg">
-              <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-sm font-medium flex-1">{d.label}</span>
-              {d.activated ? (
-                <span className="text-[10px] text-success font-medium">Ativada</span>
-              ) : (
-                <span className="text-[10px] text-muted-foreground">Cadastrada</span>
-              )}
-              {!disabled && (
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemove(d.id)}>
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+            <div key={d.id} className="rounded-xl border border-border bg-background p-3 shadow-sm space-y-3">
+              <div className="flex items-center gap-2">
+                <Monitor className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-semibold text-foreground flex-1">{d.label}</span>
+                {d.activated ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-1 text-[10px] font-semibold text-success">
+                    <CheckCircle className="h-3 w-3" /> Online
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                    <Clock className="h-3 w-3" /> Aguardando
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSelectedDevice(d)}>
+                  <QrCode className="h-3.5 w-3.5 mr-1" /> Mostrar QR Code
                 </Button>
-              )}
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => copyDeviceLink(d)}>
+                  <Copy className="h-3.5 w-3.5 mr-1" /> Copiar link
+                </Button>
+                {!disabled && (
+                  <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive hover:text-destructive" onClick={() => handleRemove(d.id)}>
+                    <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover
+                  </Button>
+                )}
+              </div>
             </div>
           ))}
           <p className="text-xs text-muted-foreground">{devices.length} dispositivo(s) cadastrado(s)</p>
         </div>
       )}
+      <Dialog open={!!selectedDevice} onOpenChange={(open) => !open && setSelectedDevice(null)}>
+        <DialogContent className="sm:max-w-md bg-background">
+          <DialogHeader>
+            <DialogTitle>{selectedDevice?.label || 'Urna'}</DialogTitle>
+          </DialogHeader>
+          {selectedDevice && (
+            <div className="flex flex-col items-center gap-4 py-3">
+              <div className="rounded-xl border border-border bg-background p-4 shadow-sm">
+                <QRCodeSVG value={getDeviceUrl(selectedDevice.token)} size={240} />
+              </div>
+              <code className="w-full rounded-lg bg-muted p-3 text-xs text-center break-all text-foreground">
+                {getDeviceUrl(selectedDevice.token)}
+              </code>
+              <Button className="w-full" onClick={() => copyDeviceLink(selectedDevice)}>
+                <Copy className="h-4 w-4 mr-2" /> Copiar link da urna
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
