@@ -134,7 +134,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       inFlightRef.current = false;
       pendingRef.current = false;
     };
-  }, [electionId]);
+  }, [electionId, currentRound, seatsCount]);
 
   const handleModeChange = async (mode: string) => {
     setSelectedMode(mode);
