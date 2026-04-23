@@ -417,7 +417,8 @@ export default function VotePublic() {
 
   const handleVote = async () => {
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
-    if ((!confirmBlank && choices.length === 0) || !electionId) return;
+    const blanksToRecord = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? blankSlots : 0);
+    if ((!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
     const ballotId = crypto.randomUUID();
@@ -430,9 +431,10 @@ export default function VotePublic() {
       if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); setVoting(false); return; }
       baseVoteData.device_id = deviceId;
     }
-    const rows = confirmBlank
-      ? [{ ...baseVoteData, candidate_id: null, is_blank: true }]
-      : choices.map((choice) => ({ ...baseVoteData, candidate_id: choice.id, is_blank: false }));
+    const rows = [
+      ...choices.map((choice) => ({ ...baseVoteData, candidate_id: choice.id, is_blank: false })),
+      ...Array.from({ length: blanksToRecord }, () => ({ ...baseVoteData, candidate_id: null, is_blank: true })),
+    ];
     const { error } = await supabase.from('election_votes' as any).insert(rows as any);
     if (error) { setVoting(false); return; }
     if (isIndividual) localStorage.setItem(`voted_${electionId}_${currentRound}`, 'true');
@@ -440,6 +442,7 @@ export default function VotePublic() {
     await playUrnaSound();
     setConfirmCandidate(null);
     setSelectedCandidates([]);
+    setBlankSlots(0);
     setConfirmBlank(false);
     setConfirmSelection(false);
     setVoteSuccess(true);
