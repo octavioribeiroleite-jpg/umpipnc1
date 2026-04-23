@@ -38,11 +38,13 @@ interface VotingPanelProps {
   votingMode: string;
   devices: Device[];
   candidates: Candidate[];
+  election?: { seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string };
   onRefresh: () => void;
 }
 
-export function VotingPanel({ electionId, electionName, status, totalPresent, votingMode, devices, candidates, onRefresh }: VotingPanelProps) {
+export function VotingPanel({ electionId, electionName, status, totalPresent, votingMode, devices, candidates, election, onRefresh }: VotingPanelProps) {
   const [voteCount, setVoteCount] = useState(0);
+  const [electedCount, setElectedCount] = useState(0);
   const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
@@ -55,6 +57,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
   const [activeTab, setActiveTab] = useState<string>('celular');
   const diff = voteCount - totalPresent;
+  const seatsCount = election?.seats_count || 1;
+  const currentRound = election?.current_round || 1;
+  const isMultiSeat = seatsCount > 1 || (election?.max_choices_per_ballot || 1) > 1;
 
   const showDevices = selectedMode === 'both' || selectedMode === 'shared';
   const needsDevices = showDevices && devices.length === 0;
@@ -68,11 +73,29 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
     inFlightRef.current = true;
     try {
-      const { count } = await supabase
+      const { data } = await supabase
         .from('election_votes' as any)
-        .select('*', { count: 'exact', head: true })
+        .select('ballot_id, round_number, candidate_id, is_blank')
         .eq('election_id', electionId);
-      setVoteCount(count || 0);
+      const rows = ((data as any[]) || []);
+      setVoteCount(new Set(rows.filter((v) => (v.round_number || 1) === currentRound).map((v) => v.ballot_id)).size);
+
+      const elected = new Set<string>();
+      for (let round = 1; round <= currentRound; round += 1) {
+        const roundRows = rows.filter((v) => (v.round_number || 1) === round);
+        const ballots = new Set(roundRows.map((v) => v.ballot_id)).size;
+        const needed = Math.floor(ballots / 2) + 1;
+        const counts = roundRows.reduce((acc: Record<string, number>, v: any) => {
+          if (!v.is_blank && v.candidate_id && !elected.has(v.candidate_id)) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+          return acc;
+        }, {});
+        Object.entries(counts)
+          .filter(([, count]) => (count as number) >= needed)
+          .sort((a, b) => (b[1] as number) - (a[1] as number))
+          .slice(0, seatsCount - elected.size)
+          .forEach(([id]) => elected.add(id));
+      }
+      setElectedCount(elected.size);
     } finally {
       inFlightRef.current = false;
       if (pendingRef.current) {
@@ -141,6 +164,14 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     toast({ title: 'Votação concluída!' });
     setLoading(false);
     setConfirmAction(null);
+    onRefresh();
+  };
+
+  const handleNextRound = async () => {
+    setLoading(true);
+    await supabase.from('elections' as any).update({ status: 'open', current_round: currentRound + 1 } as any).eq('id', electionId);
+    toast({ title: `${currentRound + 1}º escrutínio iniciado` });
+    setLoading(false);
     onRefresh();
   };
 
