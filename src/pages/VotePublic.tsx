@@ -612,27 +612,73 @@ export default function VotePublic() {
         <div className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold">{election.name}</h1>
           <p className="text-lg text-muted-foreground mt-1">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
-          <p className="text-sm text-muted-foreground mt-1">{isCamisa ? 'Escolha o modelo' : 'Escolha seu candidato'}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isCamisa ? 'Escolha o modelo' : isMultiSeat ? `Escolha até ${maxChoices} candidato(s) • ${selectedCandidates.length}/${maxChoices}` : 'Escolha seu candidato'}
+          </p>
         </div>
 
         <div className={`grid ${isCamisa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 md:grid-cols-3'} gap-3 sm:gap-4 md:gap-6`}>
-          {candidates.map((c) => {
+          {eligibleCandidates.map((c) => {
             const photos = getPhotoUrls(c);
+            const selectedIndex = selectedCandidates.findIndex((candidate) => candidate.id === c.id);
+            const selected = selectedIndex >= 0;
             return (
               <button
                 key={c.id}
-                onClick={() => { void primeAudio(); setConfirmCandidate(c); }}
-                className="touch-manipulation flex min-h-48 flex-col items-center justify-between gap-3 rounded-2xl border-2 border-border bg-card/95 p-3 shadow-sm transition-all hover:border-primary hover:bg-primary/5 active:scale-[0.98] sm:p-4 md:p-6"
+                onClick={() => {
+                  void primeAudio();
+                  if (!isMultiSeat) { setConfirmCandidate(c); return; }
+                  setSelectedCandidates((current) => {
+                    if (current.some((candidate) => candidate.id === c.id)) return current.filter((candidate) => candidate.id !== c.id);
+                    if (current.length >= maxChoices) return current;
+                    return [...current, c];
+                  });
+                }}
+                className={`touch-manipulation relative flex min-h-48 flex-col items-center justify-between gap-3 rounded-2xl border-2 bg-card/95 p-3 shadow-sm transition-all hover:border-primary hover:bg-primary/5 active:scale-[0.98] sm:p-4 md:p-6 ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
               >
+                {isMultiSeat && selected && (
+                  <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-sm">
+                    {selectedIndex + 1}
+                  </span>
+                )}
                 <CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} />
                 <span className="text-sm md:text-base font-semibold text-center">{c.name}</span>
                 <span className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">
-                  VOTAR
+                  {isMultiSeat ? (selected ? 'SELECIONADO' : 'SELECIONAR') : 'VOTAR'}
                 </span>
               </button>
             );
           })}
         </div>
+
+        {isMultiSeat && (
+          <div className="sticky bottom-3 mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
+            <Button
+              className="h-12 w-full text-base font-bold"
+              disabled={selectedCandidates.length === 0}
+              onClick={() => { void primeAudio(); setConfirmSelection(true); }}
+            >
+              Confirmar seleção ({selectedCandidates.length}/{maxChoices})
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 w-full font-semibold"
+              onClick={() => { void primeAudio(); setSelectedCandidates([]); setConfirmBlank(true); }}
+            >
+              Votar em branco
+            </Button>
+          </div>
+        )}
+
+        {!isMultiSeat && !isCamisa && (
+          <Button
+            variant="outline"
+            className="mt-5 h-12 w-full font-semibold"
+            onClick={() => { void primeAudio(); setConfirmBlank(true); }}
+          >
+            Votar em branco
+          </Button>
+        )}
       </div>
     </div>
   );
