@@ -18,7 +18,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
     const fetchResults = async () => {
       const { data } = await supabase
         .from('election_votes' as any)
-        .select('candidate_id')
+        .select('*')
         .eq('election_id', electionId);
 
       if (data) {
