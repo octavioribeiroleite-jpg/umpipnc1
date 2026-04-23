@@ -23,6 +23,10 @@ interface Election {
   society_id: string | null;
   created_by: string;
   created_at: string;
+  seats_count?: number;
+  max_choices_per_ballot?: number;
+  current_round?: number;
+  majority_rule?: string;
 }
 
 interface AttendanceItem { id: string; name: string; present: boolean; }
@@ -196,6 +200,7 @@ export default function EleicaoDetalhe() {
             votingMode={votingMode}
             devices={devices}
             candidates={candidates}
+            election={election as any}
             onRefresh={fetchAll}
           />
         );
@@ -327,6 +332,7 @@ export default function EleicaoDetalhe() {
             electionId={election.id}
             totalPresent={election.total_present}
             candidates={candidates}
+            election={election as any}
           />
         </div>
       )}
