@@ -531,18 +531,35 @@ export default function VotePublic() {
   }
 
   // Confirm modal
-  if (confirmCandidate) {
-    const confirmPhotos = getPhotoUrls(confirmCandidate);
+  if (confirmCandidate || confirmBlank || (isMultiSeat && selectedCandidates.length > 0 && voting)) {
+    const confirmPhotos = confirmCandidate ? getPhotoUrls(confirmCandidate) : [];
+    const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-6">
-          <h2 className="text-xl font-bold">{isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
-          <div className="flex flex-col items-center gap-4">
-            <CandidatePhotos photos={confirmPhotos} name={confirmCandidate.name} size="lg" />
-            <p className="text-2xl font-bold">{confirmCandidate.name}</p>
-          </div>
+          <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto em branco?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
+          {confirmBlank ? (
+            <div className="rounded-2xl border-2 border-border bg-muted/40 p-8">
+              <Circle className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+              <p className="text-2xl font-bold">Voto em branco</p>
+            </div>
+          ) : isMultiSeat ? (
+            <div className="space-y-2 text-left">
+              {choices.map((choice, index) => (
+                <div key={choice.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{index + 1}</span>
+                  <span className="font-semibold text-foreground">{choice.name}</span>
+                </div>
+              ))}
+            </div>
+          ) : confirmCandidate && (
+            <div className="flex flex-col items-center gap-4">
+              <CandidatePhotos photos={confirmPhotos} name={confirmCandidate.name} size="lg" />
+              <p className="text-2xl font-bold">{confirmCandidate.name}</p>
+            </div>
+          )}
           <div className="flex gap-3">
-            <button onClick={() => setConfirmCandidate(null)} className="flex-1 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors">
+            <button onClick={() => { setConfirmCandidate(null); setConfirmBlank(false); }} className="flex-1 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors">
               Cancelar
             </button>
             <button onClick={() => { void primeAudio(); void handleVote(); }} disabled={voting} className="flex-1 py-4 rounded-xl bg-primary text-primary-foreground text-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
