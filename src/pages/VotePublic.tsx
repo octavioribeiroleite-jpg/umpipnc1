@@ -169,6 +169,7 @@ export default function VotePublic() {
   const [voting, setVoting] = useState(false);
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
   const [selectedCandidates, setSelectedCandidates] = useState<Candidate[]>([]);
+  const [blankSlots, setBlankSlots] = useState(0);
   const [confirmSelection, setConfirmSelection] = useState(false);
   const [confirmBlank, setConfirmBlank] = useState(false);
   const [voteSuccess, setVoteSuccess] = useState(false);
@@ -197,6 +198,7 @@ export default function VotePublic() {
   const isMultiSeat = !isCamisa && maxChoices > 1;
   const [electedIds, setElectedIds] = useState<string[]>([]);
   const eligibleCandidates = candidates.filter((c) => !electedIds.includes(c.id));
+  const totalSelectedMarks = selectedCandidates.length + blankSlots;
 
   useEffect(() => {
     ensureAudio();
