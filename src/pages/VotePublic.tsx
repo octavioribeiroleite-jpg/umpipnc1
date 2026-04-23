@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight, Circle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import voteConfirmSound from '@/assets/vote-confirm.mp3';
 
-interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; }
+interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; }
 interface Candidate { id: string; name: string; photo_url: string | null; photo_urls?: string[]; display_order: number; }
 
 function getDeviceId(): string {
@@ -105,6 +105,25 @@ function CandidateStartPreview({ candidates, isCamisa }: { candidates: Candidate
       </div>
     </div>
   );
+}
+
+function computeElectedIds(votes: any[], seatsCount: number, currentRound: number, majorityRule = 'simple') {
+  const elected = new Set<string>();
+  for (let round = 1; round < currentRound; round += 1) {
+    const roundVotes = votes.filter((v) => (v.round_number || 1) === round);
+    const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
+    const needed = Math.floor(totalBallots / 2) + 1;
+    const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
+      if (!v.is_blank && v.candidate_id && !elected.has(v.candidate_id)) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+      return acc;
+    }, {});
+    Object.entries(counts)
+      .filter(([, count]) => majorityRule === 'absolute_50' ? (count as number) >= needed : true)
+      .sort((a, b) => (b[1] as number) - (a[1] as number))
+      .slice(0, Math.max(0, seatsCount - elected.size))
+      .forEach(([candidateId]) => elected.add(candidateId));
+  }
+  return Array.from(elected);
 }
 
 function SuccessScreen({ autoReset }: { autoReset: boolean }) {
