@@ -53,6 +53,8 @@ export default function Eleicoes() {
   const [position, setPosition] = useState('');
   const [societyId, setSocietyId] = useState<string>('');
   const [electionType, setElectionType] = useState<'cargo' | 'camisa'>('cargo');
+  const [seatsCount, setSeatsCount] = useState(1);
+  const [maxChoices, setMaxChoices] = useState(1);
   const [creating, setCreating] = useState(false);
   const [activeTab, setActiveTab] = useState<'cargo' | 'camisa'>('cargo');
   const { toast } = useToast();
@@ -104,12 +106,17 @@ export default function Eleicoes() {
     }
     setCreating(true);
     const normalizedSocietyId = societyId && societyId !== 'general' ? societyId : null;
+    const normalizedSeats = electionType === 'cargo' ? Math.max(1, seatsCount) : 1;
+    const normalizedChoices = electionType === 'cargo' ? Math.min(Math.max(1, maxChoices), normalizedSeats) : 1;
     const { error } = await supabase.from('elections' as any).insert({
       name: name.trim(),
       position: position.trim(),
       society_id: normalizedSocietyId,
       created_by: user!.id,
       type: electionType,
+      seats_count: normalizedSeats,
+      max_choices_per_ballot: normalizedChoices,
+      majority_rule: normalizedSeats > 1 || normalizedChoices > 1 ? 'absolute_50' : 'simple',
     } as any);
 
     if (error) {
@@ -117,7 +124,7 @@ export default function Eleicoes() {
     } else {
       toast({ title: 'Eleição criada!' });
       setDialogOpen(false);
-      setName(''); setPosition(''); setSocietyId(''); setElectionType('cargo');
+      setName(''); setPosition(''); setSocietyId(''); setElectionType('cargo'); setSeatsCount(1); setMaxChoices(1);
       fetchElections();
     }
     setCreating(false);
@@ -201,6 +208,33 @@ export default function Eleicoes() {
               <Label>{electionType === 'camisa' ? 'Descrição' : 'Cargo'}</Label>
               <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
             </div>
+            {electionType === 'cargo' && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Quantidade de vagas</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={seatsCount}
+                    onChange={(e) => {
+                      const next = Math.max(1, Number(e.target.value) || 1);
+                      setSeatsCount(next);
+                      setMaxChoices((current) => Math.min(current, next));
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>Escolhas por voto</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={seatsCount}
+                    value={maxChoices}
+                    onChange={(e) => setMaxChoices(Math.min(Math.max(1, Number(e.target.value) || 1), seatsCount))}
+                  />
+                </div>
+              </div>
+            )}
             <div>
               <Label>Sociedade {electionType === 'cargo' ? '(opcional)' : ''}</Label>
               <Select value={societyId} onValueChange={setSocietyId}>
