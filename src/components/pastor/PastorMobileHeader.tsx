@@ -1,36 +1,13 @@
-import { useState, useEffect } from 'react';
-import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
+import { useEffect } from 'react';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import {
   ArrowLeft,
-  Menu,
-  LogOut,
-  LayoutDashboard,
-  Calendar,
-  Megaphone,
-  MessageSquare,
-  Users,
-  Heart,
-  Globe,
-  Vote,
 } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
-import { ShareAppDialog } from '@/components/layout/ShareAppDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { InstallButton } from '@/components/layout/InstallButton';
-import { BuildStamp } from '@/components/BuildStamp';
 
 interface Society {
   id: string;
@@ -39,52 +16,18 @@ interface Society {
   color: string;
 }
 
-const navItems = [
-  { to: '/pastor', icon: LayoutDashboard, label: 'Visão Geral' },
-  { to: '/pastor/calendario', icon: Calendar, label: 'Calendário' },
-  { to: '/pastor/comunicados', icon: Megaphone, label: 'Comunicados' },
-  { to: '/pastor/sugestoes', icon: MessageSquare, label: 'Sugestões' },
-  { to: '/eleicoes', icon: Vote, label: 'Eleições' },
-  { to: '/dizimos', icon: Heart, label: 'Dízimos' },
-  { to: '/visitantes', icon: Globe, label: 'Visitantes' },
-];
-
 export function PastorMobileHeader() {
-  const { user, profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [societies, setSocieties] = useState<Society[]>([]);
   useSwipeBack();
 
   const isPastorHome = location.pathname === '/pastor';
 
   useEffect(() => {
     supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
-      .then(({ data }) => { if (data) setSocieties(data); });
+      .then(() => undefined);
   }, []);
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  const { showConfirm: showExitConfirm, setShowConfirm: setShowExitConfirm, requestExit } = useExitConfirm();
-
-  const doSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-    setSheetOpen(false);
-  };
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    setSheetOpen(false);
-  };
-
-  const isActive = (path: string) => {
-    if (path === '/pastor') return location.pathname === '/pastor';
-    return location.pathname.startsWith(path);
-  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md safe-top">
@@ -99,95 +42,10 @@ export function PastorMobileHeader() {
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <button aria-label="Abrir menu" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
-                <Menu className="h-6 w-6" />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[85vw] max-w-xs sm:w-72 p-0 flex flex-col">
-              <SheetHeader className="p-4 pb-2">
-                <div className="flex items-center gap-3">
-                  <img src={logoIpnc} alt="IPNC" className="h-10 w-10 object-contain" />
-                  <SheetTitle className="text-lg">Painel do Pastor</SheetTitle>
-                </div>
-              </SheetHeader>
-              <Separator />
-              <nav className="flex-1 overflow-y-auto py-2 px-2">
-                {navItems.map((item) => (
-                  <button
-                    key={item.to}
-                    onClick={() => handleNavigate(item.to)}
-                    className={cn(
-                      'flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                      isActive(item.to)
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    )}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {item.label}
-                  </button>
-                ))}
-
-                {societies.length > 0 && (
-                  <>
-                    <Separator className="my-2" />
-                    <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      Sociedades
-                    </p>
-                    {societies.map((s) => (
-                      <button
-                        key={s.id}
-                        onClick={() => handleNavigate(`/pastor/sociedade/${s.slug}`)}
-                        className={cn(
-                          'flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                          location.pathname === `/pastor/sociedade/${s.slug}`
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                        )}
-                      >
-                        <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                        {s.name}
-                      </button>
-                    ))}
-                  </>
-                )}
-                <Separator className="my-2" />
-                <ShareAppDialog />
-              </nav>
-              <Separator />
-              {user && (
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {profile?.full_name ? getInitials(profile.full_name) : 'P'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{profile?.full_name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={requestExit}
-                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sair
-                  </button>
-                  <ExitConfirmDialog open={showExitConfirm} onOpenChange={setShowExitConfirm} onConfirm={doSignOut} />
-                </div>
-              )}
-              <div className="px-4 pb-3">
-                <BuildStamp />
-              </div>
-            </SheetContent>
-          </Sheet>
-
           <img src={logoIpnc} alt="IPNC" className="h-9 w-9 sm:h-10 sm:w-10 object-contain flex-shrink-0" />
-          <span className="font-semibold text-foreground text-sm sm:text-base md:text-lg truncate">Painel do Pastor</span>
+          <span className="font-semibold text-foreground text-sm sm:text-base md:text-lg truncate">
+            {profile?.full_name || 'Painel do Pastor'}
+          </span>
         </div>
         <div className="flex-shrink-0">
           <InstallButton />
