@@ -350,6 +350,7 @@ export default function VotePublic() {
 
   const handleVote = async () => {
     if (!confirmCandidate || !electionId) return;
+    const audioWarmup = ensureAudioContext();
     setVoting(true);
     const voteData: any = { election_id: electionId, candidate_id: confirmCandidate.id };
     if (isIndividual) {
@@ -363,12 +364,18 @@ export default function VotePublic() {
     const { error } = await supabase.from('election_votes' as any).insert(voteData as any);
     if (error) { setVoting(false); return; }
     if (isIndividual) localStorage.setItem(`voted_${electionId}`, 'true');
-    void playUrnaSound();
+    await audioWarmup;
+    await playUrnaSound();
     setConfirmCandidate(null);
     setVoteSuccess(true);
     setVoting(false);
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
-      setTimeout(() => { setVoteSuccess(false); setReadyToVote(false); setConfirmCandidate(null); }, 15000);
+      if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
+      resetTimeoutRef.current = window.setTimeout(() => {
+        setVoteSuccess(false);
+        setReadyToVote(false);
+        setConfirmCandidate(null);
+      }, 15000);
     }
   };
 
@@ -515,7 +522,7 @@ export default function VotePublic() {
             return (
               <button
                 key={c.id}
-                onClick={() => setConfirmCandidate(c)}
+                onClick={() => { void primeAudio(); setConfirmCandidate(c); }}
                 className="flex flex-col items-center gap-3 p-4 md:p-6 border-2 rounded-xl hover:border-primary hover:bg-primary/5 transition-all"
               >
                 <CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} />
