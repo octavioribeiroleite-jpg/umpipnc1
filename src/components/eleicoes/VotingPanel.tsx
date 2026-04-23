@@ -21,6 +21,7 @@ function ChecklistItem({ done, label }: { done: boolean; label: string }) {
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { DeviceRegistration } from './DeviceRegistration';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -224,7 +225,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="rounded-xl border border-border bg-background p-4 shadow-sm space-y-4">
         {/* Mode badge */}
         <Badge variant="outline" className="text-[10px]">
           {votingMode === 'individual' ? '📱 Voto Individual' : votingMode === 'both' ? '🖥️📱 Urna + Celular' : '🖥️ Urna Compartilhada'}
@@ -241,15 +242,15 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
         {/* Compact counters */}
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="p-2 bg-muted/60 border border-border/50 rounded-lg">
+          <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
             <p className="text-lg font-bold text-foreground">{totalPresent}</p>
             <p className="text-[10px] text-muted-foreground">Presentes</p>
           </div>
-          <div className="p-2 bg-muted/60 border border-border/50 rounded-lg">
+          <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
             <p className="text-lg font-bold text-foreground">{voteCount}</p>
             <p className="text-[10px] text-muted-foreground">Votos</p>
           </div>
-          <div className={`p-2 rounded-lg border ${diff === 0 ? 'bg-success/15 border-success/40' : 'bg-destructive/15 border-destructive/40'}`}>
+          <div className={`p-2 rounded-lg border bg-background shadow-sm ${diff === 0 ? 'border-success/50' : 'border-destructive/50'}`}>
             <p className={`text-lg font-bold ${diff === 0 ? 'text-success' : 'text-destructive'}`}>
               {diff > 0 ? `+${diff}` : diff}
             </p>
