@@ -169,6 +169,7 @@ export default function VotePublic() {
   const [voting, setVoting] = useState(false);
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
   const [selectedCandidates, setSelectedCandidates] = useState<Candidate[]>([]);
+  const [confirmSelection, setConfirmSelection] = useState(false);
   const [confirmBlank, setConfirmBlank] = useState(false);
   const [voteSuccess, setVoteSuccess] = useState(false);
   const [readyToVote, setReadyToVote] = useState(false);
@@ -438,6 +439,7 @@ export default function VotePublic() {
     setConfirmCandidate(null);
     setSelectedCandidates([]);
     setConfirmBlank(false);
+    setConfirmSelection(false);
     setVoteSuccess(true);
     setVoting(false);
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
@@ -531,7 +533,7 @@ export default function VotePublic() {
   }
 
   // Confirm modal
-  if (confirmCandidate || confirmBlank || (isMultiSeat && selectedCandidates.length > 0 && voting)) {
+  if (confirmCandidate || confirmBlank || confirmSelection) {
     const confirmPhotos = confirmCandidate ? getPhotoUrls(confirmCandidate) : [];
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
     return (
@@ -559,7 +561,7 @@ export default function VotePublic() {
             </div>
           )}
           <div className="flex gap-3">
-            <button onClick={() => { setConfirmCandidate(null); setConfirmBlank(false); }} className="flex-1 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors">
+            <button onClick={() => { setConfirmCandidate(null); setConfirmBlank(false); setConfirmSelection(false); }} className="flex-1 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors">
               Cancelar
             </button>
             <button onClick={() => { void primeAudio(); void handleVote(); }} disabled={voting} className="flex-1 py-4 rounded-xl bg-primary text-primary-foreground text-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
@@ -590,8 +592,9 @@ export default function VotePublic() {
             )}
           </div>
 
-          <div className="my-6 border-y border-border/70 py-5">
-            <CandidateStartPreview candidates={candidates} isCamisa={isCamisa} />
+          <div className="my-6 rounded-2xl border border-border/70 bg-muted/30 px-4 py-5">
+            <p className="text-sm font-semibold text-foreground">{seatsCount > 1 ? `${seatsCount} vagas disponíveis` : 'Votação segura'}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Os nomes e fotos aparecem somente depois de iniciar o voto.</p>
           </div>
 
           <button onClick={() => { void primeAudio(); setReadyToVote(true); }} className="touch-manipulation w-full rounded-2xl bg-primary px-6 py-5 text-xl font-extrabold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 active:scale-[0.98] sm:text-2xl">
