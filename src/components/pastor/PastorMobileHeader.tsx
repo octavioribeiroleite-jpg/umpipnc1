@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -6,15 +5,7 @@ import logoIpnc from '@/assets/logo-ipnc.png';
 import {
   ArrowLeft,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { InstallButton } from '@/components/layout/InstallButton';
-
-interface Society {
-  id: string;
-  name: string;
-  slug: string;
-  color: string;
-}
 
 export function PastorMobileHeader() {
   const { profile } = useAuth();
@@ -23,11 +14,6 @@ export function PastorMobileHeader() {
   useSwipeBack();
 
   const isPastorHome = location.pathname === '/pastor';
-
-  useEffect(() => {
-    supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
-      .then(() => undefined);
-  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md safe-top">
