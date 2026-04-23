@@ -261,6 +261,14 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         <Badge variant="outline" className="text-[10px]">
           {votingMode === 'individual' ? '📱 Voto Individual' : votingMode === 'both' ? '🖥️📱 Urna + Celular' : '🖥️ Urna Compartilhada'}
         </Badge>
+        {isMultiSeat && (
+          <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm">
+            <p className="font-semibold text-foreground">{currentRound}º escrutínio</p>
+            <p className="text-muted-foreground">
+              {electedCount}/{seatsCount} vaga(s) preenchida(s). Restam {Math.max(0, seatsCount - electedCount)}.
+            </p>
+          </div>
+        )}
 
         {/* Progress */}
         <div className="space-y-1">
@@ -279,7 +287,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
           <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
             <p className="text-lg font-bold text-foreground">{voteCount}</p>
-            <p className="text-[10px] text-muted-foreground">Votos</p>
+            <p className="text-[10px] text-muted-foreground">Cédulas</p>
           </div>
           <div className={`p-2 rounded-lg border bg-background shadow-sm ${diff === 0 ? 'border-success/50' : 'border-destructive/50'}`}>
             <p className={`text-lg font-bold ${diff === 0 ? 'text-success' : 'text-destructive'}`}>
@@ -300,7 +308,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             Abrir tela de apresentação
             <ExternalLink className="h-3 w-3 ml-1.5 opacity-60" />
           </Button>
-          {diff !== 0 ? (
+          {isMultiSeat && diff === 0 && electedCount < seatsCount ? (
+            <Button size="sm" onClick={handleNextRound} disabled={loading}>
+              <Play className="h-3.5 w-3.5 mr-1.5" /> Próximo escrutínio
+            </Button>
+          ) : diff !== 0 ? (
             <Button variant="destructive" size="sm" onClick={() => setConfirmAction('reset')}>
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reiniciar
             </Button>
