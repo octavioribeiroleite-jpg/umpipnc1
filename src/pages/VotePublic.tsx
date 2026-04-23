@@ -77,6 +77,36 @@ function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name
   );
 }
 
+function CandidateStartPreview({ candidates, isCamisa }: { candidates: Candidate[]; isCamisa: boolean }) {
+  if (candidates.length === 0) return null;
+
+  return (
+    <div className="w-full overflow-x-auto pb-1">
+      <div className="flex min-w-max justify-center gap-3 px-1 sm:min-w-0 sm:flex-wrap">
+        {candidates.map((candidate) => {
+          const [photo] = getPhotoUrls(candidate);
+          return (
+            <div key={candidate.id} className="w-24 shrink-0 rounded-xl border border-border bg-muted/30 p-2 text-center shadow-sm sm:w-28">
+              <div className="mx-auto h-16 w-16 overflow-hidden rounded-lg bg-muted sm:h-20 sm:w-20">
+                {photo ? (
+                  <img src={photo} alt={candidate.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <UserCheck className="h-7 w-7 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <p className="mt-2 line-clamp-2 text-xs font-semibold leading-tight text-foreground">
+                {isCamisa ? candidate.name : candidate.name}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function SuccessScreen({ autoReset }: { autoReset: boolean }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4 sm:p-6 text-center">
