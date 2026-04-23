@@ -11,6 +11,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   UserCheck,
   ClipboardCheck,
   ClipboardList,
@@ -24,9 +26,10 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { BuildStamp } from '@/components/BuildStamp';
+import { useScrollIndicators } from '@/hooks/useScrollIndicators';
 
 const menuItems = [
   { icon: Home, label: 'Home', path: '/' },
@@ -59,6 +62,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { profile, signOut, isAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const { canScrollUp, canScrollDown, scrollUp, scrollDown } = useScrollIndicators(navRef);
 
   const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
 
@@ -104,7 +109,13 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 overflow-y-auto scrollbar-thin">
+      <div className="relative flex-1 min-h-0">
+      {canScrollUp && !collapsed && (
+        <button onClick={scrollUp} aria-label="Ver itens acima" className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-full border border-sidebar-border bg-sidebar/95 p-1 text-sidebar-foreground shadow-md">
+          <ChevronUp className="h-4 w-4" />
+        </button>
+      )}
+      <nav ref={navRef} className="h-full py-4 overflow-y-auto scrollbar-thin">
         <ul className="space-y-1 px-2">
           {allMenuItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -128,6 +139,12 @@ export function AppSidebar() {
           })}
         </ul>
       </nav>
+      {canScrollDown && !collapsed && (
+        <button onClick={scrollDown} aria-label="Ver mais itens" className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full border border-sidebar-border bg-sidebar/95 p-1 text-sidebar-foreground shadow-md">
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      )}
+      </div>
 
       {/* User section */}
       <div className="p-4 border-t border-sidebar-border">

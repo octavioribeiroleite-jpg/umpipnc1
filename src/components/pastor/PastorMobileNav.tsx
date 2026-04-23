@@ -1,9 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, Calendar, Megaphone, MessageSquare, Heart, Globe, Vote } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Calendar, Globe, Heart, LayoutDashboard, LogOut, Megaphone, MessageSquare, Users, Vote } from 'lucide-react';
+import { BottomNav, type BottomNavItem } from '@/components/layout/BottomNav';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface Society {
   id: string;
@@ -15,89 +15,39 @@ interface Society {
 export function PastorMobileNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [societies, setSocieties] = useState<Society[]>([]);
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
       .then(({ data }) => { if (data) setSocieties(data); });
   }, []);
 
-  const isActive = (path: string) => {
-    if (path === '/pastor') return location.pathname === '/pastor';
-    return location.pathname.startsWith(path);
-  };
+  const isActive = (path: string) => (path === '/pastor' ? location.pathname === '/pastor' : location.pathname.startsWith(path));
+  const go = (path: string) => navigate(path);
 
-  const isSocietyActive = location.pathname.startsWith('/pastor/sociedade');
-
-  const items = [
-    { path: '/pastor', icon: LayoutDashboard, label: 'Geral' },
-    { path: 'societies', icon: Users, label: 'Sociedades' },
-    { path: '/pastor/calendario', icon: Calendar, label: 'Calendário' },
-    { path: '/pastor/comunicados', icon: Megaphone, label: 'Comunicados' },
-    { path: '/pastor/sugestoes', icon: MessageSquare, label: 'Sugestões' },
-    { path: '/eleicoes', icon: Vote, label: 'Eleições' },
-    { path: '/dizimos', icon: Heart, label: 'Dízimos' },
-    { path: '/visitantes', icon: Globe, label: 'Visitantes' },
+  const mainItems: BottomNavItem[] = [
+    { key: 'geral', path: '/pastor', icon: LayoutDashboard, label: 'Geral', active: isActive('/pastor'), onClick: () => go('/pastor') } as BottomNavItem,
+    { key: 'calendario', icon: Calendar, label: 'Calendário', active: isActive('/pastor/calendario'), onClick: () => go('/pastor/calendario') },
+    { key: 'comunicados', icon: Megaphone, label: 'Comunicados', active: isActive('/pastor/comunicados'), onClick: () => go('/pastor/comunicados') },
+    { key: 'sociedades', icon: Users, label: 'Sociedades', active: location.pathname.startsWith('/pastor/sociedade'), onClick: () => go(societies[0] ? `/pastor/sociedade/${societies[0].slug}` : '/pastor') },
   ];
 
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-bottom">
-      <div className="flex items-center justify-around h-16">
-        {items.map(item => {
-          if (item.path === 'societies') {
-            return (
-              <Sheet key="societies" open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                  <button
-                    className={cn(
-                      'flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors',
-                      isSocietyActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span className="text-[10px] font-medium">{item.label}</span>
-                  </button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-xl">
-                  <SheetHeader>
-                    <SheetTitle>Sociedades</SheetTitle>
-                  </SheetHeader>
-                  <div className="grid gap-2 py-4">
-                    {societies.map(s => (
-                      <button
-                        key={s.id}
-                        onClick={() => { navigate(`/pastor/sociedade/${s.slug}`); setSheetOpen(false); }}
-                        className={cn(
-                          'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
-                          location.pathname === `/pastor/sociedade/${s.slug}` ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-                        )}
-                      >
-                        <div className="h-4 w-4 rounded-full" style={{ backgroundColor: s.color }} />
-                        <span className="font-medium">{s.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </SheetContent>
-              </Sheet>
-            );
-          }
+  const moreItems: BottomNavItem[] = [
+    ...societies.map((s) => ({
+      key: `society-${s.id}`,
+      icon: Users,
+      label: s.name,
+      markerColor: s.color,
+      active: location.pathname === `/pastor/sociedade/${s.slug}`,
+      onClick: () => go(`/pastor/sociedade/${s.slug}`),
+    })),
+    { key: 'sugestoes', icon: MessageSquare, label: 'Sugestões', active: isActive('/pastor/sugestoes'), onClick: () => go('/pastor/sugestoes') },
+    { key: 'eleicoes', icon: Vote, label: 'Eleições', active: isActive('/eleicoes'), onClick: () => go('/eleicoes') },
+    { key: 'dizimos', icon: Heart, label: 'Dízimos', active: isActive('/dizimos'), onClick: () => go('/dizimos') },
+    { key: 'visitantes', icon: Globe, label: 'Visitantes', active: isActive('/visitantes'), onClick: () => go('/visitantes') },
+    { key: 'sair', icon: LogOut, label: 'Sair', onClick: async () => { await signOut(); go('/auth'); } },
+  ];
 
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={cn(
-                'flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors',
-                isActive(item.path) ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
+  return <BottomNav mainItems={mainItems} moreItems={moreItems} moreTitle="Painel do Pastor" />;
 }

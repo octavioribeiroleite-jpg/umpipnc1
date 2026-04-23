@@ -13,11 +13,14 @@ import {
   Heart,
   Globe,
   Vote,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { BuildStamp } from '@/components/BuildStamp';
+import { useScrollIndicators } from '@/hooks/useScrollIndicators';
 
 interface Society {
   id: string;
@@ -32,6 +35,8 @@ export function PastorSidebar() {
   const location = useLocation();
   const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
   const [societies, setSocieties] = useState<Society[]>([]);
+  const navRef = useRef<HTMLElement>(null);
+  const { canScrollUp, canScrollDown, scrollUp, scrollDown } = useScrollIndicators(navRef);
 
   const doSignOut = async () => {
     await signOut();
@@ -74,7 +79,13 @@ export function PastorSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
+      <div className="relative flex-1 min-h-0">
+      {canScrollUp && (
+        <button onClick={scrollUp} aria-label="Ver itens acima" className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-full border border-sidebar-border bg-sidebar/95 p-1 text-sidebar-foreground shadow-md">
+          <ChevronUp className="h-4 w-4" />
+        </button>
+      )}
+      <nav ref={navRef} className="h-full p-3 space-y-1 overflow-y-auto scrollbar-thin">
         {mainItems.map(item => (
           <button
             key={item.path}
@@ -113,6 +124,12 @@ export function PastorSidebar() {
           ))}
         </div>
       </nav>
+      {canScrollDown && (
+        <button onClick={scrollDown} aria-label="Ver mais itens" className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full border border-sidebar-border bg-sidebar/95 p-1 text-sidebar-foreground shadow-md">
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      )}
+      </div>
 
       {/* Footer */}
       <div className="p-3 border-t border-sidebar-border">
