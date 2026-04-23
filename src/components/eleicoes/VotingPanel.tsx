@@ -280,6 +280,20 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           )}
         </div>
 
+        {showDevices && (
+          <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                <Monitor className="h-4 w-4 text-primary" /> Urnas conectadas
+              </p>
+              <Badge variant="secondary" className="text-[10px]">
+                {devices.filter((d) => d.activated).length}/{devices.length} online
+              </Badge>
+            </div>
+            <DeviceRegistration electionId={electionId} devices={devices} onRefresh={onRefresh} disabled={false} />
+          </div>
+        )}
+
         {/* QR Code & Link */}
         {votingMode === 'both' ? (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
