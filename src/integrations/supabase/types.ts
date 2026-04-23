@@ -500,25 +500,34 @@ export type Database = {
       }
       election_votes: {
         Row: {
-          candidate_id: string
+          ballot_id: string
+          candidate_id: string | null
           created_at: string
           device_id: string | null
           election_id: string
           id: string
+          is_blank: boolean
+          round_number: number
         }
         Insert: {
-          candidate_id: string
+          ballot_id?: string
+          candidate_id?: string | null
           created_at?: string
           device_id?: string | null
           election_id: string
           id?: string
+          is_blank?: boolean
+          round_number?: number
         }
         Update: {
-          candidate_id?: string
+          ballot_id?: string
+          candidate_id?: string | null
           created_at?: string
           device_id?: string | null
           election_id?: string
           id?: string
+          is_blank?: boolean
+          round_number?: number
         }
         Relationships: [
           {
@@ -541,9 +550,13 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          current_round: number
           id: string
+          majority_rule: string
+          max_choices_per_ballot: number
           name: string
           position: string
+          seats_count: number
           show_result: boolean
           society_id: string | null
           status: string
@@ -554,9 +567,13 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by: string
+          current_round?: number
           id?: string
+          majority_rule?: string
+          max_choices_per_ballot?: number
           name: string
           position: string
+          seats_count?: number
           show_result?: boolean
           society_id?: string | null
           status?: string
@@ -567,9 +584,13 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string
+          current_round?: number
           id?: string
+          majority_rule?: string
+          max_choices_per_ballot?: number
           name?: string
           position?: string
+          seats_count?: number
           show_result?: boolean
           society_id?: string | null
           status?: string
