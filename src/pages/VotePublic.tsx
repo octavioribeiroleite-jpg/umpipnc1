@@ -168,6 +168,8 @@ export default function VotePublic() {
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
+  const [selectedCandidates, setSelectedCandidates] = useState<Candidate[]>([]);
+  const [confirmBlank, setConfirmBlank] = useState(false);
   const [voteSuccess, setVoteSuccess] = useState(false);
   const [readyToVote, setReadyToVote] = useState(false);
   const [alreadyVoted, setAlreadyVoted] = useState(false);
@@ -188,6 +190,12 @@ export default function VotePublic() {
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const isCamisa = election?.type === 'camisa';
+  const seatsCount = election?.seats_count || 1;
+  const currentRound = election?.current_round || 1;
+  const maxChoices = Math.max(1, Math.min(election?.max_choices_per_ballot || 1, seatsCount));
+  const isMultiSeat = !isCamisa && maxChoices > 1;
+  const [electedIds, setElectedIds] = useState<string[]>([]);
+  const eligibleCandidates = candidates.filter((c) => !electedIds.includes(c.id));
 
   useEffect(() => {
     ensureAudio();
@@ -228,17 +236,24 @@ export default function VotePublic() {
         photo_urls: Array.isArray(c.photo_urls) ? c.photo_urls : [],
       })));
 
+      const round = elData?.current_round || 1;
+      const seats = elData?.seats_count || 1;
+      const { data: voteRows } = await supabase
+        .from('election_votes' as any).select('*')
+        .eq('election_id', electionId);
+      setElectedIds(computeElectedIds((voteRows as any[]) || [], seats, round, elData?.majority_rule || 'simple'));
+
       if (!isUrnaMode && (elData?.voting_mode === 'individual' || elData?.voting_mode === 'both')) {
         const deviceId = getDeviceId();
-        if (localStorage.getItem(`voted_${electionId}`)) {
+        if (localStorage.getItem(`voted_${electionId}_${round}`)) {
           setAlreadyVoted(true);
         } else {
           const { count } = await supabase
             .from('election_votes' as any).select('*', { count: 'exact', head: true })
-            .eq('election_id', electionId).eq('device_id', deviceId);
+            .eq('election_id', electionId).eq('device_id', deviceId).eq('round_number', round);
           if (count && count > 0) {
             setAlreadyVoted(true);
-            localStorage.setItem(`voted_${electionId}`, 'true');
+            localStorage.setItem(`voted_${electionId}_${round}`, 'true');
           }
         }
       }
