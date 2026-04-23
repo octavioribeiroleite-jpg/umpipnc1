@@ -516,20 +516,28 @@ export default function VotePublic() {
   // Pre-voting screen
   if ((isSharedBehavior || !isIndividual) && !readyToVote) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
-        <div className="max-w-sm w-full space-y-8">
-          <div>
-            <Vote className="h-20 w-20 text-primary mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">{election.name}</h1>
-            <p className="text-muted-foreground mt-1">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4 text-center sm:p-6">
+        <div className="w-full max-w-2xl animate-fade-up rounded-[2rem] border border-border/70 bg-background px-4 py-6 shadow-2xl sm:px-8 sm:py-8">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+            <Vote className="h-9 w-9 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-primary">Urna pronta</p>
+            <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">{election.name}</h1>
+            <p className="text-sm font-medium text-muted-foreground sm:text-base">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
             {isSharedBehavior && (
-              <p className="text-xs text-primary mt-2 flex items-center justify-center gap-1">
+              <p className="mx-auto mt-3 inline-flex items-center justify-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                 <Monitor className="h-3 w-3" /> Urna Fixa Ativada
               </p>
             )}
           </div>
-          <button onClick={() => { void primeAudio(); setReadyToVote(true); }} className="w-full py-5 rounded-xl bg-primary text-primary-foreground text-xl font-bold hover:bg-primary/90 transition-colors">
-            Iniciar Votação
+
+          <div className="my-6 border-y border-border/70 py-5">
+            <CandidateStartPreview candidates={candidates} isCamisa={isCamisa} />
+          </div>
+
+          <button onClick={() => { void primeAudio(); setReadyToVote(true); }} className="touch-manipulation w-full rounded-2xl bg-primary px-6 py-5 text-xl font-extrabold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 active:scale-[0.98] sm:text-2xl">
+            Iniciar votação
           </button>
         </div>
       </div>
@@ -538,7 +546,7 @@ export default function VotePublic() {
 
   // Main voting screen
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold">{election.name}</h1>
@@ -546,18 +554,18 @@ export default function VotePublic() {
           <p className="text-sm text-muted-foreground mt-1">{isCamisa ? 'Escolha o modelo' : 'Escolha seu candidato'}</p>
         </div>
 
-        <div className={`grid ${isCamisa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 md:grid-cols-3'} gap-4 md:gap-6`}>
+        <div className={`grid ${isCamisa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 md:grid-cols-3'} gap-3 sm:gap-4 md:gap-6`}>
           {candidates.map((c) => {
             const photos = getPhotoUrls(c);
             return (
               <button
                 key={c.id}
                 onClick={() => { void primeAudio(); setConfirmCandidate(c); }}
-                className="flex flex-col items-center gap-3 p-4 md:p-6 border-2 rounded-xl hover:border-primary hover:bg-primary/5 transition-all"
+                className="touch-manipulation flex min-h-48 flex-col items-center justify-between gap-3 rounded-2xl border-2 border-border bg-card/95 p-3 shadow-sm transition-all hover:border-primary hover:bg-primary/5 active:scale-[0.98] sm:p-4 md:p-6"
               >
                 <CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} />
                 <span className="text-sm md:text-base font-semibold text-center">{c.name}</span>
-                <span className="px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold">
+                <span className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">
                   VOTAR
                 </span>
               </button>
