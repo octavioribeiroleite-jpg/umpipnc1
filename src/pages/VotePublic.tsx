@@ -510,7 +510,7 @@ export default function VotePublic() {
         setVoteSuccess(false);
         setReadyToVote(false);
         setConfirmCandidate(null);
-      }, 15000);
+      }, 1500);
     }
   };
 
