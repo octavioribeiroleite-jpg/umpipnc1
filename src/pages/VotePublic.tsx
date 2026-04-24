@@ -220,10 +220,25 @@ export default function VotePublic() {
   const isCamisa = election?.type === 'camisa';
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
-  const maxChoices = Math.max(1, Math.min(election?.max_choices_per_ballot || 1, seatsCount));
-  const isMultiSeat = !isCamisa && maxChoices > 1;
   const [electedIds, setElectedIds] = useState<string[]>([]);
-  const eligibleCandidates = candidates.filter((c) => !electedIds.includes(c.id));
+  const [allVotes, setAllVotes] = useState<any[]>([]);
+  const remainingSeats = Math.max(1, seatsCount - electedIds.length);
+  const maxChoices = Math.max(
+    1,
+    Math.min(election?.max_choices_per_ballot || 1, remainingSeats),
+  );
+  const isMultiSeat = !isCamisa && maxChoices > 1;
+  const eligibleCandidates = isCamisa
+    ? candidates
+    : currentRound <= 1
+      ? candidates.filter((c) => !electedIds.includes(c.id))
+      : getTopForNextRound(
+          allVotes,
+          candidates,
+          electedIds,
+          currentRound - 1,
+          remainingSeats + 1,
+        );
   const totalSelectedMarks = selectedCandidates.length + blankSlots;
 
   useEffect(() => {
