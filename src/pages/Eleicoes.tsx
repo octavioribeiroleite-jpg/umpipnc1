@@ -65,6 +65,12 @@ export default function Eleicoes() {
     if (!isAdmin && !isPastor) navigate('/');
   }, [isAdmin, isPastor, navigate]);
 
+  useEffect(() => {
+    if (electionType === 'cargo') {
+      setMaxChoices(seatsCount);
+    }
+  }, [seatsCount, electionType]);
+
   const fetchElections = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -104,6 +110,10 @@ export default function Eleicoes() {
       toast({ title: 'Preencha nome e cargo', variant: 'destructive' });
       return;
     }
+    if (electionType === 'cargo' && seatsCount < 1) {
+      toast({ title: 'Quantidade de vagas deve ser pelo menos 1', variant: 'destructive' });
+      return;
+    }
     setCreating(true);
     const normalizedSocietyId = societyId && societyId !== 'general' ? societyId : null;
     const normalizedSeats = electionType === 'cargo' ? Math.max(1, seatsCount) : 1;
@@ -116,7 +126,7 @@ export default function Eleicoes() {
       type: electionType,
       seats_count: normalizedSeats,
       max_choices_per_ballot: normalizedChoices,
-      majority_rule: normalizedSeats > 1 || normalizedChoices > 1 ? 'absolute_50' : 'simple',
+      majority_rule: electionType === 'cargo' ? 'absolute_50' : 'simple',
     } as any);
 
     if (error) {
@@ -222,6 +232,11 @@ export default function Eleicoes() {
                       setMaxChoices((current) => Math.min(current, next));
                     }}
                   />
+                  {seatsCount > 1 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ℹ️ Cadastre pelo menos {seatsCount + 1} candidatos para garantir disputa real.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label>Escolhas por voto</Label>
@@ -230,9 +245,26 @@ export default function Eleicoes() {
                     min={1}
                     max={seatsCount}
                     value={maxChoices}
-                    onChange={(e) => setMaxChoices(Math.min(Math.max(1, Number(e.target.value) || 1), seatsCount))}
+                    readOnly
+                    className="bg-muted text-muted-foreground cursor-not-allowed"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ℹ️ Preenchido automaticamente igual à quantidade de vagas.
+                  </p>
                 </div>
+              </div>
+            )}
+            {electionType === 'cargo' && (
+              <div className="flex flex-col gap-1">
+                <Label>Regra de maioria</Label>
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  {seatsCount > 1
+                    ? '✅ Maioria Absoluta (>50% das cédulas) — obrigatório para múltiplas vagas'
+                    : '✅ Maioria Absoluta (>50% das cédulas)'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  ℹ️ Para eleição de diáconos, a regra é sempre Maioria Absoluta no 1º escrutínio.
+                </p>
               </div>
             )}
             <div>
