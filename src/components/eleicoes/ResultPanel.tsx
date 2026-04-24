@@ -30,7 +30,8 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
           const round = index + 1;
           const roundVotes = votes.filter((v) => (v.round_number || 1) === round);
           const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
-          const blankVotes = new Set(roundVotes.filter((v) => v.is_blank).map((v) => v.ballot_id || v.id)).size;
+          // Cada marcação em branco/nulo conta individualmente, não por cédula.
+          const blankVotes = roundVotes.filter((v) => v.is_blank).length;
           const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
             if (!v.is_blank && v.candidate_id && !alreadyElected.has(v.candidate_id)) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
             return acc;
@@ -108,7 +109,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
             })}
             {roundResult.blankVotes > 0 && (
               <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 p-3 text-sm">
-                <span className="font-medium text-foreground">Votos em branco</span>
+                <span className="font-medium text-foreground">Brancos / Nulos</span>
                 <strong>{roundResult.blankVotes}</strong>
               </div>
             )}
