@@ -61,7 +61,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
   const majorityRule = election?.majority_rule || 'simple';
-  const isMultiSeat = seatsCount > 1 || (election?.max_choices_per_ballot || 1) > 1;
+  const isMultiSeat = seatsCount > 1;
 
   const showDevices = selectedMode === 'both' || selectedMode === 'shared';
   const needsDevices = showDevices && devices.length === 0;
@@ -88,19 +88,31 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         const ballots = new Set(roundRows.map((v) => v.ballot_id)).size;
         const needed = Math.floor(ballots / 2) + 1;
         const counts = roundRows.reduce((acc: Record<string, number>, v: any) => {
-          if (!v.is_blank && v.candidate_id && !elected.has(v.candidate_id)) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+          if (!v.is_blank && v.candidate_id && !elected.has(v.candidate_id))
+            acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
           return acc;
         }, {});
-        Object.entries(counts)
-          .filter(([, count]) => majorityRule === 'absolute_50' ? (count as number) >= needed : true)
-          .sort((a, b) => (b[1] as number) - (a[1] as number))
-          .slice(0, seatsCount - elected.size)
-          .forEach(([id]) => elected.add(id));
+        const sorted = Object.entries(counts)
+          .sort((a, b) => (b[1] as number) - (a[1] as number));
+        if (round === 1) {
+          sorted
+            .filter(([, count]) => majorityRule === 'absolute_50'
+              ? (count as number) >= needed
+              : true)
+            .slice(0, seatsCount - elected.size)
+            .forEach(([id]) => elected.add(id));
+        } else {
+          const topN = sorted.slice(0, Math.max(1, seatsCount - elected.size));
+          const hasTopTie = topN.length > 1 && topN[0][1] === topN[1][1];
+          if (!hasTopTie && topN.length > 0) {
+            elected.add(topN[0][0]);
+          }
+        }
       }
       setElectedCount(elected.size);
 
-      // Detecção de empate no escrutínio atual (a partir do 2º).
-      if (currentRound > 1) {
+      // Detecção de empate no escrutínio atual (qualquer round).
+      {
         const remaining = Math.max(0, seatsCount - elected.size);
         const curRows = rows.filter((v) => (v.round_number || 1) === currentRound && !v.is_blank);
         const counts = curRows.reduce((acc: Record<string, number>, v: any) => {
@@ -122,8 +134,6 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         } else {
           setTieAlert([]);
         }
-      } else {
-        setTieAlert([]);
       }
     } finally {
       inFlightRef.current = false;
@@ -359,9 +369,15 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <ExternalLink className="h-3 w-3 ml-1.5 opacity-60" />
           </Button>
           {isMultiSeat && diff === 0 && electedCount < seatsCount ? (
-            <Button size="sm" onClick={handleNextRound} disabled={loading}>
-              <Play className="h-3.5 w-3.5 mr-1.5" /> Próximo escrutínio
-            </Button>
+            tieAlert.length > 0 ? (
+              <Button size="sm" disabled className="opacity-50 cursor-not-allowed">
+                ⚠️ Empate — resolva antes de avançar
+              </Button>
+            ) : (
+              <Button size="sm" onClick={handleNextRound} disabled={loading}>
+                <Play className="h-3.5 w-3.5 mr-1.5" /> Próximo escrutínio
+              </Button>
+            )
           ) : diff !== 0 ? (
             <Button variant="destructive" size="sm" onClick={() => setConfirmAction('reset')}>
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reiniciar
