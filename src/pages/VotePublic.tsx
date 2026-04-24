@@ -262,9 +262,9 @@ export default function VotePublic() {
   }, []);
 
   useEffect(() => {
-    if (isUrnaMode && electionId && urnaToken) {
-      const flag = sessionStorage.getItem(`urna_authenticated_${electionId}_${urnaToken}`);
-      if (flag === 'true') setUrnaAuthenticated(true);
+    if (isUrnaMode) {
+      // Modo de testes: urna libera direto, sem senha.
+      setUrnaAuthenticated(true);
     }
   }, [isUrnaMode, electionId, urnaToken]);
 
@@ -301,20 +301,7 @@ export default function VotePublic() {
       setAllVotes(votesData);
       setElectedIds(computeElectedIds(votesData, seats, round, elData?.majority_rule || 'simple'));
 
-      if (!isUrnaMode && (elData?.voting_mode === 'individual' || elData?.voting_mode === 'both')) {
-        const deviceId = getDeviceId();
-        if (localStorage.getItem(`voted_${electionId}_${round}`)) {
-          setAlreadyVoted(true);
-        } else {
-          const { count } = await supabase
-            .from('election_votes' as any).select('*', { count: 'exact', head: true })
-            .eq('election_id', electionId).eq('device_id', deviceId).eq('round_number', round);
-          if (count && count > 0) {
-            setAlreadyVoted(true);
-            localStorage.setItem(`voted_${electionId}_${round}`, 'true');
-          }
-        }
-      }
+      // Modo de testes: bloqueio de "já votou" desativado para permitir votar várias vezes.
       setLoading(false);
     };
     fetchData();
