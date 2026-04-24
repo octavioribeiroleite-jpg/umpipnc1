@@ -588,11 +588,11 @@ export default function VotePublic() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-6">
-          <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto em branco?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
+          <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto Branco / Nulo?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
           {confirmBlank ? (
             <div className="rounded-2xl border-2 border-border bg-muted/40 p-8">
               <Circle className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-              <p className="text-2xl font-bold">Voto em branco</p>
+              <p className="text-2xl font-bold">Branco / Nulo</p>
             </div>
           ) : isMultiSeat ? (
             <div className="space-y-2 text-left">
@@ -605,7 +605,7 @@ export default function VotePublic() {
               {Array.from({ length: confirmationBlankSlots }).map((_, index) => (
                 <div key={`blank-${index}`} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">{choices.length + index + 1}</span>
-                  <span className="font-semibold text-foreground">Voto em branco</span>
+                  <span className="font-semibold text-foreground">Branco / Nulo</span>
                 </div>
               ))}
             </div>
@@ -709,7 +709,7 @@ export default function VotePublic() {
         {isMultiSeat && (
           <div className="sticky bottom-3 mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
             <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2 text-sm">
-              <span className="font-semibold text-foreground">Brancos</span>
+              <span className="font-semibold text-foreground">Brancos / Nulos</span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" className="h-9 w-9" disabled={blankSlots === 0} onClick={() => setBlankSlots((value) => Math.max(0, value - 1))}>−</Button>
                 <strong className="w-8 text-center text-foreground">{blankSlots}</strong>
@@ -728,7 +728,7 @@ export default function VotePublic() {
               className="h-11 w-full font-semibold"
               onClick={() => { void primeAudio(); setSelectedCandidates([]); setBlankSlots(maxChoices); setConfirmBlank(true); }}
             >
-              Votar tudo em branco
+              Votar tudo em Branco / Nulo
             </Button>
           </div>
         )}
@@ -739,7 +739,7 @@ export default function VotePublic() {
             className="mt-5 h-12 w-full font-semibold"
             onClick={() => { void primeAudio(); setConfirmBlank(true); }}
           >
-            Votar em branco
+            Votar em Branco / Nulo
           </Button>
         )}
       </div>
