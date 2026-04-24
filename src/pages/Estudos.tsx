@@ -73,10 +73,27 @@ export default function Estudos() {
   const handleCreate = async () => {
     if (!newTitle.trim() || !profile) return;
     setCreating(true);
+
+    // Resolver society_id com fallback para evitar estudos órfãos (invisíveis pela RLS)
+    let societyId: string | null = profile.society_id ?? null;
+    if (!societyId) {
+      const { data: memberRow } = await supabase
+        .from('members')
+        .select('society_id')
+        .eq('user_id', profile.user_id)
+        .maybeSingle();
+      societyId = (memberRow as any)?.society_id ?? null;
+    }
+    if (!societyId) {
+      toast.error('Não foi possível identificar sua sociedade. Atualize a página e tente novamente.');
+      setCreating(false);
+      return;
+    }
+
     const { error } = await supabase.from('study_notes').insert({
       title: newTitle.trim(),
       date: newDate,
-      society_id: profile.society_id,
+      society_id: societyId,
       created_by: profile.user_id,
       notes: '',
     } as any);

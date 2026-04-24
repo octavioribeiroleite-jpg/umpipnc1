@@ -1,94 +1,52 @@
-Aplicar correções na lógica de votação multi-vagas, escrutínios e exibição de Branco/Nulo, sem mexer em estrutura de banco.
+## Diagnóstico
 
-## Regras consolidadas
+Existem 2 estudos no banco, mas a UMP só vê 1:
 
-1. Contagem de Branco/Nulo
-- Cada marcação em branco conta como 1 (não por cédula).
-- Brancos entram no total de cédulas para cálculo da maioria absoluta.
+| Título | society_id | Visível p/ UMP? |
+|---|---|---|
+| 1 Timóteo 4:12 | UMP ✅ | Sim |
+| 2 Timóteo, 3-14. | **NULL** ❌ | **Não** |
 
-2. Apuração por escrutínio
-- 1º escrutínio: maioria absoluta = `floor(total_cedulas / 2) + 1`.
-- Eleitos no escrutínio acumulam e são removidos das próximas rodadas.
-- Eleitos contam para `vagas_restantes`.
+A RLS de `study_notes` é correta: exige `society_id = sociedade do usuário`. O problema é que o segundo estudo foi salvo com `society_id = NULL` — provavelmente porque o `profile.society_id` do criador estava `null` no momento (perfil ainda carregando ou usuário sem sociedade vinculada na hora).
 
-3. Limitação de candidatos no 2º+ escrutínio (fórmula confirmada)
-```
-vagas_restantes = seats_count - total_eleitos_até_agora
-candidatos_exibidos = top (vagas_restantes + 1) candidatos mais votados da rodada anterior, excluindo já eleitos
-```
-Exemplos:
-- 3 vagas, 1 eleito no 1º → 2º escrutínio mostra top 3 do 1º (excluindo o eleito).
-- 3 vagas, 2 eleitos no 1º → 2º escrutínio mostra top 2 do 1º (excluindo eleitos).
-- 3 vagas, 0 eleitos no 1º → 2º escrutínio mostra top 4 do 1º.
+Como o `handleCreate` em `src/pages/Estudos.tsx` simplesmente envia `society_id: profile.society_id`, sem validar nem ter fallback, o estudo nasceu órfão e ninguém consegue vê-lo (nem o autor).
 
-4. Voto parcial mantido
-- Pode misturar candidatos + brancos/nulos até o limite do escrutínio atual.
-- Pode votar em menos que o limite.
+## Correções
 
-5. Detecção de empate (apenas sinalização nesta etapa)
-- No 2º+ escrutínio, se o topo da apuração estiver empatado dentro da janela de `vagas_restantes + 1`, o painel exibirá alerta de empate.
-- Não eleger automaticamente em caso de empate.
-- Não criar coluna nova no banco. A decisão manual do Conselho fica para etapa futura com tabela própria `election_tiebreaks`.
+### 1. Recuperar o estudo órfão
 
-6. Terminologia visual
-- Trocar “Voto em branco” / “Votar tudo em branco” por “Branco / Nulo” na interface.
-- Internamente segue usando `is_blank`.
+Atribuir "2 Timóteo, 3-14." à UMP via `UPDATE` direto:
 
-## Arquivos a alterar
-
-### `src/components/eleicoes/ResultPanel.tsx`
-- Receber `majority_rule` da eleição (já recebe via prop) e aplicar `absolute_50` corretamente.
-- Trocar contagem de brancos: `roundVotes.filter(v => v.is_blank).length`.
-- Calcular eleitos por escrutínio respeitando `vagas_restantes` acumulado.
-- Renomear rótulo para “Brancos / Nulos”.
-
-### `src/pages/VotePublic.tsx`
-- Ajustar `computeElectedIds` para acumular eleitos de todos os escrutínios anteriores ao atual (mantém comportamento; revisar limites).
-- Carregar todos os votos da eleição (`allVotes`) — já é feito em `voteRows`. Reaproveitar para calcular top da rodada anterior.
-- Substituir `eligibleCandidates`:
-  - 1º escrutínio: candidatos não eleitos.
-  - 2º+ escrutínio: aplicar `getTopForNextRound(allVotes, candidates, electedIds, currentRound - 1, vagasRestantes + 1)`.
-- Reduzir `maxChoices` para `min(max_choices_per_ballot, vagas_restantes)` no escrutínio atual.
-- Trocar textos para “Branco / Nulo” em:
-  - botão “Votar tudo em branco” → “Votar tudo em Branco / Nulo”;
-  - botão “Votar em branco” → “Votar em Branco / Nulo”;
-  - confirmações “Voto em branco” → “Branco / Nulo”;
-  - rótulo do contador “Brancos” → “Brancos / Nulos”.
-
-### `src/components/eleicoes/VotingPanel.tsx`
-- Manter contagem por cédulas únicas (já correto).
-- Alinhar cálculo de eleitos com `ResultPanel` (`absolute_50` ou regra simples).
-- Adicionar detecção de empate no escrutínio atual (top dentro de `vagas_restantes + 1` com mesma contagem que o último elegível).
-- Exibir alerta amarelo:
-  ```
-  ⚠️ Empate detectado no Nº escrutínio
-  O Conselho deve decidir manualmente o(s) candidato(s) eleito(s).
-  ```
-- Bloquear botão “Próximo escrutínio” / “Concluir” quando houver empate sem decisão? → Apenas avisar, sem bloquear, para não travar o fluxo. A decisão registrada virá em etapa futura.
-
-## Checklist de validação após implementar
-
-- [ ] `allVotes` em `VotePublic.tsx` cobre todos os escrutínios.
-- [ ] `ResultPanel.tsx` aplica `majority_rule` recebido.
-- [ ] Brancos/Nulos contados por marcação.
-- [ ] Maioria absoluta = `floor(total/2) + 1`, com brancos no total.
-- [ ] Eleitos removidos do próximo escrutínio.
-- [ ] 2º+ escrutínio mostra exatamente top `vagas_restantes + 1`.
-- [ ] `maxChoices` do escrutínio = `min(max_choices_per_ballot, vagas_restantes)`.
-- [ ] Voto misto (candidatos + brancos) continua funcionando.
-- [ ] Empate é apenas sinalizado, sem eleger automaticamente.
-- [ ] Textos da interface usam “Branco / Nulo”.
-
-## Etapa futura (não nesta entrega)
-
-Criar tabela dedicada quando formos implementar decisão manual do Conselho:
 ```sql
-CREATE TABLE election_tiebreaks (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  election_id uuid REFERENCES elections(id),
-  round_number int,
-  elected_candidate_id uuid,
-  decided_by uuid,
-  decided_at timestamptz DEFAULT now()
-);
+UPDATE public.study_notes
+SET society_id = 'a8432474-7803-466f-9ceb-d49227fa555b' -- UMP
+WHERE id = '0a6179d6-7d08-4446-abf6-169ae97e21f4';
 ```
+
+### 2. Garantir que todo estudo novo seja salvo com a sociedade correta
+
+Em `src/pages/Estudos.tsx` → função `handleCreate`:
+
+- Determinar a sociedade efetiva com fallback robusto:
+  1. `profile.society_id` (caso normal); se ausente,
+  2. Buscar a sociedade do usuário pela tabela `members` (relacionando `members.user_id = auth.uid()`); se ainda ausente,
+  3. Bloquear a criação com toast claro: "Não foi possível identificar sua sociedade. Atualize a página e tente novamente."
+- Só inserir após resolver `society_id`.
+
+Isso evita novos estudos órfãos mesmo se o `profile` estiver desatualizado por um instante.
+
+### 3. Garantir visibilidade para todos os membros da UMP
+
+A RLS atual já cobre isso: qualquer usuário com `profile.society_id = UMP` vê todos os estudos com `society_id = UMP`. Sem alteração de policy necessária — basta que o passo 2 garanta o `society_id` correto na gravação.
+
+### 4. Verificação
+
+- Recarregar `/estudos` logado como membro da UMP → devem aparecer **2** estudos.
+- Criar um novo estudo de teste → deve aparecer imediatamente para outros membros da UMP.
+- Tentar criar com sessão sem sociedade → toast de erro, sem inserção.
+
+## Detalhes técnicos
+
+- Arquivo: `src/pages/Estudos.tsx` (apenas `handleCreate`).
+- Migração de dados: 1 `UPDATE` filtrado por id (sem risco de safe-update, pois usa `WHERE id = ...`).
+- Sem mudanças em RLS, schema ou outras telas.
