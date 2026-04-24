@@ -126,6 +126,32 @@ function computeElectedIds(votes: any[], seatsCount: number, currentRound: numbe
   return Array.from(elected);
 }
 
+/**
+ * Para o 2º+ escrutínio: exibe apenas o top (vagas_restantes + 1) candidatos
+ * mais votados da rodada anterior, excluindo os já eleitos.
+ */
+function getTopForNextRound(
+  allVotes: any[],
+  candidates: Candidate[],
+  electedIds: string[],
+  previousRound: number,
+  topN: number,
+): Candidate[] {
+  const prevVotes = allVotes.filter(
+    (v) => (v.round_number || 1) === previousRound && !v.is_blank,
+  );
+  const counts = prevVotes.reduce((acc: Record<string, number>, v: any) => {
+    if (v.candidate_id && !electedIds.includes(v.candidate_id)) {
+      acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+    }
+    return acc;
+  }, {});
+  return candidates
+    .filter((c) => !electedIds.includes(c.id))
+    .sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0))
+    .slice(0, Math.max(1, topN));
+}
+
 function SuccessScreen({ autoReset }: { autoReset: boolean }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4 sm:p-6 text-center">
