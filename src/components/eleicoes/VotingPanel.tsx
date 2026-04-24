@@ -299,6 +299,27 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         )}
 
+        {tieAlert.length > 0 && (
+          <div className="rounded-xl border border-warning/60 bg-warning/10 p-3 text-sm">
+            <p className="font-bold text-foreground mb-1">
+              ⚠️ Empate detectado no {currentRound}º escrutínio
+            </p>
+            <p className="text-muted-foreground mb-2">
+              Há empate entre os candidatos no limite das vagas restantes. O Conselho deve decidir manualmente.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {tieAlert.map((id) => {
+                const c = candidates.find((x) => x.id === id);
+                return (
+                  <Badge key={id} variant="outline" className="text-[11px]">
+                    {c?.name || id}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Progress */}
         <div className="space-y-1">
           <div className="flex justify-between text-xs">
