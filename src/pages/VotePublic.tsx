@@ -117,11 +117,23 @@ function computeElectedIds(votes: any[], seatsCount: number, currentRound: numbe
       if (!v.is_blank && v.candidate_id && !elected.has(v.candidate_id)) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
       return acc;
     }, {});
-    Object.entries(counts)
-      .filter(([, count]) => majorityRule === 'absolute_50' ? (count as number) >= needed : true)
-      .sort((a, b) => (b[1] as number) - (a[1] as number))
-      .slice(0, Math.max(0, seatsCount - elected.size))
-      .forEach(([candidateId]) => elected.add(candidateId));
+    const sorted = Object.entries(counts)
+      .sort((a, b) => (b[1] as number) - (a[1] as number));
+
+    if (round === 1) {
+      sorted
+        .filter(([, count]) => majorityRule === 'absolute_50'
+          ? (count as number) >= needed
+          : true)
+        .slice(0, Math.max(0, seatsCount - elected.size))
+        .forEach(([candidateId]) => elected.add(candidateId));
+    } else {
+      const topN = sorted.slice(0, Math.max(1, seatsCount - elected.size));
+      const hasTopTie = topN.length > 1 && topN[0][1] === topN[1][1];
+      if (!hasTopTie && topN.length > 0) {
+        elected.add(topN[0][0]);
+      }
+    }
   }
   return Array.from(elected);
 }
@@ -307,6 +319,21 @@ export default function VotePublic() {
     };
     fetchData();
   }, [electionId, isUrnaMode, urnaToken]);
+
+  useEffect(() => {
+    if (!electionId || !election) return;
+    const round = election.current_round || 1;
+    const seats = election.seats_count || 1;
+    supabase
+      .from('election_votes' as any)
+      .select('*')
+      .eq('election_id', electionId)
+      .then(({ data }) => {
+        const votesData = (data as any[]) || [];
+        setAllVotes(votesData);
+        setElectedIds(computeElectedIds(votesData, seats, round, election.majority_rule || 'simple'));
+      });
+  }, [electionId, election?.current_round]);
 
   const handleUrnaAuth = async () => {
     if (!authUsername.trim() || !authPassword.trim()) return;
@@ -648,7 +675,9 @@ export default function VotePublic() {
           </div>
 
           <div className="my-6 rounded-2xl border border-border/70 bg-muted/30 px-4 py-5">
-            <p className="text-sm font-semibold text-foreground">{seatsCount > 1 ? `Até ${maxChoices} votos neste escrutínio` : 'Votação segura'}</p>
+            <p className="text-sm font-semibold text-foreground">{isMultiSeat
+              ? `Até ${maxChoices} voto(s) neste escrutínio • ${currentRound}º escrutínio`
+              : 'Votação segura'}</p>
             <p className="mt-1 text-xs text-muted-foreground">Os nomes e fotos aparecem somente depois de iniciar o voto.</p>
           </div>
 
