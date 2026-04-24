@@ -169,6 +169,7 @@ export default function VotePublic() {
   const [voting, setVoting] = useState(false);
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
   const [selectedCandidates, setSelectedCandidates] = useState<Candidate[]>([]);
+  const [blankSlots, setBlankSlots] = useState(0);
   const [confirmSelection, setConfirmSelection] = useState(false);
   const [confirmBlank, setConfirmBlank] = useState(false);
   const [voteSuccess, setVoteSuccess] = useState(false);
@@ -197,6 +198,7 @@ export default function VotePublic() {
   const isMultiSeat = !isCamisa && maxChoices > 1;
   const [electedIds, setElectedIds] = useState<string[]>([]);
   const eligibleCandidates = candidates.filter((c) => !electedIds.includes(c.id));
+  const totalSelectedMarks = selectedCandidates.length + blankSlots;
 
   useEffect(() => {
     ensureAudio();
@@ -415,7 +417,8 @@ export default function VotePublic() {
 
   const handleVote = async () => {
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
-    if ((!confirmBlank && choices.length === 0) || !electionId) return;
+    const blanksToRecord = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? blankSlots : 0);
+    if ((!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
     const ballotId = crypto.randomUUID();
@@ -428,9 +431,10 @@ export default function VotePublic() {
       if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); setVoting(false); return; }
       baseVoteData.device_id = deviceId;
     }
-    const rows = confirmBlank
-      ? [{ ...baseVoteData, candidate_id: null, is_blank: true }]
-      : choices.map((choice) => ({ ...baseVoteData, candidate_id: choice.id, is_blank: false }));
+    const rows = [
+      ...choices.map((choice) => ({ ...baseVoteData, candidate_id: choice.id, is_blank: false })),
+      ...Array.from({ length: blanksToRecord }, () => ({ ...baseVoteData, candidate_id: null, is_blank: true })),
+    ];
     const { error } = await supabase.from('election_votes' as any).insert(rows as any);
     if (error) { setVoting(false); return; }
     if (isIndividual) localStorage.setItem(`voted_${electionId}_${currentRound}`, 'true');
@@ -438,6 +442,7 @@ export default function VotePublic() {
     await playUrnaSound();
     setConfirmCandidate(null);
     setSelectedCandidates([]);
+    setBlankSlots(0);
     setConfirmBlank(false);
     setConfirmSelection(false);
     setVoteSuccess(true);
@@ -536,6 +541,7 @@ export default function VotePublic() {
   if (confirmCandidate || confirmBlank || confirmSelection) {
     const confirmPhotos = confirmCandidate ? getPhotoUrls(confirmCandidate) : [];
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
+    const confirmationBlankSlots = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? blankSlots : 0);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-6">
@@ -551,6 +557,12 @@ export default function VotePublic() {
                 <div key={choice.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{index + 1}</span>
                   <span className="font-semibold text-foreground">{choice.name}</span>
+                </div>
+              ))}
+              {Array.from({ length: confirmationBlankSlots }).map((_, index) => (
+                <div key={`blank-${index}`} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">{choices.length + index + 1}</span>
+                  <span className="font-semibold text-foreground">Voto em branco</span>
                 </div>
               ))}
             </div>
@@ -593,7 +605,7 @@ export default function VotePublic() {
           </div>
 
           <div className="my-6 rounded-2xl border border-border/70 bg-muted/30 px-4 py-5">
-            <p className="text-sm font-semibold text-foreground">{seatsCount > 1 ? `${seatsCount} vagas disponíveis` : 'Votação segura'}</p>
+            <p className="text-sm font-semibold text-foreground">{seatsCount > 1 ? `Até ${maxChoices} votos neste escrutínio` : 'Votação segura'}</p>
             <p className="mt-1 text-xs text-muted-foreground">Os nomes e fotos aparecem somente depois de iniciar o voto.</p>
           </div>
 
@@ -613,7 +625,7 @@ export default function VotePublic() {
           <h1 className="text-2xl md:text-3xl font-bold">{election.name}</h1>
           <p className="text-lg text-muted-foreground mt-1">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
           <p className="text-sm text-muted-foreground mt-1">
-            {isCamisa ? 'Escolha o modelo' : isMultiSeat ? `Escolha até ${maxChoices} candidato(s) • ${selectedCandidates.length}/${maxChoices}` : 'Escolha seu candidato'}
+            {isCamisa ? 'Escolha o modelo' : isMultiSeat ? `Preencha até ${maxChoices} voto(s) • ${totalSelectedMarks}/${maxChoices}` : 'Escolha seu candidato'}
           </p>
         </div>
 
@@ -630,7 +642,7 @@ export default function VotePublic() {
                   if (!isMultiSeat) { setConfirmCandidate(c); return; }
                   setSelectedCandidates((current) => {
                     if (current.some((candidate) => candidate.id === c.id)) return current.filter((candidate) => candidate.id !== c.id);
-                    if (current.length >= maxChoices) return current;
+                    if (current.length + blankSlots >= maxChoices) return current;
                     return [...current, c];
                   });
                 }}
@@ -653,19 +665,27 @@ export default function VotePublic() {
 
         {isMultiSeat && (
           <div className="sticky bottom-3 mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2 text-sm">
+              <span className="font-semibold text-foreground">Brancos</span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" className="h-9 w-9" disabled={blankSlots === 0} onClick={() => setBlankSlots((value) => Math.max(0, value - 1))}>−</Button>
+                <strong className="w-8 text-center text-foreground">{blankSlots}</strong>
+                <Button variant="outline" size="icon" className="h-9 w-9" disabled={totalSelectedMarks >= maxChoices} onClick={() => { void primeAudio(); setBlankSlots((value) => Math.min(maxChoices - selectedCandidates.length, value + 1)); }}>+</Button>
+              </div>
+            </div>
             <Button
               className="h-12 w-full text-base font-bold"
-              disabled={selectedCandidates.length === 0}
+              disabled={totalSelectedMarks === 0}
               onClick={() => { void primeAudio(); setConfirmSelection(true); }}
             >
-              Confirmar seleção ({selectedCandidates.length}/{maxChoices})
+              Confirmar cédula ({totalSelectedMarks}/{maxChoices})
             </Button>
             <Button
               variant="outline"
               className="h-11 w-full font-semibold"
-              onClick={() => { void primeAudio(); setSelectedCandidates([]); setConfirmBlank(true); }}
+              onClick={() => { void primeAudio(); setSelectedCandidates([]); setBlankSlots(maxChoices); setConfirmBlank(true); }}
             >
-              Votar em branco
+              Votar tudo em branco
             </Button>
           </div>
         )}
