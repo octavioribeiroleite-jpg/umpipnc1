@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
@@ -60,21 +61,29 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
   return (
     <div className="space-y-3">
       {!disabled && (
-        <div className="rounded-xl border border-border bg-background p-3 shadow-sm space-y-2">
-          <p className="text-xs font-semibold text-foreground">Adicionar urna</p>
+        <div className="flex flex-col gap-2 mb-4">
+          <Label className="text-sm font-medium">Adicionar urna</Label>
           <div className="flex gap-2">
-          <Input
-            placeholder="Rótulo (ex: Mesa 1, Entrada)"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            className="h-9 text-sm"
-          />
-          <Button size="sm" onClick={handleAdd} disabled={adding || !label.trim()} className="h-9 shrink-0">
-            {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
-            Adicionar
-          </Button>
+            <Input
+              placeholder="Rótulo (ex: Mesa 1, Entrada)"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              className="h-9 text-sm"
+            />
+            <Button
+              onClick={handleAdd}
+              disabled={adding || !label.trim()}
+              size="sm"
+              className="shrink-0"
+            >
+              {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+              Adicionar
+            </Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            ℹ️ Cada urna gera um link e QR Code exclusivo para o dispositivo físico.
+          </p>
         </div>
       )}
 
@@ -85,17 +94,17 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
       ) : (
         <div className="space-y-2">
           {devices.map((d) => (
-            <div key={d.id} className="rounded-xl border border-border bg-background p-3 shadow-sm space-y-3">
+            <div key={d.id} className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-2">
               <div className="flex items-center gap-2">
                 <Monitor className="h-4 w-4 text-primary shrink-0" />
                 <span className="text-sm font-semibold text-foreground flex-1">{d.label}</span>
                 {d.activated ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-1 text-[10px] font-semibold text-success">
-                    <CheckCircle className="h-3 w-3" /> Online
+                  <span className="flex items-center gap-1 text-xs font-medium text-success bg-success/15 px-2 py-0.5 rounded-full">
+                    <CheckCircle className="w-3 h-3" /> Online
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground">
-                    <Clock className="h-3 w-3" /> Aguardando
+                  <span className="flex items-center gap-1 text-xs font-medium text-warning bg-warning/15 px-2 py-0.5 rounded-full">
+                    <Clock className="w-3 h-3" /> Aguardando
                   </span>
                 )}
               </div>
