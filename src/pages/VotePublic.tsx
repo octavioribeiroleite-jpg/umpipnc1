@@ -126,6 +126,32 @@ function computeElectedIds(votes: any[], seatsCount: number, currentRound: numbe
   return Array.from(elected);
 }
 
+/**
+ * Para o 2º+ escrutínio: exibe apenas o top (vagas_restantes + 1) candidatos
+ * mais votados da rodada anterior, excluindo os já eleitos.
+ */
+function getTopForNextRound(
+  allVotes: any[],
+  candidates: Candidate[],
+  electedIds: string[],
+  previousRound: number,
+  topN: number,
+): Candidate[] {
+  const prevVotes = allVotes.filter(
+    (v) => (v.round_number || 1) === previousRound && !v.is_blank,
+  );
+  const counts = prevVotes.reduce((acc: Record<string, number>, v: any) => {
+    if (v.candidate_id && !electedIds.includes(v.candidate_id)) {
+      acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+    }
+    return acc;
+  }, {});
+  return candidates
+    .filter((c) => !electedIds.includes(c.id))
+    .sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0))
+    .slice(0, Math.max(1, topN));
+}
+
 function SuccessScreen({ autoReset }: { autoReset: boolean }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4 sm:p-6 text-center">
@@ -194,10 +220,25 @@ export default function VotePublic() {
   const isCamisa = election?.type === 'camisa';
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
-  const maxChoices = Math.max(1, Math.min(election?.max_choices_per_ballot || 1, seatsCount));
-  const isMultiSeat = !isCamisa && maxChoices > 1;
   const [electedIds, setElectedIds] = useState<string[]>([]);
-  const eligibleCandidates = candidates.filter((c) => !electedIds.includes(c.id));
+  const [allVotes, setAllVotes] = useState<any[]>([]);
+  const remainingSeats = Math.max(1, seatsCount - electedIds.length);
+  const maxChoices = Math.max(
+    1,
+    Math.min(election?.max_choices_per_ballot || 1, remainingSeats),
+  );
+  const isMultiSeat = !isCamisa && maxChoices > 1;
+  const eligibleCandidates = isCamisa
+    ? candidates
+    : currentRound <= 1
+      ? candidates.filter((c) => !electedIds.includes(c.id))
+      : getTopForNextRound(
+          allVotes,
+          candidates,
+          electedIds,
+          currentRound - 1,
+          remainingSeats + 1,
+        );
   const totalSelectedMarks = selectedCandidates.length + blankSlots;
 
   useEffect(() => {
@@ -244,7 +285,9 @@ export default function VotePublic() {
       const { data: voteRows } = await supabase
         .from('election_votes' as any).select('*')
         .eq('election_id', electionId);
-      setElectedIds(computeElectedIds((voteRows as any[]) || [], seats, round, elData?.majority_rule || 'simple'));
+      const votesData = (voteRows as any[]) || [];
+      setAllVotes(votesData);
+      setElectedIds(computeElectedIds(votesData, seats, round, elData?.majority_rule || 'simple'));
 
       if (!isUrnaMode && (elData?.voting_mode === 'individual' || elData?.voting_mode === 'both')) {
         const deviceId = getDeviceId();
@@ -545,11 +588,11 @@ export default function VotePublic() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-6">
-          <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto em branco?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
+          <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto Branco / Nulo?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
           {confirmBlank ? (
             <div className="rounded-2xl border-2 border-border bg-muted/40 p-8">
               <Circle className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-              <p className="text-2xl font-bold">Voto em branco</p>
+              <p className="text-2xl font-bold">Branco / Nulo</p>
             </div>
           ) : isMultiSeat ? (
             <div className="space-y-2 text-left">
@@ -562,7 +605,7 @@ export default function VotePublic() {
               {Array.from({ length: confirmationBlankSlots }).map((_, index) => (
                 <div key={`blank-${index}`} className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">{choices.length + index + 1}</span>
-                  <span className="font-semibold text-foreground">Voto em branco</span>
+                  <span className="font-semibold text-foreground">Branco / Nulo</span>
                 </div>
               ))}
             </div>
@@ -666,7 +709,7 @@ export default function VotePublic() {
         {isMultiSeat && (
           <div className="sticky bottom-3 mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
             <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2 text-sm">
-              <span className="font-semibold text-foreground">Brancos</span>
+              <span className="font-semibold text-foreground">Brancos / Nulos</span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" className="h-9 w-9" disabled={blankSlots === 0} onClick={() => setBlankSlots((value) => Math.max(0, value - 1))}>−</Button>
                 <strong className="w-8 text-center text-foreground">{blankSlots}</strong>
@@ -685,7 +728,7 @@ export default function VotePublic() {
               className="h-11 w-full font-semibold"
               onClick={() => { void primeAudio(); setSelectedCandidates([]); setBlankSlots(maxChoices); setConfirmBlank(true); }}
             >
-              Votar tudo em branco
+              Votar tudo em Branco / Nulo
             </Button>
           </div>
         )}
@@ -696,7 +739,7 @@ export default function VotePublic() {
             className="mt-5 h-12 w-full font-semibold"
             onClick={() => { void primeAudio(); setConfirmBlank(true); }}
           >
-            Votar em branco
+            Votar em Branco / Nulo
           </Button>
         )}
       </div>

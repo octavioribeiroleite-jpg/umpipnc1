@@ -45,6 +45,7 @@ interface VotingPanelProps {
 export function VotingPanel({ electionId, electionName, status, totalPresent, votingMode, devices, candidates, election, onRefresh }: VotingPanelProps) {
   const [voteCount, setVoteCount] = useState(0);
   const [electedCount, setElectedCount] = useState(0);
+  const [tieAlert, setTieAlert] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
@@ -59,6 +60,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const diff = voteCount - totalPresent;
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
+  const majorityRule = election?.majority_rule || 'simple';
   const isMultiSeat = seatsCount > 1 || (election?.max_choices_per_ballot || 1) > 1;
 
   const showDevices = selectedMode === 'both' || selectedMode === 'shared';
@@ -90,12 +92,39 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           return acc;
         }, {});
         Object.entries(counts)
-          .filter(([, count]) => (count as number) >= needed)
+          .filter(([, count]) => majorityRule === 'absolute_50' ? (count as number) >= needed : true)
           .sort((a, b) => (b[1] as number) - (a[1] as number))
           .slice(0, seatsCount - elected.size)
           .forEach(([id]) => elected.add(id));
       }
       setElectedCount(elected.size);
+
+      // Detecção de empate no escrutínio atual (a partir do 2º).
+      if (currentRound > 1) {
+        const remaining = Math.max(0, seatsCount - elected.size);
+        const curRows = rows.filter((v) => (v.round_number || 1) === currentRound && !v.is_blank);
+        const counts = curRows.reduce((acc: Record<string, number>, v: any) => {
+          if (v.candidate_id && !elected.has(v.candidate_id)) {
+            acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+          }
+          return acc;
+        }, {});
+        const sorted = Object.entries(counts).sort((a, b) => (b[1] as number) - (a[1] as number));
+        if (remaining > 0 && sorted.length > remaining) {
+          const cutoff = sorted[remaining - 1]?.[1];
+          const next = sorted[remaining]?.[1];
+          if (cutoff !== undefined && cutoff === next) {
+            const tied = sorted.filter(([, c]) => c === cutoff).map(([id]) => id);
+            setTieAlert(tied);
+          } else {
+            setTieAlert([]);
+          }
+        } else {
+          setTieAlert([]);
+        }
+      } else {
+        setTieAlert([]);
+      }
     } finally {
       inFlightRef.current = false;
       if (pendingRef.current) {
@@ -134,7 +163,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       inFlightRef.current = false;
       pendingRef.current = false;
     };
-  }, [electionId, currentRound, seatsCount]);
+  }, [electionId, currentRound, seatsCount, majorityRule]);
 
   const handleModeChange = async (mode: string) => {
     setSelectedMode(mode);
@@ -267,6 +296,27 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <p className="text-muted-foreground">
               {electedCount}/{seatsCount} vaga(s) preenchida(s). Restam {Math.max(0, seatsCount - electedCount)}.
             </p>
+          </div>
+        )}
+
+        {tieAlert.length > 0 && (
+          <div className="rounded-xl border border-warning/60 bg-warning/10 p-3 text-sm">
+            <p className="font-bold text-foreground mb-1">
+              ⚠️ Empate detectado no {currentRound}º escrutínio
+            </p>
+            <p className="text-muted-foreground mb-2">
+              Há empate entre os candidatos no limite das vagas restantes. O Conselho deve decidir manualmente.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {tieAlert.map((id) => {
+                const c = candidates.find((x) => x.id === id);
+                return (
+                  <Badge key={id} variant="outline" className="text-[11px]">
+                    {c?.name || id}
+                  </Badge>
+                );
+              })}
+            </div>
           </div>
         )}
 
