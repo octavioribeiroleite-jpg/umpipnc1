@@ -296,16 +296,29 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   return (
     <>
       <div className="rounded-xl border border-border bg-background p-4 shadow-sm space-y-4">
-        {/* Mode badge */}
-        <Badge variant="outline" className="text-[10px]">
-          {votingMode === 'individual' ? '📱 Voto Individual' : votingMode === 'both' ? '🖥️📱 Urna + Celular' : '🖥️ Urna Compartilhada'}
-        </Badge>
+        {/* Mode label */}
+        <div className="flex items-center gap-2">
+          {votingMode === 'individual' ? (
+            <Smartphone className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <Monitor className="h-4 w-4 text-muted-foreground" />
+          )}
+          <span className="text-sm font-medium text-muted-foreground">
+            Modo: {votingMode === 'individual' ? 'Voto Individual' : votingMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
+          </span>
+        </div>
         {isMultiSeat && (
           <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm">
             <p className="font-semibold text-foreground">{currentRound}º escrutínio</p>
-            <p className="text-muted-foreground">
-              {electedCount}/{seatsCount} vaga(s) preenchida(s). Restam {Math.max(0, seatsCount - electedCount)}.
-            </p>
+            {diff === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {electedCount}/{seatsCount} vaga(s) preenchida(s). Restam {Math.max(0, seatsCount - electedCount)}.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Aguardando todos os votos para apurar resultado.
+              </p>
+            )}
           </div>
         )}
 
@@ -349,15 +362,17 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <p className="text-lg font-bold text-foreground">{voteCount}</p>
             <p className="text-[10px] text-muted-foreground">Cédulas</p>
           </div>
-          <div className={`p-2 rounded-lg border bg-background shadow-sm ${diff === 0 ? 'border-success/50' : 'border-destructive/50'}`}>
-            <p className={`text-lg font-bold ${diff === 0 ? 'text-success' : 'text-destructive'}`}>
-              {diff > 0 ? `+${diff}` : diff}
+          <div className={`p-2 rounded-lg border shadow-sm ${diff === 0 ? 'border-success/50 bg-success/5' : 'border-warning/50 bg-warning/10'}`}>
+            <p className={`text-lg font-bold ${diff === 0 ? 'text-success' : 'text-warning'}`}>
+              {Math.abs(diff)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Diferença</p>
+            <p className="text-[10px] text-muted-foreground">
+              {diff === 0 ? 'Todos votaram' : 'Aguardando voto'}
+            </p>
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Botões principais */}
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
@@ -378,26 +393,38 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 <Play className="h-3.5 w-3.5 mr-1.5" /> Próximo escrutínio
               </Button>
             )
-          ) : diff !== 0 ? (
-            <Button variant="destructive" size="sm" onClick={() => setConfirmAction('reset')}>
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reiniciar
-            </Button>
-          ) : (
+          ) : diff === 0 ? (
             <Button size="sm" onClick={() => setConfirmAction('finish')} className="bg-success hover:bg-success/90">
               <CheckCircle className="h-3.5 w-3.5 mr-1.5" /> Concluir
             </Button>
-          )}
+          ) : null}
+        </div>
+
+        {/* Botão Reiniciar separado, discreto */}
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive text-xs"
+            onClick={() => setConfirmAction('reset')}
+          >
+            <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar votação
+          </Button>
         </div>
 
         {showDevices && (
           <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                <Monitor className="h-4 w-4 text-primary" /> Urnas conectadas
+                <Monitor className="h-4 w-4 text-muted-foreground" /> Urnas conectadas
               </p>
-              <Badge variant="secondary" className="text-[10px]">
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                devices.filter((d) => d.activated).length > 0
+                  ? 'bg-success/15 text-success'
+                  : 'bg-warning/15 text-warning'
+              }`}>
                 {devices.filter((d) => d.activated).length}/{devices.length} online
-              </Badge>
+              </span>
             </div>
             <DeviceRegistration electionId={electionId} devices={devices} onRefresh={onRefresh} disabled={false} />
           </div>
