@@ -12,7 +12,7 @@ interface ResultPanelProps {
 }
 
 export function ResultPanel({ electionId, totalPresent, candidates, election }: ResultPanelProps) {
-  const [roundResults, setRoundResults] = useState<{ round: number; totalBallots: number; blankVotes: number; electedIds: string[]; rows: { candidate_id: string; count: number }[] }[]>([]);
+  const [roundResults, setRoundResults] = useState<{ round: number; totalBallots: number; blankVotes: number; electedIds: string[]; rows: { candidate_id: string; count: number }[]; hasTie: boolean }[]>([]);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -40,12 +40,26 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
             .map(([candidate_id, count]) => ({ candidate_id, count: count as number }))
             .sort((a, b) => b.count - a.count);
           const needed = Math.floor(totalBallots / 2) + 1;
-          const electedIds = rows
-            .filter((r) => election?.majority_rule === 'absolute_50' ? r.count >= needed : true)
-            .slice(0, Math.max(0, seatsCount - alreadyElected.size))
-            .map((r) => r.candidate_id);
-          electedIds.forEach((candidateId) => alreadyElected.add(candidateId));
-          return { round, totalBallots, blankVotes, electedIds, rows };
+          let electedIds: string[] = [];
+          if (round === 1) {
+            electedIds = rows
+              .filter((r) => election?.majority_rule === 'absolute_50'
+                ? r.count >= needed
+                : true)
+              .slice(0, Math.max(0, seatsCount - alreadyElected.size))
+              .map((r) => r.candidate_id);
+          } else {
+            const topN = rows.slice(0, Math.max(1, seatsCount - alreadyElected.size));
+            const hasTopTie = topN.length > 1 && topN[0].count === topN[1].count;
+            if (!hasTopTie && topN.length > 0) {
+              electedIds = [topN[0].candidate_id];
+            }
+          }
+          electedIds.forEach((id) => alreadyElected.add(id));
+          const hasTie = round > 1 &&
+            rows.length >= 2 &&
+            rows[0].count === rows[1].count;
+          return { round, totalBallots, blankVotes, electedIds, rows, hasTie };
         });
         setRoundResults(parsed);
       }
@@ -101,7 +115,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-lg font-bold text-foreground">{r.count}</p>
-                  <p className="text-xs text-muted-foreground">{pct}%</p>
+                  <p className="text-xs text-muted-foreground">{pct}% das cédulas</p>
                 </div>
               </div>
             </AppCard>
@@ -112,6 +126,11 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                 <span className="font-medium text-foreground">Brancos / Nulos</span>
                 <strong>{roundResult.blankVotes}</strong>
               </div>
+            )}
+            {roundResult.hasTie && (
+              <p className="text-yellow-700 font-semibold mt-2 text-sm">
+                ⚠️ Empate — Conselho deve decidir manualmente
+              </p>
             )}
           </div>
         ))}
