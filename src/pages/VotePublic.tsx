@@ -285,7 +285,9 @@ export default function VotePublic() {
       const { data: voteRows } = await supabase
         .from('election_votes' as any).select('*')
         .eq('election_id', electionId);
-      setElectedIds(computeElectedIds((voteRows as any[]) || [], seats, round, elData?.majority_rule || 'simple'));
+      const votesData = (voteRows as any[]) || [];
+      setAllVotes(votesData);
+      setElectedIds(computeElectedIds(votesData, seats, round, elData?.majority_rule || 'simple'));
 
       if (!isUrnaMode && (elData?.voting_mode === 'individual' || elData?.voting_mode === 'both')) {
         const deviceId = getDeviceId();
