@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,7 +40,12 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
     setAdding(true);
     const { error } = await supabase
       .from('election_devices' as any)
-      .insert({ election_id: electionId, label: label.trim() } as any);
+      .insert({
+        election_id: electionId,
+        label: label.trim(),
+        token: crypto.randomUUID(),
+        activated: false,
+      } as any);
 
     if (error) {
       toast({ title: 'Erro ao adicionar dispositivo', variant: 'destructive' });
@@ -53,10 +58,31 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
   };
 
   const handleRemove = async (id: string) => {
-    await supabase.from('election_devices' as any).delete().eq('id', id);
+    if (!window.confirm('Remover este dispositivo? O link da urna deixará de funcionar.')) return;
+    const { error } = await supabase
+      .from('election_devices' as any)
+      .delete()
+      .eq('id', id);
+    if (error) {
+      toast({ title: 'Erro ao remover dispositivo', variant: 'destructive' });
+      return;
+    }
     toast({ title: 'Dispositivo removido' });
     onRefresh();
   };
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`devices-${electionId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'election_devices',
+        filter: `election_id=eq.${electionId}`,
+      }, () => onRefresh())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [electionId]);
 
   return (
     <div className="space-y-3">
