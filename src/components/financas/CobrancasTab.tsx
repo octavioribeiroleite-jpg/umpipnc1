@@ -90,12 +90,24 @@ export function CobrancasTab() {
   const competence = `${selectedMonth}/${selectedYear}`;
   const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
-  useEffect(() => {
-    fetchData();
-  }, [competence, selectedYear]);
-
   const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
   const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+
+  useEffect(() => {
+    fetchData();
+  }, [competence, selectedYear, societyId]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('charges-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'charges',
+      }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [societyId]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -203,6 +215,7 @@ export function CobrancasTab() {
       toast.error('Selecione pelo menos uma cobrança');
       return;
     }
+    setSubmitting(true);
 
     const paidAt = new Date(paymentDate).toISOString();
     
@@ -216,7 +229,19 @@ export function CobrancasTab() {
 
     if (chargesToPay.length === 0) {
       toast.error('Nenhuma cobrança selecionada para pagamento');
+      setSubmitting(false);
       return;
+    }
+
+    if (isPartialPayment) {
+      for (const charge of chargesToPay) {
+        const val = parseFloat(partialAmounts[charge.id] || '0');
+        if (!val || val <= 0) {
+          toast.error(`Informe o valor para ${charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}`);
+          setSubmitting(false);
+          return;
+        }
+      }
     }
 
     // Calculate amounts for each charge
@@ -240,6 +265,7 @@ export function CobrancasTab() {
     for (const info of paymentsInfo) {
       if (info.amountToPay <= 0) {
         toast.error(`Informe um valor válido para ${info.charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}`);
+        setSubmitting(false);
         return;
       }
     }
@@ -318,6 +344,8 @@ export function CobrancasTab() {
       // Reverter estado em caso de erro
       fetchData();
       toast.error('Erro ao processar: ' + error.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -414,7 +442,12 @@ export function CobrancasTab() {
   const pendingCharges = charges.filter(c => c.status === 'pendente').length;
   const exemptCharges = charges.filter(c => c.status === 'isento').length;
   const totalCharges = charges.length;
-  const progressValue = totalCharges > 0 ? Math.round((paidCharges / totalCharges) * 100) : 0;
+  const totalMembers = members.filter(m => charges.some(c => c.member_id === m.id)).length;
+  const paidMembers = members.filter(m => {
+    const mc = charges.filter(c => c.member_id === m.id);
+    return mc.length > 0 && mc.every(c => c.status === 'pago' || c.status === 'isento');
+  }).length;
+  const progressValue = totalMembers > 0 ? Math.round((paidMembers / totalMembers) * 100) : 0;
 
   // Financial summary calculations
   const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
