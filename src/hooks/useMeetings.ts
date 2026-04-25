@@ -24,12 +24,12 @@ interface MeetingWithDetails extends Meeting {
 }
 
 export function useMeetings() {
-  const { user, profile, isAdmin, isPastor } = useAuth();
+  const { user, profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
   const [meetings, setMeetings] = useState<MeetingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : null;
+  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
 
   const fetchMeetings = async () => {
     if (!user) return;
@@ -110,7 +110,7 @@ export function useMeetings() {
 
   useEffect(() => {
     fetchMeetings();
-  }, [user]);
+  }, [user, societyId]);
 
   const deleteMeeting = async (meetingId: string) => {
     try {
