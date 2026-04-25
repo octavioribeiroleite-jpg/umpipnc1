@@ -54,6 +54,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [partialRows, setPartialRows] = useState<{ candidate_id: string; count: number; pct: number; elected: boolean }[]>([]);
   const [partialBlanks, setPartialBlanks] = useState(0);
   const [partialNeeded, setPartialNeeded] = useState(0);
+  type VotingPhase = 'voting' | 'apurando' | 'resultado';
+  const [phase, setPhase] = useState<VotingPhase>('voting');
   const { toast } = useToast();
   const inFlightRef = useRef(false);
   const pendingRef = useRef(false);
