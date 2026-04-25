@@ -51,7 +51,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
   const [qrExpanded, setQrExpanded] = useState(false);
   const [expandedDeviceToken, setExpandedDeviceToken] = useState<string | null>(null);
-  const [partialRows, setPartialRows] = useState<{ candidate_id: string; count: number; pct: number; elected: boolean }[]>([]);
+  const [partialRows, setPartialRows] = useState<{ candidate_id: string; name: string; count: number; pct: number; elected: boolean }[]>([]);
   const [partialBlanks, setPartialBlanks] = useState(0);
   const [partialNeeded, setPartialNeeded] = useState(0);
   type VotingPhase = 'voting' | 'apurando' | 'resultado';
@@ -62,7 +62,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
   const [activeTab, setActiveTab] = useState<string>('celular');
-  const diff = voteCount - totalPresent;
+  const diff = Math.max(0, totalPresent - voteCount);
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
   const majorityRule = election?.majority_rule || 'simple';
@@ -107,11 +107,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             .slice(0, seatsCount - elected.size)
             .forEach(([id]) => elected.add(id));
         } else {
-          const remaining = Math.max(1, seatsCount - elected.size);
-          const topN = sorted.slice(0, remaining);
-          const hasTopTie = topN.length > 1 && topN[0][1] === topN[1][1];
-          if (!hasTopTie && topN.length > 0) {
-            topN.forEach(([id]) => elected.add(id));
+          const topCandidate = sorted[0];
+          const secondCandidate = sorted[1];
+          const hasTie = secondCandidate && topCandidate[1] === secondCandidate[1];
+          if (!hasTie && topCandidate) {
+            elected.add(topCandidate[0]);
           }
         }
       }
@@ -187,7 +187,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   }, [electionId, currentRound, seatsCount, majorityRule]);
 
   useEffect(() => {
-    if (diff !== 0 || !electionId) {
+    if (voteCount < totalPresent || !electionId) {
       setPartialRows([]);
       return;
     }
@@ -231,7 +231,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               elected = true;
             }
           }
-          return { ...r, elected };
+          return {
+            ...r,
+            name: candidates.find((c) => c.id === r.candidate_id)?.name || 'Desconhecido',
+            elected,
+          };
         });
         setPartialRows(rows);
       });
