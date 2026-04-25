@@ -178,6 +178,40 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     };
   }, [electionId, currentRound, seatsCount, majorityRule]);
 
+  useEffect(() => {
+    if (diff !== 0 || !electionId) {
+      setPartialRows([]);
+      return;
+    }
+    supabase
+      .from('election_votes' as any)
+      .select('*')
+      .eq('election_id', electionId)
+      .then(({ data }) => {
+        const votes = (data as any[]) || [];
+        const roundVotes = votes.filter((v) => (v.round_number || 1) === currentRound);
+        const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
+        const needed = Math.floor(totalBallots / 2) + 1;
+        setPartialNeeded(needed);
+        setPartialBlanks(roundVotes.filter((v) => v.is_blank).length);
+        const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
+          if (!v.is_blank && v.candidate_id) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+          return acc;
+        }, {});
+        const rows = Object.entries(counts)
+          .map(([candidate_id, count]) => ({
+            candidate_id,
+            count: count as number,
+            pct: totalBallots > 0 ? Math.round(((count as number) / totalBallots) * 100) : 0,
+            elected: majorityRule === 'absolute_50'
+              ? (count as number) >= needed
+              : true,
+          }))
+          .sort((a, b) => b.count - a.count);
+        setPartialRows(rows);
+      });
+  }, [diff, currentRound, electionId, majorityRule]);
+
   const handleModeChange = async (mode: string) => {
     setSelectedMode(mode);
     await supabase.from('elections' as any).update({ voting_mode: mode } as any).eq('id', electionId);
