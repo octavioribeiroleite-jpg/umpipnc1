@@ -54,30 +54,38 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
               .slice(0, Math.max(0, seatsCount - alreadyElected.size))
               .map((r) => r.candidate_id);
           } else {
-            const remaining = Math.max(1, seatsCount - alreadyElected.size);
-            const topN = rows.slice(0, remaining);
-            const hasTopTie = topN.length > 1 && topN[0].count === topN[1].count;
-            if (!hasTopTie && topN.length > 0) {
-              electedIds = topN.map((r) => r.candidate_id);
+            const top = rows[0];
+            const second = rows[1];
+            const hasTie = second && top.count === second.count;
+            if (!hasTie && top) {
+              electedIds = [top.candidate_id];
             }
           }
           electedIds.forEach((id) => alreadyElected.add(id));
-          const remaining = Math.max(1, seatsCount - alreadyElected.size + electedIds.length);
-          const cutoff = rows[remaining - 1]?.count;
-          const next = rows[remaining]?.count;
-          const hasTie = cutoff !== undefined && cutoff === next;
+          const hasTie = rows.length >= 2 && rows[0].count === rows[1].count;
           return { round, totalBallots, blankVotes, electedIds, rows, hasTie };
         });
         setRoundResults(parsed);
       }
     };
     fetchResults();
+
+    const channel = supabase
+      .channel(`result-${electionId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'election_votes',
+        filter: `election_id=eq.${electionId}`,
+      }, fetchResults)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [electionId, election?.current_round, election?.majority_rule, election?.seats_count]);
 
   const allElected = roundResults.flatMap((r) => r.electedIds);
   const seatsCount = election?.seats_count || 1;
-  const isValid = roundResults.length > 0 &&
-    (roundResults[roundResults.length - 1]?.totalBallots || 0) === totalPresent;
+  const isValid = roundResults.length > 0 && allElected.length >= seatsCount;
 
   return (
     <div className="space-y-4">
