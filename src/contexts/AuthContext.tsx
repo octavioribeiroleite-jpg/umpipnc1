@@ -38,6 +38,7 @@ interface AuthContextType {
   society: Society | null;
   selectedSocietyId: string | null;
   setSelectedSocietyId: (id: string | null) => void;
+  effectiveSocietyId: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,14 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const [society, setSociety] = useState<Society | null>(null);
-  const [selectedSocietyId, setSelectedSocietyIdState] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      return localStorage.getItem('selectedSocietyId');
-    } catch {
-      return null;
-    }
-  });
+  const [selectedSocietyId, setSelectedSocietyIdState] = useState<string | null>(null);
 
   const setSelectedSocietyId = (id: string | null) => {
     setSelectedSocietyIdState(id);
@@ -252,8 +246,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from('user_roles')
           .select('role')
           .eq('user_id', userId);
-        if (rolesData) {
-          setRoles(rolesData.map(r => r.role as AppRole));
+        const fetchedRoles = rolesData?.map(r => r.role as AppRole) || [];
+        setRoles(fetchedRoles);
+
+        const fetchedIsAdmin = fetchedRoles.includes('admin');
+        if (fetchedIsAdmin) {
+          try {
+            const saved = localStorage.getItem('selectedSocietyId');
+            if (saved) setSelectedSocietyIdState(saved);
+          } catch {}
+        } else {
+          try { localStorage.removeItem('selectedSocietyId'); } catch {}
+          setSelectedSocietyIdState(null);
         }
       } catch (err) {
         console.error('[Auth] Roles fetch error:', err);
@@ -267,6 +271,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (username: string, password: string) => {
+    try {
+      localStorage.removeItem('selectedSocietyId');
+    } catch {}
+    setSelectedSocietyIdState(null);
+
     const cleanUsername = username.toLowerCase().replace(/\s+/g, '');
     const { data: email } = await supabase.rpc('get_email_by_username', {
       _username: cleanUsername,
@@ -295,6 +304,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isManagement = roles.includes('admin') || roles.includes('diretoria');
   const isPastor = roles.includes('pastor');
 
+  const effectiveSocietyId = isAdmin
+    ? selectedSocietyId
+    : (profile?.society_id ?? null);
+
   return (
     <AuthContext.Provider
       value={{
@@ -312,6 +325,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         society,
         selectedSocietyId,
         setSelectedSocietyId,
+        effectiveSocietyId,
       }}
     >
       {children}
