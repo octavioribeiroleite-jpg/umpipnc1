@@ -393,7 +393,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 </span>
               </div>
               <span className="text-xs text-muted-foreground">
-                Maioria necessária: {partialNeeded} votos
+                {currentRound === 1
+                  ? `Maioria necessária: ${partialNeeded} votos`
+                  : 'Maioria simples — mais votado(s) eleito(s)'}
               </span>
             </div>
 
