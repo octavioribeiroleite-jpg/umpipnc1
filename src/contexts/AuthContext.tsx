@@ -50,7 +50,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const [society, setSociety] = useState<Society | null>(null);
-  const [selectedSocietyId, setSelectedSocietyId] = useState<string | null>(null);
+  const [selectedSocietyId, setSelectedSocietyIdState] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return localStorage.getItem('selectedSocietyId');
+    } catch {
+      return null;
+    }
+  });
+
+  const setSelectedSocietyId = (id: string | null) => {
+    setSelectedSocietyIdState(id);
+    try {
+      if (id) {
+        localStorage.setItem('selectedSocietyId', id);
+      } else {
+        localStorage.removeItem('selectedSocietyId');
+      }
+    } catch {
+      // ignore storage errors
+    }
+  };
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
