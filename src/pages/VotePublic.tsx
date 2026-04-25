@@ -150,10 +150,12 @@ function getTopForNextRound(
   topN: number,
 ): Candidate[] {
   const prevVotes = allVotes.filter(
-    (v) => (v.round_number || 1) === previousRound && !v.is_blank,
+    (v) => (v.round_number || 1) === previousRound &&
+    !v.is_blank &&
+    !electedIds.includes(v.candidate_id),
   );
   const counts = prevVotes.reduce((acc: Record<string, number>, v: any) => {
-    if (v.candidate_id && !electedIds.includes(v.candidate_id)) {
+    if (v.candidate_id) {
       acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
     }
     return acc;
@@ -161,7 +163,7 @@ function getTopForNextRound(
   return candidates
     .filter((c) => !electedIds.includes(c.id))
     .sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0))
-    .slice(0, Math.max(1, topN));
+    .slice(0, Math.max(2, topN));
 }
 
 function SuccessScreen({ autoReset }: { autoReset: boolean }) {
@@ -246,7 +248,7 @@ export default function VotePublic() {
       ? candidates.filter((c) => !electedIds.includes(c.id))
       : getTopForNextRound(
           allVotes,
-          candidates,
+          candidates.filter((c) => !electedIds.includes(c.id)),
           electedIds,
           currentRound - 1,
           remainingSeats + 1,
