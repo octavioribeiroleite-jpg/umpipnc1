@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye, BarChart2, Medal } from 'lucide-react';
 
 function ChecklistItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -51,6 +51,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
   const [qrExpanded, setQrExpanded] = useState(false);
   const [expandedDeviceToken, setExpandedDeviceToken] = useState<string | null>(null);
+  const [partialRows, setPartialRows] = useState<{ candidate_id: string; count: number; pct: number; elected: boolean }[]>([]);
+  const [partialBlanks, setPartialBlanks] = useState(0);
+  const [partialNeeded, setPartialNeeded] = useState(0);
   const { toast } = useToast();
   const inFlightRef = useRef(false);
   const pendingRef = useRef(false);
