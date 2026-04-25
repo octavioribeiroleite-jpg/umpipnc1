@@ -157,6 +157,7 @@ function getTopForNextRound(
   const counts = prevVotes.reduce((acc: Record<string, number>, v: any) => {
     if (v.candidate_id) {
       acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+    }
     return acc;
   }, {});
   return candidates
