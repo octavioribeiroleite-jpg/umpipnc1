@@ -366,48 +366,52 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         )}
 
-        {tieAlert.length > 0 && (
-          <div className="rounded-xl border border-warning/60 bg-warning/10 p-3 text-sm">
-            <p className="font-bold text-foreground mb-1">
-              ⚠️ Empate detectado no {currentRound}º escrutínio
+        {/* FASE: VOTING — todos votaram, aguardando apuração */}
+        {diff === 0 && phase === 'voting' && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center">
+            <CheckCircle className="w-8 h-8 text-primary mx-auto mb-2" />
+            <p className="text-sm font-semibold mb-1">Todos os votos foram recebidos</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              {voteCount} cédula(s) registrada(s). Clique para apurar o resultado.
             </p>
-            <p className="text-muted-foreground mb-2">
-              Há empate entre os candidatos no limite das vagas restantes. O Conselho deve decidir manualmente.
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {tieAlert.map((id) => {
-                const c = candidates.find((x) => x.id === id);
-                return (
-                  <Badge key={id} variant="outline" className="text-[11px]">
-                    {c?.name || id}
-                  </Badge>
-                );
-              })}
-            </div>
+            <Button className="w-full" onClick={() => setPhase('apurando')}>
+              <BarChart2 className="w-4 h-4 mr-2" />
+              Apurar resultado
+            </Button>
           </div>
         )}
 
-        {diff === 0 && partialRows.length > 0 && (
-          <div className="rounded-lg border border-border bg-muted/30 p-4 mt-2">
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart2 className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-semibold">
-                Resultado parcial — {currentRound}º escrutínio
-              </span>
-              <span className="text-xs text-muted-foreground ml-auto">
+        {/* FASE: APURANDO — mostra resultado parcial */}
+        {diff === 0 && phase === 'apurando' && partialRows.length > 0 && (
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <BarChart2 className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-semibold">
+                  Resultado — {currentRound}º escrutínio
+                </span>
+              </div>
+              <span className="text-xs text-muted-foreground">
                 Maioria necessária: {partialNeeded} votos
               </span>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 mb-3">
               {partialRows.map((r, i) => {
                 const candidate = candidates.find((c) => c.id === r.candidate_id);
+                const isTied = tieAlert.includes(r.candidate_id);
                 return (
-                  <div key={r.candidate_id} className="flex flex-col gap-1">
+                  <div
+                    key={r.candidate_id}
+                    className={`flex flex-col gap-1 p-2 rounded-md ${
+                      isTied ? 'bg-warning/10 border border-warning/30' :
+                      r.elected && currentRound === 1 ? 'bg-success/10 border border-success/30' : ''
+                    }`}
+                  >
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        {i === 0 && <Medal className="w-3 h-3 text-warning" />}
-                        <span className={i === 0 ? 'font-semibold' : 'text-muted-foreground'}>
+                        {i === 0 && !isTied && <Medal className="w-3 h-3 text-warning" />}
+                        <span className={r.elected && currentRound === 1 ? 'font-bold text-success' : i === 0 ? 'font-semibold' : 'text-muted-foreground'}>
                           {candidate?.name || 'Desconhecido'}
                         </span>
                         {r.elected && currentRound === 1 && (
@@ -415,20 +419,23 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                             ✓ Eleito
                           </span>
                         )}
+                        {isTied && (
+                          <span className="text-xs font-medium text-warning bg-warning/20 px-1.5 py-0.5 rounded-full">
+                            Empatado
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="font-semibold text-foreground">{r.count} votos</span>
-                        <span>{r.pct}%</span>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="font-bold">{r.count} votos</span>
+                        <span className="text-muted-foreground">{r.pct}%</span>
                       </div>
                     </div>
                     <div className="w-full bg-muted rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full transition-all ${
-                          r.elected && currentRound === 1
-                            ? 'bg-success'
-                            : i === 0
-                            ? 'bg-primary'
-                            : 'bg-muted-foreground/40'
+                          r.elected && currentRound === 1 ? 'bg-success' :
+                          isTied ? 'bg-warning' :
+                          i === 0 ? 'bg-primary' : 'bg-muted-foreground/30'
                         }`}
                         style={{ width: `${r.pct}%` }}
                       />
@@ -439,15 +446,53 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             </div>
 
             {partialBlanks > 0 && (
-              <p className="text-xs text-muted-foreground mt-3">
+              <p className="text-xs text-muted-foreground mb-2">
                 Brancos / Nulos: {partialBlanks}
               </p>
             )}
 
-            <p className="text-xs text-muted-foreground mt-1 border-t border-border pt-2">
+            {tieAlert.length > 0 && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 mb-3">
+                <p className="text-xs font-semibold text-warning mb-1">
+                  ⚠️ Empate detectado
+                </p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Candidatos empatados com {partialRows.find(r => tieAlert.includes(r.candidate_id))?.count} votos:
+                </p>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {tieAlert.map((id) => {
+                    const c = candidates.find((x) => x.id === id);
+                    return (
+                      <span key={id} className="px-2 py-0.5 text-xs rounded-full bg-warning/20 text-warning font-medium">
+                        {c?.name || id}
+                      </span>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O Conselho pode realizar novo escrutínio entre os empatados ou decidir conforme regimento.
+                </p>
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mb-2"
+              onClick={() => setPhase('resultado')}
+            >
+              Confirmar resultado e avançar
+            </Button>
+          </div>
+        )}
+
+        {/* FASE: RESULTADO — ações finais */}
+        {diff === 0 && phase === 'resultado' && (
+          <div className="rounded-lg border border-border bg-muted/20 p-3 mb-2">
+            <p className="text-xs font-semibold mb-2">
               {electedCount >= seatsCount
-                ? `✅ Todas as ${seatsCount} vaga(s) preenchidas.`
-                : `⚠️ ${electedCount} de ${seatsCount} vaga(s) preenchida(s). Avance para o ${currentRound + 1}º escrutínio.`}
+                ? `✅ ${electedCount} vaga(s) preenchida(s). Pronto para concluir.`
+                : `⚠️ ${electedCount} de ${seatsCount} vaga(s) preenchida(s). Inicie o próximo escrutínio.`}
             </p>
           </div>
         )}
@@ -481,32 +526,38 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         </div>
 
-        {/* Botões principais */}
-        <div className="flex flex-wrap gap-2">
+        {/* Botões principais — só aparecem na fase correta */}
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => window.open(`/eleicao/${electionId}/apresentar`, '_blank', 'noopener')}
+            className="flex items-center gap-2"
           >
-            <Monitor className="h-3.5 w-3.5 mr-1.5" />
+            <Monitor className="w-4 h-4" />
             Abrir tela de apresentação
-            <ExternalLink className="h-3 w-3 ml-1.5 opacity-60" />
+            <ExternalLink className="h-3 w-3 opacity-60" />
           </Button>
-          {isMultiSeat && diff === 0 && electedCount < seatsCount ? (
+
+          {phase === 'resultado' && isMultiSeat && electedCount < seatsCount && (
             tieAlert.length > 0 ? (
-              <Button size="sm" disabled className="opacity-50 cursor-not-allowed">
+              <Button variant="outline" disabled className="text-warning border-warning/40">
                 ⚠️ Empate — resolva antes de avançar
               </Button>
             ) : (
-              <Button size="sm" onClick={handleNextRound} disabled={loading}>
-                <Play className="h-3.5 w-3.5 mr-1.5" /> Próximo escrutínio
+              <Button onClick={handleNextRound} disabled={loading} className="bg-primary">
+                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Próximo escrutínio →
               </Button>
             )
-          ) : diff === 0 ? (
-            <Button size="sm" onClick={() => setConfirmAction('finish')} className="bg-success hover:bg-success/90">
-              <CheckCircle className="h-3.5 w-3.5 mr-1.5" /> Concluir
+          )}
+
+          {phase === 'resultado' && electedCount >= seatsCount && (
+            <Button onClick={() => setConfirmAction('finish')} className="bg-success hover:bg-success/90">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Concluir
             </Button>
-          ) : null}
+          )}
         </div>
 
         {/* Botão Reiniciar separado, discreto */}
