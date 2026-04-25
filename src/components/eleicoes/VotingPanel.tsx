@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye, BarChart2, Medal } from 'lucide-react';
 
 function ChecklistItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -51,6 +51,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
   const [qrExpanded, setQrExpanded] = useState(false);
   const [expandedDeviceToken, setExpandedDeviceToken] = useState<string | null>(null);
+  const [partialRows, setPartialRows] = useState<{ candidate_id: string; count: number; pct: number; elected: boolean }[]>([]);
+  const [partialBlanks, setPartialBlanks] = useState(0);
+  const [partialNeeded, setPartialNeeded] = useState(0);
   const { toast } = useToast();
   const inFlightRef = useRef(false);
   const pendingRef = useRef(false);
@@ -174,6 +177,40 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       pendingRef.current = false;
     };
   }, [electionId, currentRound, seatsCount, majorityRule]);
+
+  useEffect(() => {
+    if (diff !== 0 || !electionId) {
+      setPartialRows([]);
+      return;
+    }
+    supabase
+      .from('election_votes' as any)
+      .select('*')
+      .eq('election_id', electionId)
+      .then(({ data }) => {
+        const votes = (data as any[]) || [];
+        const roundVotes = votes.filter((v) => (v.round_number || 1) === currentRound);
+        const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
+        const needed = Math.floor(totalBallots / 2) + 1;
+        setPartialNeeded(needed);
+        setPartialBlanks(roundVotes.filter((v) => v.is_blank).length);
+        const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
+          if (!v.is_blank && v.candidate_id) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+          return acc;
+        }, {});
+        const rows = Object.entries(counts)
+          .map(([candidate_id, count]) => ({
+            candidate_id,
+            count: count as number,
+            pct: totalBallots > 0 ? Math.round(((count as number) / totalBallots) * 100) : 0,
+            elected: majorityRule === 'absolute_50'
+              ? (count as number) >= needed
+              : true,
+          }))
+          .sort((a, b) => b.count - a.count);
+        setPartialRows(rows);
+      });
+  }, [diff, currentRound, electionId, majorityRule]);
 
   const handleModeChange = async (mode: string) => {
     setSelectedMode(mode);
@@ -340,6 +377,71 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {diff === 0 && partialRows.length > 0 && (
+          <div className="rounded-lg border border-border bg-muted/30 p-4 mt-2">
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart2 className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">
+                Resultado parcial — {currentRound}º escrutínio
+              </span>
+              <span className="text-xs text-muted-foreground ml-auto">
+                Maioria necessária: {partialNeeded} votos
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {partialRows.map((r, i) => {
+                const candidate = candidates.find((c) => c.id === r.candidate_id);
+                return (
+                  <div key={r.candidate_id} className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        {i === 0 && <Medal className="w-3 h-3 text-warning" />}
+                        <span className={i === 0 ? 'font-semibold' : 'text-muted-foreground'}>
+                          {candidate?.name || 'Desconhecido'}
+                        </span>
+                        {r.elected && currentRound === 1 && (
+                          <span className="text-xs font-medium text-success bg-success/15 px-1.5 py-0.5 rounded-full">
+                            ✓ Eleito
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">{r.count} votos</span>
+                        <span>{r.pct}%</span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-1.5">
+                      <div
+                        className={`h-1.5 rounded-full transition-all ${
+                          r.elected && currentRound === 1
+                            ? 'bg-success'
+                            : i === 0
+                            ? 'bg-primary'
+                            : 'bg-muted-foreground/40'
+                        }`}
+                        style={{ width: `${r.pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {partialBlanks > 0 && (
+              <p className="text-xs text-muted-foreground mt-3">
+                Brancos / Nulos: {partialBlanks}
+              </p>
+            )}
+
+            <p className="text-xs text-muted-foreground mt-1 border-t border-border pt-2">
+              {electedCount >= seatsCount
+                ? `✅ Todas as ${seatsCount} vaga(s) preenchidas.`
+                : `⚠️ ${electedCount} de ${seatsCount} vaga(s) preenchida(s). Avance para o ${currentRound + 1}º escrutínio.`}
+            </p>
           </div>
         )}
 
