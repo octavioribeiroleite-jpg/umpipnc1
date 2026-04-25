@@ -87,8 +87,7 @@ export function CamisasTab() {
     notes: ''
   });
 
-  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+  const { effectiveSocietyId: societyId } = useAuth();
 
   useEffect(() => {
     fetchData();

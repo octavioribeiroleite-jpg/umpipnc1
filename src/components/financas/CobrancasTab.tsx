@@ -90,8 +90,7 @@ export function CobrancasTab() {
   const competence = `${selectedMonth}/${selectedYear}`;
   const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
-  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+  const { effectiveSocietyId: societyId } = useAuth();
 
   useEffect(() => {
     fetchData();
