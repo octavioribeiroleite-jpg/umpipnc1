@@ -431,10 +431,10 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         {i === 0 && !isTied && <Medal className="w-3 h-3 text-warning" />}
-                        <span className={r.elected && currentRound === 1 ? 'font-bold text-success' : i === 0 ? 'font-semibold' : 'text-muted-foreground'}>
+                        <span className={r.elected ? 'font-bold text-success' : i === 0 ? 'font-semibold' : 'text-muted-foreground'}>
                           {candidate?.name || 'Desconhecido'}
                         </span>
-                        {r.elected && currentRound === 1 && (
+                        {r.elected && (
                           <span className="text-xs font-medium text-success bg-success/15 px-1.5 py-0.5 rounded-full">
                             ✓ Eleito
                           </span>
@@ -453,7 +453,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                     <div className="w-full bg-muted rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full transition-all ${
-                          r.elected && currentRound === 1 ? 'bg-success' :
+                          r.elected ? 'bg-success' :
                           isTied ? 'bg-warning' :
                           i === 0 ? 'bg-primary' : 'bg-muted-foreground/30'
                         }`}
