@@ -81,8 +81,7 @@ export function MembrosTab() {
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [creating, setCreating] = useState(false);
   const { toast } = useToast();
-  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+  const { effectiveSocietyId: societyId } = useAuth();
 
   const fetchMembers = async () => {
     let query = supabase

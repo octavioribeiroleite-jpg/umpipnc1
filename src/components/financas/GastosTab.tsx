@@ -41,7 +41,7 @@ interface Transaction {
 }
 
 export function GastosTab() {
-  const { user, profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
+  const { user, effectiveSocietyId: societyId } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -58,7 +58,6 @@ export function GastosTab() {
   });
   const [initialReceiptPreview, setInitialReceiptPreview] = useState<string | null>(null);
 
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
 
   const fetchData = async () => {
     setLoading(true);

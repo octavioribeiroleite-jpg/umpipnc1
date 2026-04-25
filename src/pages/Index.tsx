@@ -42,8 +42,7 @@ function QuickAction({
 }
 
 export default function Index() {
-  const { user, loading, rolesLoaded, isPastor, profile, isAdmin, isManagement, roles, selectedSocietyId } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+  const { user, loading, rolesLoaded, isPastor, profile, isAdmin, isManagement, roles, effectiveSocietyId: societyId } = useAuth();
   const navigate = useNavigate();
 
   const today = new Date();

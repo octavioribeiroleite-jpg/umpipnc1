@@ -103,8 +103,7 @@ export function MensalidadesTab() {
 
   const competence = `${selectedMonth}/${selectedYear}`;
 
-  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+  const { effectiveSocietyId: societyId } = useAuth();
 
   const fetchData = async () => {
     setLoading(true);

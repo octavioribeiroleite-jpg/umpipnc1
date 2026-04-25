@@ -68,8 +68,7 @@ function StatCard({
 }
 
 export default function Financas() {
-  const { profile, isAdmin, isPastor, selectedSocietyId, setSelectedSocietyId } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+  const { isAdmin, isPastor, selectedSocietyId, setSelectedSocietyId, effectiveSocietyId: societyId } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'cobrancas';
   const [activeTab, setActiveTab] = useState(initialTab);

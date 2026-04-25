@@ -30,8 +30,7 @@ interface LaunchGroup {
 }
 
 export function ConfiguracoesTab() {
-  const { profile, isAdmin, isPastor, selectedSocietyId } = useAuth();
-  const societyId = (!isAdmin && !isPastor) ? profile?.society_id : selectedSocietyId;
+  const { effectiveSocietyId: societyId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [chargeYear, setChargeYear] = useState(currentYear.toString());
