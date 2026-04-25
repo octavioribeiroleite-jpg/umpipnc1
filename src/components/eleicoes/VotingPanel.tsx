@@ -153,6 +153,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     setSelectedMode(votingMode || 'shared');
   }, [votingMode]);
 
+  // Resetar fase quando mudar de round
+  useEffect(() => {
+    setPhase('voting');
+  }, [currentRound]);
+
   useEffect(() => {
     fetchVoteCount();
 
