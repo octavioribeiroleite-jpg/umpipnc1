@@ -128,11 +128,11 @@ function computeElectedIds(votes: any[], seatsCount: number, currentRound: numbe
         .slice(0, Math.max(0, seatsCount - elected.size))
         .forEach(([candidateId]) => elected.add(candidateId));
     } else {
-      const remaining = Math.max(1, seatsCount - elected.size);
-      const topN = sorted.slice(0, remaining);
-      const hasTopTie = topN.length > 1 && topN[0][1] === topN[1][1];
-      if (!hasTopTie && topN.length > 0) {
-        topN.forEach(([id]) => elected.add(id));
+      const top = sorted[0];
+      const second = sorted[1];
+      const hasTie = second && top[1] === second[1];
+      if (!hasTie && top) {
+        elected.add(top[0]);
       }
     }
   }
@@ -265,9 +265,11 @@ export default function VotePublic() {
   }, []);
 
   useEffect(() => {
-    if (isUrnaMode) {
-      // Modo de testes: urna libera direto, sem senha.
-      setUrnaAuthenticated(true);
+    if (isUrnaMode && urnaToken) {
+      const stored = sessionStorage.getItem(
+        `urna_authenticated_${electionId}_${urnaToken}`
+      );
+      if (stored === 'true') setUrnaAuthenticated(true);
     }
   }, [isUrnaMode, electionId, urnaToken]);
 
@@ -304,7 +306,18 @@ export default function VotePublic() {
       setAllVotes(votesData);
       setElectedIds(computeElectedIds(votesData, seats, round, elData?.majority_rule || 'simple'));
 
-      // Modo de testes: bloqueio de "já votou" desativado para permitir votar várias vezes.
+      if (!isUrnaMode) {
+        const deviceId = getDeviceId();
+        const { count } = await supabase
+          .from('election_votes' as any)
+          .select('*', { count: 'exact', head: true })
+          .eq('election_id', electionId)
+          .eq('device_id', deviceId)
+          .eq('round_number', round);
+        if (count && count > 0) {
+          setAlreadyVoted(true);
+        }
+      }
       setLoading(false);
     };
     fetchData();
