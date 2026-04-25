@@ -107,11 +107,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             .slice(0, seatsCount - elected.size)
             .forEach(([id]) => elected.add(id));
         } else {
-          const remaining = seatsCount - elected.size;
-          const topN = sorted.slice(0, Math.max(1, remaining));
+          const remaining = Math.max(1, seatsCount - elected.size);
+          const topN = sorted.slice(0, remaining);
           const hasTopTie = topN.length > 1 && topN[0][1] === topN[1][1];
           if (!hasTopTie && topN.length > 0) {
-            elected.add(topN[0][0]);
+            topN.forEach(([id]) => elected.add(id));
           }
         }
       }
