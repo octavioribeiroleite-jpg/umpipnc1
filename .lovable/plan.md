@@ -1,52 +1,56 @@
-## Exibir resultado parcial no VotingPanel quando todos votarem
+## Correções no `src/components/eleicoes/VotingPanel.tsx`
 
-Adicionar um painel inline de **resultado parcial do escrutínio atual** dentro do `VotingPanel.tsx`, visível somente quando `diff === 0` (todos votaram), posicionado **antes** dos botões "Próximo escrutínio" / "Concluir". Assim o admin tem contexto para decidir se avança ou conclui.
+Três ajustes pontuais, sem mudar layout, estilos ou demais comportamentos.
 
-### Arquivo alterado
-- `src/components/eleicoes/VotingPanel.tsx`
+### 1. `fetchVoteCount` — bloco `else` do loop de rounds (round > 1)
 
-### Mudanças
+Hoje (linhas ~109-116) o código pega o `topN` (top `remaining` candidatos) e elege todos se não houver empate entre o 1º e o 2º. Será substituído por uma versão mais conservadora que elege **apenas o 1º colocado**, e somente se ele não estiver empatado com o 2º:
 
-**1. Imports do `lucide-react`**
-Acrescentar `BarChart2` e `Medal` à linha de import existente (preservando os ícones já usados: `Play`, `RotateCcw`, `CheckCircle`, `Loader2`, `Link as LinkIcon`, `Copy`, `Maximize2`, `X`, `Smartphone`, `Monitor`, `Check`, `Circle`, `ExternalLink`, `Eye`).
-
-**2. Novos estados**
 ```ts
-const [partialRows, setPartialRows] = useState<{ candidate_id: string; count: number; pct: number; elected: boolean }[]>([]);
-const [partialBlanks, setPartialBlanks] = useState(0);
-const [partialNeeded, setPartialNeeded] = useState(0);
+} else {
+  const topCandidate = sorted[0];
+  const secondCandidate = sorted[1];
+  const hasTie = secondCandidate && topCandidate[1] === secondCandidate[1];
+  if (!hasTie && topCandidate) {
+    elected.add(topCandidate[0]);
+  }
+}
 ```
 
-**3. Novo `useEffect`** — recalcula resultado parcial sempre que `diff === 0` (e zera quando volta a haver pendências). Deps: `[diff, currentRound, electionId, election?.majority_rule]`.
+### 2. `useEffect` do resultado parcial — incluir `name` em `partialRows`
 
-Lógica:
-- Busca todos os votos da eleição
-- Filtra pelo `currentRound`
-- Conta cédulas únicas (`ballot_id`), brancos, e votos por candidato
-- Calcula `needed = floor(totalBallots/2) + 1`
-- Marca `elected = true` se `majority_rule === 'absolute_50'` ⇒ `count >= needed`; caso contrário `true` (regra simples — apuração final é feita no avanço de escrutínio)
-- Ordena por `count` desc
+- Atualizar a tipagem do estado:
+  ```ts
+  const [partialRows, setPartialRows] = useState<{
+    candidate_id: string;
+    name: string;
+    count: number;
+    pct: number;
+    elected: boolean;
+  }[]>([]);
+  ```
+- Dentro do `.map` que monta `rows` (linhas ~224-235), adicionar:
+  ```ts
+  name: candidates.find(c => c.id === r.candidate_id)?.name || 'Desconhecido',
+  ```
 
-**4. Bloco JSX de resultado parcial**
-Inserido **logo após** o bloco do `tieAlert` e **antes** da barra de Progresso (`{/* Progress */}`). Renderiza apenas quando `diff === 0 && partialRows.length > 0`.
+### 3. `diff` nunca negativo + comparações via `voteCount >= totalPresent`
 
-Conteúdo:
-- Cabeçalho com ícone `BarChart2`, título "Resultado parcial — Nº escrutínio" e "Maioria necessária: X votos"
-- Lista de candidatos com:
-  - `Medal` no 1º colocado
-  - Nome (destaque para o líder)
-  - Badge verde "✓ Eleito" quando `r.elected && currentRound === 1`
-  - Contagem e percentual
-  - Mini barra de progresso colorida (verde p/ eleito, primary p/ líder, muted p/ demais)
-- Linha "Brancos / Nulos: N" se houver
-- Rodapé condicional:
-  - `electedCount >= seatsCount` → "✅ Todas as N vaga(s) preenchidas."
-  - senão → "⚠️ X de Y vaga(s) preenchida(s). Avance para o Nº escrutínio."
+- Linha 65: trocar
+  ```ts
+  const diff = voteCount - totalPresent;
+  ```
+  por
+  ```ts
+  const diff = Math.max(0, totalPresent - voteCount);
+  ```
+- Substituir todas as ocorrências `diff === 0` por `voteCount >= totalPresent` nas linhas 190, 375, 388, 403, 510, 539, 540, 544 (incluindo o `diff !== 0` da linha 190, que vira `voteCount < totalPresent`).
 
-### O que NÃO muda
-- Lógica de votação, contagem de cédulas, regras de empate, navegação de escrutínios, botões existentes ("Próximo escrutínio", "Concluir", "Reiniciar", "Abrir tela de apresentação")
-- `ResultPanel.tsx`, `EleicaoDetalhe.tsx`, banco de dados, RLS
-- Estilo visual dos contadores compactos (Presentes/Cédulas/Aguardando voto)
+### O que não muda
 
-### Resultado esperado
-Ao todos votarem em uma eleição multi-vaga (ou única), o admin vê **inline** um resumo ordenado dos votos por candidato + brancos + maioria necessária + status das vagas, antes mesmo de clicar em "Próximo escrutínio" ou "Concluir".
+- Nenhuma outra lógica, JSX, estilos, fases (`voting` / `apurando` / `resultado`), realtime, banco ou RLS.
+- `ResultPanel`, `EleicaoDetalhe` e demais componentes ficam intactos.
+
+### Observação
+
+A inversão do sinal de `diff` (`totalPresent - voteCount` em vez de `voteCount - totalPresent`) é segura porque, após o passo 3, `diff` só é usado em contagens de pendentes/exibição — todas as condições binárias passam a usar `voteCount >= totalPresent`.
