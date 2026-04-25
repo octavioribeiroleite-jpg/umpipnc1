@@ -54,12 +54,18 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
               .slice(0, Math.max(0, seatsCount - alreadyElected.size))
               .map((r) => r.candidate_id);
           } else {
-            const topN = rows.slice(0, Math.max(1, seatsCount - alreadyElected.size));
+            const remaining = Math.max(1, seatsCount - alreadyElected.size);
+            const topN = rows.slice(0, remaining);
             const hasTopTie = topN.length > 1 && topN[0].count === topN[1].count;
-            if (!hasTopTie && topN.length > 0) electedIds = [topN[0].candidate_id];
+            if (!hasTopTie && topN.length > 0) {
+              electedIds = topN.map((r) => r.candidate_id);
+            }
           }
           electedIds.forEach((id) => alreadyElected.add(id));
-          const hasTie = rows.length >= 2 && rows[0].count === rows[1].count;
+          const remaining = Math.max(1, seatsCount - alreadyElected.size + electedIds.length);
+          const cutoff = rows[remaining - 1]?.count;
+          const next = rows[remaining]?.count;
+          const hasTie = cutoff !== undefined && cutoff === next;
           return { round, totalBallots, blankVotes, electedIds, rows, hasTie };
         });
         setRoundResults(parsed);
