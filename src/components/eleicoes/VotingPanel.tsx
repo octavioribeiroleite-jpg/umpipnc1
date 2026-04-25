@@ -200,25 +200,42 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         const roundVotes = votes.filter((v) => (v.round_number || 1) === currentRound);
         const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
         const needed = Math.floor(totalBallots / 2) + 1;
-        setPartialNeeded(needed);
+        setPartialNeeded(currentRound === 1 ? needed : 0);
         setPartialBlanks(roundVotes.filter((v) => v.is_blank).length);
         const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
           if (!v.is_blank && v.candidate_id) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
           return acc;
         }, {});
-        const rows = Object.entries(counts)
+        const sorted = Object.entries(counts)
           .map(([candidate_id, count]) => ({
             candidate_id,
             count: count as number,
             pct: totalBallots > 0 ? Math.round(((count as number) / totalBallots) * 100) : 0,
-            elected: majorityRule === 'absolute_50'
-              ? (count as number) >= needed
-              : true,
           }))
           .sort((a, b) => b.count - a.count);
+
+        // Vagas restantes para este escrutínio
+        const seatsRemaining = Math.max(0, seatsCount - electedCount);
+        // Verifica empate na posição de corte (entre o último top-N e o próximo)
+        const cutoff = sorted[seatsRemaining - 1]?.count;
+        const next = sorted[seatsRemaining]?.count;
+        const tieAtCutoff = cutoff !== undefined && cutoff === next;
+
+        const rows = sorted.map((r, i) => {
+          let elected = false;
+          if (seatsRemaining > 0 && i < seatsRemaining && !tieAtCutoff) {
+            if (currentRound === 1 && majorityRule === 'absolute_50') {
+              elected = r.count >= needed;
+            } else {
+              // 1º com simple OU 2º+ → top N sem empate na posição de corte
+              elected = true;
+            }
+          }
+          return { ...r, elected };
+        });
         setPartialRows(rows);
       });
-  }, [diff, currentRound, electionId, majorityRule]);
+  }, [diff, currentRound, electionId, majorityRule, seatsCount, electedCount]);
 
   const handleModeChange = async (mode: string) => {
     setSelectedMode(mode);
@@ -414,10 +431,10 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         {i === 0 && !isTied && <Medal className="w-3 h-3 text-warning" />}
-                        <span className={r.elected && currentRound === 1 ? 'font-bold text-success' : i === 0 ? 'font-semibold' : 'text-muted-foreground'}>
+                        <span className={r.elected ? 'font-bold text-success' : i === 0 ? 'font-semibold' : 'text-muted-foreground'}>
                           {candidate?.name || 'Desconhecido'}
                         </span>
-                        {r.elected && currentRound === 1 && (
+                        {r.elected && (
                           <span className="text-xs font-medium text-success bg-success/15 px-1.5 py-0.5 rounded-full">
                             ✓ Eleito
                           </span>
@@ -436,7 +453,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                     <div className="w-full bg-muted rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full transition-all ${
-                          r.elected && currentRound === 1 ? 'bg-success' :
+                          r.elected ? 'bg-success' :
                           isTied ? 'bg-warning' :
                           i === 0 ? 'bg-primary' : 'bg-muted-foreground/30'
                         }`}
