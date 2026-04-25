@@ -322,6 +322,70 @@ export default function VotePublic() {
       });
   }, [electionId, election?.current_round]);
 
+  // Realtime: sincroniza urna com ações do admin (avanço de escrutínio / encerramento)
+  useEffect(() => {
+    if (!electionId) return;
+
+    const channel = supabase
+      .channel(`vote-public-election-${electionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'elections',
+          filter: `id=eq.${electionId}`,
+        },
+        async (payload: any) => {
+          const updated = payload.new;
+          const previous = payload.old;
+
+          // Eleição encerrada → mostra tela de encerramento
+          if (updated.status === 'finished' && previous.status !== 'finished') {
+            setElection(updated);
+            return;
+          }
+
+          // Avançou para novo escrutínio → reseta urna e recarrega dados
+          if (updated.current_round !== previous.current_round) {
+            setElection(updated);
+
+            const { data: voteRows } = await supabase
+              .from('election_votes' as any)
+              .select('*')
+              .eq('election_id', electionId);
+            const votesData = (voteRows as any[]) || [];
+            setAllVotes(votesData);
+            setElectedIds(
+              computeElectedIds(
+                votesData,
+                updated.seats_count || 1,
+                updated.current_round || 1,
+                updated.majority_rule || 'simple',
+              ),
+            );
+
+            setVoteSuccess(false);
+            setReadyToVote(false);
+            setSelectedCandidates([]);
+            setBlankSlots(0);
+            setConfirmCandidate(null);
+            setConfirmBlank(false);
+            setConfirmSelection(false);
+            setAlreadyVoted(false);
+            return;
+          }
+
+          setElection(updated);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [electionId]);
+
   const handleUrnaAuth = async () => {
     if (!authUsername.trim() || !authPassword.trim()) return;
     setAuthLoading(true);
