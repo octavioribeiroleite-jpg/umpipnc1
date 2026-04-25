@@ -132,6 +132,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
       {/* Escrutínios */}
       <div className="space-y-3">
         {roundResults.map((roundResult) => {
+          const isFirstRound = roundResult.round === 1;
           const needed = Math.floor(roundResult.totalBallots / 2) + 1;
           const isCurrentRound = roundResult.round === (election?.current_round || 1);
           return (
@@ -156,7 +157,11 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                     <Users className="h-3 w-3" />
                     {roundResult.totalBallots} cédulas
                   </span>
-                  <span>Maioria: {needed} votos</span>
+                  <span>
+                    {isFirstRound
+                      ? `Maioria necessária: ${needed} votos`
+                      : 'Maioria simples — mais votado(s) eleito(s)'}
+                  </span>
                 </div>
               </div>
 
