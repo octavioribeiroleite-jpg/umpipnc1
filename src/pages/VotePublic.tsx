@@ -822,7 +822,7 @@ export default function VotePublic() {
             <Button
               variant="outline"
               className="h-11 w-full font-semibold"
-              onClick={() => { void primeAudio(); setSelectedCandidates([]); setBlankSlots(maxChoices); setConfirmBlank(true); }}
+              onClick={() => { void primeAudio(); setConfirmBlank(true); }}
             >
               Votar tudo em Branco / Nulo
             </Button>
