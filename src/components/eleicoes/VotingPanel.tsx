@@ -259,7 +259,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         const roundVotes = votes.filter((v) => (v.round_number || 1) === currentRound);
         const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
         const needed = Math.floor(totalBallots / 2) + 1;
-        setPartialNeeded(currentRound === 1 ? needed : 0);
+        setPartialNeeded(needed);
         setPartialBlanks(roundVotes.filter((v) => v.is_blank).length);
         const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
           if (!v.is_blank && v.candidate_id) acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
@@ -283,11 +283,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         const rows = sorted.map((r, i) => {
           let elected = false;
           if (seatsRemaining > 0 && i < seatsRemaining && !tieAtCutoff) {
-            if (currentRound === 1 && majorityRule === 'absolute_50') {
-              elected = r.count >= needed;
+            if (currentRound === 1) {
+              elected = majorityRule === 'absolute_50' ? r.count >= needed : true;
             } else {
-              // 1º com simple OU 2º+ → top N sem empate na posição de corte
-              elected = true;
+              // 2º e 3º escrutínio: exige maioria absoluta
+              elected = r.count >= needed;
             }
           }
           return {
@@ -476,7 +476,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 {currentRound === 1
                   ? `Maioria necessária: ${partialNeeded} votos`
                   : currentRound < 3
-                  ? `${currentRound}º escrutínio — top 3 disputam maioria absoluta`
+                  ? `${currentRound}º escrutínio — top ${Math.max(0, seatsCount - electedCount) + 1} disputam maioria absoluta`
                   : `3º escrutínio final — empate desfeito pelo mais velho`}
               </span>
             </div>
