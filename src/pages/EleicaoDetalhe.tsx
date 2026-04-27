@@ -30,7 +30,7 @@ interface Election {
 }
 
 interface AttendanceItem { id: string; name: string; present: boolean; }
-interface Candidate { id: string; name: string; photo_url: string | null; display_order: number; }
+interface Candidate { id: string; name: string; photo_url: string | null; display_order: number; birth_date?: string | null; }
 interface Device { id: string; label: string; token: string; activated: boolean; }
 
 export default function EleicaoDetalhe() {
