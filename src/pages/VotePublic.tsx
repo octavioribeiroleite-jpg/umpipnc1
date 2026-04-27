@@ -681,6 +681,18 @@ export default function VotePublic() {
     );
   }
 
+  if (!isCamisa && currentRound > MAX_ROUNDS) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+        <ShieldCheck className="h-16 w-16 text-warning mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Escrutínios Encerrados</h1>
+        <p className="text-muted-foreground max-w-md">
+          Número máximo de escrutínios atingido. Aguarde o admin para encerrar a eleição.
+        </p>
+      </div>
+    );
+  }
+
   // Urna auth screen
   if (isUrnaMode && !urnaAuthenticated) {
     return (
