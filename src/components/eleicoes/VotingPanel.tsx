@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface Device { id: string; label: string; token: string; activated: boolean; }
-interface Candidate { id: string; name: string; }
+interface Candidate { id: string; name: string; birth_date?: string | null; }
 
 interface VotingPanelProps {
   electionId: string;
@@ -88,30 +88,89 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       setVoteCount(new Set(rows.filter((v) => (v.round_number || 1) === currentRound).map((v) => v.ballot_id)).size);
 
       const elected = new Set<string>();
+      const MAX_ROUNDS = 3;
+
       for (let round = 1; round <= currentRound; round += 1) {
         const roundRows = rows.filter((v) => (v.round_number || 1) === round);
         const ballots = new Set(roundRows.map((v) => v.ballot_id)).size;
         const needed = Math.floor(ballots / 2) + 1;
+
         const counts = roundRows.reduce((acc: Record<string, number>, v: any) => {
           if (!v.is_blank && v.candidate_id && !elected.has(v.candidate_id))
             acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
           return acc;
         }, {});
+
         const sorted = Object.entries(counts)
           .sort((a, b) => (b[1] as number) - (a[1] as number));
+
+        const vagas = seatsCount - elected.size;
+
         if (round === 1) {
-          sorted
-            .filter(([, count]) => majorityRule === 'absolute_50'
-              ? (count as number) >= needed
-              : true)
-            .slice(0, seatsCount - elected.size)
-            .forEach(([id]) => elected.add(id));
+          // 1º escrutínio: elege quem atingiu maioria absoluta
+          const aprovados = sorted.filter(([, count]) =>
+            majorityRule === 'absolute_50' ? (count as number) >= needed : true
+          );
+
+          const cutoffIndex = vagas - 1;
+          const cutoffCount = aprovados[cutoffIndex]?.[1];
+          const nextCount = aprovados[vagas]?.[1];
+          const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
+
+          if (!tieAtCutoff) {
+            aprovados.slice(0, vagas).forEach(([id]) => elected.add(id));
+          } else {
+            aprovados
+              .filter(([, count]) => (count as number) > (cutoffCount as number))
+              .forEach(([id]) => elected.add(id));
+          }
+        } else if (round < MAX_ROUNDS) {
+          // 2º escrutínio: top candidatos disputam maioria absoluta
+          const cutoffIndex = vagas - 1;
+          const cutoffCount = sorted[cutoffIndex]?.[1];
+          const nextCount = sorted[vagas]?.[1];
+          const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
+
+          if (!tieAtCutoff) {
+            sorted
+              .filter(([, count]) => (count as number) >= needed)
+              .slice(0, vagas)
+              .forEach(([id]) => elected.add(id));
+          }
+          // Se empate: não elege ninguém, vai pro próximo escrutínio
         } else {
-          const topCandidate = sorted[0];
-          const secondCandidate = sorted[1];
-          const hasTie = secondCandidate && topCandidate[1] === secondCandidate[1];
-          if (!hasTie && topCandidate) {
-            elected.add(topCandidate[0]);
+          // 3º escrutínio (MAX_ROUNDS): desempate pelo mais velho
+          const cutoffIndex = vagas - 1;
+          const cutoffCount = sorted[cutoffIndex]?.[1];
+          const nextCount = sorted[vagas]?.[1];
+          const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
+
+          if (!tieAtCutoff) {
+            sorted.slice(0, vagas).forEach(([id]) => elected.add(id));
+          } else {
+            const tiedIds = sorted
+              .filter(([, count]) => (count as number) === cutoffCount)
+              .map(([id]) => id);
+
+            const electedBefore = elected.size;
+            sorted
+              .filter(([, count]) => (count as number) > (cutoffCount as number))
+              .forEach(([id]) => elected.add(id));
+
+            const vagasRestantes = vagas - (elected.size - electedBefore);
+
+            const tiedCandidates = tiedIds
+              .map((id) => candidates.find((c) => c.id === id))
+              .filter(Boolean)
+              .sort((a, b) => {
+                if (!a?.birth_date) return 1;
+                if (!b?.birth_date) return -1;
+                return new Date(a.birth_date).getTime() - new Date(b.birth_date).getTime();
+              });
+
+            tiedCandidates.slice(0, vagasRestantes).forEach((c) => {
+              if (c) elected.add(c.id);
+            });
           }
         }
       }
@@ -416,7 +475,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               <span className="text-xs text-muted-foreground">
                 {currentRound === 1
                   ? `Maioria necessária: ${partialNeeded} votos`
-                  : 'Maioria simples — mais votado(s) eleito(s)'}
+                  : currentRound < 3
+                  ? `${currentRound}º escrutínio — top 3 disputam maioria absoluta`
+                  : `3º escrutínio final — empate desfeito pelo mais velho`}
               </span>
             </div>
 
@@ -563,7 +624,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Button>
 
-          {phase === 'resultado' && isMultiSeat && electedCount < seatsCount && (
+          {phase === 'resultado' && isMultiSeat && electedCount < seatsCount && currentRound < 3 && (
             tieAlert.length > 0 ? (
               <Button variant="outline" disabled className="text-warning border-warning/40">
                 ⚠️ Empate — resolva antes de avançar
@@ -571,9 +632,21 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             ) : (
               <Button onClick={handleNextRound} disabled={loading} className="bg-primary">
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Próximo escrutínio →
+                {currentRound + 1}º escrutínio →
               </Button>
             )
+          )}
+
+          {phase === 'resultado' && isMultiSeat && electedCount < seatsCount && currentRound >= 3 && (
+            <div className="rounded-lg border border-warning/40 bg-warning/10 p-3">
+              <p className="text-xs font-semibold text-warning mb-1">
+                ⚠️ Máximo de escrutínios atingido
+              </p>
+              <p className="text-xs text-muted-foreground">
+                O desempate foi aplicado automaticamente pelo critério de idade (mais velho eleito).
+                Caso não haja birth_date cadastrado, o Conselho deve decidir conforme o regimento.
+              </p>
+            </div>
           )}
 
           {phase === 'resultado' && electedCount >= seatsCount && (
