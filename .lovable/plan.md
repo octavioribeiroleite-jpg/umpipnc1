@@ -1,56 +1,38 @@
-## Correções no `src/components/eleicoes/VotingPanel.tsx`
+## Atualização do VotingPanel.tsx — Lógica de escrutínios com desempate por idade
 
-Três ajustes pontuais, sem mudar layout, estilos ou demais comportamentos.
+Aplicar as 6 alterações solicitadas no arquivo `src/components/eleicoes/VotingPanel.tsx` (o componente está em `eleicoes/`, não `elections/`) e adicionar o campo `birth_date` à tabela de candidatos.
 
-### 1. `fetchVoteCount` — bloco `else` do loop de rounds (round > 1)
+### Mudanças no banco de dados
 
-Hoje (linhas ~109-116) o código pega o `topN` (top `remaining` candidatos) e elege todos se não houver empate entre o 1º e o 2º. Será substituído por uma versão mais conservadora que elege **apenas o 1º colocado**, e somente se ele não estiver empatado com o 2º:
+A tabela real é `election_candidates` (não `candidates`). Migration:
 
-```ts
-} else {
-  const topCandidate = sorted[0];
-  const secondCandidate = sorted[1];
-  const hasTie = secondCandidate && topCandidate[1] === secondCandidate[1];
-  if (!hasTie && topCandidate) {
-    elected.add(topCandidate[0]);
-  }
-}
+```sql
+ALTER TABLE public.election_candidates 
+  ADD COLUMN IF NOT EXISTS birth_date date;
 ```
 
-### 2. `useEffect` do resultado parcial — incluir `name` em `partialRows`
+Sem alteração de RLS (políticas existentes cobrem o novo campo).
 
-- Atualizar a tipagem do estado:
-  ```ts
-  const [partialRows, setPartialRows] = useState<{
-    candidate_id: string;
-    name: string;
-    count: number;
-    pct: number;
-    elected: boolean;
-  }[]>([]);
-  ```
-- Dentro do `.map` que monta `rows` (linhas ~224-235), adicionar:
-  ```ts
-  name: candidates.find(c => c.id === r.candidate_id)?.name || 'Desconhecido',
-  ```
+### Mudanças em `src/components/eleicoes/VotingPanel.tsx`
 
-### 3. `diff` nunca negativo + comparações via `voteCount >= totalPresent`
+1. **Interface `Candidate`** (linha 31): adicionar `birth_date?: string | null`.
 
-- Linha 65: trocar
-  ```ts
-  const diff = voteCount - totalPresent;
-  ```
-  por
-  ```ts
-  const diff = Math.max(0, totalPresent - voteCount);
-  ```
-- Substituir todas as ocorrências `diff === 0` por `voteCount >= totalPresent` nas linhas 190, 375, 388, 403, 510, 539, 540, 544 (incluindo o `diff !== 0` da linha 190, que vira `voteCount < totalPresent`).
+2. **Lógica de apuração em `fetchVoteCount`** (linhas ~90-118): substituir o bloco `for (let round = 1; round <= currentRound; ...)` pela nova lógica com:
+   - `MAX_ROUNDS = 3`
+   - 1º escrutínio: maioria absoluta (se regra) com verificação de empate na posição de corte
+   - 2º escrutínio: top candidatos disputam; bloqueia eleição se houver empate na posição de corte
+   - 3º escrutínio: desempate automático pelo `birth_date` mais antigo (mais velho)
 
-### O que não muda
+3. **Botão "Próximo escrutínio"** (linhas ~566-577): adicionar condição `currentRound < 3` e renomear label para `${currentRound + 1}º escrutínio →`.
 
-- Nenhuma outra lógica, JSX, estilos, fases (`voting` / `apurando` / `resultado`), realtime, banco ou RLS.
-- `ResultPanel`, `EleicaoDetalhe` e demais componentes ficam intactos.
+4. **Mensagem de máximo de escrutínios atingido**: adicionar novo bloco logo após o botão para o caso `currentRound >= 3` com vagas ainda não preenchidas, explicando que o desempate foi por idade.
 
-### Observação
+5. **Label do escrutínio no painel parcial** (linhas ~416-420): substituir o `<span>` para refletir três casos (1º = maioria, 2º = top 3 disputam, 3º = empate por idade).
 
-A inversão do sinal de `diff` (`totalPresent - voteCount` em vez de `voteCount - totalPresent`) é segura porque, após o passo 3, `diff` só é usado em contagens de pendentes/exibição — todas as condições binárias passam a usar `voteCount >= totalPresent`.
+6. **Necessário também ajustar a query do Supabase** em `fetchVoteCount` para incluir `birth_date` ao buscar candidatos? — Não. Os candidatos já vêm via prop `candidates` de `EleicaoDetalhe.tsx`, que faz `select('*')` em `election_candidates`. Após a migration, o campo virá automaticamente. A interface `Candidate` em `EleicaoDetalhe.tsx` (linha 35) também deve ganhar `birth_date?: string | null` para tipagem consistente.
+
+### Observações
+
+- Não adiciono UI para editar `birth_date` neste passo (não foi pedido). O campo ficará disponível no banco e tipado; o cadastro virá em prompt futuro caso necessário.
+- Sem alterações em outros componentes além do `VotingPanel.tsx` e tipagem mínima em `EleicaoDetalhe.tsx`.
+- Layout, estilos e demais comportamentos permanecem inalterados.

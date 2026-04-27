@@ -430,6 +430,7 @@ export type Database = {
       }
       election_candidates: {
         Row: {
+          birth_date: string | null
           display_order: number
           election_id: string
           id: string
@@ -438,6 +439,7 @@ export type Database = {
           photo_urls: Json
         }
         Insert: {
+          birth_date?: string | null
           display_order?: number
           election_id: string
           id?: string
@@ -446,6 +448,7 @@ export type Database = {
           photo_urls?: Json
         }
         Update: {
+          birth_date?: string | null
           display_order?: number
           election_id?: string
           id?: string

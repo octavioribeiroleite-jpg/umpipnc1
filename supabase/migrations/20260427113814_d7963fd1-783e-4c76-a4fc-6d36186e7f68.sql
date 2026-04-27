@@ -1,0 +1,1 @@
+ALTER TABLE public.election_candidates ADD COLUMN IF NOT EXISTS birth_date date;
