@@ -347,10 +347,11 @@ export default function VotePublic() {
       ]);
       const elData = elRes.data as any;
       setElection(elData);
-      setCandidates(((caRes.data as any[]) || []).map((c: any) => ({
+      const candidatesData = ((caRes.data as any[]) || []).map((c: any) => ({
         ...c,
         photo_urls: Array.isArray(c.photo_urls) ? c.photo_urls : [],
-      })));
+      })) as Candidate[];
+      setCandidates(candidatesData);
 
       const round = elData?.current_round || 1;
       const seats = elData?.seats_count || 1;
@@ -359,7 +360,7 @@ export default function VotePublic() {
         .eq('election_id', electionId);
       const votesData = (voteRows as any[]) || [];
       setAllVotes(votesData);
-      setElectedIds(computeElectedIds(votesData, seats, round, elData?.majority_rule || 'simple'));
+      setElectedIds(computeElectedIds(votesData, seats, round, elData?.majority_rule || 'simple', candidatesData));
 
       if (!isUrnaMode) {
         const deviceId = getDeviceId();
@@ -389,9 +390,9 @@ export default function VotePublic() {
       .then(({ data }) => {
         const votesData = (data as any[]) || [];
         setAllVotes(votesData);
-        setElectedIds(computeElectedIds(votesData, seats, round, election.majority_rule || 'simple'));
+        setElectedIds(computeElectedIds(votesData, seats, round, election.majority_rule || 'simple', candidates));
       });
-  }, [electionId, election?.current_round]);
+  }, [electionId, election?.current_round, candidates]);
 
   // Realtime: sincroniza urna com ações do admin (avanço de escrutínio / encerramento)
   useEffect(() => {
@@ -433,6 +434,7 @@ export default function VotePublic() {
                 updated.seats_count || 1,
                 updated.current_round || 1,
                 updated.majority_rule || 'simple',
+                candidates,
               ),
             );
 
