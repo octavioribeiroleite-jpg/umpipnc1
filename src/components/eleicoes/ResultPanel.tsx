@@ -6,7 +6,7 @@ import { Trophy, CheckCircle, Medal, Users, FileX, AlertTriangle } from 'lucide-
 interface ResultPanelProps {
   electionId: string;
   totalPresent: number;
-  candidates: { id: string; name: string; photo_url: string | null }[];
+  candidates: { id: string; name: string; photo_url: string | null; birth_date?: string | null }[];
   election?: { seats_count?: number; current_round?: number; majority_rule?: string };
 }
 
@@ -32,37 +32,94 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
         const maxRound = Math.max(election?.current_round || 1, ...votes.map((v) => v.round_number || 1));
         const alreadyElected = new Set<string>();
         const seatsCount = election?.seats_count || 1;
+        const MAX_ROUNDS = 3;
 
         const parsed = Array.from({ length: maxRound }, (_, index) => {
           const round = index + 1;
           const roundVotes = votes.filter((v) => (v.round_number || 1) === round);
           const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
+
           const blankVotes = roundVotes.filter((v) => v.is_blank).length;
+
           const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
             if (!v.is_blank && v.candidate_id && !alreadyElected.has(v.candidate_id))
               acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
             return acc;
           }, {});
+
           const rows = Object.entries(counts)
             .map(([candidate_id, count]) => ({ candidate_id, count: count as number }))
             .sort((a, b) => b.count - a.count);
+
           const needed = Math.floor(totalBallots / 2) + 1;
+          const vagas = Math.max(0, seatsCount - alreadyElected.size);
           let electedIds: string[] = [];
+          let hasTie = false;
+
           if (round === 1) {
-            electedIds = rows
-              .filter((r) => election?.majority_rule === 'absolute_50' ? r.count >= needed : true)
-              .slice(0, Math.max(0, seatsCount - alreadyElected.size))
-              .map((r) => r.candidate_id);
+            const aprovados = rows.filter((r) =>
+              election?.majority_rule === 'absolute_50' ? r.count >= needed : true
+            );
+            const cutoffCount = aprovados[vagas - 1]?.count;
+            const nextCount = aprovados[vagas]?.count;
+            const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
+
+            if (!tieAtCutoff) {
+              electedIds = aprovados.slice(0, vagas).map((r) => r.candidate_id);
+            } else {
+              electedIds = aprovados
+                .filter((r) => r.count > cutoffCount)
+                .map((r) => r.candidate_id);
+              hasTie = true;
+            }
+          } else if (round < MAX_ROUNDS) {
+            const cutoffCount = rows[vagas - 1]?.count;
+            const nextCount = rows[vagas]?.count;
+            const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
+
+            if (!tieAtCutoff) {
+              electedIds = rows
+                .filter((r) => r.count >= needed)
+                .slice(0, vagas)
+                .map((r) => r.candidate_id);
+            } else {
+              hasTie = true;
+            }
           } else {
-            const top = rows[0];
-            const second = rows[1];
-            const hasTie = second && top.count === second.count;
-            if (!hasTie && top) {
-              electedIds = [top.candidate_id];
+            const cutoffCount = rows[vagas - 1]?.count;
+            const nextCount = rows[vagas]?.count;
+            const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
+
+            if (!tieAtCutoff) {
+              electedIds = rows.slice(0, vagas).map((r) => r.candidate_id);
+            } else {
+              const clearlyElected = rows
+                .filter((r) => r.count > cutoffCount)
+                .map((r) => r.candidate_id);
+
+              const vagasRestantes = vagas - clearlyElected.length;
+
+              const tiedIds = rows
+                .filter((r) => r.count === cutoffCount)
+                .map((r) => r.candidate_id);
+
+              const tiedByAge = tiedIds
+                .map((id) => candidates.find((c) => c.id === id))
+                .filter(Boolean)
+                .sort((a, b) => {
+                  if (!a?.birth_date) return 1;
+                  if (!b?.birth_date) return -1;
+                  return new Date(a.birth_date).getTime() - new Date(b.birth_date).getTime();
+                })
+                .slice(0, vagasRestantes)
+                .map((c) => c!.id);
+
+              electedIds = [...clearlyElected, ...tiedByAge];
+              hasTie = tiedIds.length > vagasRestantes;
             }
           }
+
           electedIds.forEach((id) => alreadyElected.add(id));
-          const hasTie = rows.length >= 2 && rows[0].count === rows[1].count;
           return { round, totalBallots, blankVotes, electedIds, rows, hasTie };
         });
         setRoundResults(parsed);
@@ -140,7 +197,6 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
       {/* Escrutínios */}
       <div className="space-y-3">
         {roundResults.map((roundResult) => {
-          const isFirstRound = roundResult.round === 1;
           const needed = Math.floor(roundResult.totalBallots / 2) + 1;
           const isCurrentRound = roundResult.round === (election?.current_round || 1);
           return (
@@ -166,9 +222,11 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                     {roundResult.totalBallots} cédulas
                   </span>
                   <span>
-                    {isFirstRound
+                    {roundResult.round === 1
                       ? `Maioria necessária: ${needed} votos`
-                      : 'Maioria simples — mais votado(s) eleito(s)'}
+                      : roundResult.round < 3
+                      ? `${roundResult.round}º escrutínio — maioria absoluta entre os top candidatos`
+                      : `3º escrutínio final — empate desfeito pelo mais velho`}
                   </span>
                 </div>
               </div>
@@ -251,7 +309,9 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                 <div className="flex items-center gap-2 rounded-lg border border-warning/50 bg-warning/10 p-2.5 text-xs">
                   <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
                   <span className="text-foreground font-medium">
-                    Empate — Conselho deve decidir manualmente
+                    {roundResult.round < 3
+                      ? 'Empate — será resolvido no próximo escrutínio'
+                      : 'Empate no 3º escrutínio — desempate aplicado pelo critério de idade (mais velho eleito)'}
                   </span>
                 </div>
               )}
