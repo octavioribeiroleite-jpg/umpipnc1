@@ -1,0 +1,1 @@
+ALTER TABLE public.elections ADD COLUMN IF NOT EXISTS round2_candidate_ids uuid[] DEFAULT NULL;

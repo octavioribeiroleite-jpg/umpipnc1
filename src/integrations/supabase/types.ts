@@ -559,6 +559,7 @@ export type Database = {
           max_choices_per_ballot: number
           name: string
           position: string
+          round2_candidate_ids: string[] | null
           seats_count: number
           show_result: boolean
           society_id: string | null
@@ -576,6 +577,7 @@ export type Database = {
           max_choices_per_ballot?: number
           name: string
           position: string
+          round2_candidate_ids?: string[] | null
           seats_count?: number
           show_result?: boolean
           society_id?: string | null
@@ -593,6 +595,7 @@ export type Database = {
           max_choices_per_ballot?: number
           name?: string
           position?: string
+          round2_candidate_ids?: string[] | null
           seats_count?: number
           show_result?: boolean
           society_id?: string | null
