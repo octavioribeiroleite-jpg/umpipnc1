@@ -587,7 +587,7 @@ export default function Auth() {
             <img
               src={logoIpnc}
               alt="Renovo IPNC"
-              className="h-36 w-36 mx-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+              className="h-48 w-48 sm:h-56 sm:w-56 mx-auto object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.55)]"
             />
           </div>
           <h1 className="font-display text-3xl font-bold text-white drop-shadow-lg">
