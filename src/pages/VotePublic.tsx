@@ -675,36 +675,7 @@ export default function VotePublic() {
     );
   }
 
-  // Urna auth screen
-  if (isUrnaMode && !urnaAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
-        <div className="max-w-sm w-full space-y-6">
-          <div className="text-center">
-            <Monitor className="h-16 w-16 text-primary mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Ativar Urna Fixa</h1>
-            {deviceLabel && <p className="text-primary font-medium mt-1">{deviceLabel}</p>}
-            <p className="text-muted-foreground mt-2 text-sm">Digite suas credenciais de admin ou diretoria para liberar esta urna.</p>
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="urna-username">Usuário</Label>
-              <Input id="urna-username" value={authUsername} onChange={(e) => setAuthUsername(e.target.value)} placeholder="Digite seu usuário" onKeyDown={(e) => e.key === 'Enter' && handleUrnaAuth()} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="urna-password">Senha</Label>
-              <Input id="urna-password" type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Digite sua senha" onKeyDown={(e) => e.key === 'Enter' && handleUrnaAuth()} />
-            </div>
-            {authError && <p className="text-sm text-destructive text-center">{authError}</p>}
-            <Button onClick={() => { void primeAudio(); void handleUrnaAuth(); }} disabled={authLoading || !authUsername.trim() || !authPassword.trim()} className="w-full" size="lg">
-              {authLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogIn className="h-4 w-4 mr-2" />}
-              Autenticar
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // (Tela de autenticação removida — urna fica online direto pelo QR Code.)
 
   if (alreadyVoted) {
     return (
