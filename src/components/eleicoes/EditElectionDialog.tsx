@@ -33,8 +33,8 @@ export function EditElectionDialog({ open, onOpenChange, election, onSaved }: Ed
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState(election.name || '');
   const [position, setPosition] = useState(election.position || '');
-  const [seatsCount, setSeatsCount] = useState(election.seats_count || 1);
-  const [maxChoices, setMaxChoices] = useState(election.max_choices_per_ballot || 1);
+  const [seatsCount, setSeatsCount] = useState<string>(String(election.seats_count || 1));
+  const [maxChoices, setMaxChoices] = useState<string>(String(election.max_choices_per_ballot || 1));
   const [votingMode, setVotingMode] = useState(election.voting_mode || 'shared');
   const [majorityRule, setMajorityRule] = useState(election.majority_rule || 'simple');
 
@@ -45,17 +45,14 @@ export function EditElectionDialog({ open, onOpenChange, election, onSaved }: Ed
     if (open) {
       setName(election.name || '');
       setPosition(election.position || '');
-      setSeatsCount(election.seats_count || 1);
-      setMaxChoices(election.max_choices_per_ballot || 1);
+      setSeatsCount(String(election.seats_count || 1));
+      setMaxChoices(String(election.max_choices_per_ballot || 1));
       setVotingMode(election.voting_mode || 'shared');
       setMajorityRule(election.majority_rule || 'simple');
     }
   }, [open, election]);
 
-  // max_choices nunca > seats
-  useEffect(() => {
-    if (isCargo && maxChoices > seatsCount) setMaxChoices(seatsCount);
-  }, [seatsCount, isCargo, maxChoices]);
+  // (clamp acontece apenas ao salvar, para não mexer enquanto o usuário digita)
 
   const handleSave = async () => {
     if (!name.trim() || !position.trim()) {
@@ -69,8 +66,10 @@ export function EditElectionDialog({ open, onOpenChange, election, onSaved }: Ed
       voting_mode: votingMode,
     };
     if (isCargo) {
-      payload.seats_count = Math.max(1, seatsCount);
-      payload.max_choices_per_ballot = Math.min(Math.max(1, maxChoices), Math.max(1, seatsCount));
+      const seatsNum = Math.max(1, parseInt(seatsCount, 10) || 1);
+      const choicesNum = Math.min(Math.max(1, parseInt(maxChoices, 10) || 1), seatsNum);
+      payload.seats_count = seatsNum;
+      payload.max_choices_per_ballot = choicesNum;
       payload.majority_rule = majorityRule;
     }
 
@@ -123,7 +122,11 @@ export function EditElectionDialog({ open, onOpenChange, election, onSaved }: Ed
                     type="number"
                     min={1}
                     value={seatsCount}
-                    onChange={(e) => setSeatsCount(Math.max(1, Number(e.target.value) || 1))}
+                    onChange={(e) => setSeatsCount(e.target.value)}
+                    onBlur={() => {
+                      const n = parseInt(seatsCount, 10);
+                      setSeatsCount(String(Number.isFinite(n) && n >= 1 ? n : 1));
+                    }}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -132,9 +135,14 @@ export function EditElectionDialog({ open, onOpenChange, election, onSaved }: Ed
                     id="edit-choices"
                     type="number"
                     min={1}
-                    max={seatsCount}
                     value={maxChoices}
-                    onChange={(e) => setMaxChoices(Math.max(1, Number(e.target.value) || 1))}
+                    onChange={(e) => setMaxChoices(e.target.value)}
+                    onBlur={() => {
+                      const n = parseInt(maxChoices, 10);
+                      const seats = Math.max(1, parseInt(seatsCount, 10) || 1);
+                      const clamped = Number.isFinite(n) && n >= 1 ? Math.min(n, seats) : 1;
+                      setMaxChoices(String(clamped));
+                    }}
                   />
                 </div>
               </div>
