@@ -431,6 +431,30 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     toast({ title: 'Link copiado!' });
   };
 
+  // Cálculo do ranking ao vivo
+  const liveCurrentRound = election?.current_round || 1;
+  const liveTotalBallots = new Set(
+    liveVotes
+      .filter(v => (v.round_number || 1) === liveCurrentRound)
+      .map(v => v.ballot_id || v.id)
+  ).size;
+  const liveNeeded = Math.floor(liveTotalBallots / 2) + 1;
+  const liveVoteCounts = liveVotes
+    .filter(v => (v.round_number || 1) === liveCurrentRound && !v.is_blank && v.candidate_id)
+    .reduce((acc: Record<string, number>, v: any) => {
+      acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+      return acc;
+    }, {});
+  const liveRankedCandidates = (candidates || [])
+    .map(c => ({
+      ...c,
+      votes: liveVoteCounts[c.id] || 0,
+      pct: liveTotalBallots > 0 ? Math.round(((liveVoteCounts[c.id] || 0) / liveTotalBallots) * 100) : 0,
+      elected: (liveVoteCounts[c.id] || 0) >= liveNeeded && liveTotalBallots > 0,
+    }))
+    .sort((a, b) => b.votes - a.votes);
+  const liveBlankCount = liveVotes.filter(v => (v.round_number || 1) === liveCurrentRound && v.is_blank).length;
+
   if (status === 'draft') {
     return (
       <div className="space-y-3">
