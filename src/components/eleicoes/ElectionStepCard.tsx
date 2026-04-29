@@ -21,11 +21,11 @@ interface Props {
 export function ElectionStepCard({ state, icon, title, summary, onToggle, onAdvance, canAdvance, advanceLabel, isLastStep, children }: Props) {
   if (state === 'active') {
     return (
-      <div className="rounded-[18px] bg-primary/5 border-2 border-primary/30 shadow-md backdrop-blur-sm p-4 transition-all">
+      <div className="rounded-[18px] bg-white dark:bg-card border-2 border-primary shadow-lg backdrop-blur-sm p-4 transition-all">
         <div className="flex items-center gap-2 mb-3">
           <div className="text-primary">{icon}</div>
-          <h2 className="text-sm font-semibold flex-1">{title}</h2>
-          <span className="text-[10px] font-medium text-primary uppercase tracking-wide">Etapa atual</span>
+          <h2 className="text-sm font-semibold flex-1 text-foreground">{title}</h2>
+          <span className="text-[10px] font-semibold text-primary-foreground bg-primary px-2 py-0.5 rounded-full uppercase tracking-wide">Etapa atual</span>
         </div>
         {children}
         {onAdvance && !isLastStep && (
@@ -45,7 +45,7 @@ export function ElectionStepCard({ state, icon, title, summary, onToggle, onAdva
       <button
         type="button"
         onClick={onToggle}
-        className="w-full rounded-[14px] bg-success/10 border border-success/30 px-3 py-2.5 flex items-center gap-2 text-left hover:bg-success/15 transition-colors"
+        className="w-full rounded-[14px] bg-white/95 dark:bg-card/95 border border-success/40 shadow-sm px-3 py-2.5 flex items-center gap-2 text-left hover:bg-success/10 transition-colors"
       >
         <div className="w-6 h-6 rounded-full bg-success text-success-foreground flex items-center justify-center shrink-0">
           <Check className="h-3.5 w-3.5" />
@@ -62,8 +62,8 @@ export function ElectionStepCard({ state, icon, title, summary, onToggle, onAdva
   return (
     <div
       className={cn(
-        'w-full rounded-[14px] bg-muted/40 border border-dashed border-border px-3 py-2.5 flex items-center gap-2',
-        onToggle ? 'cursor-pointer hover:bg-muted/60' : 'opacity-70 cursor-not-allowed',
+        'w-full rounded-[14px] bg-white/80 dark:bg-card/80 border border-dashed border-border shadow-sm px-3 py-2.5 flex items-center gap-2',
+        onToggle ? 'cursor-pointer hover:bg-white dark:hover:bg-card' : 'opacity-80 cursor-not-allowed',
       )}
       onClick={onToggle}
     >

@@ -153,7 +153,7 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
         {candidates.map((c) => {
           const photos = getPhotoUrls(c);
           return (
-            <div key={c.id} className="flex flex-col items-center gap-1.5 p-2 border border-border/60 bg-muted/40 rounded-lg">
+            <div key={c.id} className="flex flex-col items-center gap-1.5 p-2 border border-border bg-background shadow-sm rounded-lg">
               {/* Photo display */}
               <div className={`relative ${isCamisa ? 'w-full aspect-square' : 'w-16 h-16'} rounded-lg overflow-hidden bg-muted flex items-center justify-center`}>
                 {photos.length > 0 ? (
