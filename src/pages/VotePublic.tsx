@@ -923,7 +923,7 @@ export default function VotePublic() {
                   if (!isMultiSeat) { setConfirmCandidate(c); return; }
                   setSelectedCandidates((current) => {
                     if (current.some((candidate) => candidate.id === c.id)) return current.filter((candidate) => candidate.id !== c.id);
-                    if (current.length + blankSlots >= maxChoices) return current;
+                    if (current.length >= maxChoices) return current;
                     return [...current, c];
                   });
                 }}
@@ -946,20 +946,19 @@ export default function VotePublic() {
 
         {isMultiSeat && (
           <div className="sticky bottom-3 mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
-            <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2 text-sm">
-              <span className="font-semibold text-foreground">Brancos / Nulos</span>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-9 w-9" disabled={blankSlots === 0} onClick={() => setBlankSlots((value) => Math.max(0, value - 1))}>−</Button>
-                <strong className="w-8 text-center text-foreground">{blankSlots}</strong>
-                <Button variant="outline" size="icon" className="h-9 w-9" disabled={totalSelectedMarks >= maxChoices} onClick={() => { void primeAudio(); setBlankSlots((value) => Math.min(maxChoices - selectedCandidates.length, value + 1)); }}>+</Button>
-              </div>
-            </div>
             <Button
               className="h-12 w-full text-base font-bold"
-              disabled={totalSelectedMarks === 0}
-              onClick={() => { void primeAudio(); setConfirmSelection(true); }}
+              disabled={selectedCandidates.length === 0}
+              onClick={() => {
+                void primeAudio();
+                if (selectedCandidates.length < maxChoices) {
+                  setShowNullWarning(true);
+                } else {
+                  setConfirmSelection(true);
+                }
+              }}
             >
-              Confirmar cédula ({totalSelectedMarks}/{maxChoices})
+              Confirmar cédula ({selectedCandidates.length}/{maxChoices})
             </Button>
             <Button
               variant="outline"
