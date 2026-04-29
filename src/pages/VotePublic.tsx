@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import voteConfirmSound from '@/assets/vote-confirm.mp3';
 
-interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; }
+interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; round2_candidate_ids?: string[] | null; }
 interface Candidate { id: string; name: string; photo_url: string | null; photo_urls?: string[]; display_order: number; birth_date?: string | null; }
 
 function getDeviceId(): string {
@@ -149,14 +149,12 @@ function computeElectedIds(
           .forEach((r) => elected.add(r.candidate_id));
       }
     } else if (round < MAX_ROUNDS) {
+      // 2º escrutínio: maioria SIMPLES (top N), sem exigir 50%+1
       const cutoffCount = rows[vagas - 1]?.count;
       const nextCount = rows[vagas]?.count;
       const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
       if (!tieAtCutoff) {
-        rows
-          .filter((r) => r.count >= needed)
-          .slice(0, vagas)
-          .forEach((r) => elected.add(r.candidate_id));
+        rows.slice(0, vagas).forEach((r) => elected.add(r.candidate_id));
       }
     } else {
       const cutoffCount = rows[vagas - 1]?.count;
@@ -302,13 +300,17 @@ export default function VotePublic() {
     ? candidates
     : currentRound <= 1
       ? candidates.filter((c) => !electedIds.includes(c.id))
-      : getTopForNextRound(
-          allVotes,
-          candidates.filter((c) => !electedIds.includes(c.id)),
-          electedIds,
-          currentRound - 1,
-          remainingSeats + 1,
-        );
+      : (election?.round2_candidate_ids && election.round2_candidate_ids.length > 0)
+        ? candidates.filter(
+            (c) => election.round2_candidate_ids!.includes(c.id) && !electedIds.includes(c.id),
+          )
+        : getTopForNextRound(
+            allVotes,
+            candidates.filter((c) => !electedIds.includes(c.id)),
+            electedIds,
+            currentRound - 1,
+            remainingSeats + 1,
+          );
   const totalSelectedMarks = selectedCandidates.length + blankSlots;
 
   useEffect(() => {
