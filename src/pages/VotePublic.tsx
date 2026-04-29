@@ -746,11 +746,81 @@ export default function VotePublic() {
     );
   }
 
+  // Tela de alerta: cédula incompleta (votos serão contados como nulos)
+  if (showNullWarning && isMultiSeat) {
+    const nullCount = maxChoices - selectedCandidates.length;
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-8">
+        <div className="w-full max-w-md rounded-2xl border-2 border-warning bg-warning/10 p-6 shadow-lg flex flex-col gap-5">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warning text-warning-foreground text-4xl font-bold">
+              ⚠️
+            </div>
+            <h2 className="text-2xl font-extrabold text-foreground">Atenção!</h2>
+            <p className="text-foreground font-medium text-base">
+              Você preencheu <strong>{selectedCandidates.length} de {maxChoices}</strong> votos disponíveis.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-background border border-warning/40 p-4 flex flex-col gap-2">
+            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-1">Sua cédula ficará assim:</p>
+
+            {selectedCandidates.map((c, i) => (
+              <div key={c.id} className="flex items-center gap-3 py-1">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">{i + 1}</span>
+                <span className="font-semibold text-foreground">{c.name}</span>
+              </div>
+            ))}
+
+            {Array.from({ length: nullCount }).map((_, i) => (
+              <div key={`null-${i}`} className="flex items-center gap-3 py-1">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-warning text-warning-foreground text-sm font-bold">
+                  {selectedCandidates.length + i + 1}
+                </span>
+                <span className="font-semibold text-warning">Voto Nulo</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-xl bg-warning/20 border border-warning px-4 py-3 text-center">
+            <p className="text-foreground font-bold text-sm">
+              {nullCount === 1
+                ? `1 voto será contado como NULO.`
+                : `${nullCount} votos serão contados como NULO.`}
+            </p>
+            <p className="text-muted-foreground text-sm mt-1">
+              Você ainda pode voltar e selecionar mais candidatos.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => {
+                void primeAudio();
+                setShowNullWarning(false);
+                setConfirmSelection(true);
+              }}
+              className="w-full rounded-xl bg-primary py-4 text-lg font-extrabold text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+            >
+              Estou ciente — Confirmar assim mesmo
+            </button>
+            <button
+              onClick={() => setShowNullWarning(false)}
+              className="w-full rounded-xl border-2 border-border py-4 text-lg font-semibold text-foreground hover:bg-muted transition-colors"
+            >
+              ← Voltar e selecionar mais
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Confirm modal
   if (confirmCandidate || confirmBlank || confirmSelection) {
     const confirmPhotos = confirmCandidate ? getPhotoUrls(confirmCandidate) : [];
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
-    const confirmationBlankSlots = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? blankSlots : 0);
+    const confirmationBlankSlots = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? autoBlankSlots : 0);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-6">
