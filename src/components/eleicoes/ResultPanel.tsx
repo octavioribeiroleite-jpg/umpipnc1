@@ -6,8 +6,13 @@ import { Trophy, CheckCircle, Medal, Users, FileX, AlertTriangle } from 'lucide-
 interface ResultPanelProps {
   electionId: string;
   totalPresent: number;
-  candidates: { id: string; name: string; photo_url: string | null; birth_date?: string | null }[];
+  candidates: { id: string; name: string; photo_url: string | null; photo_urls?: string[] | null; birth_date?: string | null }[];
   election?: { seats_count?: number; current_round?: number; majority_rule?: string };
+}
+
+function getCandidatePhoto(candidate: { photo_url: string | null; photo_urls?: string[] | null }): string | null {
+  if (Array.isArray(candidate.photo_urls) && candidate.photo_urls.length > 0) return candidate.photo_urls[0];
+  return candidate.photo_url || null;
 }
 
 export function ResultPanel({ electionId, totalPresent, candidates, election }: ResultPanelProps) {
@@ -164,26 +169,71 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
         </div>
       </div>
 
-      {/* Eleitos em destaque */}
+      {/* Eleitos em destaque — Cards grandes */}
       {allElected.length > 0 && (
-        <div className="rounded-xl border border-success/40 bg-success/10 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Trophy className="h-4 w-4 text-success" />
-            <span className="text-sm font-semibold text-foreground">
-              {allElected.length === 1 ? 'Eleito' : 'Eleitos'}
-            </span>
+        <div className="rounded-2xl border-2 border-success/50 bg-gradient-to-b from-success/10 to-success/5 p-5 shadow-md">
+          <div className="flex items-center justify-center gap-2 mb-5">
+            <Trophy className="h-6 w-6 text-warning" />
+            <h3 className="text-lg font-extrabold text-foreground tracking-tight">
+              {allElected.length === 1 ? 'Eleito' : `${allElected.length} Eleitos`}
+            </h3>
+            <Trophy className="h-6 w-6 text-warning" />
           </div>
-          <div className="flex flex-wrap gap-2">
-            {allElected.map((id) => {
+
+          <div className={`grid gap-4 ${allElected.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' : allElected.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'}`}>
+            {allElected.map((id, index) => {
               const c = candidates.find((x) => x.id === id);
+              const photo = c ? getCandidatePhoto(c) : null;
+
+              const positionConfig = [
+                { icon: '🥇', label: '1º Eleito', ring: 'ring-warning/40', bg: 'bg-warning/10', border: 'border-warning' },
+                { icon: '🥈', label: '2º Eleito', ring: 'ring-muted-foreground/30', bg: 'bg-muted/40', border: 'border-muted-foreground/40' },
+                { icon: '🥉', label: '3º Eleito', ring: 'ring-warning/30', bg: 'bg-warning/5', border: 'border-warning/60' },
+              ];
+              const pos = positionConfig[index] || { icon: '✅', label: `${index + 1}º Eleito`, ring: 'ring-success/30', bg: 'bg-success/10', border: 'border-success' };
+
+              const roundWithElected = roundResults.find((r) => r.electedIds.includes(id));
+              const voteRow = roundWithElected?.rows.find((r) => r.candidate_id === id);
+              const voteCount = voteRow?.count ?? null;
+              const votePct = roundWithElected && roundWithElected.totalBallots > 0 && voteCount !== null
+                ? Math.round((voteCount / roundWithElected.totalBallots) * 100)
+                : null;
+
               return (
                 <div
                   key={id}
-                  className="flex items-center gap-2 rounded-lg bg-background border border-success/30 px-3 py-2 shadow-sm"
+                  className={`flex flex-col items-center gap-3 rounded-2xl border-2 ${pos.border} ${pos.bg} p-4 shadow-sm ring-2 ${pos.ring} transition-all`}
                 >
-                  <CheckCircle className="h-4 w-4 text-success shrink-0" />
-                  <span className="text-sm font-medium text-foreground">
-                    {c?.name || 'Desconhecido'}
+                  <span className="text-3xl">{pos.icon}</span>
+
+                  <div className={`h-24 w-24 overflow-hidden rounded-full border-4 ${pos.border} shadow-lg ring-4 ${pos.ring}`}>
+                    {photo ? (
+                      <img src={photo} alt={c?.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-muted">
+                        <CheckCircle className="h-10 w-10 text-success" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-center">
+                    <p className="text-base font-extrabold text-foreground leading-tight">
+                      {c?.name || 'Desconhecido'}
+                    </p>
+                    <p className="text-xs font-semibold text-muted-foreground mt-0.5">{pos.label}</p>
+                  </div>
+
+                  {voteCount !== null && (
+                    <div className="flex items-center gap-2 rounded-full bg-background/80 border border-border px-3 py-1 shadow-sm">
+                      <span className="text-sm font-bold text-foreground">{voteCount} votos</span>
+                      {votePct !== null && (
+                        <span className="text-xs text-muted-foreground">({votePct}%)</span>
+                      )}
+                    </div>
+                  )}
+
+                  <span className="rounded-full bg-success px-3 py-1 text-xs font-bold text-success-foreground shadow">
+                    ✓ ELEITO
                   </span>
                 </div>
               );
