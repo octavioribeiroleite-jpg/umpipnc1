@@ -564,15 +564,25 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     <>
       <div className="rounded-xl border border-border bg-background p-4 shadow-sm space-y-4">
         {/* Mode label */}
-        <div className="flex items-center gap-2">
-          {votingMode === 'individual' ? (
-            <Smartphone className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <Monitor className="h-4 w-4 text-muted-foreground" />
-          )}
-          <span className="text-sm font-medium text-muted-foreground">
-            Modo: {votingMode === 'individual' ? 'Voto Individual' : votingMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
-          </span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {votingMode === 'individual' ? (
+              <Smartphone className="h-4 w-4 text-muted-foreground shrink-0" />
+            ) : (
+              <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
+            )}
+            <span className="text-sm font-medium text-muted-foreground truncate">
+              Modo: {votingMode === 'individual' ? 'Voto Individual' : votingMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs shrink-0"
+            onClick={() => setConfirmEdit(true)}
+          >
+            <Pencil className="h-3 w-3 mr-1" /> Editar configuração
+          </Button>
         </div>
         {isMultiSeat && (
           <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm">
