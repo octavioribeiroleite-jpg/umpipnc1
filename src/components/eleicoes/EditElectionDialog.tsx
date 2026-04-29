@@ -40,17 +40,19 @@ export function EditElectionDialog({ open, onOpenChange, election, onSaved }: Ed
 
   const isCargo = (election.type || 'cargo') === 'cargo';
 
-  // Reset ao abrir
+  // Reset ao abrir — depende APENAS de `open` para não sobrescrever
+  // o que o usuário está digitando quando `election` é refetch (realtime).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (open) {
       setName(election.name || '');
       setPosition(election.position || '');
-      setSeatsCount(String(election.seats_count || 1));
-      setMaxChoices(String(election.max_choices_per_ballot || 1));
+      setSeatsCount(String(election.seats_count ?? 1));
+      setMaxChoices(String(election.max_choices_per_ballot ?? 1));
       setVotingMode(election.voting_mode || 'shared');
       setMajorityRule(election.majority_rule || 'simple');
     }
-  }, [open, election]);
+  }, [open]);
 
   // (clamp acontece apenas ao salvar, para não mexer enquanto o usuário digita)
 
