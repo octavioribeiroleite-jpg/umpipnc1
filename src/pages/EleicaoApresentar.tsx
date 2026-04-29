@@ -18,6 +18,12 @@ interface Candidate {
   id: string;
   name: string;
   photo_url: string | null;
+  photo_urls?: string[] | null;
+}
+
+function getCandidatePhoto(candidate: { photo_url?: string | null; photo_urls?: string[] | null }): string | null {
+  if (Array.isArray(candidate.photo_urls) && candidate.photo_urls.length > 0) return candidate.photo_urls[0];
+  return candidate.photo_url || null;
 }
 
 export default function EleicaoApresentar() {
@@ -106,6 +112,7 @@ export default function EleicaoApresentar() {
   const isValid = totalVotes === totalPresent;
   const winner = results[0];
   const winnerCandidate = winner ? candidates.find((c) => c.id === winner.candidate_id) : null;
+  const needed = totalVotes > 0 ? Math.floor(totalVotes / 2) + 1 : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/40 flex flex-col">
@@ -162,49 +169,62 @@ export default function EleicaoApresentar() {
             {/* Ranking */}
             <div className="space-y-3">
               <h3 className="text-xl lg:text-2xl font-semibold text-center">Ranking completo</h3>
-              <div className="space-y-2 lg:space-y-3">
+              <div className={`grid gap-4 ${
+                results.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' :
+                results.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' :
+                results.length <= 4 ? 'grid-cols-2 sm:grid-cols-4' :
+                'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
+              }`}>
                 {results.map((r, i) => {
-                  const c = candidates.find((c) => c.id === r.candidate_id);
-                  const candidatePct =
-                    totalVotes > 0 ? Math.round((r.count / totalVotes) * 100) : 0;
+                  const c = candidates.find((x) => x.id === r.candidate_id);
+                  const photo = c ? getCandidatePhoto(c) : null;
+                  const candidatePct = totalVotes > 0 ? Math.round((r.count / totalVotes) * 100) : 0;
+                  const elected = needed > 0 && r.count >= needed;
+                  const posEmoji = ['🥇', '🥈', '🥉'][i] || `${i + 1}º`;
+                  const posLabel = ['1º', '2º', '3º'][i] || `${i + 1}º`;
                   return (
                     <div
                       key={r.candidate_id}
-                      className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-xl bg-card border border-border/60 shadow-sm"
+                      className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 shadow-md transition-all ${
+                        elected
+                          ? 'border-warning bg-warning/10 ring-2 ring-warning/30'
+                          : i === 0
+                          ? 'border-primary/60 bg-primary/5'
+                          : 'border-border bg-card'
+                      }`}
                     >
-                      <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-muted flex items-center justify-center font-bold text-sm lg:text-base shrink-0">
-                        {i + 1}
-                      </div>
-                      <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-lg overflow-hidden bg-muted shrink-0">
-                        {c?.photo_url ? (
-                          <img
-                            src={c.photo_url}
-                            alt={c.name}
-                            className="w-full h-full object-cover"
-                          />
+                      <span className="text-2xl">{posEmoji}</span>
+                      <div className={`h-20 w-20 lg:h-24 lg:w-24 overflow-hidden rounded-full border-4 shadow-lg ${
+                        elected ? 'border-warning' : i === 0 ? 'border-primary' : 'border-border'
+                      }`}>
+                        {photo ? (
+                          <img src={photo} alt={c?.name} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <UserCheck className="h-6 w-6 text-muted-foreground" />
+                          <div className="flex h-full w-full items-center justify-center bg-muted text-2xl font-bold text-muted-foreground">
+                            {c?.name?.charAt(0).toUpperCase() || <UserCheck className="h-8 w-8" />}
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-base lg:text-lg truncate">
-                          {c?.name || 'Desconhecido'}
-                        </p>
-                        <div className="w-full bg-muted rounded-full h-2 lg:h-2.5 mt-1.5">
-                          <div
-                            className="bg-primary rounded-full h-full transition-all"
-                            style={{ width: `${candidatePct}%` }}
-                          />
-                        </div>
+                      <p className="text-center text-sm lg:text-base font-extrabold text-foreground leading-tight">
+                        {c?.name || 'Desconhecido'}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-semibold">{posLabel} lugar</p>
+                      <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1">
+                        <span className="text-sm font-bold text-foreground">{r.count}</span>
+                        <span className="text-xs text-muted-foreground">votos</span>
+                        <span className="text-xs font-semibold text-primary">({candidatePct}%)</span>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xl lg:text-2xl font-bold">{r.count}</p>
-                        <p className="text-xs lg:text-sm text-muted-foreground">
-                          {candidatePct}%
-                        </p>
+                      <div className="w-full bg-muted rounded-full h-2 mt-1">
+                        <div
+                          className={`h-2 rounded-full transition-all ${elected ? 'bg-warning' : i === 0 ? 'bg-primary' : 'bg-muted-foreground/40'}`}
+                          style={{ width: `${candidatePct}%` }}
+                        />
                       </div>
+                      {elected && (
+                        <span className="absolute -top-2 -right-2 rounded-full bg-warning px-2 py-0.5 text-[10px] font-extrabold text-warning-foreground shadow">
+                          ✓ ELEITO
+                        </span>
+                      )}
                     </div>
                   );
                 })}
