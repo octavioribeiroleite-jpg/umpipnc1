@@ -263,12 +263,12 @@ export default function VotePublic() {
   const [voting, setVoting] = useState(false);
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
   const [selectedCandidates, setSelectedCandidates] = useState<Candidate[]>([]);
-  const [blankSlots, setBlankSlots] = useState(0);
   const [confirmSelection, setConfirmSelection] = useState(false);
   const [confirmBlank, setConfirmBlank] = useState(false);
   const [voteSuccess, setVoteSuccess] = useState(false);
   const [readyToVote, setReadyToVote] = useState(false);
   const [alreadyVoted, setAlreadyVoted] = useState(false);
+  const [showNullWarning, setShowNullWarning] = useState(false);
 
   const [urnaAuthenticated, setUrnaAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
@@ -311,7 +311,8 @@ export default function VotePublic() {
             currentRound - 1,
             remainingSeats + 1,
           );
-  const totalSelectedMarks = selectedCandidates.length + blankSlots;
+  const autoBlankSlots = Math.max(0, maxChoices - selectedCandidates.length);
+  const totalSelectedMarks = selectedCandidates.length + autoBlankSlots;
 
   useEffect(() => {
     ensureAudio();
