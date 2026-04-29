@@ -25,13 +25,36 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
   const [newName, setNewName] = useState('');
   const [importing, setImporting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [optimisticOverrides, setOptimisticOverrides] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  const presentCount = attendance.filter((a) => a.present).length;
+  const presentCount = attendance.filter((a) =>
+    optimisticOverrides[a.id] !== undefined ? optimisticOverrides[a.id] : a.present
+  ).length;
 
   const handleToggle = async (id: string, present: boolean) => {
-    await supabase.from('election_attendance' as any).update({ present } as any).eq('id', id);
-    onRefresh();
+    // 1. Optimistic update — UI atualiza instantaneamente
+    setOptimisticOverrides((prev) => ({ ...prev, [id]: present }));
+
+    // 2. Persiste no banco em segundo plano
+    const { error } = await supabase
+      .from('election_attendance' as any)
+      .update({ present } as any)
+      .eq('id', id);
+
+    if (error) {
+      // Reverte se falhar
+      setOptimisticOverrides((prev) => ({ ...prev, [id]: !present }));
+      toast({ title: 'Erro ao atualizar presença', variant: 'destructive' });
+    } else {
+      // Limpa o override após confirmação e sincroniza
+      setOptimisticOverrides((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      onRefresh();
+    }
   };
 
   const handleAdd = async () => {
@@ -109,21 +132,26 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
       </div>
 
       <div className="space-y-0.5 max-h-60 overflow-y-auto">
-        {attendance.map((item) => (
-          <div key={item.id} className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-muted/50">
-            <Checkbox
-              checked={item.present}
-              onCheckedChange={(checked) => handleToggle(item.id, !!checked)}
-              disabled={disabled}
-            />
-            <span className="flex-1 text-sm truncate">{item.name}</span>
-            {!disabled && (
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive shrink-0" onClick={() => handleRemove(item.id)}>
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        ))}
+        {attendance.map((item) => {
+          const isPresent = optimisticOverrides[item.id] !== undefined
+            ? optimisticOverrides[item.id]
+            : item.present;
+          return (
+            <div key={item.id} className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-muted/50">
+              <Checkbox
+                checked={isPresent}
+                onCheckedChange={(checked) => handleToggle(item.id, !!checked)}
+                disabled={disabled}
+              />
+              <span className="flex-1 text-sm truncate">{item.name}</span>
+              {!disabled && (
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive shrink-0" onClick={() => handleRemove(item.id)}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {attendance.length > 0 && (
