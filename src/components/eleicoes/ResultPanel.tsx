@@ -39,7 +39,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
           const roundVotes = votes.filter((v) => (v.round_number || 1) === round);
           const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
 
-          const blankVotes = roundVotes.filter((v) => v.is_blank).length;
+          const blankVotes = roundVotes.filter((v) => v.is_blank === true).length;
 
           const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
             if (!v.is_blank && v.candidate_id && !alreadyElected.has(v.candidate_id))
@@ -291,14 +291,11 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                 })}
               </div>
 
-              {/* Brancos/Nulos */}
+              {/* Votos em branco */}
               {roundResult.blankVotes > 0 && (
-                <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 p-2.5 text-xs">
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <FileX className="h-3.5 w-3.5" />
-                    Brancos / Nulos
-                  </span>
-                  <strong className="text-foreground">{roundResult.blankVotes}</strong>
+                <div className="flex items-center justify-between text-sm text-muted-foreground border-t pt-2 mt-2">
+                  <span>Votos em branco</span>
+                  <span className="font-medium">{roundResult.blankVotes}</span>
                 </div>
               )}
 
@@ -323,6 +320,11 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
         <span className="text-foreground">
           Total presentes: <strong>{totalPresent}</strong>
         </span>
+        {roundResults.reduce((sum, r) => sum + r.blankVotes, 0) > 0 && (
+          <span className="text-muted-foreground text-sm">
+            Total de votos em branco: <strong>{roundResults.reduce((sum, r) => sum + r.blankVotes, 0)}</strong>
+          </span>
+        )}
         <span className={allElected.length >= seatsCount ? 'text-success font-medium' : 'text-warning font-medium'}>
           {allElected.length >= seatsCount
             ? '✅ Todas as vagas preenchidas'
