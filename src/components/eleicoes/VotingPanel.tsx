@@ -59,6 +59,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const { toast } = useToast();
   const inFlightRef = useRef(false);
   const pendingRef = useRef(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
   const [activeTab, setActiveTab] = useState<string>('celular');
@@ -226,7 +227,10 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         table: 'election_votes',
         filter: `election_id=eq.${electionId}`,
       }, () => {
-        fetchVoteCount();
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          void fetchVoteCount();
+        }, 300);
       })
       .subscribe();
 
@@ -239,6 +243,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       supabase.removeChannel(channel);
       inFlightRef.current = false;
       pendingRef.current = false;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [electionId, currentRound, seatsCount, majorityRule]);
 
