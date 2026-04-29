@@ -73,15 +73,13 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
               hasTie = true;
             }
           } else if (round < MAX_ROUNDS) {
+            // 2º escrutínio: MAIORIA SIMPLES — top N com mais votos
             const cutoffCount = rows[vagas - 1]?.count;
             const nextCount = rows[vagas]?.count;
             const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
 
             if (!tieAtCutoff) {
-              electedIds = rows
-                .filter((r) => r.count >= needed)
-                .slice(0, vagas)
-                .map((r) => r.candidate_id);
+              electedIds = rows.slice(0, vagas).map((r) => r.candidate_id);
             } else {
               hasTie = true;
             }
@@ -223,9 +221,9 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                   </span>
                   <span>
                     {roundResult.round === 1
-                      ? `Maioria necessária: ${needed} votos`
-                      : roundResult.round < 3
-                      ? `${roundResult.round}º escrutínio — maioria absoluta entre os top candidatos`
+                      ? `Maioria necessária: ${needed} votos (50%+1)`
+                      : roundResult.round === 2
+                      ? `2º escrutínio — maioria simples entre os top candidatos do 1º`
                       : `3º escrutínio final — empate desfeito pelo mais velho`}
                   </span>
                 </div>
