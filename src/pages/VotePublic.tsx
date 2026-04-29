@@ -270,11 +270,8 @@ export default function VotePublic() {
   const [alreadyVoted, setAlreadyVoted] = useState(false);
   const [showNullWarning, setShowNullWarning] = useState(false);
 
+  // Urna fixa: ativada automaticamente ao escanear o QR Code (token válido).
   const [urnaAuthenticated, setUrnaAuthenticated] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [authUsername, setAuthUsername] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
   const [deviceLabel, setDeviceLabel] = useState('');
   const [invalidToken, setInvalidToken] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -322,14 +319,8 @@ export default function VotePublic() {
     };
   }, []);
 
-  useEffect(() => {
-    if (isUrnaMode && urnaToken) {
-      const stored = sessionStorage.getItem(
-        `urna_authenticated_${electionId}_${urnaToken}`
-      );
-      if (stored === 'true') setUrnaAuthenticated(true);
-    }
-  }, [isUrnaMode, electionId, urnaToken]);
+  // (Sem autenticação manual: a urna fica online automaticamente
+  //  assim que o token do QR Code é validado abaixo.)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -342,6 +333,15 @@ export default function VotePublic() {
           .eq('election_id', electionId).eq('token', urnaToken).single();
         if (deviceError || !deviceData) { setInvalidToken(true); setLoading(false); return; }
         setDeviceLabel((deviceData as any).label || '');
+        // Token válido → marca a urna como ativada (online) automaticamente
+        // e libera a tela de votação sem pedir senha.
+        if (!(deviceData as any).activated) {
+          await supabase
+            .from('election_devices' as any)
+            .update({ activated: true } as any)
+            .eq('token', urnaToken);
+        }
+        setUrnaAuthenticated(true);
       }
 
       const [elRes, caRes] = await Promise.all([
