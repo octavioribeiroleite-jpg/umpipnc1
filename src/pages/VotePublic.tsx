@@ -270,11 +270,8 @@ export default function VotePublic() {
   const [alreadyVoted, setAlreadyVoted] = useState(false);
   const [showNullWarning, setShowNullWarning] = useState(false);
 
+  // Urna fixa: ativada automaticamente ao escanear o QR Code (token válido).
   const [urnaAuthenticated, setUrnaAuthenticated] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [authUsername, setAuthUsername] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
   const [deviceLabel, setDeviceLabel] = useState('');
   const [invalidToken, setInvalidToken] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -322,14 +319,8 @@ export default function VotePublic() {
     };
   }, []);
 
-  useEffect(() => {
-    if (isUrnaMode && urnaToken) {
-      const stored = sessionStorage.getItem(
-        `urna_authenticated_${electionId}_${urnaToken}`
-      );
-      if (stored === 'true') setUrnaAuthenticated(true);
-    }
-  }, [isUrnaMode, electionId, urnaToken]);
+  // (Sem autenticação manual: a urna fica online automaticamente
+  //  assim que o token do QR Code é validado abaixo.)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -342,6 +333,15 @@ export default function VotePublic() {
           .eq('election_id', electionId).eq('token', urnaToken).single();
         if (deviceError || !deviceData) { setInvalidToken(true); setLoading(false); return; }
         setDeviceLabel((deviceData as any).label || '');
+        // Token válido → marca a urna como ativada (online) automaticamente
+        // e libera a tela de votação sem pedir senha.
+        if (!(deviceData as any).activated) {
+          await supabase
+            .from('election_devices' as any)
+            .update({ activated: true } as any)
+            .eq('token', urnaToken);
+        }
+        setUrnaAuthenticated(true);
       }
 
       const [elRes, caRes] = await Promise.all([
@@ -462,28 +462,7 @@ export default function VotePublic() {
     };
   }, [electionId]);
 
-  const handleUrnaAuth = async () => {
-    if (!authUsername.trim() || !authPassword.trim()) return;
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      const { data: email, error: emailError } = await supabase.rpc('get_email_by_username', { _username: authUsername.trim() });
-      if (emailError || !email) { setAuthError('Usuário não encontrado.'); setAuthLoading(false); return; }
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email: email as string, password: authPassword });
-      if (signInError || !signInData.user) { setAuthError('Senha incorreta.'); setAuthLoading(false); return; }
-      const { data: hasRole } = await supabase.rpc('has_management_role', { _user_id: signInData.user.id });
-      await supabase.auth.signOut();
-      if (!hasRole) { setAuthError('Apenas admin ou diretoria podem ativar a urna.'); setAuthLoading(false); return; }
-      if (urnaToken) {
-        await supabase.from('election_devices' as any).update({ activated: true } as any).eq('token', urnaToken);
-      }
-      sessionStorage.setItem(`urna_authenticated_${electionId}_${urnaToken}`, 'true');
-      setUrnaAuthenticated(true);
-    } catch {
-      setAuthError('Erro ao autenticar. Tente novamente.');
-    }
-    setAuthLoading(false);
-  };
+  // (handleUrnaAuth removido — urna agora é ativada automaticamente pelo QR Code.)
 
   const ensureAudio = () => {
     if (!audioRef.current) {
@@ -696,36 +675,7 @@ export default function VotePublic() {
     );
   }
 
-  // Urna auth screen
-  if (isUrnaMode && !urnaAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
-        <div className="max-w-sm w-full space-y-6">
-          <div className="text-center">
-            <Monitor className="h-16 w-16 text-primary mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Ativar Urna Fixa</h1>
-            {deviceLabel && <p className="text-primary font-medium mt-1">{deviceLabel}</p>}
-            <p className="text-muted-foreground mt-2 text-sm">Digite suas credenciais de admin ou diretoria para liberar esta urna.</p>
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="urna-username">Usuário</Label>
-              <Input id="urna-username" value={authUsername} onChange={(e) => setAuthUsername(e.target.value)} placeholder="Digite seu usuário" onKeyDown={(e) => e.key === 'Enter' && handleUrnaAuth()} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="urna-password">Senha</Label>
-              <Input id="urna-password" type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Digite sua senha" onKeyDown={(e) => e.key === 'Enter' && handleUrnaAuth()} />
-            </div>
-            {authError && <p className="text-sm text-destructive text-center">{authError}</p>}
-            <Button onClick={() => { void primeAudio(); void handleUrnaAuth(); }} disabled={authLoading || !authUsername.trim() || !authPassword.trim()} className="w-full" size="lg">
-              {authLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogIn className="h-4 w-4 mr-2" />}
-              Autenticar
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // (Tela de autenticação removida — urna fica online direto pelo QR Code.)
 
   if (alreadyVoted) {
     return (
