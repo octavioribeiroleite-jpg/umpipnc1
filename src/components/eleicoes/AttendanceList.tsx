@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,6 +28,24 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
   const [optimisticOverrides, setOptimisticOverrides] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
+  // Limpa cada override SOMENTE quando o item do parent já reflete o valor otimista.
+  // Isso evita o "piscar" entre apagar o override e o onRefresh trazer o dado novo.
+  useEffect(() => {
+    setOptimisticOverrides((prev) => {
+      const next: Record<string, boolean> = {};
+      let changed = false;
+      for (const [id, value] of Object.entries(prev)) {
+        const item = attendance.find((a) => a.id === id);
+        if (item && item.present === value) {
+          changed = true; // descarta — parent já está sincronizado
+        } else {
+          next[id] = value;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [attendance]);
+
   const presentCount = attendance.filter((a) =>
     optimisticOverrides[a.id] !== undefined ? optimisticOverrides[a.id] : a.present
   ).length;
@@ -44,15 +62,14 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
 
     if (error) {
       // Reverte se falhar
-      setOptimisticOverrides((prev) => ({ ...prev, [id]: !present }));
-      toast({ title: 'Erro ao atualizar presença', variant: 'destructive' });
-    } else {
-      // Limpa o override após confirmação e sincroniza
       setOptimisticOverrides((prev) => {
         const next = { ...prev };
         delete next[id];
         return next;
       });
+      toast({ title: 'Erro ao atualizar presença', variant: 'destructive' });
+    } else {
+      // Mantém o override até o useEffect detectar que o parent sincronizou.
       onRefresh();
     }
   };
