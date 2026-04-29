@@ -567,7 +567,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             variant="outline"
             size="sm"
             className="h-7 text-xs shrink-0"
-            onClick={() => setConfirmEdit(true)}
+            onClick={() => setEditOpen(true)}
           >
             <Pencil className="h-3 w-3 mr-1" /> Editar configuração
           </Button>
@@ -1065,25 +1065,21 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={confirmEdit} onOpenChange={setConfirmEdit}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Editar configuração da votação?</AlertDialogTitle>
-            <AlertDialogDescription>
-              A votação voltará para o modo de configuração (rascunho) para você ajustar candidatos, presença, modo de votação ou dispositivos.
-              <br /><br />
-              <strong className="text-destructive">Atenção:</strong> todos os votos já registrados serão apagados, e o escrutínio voltará para o 1º. Presença e candidatos serão mantidos.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEditConfig} disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              Sim, editar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <EditElectionDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        election={{
+          id: electionId,
+          name: electionName,
+          position: (election as any)?.position,
+          type: (election as any)?.type,
+          seats_count: election?.seats_count,
+          max_choices_per_ballot: election?.max_choices_per_ballot,
+          voting_mode: votingMode,
+          majority_rule: election?.majority_rule,
+        }}
+        onSaved={onRefresh}
+      />
     </>
   );
 }
