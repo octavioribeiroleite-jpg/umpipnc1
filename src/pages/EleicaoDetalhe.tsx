@@ -42,7 +42,7 @@ export default function EleicaoDetalhe() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeStep, setActiveStep] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState<string | null>('candidatos');
 
   const fetchAll = async () => {
     if (!id) return;
@@ -120,7 +120,7 @@ export default function EleicaoDetalhe() {
     return idx === -1 ? steps.length - 1 : idx;
   }, [steps, completion]);
 
-  const currentStepKey = activeStep || steps[autoCurrentIndex]?.key;
+  const currentStepKey = activeStep ?? steps[autoCurrentIndex]?.key;
   const currentIndex = steps.findIndex((s) => s.key === currentStepKey);
 
   if (loading || !election) {
