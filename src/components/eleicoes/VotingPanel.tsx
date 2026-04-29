@@ -253,6 +253,31 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     };
   }, [electionId, currentRound, seatsCount, majorityRule]);
 
+  // Painel de ranking ao vivo — busca todos os votos e atualiza via Realtime
+  useEffect(() => {
+    if (!electionId) return;
+    const fetchVotes = async () => {
+      const { data } = await supabase
+        .from('election_votes' as any)
+        .select('*')
+        .eq('election_id', electionId);
+      setLiveVotes((data as any[]) || []);
+    };
+    fetchVotes();
+
+    const channel = supabase
+      .channel(`votingpanel-votes-${electionId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'election_votes',
+        filter: `election_id=eq.${electionId}`,
+      }, () => { void fetchVotes(); })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [electionId]);
+
   useEffect(() => {
     if (voteCount < totalPresent || !electionId) {
       setPartialRows([]);
