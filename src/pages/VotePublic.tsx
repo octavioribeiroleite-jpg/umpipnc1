@@ -444,10 +444,10 @@ export default function VotePublic() {
             setVoteSuccess(false);
             setReadyToVote(false);
             setSelectedCandidates([]);
-            setBlankSlots(0);
             setConfirmCandidate(null);
             setConfirmBlank(false);
             setConfirmSelection(false);
+            setShowNullWarning(false);
             setAlreadyVoted(false);
             return;
           }
@@ -614,7 +614,7 @@ export default function VotePublic() {
 
   const handleVote = async () => {
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
-    const blanksToRecord = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? blankSlots : 0);
+    const blanksToRecord = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? autoBlankSlots : 0);
     if ((!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
@@ -639,9 +639,9 @@ export default function VotePublic() {
     await playUrnaSound();
     setConfirmCandidate(null);
     setSelectedCandidates([]);
-    setBlankSlots(0);
     setConfirmBlank(false);
     setConfirmSelection(false);
+    setShowNullWarning(false);
     setVoteSuccess(true);
     setVoting(false);
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
