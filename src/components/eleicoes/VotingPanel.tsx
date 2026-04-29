@@ -28,7 +28,12 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface Device { id: string; label: string; token: string; activated: boolean; }
-interface Candidate { id: string; name: string; birth_date?: string | null; }
+interface Candidate { id: string; name: string; birth_date?: string | null; photo_url?: string | null; photo_urls?: string[] | null; }
+
+function getCandidatePhoto(candidate: { photo_url?: string | null; photo_urls?: string[] | null }): string | null {
+  if (Array.isArray(candidate.photo_urls) && candidate.photo_urls.length > 0) return candidate.photo_urls[0];
+  return candidate.photo_url || null;
+}
 
 interface VotingPanelProps {
   electionId: string;
@@ -54,6 +59,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [partialRows, setPartialRows] = useState<{ candidate_id: string; name: string; count: number; pct: number; elected: boolean }[]>([]);
   const [partialBlanks, setPartialBlanks] = useState(0);
   const [partialNeeded, setPartialNeeded] = useState(0);
+  const [liveVotes, setLiveVotes] = useState<any[]>([]);
   type VotingPhase = 'voting' | 'apurando' | 'resultado';
   const [phase, setPhase] = useState<VotingPhase>('voting');
   const { toast } = useToast();
