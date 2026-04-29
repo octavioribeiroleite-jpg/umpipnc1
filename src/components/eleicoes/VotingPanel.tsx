@@ -38,7 +38,7 @@ interface VotingPanelProps {
   votingMode: string;
   devices: Device[];
   candidates: Candidate[];
-  election?: { seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string };
+  election?: { seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; round2_candidate_ids?: string[] | null };
   onRefresh: () => void;
 }
 
@@ -125,19 +125,16 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               .forEach(([id]) => elected.add(id));
           }
         } else if (round < MAX_ROUNDS) {
-          // 2º escrutínio: top candidatos disputam maioria absoluta
+          // 2º escrutínio: maioria SIMPLES — elege o top N (sem exigir 50%+1)
           const cutoffIndex = vagas - 1;
           const cutoffCount = sorted[cutoffIndex]?.[1];
           const nextCount = sorted[vagas]?.[1];
           const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
 
           if (!tieAtCutoff) {
-            sorted
-              .filter(([, count]) => (count as number) >= needed)
-              .slice(0, vagas)
-              .forEach(([id]) => elected.add(id));
+            sorted.slice(0, vagas).forEach(([id]) => elected.add(id));
           }
-          // Se empate: não elege ninguém, vai pro próximo escrutínio
+          // Se empate: não elege ninguém, vai pro 3º escrutínio
         } else {
           // 3º escrutínio (MAX_ROUNDS): desempate pelo mais velho
           const cutoffIndex = vagas - 1;
@@ -286,8 +283,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             if (currentRound === 1) {
               elected = majorityRule === 'absolute_50' ? r.count >= needed : true;
             } else {
-              // 2º e 3º escrutínio: exige maioria absoluta
-              elected = r.count >= needed;
+              // 2º e 3º escrutínio: maioria SIMPLES (top N)
+              elected = true;
             }
           }
           return {
@@ -333,7 +330,61 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
   const handleNextRound = async () => {
     setLoading(true);
-    await supabase.from('elections' as any).update({ status: 'open', current_round: currentRound + 1 } as any).eq('id', electionId);
+
+    // Ao avançar do 1º para o 2º escrutínio, calcular e salvar os top 2
+    // candidatos não eleitos do 1º escrutínio para limitar quem aparece na urna.
+    const updatePayload: any = {
+      status: 'open',
+      current_round: currentRound + 1,
+    };
+
+    if (currentRound === 1) {
+      const { data: voteRows } = await supabase
+        .from('election_votes' as any)
+        .select('candidate_id, ballot_id, is_blank, round_number')
+        .eq('election_id', electionId);
+      const votes = (voteRows as any[]) || [];
+      const round1Votes = votes.filter((v) => (v.round_number || 1) === 1);
+      const totalBallots1 = new Set(round1Votes.map((v) => v.ballot_id)).size;
+      const needed1 = Math.floor(totalBallots1 / 2) + 1;
+
+      const counts: Record<string, number> = {};
+      round1Votes.forEach((v) => {
+        if (!v.is_blank && v.candidate_id) {
+          counts[v.candidate_id] = (counts[v.candidate_id] || 0) + 1;
+        }
+      });
+
+      // IDs dos eleitos do 1º escrutínio (mesma regra usada em fetchVoteCount)
+      const sortedR1 = Object.entries(counts).sort((a, b) => (b[1] as number) - (a[1] as number));
+      const aprovados = sortedR1.filter(([, c]) =>
+        majorityRule === 'absolute_50' ? (c as number) >= needed1 : true
+      );
+      const cutoffCount = aprovados[seatsCount - 1]?.[1];
+      const nextCount = aprovados[seatsCount]?.[1];
+      const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
+      const electedR1 = new Set<string>();
+      if (!tieAtCutoff) {
+        aprovados.slice(0, seatsCount).forEach(([id]) => electedR1.add(id));
+      } else {
+        aprovados
+          .filter(([, c]) => (c as number) > (cutoffCount as number))
+          .forEach(([id]) => electedR1.add(id));
+      }
+
+      // Top N+1 (= número de vagas restantes + 1; mínimo 2) não eleitos
+      const vagasRestantes = Math.max(0, seatsCount - electedR1.size);
+      const topCount = Math.max(2, vagasRestantes + 1);
+      const top = Object.entries(counts)
+        .filter(([id]) => !electedR1.has(id))
+        .sort((a, b) => (b[1] as number) - (a[1] as number))
+        .slice(0, topCount)
+        .map(([id]) => id);
+
+      updatePayload.round2_candidate_ids = top;
+    }
+
+    await supabase.from('elections' as any).update(updatePayload as any).eq('id', electionId);
     toast({ title: `${currentRound + 1}º escrutínio iniciado` });
     setLoading(false);
     onRefresh();
@@ -474,9 +525,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               </div>
               <span className="text-xs text-muted-foreground">
                 {currentRound === 1
-                  ? `Maioria necessária: ${partialNeeded} votos`
-                  : currentRound < 3
-                  ? `${currentRound}º escrutínio — top ${Math.max(0, seatsCount - electedCount) + 1} disputam maioria absoluta`
+                  ? `Maioria necessária: ${partialNeeded} votos (50%+1)`
+                  : currentRound === 2
+                  ? `2º escrutínio — maioria simples entre os top ${Math.max(0, seatsCount - electedCount) + 1}`
                   : `3º escrutínio final — empate desfeito pelo mais velho`}
               </span>
             </div>
