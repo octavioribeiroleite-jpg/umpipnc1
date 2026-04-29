@@ -52,6 +52,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [electedCount, setElectedCount] = useState(0);
   const [tieAlert, setTieAlert] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | null>(null);
+  const [confirmEdit, setConfirmEdit] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
   const [qrExpanded, setQrExpanded] = useState(false);
@@ -377,6 +378,20 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     toast({ title: 'Votação concluída!' });
     setLoading(false);
     setConfirmAction(null);
+    onRefresh();
+  };
+
+  const handleEditConfig = async () => {
+    setLoading(true);
+    // Apaga votos para evitar resultado inconsistente após reconfigurar
+    await supabase.from('election_votes' as any).delete().eq('election_id', electionId);
+    await supabase
+      .from('elections' as any)
+      .update({ status: 'draft', current_round: 1, round2_candidate_ids: null } as any)
+      .eq('id', electionId);
+    toast({ title: 'Configuração reaberta para edição' });
+    setLoading(false);
+    setConfirmEdit(false);
     onRefresh();
   };
 
