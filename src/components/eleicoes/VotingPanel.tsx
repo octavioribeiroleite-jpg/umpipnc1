@@ -22,6 +22,7 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { DeviceRegistration } from './DeviceRegistration';
+import { EditElectionDialog } from './EditElectionDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -43,7 +44,7 @@ interface VotingPanelProps {
   votingMode: string;
   devices: Device[];
   candidates: Candidate[];
-  election?: { seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; round2_candidate_ids?: string[] | null };
+  election?: { id?: string; name?: string; position?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; voting_mode?: string; round2_candidate_ids?: string[] | null };
   onRefresh: () => void;
 }
 
@@ -52,7 +53,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [electedCount, setElectedCount] = useState(0);
   const [tieAlert, setTieAlert] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | null>(null);
-  const [confirmEdit, setConfirmEdit] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
   const [qrExpanded, setQrExpanded] = useState(false);
@@ -381,19 +382,6 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     onRefresh();
   };
 
-  const handleEditConfig = async () => {
-    setLoading(true);
-    // Apaga votos para evitar resultado inconsistente após reconfigurar
-    await supabase.from('election_votes' as any).delete().eq('election_id', electionId);
-    await supabase
-      .from('elections' as any)
-      .update({ status: 'draft', current_round: 1, round2_candidate_ids: null } as any)
-      .eq('id', electionId);
-    toast({ title: 'Configuração reaberta para edição' });
-    setLoading(false);
-    setConfirmEdit(false);
-    onRefresh();
-  };
 
   const handleNextRound = async () => {
     setLoading(true);
@@ -579,7 +567,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             variant="outline"
             size="sm"
             className="h-7 text-xs shrink-0"
-            onClick={() => setConfirmEdit(true)}
+            onClick={() => setEditOpen(true)}
           >
             <Pencil className="h-3 w-3 mr-1" /> Editar configuração
           </Button>
@@ -1077,25 +1065,21 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={confirmEdit} onOpenChange={setConfirmEdit}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Editar configuração da votação?</AlertDialogTitle>
-            <AlertDialogDescription>
-              A votação voltará para o modo de configuração (rascunho) para você ajustar candidatos, presença, modo de votação ou dispositivos.
-              <br /><br />
-              <strong className="text-destructive">Atenção:</strong> todos os votos já registrados serão apagados, e o escrutínio voltará para o 1º. Presença e candidatos serão mantidos.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEditConfig} disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              Sim, editar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <EditElectionDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        election={{
+          id: electionId,
+          name: electionName,
+          position: (election as any)?.position,
+          type: (election as any)?.type,
+          seats_count: election?.seats_count,
+          max_choices_per_ballot: election?.max_choices_per_ballot,
+          voting_mode: votingMode,
+          majority_rule: election?.majority_rule,
+        }}
+        onSaved={onRefresh}
+      />
     </>
   );
 }
