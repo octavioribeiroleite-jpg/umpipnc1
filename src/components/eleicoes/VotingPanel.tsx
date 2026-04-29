@@ -28,7 +28,12 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface Device { id: string; label: string; token: string; activated: boolean; }
-interface Candidate { id: string; name: string; birth_date?: string | null; }
+interface Candidate { id: string; name: string; birth_date?: string | null; photo_url?: string | null; photo_urls?: string[] | null; }
+
+function getCandidatePhoto(candidate: { photo_url?: string | null; photo_urls?: string[] | null }): string | null {
+  if (Array.isArray(candidate.photo_urls) && candidate.photo_urls.length > 0) return candidate.photo_urls[0];
+  return candidate.photo_url || null;
+}
 
 interface VotingPanelProps {
   electionId: string;
@@ -54,6 +59,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [partialRows, setPartialRows] = useState<{ candidate_id: string; name: string; count: number; pct: number; elected: boolean }[]>([]);
   const [partialBlanks, setPartialBlanks] = useState(0);
   const [partialNeeded, setPartialNeeded] = useState(0);
+  const [liveVotes, setLiveVotes] = useState<any[]>([]);
   type VotingPhase = 'voting' | 'apurando' | 'resultado';
   const [phase, setPhase] = useState<VotingPhase>('voting');
   const { toast } = useToast();
@@ -247,6 +253,31 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     };
   }, [electionId, currentRound, seatsCount, majorityRule]);
 
+  // Painel de ranking ao vivo — busca todos os votos e atualiza via Realtime
+  useEffect(() => {
+    if (!electionId) return;
+    const fetchVotes = async () => {
+      const { data } = await supabase
+        .from('election_votes' as any)
+        .select('*')
+        .eq('election_id', electionId);
+      setLiveVotes((data as any[]) || []);
+    };
+    fetchVotes();
+
+    const channel = supabase
+      .channel(`votingpanel-votes-${electionId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'election_votes',
+        filter: `election_id=eq.${electionId}`,
+      }, () => { void fetchVotes(); })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [electionId]);
+
   useEffect(() => {
     if (voteCount < totalPresent || !electionId) {
       setPartialRows([]);
@@ -399,6 +430,30 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     navigator.clipboard.writeText(voteUrl);
     toast({ title: 'Link copiado!' });
   };
+
+  // Cálculo do ranking ao vivo
+  const liveCurrentRound = election?.current_round || 1;
+  const liveTotalBallots = new Set(
+    liveVotes
+      .filter(v => (v.round_number || 1) === liveCurrentRound)
+      .map(v => v.ballot_id || v.id)
+  ).size;
+  const liveNeeded = Math.floor(liveTotalBallots / 2) + 1;
+  const liveVoteCounts = liveVotes
+    .filter(v => (v.round_number || 1) === liveCurrentRound && !v.is_blank && v.candidate_id)
+    .reduce((acc: Record<string, number>, v: any) => {
+      acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
+      return acc;
+    }, {});
+  const liveRankedCandidates = (candidates || [])
+    .map(c => ({
+      ...c,
+      votes: liveVoteCounts[c.id] || 0,
+      pct: liveTotalBallots > 0 ? Math.round(((liveVoteCounts[c.id] || 0) / liveTotalBallots) * 100) : 0,
+      elected: (liveVoteCounts[c.id] || 0) >= liveNeeded && liveTotalBallots > 0,
+    }))
+    .sort((a, b) => b.votes - a.votes);
+  const liveBlankCount = liveVotes.filter(v => (v.round_number || 1) === liveCurrentRound && v.is_blank).length;
 
   if (status === 'draft') {
     return (
@@ -666,6 +721,84 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             </p>
           </div>
         </div>
+
+        {/* Ranking ao vivo dos candidatos */}
+        {liveRankedCandidates.length > 0 && (
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {liveCurrentRound}º Escrutínio — Apuração ao vivo
+              </p>
+              {liveTotalBallots > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Maioria: <strong>{liveNeeded} votos</strong>
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {liveRankedCandidates.map((c, index) => {
+                const photo = getCandidatePhoto(c);
+                const posEmoji = ['🥇','🥈','🥉'][index] || `${index + 1}`;
+                return (
+                  <div
+                    key={c.id}
+                    className={`relative flex items-center gap-3 rounded-xl border-2 p-3 transition-all ${
+                      c.elected
+                        ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
+                        : index === 0 && liveTotalBallots > 0
+                        ? 'border-primary/50 bg-primary/5'
+                        : 'border-border bg-background'
+                    }`}
+                  >
+                    <span className="text-xl shrink-0">{posEmoji}</span>
+                    <div className={`h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 shadow ${
+                      c.elected ? 'border-yellow-400' : 'border-border'
+                    }`}>
+                      {photo ? (
+                        <img src={photo} alt={c.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted text-sm font-bold text-muted-foreground">
+                          {c.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="text-sm font-bold text-foreground truncate">{c.name}</p>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-sm font-extrabold text-foreground">{c.votes}</span>
+                          <span className="text-xs text-muted-foreground">votos</span>
+                          <span className="text-xs font-semibold text-primary">({c.pct}%)</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-500 ${
+                            c.elected ? 'bg-yellow-400' : index === 0 ? 'bg-primary' : 'bg-muted-foreground/40'
+                          }`}
+                          style={{ width: liveTotalBallots > 0 ? `${c.pct}%` : '0%' }}
+                        />
+                      </div>
+                    </div>
+                    {c.elected && (
+                      <span className="shrink-0 rounded-full bg-yellow-400 px-2 py-0.5 text-[10px] font-extrabold text-yellow-900 shadow">
+                        ✓ ELEITO
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {liveBlankCount > 0 && (
+              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs">
+                <span className="text-muted-foreground">Brancos / Nulos</span>
+                <strong className="text-foreground">{liveBlankCount}</strong>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Botões principais — só aparecem na fase correta */}
         <div className="flex gap-2 flex-wrap">
