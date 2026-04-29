@@ -462,28 +462,7 @@ export default function VotePublic() {
     };
   }, [electionId]);
 
-  const handleUrnaAuth = async () => {
-    if (!authUsername.trim() || !authPassword.trim()) return;
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      const { data: email, error: emailError } = await supabase.rpc('get_email_by_username', { _username: authUsername.trim() });
-      if (emailError || !email) { setAuthError('Usuário não encontrado.'); setAuthLoading(false); return; }
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email: email as string, password: authPassword });
-      if (signInError || !signInData.user) { setAuthError('Senha incorreta.'); setAuthLoading(false); return; }
-      const { data: hasRole } = await supabase.rpc('has_management_role', { _user_id: signInData.user.id });
-      await supabase.auth.signOut();
-      if (!hasRole) { setAuthError('Apenas admin ou diretoria podem ativar a urna.'); setAuthLoading(false); return; }
-      if (urnaToken) {
-        await supabase.from('election_devices' as any).update({ activated: true } as any).eq('token', urnaToken);
-      }
-      sessionStorage.setItem(`urna_authenticated_${electionId}_${urnaToken}`, 'true');
-      setUrnaAuthenticated(true);
-    } catch {
-      setAuthError('Erro ao autenticar. Tente novamente.');
-    }
-    setAuthLoading(false);
-  };
+  // (handleUrnaAuth removido — urna agora é ativada automaticamente pelo QR Code.)
 
   const ensureAudio = () => {
     if (!audioRef.current) {
