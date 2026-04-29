@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye, BarChart2, Medal } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye, BarChart2, Medal, Pencil } from 'lucide-react';
 
 function ChecklistItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -52,6 +52,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [electedCount, setElectedCount] = useState(0);
   const [tieAlert, setTieAlert] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | null>(null);
+  const [confirmEdit, setConfirmEdit] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
   const [qrExpanded, setQrExpanded] = useState(false);
@@ -268,15 +269,31 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     const channel = supabase
       .channel(`votingpanel-votes-${electionId}`)
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'election_votes',
         filter: `election_id=eq.${electionId}`,
       }, () => { void fetchVotes(); })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Polling de fallback (caso o Realtime falhe / muitos votos simultâneos)
+    const interval = setInterval(() => { void fetchVotes(); }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [electionId]);
+
+  // Refetch também sempre que voteCount mudar — garante sincronia com o painel principal
+  useEffect(() => {
+    if (!electionId) return;
+    void supabase
+      .from('election_votes' as any)
+      .select('*')
+      .eq('election_id', electionId)
+      .then(({ data }) => setLiveVotes((data as any[]) || []));
+  }, [voteCount, electionId]);
 
   useEffect(() => {
     if (voteCount < totalPresent || !electionId) {
@@ -361,6 +378,20 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     toast({ title: 'Votação concluída!' });
     setLoading(false);
     setConfirmAction(null);
+    onRefresh();
+  };
+
+  const handleEditConfig = async () => {
+    setLoading(true);
+    // Apaga votos para evitar resultado inconsistente após reconfigurar
+    await supabase.from('election_votes' as any).delete().eq('election_id', electionId);
+    await supabase
+      .from('elections' as any)
+      .update({ status: 'draft', current_round: 1, round2_candidate_ids: null } as any)
+      .eq('id', electionId);
+    toast({ title: 'Configuração reaberta para edição' });
+    setLoading(false);
+    setConfirmEdit(false);
     onRefresh();
   };
 
@@ -533,15 +564,25 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     <>
       <div className="rounded-xl border border-border bg-background p-4 shadow-sm space-y-4">
         {/* Mode label */}
-        <div className="flex items-center gap-2">
-          {votingMode === 'individual' ? (
-            <Smartphone className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <Monitor className="h-4 w-4 text-muted-foreground" />
-          )}
-          <span className="text-sm font-medium text-muted-foreground">
-            Modo: {votingMode === 'individual' ? 'Voto Individual' : votingMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
-          </span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {votingMode === 'individual' ? (
+              <Smartphone className="h-4 w-4 text-muted-foreground shrink-0" />
+            ) : (
+              <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
+            )}
+            <span className="text-sm font-medium text-muted-foreground truncate">
+              Modo: {votingMode === 'individual' ? 'Voto Individual' : votingMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs shrink-0"
+            onClick={() => setConfirmEdit(true)}
+          >
+            <Pencil className="h-3 w-3 mr-1" /> Editar configuração
+          </Button>
         </div>
         {isMultiSeat && (
           <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm">
@@ -1031,6 +1072,26 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <AlertDialogAction onClick={confirmAction === 'reset' ? handleReset : handleFinish}>
               {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
               Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmEdit} onOpenChange={setConfirmEdit}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Editar configuração da votação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A votação voltará para o modo de configuração (rascunho) para você ajustar candidatos, presença, modo de votação ou dispositivos.
+              <br /><br />
+              <strong className="text-destructive">Atenção:</strong> todos os votos já registrados serão apagados, e o escrutínio voltará para o 1º. Presença e candidatos serão mantidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEditConfig} disabled={loading}>
+              {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              Sim, editar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
