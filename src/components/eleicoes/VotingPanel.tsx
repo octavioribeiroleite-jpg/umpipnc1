@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye, BarChart2, Medal } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye, BarChart2, Medal, Pencil } from 'lucide-react';
 
 function ChecklistItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -268,15 +268,31 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     const channel = supabase
       .channel(`votingpanel-votes-${electionId}`)
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'election_votes',
         filter: `election_id=eq.${electionId}`,
       }, () => { void fetchVotes(); })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Polling de fallback (caso o Realtime falhe / muitos votos simultâneos)
+    const interval = setInterval(() => { void fetchVotes(); }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [electionId]);
+
+  // Refetch também sempre que voteCount mudar — garante sincronia com o painel principal
+  useEffect(() => {
+    if (!electionId) return;
+    void supabase
+      .from('election_votes' as any)
+      .select('*')
+      .eq('election_id', electionId)
+      .then(({ data }) => setLiveVotes((data as any[]) || []));
+  }, [voteCount, electionId]);
 
   useEffect(() => {
     if (voteCount < totalPresent || !electionId) {
