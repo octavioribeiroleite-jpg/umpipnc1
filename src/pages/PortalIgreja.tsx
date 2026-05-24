@@ -431,7 +431,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-card border-b border-border px-4 py-4 safe-top">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-card/90 backdrop-blur-md border-b border-border px-4 py-4 safe-top">
         <div className="flex items-center justify-between max-w-2xl mx-auto">
           <div className="flex items-center gap-3">
             {/* Hamburger Menu */}
@@ -501,15 +501,18 @@ function Portal({ visitor }: { visitor: VisitorData }) {
               <p className="text-sm text-muted-foreground">Olá, {firstName}!</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
-            <LogIn className="h-4 w-4 mr-1.5" />
-            Login
-          </Button>
+          <div className="flex items-center gap-1">
+            <HeaderActions showInstall={false} showVersion={false} />
+            <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
+              <LogIn className="h-4 w-4 mr-1.5" />
+              Login
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto px-4 py-4 pb-24 max-w-2xl mx-auto w-full">
+      <main className="flex-1 overflow-auto px-4 py-4 pt-24 pb-24 max-w-2xl mx-auto w-full">
         {activeTab === 'inicio' && <InicioTab visitor={visitor} onTabChange={setActiveTab} />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
         {activeTab === 'avisos' && <AvisosTab />}
