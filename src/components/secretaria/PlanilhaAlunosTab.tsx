@@ -162,9 +162,22 @@ export default function PlanilhaAlunosTab({
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isAllClasses = selectedClassId === '__all__';
+  const visibleClassIds = useMemo(
+    () => new Set(visibleClasses.map((c) => c.id)),
+    [visibleClasses],
+  );
+  const classNameById = useMemo(() => {
+    const m: Record<string, string> = {};
+    classes.forEach((c) => (m[c.id] = c.name));
+    return m;
+  }, [classes]);
   const classStudents = useMemo(
-    () => allStudents.filter((s) => s.class_id === selectedClassId),
-    [allStudents, selectedClassId],
+    () =>
+      isAllClasses
+        ? allStudents.filter((s) => visibleClassIds.has(s.class_id))
+        : allStudents.filter((s) => s.class_id === selectedClassId),
+    [allStudents, selectedClassId, isAllClasses, visibleClassIds],
   );
 
   const filteredStudents = useMemo(() => {
@@ -526,6 +539,9 @@ export default function PlanilhaAlunosTab({
                   <SelectValue placeholder="Selecionar turma" />
                 </SelectTrigger>
                 <SelectContent>
+                  {accessLevel === 'admin' && (
+                    <SelectItem value="__all__">Todas as turmas</SelectItem>
+                  )}
                   {visibleClasses.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
@@ -582,17 +598,27 @@ export default function PlanilhaAlunosTab({
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
-              placeholder="Nome do novo aluno..."
+              placeholder={
+                isAllClasses
+                  ? 'Selecione uma turma para adicionar...'
+                  : 'Nome do novo aluno...'
+              }
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddStudent();
               }}
+              disabled={isAllClasses}
               className="flex-1"
             />
             <Button
               onClick={handleAddStudent}
-              disabled={!newName.trim() || addingStudent || !selectedClassId}
+              disabled={
+                !newName.trim() ||
+                addingStudent ||
+                !selectedClassId ||
+                isAllClasses
+              }
             >
               <Plus className="h-4 w-4" /> Adicionar
             </Button>
@@ -689,6 +715,7 @@ export default function PlanilhaAlunosTab({
                       />
                     </TableHead>
                     <TableHead>Nome</TableHead>
+                    {isAllClasses && <TableHead className="w-40">Turma</TableHead>}
                     <TableHead className="w-24">Status</TableHead>
                     <TableHead className="w-28">Origem</TableHead>
                     <TableHead className="w-28 hidden md:table-cell">
@@ -753,6 +780,11 @@ export default function PlanilhaAlunosTab({
                           </button>
                         )}
                       </TableCell>
+                      {isAllClasses && (
+                        <TableCell className="text-sm text-muted-foreground">
+                          {classNameById[s.class_id] ?? '-'}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge variant={s.active ? 'default' : 'secondary'}>
                           {s.active ? 'Ativo' : 'Inativo'}
@@ -879,6 +911,11 @@ export default function PlanilhaAlunosTab({
                       <Badge variant="outline" className="text-[10px]">
                         {s.origin === 'importado' ? 'Importado' : 'Manual'}
                       </Badge>
+                      {isAllClasses && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {classNameById[s.class_id] ?? '-'}
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       <Button
@@ -936,7 +973,12 @@ export default function PlanilhaAlunosTab({
           <div className="space-y-3">
             <p className="text-sm">
               Transferir <strong>{transferStudent?.name}</strong> de{' '}
-              <strong>{selectedClass?.name}</strong> para:
+              <strong>
+                {transferStudent
+                  ? (classNameById[transferStudent.class_id] ?? '-')
+                  : ''}
+              </strong>{' '}
+              para:
             </p>
             <Select value={transferTarget} onValueChange={setTransferTarget}>
               <SelectTrigger>
