@@ -175,6 +175,8 @@ export default function Index() {
       />
       <PastorNotificationBanner />
 
+      <UpdateAppButton />
+
       {/* Pending submissions notification */}
       {pendingSubmissions > 0 && (
         <AppCard
