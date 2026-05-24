@@ -218,6 +218,7 @@ export default function Secretaria() {
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
+  const [classVisitors, setClassVisitors] = useState<Record<string, number>>({});
   const [currentView, setCurrentView] = useState<CurrentView>('home');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const { weekBirthdays, todayBirthdays } = useBirthdays();
@@ -297,18 +298,24 @@ export default function Secretaria() {
   };
 
   const fetchData = useCallback(async () => {
-    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes] = await Promise.all([
+    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, classVisitorsRes] = await Promise.all([
       supabase.from('ebd_classes').select('*').eq('active', true).order('order_index'),
       supabase.from('ebd_students').select('*').eq('active', true).order('name'),
       supabase.from('ebd_students').select('*').order('name'),
       supabase.from('ebd_attendance').select('*').eq('date', sundayDate),
       supabase.from('ebd_day_closures').select('*').eq('date', sundayDate).maybeSingle(),
+      supabase.from('ebd_class_visitors').select('class_id, visitor_count').eq('date', sundayDate),
     ]);
 
     if (classesRes.data) setClasses(classesRes.data);
     if (activeStudentsRes.data) setActiveStudents(activeStudentsRes.data);
     if (allStudentsRes.data) setAllStudents(allStudentsRes.data);
     if (attendanceRes.data) setAttendance(attendanceRes.data);
+    const cvMap: Record<string, number> = {};
+    (classVisitorsRes.data || []).forEach((row: any) => {
+      cvMap[row.class_id] = row.visitor_count;
+    });
+    setClassVisitors(cvMap);
     if (closureRes.data) {
       setDayIsClosed(true);
       setClosureId(closureRes.data.id);
@@ -316,7 +323,7 @@ export default function Secretaria() {
     } else {
       setDayIsClosed(false);
       setClosureId(null);
-      setVisitorCount(0);
+      setVisitorCount(Object.values(cvMap).reduce((s, n) => s + (n || 0), 0));
     }
   }, [sundayDate]);
 
@@ -324,23 +331,43 @@ export default function Secretaria() {
     if (accessLevel) fetchData();
   }, [accessLevel, fetchData]);
 
+  const handleUpdateClassVisitor = useCallback(async (classId: string, count: number) => {
+    setClassVisitors(prev => {
+      const next = { ...prev, [classId]: count };
+      setVisitorCount(Object.values(next).reduce((s, n) => s + (n || 0), 0));
+      return next;
+    });
+    const { error } = await supabase
+      .from('ebd_class_visitors')
+      .upsert(
+        { class_id: classId, date: sundayDate, visitor_count: count, marked_by: professorNome || 'Administrador' },
+        { onConflict: 'class_id,date' },
+      );
+    if (error) {
+      toast.error('Erro ao salvar visitantes');
+    }
+  }, [sundayDate, professorNome]);
+
   const handleCloseDay = async () => {
     const classSummary = classes.map(cls => {
       const classStudents = activeStudents.filter(s => s.class_id === cls.id);
       const classAttendance = attendance.filter(a => a.class_id === cls.id && a.date === sundayDate);
       const present = classAttendance.filter(a => a.present).length;
       const total = classStudents.length;
+      const visitors = classVisitors[cls.id] ?? 0;
       return {
         classId: cls.id,
         className: cls.name,
         total,
         present,
         percentage: total > 0 ? Math.round((present / total) * 100) : 0,
+        visitor_count: visitors,
       };
     });
 
     const totalStudents = activeStudents.length;
     const presentStudents = attendance.filter(a => a.present && a.date === sundayDate).length;
+    const totalVisitors = Object.values(classVisitors).reduce((s, n) => s + (n || 0), 0);
 
     const { error } = await supabase
       .from('ebd_day_closures')
@@ -350,7 +377,7 @@ export default function Secretaria() {
         total_students: totalStudents,
         present_students: presentStudents,
         class_summary: classSummary,
-        visitor_count: visitorCount,
+        visitor_count: totalVisitors,
       } as any);
 
     if (error) {
@@ -642,8 +669,8 @@ export default function Secretaria() {
             dayIsClosed={dayIsClosed}
             onCloseDay={handleCloseDay}
             onReopenDay={handleReopenDay}
-            visitorCount={visitorCount}
-            setVisitorCount={setVisitorCount}
+            classVisitors={classVisitors}
+            onUpdateClassVisitor={handleUpdateClassVisitor}
           />
         )}
 

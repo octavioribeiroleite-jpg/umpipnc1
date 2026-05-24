@@ -304,6 +304,36 @@ export type Database = {
           },
         ]
       }
+      ebd_class_visitors: {
+        Row: {
+          class_id: string
+          created_at: string
+          date: string
+          id: string
+          marked_by: string | null
+          updated_at: string
+          visitor_count: number
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          date: string
+          id?: string
+          marked_by?: string | null
+          updated_at?: string
+          visitor_count?: number
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          marked_by?: string | null
+          updated_at?: string
+          visitor_count?: number
+        }
+        Relationships: []
+      }
       ebd_classes: {
         Row: {
           active: boolean
