@@ -23,10 +23,10 @@ export function HeaderActions({ showInstall = true, showVersion = true }: Props)
   })();
 
   return (
-    <div className="flex items-center gap-1 flex-shrink-0">
+    <div className="flex items-center gap-0.5 flex-shrink-0">
       {showVersion && lastUpdate && (
         <span
-          className="hidden xs:inline text-[10px] leading-tight text-muted-foreground mr-1 text-right"
+          className="hidden sm:inline text-[10px] leading-tight text-muted-foreground mr-1 text-right"
           title={`Última atualização: ${lastUpdate}`}
         >
           v{lastUpdate}
