@@ -6,6 +6,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { InstallButton } from '@/components/layout/InstallButton';
+import { UpdateAppButton } from '@/components/UpdateAppButton';
 
 export function MobileHeader() {
   const { profile } = useAuth();
@@ -33,7 +34,8 @@ export function MobileHeader() {
             {profile?.full_name || 'IPNC'}
           </span>
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 flex items-center gap-1">
+          <UpdateAppButton variant="icon" />
           <InstallButton />
         </div>
       </div>
