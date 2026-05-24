@@ -664,37 +664,48 @@ export default function Secretaria() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border px-4 py-3 safe-top">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border px-2 py-1.5 safe-top">
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <button
               onClick={handleBackToHome}
-              className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Voltar"
+              className="p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <div>
-              <h1 className="font-semibold text-lg">{viewTitles[currentView]}</h1>
-              <p className="text-xs text-muted-foreground">{formattedDate}</p>
+            <div className="min-w-0 leading-tight">
+              <h1 className="font-semibold text-sm sm:text-base truncate">{viewTitles[currentView]}</h1>
+              <p className="text-[10px] text-muted-foreground truncate">
+                {formattedDate}
+                <span className="mx-1">·</span>
+                <span className={isAdmin ? 'text-primary font-medium' : ''}>{profileLabel}</span>
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5 flex-shrink-0">
             <HeaderActions />
             <button
               onClick={handleBackToHome}
-              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-              title="Voltar ao menu"
+              aria-label="Menu da Secretaria"
+              title="Menu da Secretaria"
+              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
             >
-              <Home className="h-4.5 w-4.5" />
+              <Home className="h-5 w-5" />
             </button>
-            <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs hidden sm:inline-flex">
-              {profileLabel}
-            </Badge>
+            <button
+              onClick={handleExitApp}
+              aria-label="Sair"
+              title="Sair"
+              className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="p-4 pb-8 pt-20">
+      <div className="p-4 pb-8 pt-16">
         {currentView === 'chamada' && (
           <ChamadaTab
             classes={classes}

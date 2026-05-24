@@ -1,113 +1,45 @@
+## Problema
+A barra superior da Secretaria está desproporcional no mobile (384px): título grande em duas linhas, badge "Administrador" largo, vários botões competindo por espaço e o ícone de **atualizar versão** acaba ficando escondido/cortado.
 
-# Planilha de Alunos — Novo módulo da Secretaria
+## Mudanças no header da Secretaria (`src/pages/Secretaria.tsx`)
 
-Criar módulo de gestão de alunos da EBD com importação CSV inteligente (Levenshtein), exportação, edição inline, transferência entre turmas e ações em massa.
+**Layout mais compacto e equilibrado:**
 
-## 1. Migração de banco
+1. **Reduzir altura e padding**: `py-3` → `py-2`, alinhar tudo em uma única linha de 48px.
+2. **Esquerda** (apenas o essencial):
+   - Botão `←` voltar (compacto)
+   - Título `text-base` (não `text-lg`) + data em `text-[10px]` na linha de baixo, com `truncate` e `min-w-0` para não empurrar os ícones.
+3. **Direita** (cluster de ações fixas, sempre visível):
+   - Ícone **Atualizar versão** (RefreshCw) — destacado em verde/primary, sempre visível
+   - Ícone **Instalar PWA** (quando aplicável)
+   - Ícone **Home** (voltar ao menu da secretaria)
+   - Ícone **Sair** (LogOut) com `ExitConfirmDialog`
+   - Badge "Administrador" movido para **abaixo do título** como chip pequeno (`text-[10px] px-1.5 py-0`), ou ocultado em telas <400px (já que o ícone de sair já indica sessão ativa)
 
-`ebd_students` (idempotente):
-- `origin` (text, default `'manual'`, check `'manual' | 'importado'`)
-- `created_at` já existe — manter.
+4. **Tamanho uniforme dos ícones**: todos `h-9 w-9` com `p-2`, gap `gap-0.5` para caber 4 ícones em 384px sem cortar.
 
-## 2. Componente novo
+5. **Glassmorphism consistente** com o resto do app: manter `bg-card/90 backdrop-blur-md`.
 
-`src/components/secretaria/PlanilhaAlunosTab.tsx`
+## Resultado visual esperado
 
-Props: `classes`, `allStudents`, `onRefresh`, `accessLevel`, `professorClassId?`.
-
-Header com botão Voltar já é renderizado pelo wrapper em `Secretaria.tsx` (padrão de `TurmasTab` e `ChamadaTab`). **Sem `onBack` interno.**
-
-## 3. Helpers locais (sem libs)
-
-- `stringSimilarity` (Levenshtein normalizado): `=1` idêntico, `≥0.75 e <1` similar, `<0.75` diferente.
-- `parseCSV` suporta `, ; | \t`, remove aspas externas e trim.
-
-## 4. Funcionalidades
-
-- Seletor de turma (oculto para professor — fixa em `professorClassId`)
-- Totalizadores: total / ativos / inativos
-- Busca + filtro (todos / ativos / inativos)
-- Adicionar manual (`origin='manual'`)
-- Edição inline com `autoFocus`, Enter salva, Esc cancela
-- Toggle ativo/inativo individual e em massa (via `selectedIds: Set<string>`)
-- Transferir entre turmas (dedicada)
-- Exportar CSV com BOM UTF-8
-- Importar CSV via wizard de 3 passos
-
-## 5. Wizard de importação
-
-**Passo 1 — Upload**
-- Aceita `.csv` e `.txt`, UTF-8
-- Preview 5 primeiras linhas, coluna escolhida destacada em azul
-- Dropdown de coluna do nome
-- **Turma destino começa vazia** — botão "Analisar" desabilitado até escolher
-
-**Passo 2 — Análise (`handleAnalyze`)**
-
-Ordem por linha:
-1. Idêntico a aluno no banco → `duplicata_certa` (similarTo + similarId)
-2. Similar a aluno no banco (Levenshtein ≥ 0.75 e < 1) → `duplicata_provavel`
-3. Repetido dentro do próprio CSV (detectado via `Set` pré-calculado de todos os nomes do CSV, não dependendo da ordem) → `duplicata_certa` com mensagem "duplicata dentro da planilha importada"
-4. Caso contrário → `novo`
-
-Tela:
-- Verde / amarelo / vermelho conforme status
-- Botões por linha: Ignorar / Adicionar mesmo assim / Substituir nome existente
-- Ações em massa: ignorar todas duplicatas, adicionar todas mesmo assim
-- Scroll interno `max-h-[60vh]`
-
-**Passo 3 — Confirmação**
-- Resumo: "X adicionados · Y substituídos · Z ignorados"
-- **Aviso vermelho destacado quando substituições > 0**: "⚠️ Y substituições de nome serão feitas — esta ação não pode ser desfeita."
-
-**`handleImport` — batch insert + loop de updates + contador de erros**
-
-```ts
-const toAdd = importRows.filter(r => r.action === 'adicionar')
-  .map(r => ({ name: r.name, class_id: importTargetClass, active: true, origin: 'importado' as const }));
-
-let added = 0, replaced = 0, errors = 0;
-if (toAdd.length) {
-  const { data, error } = await supabase.from('ebd_students').insert(toAdd).select('id');
-  if (error) errors += toAdd.length; else added = data?.length ?? toAdd.length;
-}
-for (const row of importRows.filter(r => r.action === 'substituir' && r.similarId)) {
-  const { error } = await supabase.from('ebd_students').update({ name: row.name }).eq('id', row.similarId!);
-  if (error) errors++; else replaced++;
-}
+```text
+┌──────────────────────────────────────────────────┐
+│ ←  Secretaria EBD              [↻][⬇][⌂][⎋]      │
+│    24 de maio · Administrador                    │
+└──────────────────────────────────────────────────┘
 ```
 
-Reset completo do wizard ao final.
+- `[↻]` Atualizar versão (verde)
+- `[⬇]` Instalar PWA
+- `[⌂]` Voltar ao menu
+- `[⎋]` Sair
 
-## 6. Layout
+## Ajustes complementares
 
-**Desktop**: tabela em `<Card><CardContent className="p-0">` — checkbox / Nome / Status / Origem / Cadastro (`hidden sm:table-cell`) / Ações.
+- Aumentar `pt-20` → `pt-16` no conteúdo (header agora é mais baixo).
+- Garantir que o `HeaderActions` mostra o ícone Refresh independente do breakpoint `xs` (remover dependência de `xs:` que pode não existir no Tailwind config).
 
-**Mobile (`< sm`)**: cards empilhados (`sm:hidden`).
-- Linha 1: checkbox + nome (bold, `line-through` se inativo)
-- Linha 2: badges de status + origem à esquerda · ícones Transferir e Ativar/Desativar à direita
-- Sem data de cadastro
+## Fora de escopo
 
-Ações em massa aparecem apenas se `selectedIds.size > 0` (com `animate-in fade-in`).
-
-## 7. Integração em `Secretaria.tsx`
-
-- Adicionar `'planilha'` ao `CurrentView`
-- Entrada em `viewTitles`
-- Card no menu home (ícone `TableProperties`)
-- Renderizar `<PlanilhaAlunosTab>` com `classes`, `allStudents`, `fetchData`, `accessLevel`, `professorClassId`
-
-## 8. CSV de teste
-
-`public/alunos-teste-duplicatas.csv` com casos: idênticos, acentos diferentes ("João"/"Joao"), espaços extras, similares ("María Sílva"/"Maria Silva"), repetidos no CSV ("Pedro Santos" 2x), e novos.
-
-## Regras
-
-- Não tocar em `TurmasTab.tsx` nem `ChamadaTab.tsx`
-- Padrão shadcn/ui, semantic colors
-- 100% pt-BR (toasts e erros)
-- `useMemo` em derivados
-- Toasts via `sonner`
-- `title` em ícones, sem confirm para toggles simples
-
-Pronto para implementar?
+- Não vou mexer no conteúdo abaixo do header (cards de presença, aniversariantes, grid 2x3).
+- Não vou alterar outras páginas — apenas o header da Secretaria.
