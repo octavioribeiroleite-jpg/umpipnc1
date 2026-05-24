@@ -9,6 +9,7 @@ import { PastorDayEventList } from '@/components/pastor/PastorDayEventList';
 import { useEvents, EventStatus } from '@/hooks/useEvents';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { UpdateAppButton } from '@/components/UpdateAppButton';
 import { AppCard } from '@/components/ui/app-card';
 import { SectionTitle } from '@/components/ui/typography';
 import { Skeleton } from '@/components/ui/skeleton';
