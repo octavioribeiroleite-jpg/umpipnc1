@@ -35,6 +35,7 @@ interface ClassSummaryItem {
   total: number;
   present: number;
   percentage: number;
+  visitor_count?: number;
 }
 
 interface DayRecord {
@@ -407,6 +408,11 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
                     </div>
                   </div>
                   <Progress value={cs.percentage} className="h-1.5" />
+                  {(cs.visitor_count ?? 0) > 0 && (
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1 pt-0.5">
+                      <Users className="h-3 w-3" /> {cs.visitor_count} visitante{(cs.visitor_count ?? 0) > 1 ? 's' : ''}
+                    </p>
+                  )}
                 </div>
               ))}
             </CardContent>
