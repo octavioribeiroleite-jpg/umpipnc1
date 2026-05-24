@@ -705,6 +705,7 @@ export default function PlanilhaAlunosTab({
                       />
                     </TableHead>
                     <TableHead>Nome</TableHead>
+                    {isAllClasses && <TableHead className="w-40">Turma</TableHead>}
                     <TableHead className="w-24">Status</TableHead>
                     <TableHead className="w-28">Origem</TableHead>
                     <TableHead className="w-28 hidden md:table-cell">
@@ -769,6 +770,11 @@ export default function PlanilhaAlunosTab({
                           </button>
                         )}
                       </TableCell>
+                      {isAllClasses && (
+                        <TableCell className="text-sm text-muted-foreground">
+                          {classNameById[s.class_id] ?? '-'}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge variant={s.active ? 'default' : 'secondary'}>
                           {s.active ? 'Ativo' : 'Inativo'}
