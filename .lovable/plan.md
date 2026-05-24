@@ -1,43 +1,113 @@
-## O que muda
 
-### 1. Revisar turmas antes de fechar o dia
-Hoje, depois de "Finalizar Chamada" de uma turma, ao tocar no card ela abre só em modo leitura. Vamos permitir abrir qualquer turma (iniciada, em andamento ou finalizada) e revisar/editar livremente enquanto o **dia** não estiver fechado.
+# Planilha de Alunos — Novo módulo da Secretaria
 
-- Card da turma na grade continua clicável em qualquer status.
-- Na tela de detalhe da turma:
-  - Se status = `finalizada` e o dia ainda está aberto → mostrar botão "Revisar / Editar" que volta para `aberta` (sem perder dados).
-  - Adicionar contador "X de Y turmas finalizadas" no topo da grade para o admin saber quando pode fechar o dia.
-  - Botão "Fechar Dia" continua só para Admin/Secretaria, agora com aviso se ainda houver turmas não finalizadas.
+Criar módulo de gestão de alunos da EBD com importação CSV inteligente (Levenshtein), exportação, edição inline, transferência entre turmas e ações em massa.
 
-### 2. Visitantes com nome (opcional)
-Em vez de apenas um contador, cada visitante pode ter um nome. O contador continua existindo (= quantidade de nomes + visitantes anônimos).
+## 1. Migração de banco
 
-UI no detalhe da turma (substitui o stepper atual):
-- Lista compacta de visitantes adicionados, cada um com nome (ou "Visitante" se vazio) e botão de remover.
-- Botão "+ Adicionar visitante" abre input inline para digitar o nome (Enter confirma; campo vazio = anônimo).
-- Total da turma e total do dia continuam somando todos.
+`ebd_students` (idempotente):
+- `origin` (text, default `'manual'`, check `'manual' | 'importado'`)
+- `created_at` já existe — manter.
 
-No fechamento do dia e no histórico, o resumo passa a listar os nomes dos visitantes por turma (quando houver), além da contagem.
+## 2. Componente novo
 
-## Detalhes técnicos
+`src/components/secretaria/PlanilhaAlunosTab.tsx`
 
-**Banco** (migration nova):
-- Trocar `ebd_class_visitors` (count agregado) por `ebd_class_visitor_entries`:
-  - `id`, `class_id`, `date`, `name text` (nullable = anônimo), `created_at`, `marked_by`.
-- Migrar dados existentes: para cada linha com `visitor_count = N`, criar N entradas anônimas.
-- Manter as policies abertas equivalentes às atuais (`anon` insert/update/delete/select).
+Props: `classes`, `allStudents`, `onRefresh`, `accessLevel`, `professorClassId?`.
 
-**Frontend**:
-- `src/pages/Secretaria.tsx`:
-  - `classVisitors` passa a ser `Record<string, { id: string; name: string | null }[]>`.
-  - `handleUpdateClassVisitor` vira `addClassVisitor(classId, name)` e `removeClassVisitor(entryId)`.
-  - `handleCloseDay` grava no `class_summary` os nomes (`visitors: [{name}]`) além do total.
-- `src/components/secretaria/ChamadaTab.tsx`:
-  - Substituir o bloco do stepper por lista + input "Adicionar visitante".
-  - Permitir reabrir uma turma `finalizada` enquanto o dia estiver aberto (botão "Revisar / Editar").
-  - Header da grade: mostrar "X/Y turmas finalizadas".
-  - Diálogo de "Fechar Dia": se houver turmas não finalizadas, exibir aviso ("Ainda há turmas em andamento. Fechar mesmo assim?").
-- `src/components/secretaria/HistoricoTab.tsx`:
-  - Mostrar nomes dos visitantes (quando houver) no breakdown por turma, mantendo a contagem.
+Header com botão Voltar já é renderizado pelo wrapper em `Secretaria.tsx` (padrão de `TurmasTab` e `ChamadaTab`). **Sem `onBack` interno.**
 
-Sem mudanças em PDF/relatórios nesta etapa (podem ser feitas depois se necessário).
+## 3. Helpers locais (sem libs)
+
+- `stringSimilarity` (Levenshtein normalizado): `=1` idêntico, `≥0.75 e <1` similar, `<0.75` diferente.
+- `parseCSV` suporta `, ; | \t`, remove aspas externas e trim.
+
+## 4. Funcionalidades
+
+- Seletor de turma (oculto para professor — fixa em `professorClassId`)
+- Totalizadores: total / ativos / inativos
+- Busca + filtro (todos / ativos / inativos)
+- Adicionar manual (`origin='manual'`)
+- Edição inline com `autoFocus`, Enter salva, Esc cancela
+- Toggle ativo/inativo individual e em massa (via `selectedIds: Set<string>`)
+- Transferir entre turmas (dedicada)
+- Exportar CSV com BOM UTF-8
+- Importar CSV via wizard de 3 passos
+
+## 5. Wizard de importação
+
+**Passo 1 — Upload**
+- Aceita `.csv` e `.txt`, UTF-8
+- Preview 5 primeiras linhas, coluna escolhida destacada em azul
+- Dropdown de coluna do nome
+- **Turma destino começa vazia** — botão "Analisar" desabilitado até escolher
+
+**Passo 2 — Análise (`handleAnalyze`)**
+
+Ordem por linha:
+1. Idêntico a aluno no banco → `duplicata_certa` (similarTo + similarId)
+2. Similar a aluno no banco (Levenshtein ≥ 0.75 e < 1) → `duplicata_provavel`
+3. Repetido dentro do próprio CSV (detectado via `Set` pré-calculado de todos os nomes do CSV, não dependendo da ordem) → `duplicata_certa` com mensagem "duplicata dentro da planilha importada"
+4. Caso contrário → `novo`
+
+Tela:
+- Verde / amarelo / vermelho conforme status
+- Botões por linha: Ignorar / Adicionar mesmo assim / Substituir nome existente
+- Ações em massa: ignorar todas duplicatas, adicionar todas mesmo assim
+- Scroll interno `max-h-[60vh]`
+
+**Passo 3 — Confirmação**
+- Resumo: "X adicionados · Y substituídos · Z ignorados"
+- **Aviso vermelho destacado quando substituições > 0**: "⚠️ Y substituições de nome serão feitas — esta ação não pode ser desfeita."
+
+**`handleImport` — batch insert + loop de updates + contador de erros**
+
+```ts
+const toAdd = importRows.filter(r => r.action === 'adicionar')
+  .map(r => ({ name: r.name, class_id: importTargetClass, active: true, origin: 'importado' as const }));
+
+let added = 0, replaced = 0, errors = 0;
+if (toAdd.length) {
+  const { data, error } = await supabase.from('ebd_students').insert(toAdd).select('id');
+  if (error) errors += toAdd.length; else added = data?.length ?? toAdd.length;
+}
+for (const row of importRows.filter(r => r.action === 'substituir' && r.similarId)) {
+  const { error } = await supabase.from('ebd_students').update({ name: row.name }).eq('id', row.similarId!);
+  if (error) errors++; else replaced++;
+}
+```
+
+Reset completo do wizard ao final.
+
+## 6. Layout
+
+**Desktop**: tabela em `<Card><CardContent className="p-0">` — checkbox / Nome / Status / Origem / Cadastro (`hidden sm:table-cell`) / Ações.
+
+**Mobile (`< sm`)**: cards empilhados (`sm:hidden`).
+- Linha 1: checkbox + nome (bold, `line-through` se inativo)
+- Linha 2: badges de status + origem à esquerda · ícones Transferir e Ativar/Desativar à direita
+- Sem data de cadastro
+
+Ações em massa aparecem apenas se `selectedIds.size > 0` (com `animate-in fade-in`).
+
+## 7. Integração em `Secretaria.tsx`
+
+- Adicionar `'planilha'` ao `CurrentView`
+- Entrada em `viewTitles`
+- Card no menu home (ícone `TableProperties`)
+- Renderizar `<PlanilhaAlunosTab>` com `classes`, `allStudents`, `fetchData`, `accessLevel`, `professorClassId`
+
+## 8. CSV de teste
+
+`public/alunos-teste-duplicatas.csv` com casos: idênticos, acentos diferentes ("João"/"Joao"), espaços extras, similares ("María Sílva"/"Maria Silva"), repetidos no CSV ("Pedro Santos" 2x), e novos.
+
+## Regras
+
+- Não tocar em `TurmasTab.tsx` nem `ChamadaTab.tsx`
+- Padrão shadcn/ui, semantic colors
+- 100% pt-BR (toasts e erros)
+- `useMemo` em derivados
+- Toasts via `sonner`
+- `title` em ícones, sem confirm para toggles simples
+
+Pronto para implementar?

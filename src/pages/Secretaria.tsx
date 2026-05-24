@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck, LogOut, Cake, Home, Plus } from 'lucide-react';
+import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck, LogOut, Cake, Home, Plus, TableProperties } from 'lucide-react';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import ChamadaTab from '@/components/secretaria/ChamadaTab';
 import HistoricoTab from '@/components/secretaria/HistoricoTab';
 import TurmasTab from '@/components/secretaria/TurmasTab';
+import PlanilhaAlunosTab from '@/components/secretaria/PlanilhaAlunosTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +65,7 @@ interface AttendanceRecord {
 
 type AccessLevel = 'admin' | 'professor';
 type LoginStep = 'profile' | 'pin' | 'name-confirm' | 'name-input';
-type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes';
+type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha';
 
 export interface VisitorEntry {
   id: string;
@@ -633,6 +634,17 @@ export default function Secretaria() {
                 <span className="font-medium text-sm">Turmas</span>
               </AppCard>
             )}
+
+            <AppCard
+              variant="interactive"
+              className="flex flex-col items-center gap-3 py-6"
+              onClick={() => setCurrentView('planilha')}
+            >
+              <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                <TableProperties className="h-7 w-7 text-emerald-500" />
+              </div>
+              <span className="font-medium text-sm">Planilha de Alunos</span>
+            </AppCard>
           </div>
         </div>
       </div>
@@ -646,6 +658,7 @@ export default function Secretaria() {
     historico: 'Histórico',
     turmas: 'Turmas',
     aniversariantes: 'Aniversariantes',
+    planilha: 'Planilha de Alunos',
   };
 
   return (
@@ -713,6 +726,15 @@ export default function Secretaria() {
 
         {currentView === 'aniversariantes' && (
           <SecretariaAniversariantes />
+        )}
+
+        {currentView === 'planilha' && (
+          <PlanilhaAlunosTab
+            classes={classes}
+            allStudents={allStudents}
+            onRefresh={fetchData}
+            accessLevel={accessLevel!}
+          />
         )}
       </div>
 
