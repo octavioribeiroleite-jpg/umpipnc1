@@ -634,6 +634,17 @@ export default function Secretaria() {
                 <span className="font-medium text-sm">Turmas</span>
               </AppCard>
             )}
+
+            <AppCard
+              variant="interactive"
+              className="flex flex-col items-center gap-3 py-6"
+              onClick={() => setCurrentView('planilha')}
+            >
+              <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                <TableProperties className="h-7 w-7 text-emerald-500" />
+              </div>
+              <span className="font-medium text-sm">Planilha de Alunos</span>
+            </AppCard>
           </div>
         </div>
       </div>
