@@ -66,6 +66,11 @@ type AccessLevel = 'admin' | 'professor';
 type LoginStep = 'profile' | 'pin' | 'name-confirm' | 'name-input';
 type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes';
 
+export interface VisitorEntry {
+  id: string;
+  name: string | null;
+}
+
 const PROFESSOR_NAME_KEY = 'ebd_professor_name';
 
 function getTodayDate(): string {
@@ -218,7 +223,7 @@ export default function Secretaria() {
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
-  const [classVisitors, setClassVisitors] = useState<Record<string, number>>({});
+  const [classVisitors, setClassVisitors] = useState<Record<string, VisitorEntry[]>>({});
   const [currentView, setCurrentView] = useState<CurrentView>('home');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const { weekBirthdays, todayBirthdays } = useBirthdays();
@@ -298,24 +303,26 @@ export default function Secretaria() {
   };
 
   const fetchData = useCallback(async () => {
-    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, classVisitorsRes] = await Promise.all([
+    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes] = await Promise.all([
       supabase.from('ebd_classes').select('*').eq('active', true).order('order_index'),
       supabase.from('ebd_students').select('*').eq('active', true).order('name'),
       supabase.from('ebd_students').select('*').order('name'),
       supabase.from('ebd_attendance').select('*').eq('date', sundayDate),
       supabase.from('ebd_day_closures').select('*').eq('date', sundayDate).maybeSingle(),
-      supabase.from('ebd_class_visitors').select('class_id, visitor_count').eq('date', sundayDate),
+      (supabase.from('ebd_class_visitor_entries' as any).select('id, class_id, name').eq('date', sundayDate)),
     ]);
 
     if (classesRes.data) setClasses(classesRes.data);
     if (activeStudentsRes.data) setActiveStudents(activeStudentsRes.data);
     if (allStudentsRes.data) setAllStudents(allStudentsRes.data);
     if (attendanceRes.data) setAttendance(attendanceRes.data);
-    const cvMap: Record<string, number> = {};
-    (classVisitorsRes.data || []).forEach((row: any) => {
-      cvMap[row.class_id] = row.visitor_count;
+    const cvMap: Record<string, VisitorEntry[]> = {};
+    ((visitorEntriesRes as any).data || []).forEach((row: any) => {
+      if (!cvMap[row.class_id]) cvMap[row.class_id] = [];
+      cvMap[row.class_id].push({ id: row.id, name: row.name ?? null });
     });
     setClassVisitors(cvMap);
+    const totalV = Object.values(cvMap).reduce((s, list) => s + list.length, 0);
     if (closureRes.data) {
       setDayIsClosed(true);
       setClosureId(closureRes.data.id);
@@ -323,7 +330,7 @@ export default function Secretaria() {
     } else {
       setDayIsClosed(false);
       setClosureId(null);
-      setVisitorCount(Object.values(cvMap).reduce((s, n) => s + (n || 0), 0));
+      setVisitorCount(totalV);
     }
   }, [sundayDate]);
 
@@ -331,22 +338,38 @@ export default function Secretaria() {
     if (accessLevel) fetchData();
   }, [accessLevel, fetchData]);
 
-  const handleUpdateClassVisitor = useCallback(async (classId: string, count: number) => {
+  const handleAddClassVisitor = useCallback(async (classId: string, name: string | null) => {
+    const cleanName = name?.trim() || null;
+    const { data, error } = await (supabase.from('ebd_class_visitor_entries' as any)
+      .insert({ class_id: classId, date: sundayDate, name: cleanName, marked_by: professorNome || 'Administrador' })
+      .select('id, class_id, name')
+      .single() as any);
+    if (error || !data) {
+      toast.error('Erro ao adicionar visitante');
+      return;
+    }
     setClassVisitors(prev => {
-      const next = { ...prev, [classId]: count };
-      setVisitorCount(Object.values(next).reduce((s, n) => s + (n || 0), 0));
+      const list = prev[classId] ? [...prev[classId]] : [];
+      list.push({ id: data.id, name: data.name ?? null });
+      const next = { ...prev, [classId]: list };
+      setVisitorCount(Object.values(next).reduce((s, l) => s + l.length, 0));
       return next;
     });
-    const { error } = await supabase
-      .from('ebd_class_visitors')
-      .upsert(
-        { class_id: classId, date: sundayDate, visitor_count: count, marked_by: professorNome || 'Administrador' },
-        { onConflict: 'class_id,date' },
-      );
-    if (error) {
-      toast.error('Erro ao salvar visitantes');
-    }
   }, [sundayDate, professorNome]);
+
+  const handleRemoveClassVisitor = useCallback(async (classId: string, entryId: string) => {
+    const { error } = await (supabase.from('ebd_class_visitor_entries' as any).delete().eq('id', entryId) as any);
+    if (error) {
+      toast.error('Erro ao remover visitante');
+      return;
+    }
+    setClassVisitors(prev => {
+      const list = (prev[classId] || []).filter(v => v.id !== entryId);
+      const next = { ...prev, [classId]: list };
+      setVisitorCount(Object.values(next).reduce((s, l) => s + l.length, 0));
+      return next;
+    });
+  }, []);
 
   const handleCloseDay = async () => {
     const classSummary = classes.map(cls => {
@@ -354,20 +377,21 @@ export default function Secretaria() {
       const classAttendance = attendance.filter(a => a.class_id === cls.id && a.date === sundayDate);
       const present = classAttendance.filter(a => a.present).length;
       const total = classStudents.length;
-      const visitors = classVisitors[cls.id] ?? 0;
+      const visitorEntries = classVisitors[cls.id] || [];
       return {
         classId: cls.id,
         className: cls.name,
         total,
         present,
         percentage: total > 0 ? Math.round((present / total) * 100) : 0,
-        visitor_count: visitors,
+        visitor_count: visitorEntries.length,
+        visitors: visitorEntries.map(v => ({ name: v.name })),
       };
     });
 
     const totalStudents = activeStudents.length;
     const presentStudents = attendance.filter(a => a.present && a.date === sundayDate).length;
-    const totalVisitors = Object.values(classVisitors).reduce((s, n) => s + (n || 0), 0);
+    const totalVisitors = Object.values(classVisitors).reduce((s, l) => s + l.length, 0);
 
     const { error } = await supabase
       .from('ebd_day_closures')
@@ -670,7 +694,8 @@ export default function Secretaria() {
             onCloseDay={handleCloseDay}
             onReopenDay={handleReopenDay}
             classVisitors={classVisitors}
-            onUpdateClassVisitor={handleUpdateClassVisitor}
+            onAddClassVisitor={handleAddClassVisitor}
+            onRemoveClassVisitor={handleRemoveClassVisitor}
           />
         )}
 
