@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { useRef, useState } from 'react';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { BuildStamp } from '@/components/BuildStamp';
+import { UpdateAppButton } from '@/components/UpdateAppButton';
 import { useScrollIndicators } from '@/hooks/useScrollIndicators';
 
 const menuItems = [
@@ -154,6 +155,13 @@ export function AppSidebar() {
             <p className="text-xs text-sidebar-muted truncate">{profile.email}</p>
           </div>
         )}
+        <div className={cn('mb-2', collapsed && 'flex justify-center')}>
+          {collapsed ? (
+            <UpdateAppButton variant="icon" />
+          ) : (
+            <UpdateAppButton variant="full" />
+          )}
+        </div>
         <Button
           variant="ghost"
           onClick={requestExit}
