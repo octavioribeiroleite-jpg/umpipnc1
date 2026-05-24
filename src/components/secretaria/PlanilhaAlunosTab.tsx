@@ -973,7 +973,12 @@ export default function PlanilhaAlunosTab({
           <div className="space-y-3">
             <p className="text-sm">
               Transferir <strong>{transferStudent?.name}</strong> de{' '}
-              <strong>{selectedClass?.name}</strong> para:
+              <strong>
+                {transferStudent
+                  ? (classNameById[transferStudent.class_id] ?? '-')
+                  : ''}
+              </strong>{' '}
+              para:
             </p>
             <Select value={transferTarget} onValueChange={setTransferTarget}>
               <SelectTrigger>
