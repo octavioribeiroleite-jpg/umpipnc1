@@ -151,3 +151,19 @@ export async function applyUpdateNow() {
 
   window.location.reload();
 }
+
+/**
+ * Verificação silenciosa: limpa caches antigos e dispara update do SW
+ * SEM forçar reload. Usada em navegações entre páginas.
+ */
+export async function silentUpdateCheck() {
+  try {
+    await purgeOldCaches();
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.update().catch(() => {})));
+    }
+  } catch {
+    // ignore
+  }
+}
