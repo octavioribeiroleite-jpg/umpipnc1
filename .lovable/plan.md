@@ -1,83 +1,43 @@
-## Objetivo
+## O que muda
 
-Lançar o pedido de **40 camisas** na sociedade **UMP** sem mexer na estrutura atual do módulo (sem campos novos de OFF/PRETA/Infantil/status). Toda a granularidade que não cabe nos campos hoje será preservada nas **observações** de cada venda.
+### 1. Revisar turmas antes de fechar o dia
+Hoje, depois de "Finalizar Chamada" de uma turma, ao tocar no card ela abre só em modo leitura. Vamos permitir abrir qualquer turma (iniciada, em andamento ou finalizada) e revisar/editar livremente enquanto o **dia** não estiver fechado.
 
-## Mapeamentos adotados
+- Card da turma na grade continua clicável em qualquer status.
+- Na tela de detalhe da turma:
+  - Se status = `finalizada` e o dia ainda está aberto → mostrar botão "Revisar / Editar" que volta para `aberta` (sem perder dados).
+  - Adicionar contador "X de Y turmas finalizadas" no topo da grade para o admin saber quando pode fechar o dia.
+  - Botão "Fechar Dia" continua só para Admin/Secretaria, agora com aviso se ainda houver turmas não finalizadas.
 
-**Tamanhos (constraint do banco aceita só PP/P/M/G/GG/XG):**
-- Infantil 2/3/4 anos → registrado como **PP** (com a idade na observação)
+### 2. Visitantes com nome (opcional)
+Em vez de apenas um contador, cada visitante pode ter um nome. O contador continua existindo (= quantidade de nomes + visitantes anônimos).
 
-**Status (cores) → preço efetivamente pago:**
-- 🟢 PAGO INTEGRAL → recebe valor integral (qtd × R$ 65) e gera transação de entrada
-- 🟡 PAGO METADE → recebe metade (qtd × R$ 32,50) e gera transação de entrada com esse valor
-- 🔵 DOAÇÃO → nenhuma transação financeira (custo continua no pedido de compra)
-- ⚪ A CONFERIR → nenhuma transação por enquanto; observação destaca "REVISAR"
+UI no detalhe da turma (substitui o stepper atual):
+- Lista compacta de visitantes adicionados, cada um com nome (ou "Visitante" se vazio) e botão de remover.
+- Botão "+ Adicionar visitante" abre input inline para digitar o nome (Enter confirma; campo vazio = anônimo).
+- Total da turma e total do dia continuam somando todos.
 
-O `payment_method` de cada venda receberá `pago_integral`, `pago_metade`, `doacao` ou `a_conferir` para você filtrar depois.
+No fechamento do dia e no histórico, o resumo passa a listar os nomes dos visitantes por turma (quando houver), além da contagem.
 
-## Passo a passo da importação
+## Detalhes técnicos
 
-1. **Compra única (R$ 2.200 / 40 unidades)** em `shirt_purchases` com data de hoje, fornecedor "Pedido camisas", e observação detalhando os totais OFF (32) e PRETA (8). Cria também a transação de saída (despesa) de R$ 2.200.
-2. **Itens da compra** em `shirt_purchase_items` agregados por tamanho (infantil → PP):
-   - PP: 5 · P: 9 · M: 19 · G: 5 · GG: 1 · XG: 1
-3. **Estoque** em `shirt_inventory`: ajusta as quantidades por tamanho com custo médio de R$ 55. Após as 33 vendas abaixo, o estoque ficará zerado (40 entram, 40 saem).
-4. **33 vendas individuais** em `shirt_sales`, uma por pessoa (ordem do XLS). Casos com tamanhos diferentes (ex.: Octávio 1M + 1XG) são divididos em duas linhas para manter o estoque exato. Cada venda guarda em `notes` o detalhamento original (modelo OFF/PRETA, infantil etc.).
-5. **Transações de entrada** só são criadas para vendas verdes e amarelas, com o valor efetivamente recebido. Vinculadas à venda via `transaction_id`.
+**Banco** (migration nova):
+- Trocar `ebd_class_visitors` (count agregado) por `ebd_class_visitor_entries`:
+  - `id`, `class_id`, `date`, `name text` (nullable = anônimo), `created_at`, `marked_by`.
+- Migrar dados existentes: para cada linha com `visitor_count = N`, criar N entradas anônimas.
+- Manter as policies abertas equivalentes às atuais (`anon` insert/update/delete/select).
 
-## Resumo numérico esperado
+**Frontend**:
+- `src/pages/Secretaria.tsx`:
+  - `classVisitors` passa a ser `Record<string, { id: string; name: string | null }[]>`.
+  - `handleUpdateClassVisitor` vira `addClassVisitor(classId, name)` e `removeClassVisitor(entryId)`.
+  - `handleCloseDay` grava no `class_summary` os nomes (`visitors: [{name}]`) além do total.
+- `src/components/secretaria/ChamadaTab.tsx`:
+  - Substituir o bloco do stepper por lista + input "Adicionar visitante".
+  - Permitir reabrir uma turma `finalizada` enquanto o dia estiver aberto (botão "Revisar / Editar").
+  - Header da grade: mostrar "X/Y turmas finalizadas".
+  - Diálogo de "Fechar Dia": se houver turmas não finalizadas, exibir aviso ("Ainda há turmas em andamento. Fechar mesmo assim?").
+- `src/components/secretaria/HistoricoTab.tsx`:
+  - Mostrar nomes dos visitantes (quando houver) no breakdown por turma, mantendo a contagem.
 
-```text
-Custo total (compra)        R$ 2.200,00
-Receita potencial (40×65)   R$ 2.600,00  (referência)
-Receita lançada no sistema  R$ 2.340,00  (40 - 4 doações = 36 × 65)
-Recebido efetivo            = soma das verdes (integral) + amarelas (metade)
-Em aberto                   = amarelas (metade restante) + brancas (a conferir)
-Lucro previsto              R$ 140,00 (após 4 doações)
-```
-
-## Detalhe técnico das vendas (33 pessoas, 34 linhas)
-
-| Pessoa | Tam. (BD) | Qtd | Status | Obs. |
-|---|---|---|---|---|
-| Octávio | M | 1 | 🟢 integral | 1 M OFF (split) |
-| Octávio | XG | 1 | 🟢 integral | 1 XG OFF (split) |
-| Cintia | PP | 2 | 🟢 integral | 2 PP OFF |
-| Wânia | P | 1 | 🟡 metade | 1 P OFF |
-| Matheus | G | 1 | 🟡 metade | 1 G PRETA |
-| Davi | M | 2 | 🟡 metade | 1 M OFF + 1 M PRETA |
-| Bianca | M | 1 | 🟢 integral | 1 M OFF |
-| Viviane | P | 1 | 🟢 integral | 1 P OFF |
-| Thainara | P | 2 | 🟢 integral | 1 P OFF + 1 P PRETA |
-| Rodrigo (Jana) | M | 2 | 🟡 metade | 1 M OFF + 1 M PRETA |
-| Vitor | G | 1 | 🟡 metade | 1 G OFF |
-| Emilly | M | 1 | 🟡 metade | 1 M OFF |
-| Marlon | G | 2 | 🟡 metade | 1 G OFF + 1 G PRETA |
-| Lucas Felipe | M | 1 | 🟡 metade | 1 M OFF |
-| Mayara | M | 1 | 🟡 metade | 1 M OFF |
-| Fernando (Fel) | PP | 1 | 🟡 metade | Infantil 4 anos OFF |
-| Isabella | P | 1 | ⚪ a conferir | 1 P OFF |
-| Eduarda | P | 1 | 🟢 integral | 1 P OFF |
-| Dany | P | 1 | 🟡 metade | 1 P OFF |
-| Ricardo | M | 1 | 🔵 doação | 1 M OFF |
-| Elisa | PP | 1 | 🟡 metade | Infantil 3 anos OFF |
-| Joice | M | 1 | 🟢 integral | 1 M OFF |
-| Wesley | GG | 1 | 🟢 integral | 1 GG OFF |
-| Raquel | M | 1 | 🟡 metade | 1 M OFF |
-| Daniel Pastor | M | 2 | ⚪ a conferir | 1 M OFF + 1 M PRETA |
-| André | M | 1 | ⚪ a conferir | 1 M OFF |
-| Rafael | M | 1 | 🟡 metade | 1 M PRETA |
-| Daniel | M | 1 | 🟡 metade | 1 M OFF |
-| Helena | PP | 1 | 🟡 metade | Infantil 2 anos OFF |
-| Jaqueline | M | 1 | 🔵 doação | 1 M OFF |
-| Valkiria | P | 1 | 🟡 metade | 1 P OFF |
-| Franklin | G | 1 | 🟡 metade | 1 G PRETA |
-| Thierry | M | 1 | 🔵 doação | 1 M OFF |
-| Ana | P | 1 | 🔵 doação | 1 P OFF |
-
-**Confere:** OFF 32 + PRETA 8 = **40** ✓
-
-## O que NÃO será feito
-
-- Nenhuma alteração de schema, tela ou layout do módulo Camisas.
-- Sem distinção visual de OFF/PRETA ou status colorido (cabe num próximo passo, se quiser).
-- Os 4 status ficam codificados em `payment_method` (`pago_integral` / `pago_metade` / `doacao` / `a_conferir`) para você filtrar manualmente.
+Sem mudanças em PDF/relatórios nesta etapa (podem ser feitas depois se necessário).

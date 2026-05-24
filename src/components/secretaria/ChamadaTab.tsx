@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw, Download, Lock, LockOpen, UserPlus, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, Download, Lock, LockOpen, UserPlus, Plus, X, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -40,6 +41,11 @@ interface AttendanceRecord {
 
 type ChamadaStatus = 'idle' | 'aberta' | 'finalizada';
 
+interface VisitorEntry {
+  id: string;
+  name: string | null;
+}
+
 interface ChamadaTabProps {
   classes: EbdClass[];
   students: EbdStudent[];
@@ -52,20 +58,27 @@ interface ChamadaTabProps {
   dayIsClosed?: boolean;
   onCloseDay?: () => Promise<void>;
   onReopenDay?: () => Promise<void>;
-  classVisitors?: Record<string, number>;
-  onUpdateClassVisitor?: (classId: string, count: number) => Promise<void> | void;
+  classVisitors?: Record<string, VisitorEntry[]>;
+  onAddClassVisitor?: (classId: string, name: string | null) => Promise<void> | void;
+  onRemoveClassVisitor?: (classId: string, entryId: string) => Promise<void> | void;
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, classVisitors = {}, onUpdateClassVisitor }: ChamadaTabProps) {
+export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, classVisitors = {}, onAddClassVisitor, onRemoveClassVisitor }: ChamadaTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
   const [chamadaStatusMap, setChamadaStatusMap] = useState<Record<string, ChamadaStatus>>({});
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [showReopenConfirm, setShowReopenConfirm] = useState(false);
   const [closingDay, setClosingDay] = useState(false);
+  const [visitorInputOpen, setVisitorInputOpen] = useState(false);
+  const [visitorNameDraft, setVisitorNameDraft] = useState('');
+  const [addingVisitor, setAddingVisitor] = useState(false);
+  const visitorInputRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = accessLevel === 'admin';
-  const totalVisitors = Object.values(classVisitors).reduce((sum, n) => sum + (n || 0), 0);
+  const totalVisitors = Object.values(classVisitors).reduce((sum, list) => sum + (list?.length || 0), 0);
+  const finishedClassesCount = classes.filter(c => (chamadaStatusMap[c.id] || 'idle') === 'finalizada').length;
+  const inProgressClassesCount = classes.filter(c => (chamadaStatusMap[c.id] || 'idle') === 'aberta').length;
 
   const getClassChamadaStatus = (classId: string): ChamadaStatus => {
     return chamadaStatusMap[classId] || 'idle';
@@ -177,12 +190,18 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     const stats = getClassStats(selectedClass.id);
     const status = getClassChamadaStatus(selectedClass.id);
     const isReadOnly = status !== 'aberta' || !!dayIsClosed;
-    const classVisitorCount = classVisitors[selectedClass.id] ?? 0;
-    const handleVisitorChange = (delta: number) => {
-      if (isReadOnly) return;
-      const next = Math.max(0, Math.min(999, classVisitorCount + delta));
-      if (next === classVisitorCount) return;
-      onUpdateClassVisitor?.(selectedClass.id, next);
+    const visitorList = classVisitors[selectedClass.id] || [];
+
+    const submitVisitor = async () => {
+      if (isReadOnly || addingVisitor) return;
+      setAddingVisitor(true);
+      try {
+        await onAddClassVisitor?.(selectedClass.id, visitorNameDraft || null);
+        setVisitorNameDraft('');
+        setVisitorInputOpen(false);
+      } finally {
+        setAddingVisitor(false);
+      }
     };
 
     // Idle state - show start button
@@ -239,7 +258,10 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             </Button>
             <div className="flex-1 min-w-0">
               <h2 className="font-semibold text-lg">{selectedClass.name}</h2>
-              <p className="text-xs text-muted-foreground">{stats.present}/{stats.total} presentes</p>
+              <p className="text-xs text-muted-foreground">
+                {stats.present}/{stats.total} presentes
+                {visitorList.length > 0 && ` · ${visitorList.length} visitante${visitorList.length > 1 ? 's' : ''}`}
+              </p>
             </div>
             {dayIsClosed ? (
               <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20">
@@ -295,33 +317,84 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           )}
 
           {/* Visitantes desta aula */}
-          <div className="mt-4 p-3 rounded-lg border border-border bg-muted/30 flex items-center gap-3">
-            <UserPlus className="h-4 w-4 text-muted-foreground shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Visitantes nesta aula</p>
-              <p className="text-[11px] text-muted-foreground">Pessoas visitando esta turma hoje</p>
+          <div className="mt-4 p-3 rounded-lg border border-border bg-muted/30 space-y-2">
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4 text-muted-foreground shrink-0" />
+              <p className="text-sm font-medium flex-1">Visitantes nesta aula</p>
+              <Badge variant="secondary" className="text-[10px]">{visitorList.length}</Badge>
             </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={isReadOnly || classVisitorCount === 0}
-                onClick={() => handleVisitorChange(-1)}
-              >
-                <Minus className="h-3.5 w-3.5" />
-              </Button>
-              <span className="w-8 text-center font-semibold tabular-nums text-sm">{classVisitorCount}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={isReadOnly}
-                onClick={() => handleVisitorChange(1)}
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+
+            {visitorList.length > 0 && (
+              <div className="space-y-1.5">
+                {visitorList.map(v => (
+                  <div key={v.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-background border border-border/60">
+                    <UserPlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className={`flex-1 text-sm truncate ${v.name ? '' : 'text-muted-foreground italic'}`}>
+                      {v.name || 'Visitante sem nome'}
+                    </span>
+                    {!isReadOnly && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        onClick={() => onRemoveClassVisitor?.(selectedClass.id, v.id)}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!isReadOnly && (
+              visitorInputOpen ? (
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    ref={visitorInputRef}
+                    autoFocus
+                    placeholder="Nome do visitante (opcional)"
+                    value={visitorNameDraft}
+                    onChange={(e) => setVisitorNameDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        submitVisitor();
+                      } else if (e.key === 'Escape') {
+                        setVisitorInputOpen(false);
+                        setVisitorNameDraft('');
+                      }
+                    }}
+                    className="h-8 text-sm"
+                    disabled={addingVisitor}
+                  />
+                  <Button size="sm" className="h-8 px-3" onClick={submitVisitor} disabled={addingVisitor}>
+                    {addingVisitor ? '...' : 'Add'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => { setVisitorInputOpen(false); setVisitorNameDraft(''); }}
+                    disabled={addingVisitor}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-xs"
+                  onClick={() => setVisitorInputOpen(true)}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar visitante
+                </Button>
+              )
+            )}
+            {isReadOnly && visitorList.length === 0 && (
+              <p className="text-[11px] text-muted-foreground italic">Nenhum visitante.</p>
+            )}
           </div>
         </div>
 
@@ -343,8 +416,8 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                 className="w-full"
                 onClick={() => setClassChamadaStatus(selectedClass.id, 'aberta')}
               >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reabrir Chamada
+                <Pencil className="h-4 w-4 mr-2" />
+                Revisar / Editar
               </Button>
             )}
           </div>
@@ -419,6 +492,17 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           </div>
           <Progress value={totalStats.percentage} className="h-2" />
 
+          {/* Progresso turmas finalizadas */}
+          {classes.length > 0 && !dayIsClosed && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>{finishedClassesCount}/{classes.length} turmas finalizadas</span>
+              {inProgressClassesCount > 0 && (
+                <span className="text-blue-600">· {inProgressClassesCount} em andamento</span>
+              )}
+            </div>
+          )}
+
           {/* Visitor count (somatório por turma) */}
           <div className="flex items-center gap-2 pt-1">
             <UserPlus className="h-4 w-4 text-muted-foreground" />
@@ -431,7 +515,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             )}
           </div>
           <p className="text-[11px] text-muted-foreground -mt-1">
-            Marque os visitantes dentro de cada turma.
+            Adicione visitantes (com nome opcional) dentro de cada turma.
           </p>
 
           {/* Close/Reopen day button for admin */}
@@ -453,7 +537,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
         {sortedClasses.map((cls, index) => {
           const stats = getClassStats(cls.id);
           const pct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
-          const classVis = classVisitors[cls.id] ?? 0;
+          const classVis = (classVisitors[cls.id] || []).length;
 
           return (
             <Card
@@ -502,7 +586,14 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           <AlertDialogHeader>
             <AlertDialogTitle>Fechar dia?</AlertDialogTitle>
             <AlertDialogDescription>
-              Isso vai registrar o resumo da chamada de hoje no histórico. A chamada não poderá mais ser editada até ser reaberta.
+              {finishedClassesCount < classes.length && classes.length > 0 ? (
+                <>
+                  Ainda há <strong>{classes.length - finishedClassesCount} turma(s) não finalizada(s)</strong>.{' '}
+                  Você pode fechar mesmo assim — o resumo atual será registrado e a chamada não poderá mais ser editada até ser reaberta.
+                </>
+              ) : (
+                <>Isso vai registrar o resumo da chamada de hoje no histórico. A chamada não poderá mais ser editada até ser reaberta.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
