@@ -539,6 +539,9 @@ export default function PlanilhaAlunosTab({
                   <SelectValue placeholder="Selecionar turma" />
                 </SelectTrigger>
                 <SelectContent>
+                  {accessLevel === 'admin' && (
+                    <SelectItem value="__all__">Todas as turmas</SelectItem>
+                  )}
                   {visibleClasses.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
