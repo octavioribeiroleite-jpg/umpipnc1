@@ -598,17 +598,27 @@ export default function PlanilhaAlunosTab({
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
-              placeholder="Nome do novo aluno..."
+              placeholder={
+                isAllClasses
+                  ? 'Selecione uma turma para adicionar...'
+                  : 'Nome do novo aluno...'
+              }
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddStudent();
               }}
+              disabled={isAllClasses}
               className="flex-1"
             />
             <Button
               onClick={handleAddStudent}
-              disabled={!newName.trim() || addingStudent || !selectedClassId}
+              disabled={
+                !newName.trim() ||
+                addingStudent ||
+                !selectedClassId ||
+                isAllClasses
+              }
             >
               <Plus className="h-4 w-4" /> Adicionar
             </Button>
