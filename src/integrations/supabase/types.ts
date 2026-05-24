@@ -431,6 +431,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          origin: string
         }
         Insert: {
           active?: boolean
@@ -438,6 +439,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          origin?: string
         }
         Update: {
           active?: boolean
@@ -445,6 +447,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          origin?: string
         }
         Relationships: [
           {
