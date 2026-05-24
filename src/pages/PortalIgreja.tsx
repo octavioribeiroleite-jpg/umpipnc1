@@ -17,6 +17,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import logoIpnc from '@/assets/logo-ipnc.png';
+import { HeaderActions } from '@/components/layout/HeaderActions';
 
 // ---------- Types ----------
 
