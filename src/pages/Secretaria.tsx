@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AppCard } from '@/components/ui/app-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HeaderActions } from '@/components/layout/HeaderActions';
 import { useBirthdays } from '@/hooks/useBirthdays';
 import type { Birthday, BirthdayInsert } from '@/hooks/useBirthdays';
 import { NextBirthdayCard } from '@/components/aniversariantes/NextBirthdayCard';
@@ -663,7 +664,7 @@ export default function Secretaria() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 safe-top">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border px-4 py-3 safe-top">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -678,6 +679,7 @@ export default function Secretaria() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <HeaderActions />
             <button
               onClick={handleBackToHome}
               className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
@@ -685,14 +687,14 @@ export default function Secretaria() {
             >
               <Home className="h-4.5 w-4.5" />
             </button>
-            <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
+            <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs hidden sm:inline-flex">
               {profileLabel}
             </Badge>
           </div>
         </div>
       </div>
 
-      <div className="p-4 pb-8">
+      <div className="p-4 pb-8 pt-20">
         {currentView === 'chamada' && (
           <ChamadaTab
             classes={classes}
