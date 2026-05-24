@@ -727,6 +727,15 @@ export default function Secretaria() {
         {currentView === 'aniversariantes' && (
           <SecretariaAniversariantes />
         )}
+
+        {currentView === 'planilha' && (
+          <PlanilhaAlunosTab
+            classes={classes}
+            allStudents={allStudents}
+            onRefresh={fetchData}
+            accessLevel={accessLevel!}
+          />
+        )}
       </div>
 
       <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
