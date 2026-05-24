@@ -4,17 +4,44 @@ import logoIpnc from '@/assets/logo-ipnc.png';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import {
   ArrowLeft,
+  LogOut,
 } from 'lucide-react';
 import { InstallButton } from '@/components/layout/InstallButton';
 import { UpdateAppButton } from '@/components/UpdateAppButton';
+import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 
 export function MobileHeader() {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   useSwipeBack();
+  const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
 
   const isHome = location.pathname === '/';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const lastUpdate = (() => {
+    try {
+      const iso =
+        typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
+      if (!iso) return '';
+      const d = new Date(iso);
+      const date = d.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+      });
+      const time = d
+        .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        .replace(':', 'h');
+      return `${date} ${time}`;
+    } catch {
+      return '';
+    }
+  })();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md safe-top">
@@ -35,10 +62,33 @@ export function MobileHeader() {
           </span>
         </div>
         <div className="flex-shrink-0 flex items-center gap-1">
+          {lastUpdate && (
+            <span
+              className="hidden xs:inline text-[10px] leading-tight text-muted-foreground mr-1 text-right"
+              title={`Última atualização: ${lastUpdate}`}
+            >
+              v{lastUpdate}
+            </span>
+          )}
           <UpdateAppButton variant="icon" />
           <InstallButton />
+          {profile && (
+            <button
+              onClick={requestExit}
+              aria-label="Sair"
+              title="Sair"
+              className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          )}
         </div>
       </div>
+      <ExitConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        onConfirm={handleSignOut}
+      />
     </header>
   );
 }
