@@ -6,6 +6,8 @@ import { PullToRefresh } from './PullToRefresh';
 import { BottomNav, type BottomNavItem } from './BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { silentUpdateCheck } from '@/lib/registerSW';
 import {
   Home,
   Users,
@@ -34,6 +36,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    void silentUpdateCheck();
+  }, [location.pathname]);
 
   const go = (path: string) => navigate(path);
   const isActive = (path: string) => (path === '/' ? location.pathname === '/' : location.pathname.startsWith(path));
