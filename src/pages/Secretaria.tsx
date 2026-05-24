@@ -685,16 +685,14 @@ export default function Secretaria() {
           </div>
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <HeaderActions />
-            {currentView !== 'home' && (
-              <button
-                onClick={handleBackToHome}
-                aria-label="Menu da Secretaria"
-                title="Menu da Secretaria"
-                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-              >
-                <Home className="h-5 w-5" />
-              </button>
-            )}
+            <button
+              onClick={handleBackToHome}
+              aria-label="Menu da Secretaria"
+              title="Menu da Secretaria"
+              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <Home className="h-5 w-5" />
+            </button>
             <button
               onClick={handleExitApp}
               aria-label="Sair"
