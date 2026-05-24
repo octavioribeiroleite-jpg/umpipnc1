@@ -901,6 +901,11 @@ export default function PlanilhaAlunosTab({
                       <Badge variant="outline" className="text-[10px]">
                         {s.origin === 'importado' ? 'Importado' : 'Manual'}
                       </Badge>
+                      {isAllClasses && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {classNameById[s.class_id] ?? '-'}
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       <Button
