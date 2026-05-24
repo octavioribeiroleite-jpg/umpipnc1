@@ -162,9 +162,22 @@ export default function PlanilhaAlunosTab({
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isAllClasses = selectedClassId === '__all__';
+  const visibleClassIds = useMemo(
+    () => new Set(visibleClasses.map((c) => c.id)),
+    [visibleClasses],
+  );
+  const classNameById = useMemo(() => {
+    const m: Record<string, string> = {};
+    classes.forEach((c) => (m[c.id] = c.name));
+    return m;
+  }, [classes]);
   const classStudents = useMemo(
-    () => allStudents.filter((s) => s.class_id === selectedClassId),
-    [allStudents, selectedClassId],
+    () =>
+      isAllClasses
+        ? allStudents.filter((s) => visibleClassIds.has(s.class_id))
+        : allStudents.filter((s) => s.class_id === selectedClassId),
+    [allStudents, selectedClassId, isAllClasses, visibleClassIds],
   );
 
   const filteredStudents = useMemo(() => {
