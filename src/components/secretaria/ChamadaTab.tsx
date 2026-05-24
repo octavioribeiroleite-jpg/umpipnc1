@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw, Download, Lock, LockOpen, UserPlus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, RotateCcw, Download, Lock, LockOpen, UserPlus, Minus, Plus } from 'lucide-react';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -53,11 +52,11 @@ interface ChamadaTabProps {
   dayIsClosed?: boolean;
   onCloseDay?: () => Promise<void>;
   onReopenDay?: () => Promise<void>;
-  visitorCount?: number;
-  setVisitorCount?: React.Dispatch<React.SetStateAction<number>>;
+  classVisitors?: Record<string, number>;
+  onUpdateClassVisitor?: (classId: string, count: number) => Promise<void> | void;
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, visitorCount = 0, setVisitorCount }: ChamadaTabProps) {
+export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, classVisitors = {}, onUpdateClassVisitor }: ChamadaTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
   const [chamadaStatusMap, setChamadaStatusMap] = useState<Record<string, ChamadaStatus>>({});
@@ -66,6 +65,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
   const [closingDay, setClosingDay] = useState(false);
 
   const isAdmin = accessLevel === 'admin';
+  const totalVisitors = Object.values(classVisitors).reduce((sum, n) => sum + (n || 0), 0);
 
   const getClassChamadaStatus = (classId: string): ChamadaStatus => {
     return chamadaStatusMap[classId] || 'idle';
@@ -120,7 +120,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
   const getTotalStats = () => {
     const total = students.length;
     const present = attendance.filter(a => a.present && a.date === attendanceDate).length;
-    const totalWithVisitors = present + visitorCount;
+    const totalWithVisitors = present + totalVisitors;
     return { total, present, percentage: total > 0 ? Math.round((present / total) * 100) : 0, totalWithVisitors };
   };
 
@@ -177,6 +177,13 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     const stats = getClassStats(selectedClass.id);
     const status = getClassChamadaStatus(selectedClass.id);
     const isReadOnly = status !== 'aberta' || !!dayIsClosed;
+    const classVisitorCount = classVisitors[selectedClass.id] ?? 0;
+    const handleVisitorChange = (delta: number) => {
+      if (isReadOnly) return;
+      const next = Math.max(0, Math.min(999, classVisitorCount + delta));
+      if (next === classVisitorCount) return;
+      onUpdateClassVisitor?.(selectedClass.id, next);
+    };
 
     // Idle state - show start button
     if (status === 'idle' && !dayIsClosed) {
@@ -286,6 +293,36 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           {classStudents.length === 0 && (
             <p className="text-center text-muted-foreground py-8">Nenhum aluno cadastrado nesta turma.</p>
           )}
+
+          {/* Visitantes desta aula */}
+          <div className="mt-4 p-3 rounded-lg border border-border bg-muted/30 flex items-center gap-3">
+            <UserPlus className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Visitantes nesta aula</p>
+              <p className="text-[11px] text-muted-foreground">Pessoas visitando esta turma hoje</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={isReadOnly || classVisitorCount === 0}
+                onClick={() => handleVisitorChange(-1)}
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </Button>
+              <span className="w-8 text-center font-semibold tabular-nums text-sm">{classVisitorCount}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={isReadOnly}
+                onClick={() => handleVisitorChange(1)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Footer action */}
@@ -382,34 +419,20 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           </div>
           <Progress value={totalStats.percentage} className="h-2" />
 
-          {/* Visitor count */}
-          <div className="flex items-center gap-3 pt-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <UserPlus className="h-4 w-4" />
-              <span className="text-sm">Visitantes</span>
-            </div>
-            {dayIsClosed ? (
-              <span className="text-sm font-medium">{visitorCount}</span>
-            ) : (
-              <Input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={visitorCount === 0 ? '' : String(visitorCount)}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, '');
-                  setVisitorCount?.(val === '' ? 0 : Math.min(999, parseInt(val)));
-                }}
-                placeholder="0"
-                className="w-20 h-8 text-center text-sm"
-              />
-            )}
-            {visitorCount > 0 && (
-              <span className="text-xs text-muted-foreground ml-auto">
-                Total geral: <span className="font-semibold text-foreground">{totalStats.totalWithVisitors}</span>
+          {/* Visitor count (somatório por turma) */}
+          <div className="flex items-center gap-2 pt-1">
+            <UserPlus className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Visitantes</span>
+            <span className="text-sm font-semibold ml-auto">{totalVisitors}</span>
+            {totalVisitors > 0 && (
+              <span className="text-xs text-muted-foreground">
+                · Total: <span className="font-semibold text-foreground">{totalStats.totalWithVisitors}</span>
               </span>
             )}
           </div>
+          <p className="text-[11px] text-muted-foreground -mt-1">
+            Marque os visitantes dentro de cada turma.
+          </p>
 
           {/* Close/Reopen day button for admin */}
           {isAdmin && !dayIsClosed && attendance.length > 0 && onCloseDay && (
@@ -430,6 +453,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
         {sortedClasses.map((cls, index) => {
           const stats = getClassStats(cls.id);
           const pct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
+          const classVis = classVisitors[cls.id] ?? 0;
 
           return (
             <Card
@@ -457,6 +481,11 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                   <span className={`text-xs font-semibold ${getPercentColor(pct)}`}>{pct}%</span>
                 </div>
                 <Progress value={pct} className="h-1.5" />
+                {classVis > 0 && (
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <UserPlus className="h-3 w-3" /> {classVis} visitante{classVis > 1 ? 's' : ''}
+                  </p>
+                )}
               </CardContent>
             </Card>
           );
