@@ -486,10 +486,12 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
   pdf.text(pdf.splitTextToSize(coverSummary, coverPanelW - 20), coverPanelX + 10, coverPanelY + 24);
 
   const coverCardY = coverPanelY + 42;
-  coverMetricCard(coverPanelX + 10, coverCardY, cardW, 'Saldo do ano', formatSignedCurrency(saldo), saldo >= 0 ? PDF_COLORS.green : PDF_COLORS.red);
-  coverMetricCard(coverPanelX + 13 + cardW, coverCardY, cardW, 'Receitas', formatCurrency(totalReceitas), PDF_COLORS.green);
-  coverMetricCard(coverPanelX + 16 + cardW * 2, coverCardY, cardW, 'Gastos', formatCurrency(totalDespesas), PDF_COLORS.red);
-  coverMetricCard(coverPanelX + 19 + cardW * 3, coverCardY, cardW, 'Adimplencia', `${adimplenciaRate}%`, PDF_COLORS.blue);
+  const coverCardGap = 3;
+  const coverCardW = (coverPanelW - 20 - coverCardGap * 3) / 4;
+  coverMetricCard(coverPanelX + 10, coverCardY, coverCardW, 'Saldo do ano', formatSignedCurrency(saldo), saldo >= 0 ? PDF_COLORS.green : PDF_COLORS.red);
+  coverMetricCard(coverPanelX + 10 + (coverCardW + coverCardGap), coverCardY, coverCardW, 'Receitas', formatCurrency(totalReceitas), PDF_COLORS.green);
+  coverMetricCard(coverPanelX + 10 + (coverCardW + coverCardGap) * 2, coverCardY, coverCardW, 'Gastos', formatCurrency(totalDespesas), PDF_COLORS.red);
+  coverMetricCard(coverPanelX + 10 + (coverCardW + coverCardGap) * 3, coverCardY, coverCardW, 'Adimplencia', `${adimplenciaRate}%`, PDF_COLORS.blue);
 
   const detailW = (coverPanelW - 30) / 3;
   const detailY = coverPanelY + 80;
