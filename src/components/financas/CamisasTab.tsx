@@ -14,9 +14,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
-import { EncomendasTab } from './EncomendasTab';
+import { EncomendasTab, type ShirtOrder, type OrderItem } from './EncomendasTab';
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
+const ORDER_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Inf2', 'Inf3', 'Inf4'];
+const ORDER_SIZE_LABEL: Record<string, string> = {
+  PP: 'PP', P: 'P', M: 'M', G: 'G', GG: 'GG', XG: 'XG',
+  Inf2: 'Inf 2 anos', Inf3: 'Inf 3 anos', Inf4: 'Inf 4 anos',
+};
+const ORDER_COLORS = [
+  { value: 'off', label: 'Off White' },
+  { value: 'preta', label: 'Preta' },
+];
 
 interface InventoryItem {
   id: string;
@@ -54,6 +63,7 @@ export function CamisasTab() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [orders, setOrders] = useState<ShirtOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
 
@@ -100,22 +110,28 @@ export function CamisasTab() {
     let purchQuery = supabase.from('shirt_purchases').select('*').order('date', { ascending: false });
     let salesQuery = supabase.from('shirt_sales').select('*').order('date', { ascending: false });
     let membersQuery = supabase.from('members').select('id, name').eq('active', true).order('name');
+    let ordersQuery = supabase.from('shirt_orders').select('*').order('buyer_name');
 
     if (societyId) {
       invQuery = invQuery.eq('society_id', societyId);
       purchQuery = purchQuery.eq('society_id', societyId);
       salesQuery = salesQuery.eq('society_id', societyId);
       membersQuery = membersQuery.eq('society_id', societyId);
+      ordersQuery = ordersQuery.eq('society_id', societyId);
     }
 
-    const [invRes, purchRes, salesRes, membersRes] = await Promise.all([
-      invQuery, purchQuery, salesQuery, membersQuery
+    const [invRes, purchRes, salesRes, membersRes, ordersRes] = await Promise.all([
+      invQuery, purchQuery, salesQuery, membersQuery, ordersQuery
     ]);
 
     setInventory(invRes.data || []);
     setPurchases(purchRes.data || []);
     setSales(salesRes.data || []);
     setMembers(membersRes.data || []);
+    setOrders(((ordersRes.data || []) as any[]).map(o => ({
+      ...o,
+      items: Array.isArray(o.items) ? (o.items as OrderItem[]) : [],
+    })) as ShirtOrder[]);
     setLoading(false);
   };
 
@@ -375,6 +391,22 @@ export function CamisasTab() {
   const totalPurchased = purchases.reduce((sum, p) => sum + p.total_cost, 0);
   const totalSold = sales.reduce((sum, s) => sum + s.total_price, 0);
   const profit = totalSold - totalPurchased;
+
+  // Encomendas (orders)
+  const orderOrdered = orders.reduce((s, o) => s + Number(o.total_price || 0), 0);
+  const orderReceived = orders.reduce((s, o) => s + Number(o.amount_paid || 0), 0);
+  const orderToReceive = Math.max(0, orderOrdered - orderReceived);
+  const orderDelivered = orders.filter(o => o.delivery_status === 'entregue').length;
+  const orderProduction = (() => {
+    const byColor: Record<string, Record<string, number>> = { off: {}, preta: {} };
+    let total = 0;
+    orders.forEach(o => (o.items || []).forEach(i => {
+      const c = byColor[i.color] || (byColor[i.color] = {});
+      c[i.size] = (c[i.size] || 0) + (Number(i.qty) || 0);
+      total += Number(i.qty) || 0;
+    }));
+    return { byColor, total };
+  })();
 
   if (loading) {
     return (
