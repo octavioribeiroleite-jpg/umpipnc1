@@ -282,25 +282,56 @@ export function RelatoriosTab() {
     toast.info('Gerando PDF, aguarde...');
 
     try {
-      const element = reportRef.current;
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const ratio = Math.min(pdfWidth / canvas.width, pdfHeight / canvas.height);
-      const imgX = (pdfWidth - canvas.width * ratio) / 2;
-      let heightLeft = canvas.height * ratio;
-      let position = 0;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - margin * 2;
+      let cursorY = margin;
 
-      pdf.addImage(imgData, 'PNG', imgX, position, canvas.width * ratio, canvas.height * ratio);
-      heightLeft -= pdfHeight;
+      // Captura cada seção separadamente para uma paginação organizada (sem cortar blocos)
+      const sections = Array.from(
+        reportRef.current.querySelectorAll<HTMLElement>('[data-pdf-section]')
+      );
 
-      while (heightLeft > 0) {
-        position = heightLeft - canvas.height * ratio;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', imgX, position, canvas.width * ratio, canvas.height * ratio);
-        heightLeft -= pdfHeight;
+      for (const section of sections) {
+        const canvas = await html2canvas(section, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+        // Se a seção for maior que a página inteira, fatia ela em páginas
+        if (imgHeight > pageHeight - margin * 2) {
+          if (cursorY > margin) {
+            pdf.addPage();
+            cursorY = margin;
+          }
+          let heightLeft = imgHeight;
+          let position = margin;
+          pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+          heightLeft -= pageHeight - margin;
+          while (heightLeft > 0) {
+            pdf.addPage();
+            position = margin - (imgHeight - heightLeft);
+            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+            heightLeft -= pageHeight - margin * 2;
+          }
+          cursorY = margin;
+          continue;
+        }
+
+        // Nova página se a seção não couber no espaço restante
+        if (cursorY + imgHeight > pageHeight - margin) {
+          pdf.addPage();
+          cursorY = margin;
+        }
+
+        pdf.addImage(imgData, 'PNG', margin, cursorY, contentWidth, imgHeight);
+        cursorY += imgHeight + 6;
       }
 
       pdf.save(`Relatorio_Financeiro_${selectedYear}.pdf`);
@@ -350,14 +381,14 @@ export function RelatoriosTab() {
       {/* Conteúdo do Relatório */}
       <div ref={reportRef} className="space-y-6 bg-background p-4 rounded-lg">
         {/* Cabeçalho */}
-        <div className="text-center border-b pb-6">
+        <div data-pdf-section className="text-center border-b pb-6">
           <h1 className="text-3xl font-bold text-foreground">Relatório Financeiro Anual</h1>
           <p className="text-xl text-muted-foreground mt-2">{selectedYear}</p>
           <p className="text-sm text-muted-foreground">Gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
 
         {/* Resumo Executivo */}
-        <Card className="border-2 border-primary/20">
+        <Card data-pdf-section className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
@@ -409,7 +440,7 @@ export function RelatoriosTab() {
         </Card>
 
         {/* Adimplência */}
-        <Card>
+        <Card data-pdf-section>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -462,7 +493,7 @@ export function RelatoriosTab() {
         </Card>
 
         {/* Gráficos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div data-pdf-section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -520,7 +551,7 @@ export function RelatoriosTab() {
         </div>
 
         {/* Tabelas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div data-pdf-section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-success">
@@ -611,7 +642,7 @@ export function RelatoriosTab() {
         </div>
 
         {/* Comprovantes */}
-        <Card>
+        <Card data-pdf-section>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ImageIcon className="h-5 w-5" />
@@ -625,31 +656,34 @@ export function RelatoriosTab() {
                 <p>Nenhum comprovante anexado para este ano</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {despesasComComprovante.map(tx => (
-                  <div key={tx.id} className="border rounded-lg overflow-hidden bg-muted/30 cursor-pointer" onClick={() => handleViewReceipt(tx.receipt_url!)}>
-                    <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                  <div key={tx.id} className="border rounded-lg overflow-hidden bg-white cursor-pointer break-inside-avoid" onClick={() => handleViewReceipt(tx.receipt_url!)}>
+                    <div className="border-b px-3 py-2 flex items-center justify-between gap-2 bg-muted/30">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{tx.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <p className="text-sm font-bold text-destructive shrink-0">{formatCurrency(tx.amount)}</p>
+                    </div>
+                    <div className="bg-muted/20 flex items-center justify-center overflow-hidden" style={{ minHeight: '220px' }}>
                       {tx.receipt_url?.includes('.pdf') ? (
-                        <div className="text-center p-4">
-                          <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-                          <p className="text-xs mt-2">PDF</p>
+                        <div className="text-center p-6">
+                          <FileText className="h-14 w-14 mx-auto text-muted-foreground" />
+                          <p className="text-xs mt-2 text-muted-foreground">Comprovante em PDF — toque para abrir</p>
                         </div>
                       ) : signedUrls[tx.id] ? (
                         <img
                           src={signedUrls[tx.id]}
                           alt={tx.description}
-                          className="w-full h-full object-cover"
+                          crossOrigin="anonymous"
+                          className="w-full h-auto max-h-[360px] object-contain"
                         />
                       ) : (
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                       )}
-                    </div>
-                    <div className="p-2">
-                      <p className="text-sm font-medium truncate">{tx.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}
-                      </p>
-                      <p className="text-sm font-bold text-destructive">{formatCurrency(tx.amount)}</p>
                     </div>
                   </div>
                 ))}
@@ -659,7 +693,7 @@ export function RelatoriosTab() {
         </Card>
 
         {/* Rodapé */}
-        <div className="text-center pt-6 border-t">
+        <div data-pdf-section className="text-center pt-6 border-t">
           <p className="text-sm text-muted-foreground">
             Relatório gerado automaticamente pelo Sistema de Gestão Financeira
           </p>
