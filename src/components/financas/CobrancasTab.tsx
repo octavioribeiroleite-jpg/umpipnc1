@@ -111,8 +111,7 @@ export function CobrancasTab() {
     let settingsQuery = supabase
       .from('financial_settings')
       .select('monthly_fee, per_capita, due_day')
-      .eq('competence', 'geral')
-      .maybeSingle();
+      .eq('competence', 'geral');
 
     if (societyId) {
       membersQuery = membersQuery.eq('society_id', societyId);
@@ -120,7 +119,7 @@ export function CobrancasTab() {
       settingsQuery = settingsQuery.eq('society_id', societyId);
     }
 
-    const [membersRes, chargesRes, settingsRes] = await Promise.all([membersQuery, chargesQuery, settingsQuery]);
+    const [membersRes, chargesRes, settingsRes] = await Promise.all([membersQuery, chargesQuery, settingsQuery.maybeSingle()]);
 
     setMembers(membersRes.data || []);
     setCharges(chargesRes.data || []);
