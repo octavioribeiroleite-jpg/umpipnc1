@@ -323,48 +323,70 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
     const x = margin + (contentWidth - imgW) / 2;
     setDraw(PDF_COLORS.border);
     pdf.roundedRect(x - 3, y - 3, imgW + 6, imgH + 6, 2, 2, 'S');
+    pdf.link(x - 3, y - 3, imgW + 6, imgH + 6, { url });
     pdf.addImage(dataUrl, props.fileType || 'JPEG', x, y, imgW, imgH);
     y += imgH + 10;
   };
 
-  const pdfButton = (label: string, x: number, btnY: number, url: string) => {
-    setFill(PDF_COLORS.blue);
-    setDraw(PDF_COLORS.blue);
-    pdf.roundedRect(x, btnY, 30, 9, 2, 2, 'FD');
+  const receiptButton = (label: string, x: number, btnY: number, url: string, color: [number, number, number], width = 38) => {
+    setFill(color);
+    setDraw(color);
+    pdf.roundedRect(x, btnY, width, 10, 2, 2, 'FD');
+    pdf.link(x, btnY, width, 10, { url });
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7.5);
+    pdf.setFontSize(7.2);
     setColor(PDF_COLORS.white);
-    (pdf as any).textWithLink(label, x + 5, btnY + 6, { url });
+    pdf.text(label, x + width / 2, btnY + 6.4, { align: 'center' });
   };
 
   const receiptCard = async (tx: TransactionWithReceipt, index: number) => {
     if (!tx.receipt_url) return;
     const signedUrl = await getSignedUrl(tx.receipt_url);
     const isPdf = tx.receipt_url.toLowerCase().includes('.pdf');
-    const h = 22;
+    const cardX = margin + 5;
+    const cardW = contentWidth - 10;
+    const buttonW = 38;
+    const buttonX = cardX + cardW - buttonW - 7;
+    const textW = buttonX - cardX - 13;
+    const titleLines = pdf.splitTextToSize(`${index + 1}. ${tx.description}`, textW);
+    const h = Math.max(24, titleLines.length * 4.2 + 15);
     ensure(h + 4);
+
     setFill(PDF_COLORS.white);
     setDraw(PDF_COLORS.border);
-    pdf.roundedRect(margin + 5, y, contentWidth - 10, h, 2, 2, 'FD');
+    pdf.roundedRect(cardX, y, cardW, h, 2, 2, 'FD');
+
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
+    pdf.setFontSize(8.8);
     setColor(PDF_COLORS.ink);
-    pdf.text(`${index + 1}. ${tx.description}`, margin + 10, y + 7, { maxWidth: contentWidth - 58 });
+    pdf.text(titleLines, cardX + 6, y + 7);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.8);
+    setColor(PDF_COLORS.muted);
+    pdf.text(`${formatDate(tx.date)} | ${tx.category_name || 'Sem categoria'} | ${formatCurrency(tx.amount)}`, cardX + 6, y + h - 7, { maxWidth: textW });
+
+    receiptButton(isPdf ? 'Abrir PDF' : 'Abrir imagem', buttonX, y + (h - 10) / 2, signedUrl, isPdf ? PDF_COLORS.blue : PDF_COLORS.green, buttonW);
+    y += h + 4;
+  };
+
+  const addPdfPlaceholder = (url: string) => {
+    ensure(42);
+    const boxX = margin + 5;
+    const boxW = contentWidth - 10;
+    setFill(PDF_COLORS.soft);
+    setDraw(PDF_COLORS.border);
+    pdf.roundedRect(boxX, y, boxW, 36, 2, 2, 'FD');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9.5);
+    setColor(PDF_COLORS.ink);
+    pdf.text('Previa do PDF', boxX + 6, y + 9);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
     setColor(PDF_COLORS.muted);
-    pdf.text(`${formatDate(tx.date)} | ${tx.category_name} | ${formatCurrency(tx.amount)}`, margin + 10, y + 15, { maxWidth: contentWidth - 58 });
-    if (isPdf) {
-      pdfButton('Abrir PDF', pageWidth - margin - 42, y + 6.5, signedUrl);
-    } else {
-      setFill(PDF_COLORS.green);
-      pdf.roundedRect(pageWidth - margin - 42, y + 6.5, 30, 9, 2, 2, 'F');
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7.5);
-      setColor(PDF_COLORS.white);
-      pdf.text('Imagem', pageWidth - margin - 27, y + 12.5, { align: 'center' });
-    }
-    y += h + 4;
+    pdf.text('Para ver o comprovante completo, clique no botao ao lado. A imagem interna do PDF pode ser adicionada em uma proxima etapa com renderizacao de PDF.', boxX + 6, y + 18, { maxWidth: boxW - 58 });
+    receiptButton('Abrir PDF', boxX + boxW - 45, y + 13, url, PDF_COLORS.blue, 38);
+    y += 42;
   };
 
   const addReceiptPage = async (tx: TransactionWithReceipt, index: number) => {
@@ -372,9 +394,13 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
     const start = sectionTitle(`Anexo ${index + 1}: comprovante`, 'Cada anexo fica em sua propria caixa para facilitar a conferencia.');
     try {
       await receiptCard(tx, index);
-      if (tx.receipt_url && !tx.receipt_url.toLowerCase().includes('.pdf')) {
+      if (tx.receipt_url) {
         const signedUrl = await getSignedUrl(tx.receipt_url);
-        await addReceiptImage(signedUrl);
+        if (tx.receipt_url.toLowerCase().includes('.pdf')) {
+          addPdfPlaceholder(signedUrl);
+        } else {
+          await addReceiptImage(signedUrl);
+        }
       }
     } catch (error) {
       console.error('Erro ao inserir comprovante:', error);
@@ -481,7 +507,7 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
   table('Gastos detalhados', ['Data', 'Descricao', 'Categoria', 'Valor'], despesasTransactions.map(tx => [formatDate(tx.date), tx.description, tx.category_name, formatCurrency(tx.amount)]), [contentWidth * 0.15, contentWidth * 0.41, contentWidth * 0.20, contentWidth * 0.18], { total: `Total de gastos: ${formatCurrency(totalDespesas)}`, accent: PDF_COLORS.red });
 
   if (despesasComComprovante.length > 0) {
-    start = sectionTitle('Comprovantes', 'Arquivos organizados um abaixo do outro. Quando o anexo for PDF, use o botao Abrir PDF.');
+    start = sectionTitle('Comprovantes', 'Arquivos organizados um abaixo do outro. Use o botao ao lado para abrir cada comprovante.');
     for (let i = 0; i < despesasComComprovante.length; i += 1) {
       try {
         await receiptCard(despesasComComprovante[i], i);
