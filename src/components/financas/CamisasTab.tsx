@@ -429,13 +429,23 @@ export function CamisasTab() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
+          <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
           <TabsTrigger value="encomendas">Encomendas</TabsTrigger>
           <TabsTrigger value="compras">Compras</TabsTrigger>
           <TabsTrigger value="vendas">Vendas</TabsTrigger>
+          <TabsTrigger value="estoque">Estoque</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="campanhas" className="space-y-4 animate-in fade-in-50">
+          <CampanhasCamisasTab
+            selectedCampaignId={selectedCampaignId}
+            onSelectCampaign={(id) => { setSelectedCampaignId(id); setActiveTab('encomendas'); }}
+            onDataChange={fetchData}
+          />
+        </TabsContent>
+
         <TabsContent value="encomendas" className="space-y-4 animate-in fade-in-50">
-          <EncomendasTab onDataChange={fetchData} />
+          <EncomendasTab onDataChange={fetchData} selectedCampaignId={selectedCampaignId} />
         </TabsContent>
 
         <TabsContent value="resumo" className="space-y-6 animate-in fade-in-50">
