@@ -489,28 +489,6 @@ export function CamisasTab() {
             </Card>
           </div>
 
-          {/* Estoque por tamanho */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Estoque por Tamanho</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                {inventory.map(item => (
-                  <div key={item.id} className="text-center p-4 rounded-lg bg-muted/50">
-                    <p className="text-lg font-bold">{item.size}</p>
-                    <p className={`text-2xl font-bold ${item.quantity > 0 ? 'text-success' : 'text-muted-foreground'}`}>
-                      {item.quantity}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Custo médio: R$ {item.average_cost.toFixed(2)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Resumo de Encomendas */}
           {orders.length > 0 && (
             <>
@@ -535,7 +513,7 @@ export function CamisasTab() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Encomendas por Tamanho</CardTitle>
+                  <CardTitle>Estoque por Tamanho</CardTitle>
                   <Badge variant="outline">Total: {orderProduction.total} camisas</Badge>
                 </CardHeader>
                 <CardContent>
