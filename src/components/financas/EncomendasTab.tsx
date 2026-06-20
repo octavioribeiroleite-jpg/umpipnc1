@@ -491,7 +491,7 @@ export function EncomendasTab({ onDataChange }: Props) {
                 </TableHeader>
                 <TableBody>
                   {filtered.map(o => {
-                    const fullyPaid = o.amount_paid >= o.total_price && o.total_price > 0;
+                    const fullyPaid = (o.amount_paid >= o.total_price && o.total_price > 0) || !!o.is_gift;
                     return (
                       <TableRow key={o.id}>
                         <TableCell className="font-medium">{o.buyer_name}</TableCell>
