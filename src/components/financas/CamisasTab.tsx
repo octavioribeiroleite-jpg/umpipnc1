@@ -13,9 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
+import { AlertTriangle, ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
 import { EncomendasTab, type ShirtOrder, type OrderItem } from './EncomendasTab';
-import { CampanhasCamisasTab } from './CampanhasCamisasTab';
+import { CampanhasCamisasTab, type ShirtCampaign } from './CampanhasCamisasTab';
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 const ORDER_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Inf2', 'Inf3', 'Inf4'];
@@ -27,6 +27,9 @@ const ORDER_COLORS = [
   { value: 'off', label: 'Off White' },
   { value: 'preta', label: 'Preta' },
 ];
+
+const formatCurrency = (value: number) =>
+  `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
 
 interface InventoryItem {
   id: string;
@@ -66,6 +69,7 @@ export function CamisasTab() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [orders, setOrders] = useState<ShirtOrder[]>([]);
+  const [campaigns, setCampaigns] = useState<ShirtCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
 
@@ -113,6 +117,7 @@ export function CamisasTab() {
     let salesQuery = supabase.from('shirt_sales').select('*').order('date', { ascending: false });
     let membersQuery = supabase.from('members').select('id, name').eq('active', true).order('name');
     let ordersQuery = supabase.from('shirt_orders').select('*').order('buyer_name');
+    let campaignsQuery = supabase.from('shirt_campaigns').select('*').order('purchase_date', { ascending: false });
 
     if (societyId) {
       invQuery = invQuery.eq('society_id', societyId);
@@ -120,10 +125,11 @@ export function CamisasTab() {
       salesQuery = salesQuery.eq('society_id', societyId);
       membersQuery = membersQuery.eq('society_id', societyId);
       ordersQuery = ordersQuery.eq('society_id', societyId);
+      campaignsQuery = campaignsQuery.eq('society_id', societyId);
     }
 
-    const [invRes, purchRes, salesRes, membersRes, ordersRes] = await Promise.all([
-      invQuery, purchQuery, salesQuery, membersQuery, ordersQuery
+    const [invRes, purchRes, salesRes, membersRes, ordersRes, campaignsRes] = await Promise.all([
+      invQuery, purchQuery, salesQuery, membersQuery, ordersQuery, campaignsQuery
     ]);
 
     setInventory(invRes.data || []);
@@ -134,6 +140,7 @@ export function CamisasTab() {
       ...o,
       items: Array.isArray(o.items) ? (o.items as OrderItem[]) : [],
     })) as ShirtOrder[]);
+    setCampaigns((campaignsRes.data || []) as ShirtCampaign[]);
     setLoading(false);
   };
 
@@ -393,6 +400,8 @@ export function CamisasTab() {
   const orderReceived = orders.reduce((s, o) => s + Number(o.amount_paid || 0), 0);
   const orderToReceive = Math.max(0, orderOrdered - orderReceived);
   const orderDelivered = orders.filter(o => o.delivery_status === 'entregue').length;
+  const fullyPaidOrders = orders.filter(o => !o.is_gift && Number(o.total_price || 0) > 0 && Number(o.amount_paid || 0) >= Number(o.total_price || 0)).length;
+  const halfPaidOrders = orders.filter(o => !o.is_gift && Number(o.amount_paid || 0) > 0 && Number(o.amount_paid || 0) < Number(o.total_price || 0)).length;
 
   // Estoque = encomendas ainda NÃO entregues (entregue sai do estoque) + estoque avulso
   const undeliveredOrders = orders.filter(o => o.delivery_status !== 'entregue');
@@ -410,11 +419,14 @@ export function CamisasTab() {
   // Valor que sobrou no estoque (encomendas não entregues)
   const stockValue = undeliveredOrders.reduce((s, o) => s + Number(o.total_price || 0), 0);
 
-  // Stats financeiras: compras (despesa) x vendas + encomendas recebidas (receita)
+  // Resumo principal usa campanha/encomendas. Vendas diretas antigas ficam separadas para evitar duplicidade.
   const totalStock = inventory.reduce((sum, i) => sum + i.quantity, 0) + orderProduction.total;
-  const totalPurchased = purchases.reduce((sum, p) => sum + p.total_cost, 0);
-  const totalSold = sales.reduce((sum, s) => sum + s.total_price, 0) + orderReceived;
-  const profit = totalSold - totalPurchased;
+  const legacyPurchaseCost = purchases.reduce((sum, p) => sum + Number(p.total_cost || 0), 0);
+  const campaignCost = campaigns.reduce((sum, c) => sum + Number(c.total_purchase_cost || 0), 0);
+  const realShirtCosts = legacyPurchaseCost + campaignCost;
+  const currentResult = orderReceived - realShirtCosts;
+  const projectedResult = orderOrdered - realShirtCosts;
+  const legacySalesTotal = sales.reduce((sum, s) => sum + Number(s.total_price || 0), 0);
 
   if (loading) {
     return (
@@ -449,6 +461,22 @@ export function CamisasTab() {
         </TabsContent>
 
         <TabsContent value="resumo" className="space-y-6 animate-in fade-in-50">
+          {legacySalesTotal > 0 && (
+            <Card className="border-amber-500/40 bg-amber-500/10">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-start gap-3 text-sm">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-medium">Há {formatCurrency(legacySalesTotal)} em vendas diretas antigas.</p>
+                    <p className="text-muted-foreground">
+                      Esse valor não entra mais no resultado do lote para evitar duplicar as encomendas. Confira a aba Vendas e remova apenas o que tiver sido lançado novamente em Encomendas.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Stats Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card>
@@ -467,25 +495,12 @@ export function CamisasTab() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-                    <ShoppingCart className="h-5 w-5 text-destructive" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Compras</p>
-                    <p className="text-xl font-bold">R$ {totalPurchased.toFixed(2).replace('.', ',')}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
                     <TrendingUp className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Vendas</p>
-                    <p className="text-xl font-bold">R$ {totalSold.toFixed(2).replace('.', ',')}</p>
+                    <p className="text-sm text-muted-foreground">Recebido</p>
+                    <p className="text-xl font-bold text-success">{formatCurrency(orderReceived)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -493,13 +508,26 @@ export function CamisasTab() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-lg ${profit >= 0 ? 'bg-success/10' : 'bg-destructive/10'} flex items-center justify-center`}>
-                    <Shirt className={`h-5 w-5 ${profit >= 0 ? 'text-success' : 'text-destructive'}`} />
+                  <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <ShoppingCart className="h-5 w-5 text-destructive" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Resultado</p>
-                    <p className={`text-xl font-bold ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      R$ {profit.toFixed(2).replace('.', ',')}
+                    <p className="text-sm text-muted-foreground">Gastos das camisas</p>
+                    <p className="text-xl font-bold">{formatCurrency(realShirtCosts)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className={`h-10 w-10 rounded-lg ${currentResult >= 0 ? 'bg-success/10' : 'bg-destructive/10'} flex items-center justify-center`}>
+                    <Shirt className={`h-5 w-5 ${currentResult >= 0 ? 'text-success' : 'text-destructive'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Resultado atual</p>
+                    <p className={`text-xl font-bold ${currentResult >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {formatCurrency(currentResult)}
                     </p>
                   </div>
                 </div>
@@ -507,28 +535,46 @@ export function CamisasTab() {
             </Card>
           </div>
 
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Card><CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">Encomendado</p>
+              <p className="text-xl font-bold">{formatCurrency(orderOrdered)}</p>
+            </CardContent></Card>
+            <Card><CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">A receber</p>
+              <p className="text-xl font-bold text-destructive">{formatCurrency(orderToReceive)}</p>
+            </CardContent></Card>
+            <Card><CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">Lucro previsto</p>
+              <p className={`text-xl font-bold ${projectedResult >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(projectedResult)}</p>
+            </CardContent></Card>
+            <Card><CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">Pagamentos</p>
+              <p className="text-xl font-bold"><span className="text-success">{fullyPaidOrders}</span> / <span className="text-amber-500">{halfPaidOrders}</span></p>
+              <p className="text-xs text-muted-foreground">quitados / metade</p>
+            </CardContent></Card>
+          </div>
+
           {/* Resumo de Encomendas */}
           {orders.length > 0 && (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Card><CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Encomendado</p>
-                  <p className="text-xl font-bold">R$ {orderOrdered.toFixed(2).replace('.', ',')}</p>
-                </CardContent></Card>
-                <Card><CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Recebido</p>
-                  <p className="text-xl font-bold text-success">R$ {orderReceived.toFixed(2).replace('.', ',')}</p>
-                </CardContent></Card>
-                <Card><CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">A receber</p>
-                  <p className="text-xl font-bold text-destructive">R$ {orderToReceive.toFixed(2).replace('.', ',')}</p>
-                </CardContent></Card>
-                <Card><CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Entregues</p>
-                  <p className="text-xl font-bold">{orderDelivered}<span className="text-sm text-muted-foreground"> / {orders.length}</span></p>
-                </CardContent></Card>
-              </div>
-            </>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <Card><CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Campanhas</p>
+                <p className="text-xl font-bold">{campaigns.length}</p>
+              </CardContent></Card>
+              <Card><CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Custo de campanhas</p>
+                <p className="text-xl font-bold">{formatCurrency(campaignCost)}</p>
+              </CardContent></Card>
+              <Card><CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Compras antigas</p>
+                <p className="text-xl font-bold">{formatCurrency(legacyPurchaseCost)}</p>
+              </CardContent></Card>
+              <Card><CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Entregues</p>
+                <p className="text-xl font-bold">{orderDelivered}<span className="text-sm text-muted-foreground"> / {orders.length}</span></p>
+              </CardContent></Card>
+            </div>
           )}
         </TabsContent>
 
@@ -562,8 +608,8 @@ export function CamisasTab() {
                         <TableCell>{new Date(p.date).toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell>{p.supplier || '-'}</TableCell>
                         <TableCell>{p.total_quantity}</TableCell>
-                        <TableCell>R$ {p.total_cost.toFixed(2).replace('.', ',')}</TableCell>
-                        <TableCell>R$ {(p.unit_cost || 0).toFixed(2).replace('.', ',')}</TableCell>
+                        <TableCell>{formatCurrency(p.total_cost)}</TableCell>
+                        <TableCell>{formatCurrency(p.unit_cost || 0)}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
@@ -587,6 +633,11 @@ export function CamisasTab() {
         </TabsContent>
 
         <TabsContent value="vendas" className="space-y-4 animate-in fade-in-50">
+          <Card className="border-amber-500/40 bg-amber-500/10">
+            <CardContent className="pt-4 pb-4 text-sm text-muted-foreground">
+              Use esta aba apenas para vendas avulsas de estoque antigo. Para a campanha atual, registre somente em Encomendas e depois marque o pagamento como quitado ou parcial.
+            </CardContent>
+          </Card>
           <div className="flex justify-end">
             <Button onClick={() => setSaleDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -617,7 +668,7 @@ export function CamisasTab() {
                         <TableCell>{s.buyer_name || '-'}</TableCell>
                         <TableCell><Badge variant="outline">{s.size}</Badge></TableCell>
                         <TableCell>{s.quantity}</TableCell>
-                        <TableCell>R$ {(s.total_price || 0).toFixed(2).replace('.', ',')}</TableCell>
+                        <TableCell>{formatCurrency(s.total_price || 0)}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
@@ -646,7 +697,7 @@ export function CamisasTab() {
               <CardTitle>Estoque por Tamanho</CardTitle>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">Em estoque: {orderProduction.total} camisas</Badge>
-                <Badge variant="secondary">Valor: R$ {stockValue.toFixed(2).replace('.', ',')}</Badge>
+                <Badge variant="secondary">Valor: {formatCurrency(stockValue)}</Badge>
               </div>
             </CardHeader>
             <CardContent>
