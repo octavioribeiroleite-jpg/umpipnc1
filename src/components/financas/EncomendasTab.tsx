@@ -576,45 +576,75 @@ export function EncomendasTab({ onDataChange }: Props) {
                 onChange={(e) => setOrderForm({ ...orderForm, buyer_name: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tamanho</Label>
-                <Select value={orderForm.size} onValueChange={(v) => setOrderForm({ ...orderForm, size: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Camisas</Label>
+                <Button type="button" variant="outline" size="sm" className="h-7"
+                  onClick={() => setItems([...items, emptyItem()])}>
+                  <Plus className="h-3 w-3 mr-1" /> Item
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label>Quantidade</Label>
-                <Input
-                  type="number" min="1"
-                  value={orderForm.quantity}
-                  onChange={(e) => setOrderForm({ ...orderForm, quantity: e.target.value })}
-                />
-              </div>
+              {items.map((it, idx) => (
+                <div key={idx} className="flex items-end gap-2">
+                  <div className="flex-1 space-y-1">
+                    {idx === 0 && <span className="text-[11px] text-muted-foreground">Cor</span>}
+                    <Select value={it.color} onValueChange={(v) => setItems(items.map((x, i) => i === idx ? { ...x, color: v } : x))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-24 space-y-1">
+                    {idx === 0 && <span className="text-[11px] text-muted-foreground">Tam.</span>}
+                    <Select value={it.size} onValueChange={(v) => setItems(items.map((x, i) => i === idx ? { ...x, size: v } : x))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {SIZES.map(s => <SelectItem key={s} value={s}>{SIZE_LABEL[s]}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-16 space-y-1">
+                    {idx === 0 && <span className="text-[11px] text-muted-foreground">Qtd</span>}
+                    <Input type="number" min="1" className="h-9" value={it.qty}
+                      onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, qty: parseInt(e.target.value) || 0 } : x))} />
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0"
+                    disabled={items.length === 1}
+                    onClick={() => setItems(items.filter((_, i) => i !== idx))}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Valor Unitário (R$)</Label>
-                <Input
-                  type="number" step="0.01" placeholder="0,00"
-                  value={orderForm.unit_price}
-                  onChange={(e) => setOrderForm({ ...orderForm, unit_price: e.target.value })}
-                />
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" className="h-4 w-4 accent-primary"
+                checked={orderForm.is_gift}
+                onChange={(e) => setOrderForm({ ...orderForm, is_gift: e.target.checked })} />
+              <Gift className="h-4 w-4" /> Brinde (gratuito)
+            </label>
+            {!orderForm.is_gift && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Valor Unitário (R$)</Label>
+                  <Input
+                    type="number" step="0.01" placeholder="65,00"
+                    value={orderForm.unit_price}
+                    onChange={(e) => setOrderForm({ ...orderForm, unit_price: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Forma de Pagamento</Label>
+                  <Select value={orderForm.payment_type} onValueChange={(v) => setOrderForm({ ...orderForm, payment_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="a_vista">À vista</SelectItem>
+                      <SelectItem value="parcelado">Parcelado (50/50)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Forma de Pagamento</Label>
-                <Select value={orderForm.payment_type} onValueChange={(v) => setOrderForm({ ...orderForm, payment_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="a_vista">À vista</SelectItem>
-                    <SelectItem value="parcelado">Parcelado (50/50)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            )}
             <div className="space-y-2">
               <Label>Observações</Label>
               <Textarea
