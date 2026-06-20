@@ -33,6 +33,62 @@ const COLORS = {
   despesa: 'hsl(0, 84%, 60%)'
 };
 
+function SectionHeader({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="space-y-1">
+      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+      {description && <p className="text-sm text-muted-foreground">{description}</p>}
+    </div>
+  );
+}
+
+function MetricCard({
+  title,
+  value,
+  helper,
+  icon: Icon,
+  tone = 'default',
+}: {
+  title: string;
+  value: string;
+  helper?: string;
+  icon: any;
+  tone?: 'default' | 'success' | 'danger' | 'blue';
+}) {
+  const toneClass = {
+    default: 'text-foreground bg-muted/50',
+    success: 'text-success bg-success/10',
+    danger: 'text-destructive bg-destructive/10',
+    blue: 'text-primary bg-primary/10',
+  }[tone];
+
+  return (
+    <Card className="border-border/70 shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
+            <p className={`mt-2 text-xl font-bold ${toneClass.split(' ')[0]}`}>{value}</p>
+            {helper && <p className="mt-1 text-xs text-muted-foreground">{helper}</p>}
+          </div>
+          <div className={`h-9 w-9 rounded-md flex items-center justify-center shrink-0 ${toneClass.split(' ').slice(1).join(' ')}`}>
+            <Icon className={`h-5 w-5 ${toneClass.split(' ')[0]}`} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyBlock({ icon: Icon, text }: { icon: any; text: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+      <Icon className="h-10 w-10 mb-2 opacity-50" />
+      <p className="text-sm">{text}</p>
+    </div>
+  );
+}
+
 export function RelatoriosTab() {
   const { effectiveSocietyId: societyId } = useAuth();
   const currentYear = new Date().getFullYear();
@@ -254,6 +310,10 @@ export function RelatoriosTab() {
   const receitasTransactions = transactions.filter(t => t.type === 'entrada');
   const despesasTransactions = transactions.filter(t => t.type === 'saida');
   const despesasComComprovante = despesasTransactions.filter(t => t.receipt_url);
+  const paidChargesLabel = `${chargeStats.pago} de ${chargeStats.total} cobranças pagas`;
+  const largestCategory = categoryData[0];
+  const bestRevenueMonth = monthlyData.reduce((best, month) => month.receitas > best.receitas ? month : best, monthlyData[0] || { month: '-', receitas: 0, despesas: 0, saldo: 0 });
+  const highestExpenseMonth = monthlyData.reduce((best, month) => month.despesas > best.despesas ? month : best, monthlyData[0] || { month: '-', receitas: 0, despesas: 0, saldo: 0 });
 
   const exportToPDF = async () => {
     setExporting(true);
@@ -292,100 +352,178 @@ export function RelatoriosTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {YEARS.map(year => (
-                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={exportToPDF} disabled={exporting || !societyId}>
-              {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-              Exportar PDF completo
-            </Button>
+    <div className="space-y-5">
+      <Card className="border-border/70 shadow-sm">
+        <CardContent className="p-4 md:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-bold text-foreground">Relatório Financeiro</h2>
+              <p className="text-sm text-muted-foreground">
+                Confira os dados do período antes de exportar o PDF oficial com anexos.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-full sm:w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={exportToPDF} disabled={exporting || !societyId} className="sm:min-w-56">
+                {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                Exportar PDF oficial
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="space-y-6 bg-background p-4 rounded-lg">
-        <div className="text-center border-b pb-6">
-          <h1 className="text-3xl font-bold text-foreground">Relatório Financeiro Anual</h1>
-          <p className="text-xl text-muted-foreground mt-2">{selectedYear}</p>
-          <p className="text-sm text-muted-foreground">Gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
-        </div>
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
+        <MetricCard
+          title="Saldo"
+          value={formatCurrency(saldo)}
+          helper="Entradas menos saídas"
+          icon={Wallet}
+          tone={saldo >= 0 ? 'success' : 'danger'}
+        />
+        <MetricCard title="Receitas" value={formatCurrency(totalReceitas)} helper="Caixa real" icon={ArrowUpCircle} tone="success" />
+        <MetricCard title="Gastos" value={formatCurrency(totalDespesas)} helper="Caixa real" icon={ArrowDownCircle} tone="danger" />
+        <MetricCard title="Adimplência" value={`${adimplenciaRate}%`} helper={paidChargesLabel} icon={Percent} tone="blue" />
+        <MetricCard title="Comprovantes" value={String(despesasComComprovante.length)} helper="Anexos de gastos" icon={ImageIcon} tone="default" />
+      </div>
 
-        <Card className="border-2 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Resumo Executivo — {selectedYear}
-            </CardTitle>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="pb-3">
+            <SectionHeader title="Caixa real" description="Dinheiro que realmente entrou e saiu no período." />
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <Wallet className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-2xl font-bold" style={{ color: saldo >= 0 ? COLORS.receita : COLORS.despesa }}>
-                  {formatCurrency(saldo)}
-                </p>
-                <p className="text-sm text-muted-foreground">Saldo do Ano</p>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-md bg-success/10 p-3">
+                <p className="text-xs text-muted-foreground">Entradas</p>
+                <p className="mt-1 text-lg font-bold text-success">{formatCurrency(totalReceitas)}</p>
               </div>
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <ArrowUpCircle className="h-8 w-8 mx-auto mb-2 text-success" />
-                <p className="text-2xl font-bold text-success">{formatCurrency(totalReceitas)}</p>
-                <p className="text-sm text-muted-foreground">Total Receitas</p>
+              <div className="rounded-md bg-destructive/10 p-3">
+                <p className="text-xs text-muted-foreground">Saídas</p>
+                <p className="mt-1 text-lg font-bold text-destructive">{formatCurrency(totalDespesas)}</p>
               </div>
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <ArrowDownCircle className="h-8 w-8 mx-auto mb-2 text-destructive" />
-                <p className="text-2xl font-bold text-destructive">{formatCurrency(totalDespesas)}</p>
-                <p className="text-sm text-muted-foreground">Total Gastos</p>
-              </div>
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <Percent className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-2xl font-bold text-primary">{adimplenciaRate}%</p>
-                <p className="text-sm text-muted-foreground">Adimplência</p>
+              <div className="rounded-md bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">Saldo</p>
+                <p className={`mt-1 text-lg font-bold ${saldo >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(saldo)}</p>
               </div>
             </div>
+            <p className="text-sm text-muted-foreground">
+              Este bloco considera somente lançamentos financeiros registrados como transações.
+            </p>
+          </CardContent>
+        </Card>
 
-            <div className="mt-4 grid grid-cols-3 gap-4 text-center border-t pt-4">
-              <div>
-                <p className="text-lg font-bold text-foreground">{formatCurrency(chargeStats.totalAmount)}</p>
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="pb-3">
+            <SectionHeader title="Cobranças" description="Valores previstos, recebidos e pendentes das cobranças." />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-md bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Previsto</p>
+                <p className="mt-1 text-lg font-bold text-foreground">{formatCurrency(chargeStats.totalAmount)}</p>
               </div>
-              <div>
-                <p className="text-lg font-bold text-success">{formatCurrency(chargeStats.paidAmount)}</p>
+              <div className="rounded-md bg-success/10 p-3">
                 <p className="text-xs text-muted-foreground">Recebido</p>
+                <p className="mt-1 text-lg font-bold text-success">{formatCurrency(chargeStats.paidAmount)}</p>
               </div>
-              <div>
-                <p className="text-lg font-bold text-destructive">{formatCurrency(chargeStats.pendingAmount)}</p>
+              <div className="rounded-md bg-destructive/10 p-3">
                 <p className="text-xs text-muted-foreground">Pendente</p>
+                <p className="mt-1 text-lg font-bold text-destructive">{formatCurrency(chargeStats.pendingAmount)}</p>
               </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge className="bg-success text-success-foreground hover:bg-success/90">{chargeStats.pago} pagas</Badge>
+              <Badge variant="destructive">{chargeStats.pendente} pendentes</Badge>
+              <Badge variant="secondary">{chargeStats.isento} isentas</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <Card className="xl:col-span-2 border-border/70 shadow-sm">
+          <CardHeader className="pb-3">
+            <SectionHeader title="Movimento mensal" description="Comparação entre receitas e gastos por mês." />
+          </CardHeader>
+          <CardContent>
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="month" className="text-xs" />
+                  <YAxis className="text-xs" tickFormatter={(v) => `R$${v}`} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Legend />
+                  <Bar dataKey="receitas" name="Receitas" fill={COLORS.receita} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="despesas" name="Gastos" fill={COLORS.despesa} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Adimplência — {selectedYear}
-            </CardTitle>
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="pb-3">
+            <SectionHeader title="Destaques" description="Leitura rápida do período." />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="rounded-md border p-3">
+              <p className="text-xs text-muted-foreground">Maior receita</p>
+              <p className="text-sm font-semibold">{bestRevenueMonth.month} - {formatCurrency(bestRevenueMonth.receitas)}</p>
+            </div>
+            <div className="rounded-md border p-3">
+              <p className="text-xs text-muted-foreground">Maior gasto</p>
+              <p className="text-sm font-semibold">{highestExpenseMonth.month} - {formatCurrency(highestExpenseMonth.despesas)}</p>
+            </div>
+            <div className="rounded-md border p-3">
+              <p className="text-xs text-muted-foreground">Principal categoria</p>
+              <p className="text-sm font-semibold">{largestCategory ? `${largestCategory.name} - ${formatCurrency(largestCategory.value)}` : 'Sem gastos'}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="pb-3">
+            <SectionHeader title="Adimplência" description="Resumo das cobranças do ano." />
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="w-full md:w-1/2 h-[250px]">
-                {pieData.length > 0 ? (
+            {chargeStats.total === 0 ? (
+              <EmptyBlock icon={Users} text="Nenhuma cobrança encontrada para este ano" />
+            ) : adimplenciaRate === 0 ? (
+              <div className="space-y-4 py-4">
+                <div className="text-center">
+                  <p className="text-5xl font-bold text-destructive">0%</p>
+                  <p className="text-sm text-muted-foreground">Nenhuma cobrança paga até agora</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-md bg-destructive/10 p-3 text-center">
+                    <p className="text-2xl font-bold text-destructive">{chargeStats.pendente}</p>
+                    <p className="text-xs text-muted-foreground">pendentes</p>
+                  </div>
+                  <div className="rounded-md bg-muted/50 p-3 text-center">
+                    <p className="text-2xl font-bold">{formatCurrency(chargeStats.pendingAmount)}</p>
+                    <p className="text-xs text-muted-foreground">a receber</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <div className="h-[220px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}>
+                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={78} paddingAngle={2} dataKey="value">
                         {pieData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
@@ -393,105 +531,52 @@ export function RelatoriosTab() {
                       <Tooltip formatter={(value: number) => `${value} cobranças`} />
                     </PieChart>
                   </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Nenhuma cobrança para este ano
-                  </div>
-                )}
-              </div>
-              <div className="w-full md:w-1/2 space-y-4">
-                <div className="text-center md:text-left">
-                  <p className="text-6xl font-bold text-primary">{adimplenciaRate}%</p>
-                  <p className="text-muted-foreground">de adimplência</p>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-2xl font-bold text-success">{chargeStats.pago}</p>
-                    <p className="text-xs text-muted-foreground">Pagos</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-destructive">{chargeStats.pendente}</p>
-                    <p className="text-xs text-muted-foreground">Pendentes</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-muted-foreground">{chargeStats.isento}</p>
-                    <p className="text-xs text-muted-foreground">Isentos</p>
-                  </div>
+                <div className="space-y-3">
+                  <p className="text-5xl font-bold text-primary">{adimplenciaRate}%</p>
+                  <p className="text-sm text-muted-foreground">{paidChargesLabel}</p>
                 </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Evolução Mensal — {selectedYear}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="pb-3">
+            <SectionHeader title="Gastos por categoria" description="Onde os recursos foram aplicados." />
+          </CardHeader>
+          <CardContent>
+            {categoryData.length === 0 ? (
+              <EmptyBlock icon={PieChartIcon} text="Nenhum gasto registrado para este ano" />
+            ) : (
+              <div className="h-[260px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="month" className="text-xs" />
-                    <YAxis className="text-xs" tickFormatter={(v) => `R$${v}`} />
+                  <PieChart>
+                    <Pie data={categoryData} cx="50%" cy="50%" outerRadius={88} paddingAngle={2} dataKey="value">
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color || '#94a3b8'} />
+                      ))}
+                    </Pie>
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Legend />
-                    <Bar dataKey="receitas" name="Receitas" fill={COLORS.receita} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="despesas" name="Despesas" fill={COLORS.despesa} radius={[4, 4, 0, 0]} />
-                  </BarChart>
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChartIcon className="h-5 w-5" />
-                Gastos por Categoria — {selectedYear}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                {categoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={categoryData} cx="50%" cy="50%" outerRadius={100} paddingAngle={2} dataKey="value"
-                        label={({ name, value }) => `${name}: ${formatCurrency(value)}`}>
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Nenhum gasto registrado para este ano
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-success">
-                <ArrowUpCircle className="h-5 w-5" />
-                Receitas — {selectedYear}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {receitasTransactions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">Nenhuma receita registrada</p>
-              ) : (
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="pb-3">
+            <SectionHeader title="Receitas" description="Entradas registradas no caixa." />
+          </CardHeader>
+          <CardContent>
+            {receitasTransactions.length === 0 ? (
+              <EmptyBlock icon={ArrowUpCircle} text="Nenhuma receita registrada" />
+            ) : (
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -505,9 +590,7 @@ export function RelatoriosTab() {
                       <TableRow key={tx.id}>
                         <TableCell className="text-muted-foreground">{formatDate(tx.date)}</TableCell>
                         <TableCell>{tx.description}</TableCell>
-                        <TableCell className="text-right font-medium text-success">
-                          {formatCurrency(tx.amount)}
-                        </TableCell>
+                        <TableCell className="text-right font-medium text-success">{formatCurrency(tx.amount)}</TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-muted/50 font-bold">
@@ -516,21 +599,20 @@ export function RelatoriosTab() {
                     </TableRow>
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <ArrowDownCircle className="h-5 w-5" />
-                Gastos — {selectedYear}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {despesasTransactions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">Nenhum gasto registrado</p>
-              ) : (
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="pb-3">
+            <SectionHeader title="Gastos" description="Saídas registradas no caixa." />
+          </CardHeader>
+          <CardContent>
+            {despesasTransactions.length === 0 ? (
+              <EmptyBlock icon={ArrowDownCircle} text="Nenhum gasto registrado" />
+            ) : (
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -550,9 +632,7 @@ export function RelatoriosTab() {
                             {tx.category_name}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right font-medium text-destructive">
-                          {formatCurrency(tx.amount)}
-                        </TableCell>
+                        <TableCell className="text-right font-medium text-destructive">{formatCurrency(tx.amount)}</TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-muted/50 font-bold">
@@ -561,65 +641,58 @@ export function RelatoriosTab() {
                     </TableRow>
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5" />
-              Comprovantes dos Gastos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {despesasComComprovante.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Nenhum comprovante anexado para este ano</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {despesasComComprovante.map(tx => (
-                  <div key={tx.id} className="border rounded-lg overflow-hidden bg-white cursor-pointer break-inside-avoid" onClick={() => handleViewReceipt(tx.receipt_url!)}>
-                    <div className="border-b px-3 py-2 flex items-center justify-between gap-2 bg-muted/30">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{tx.description}</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(tx.date)}</p>
-                      </div>
-                      <p className="text-sm font-bold text-destructive shrink-0">{formatCurrency(tx.amount)}</p>
-                    </div>
-                    <div className="bg-muted/20 flex items-center justify-center overflow-hidden" style={{ minHeight: '220px' }}>
-                      {tx.receipt_url?.toLowerCase().includes('.pdf') ? (
-                        <div className="text-center p-6">
-                          <FileText className="h-14 w-14 mx-auto text-muted-foreground" />
-                          <p className="text-xs mt-2 text-muted-foreground">Comprovante em PDF — toque para abrir</p>
-                        </div>
-                      ) : signedUrls[tx.id] ? (
-                        <img
-                          src={signedUrls[tx.id]}
-                          alt={tx.description}
-                          crossOrigin="anonymous"
-                          className="w-full h-auto max-h-[360px] object-contain"
-                        />
-                      ) : (
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                      )}
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </CardContent>
         </Card>
-
-        <div className="text-center pt-6 border-t">
-          <p className="text-sm text-muted-foreground">
-            Relatório gerado automaticamente pelo Sistema de Gestão Financeira
-          </p>
-        </div>
       </div>
+
+      <Card className="border-border/70 shadow-sm">
+        <CardHeader className="pb-3">
+          <SectionHeader title="Comprovantes" description="Anexos dos gastos incluídos no PDF oficial." />
+        </CardHeader>
+        <CardContent>
+          {despesasComComprovante.length === 0 ? (
+            <EmptyBlock icon={ImageIcon} text="Nenhum comprovante anexado para este ano" />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {despesasComComprovante.map(tx => (
+                <button
+                  key={tx.id}
+                  type="button"
+                  className="text-left border rounded-md overflow-hidden bg-background hover:bg-muted/30 transition-colors"
+                  onClick={() => handleViewReceipt(tx.receipt_url!)}
+                >
+                  <div className="border-b px-3 py-2 flex items-center justify-between gap-2 bg-muted/30">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{tx.description}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(tx.date)}</p>
+                    </div>
+                    <p className="text-sm font-bold text-destructive shrink-0">{formatCurrency(tx.amount)}</p>
+                  </div>
+                  <div className="bg-muted/20 flex items-center justify-center overflow-hidden" style={{ minHeight: '180px' }}>
+                    {tx.receipt_url?.toLowerCase().includes('.pdf') ? (
+                      <div className="text-center p-6">
+                        <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <p className="text-xs mt-2 text-muted-foreground">PDF anexado</p>
+                      </div>
+                    ) : signedUrls[tx.id] ? (
+                      <img
+                        src={signedUrls[tx.id]}
+                        alt={tx.description}
+                        crossOrigin="anonymous"
+                        className="w-full h-auto max-h-[300px] object-contain"
+                      />
+                    ) : (
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
         <DialogContent className="max-w-3xl p-2">
