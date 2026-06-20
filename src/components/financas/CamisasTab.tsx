@@ -386,27 +386,33 @@ export function CamisasTab() {
     }
   };
 
-  // Stats
-  const totalStock = inventory.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPurchased = purchases.reduce((sum, p) => sum + p.total_cost, 0);
-  const totalSold = sales.reduce((sum, s) => sum + s.total_price, 0);
-  const profit = totalSold - totalPurchased;
-
   // Encomendas (orders)
   const orderOrdered = orders.reduce((s, o) => s + Number(o.total_price || 0), 0);
   const orderReceived = orders.reduce((s, o) => s + Number(o.amount_paid || 0), 0);
   const orderToReceive = Math.max(0, orderOrdered - orderReceived);
   const orderDelivered = orders.filter(o => o.delivery_status === 'entregue').length;
+
+  // Estoque = encomendas ainda NÃO entregues (entregue sai do estoque) + estoque avulso
+  const undeliveredOrders = orders.filter(o => o.delivery_status !== 'entregue');
   const orderProduction = (() => {
     const byColor: Record<string, Record<string, number>> = { off: {}, preta: {} };
     let total = 0;
-    orders.forEach(o => (o.items || []).forEach(i => {
+    undeliveredOrders.forEach(o => (o.items || []).forEach(i => {
       const c = byColor[i.color] || (byColor[i.color] = {});
       c[i.size] = (c[i.size] || 0) + (Number(i.qty) || 0);
       total += Number(i.qty) || 0;
     }));
     return { byColor, total };
   })();
+
+  // Valor que sobrou no estoque (encomendas não entregues)
+  const stockValue = undeliveredOrders.reduce((s, o) => s + Number(o.total_price || 0), 0);
+
+  // Stats financeiras: compras (despesa) x vendas + encomendas recebidas (receita)
+  const totalStock = inventory.reduce((sum, i) => sum + i.quantity, 0) + orderProduction.total;
+  const totalPurchased = purchases.reduce((sum, p) => sum + p.total_cost, 0);
+  const totalSold = sales.reduce((sum, s) => sum + s.total_price, 0) + orderReceived;
+  const profit = totalSold - totalPurchased;
 
   if (loading) {
     return (
