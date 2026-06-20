@@ -28,6 +28,18 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+type DashboardStats = {
+  activeMembers: number;
+  openTasks: number;
+  overdueTasks: number;
+  monthlyRevenue: number;
+  pendingCharges: number;
+  announcements: number;
+};
+
+const currency = (value: number) =>
+  `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
+
 function QuickAction({
   label,
   icon: Icon,
@@ -112,6 +124,14 @@ export default function Index() {
   );
 
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    activeMembers: 0,
+    openTasks: 0,
+    overdueTasks: 0,
+    monthlyRevenue: 0,
+    pendingCharges: 0,
+    announcements: 0,
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -131,18 +151,106 @@ export default function Index() {
   }, [user, loading, rolesLoaded, navigate, isPastor, isAdmin, isManagement, roles]);
 
   useEffect(() => {
-    if (user) {
-      const fetchPending = async () => {
-        let query = supabase
+    if (!user) return;
+
+    const fetchDashboardData = async () => {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      const todayIso = now.toISOString().split('T')[0];
+      const currentYearText = String(now.getFullYear());
+
+      try {
+        let submissionsQuery = supabase
           .from('member_payment_submissions')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'pendente');
-        if (societyId) query = query.eq('society_id', societyId);
-        const { count } = await query;
-        setPendingSubmissions(count || 0);
-      };
-      fetchPending();
-    }
+
+        let membersQuery = supabase
+          .from('members')
+          .select('id', { count: 'exact', head: true })
+          .eq('active', true);
+
+        let openTasksQuery = supabase
+          .from('tasks')
+          .select('id', { count: 'exact', head: true })
+          .neq('status', 'done');
+
+        let overdueTasksQuery = supabase
+          .from('tasks')
+          .select('id', { count: 'exact', head: true })
+          .neq('status', 'done')
+          .lt('due_date', todayIso);
+
+        let transactionsQuery = supabase
+          .from('transactions')
+          .select('amount, type')
+          .eq('type', 'entrada')
+          .gte('date', startOfMonth)
+          .lte('date', endOfMonth);
+
+        let pendingChargesQuery = supabase
+          .from('charges')
+          .select('id', { count: 'exact', head: true })
+          .eq('competence', currentYearText)
+          .in('status', ['pendente', 'parcial']);
+
+        let announcementsQuery = supabase
+          .from('pastor_announcements')
+          .select('id', { count: 'exact', head: true });
+
+        if (societyId) {
+          submissionsQuery = submissionsQuery.eq('society_id', societyId);
+          membersQuery = membersQuery.eq('society_id', societyId);
+          openTasksQuery = openTasksQuery.eq('society_id', societyId);
+          overdueTasksQuery = overdueTasksQuery.eq('society_id', societyId);
+          transactionsQuery = transactionsQuery.eq('society_id', societyId);
+          pendingChargesQuery = pendingChargesQuery.eq('society_id', societyId);
+          announcementsQuery = announcementsQuery.contains('target_societies', [societyId]);
+        }
+
+        const [submissionsRes, membersRes, openTasksRes, overdueTasksRes, transactionsRes, pendingChargesRes, announcementsRes] = await Promise.all([
+          submissionsQuery,
+          membersQuery,
+          openTasksQuery,
+          overdueTasksQuery,
+          transactionsQuery,
+          pendingChargesQuery,
+          announcementsQuery,
+        ]);
+
+        const monthlyRevenue = (transactionsRes.data || [])
+          .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+
+        setPendingSubmissions(submissionsRes.count || 0);
+        setDashboardStats({
+          activeMembers: membersRes.count || 0,
+          openTasks: openTasksRes.count || 0,
+          overdueTasks: overdueTasksRes.count || 0,
+          monthlyRevenue,
+          pendingCharges: pendingChargesRes.count || 0,
+          announcements: announcementsRes.count || 0,
+        });
+      } catch (err) {
+        console.error('Erro ao carregar dados do dashboard:', err);
+      }
+    };
+
+    fetchDashboardData();
+
+    const channel = supabase
+      .channel('home-dashboard-data')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'member_payment_submissions' }, fetchDashboardData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, fetchDashboardData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, fetchDashboardData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, fetchDashboardData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'charges' }, fetchDashboardData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pastor_announcements' }, fetchDashboardData)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, societyId]);
 
   const todayCount = useMemo(() => {
@@ -162,10 +270,6 @@ export default function Index() {
       const s = new Date(ev.start_date);
       return s >= startToday && s <= endOfWeek;
     }).length;
-  }, [events]);
-
-  const awaitingCount = useMemo(() => {
-    return events.filter(ev => ev.status === 'confirmado' || ev.status === 'pendente').length;
   }, [events]);
 
   const upcomingEvents = useMemo(() => {
@@ -246,7 +350,7 @@ export default function Index() {
           <div>
             <p className="text-sm font-medium text-emerald-100">{todayFormatted.charAt(0).toUpperCase() + todayFormatted.slice(1)}</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight">{greeting}, {firstName || 'Diretoria'} 👋</h1>
-            <p className="mt-1 text-sm text-emerald-50/90">UMP IPNC • Uma família, um propósito.</p>
+            <p className="mt-1 text-sm text-emerald-50/90">UMP IPNC • {dashboardStats.activeMembers} membro{dashboardStats.activeMembers === 1 ? '' : 's'} ativo{dashboardStats.activeMembers === 1 ? '' : 's'}</p>
           </div>
           <button
             type="button"
@@ -255,7 +359,7 @@ export default function Index() {
             aria-label="Abrir comunicados"
           >
             <Bell className="h-5 w-5" />
-            {pendingSubmissions > 0 && <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-emerald-900" />}
+            {(pendingSubmissions > 0 || dashboardStats.announcements > 0) && <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-emerald-900" />}
           </button>
         </div>
       </section>
@@ -278,7 +382,7 @@ export default function Index() {
             <p className="text-sm text-muted-foreground">
               {pendingSubmissions > 0
                 ? `${pendingSubmissions} comprovante${pendingSubmissions > 1 ? 's' : ''} aguardando aprovação`
-                : 'Acompanhe comunicados, tarefas e eventos da UMP'}
+                : `${dashboardStats.announcements} comunicado${dashboardStats.announcements === 1 ? '' : 's'} disponível${dashboardStats.announcements === 1 ? '' : 'is'} para acompanhamento`}
             </p>
           </div>
         </div>
@@ -286,10 +390,10 @@ export default function Index() {
       </AppCard>
 
       <div className="mb-5 grid grid-cols-2 gap-3">
-        <StatTile title="Reuniões" value={weekCount} subtitle="eventos nos próximos 7 dias" icon={Users} onClick={() => navigate('/reunioes')} />
-        <StatTile title="Hoje" value={todayCount} subtitle="eventos para hoje" icon={Clock} tone="blue" onClick={() => navigate('/calendario')} />
-        <StatTile title="Tarefas" value={awaitingCount} subtitle="eventos aguardando atenção" icon={CheckSquare} tone="purple" onClick={() => navigate('/tarefas')} />
-        <StatTile title="Finanças" value={pendingSubmissions} subtitle="comprovantes pendentes" icon={DollarSign} tone="amber" onClick={() => navigate('/financas?tab=comprovantes')} />
+        <StatTile title="Eventos" value={weekCount} subtitle={`${todayCount} hoje • próximos 7 dias`} icon={Calendar} onClick={() => navigate('/calendario')} />
+        <StatTile title="Membros" value={dashboardStats.activeMembers} subtitle="ativos na sociedade" icon={Users} tone="blue" onClick={() => navigate('/usuarios')} />
+        <StatTile title="Tarefas" value={dashboardStats.openTasks} subtitle={`${dashboardStats.overdueTasks} vencida${dashboardStats.overdueTasks === 1 ? '' : 's'}`} icon={CheckSquare} tone="purple" onClick={() => navigate('/tarefas')} />
+        <StatTile title="Finanças" value={currency(dashboardStats.monthlyRevenue)} subtitle={`${dashboardStats.pendingCharges} cobrança${dashboardStats.pendingCharges === 1 ? '' : 's'} pendente${dashboardStats.pendingCharges === 1 ? '' : 's'}`} icon={DollarSign} tone="amber" onClick={() => navigate('/financas')} />
       </div>
 
       <section className="mb-5">
