@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
+import { EncomendasTab } from './EncomendasTab';
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 
@@ -388,9 +389,14 @@ export function CamisasTab() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
+          <TabsTrigger value="encomendas">Encomendas</TabsTrigger>
           <TabsTrigger value="compras">Compras</TabsTrigger>
           <TabsTrigger value="vendas">Vendas</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="encomendas" className="space-y-4 animate-in fade-in-50">
+          <EncomendasTab onDataChange={fetchData} />
+        </TabsContent>
 
         <TabsContent value="resumo" className="space-y-6 animate-in fade-in-50">
           {/* Stats Cards */}
