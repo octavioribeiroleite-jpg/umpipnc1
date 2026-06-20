@@ -656,31 +656,34 @@ export function RelatoriosTab() {
                 <p>Nenhum comprovante anexado para este ano</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {despesasComComprovante.map(tx => (
-                  <div key={tx.id} className="border rounded-lg overflow-hidden bg-muted/30 cursor-pointer" onClick={() => handleViewReceipt(tx.receipt_url!)}>
-                    <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                  <div key={tx.id} className="border rounded-lg overflow-hidden bg-white cursor-pointer break-inside-avoid" onClick={() => handleViewReceipt(tx.receipt_url!)}>
+                    <div className="border-b px-3 py-2 flex items-center justify-between gap-2 bg-muted/30">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{tx.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <p className="text-sm font-bold text-destructive shrink-0">{formatCurrency(tx.amount)}</p>
+                    </div>
+                    <div className="bg-muted/20 flex items-center justify-center overflow-hidden" style={{ minHeight: '220px' }}>
                       {tx.receipt_url?.includes('.pdf') ? (
-                        <div className="text-center p-4">
-                          <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-                          <p className="text-xs mt-2">PDF</p>
+                        <div className="text-center p-6">
+                          <FileText className="h-14 w-14 mx-auto text-muted-foreground" />
+                          <p className="text-xs mt-2 text-muted-foreground">Comprovante em PDF — toque para abrir</p>
                         </div>
                       ) : signedUrls[tx.id] ? (
                         <img
                           src={signedUrls[tx.id]}
                           alt={tx.description}
-                          className="w-full h-full object-cover"
+                          crossOrigin="anonymous"
+                          className="w-full h-auto max-h-[360px] object-contain"
                         />
                       ) : (
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                       )}
-                    </div>
-                    <div className="p-2">
-                      <p className="text-sm font-medium truncate">{tx.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}
-                      </p>
-                      <p className="text-sm font-bold text-destructive">{formatCurrency(tx.amount)}</p>
                     </div>
                   </div>
                 ))}
