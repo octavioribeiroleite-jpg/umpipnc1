@@ -1512,6 +1512,104 @@ export type Database = {
           },
         ]
       }
+      shirt_order_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          order_id: string
+          society_id: string | null
+          transaction_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          order_id: string
+          society_id?: string | null
+          transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          order_id?: string
+          society_id?: string | null
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shirt_order_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "shirt_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shirt_orders: {
+        Row: {
+          amount_paid: number
+          buyer_name: string
+          created_at: string
+          created_by: string | null
+          date: string
+          delivered_at: string | null
+          delivery_status: string
+          id: string
+          notes: string | null
+          payment_type: string
+          quantity: number
+          size: string
+          society_id: string | null
+          total_price: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          buyer_name: string
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          id?: string
+          notes?: string | null
+          payment_type?: string
+          quantity?: number
+          size: string
+          society_id?: string | null
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          buyer_name?: string
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          id?: string
+          notes?: string | null
+          payment_type?: string
+          quantity?: number
+          size?: string
+          society_id?: string | null
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shirt_purchase_items: {
         Row: {
           id: string
