@@ -8,9 +8,7 @@ import { PastorCalendarWidget } from '@/components/pastor/PastorCalendarWidget';
 import { PastorDayEventList } from '@/components/pastor/PastorDayEventList';
 import { useEvents, EventStatus } from '@/hooks/useEvents';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { AppCard } from '@/components/ui/app-card';
-import { SectionTitle } from '@/components/ui/typography';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HomeBirthdayCard } from '@/components/aniversariantes/HomeBirthdayCard';
 import {
@@ -18,6 +16,14 @@ import {
   Users,
   Calendar,
   Plus,
+  Bell,
+  CheckSquare,
+  ChevronRight,
+  Gift,
+  Megaphone,
+  Clock,
+  Receipt,
+  Sparkles,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -32,11 +38,60 @@ function QuickAction({
   onClick: () => void;
 }) {
   return (
-    <AppCard variant="interactive" className="flex flex-col items-center gap-1.5 md:gap-2 md:flex-1 md:min-w-[100px]" onClick={onClick}>
-      <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary/10 flex items-center justify-center">
-        <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-[74px] flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-white/90 p-3 text-center shadow-sm transition active:scale-[0.98] dark:border-border dark:bg-card/95"
+    >
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <Icon className="h-4 w-4" />
       </div>
-      <span className="text-xs md:text-sm font-medium whitespace-nowrap">{label}</span>
+      <span className="text-[11px] font-semibold leading-tight text-foreground">{label}</span>
+    </button>
+  );
+}
+
+function StatTile({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  onClick,
+  tone = 'emerald',
+}: {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: any;
+  onClick?: () => void;
+  tone?: 'emerald' | 'blue' | 'purple' | 'amber';
+}) {
+  const toneClasses = {
+    emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
+    purple: 'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
+    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+  }[tone];
+
+  return (
+    <AppCard
+      variant={onClick ? 'interactive' : 'stat'}
+      className="min-h-[122px] p-4"
+      onClick={onClick}
+    >
+      <div className="flex h-full flex-col justify-between gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${toneClasses}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+          {onClick && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground">{title}</p>
+          <p className="mt-1 text-2xl font-bold leading-none text-foreground">{value}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
+        </div>
+      </div>
     </AppCard>
   );
 }
@@ -90,7 +145,6 @@ export default function Index() {
     }
   }, [user, societyId]);
 
-  // Summary chips
   const todayCount = useMemo(() => {
     const d = new Date();
     return events.filter(ev => {
@@ -101,16 +155,26 @@ export default function Index() {
 
   const weekCount = useMemo(() => {
     const now = new Date();
-    const endOfWeek = new Date(now);
-    endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfWeek = new Date(startToday);
+    endOfWeek.setDate(startToday.getDate() + 7);
     return events.filter(ev => {
       const s = new Date(ev.start_date);
-      return s >= now && s <= endOfWeek;
+      return s >= startToday && s <= endOfWeek;
     }).length;
   }, [events]);
 
   const awaitingCount = useMemo(() => {
     return events.filter(ev => ev.status === 'confirmado' || ev.status === 'pendente').length;
+  }, [events]);
+
+  const upcomingEvents = useMemo(() => {
+    const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return [...events]
+      .filter(ev => new Date(ev.start_date) >= startToday)
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+      .slice(0, 3);
   }, [events]);
 
   const handlePrevMonth = () => {
@@ -146,9 +210,14 @@ export default function Index() {
     return (
       <AppLayout>
         <div className="space-y-6">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-40 w-full rounded-[28px]" />
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-28 rounded-[18px]" />
+            <Skeleton className="h-28 rounded-[18px]" />
+            <Skeleton className="h-28 rounded-[18px]" />
+            <Skeleton className="h-28 rounded-[18px]" />
+          </div>
+          <Skeleton className="h-64 w-full rounded-[18px]" />
         </div>
       </AppLayout>
     );
@@ -169,43 +238,130 @@ export default function Index() {
   return (
     <AppLayout>
       <PastorLoginNotification />
-      <PageHeader
-        title={`${greeting}, ${firstName}`}
-        description={todayFormatted.charAt(0).toUpperCase() + todayFormatted.slice(1)}
-      />
+
+      <section className="relative -mx-3 -mt-14 mb-4 overflow-hidden rounded-b-[32px] bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-5 pb-8 pt-20 text-white shadow-lg sm:-mx-4">
+        <div className="absolute -right-16 -top-12 h-44 w-44 rounded-full bg-white/10" />
+        <div className="absolute bottom-3 right-6 text-[92px] font-black leading-none text-white/5">IPNC</div>
+        <div className="relative flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-emerald-100">{todayFormatted.charAt(0).toUpperCase() + todayFormatted.slice(1)}</p>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight">{greeting}, {firstName || 'Diretoria'} 👋</h1>
+            <p className="mt-1 text-sm text-emerald-50/90">UMP IPNC • Uma família, um propósito.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/comunicados')}
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur"
+            aria-label="Abrir comunicados"
+          >
+            <Bell className="h-5 w-5" />
+            {pendingSubmissions > 0 && <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-emerald-900" />}
+          </button>
+        </div>
+      </section>
+
       <PastorNotificationBanner />
 
-      {/* Pending submissions notification */}
-      {pendingSubmissions > 0 && (
-        <AppCard
-          variant="interactive"
-          className="mb-4 bg-warning/10 border-warning/20"
-          onClick={() => navigate('/financas?tab=comprovantes')}
-        >
-          <span className="text-warning text-sm font-medium">
-            📋 {pendingSubmissions} comprovante{pendingSubmissions > 1 ? 's' : ''} de pagamento pendente{pendingSubmissions > 1 ? 's' : ''} de aprovação
-          </span>
-        </AppCard>
-      )}
+      <AppCard
+        variant="interactive"
+        className="mb-4 flex items-center justify-between gap-3 p-4"
+        onClick={() => pendingSubmissions > 0 ? navigate('/financas?tab=comprovantes') : navigate('/comunicados')}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+            {pendingSubmissions > 0 ? <Receipt className="h-5 w-5" /> : <Megaphone className="h-5 w-5" />}
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">
+              {pendingSubmissions > 0 ? 'Comprovantes pendentes' : 'Central da diretoria'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {pendingSubmissions > 0
+                ? `${pendingSubmissions} comprovante${pendingSubmissions > 1 ? 's' : ''} aguardando aprovação`
+                : 'Acompanhe comunicados, tarefas e eventos da UMP'}
+            </p>
+          </div>
+        </div>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+      </AppCard>
 
-      {/* Summary chips */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <AppCard variant="stat">
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Hoje</p>
-          <p className="text-lg font-bold">{todayCount}</p>
-        </AppCard>
-        <AppCard variant="stat">
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Semana</p>
-          <p className="text-lg font-bold">{weekCount}</p>
-        </AppCard>
-        <AppCard variant="stat">
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Aguardando</p>
-          <p className="text-lg font-bold">{awaitingCount}</p>
-        </AppCard>
+      <div className="mb-5 grid grid-cols-2 gap-3">
+        <StatTile title="Reuniões" value={weekCount} subtitle="eventos nos próximos 7 dias" icon={Users} onClick={() => navigate('/reunioes')} />
+        <StatTile title="Hoje" value={todayCount} subtitle="eventos para hoje" icon={Clock} tone="blue" onClick={() => navigate('/calendario')} />
+        <StatTile title="Tarefas" value={awaitingCount} subtitle="eventos aguardando atenção" icon={CheckSquare} tone="purple" onClick={() => navigate('/tarefas')} />
+        <StatTile title="Finanças" value={pendingSubmissions} subtitle="comprovantes pendentes" icon={DollarSign} tone="amber" onClick={() => navigate('/financas?tab=comprovantes')} />
       </div>
 
-      {/* Calendar */}
-      <div className="mb-4">
+      <section className="mb-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-emerald-700" />
+            <h2 className="text-lg font-bold text-foreground">Próximos eventos</h2>
+          </div>
+          <button type="button" onClick={() => navigate('/calendario')} className="text-sm font-semibold text-emerald-700">
+            Ver calendário
+          </button>
+        </div>
+
+        <AppCard className="divide-y divide-border/60 p-0">
+          {eventsLoading ? (
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : upcomingEvents.length > 0 ? (
+            upcomingEvents.map((event) => {
+              const eventDate = new Date(event.start_date);
+              return (
+                <button
+                  key={event.id}
+                  type="button"
+                  onClick={() => navigate('/calendario')}
+                  className="flex w-full items-center gap-3 p-4 text-left transition hover:bg-muted/40"
+                >
+                  <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <span className="text-lg font-bold leading-none">{format(eventDate, 'dd')}</span>
+                    <span className="text-[10px] font-bold uppercase">{format(eventDate, 'MMM', { locale: ptBR })}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-foreground">{event.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(eventDate, 'HH:mm')} {event.location ? `• ${event.location}` : ''}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              );
+            })
+          ) : (
+            <div className="p-4 text-sm text-muted-foreground">Nenhum evento próximo encontrado.</div>
+          )}
+        </AppCard>
+      </section>
+
+      <section className="mb-5">
+        <div className="mb-3 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-emerald-700" />
+          <h2 className="text-lg font-bold text-foreground">Acesso rápido</h2>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          <QuickAction label="Reunião" icon={Users} onClick={() => navigate('/reunioes')} />
+          <QuickAction label="Evento" icon={Calendar} onClick={() => navigate('/calendario')} />
+          <QuickAction label="Tarefa" icon={Plus} onClick={() => navigate('/tarefas')} />
+          <QuickAction label="Finanças" icon={DollarSign} onClick={() => navigate('/financas')} />
+        </div>
+      </section>
+
+      <section className="mb-5">
+        <div className="mb-3 flex items-center gap-2">
+          <Gift className="h-4 w-4 text-emerald-700" />
+          <h2 className="text-lg font-bold text-foreground">Aniversariantes</h2>
+        </div>
+        <HomeBirthdayCard />
+      </section>
+
+      <section className="mb-5">
         <PastorCalendarWidget
           events={events}
           selectedDate={selectedDate}
@@ -216,31 +372,21 @@ export default function Index() {
           onNextMonth={handleNextMonth}
           onToday={handleToday}
         />
-      </div>
+      </section>
 
-      {/* Birthdays card */}
-      <HomeBirthdayCard />
-
-      {/* Day event list */}
-      <div className="mb-6">
+      <section className="mb-6">
         <PastorDayEventList
           selectedDate={selectedDate}
           events={events}
           onUpdateStatus={isManagement || isAdmin ? handleUpdateStatus : undefined as any}
           isUpdating={updateEvent.isPending}
         />
-      </div>
+      </section>
 
-      {/* Quick Actions */}
-      <div className="mb-6">
-        <SectionTitle className="text-base md:text-lg font-semibold normal-case tracking-normal">Acesso Rápido</SectionTitle>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-          <QuickAction label="Nova Reunião" icon={Users} onClick={() => navigate('/reunioes')} />
-          <QuickAction label="Novo Evento" icon={Calendar} onClick={() => navigate('/calendario')} />
-          <QuickAction label="Finanças" icon={DollarSign} onClick={() => navigate('/financas')} />
-          <QuickAction label="Nova Tarefa" icon={Plus} onClick={() => navigate('/tarefas')} />
-        </div>
-      </div>
+      <AppCard className="mb-2 bg-gradient-to-br from-emerald-900 to-emerald-700 p-5 text-center text-white">
+        <p className="text-base font-semibold">&quot;Tu, porém, renova-te em Cristo.&quot;</p>
+        <p className="mt-1 text-sm text-emerald-100">Tema da UMP IPNC 2026</p>
+      </AppCard>
     </AppLayout>
   );
 }
