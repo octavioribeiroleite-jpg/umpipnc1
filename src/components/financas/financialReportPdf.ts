@@ -190,6 +190,34 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
     pdf.text(value, x + 3, y + 16, { maxWidth: width - 6 });
   };
 
+  const coverMetricCard = (x: number, top: number, width: number, title: string, value: string, color: [number, number, number]) => {
+    setFill(PDF_COLORS.white);
+    setDraw(PDF_COLORS.border);
+    pdf.roundedRect(x, top, width, 30, 2.5, 2.5, 'FD');
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.8);
+    setColor(PDF_COLORS.muted);
+    pdf.text(title, x + 4, top + 8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(12.2);
+    setColor(color);
+    pdf.text(value, x + 4, top + 20, { maxWidth: width - 8 });
+  };
+
+  const coverDetail = (x: number, top: number, width: number, label: string, value: string, color: [number, number, number]) => {
+    setFill([248, 251, 249]);
+    setDraw(PDF_COLORS.border);
+    pdf.roundedRect(x, top, width, 18, 2, 2, 'FD');
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.6);
+    setColor(PDF_COLORS.muted);
+    pdf.text(label, x + 4, top + 7);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9.2);
+    setColor(color);
+    pdf.text(value, x + width - 4, top + 12.5, { align: 'right', maxWidth: width - 8 });
+  };
+
   const paragraph = (text: string, x = margin + 5, width = contentWidth - 10) => {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9.5);
@@ -423,35 +451,63 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
   setFill(PDF_COLORS.gold);
   pdf.rect(8, 0, 2, pageHeight, 'F');
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(11);
+  pdf.setFontSize(10.5);
   setColor(PDF_COLORS.muted);
-  pdf.text('PRESTACAO DE CONTAS', margin + 5, 38);
-  pdf.setFontSize(25);
+  pdf.text('PRESTACAO DE CONTAS', margin + 5, 34);
+  pdf.setFontSize(24);
   setColor(PDF_COLORS.ink);
-  pdf.text('Relatorio Financeiro', margin + 5, 54);
-  pdf.setFontSize(34);
-  pdf.text(selectedYear, margin + 5, 72);
+  pdf.text('Relatorio Financeiro', margin + 5, 49);
+  pdf.setFontSize(32);
+  pdf.text(selectedYear, margin + 5, 65);
   pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(11);
+  pdf.setFontSize(10.5);
   setColor(PDF_COLORS.muted);
-  pdf.text('Documento para conferencia, reuniao e arquivo da igreja.', margin + 5, 84);
-  pdf.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, margin + 5, 92);
+  pdf.text('Resumo geral para conferencia, reuniao e arquivo da igreja.', margin + 5, 78);
+  pdf.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, margin + 5, 86);
 
-  setFill([255, 255, 255]);
-  setDraw(PDF_COLORS.border);
-  pdf.roundedRect(margin + 5, 112, contentWidth - 5, 72, 3, 3, 'FD');
-  y = 128;
   const cardW = (contentWidth - 14) / 4;
-  statCard(margin + 10, cardW, 'Saldo do ano', formatSignedCurrency(saldo), saldo >= 0 ? PDF_COLORS.green : PDF_COLORS.red);
-  statCard(margin + 10 + cardW + 3, cardW, 'Receitas', formatCurrency(totalReceitas), PDF_COLORS.green);
-  statCard(margin + 10 + (cardW + 3) * 2, cardW, 'Gastos', formatCurrency(totalDespesas), PDF_COLORS.red);
-  statCard(margin + 10 + (cardW + 3) * 3, cardW, 'Adimplencia', `${adimplenciaRate}%`, PDF_COLORS.blue);
+  const coverPanelX = margin + 5;
+  const coverPanelY = 108;
+  const coverPanelW = contentWidth - 5;
+  setFill(PDF_COLORS.white);
+  setDraw(PDF_COLORS.border);
+  pdf.roundedRect(coverPanelX, coverPanelY, coverPanelW, 106, 4, 4, 'FD');
 
+  setFill(PDF_COLORS.green);
+  pdf.roundedRect(coverPanelX, coverPanelY, 4, 106, 4, 4, 'F');
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(13);
+  setColor(PDF_COLORS.ink);
+  pdf.text('Resumo geral do ano', coverPanelX + 10, coverPanelY + 14);
   pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(9);
+  pdf.setFontSize(8.8);
   setColor(PDF_COLORS.muted);
-  pdf.text('Sistema de Gestao Financeira', margin + 5, 254);
-  pdf.text('Relatorio gerado automaticamente com base nos lancamentos cadastrados.', margin + 5, 260);
+  const coverSummary = `O periodo encerra com saldo de ${formatSignedCurrency(saldo)}, formado por ${formatCurrency(totalReceitas)} em receitas e ${formatCurrency(totalDespesas)} em gastos registrados. Este quadro resume os principais pontos para leitura rapida antes do detalhamento.`;
+  pdf.text(pdf.splitTextToSize(coverSummary, coverPanelW - 20), coverPanelX + 10, coverPanelY + 24);
+
+  const coverCardY = coverPanelY + 42;
+  coverMetricCard(coverPanelX + 10, coverCardY, cardW, 'Saldo do ano', formatSignedCurrency(saldo), saldo >= 0 ? PDF_COLORS.green : PDF_COLORS.red);
+  coverMetricCard(coverPanelX + 13 + cardW, coverCardY, cardW, 'Receitas', formatCurrency(totalReceitas), PDF_COLORS.green);
+  coverMetricCard(coverPanelX + 16 + cardW * 2, coverCardY, cardW, 'Gastos', formatCurrency(totalDespesas), PDF_COLORS.red);
+  coverMetricCard(coverPanelX + 19 + cardW * 3, coverCardY, cardW, 'Adimplencia', `${adimplenciaRate}%`, PDF_COLORS.blue);
+
+  const detailW = (coverPanelW - 30) / 3;
+  const detailY = coverPanelY + 80;
+  coverDetail(coverPanelX + 10, detailY, detailW, 'Cobrancas recebidas', formatCurrency(chargeStats.paidAmount), PDF_COLORS.green);
+  coverDetail(coverPanelX + 15 + detailW, detailY, detailW, 'Cobrancas pendentes', formatCurrency(chargeStats.pendingAmount), PDF_COLORS.red);
+  coverDetail(coverPanelX + 20 + detailW * 2, detailY, detailW, 'Comprovantes', String(despesasComComprovante.length), PDF_COLORS.blue);
+
+  setFill(PDF_COLORS.white);
+  setDraw(PDF_COLORS.border);
+  pdf.roundedRect(margin + 5, 228, contentWidth - 5, 24, 3, 3, 'FD');
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(9.2);
+  setColor(PDF_COLORS.ink);
+  pdf.text('Sistema de Gestao Financeira', margin + 11, 238);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8.4);
+  setColor(PDF_COLORS.muted);
+  pdf.text('Relatorio gerado automaticamente com base nos lancamentos cadastrados.', margin + 11, 246);
 
   addPage();
 
