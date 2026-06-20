@@ -2,34 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* IPNC Design System - Verde Esmeralda */
+/* IPNC Design System - Verde institucional com base clara */
 
 @layer base {
   :root {
-    /* Emerald Green Theme */
-    --background: 150 20% 98%;
-    --foreground: 150 25% 10%;
+    /* Base clara para reduzir excesso de verde na área de trabalho */
+    --background: 100 18% 97%;
+    --foreground: 145 24% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 150 25% 10%;
+    --card-foreground: 145 24% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 150 25% 10%;
+    --popover-foreground: 145 24% 10%;
 
-    /* Primary - Emerald Green */
-    --primary: 152 60% 38%;
+    /* Primary - Verde institucional */
+    --primary: 153 63% 33%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Light Emerald */
-    --secondary: 150 30% 94%;
-    --secondary-foreground: 150 25% 15%;
+    /* Secondary - Verde muito claro */
+    --secondary: 140 24% 94%;
+    --secondary-foreground: 145 24% 15%;
 
-    --muted: 150 15% 92%;
-    --muted-foreground: 150 10% 45%;
+    --muted: 140 16% 92%;
+    --muted-foreground: 145 8% 45%;
 
-    /* Accent - Teal accent */
-    --accent: 168 70% 40%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - apoio claro para hover e superfícies */
+    --accent: 145 28% 91%;
+    --accent-foreground: 145 28% 18%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -39,29 +39,29 @@
     --warning-foreground: 0 0% 100%;
 
     /* Success - Green */
-    --success: 142 76% 36%;
+    --success: 153 63% 33%;
     --success-foreground: 0 0% 100%;
 
     /* Info - Blue */
-    --info: 199 89% 48%;
+    --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
 
-    --border: 150 20% 88%;
-    --input: 150 20% 88%;
-    --ring: 152 60% 38%;
+    --border: 140 18% 87%;
+    --input: 140 18% 87%;
+    --ring: 153 63% 33%;
 
     --radius: 0.75rem;
 
-    /* Sidebar - Darker Emerald */
-    --sidebar-background: 152 45% 18%;
-    --sidebar-foreground: 150 20% 95%;
-    --sidebar-primary: 152 60% 45%;
+    /* Sidebar - Verde escuro concentrado só na navegação */
+    --sidebar-background: 152 53% 15%;
+    --sidebar-foreground: 142 24% 94%;
+    --sidebar-primary: 150 56% 46%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 152 40% 25%;
-    --sidebar-accent-foreground: 150 20% 95%;
-    --sidebar-border: 152 35% 25%;
-    --sidebar-ring: 152 60% 45%;
-    --sidebar-muted: 152 20% 40%;
+    --sidebar-accent: 152 46% 22%;
+    --sidebar-accent-foreground: 142 24% 96%;
+    --sidebar-border: 152 35% 22%;
+    --sidebar-ring: 150 56% 46%;
+    --sidebar-muted: 145 14% 62%;
   }
 
   .dark {
@@ -126,7 +126,7 @@
   body {
     margin: 0;
     padding: 0;
-    background-color: #000;
+    background-color: hsl(var(--background));
     /* Prevent any horizontal overflow at the root */
     max-width: 100%;
     overflow-x: hidden;
@@ -136,14 +136,13 @@
     @apply bg-background text-foreground antialiased;
     padding-top: env(safe-area-inset-top, 0);
     padding-bottom: env(safe-area-inset-bottom, 0);
-    /* Solid gradient fallback shows instantly while bg-app.png loads */
+    /* Fundo claro e calmo; verde fica como marca, não como massa visual */
     background-color: hsl(var(--background));
-    background-image: linear-gradient(135deg, hsl(152 45% 18%) 0%, hsl(152 60% 12%) 50%, hsl(168 50% 15%) 100%), url('/images/bg-app.png');
-    background-size: cover, cover;
-    background-position: center, center;
-    background-attachment: fixed, fixed;
-    background-repeat: no-repeat, no-repeat;
-    background-blend-mode: normal, normal;
+    background-image: linear-gradient(135deg, hsl(100 18% 97%) 0%, hsl(140 24% 94%) 48%, hsl(42 42% 95%) 100%);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
   }
 
   /* Use 100% (not 100vw) to avoid horizontal scroll caused by scrollbars */
