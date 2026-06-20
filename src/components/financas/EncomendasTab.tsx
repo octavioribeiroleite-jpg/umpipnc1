@@ -283,6 +283,7 @@ export function EncomendasTab({ onDataChange }: Props) {
     }
     toast.success(delivered ? 'Marcado como entregue' : 'Entrega desfeita');
     fetchOrders();
+    onDataChange?.();
   };
 
   const handleDelete = async () => {

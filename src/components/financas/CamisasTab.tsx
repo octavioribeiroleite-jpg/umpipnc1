@@ -386,27 +386,33 @@ export function CamisasTab() {
     }
   };
 
-  // Stats
-  const totalStock = inventory.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPurchased = purchases.reduce((sum, p) => sum + p.total_cost, 0);
-  const totalSold = sales.reduce((sum, s) => sum + s.total_price, 0);
-  const profit = totalSold - totalPurchased;
-
   // Encomendas (orders)
   const orderOrdered = orders.reduce((s, o) => s + Number(o.total_price || 0), 0);
   const orderReceived = orders.reduce((s, o) => s + Number(o.amount_paid || 0), 0);
   const orderToReceive = Math.max(0, orderOrdered - orderReceived);
   const orderDelivered = orders.filter(o => o.delivery_status === 'entregue').length;
+
+  // Estoque = encomendas ainda NÃO entregues (entregue sai do estoque) + estoque avulso
+  const undeliveredOrders = orders.filter(o => o.delivery_status !== 'entregue');
   const orderProduction = (() => {
     const byColor: Record<string, Record<string, number>> = { off: {}, preta: {} };
     let total = 0;
-    orders.forEach(o => (o.items || []).forEach(i => {
+    undeliveredOrders.forEach(o => (o.items || []).forEach(i => {
       const c = byColor[i.color] || (byColor[i.color] = {});
       c[i.size] = (c[i.size] || 0) + (Number(i.qty) || 0);
       total += Number(i.qty) || 0;
     }));
     return { byColor, total };
   })();
+
+  // Valor que sobrou no estoque (encomendas não entregues)
+  const stockValue = undeliveredOrders.reduce((s, o) => s + Number(o.total_price || 0), 0);
+
+  // Stats financeiras: compras (despesa) x vendas + encomendas recebidas (receita)
+  const totalStock = inventory.reduce((sum, i) => sum + i.quantity, 0) + orderProduction.total;
+  const totalPurchased = purchases.reduce((sum, p) => sum + p.total_cost, 0);
+  const totalSold = sales.reduce((sum, s) => sum + s.total_price, 0) + orderReceived;
+  const profit = totalSold - totalPurchased;
 
   if (loading) {
     return (
@@ -514,9 +520,15 @@ export function CamisasTab() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Estoque por Tamanho</CardTitle>
-                  <Badge variant="outline">Total: {orderProduction.total} camisas</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Em estoque: {orderProduction.total} camisas</Badge>
+                    <Badge variant="secondary">Valor: R$ {stockValue.toFixed(2).replace('.', ',')}</Badge>
+                  </div>
                 </CardHeader>
                 <CardContent>
+                  {orderProduction.total === 0 && (
+                    <p className="text-sm text-muted-foreground mb-3">Todas as camisas foram entregues — estoque zerado.</p>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {ORDER_COLORS.map(c => {
                       const sizes = ORDER_SIZES.filter(s => orderProduction.byColor[c.value]?.[s]);
