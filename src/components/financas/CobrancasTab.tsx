@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,20 +9,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
-import { ChargeCard, type ChargeCardVariant } from './ChargeCard';
 import { toast } from 'sonner';
-import { Check, MoreHorizontal, Receipt, Loader2, Undo2, Trash2, Edit, Eye, Calendar, User, Search, Clock, ShieldCheck } from 'lucide-react';
+import { Check, MoreHorizontal, Receipt, Loader2, Undo2, Trash2, Eye, Search, Clock, ShieldCheck, Wallet, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const MONTHS = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-];
+const ANNUAL_CHARGE_TYPE = 'annual_contribution';
 
 interface Member {
   id: string;
@@ -45,60 +39,57 @@ interface Charge {
   notes: string | null;
 }
 
+interface FinancialSettings {
+  monthly_fee: number;
+  per_capita: number;
+  due_day: number;
+}
+
+type MemberStatus = 'pendente' | 'parcial' | 'pago' | 'isento';
+
+const formatCurrency = (value: number) => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
+const parseMoney = (value: string) => Number(String(value || '0').replace(',', '.')) || 0;
+
 export function CobrancasTab() {
-  const { user } = useAuth();
-  const isMobile = useIsMobile();
+  const { user, effectiveSocietyId: societyId } = useAuth();
   const currentYear = new Date().getFullYear();
-  const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
   const [members, setMembers] = useState<Member[]>([]);
   const [charges, setCharges] = useState<Charge[]>([]);
+  const [settings, setSettings] = useState<FinancialSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  
-  // Dialog state - Dar Baixa
+  const [statusFilter, setStatusFilter] = useState<MemberStatus | null>(null);
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [memberCharges, setMemberCharges] = useState<Charge[]>([]);
-  const [payMensalidade, setPayMensalidade] = useState(false);
-  const [payPercapita, setPayPercapita] = useState(false);
+  const [selectedCharge, setSelectedCharge] = useState<Charge | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 16));
   const [paymentMethod, setPaymentMethod] = useState('pix');
   const [paymentNotes, setPaymentNotes] = useState('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  // Partial payment state
-  const [partialAmounts, setPartialAmounts] = useState<Record<string, string>>({});
-  const [isPartialPayment, setIsPartialPayment] = useState(false);
 
-  // Dialog state - Editar Pagamento
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingCharge, setEditingCharge] = useState<Charge | null>(null);
-  const [editPaymentDate, setEditPaymentDate] = useState('');
-  const [editPaymentMethod, setEditPaymentMethod] = useState('');
-  const [editPaymentNotes, setEditPaymentNotes] = useState('');
-
-  // Dialog state - Ver Detalhes
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [viewingCharge, setViewingCharge] = useState<Charge | null>(null);
+  const [viewingMember, setViewingMember] = useState<Member | null>(null);
 
-  // Alert Dialog - Confirmar ações
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ type: 'revert' | 'delete'; charge: Charge } | null>(null);
 
-  const competence = `${selectedMonth}/${selectedYear}`;
   const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
-
-  const { effectiveSocietyId: societyId } = useAuth();
+  const contributionAmount = Number(settings?.monthly_fee || 0);
+  const perCapitaAmount = Number(settings?.per_capita || 0);
+  const configuredAnnualTotal = contributionAmount + perCapitaAmount;
 
   useEffect(() => {
     fetchData();
-  }, [competence, selectedYear, societyId]);
+  }, [selectedYear, societyId]);
 
   useEffect(() => {
     const channel = supabase
-      .channel('charges-realtime')
+      .channel('annual-charges-realtime')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -106,186 +97,113 @@ export function CobrancasTab() {
       }, () => fetchData())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [societyId]);
+  }, [societyId, selectedYear]);
 
   const fetchData = async () => {
     setLoading(true);
+
     let membersQuery = supabase.from('members').select('id, name').eq('active', true).order('name');
-    
-    // Fetch monthly charges (percapita) AND annual charges (mensalidade with competence = year)
-    let chargesQuery = supabase.from('charges').select('*').in('competence', [competence, selectedYear]);
+    let chargesQuery = supabase
+      .from('charges')
+      .select('*')
+      .eq('competence', selectedYear)
+      .eq('type', ANNUAL_CHARGE_TYPE);
+    let settingsQuery = supabase
+      .from('financial_settings')
+      .select('monthly_fee, per_capita, due_day')
+      .eq('competence', 'geral')
+      .maybeSingle();
 
     if (societyId) {
       membersQuery = membersQuery.eq('society_id', societyId);
       chargesQuery = chargesQuery.eq('society_id', societyId);
+      settingsQuery = settingsQuery.eq('society_id', societyId);
     }
 
-    const [membersRes, chargesRes] = await Promise.all([membersQuery, chargesQuery]);
+    const [membersRes, chargesRes, settingsRes] = await Promise.all([membersQuery, chargesQuery, settingsQuery]);
 
     setMembers(membersRes.data || []);
     setCharges(chargesRes.data || []);
+    setSettings(settingsRes.data || null);
     setLoading(false);
   };
 
-  const getChargeByType = (memberId: string, type: string) => {
-    return charges.find(c => c.member_id === memberId && c.type === type);
-  };
+  const getAnnualCharge = (memberId: string) => charges.find(c => c.member_id === memberId);
+  const getPaidAmount = (charge: Charge | null | undefined) => Number(charge?.paid_amount || 0);
+  const getRemainingAmount = (charge: Charge | null | undefined) => Math.max(0, Number(charge?.amount || 0) - getPaidAmount(charge));
 
-  const getMemberCharges = (memberId: string) => {
-    return charges.filter(c => c.member_id === memberId);
+  const getChargeStatus = (charge: Charge): MemberStatus => {
+    if (charge.status === 'isento') return 'isento';
+    const paid = getPaidAmount(charge);
+    const amount = Number(charge.amount || 0);
+    if (charge.status === 'pago' && paid >= amount) return 'pago';
+    if (paid > 0 && paid < amount) return 'parcial';
+    return 'pendente';
   };
 
   const getStatusBadge = (charge: Charge) => {
-    const status = charge.status;
-    const isPartial = status === 'pago' && charge.paid_amount !== null && charge.paid_amount < charge.amount;
-    
-    if (isPartial) {
-      return <Badge variant="secondary" className="bg-warning/20 text-warning-foreground border-warning">Parcial</Badge>;
-    }
-    
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      pago: 'default',
-      pendente: 'destructive',
-      isento: 'secondary',
-      cancelado: 'outline'
+    const status = getChargeStatus(charge);
+    const classes: Record<MemberStatus, string> = {
+      pago: 'bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-400 border-0',
+      parcial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-400 border-0',
+      pendente: 'bg-destructive/10 text-destructive border-0',
+      isento: 'bg-muted text-muted-foreground border-0',
     };
-    const labels: Record<string, string> = {
+    const labels: Record<MemberStatus, string> = {
       pago: 'Pago',
+      parcial: 'Parcial',
       pendente: 'Pendente',
       isento: 'Isento',
-      cancelado: 'Cancelado'
     };
-    return <Badge variant={variants[status] || 'outline'}>{labels[status] || status}</Badge>;
+    return <Badge variant="secondary" className={classes[status]}>{labels[status]}</Badge>;
   };
 
-  const openPaymentDialog = (member: Member) => {
-    const mCharges = getMemberCharges(member.id);
+  const openPaymentDialog = (member: Member, charge: Charge) => {
+    const remaining = getRemainingAmount(charge);
     setSelectedMember(member);
-    setMemberCharges(mCharges);
-    
-    const mensalidade = mCharges.find(c => c.type === 'mensalidade');
-    const percapita = mCharges.find(c => c.type === 'percapita');
-    
-    // Check for charges that can be paid (pendente or parcial)
-    const canPayMensalidade = mensalidade?.status === 'pendente' || 
-      (mensalidade?.status === 'pago' && mensalidade.paid_amount !== null && mensalidade.paid_amount < mensalidade.amount);
-    const canPayPercapita = percapita?.status === 'pendente' || 
-      (percapita?.status === 'pago' && percapita.paid_amount !== null && percapita.paid_amount < percapita.amount);
-    
-    setPayMensalidade(canPayMensalidade || false);
-    setPayPercapita(canPayPercapita || false);
+    setSelectedCharge(charge);
+    setPaymentAmount(remaining.toFixed(2));
     setPaymentDate(new Date().toISOString().slice(0, 16));
     setPaymentMethod('pix');
     setPaymentNotes('');
     setReceiptFile(null);
-    setIsPartialPayment(false);
-    
-    // Initialize partial amounts with remaining amounts
-    const amounts: Record<string, string> = {};
-    if (mensalidade && canPayMensalidade) {
-      const remaining = mensalidade.amount - (mensalidade.paid_amount || 0);
-      amounts[mensalidade.id] = remaining.toFixed(2);
-    }
-    if (percapita && canPayPercapita) {
-      const remaining = percapita.amount - (percapita.paid_amount || 0);
-      amounts[percapita.id] = remaining.toFixed(2);
-    }
-    setPartialAmounts(amounts);
-    
     setDialogOpen(true);
   };
 
-  const openEditDialog = (charge: Charge) => {
-    setEditingCharge(charge);
-    setEditPaymentDate(charge.paid_at ? new Date(charge.paid_at).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16));
-    setEditPaymentMethod(charge.payment_method || 'pix');
-    setEditPaymentNotes(charge.notes || '');
-    setEditDialogOpen(true);
-  };
-
-  const openDetailsDialog = (charge: Charge) => {
+  const openDetailsDialog = (member: Member, charge: Charge) => {
+    setViewingMember(member);
     setViewingCharge(charge);
     setDetailsDialogOpen(true);
   };
 
   const handlePayment = async () => {
-    if (!selectedMember || !user) return;
-    if (!payMensalidade && !payPercapita) {
-      toast.error('Selecione pelo menos uma cobrança');
+    if (!selectedMember || !selectedCharge || !user) return;
+
+    const enteredAmount = parseMoney(paymentAmount);
+    const remainingAmount = getRemainingAmount(selectedCharge);
+    if (enteredAmount <= 0) {
+      toast.error('Informe um valor recebido válido');
       return;
     }
+    if (enteredAmount > remainingAmount) {
+      toast.error(`O valor recebido não pode passar de ${formatCurrency(remainingAmount)}`);
+      return;
+    }
+
     setSubmitting(true);
-
     const paidAt = new Date(paymentDate).toISOString();
-    
-    // Get charges to process (pendente or parcial)
-    const chargesToPay = memberCharges.filter(c => {
-      const isPending = c.status === 'pendente';
-      const isPartial = c.status === 'pago' && c.paid_amount !== null && c.paid_amount < c.amount;
-      const isSelected = (c.type === 'mensalidade' && payMensalidade) || (c.type === 'percapita' && payPercapita);
-      return isSelected && (isPending || isPartial);
-    });
+    const newTotalPaid = getPaidAmount(selectedCharge) + enteredAmount;
+    const isFullyPaid = newTotalPaid >= Number(selectedCharge.amount || 0);
+    const receiptPrefix = isFullyPaid ? 'Quitação' : 'Pagamento parcial';
 
-    if (chargesToPay.length === 0) {
-      toast.error('Nenhuma cobrança selecionada para pagamento');
-      setSubmitting(false);
-      return;
-    }
-
-    if (isPartialPayment) {
-      for (const charge of chargesToPay) {
-        const val = parseFloat(partialAmounts[charge.id] || '0');
-        if (!val || val <= 0) {
-          toast.error(`Informe o valor para ${charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}`);
-          setSubmitting(false);
-          return;
-        }
-      }
-    }
-
-    // Calculate amounts for each charge
-    const paymentsInfo = chargesToPay.map(charge => {
-      const enteredAmount = parseFloat(partialAmounts[charge.id] || '0');
-      const previouslyPaid = charge.paid_amount || 0;
-      const remainingAmount = charge.amount - previouslyPaid;
-      const amountToPay = isPartialPayment ? Math.min(enteredAmount, remainingAmount) : remainingAmount;
-      const newTotalPaid = previouslyPaid + amountToPay;
-      const isFullyPaid = newTotalPaid >= charge.amount;
-      
-      return {
-        charge,
-        amountToPay,
-        newTotalPaid,
-        isFullyPaid
-      };
-    });
-
-    // Validate amounts
-    for (const info of paymentsInfo) {
-      if (info.amountToPay <= 0) {
-        toast.error(`Informe um valor válido para ${info.charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}`);
-        setSubmitting(false);
-        return;
-      }
-    }
-
-    // Atualização otimista - atualiza UI imediatamente
-    setCharges(prev => prev.map(c => {
-      const paymentInfo = paymentsInfo.find(p => p.charge.id === c.id);
-      if (!paymentInfo) return c;
-      
-      return { 
-        ...c, 
-        status: 'pago', 
-        paid_at: paidAt, 
-        payment_method: paymentMethod,
-        paid_amount: paymentInfo.newTotalPaid
-      };
-    }));
+    setCharges(prev => prev.map(c => (
+      c.id === selectedCharge.id
+        ? { ...c, status: 'pago', paid_at: paidAt, payment_method: paymentMethod, paid_amount: newTotalPaid }
+        : c
+    )));
     setDialogOpen(false);
-    toast.success(isPartialPayment ? 'Pagamento parcial registrado!' : 'Pagamento registrado!');
+    toast.success(isFullyPaid ? 'Cobrança anual quitada!' : 'Baixa parcial registrada!');
 
-    // Processar em background
     try {
       let receiptUrl: string | null = null;
 
@@ -302,45 +220,39 @@ export function CobrancasTab() {
         }
       }
 
-      for (const info of paymentsInfo) {
-        const { charge, amountToPay, newTotalPaid } = info;
-        const partialNote = isPartialPayment && newTotalPaid < charge.amount 
-          ? ` (Pagamento parcial: R$ ${amountToPay.toFixed(2).replace('.', ',')} de R$ ${charge.amount.toFixed(2).replace('.', ',')})`
-          : '';
+      const partialNote = `${receiptPrefix}: ${formatCurrency(enteredAmount)} de ${formatCurrency(selectedCharge.amount)}. Composição: contribuição ${formatCurrency(contributionAmount)} + per capita ${formatCurrency(perCapitaAmount)}.`;
 
-        const { data: transaction } = await supabase
-          .from('transactions')
-          .insert({
-            description: `${charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'} - ${selectedMember.name} - ${competence}${partialNote}`,
-            amount: amountToPay,
-            type: 'entrada',
-            date: paidAt.split('T')[0],
-            created_by: user.id,
-            origin: 'automatic',
-            reference_type: 'charge',
-            reference_id: charge.id,
-            member_id: selectedMember.id,
-            receipt_url: receiptUrl,
-            society_id: societyId || null,
-          })
-          .select('id')
-          .single();
+      const { data: transaction } = await supabase
+        .from('transactions')
+        .insert({
+          description: `Contribuição anual - ${selectedMember.name} - ${selectedYear}`,
+          amount: enteredAmount,
+          type: 'entrada',
+          date: paidAt.split('T')[0],
+          created_by: user.id,
+          origin: 'automatic',
+          reference_type: 'charge',
+          reference_id: selectedCharge.id,
+          member_id: selectedMember.id,
+          receipt_url: receiptUrl,
+          society_id: societyId || null,
+        })
+        .select('id')
+        .single();
 
-        await supabase
-          .from('charges')
-          .update({
-            status: 'pago',
-            paid_at: paidAt,
-            payment_method: paymentMethod,
-            receipt_url: receiptUrl,
-            notes: paymentNotes,
-            transaction_id: transaction?.id,
-            paid_amount: newTotalPaid
-          })
-          .eq('id', charge.id);
-      }
+      await supabase
+        .from('charges')
+        .update({
+          status: 'pago',
+          paid_at: paidAt,
+          payment_method: paymentMethod,
+          receipt_url: receiptUrl || selectedCharge.receipt_url,
+          notes: paymentNotes ? `${paymentNotes}\n${partialNote}` : partialNote,
+          transaction_id: transaction?.id,
+          paid_amount: newTotalPaid,
+        })
+        .eq('id', selectedCharge.id);
     } catch (error: any) {
-      // Reverter estado em caso de erro
       fetchData();
       toast.error('Erro ao processar: ' + error.message);
     } finally {
@@ -348,49 +260,21 @@ export function CobrancasTab() {
     }
   };
 
-  const handleEditPayment = async () => {
-    if (!editingCharge) return;
-
-    setSubmitting(true);
-    try {
-      const paidAt = new Date(editPaymentDate).toISOString();
-
-      await supabase
-        .from('charges')
-        .update({
-          paid_at: paidAt,
-          payment_method: editPaymentMethod,
-          notes: editPaymentNotes
-        })
-        .eq('id', editingCharge.id);
-
-      if (editingCharge.transaction_id) {
-        await supabase
-          .from('transactions')
-          .update({ date: paidAt.split('T')[0] })
-          .eq('id', editingCharge.transaction_id);
-      }
-
-      toast.success('Pagamento atualizado!');
-      setEditDialogOpen(false);
-      fetchData();
-    } catch (error: any) {
-      toast.error('Erro: ' + error.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleRevertPayment = async (charge: Charge) => {
-    // Atualização otimista
-    setCharges(prev => prev.map(c => 
+    setCharges(prev => prev.map(c =>
       c.id === charge.id
         ? { ...c, status: 'pendente', paid_at: null, payment_method: null, receipt_url: null, notes: null, transaction_id: null, paid_amount: null }
         : c
     ));
-    toast.success('Pagamento revertido para pendente!');
+    toast.success('Cobrança voltou para pendente!');
 
     try {
+      await supabase
+        .from('transactions')
+        .delete()
+        .eq('reference_type', 'charge')
+        .eq('reference_id', charge.id);
+
       if (charge.transaction_id) {
         await supabase.from('transactions').delete().eq('id', charge.transaction_id);
       }
@@ -402,9 +286,9 @@ export function CobrancasTab() {
           paid_at: null,
           payment_method: null,
           receipt_url: null,
-          notes: null,
+          notes: `Contribuição: ${formatCurrency(contributionAmount)} | Per capita: ${formatCurrency(perCapitaAmount)}`,
           transaction_id: null,
-          paid_amount: null
+          paid_amount: null,
         })
         .eq('id', charge.id);
     } catch (error: any) {
@@ -414,11 +298,16 @@ export function CobrancasTab() {
   };
 
   const handleDeleteCharge = async (charge: Charge) => {
-    // Atualização otimista
     setCharges(prev => prev.filter(c => c.id !== charge.id));
     toast.success('Cobrança excluída!');
 
     try {
+      await supabase
+        .from('transactions')
+        .delete()
+        .eq('reference_type', 'charge')
+        .eq('reference_id', charge.id);
+
       if (charge.transaction_id) {
         await supabase.from('transactions').delete().eq('id', charge.transaction_id);
       }
@@ -437,60 +326,25 @@ export function CobrancasTab() {
     setConfirmAction(null);
   };
 
-  const paidCharges = charges.filter(c => c.status === 'pago').length;
-  const pendingCharges = charges.filter(c => c.status === 'pendente').length;
-  const exemptCharges = charges.filter(c => c.status === 'isento').length;
+  const chargeMembers = members.filter(member => getAnnualCharge(member.id));
+  const paidCharges = charges.filter(c => getChargeStatus(c) === 'pago').length;
+  const partialCharges = charges.filter(c => getChargeStatus(c) === 'parcial').length;
+  const pendingCharges = charges.filter(c => getChargeStatus(c) === 'pendente').length;
+  const exemptCharges = charges.filter(c => getChargeStatus(c) === 'isento').length;
   const totalCharges = charges.length;
-  const totalMembers = members.filter(m => charges.some(c => c.member_id === m.id)).length;
-  const paidMembers = members.filter(m => {
-    const mc = charges.filter(c => c.member_id === m.id);
-    return mc.length > 0 && mc.every(c => c.status === 'pago' || c.status === 'isento');
-  }).length;
-  const progressValue = totalMembers > 0 ? Math.round((paidMembers / totalMembers) * 100) : 0;
+  const progressValue = totalCharges > 0 ? Math.round(((paidCharges + exemptCharges) / totalCharges) * 100) : 0;
 
-  // Financial summary calculations
-  const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
-  
-  const mensalidadeCharges = charges.filter(c => c.type === 'mensalidade' && c.status !== 'isento');
-  const percapitaCharges = charges.filter(c => c.type === 'percapita' && c.status !== 'isento');
-  
-  const mensalidadePrevisto = mensalidadeCharges.reduce((s, c) => s + Number(c.amount), 0);
-  const mensalidadeRecebido = mensalidadeCharges.filter(c => c.status === 'pago').reduce((s, c) => s + Number(c.paid_amount || c.amount), 0);
-  const mensalidadePendente = mensalidadePrevisto - mensalidadeRecebido;
-  
-  const percapitaPrevisto = percapitaCharges.reduce((s, c) => s + Number(c.amount), 0);
-  const percapitaRecebido = percapitaCharges.filter(c => c.status === 'pago').reduce((s, c) => s + Number(c.paid_amount || c.amount), 0);
-  const percapitaPendente = percapitaPrevisto - percapitaRecebido;
-  
-  const totalPrevisto = mensalidadePrevisto + percapitaPrevisto;
-  const totalRecebido = mensalidadeRecebido + percapitaRecebido;
-  const totalPendente = mensalidadePendente + percapitaPendente;
+  const totalPrevisto = charges.filter(c => c.status !== 'isento').reduce((s, c) => s + Number(c.amount), 0);
+  const totalRecebido = charges.filter(c => c.status !== 'isento').reduce((s, c) => s + getPaidAmount(c), 0);
+  const totalPendente = Math.max(0, totalPrevisto - totalRecebido);
 
-  // Determine member variant based on their charges
-  const getMemberVariant = (memberId: string): ChargeCardVariant => {
-    const memberChargesArr = charges.filter(c => c.member_id === memberId);
-    if (memberChargesArr.length === 0) return 'pendente';
-    const allIsento = memberChargesArr.every(c => c.status === 'isento');
-    if (allIsento) return 'isento';
-    const hasPartial = memberChargesArr.some(c => c.status === 'pago' && c.paid_amount !== null && c.paid_amount < c.amount);
-    if (hasPartial) return 'parcial';
-    const allPaid = memberChargesArr.every(c => c.status === 'pago' || c.status === 'isento');
-    if (allPaid) return 'pago';
-    return 'pendente';
-  };
-
-  // Determine member status for filtering
-  const getMemberStatus = (memberId: string): string => {
-    return getMemberVariant(memberId);
-  };
-
-  // Filter members
-  const filteredMembers = members.filter(member => {
+  const filteredMembers = chargeMembers.filter(member => {
+    const charge = getAnnualCharge(member.id);
+    if (!charge) return false;
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const memberStatus = getMemberStatus(member.id);
+    const memberStatus = getChargeStatus(charge);
     const matchesFilter = !statusFilter || memberStatus === statusFilter;
-    const hasCharges = charges.some(c => c.member_id === member.id);
-    return matchesSearch && matchesFilter && hasCharges;
+    return matchesSearch && matchesFilter;
   });
 
   if (loading) {
@@ -503,22 +357,15 @@ export function CobrancasTab() {
 
   return (
     <div className="space-y-4">
-      {/* Header: Month/Year selectors */}
       <Card>
         <CardContent className="pt-6 pb-4">
-          <div className="flex gap-2 mb-4">
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map(month => (
-                  <SelectItem key={month} value={month}>{month}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Cobranças anuais</p>
+              <p className="text-xs text-muted-foreground">Uma cobrança por sócio, com contribuição e per capita juntas.</p>
+            </div>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[100px]">
+              <SelectTrigger className="w-[120px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -529,7 +376,6 @@ export function CobrancasTab() {
             </Select>
           </div>
 
-          {/* Progress bar */}
           <div className="mb-4">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
               <span>Adimplência</span>
@@ -551,59 +397,58 @@ export function CobrancasTab() {
             />
           </div>
 
-          {/* Financial Summary */}
           <div className="rounded-lg border border-border/60 bg-muted/30 p-3 mb-4">
-            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Resumo Financeiro — {competence}</p>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              {/* Mensalidade */}
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-foreground">Mensalidade</p>
-                <div className="text-xs text-muted-foreground flex justify-between"><span>Previsto</span><span className="font-medium text-foreground">{formatCurrency(mensalidadePrevisto)}</span></div>
-                <div className="text-xs flex justify-between"><span className="text-green-600 dark:text-green-400">Recebido</span><span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(mensalidadeRecebido)}</span></div>
-                <div className="text-xs flex justify-between"><span className="text-destructive">Pendente</span><span className="font-medium text-destructive">{formatCurrency(mensalidadePendente)}</span></div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Resumo financeiro - {selectedYear}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+              <div className="rounded-md bg-background border p-3">
+                <p className="text-xs text-muted-foreground">Previsto</p>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(totalPrevisto)}</p>
               </div>
-              {/* Per Capita */}
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-foreground">Per Capita</p>
-                <div className="text-xs text-muted-foreground flex justify-between"><span>Previsto</span><span className="font-medium text-foreground">{formatCurrency(percapitaPrevisto)}</span></div>
-                <div className="text-xs flex justify-between"><span className="text-green-600 dark:text-green-400">Recebido</span><span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(percapitaRecebido)}</span></div>
-                <div className="text-xs flex justify-between"><span className="text-destructive">Pendente</span><span className="font-medium text-destructive">{formatCurrency(percapitaPendente)}</span></div>
+              <div className="rounded-md bg-green-50 dark:bg-green-950/20 border p-3">
+                <p className="text-xs text-muted-foreground">Recebido</p>
+                <p className="text-lg font-bold text-green-700 dark:text-green-400">{formatCurrency(totalRecebido)}</p>
+              </div>
+              <div className="rounded-md bg-destructive/10 border p-3">
+                <p className="text-xs text-muted-foreground">Pendente</p>
+                <p className="text-lg font-bold text-destructive">{formatCurrency(totalPendente)}</p>
               </div>
             </div>
-            {/* Total */}
-            <div className="border-t border-border/60 pt-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-semibold text-foreground">Total</span>
-                <span className="font-bold text-foreground">{formatCurrency(totalPrevisto)}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div className="flex justify-between rounded-md bg-background/80 px-3 py-2">
+                <span className="text-muted-foreground">Contribuição</span>
+                <span className="font-semibold">{formatCurrency(contributionAmount)} por sócio</span>
               </div>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Recebido: {formatCurrency(totalRecebido)}</span>
-                <span className="text-xs text-destructive font-medium">Pendente: {formatCurrency(totalPendente)}</span>
+              <div className="flex justify-between rounded-md bg-background/80 px-3 py-2">
+                <span className="text-muted-foreground">Per capita</span>
+                <span className="font-semibold">{formatCurrency(perCapitaAmount)} por sócio</span>
+              </div>
+              <div className="flex justify-between rounded-md bg-background/80 px-3 py-2">
+                <span className="text-muted-foreground">Total anual</span>
+                <span className="font-semibold">{formatCurrency(configuredAnnualTotal)} por sócio</span>
               </div>
             </div>
           </div>
 
-          {/* Status mini-cards */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button
               onClick={() => setStatusFilter(statusFilter === 'pago' ? null : 'pago')}
-              className={cn(
-                'rounded-lg p-2.5 text-center transition-all cursor-pointer border',
-                'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900',
-                statusFilter === 'pago' && 'ring-2 ring-primary ring-offset-1'
-              )}
+              className={cn('rounded-lg p-2.5 text-center transition-all cursor-pointer border bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900', statusFilter === 'pago' && 'ring-2 ring-primary ring-offset-1')}
             >
-              <Check className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto mb-0.5" />
+              <Check className="h-4 w-4 text-green-600 mx-auto mb-0.5" />
               <p className="text-lg font-bold text-green-700 dark:text-green-300">{paidCharges}</p>
               <p className="text-[10px] text-green-600 dark:text-green-400">Pagos</p>
             </button>
             <button
+              onClick={() => setStatusFilter(statusFilter === 'parcial' ? null : 'parcial')}
+              className={cn('rounded-lg p-2.5 text-center transition-all cursor-pointer border bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900', statusFilter === 'parcial' && 'ring-2 ring-primary ring-offset-1')}
+            >
+              <Wallet className="h-4 w-4 text-yellow-600 mx-auto mb-0.5" />
+              <p className="text-lg font-bold text-yellow-700 dark:text-yellow-300">{partialCharges}</p>
+              <p className="text-[10px] text-yellow-600 dark:text-yellow-400">Parciais</p>
+            </button>
+            <button
               onClick={() => setStatusFilter(statusFilter === 'pendente' ? null : 'pendente')}
-              className={cn(
-                'rounded-lg p-2.5 text-center transition-all cursor-pointer border',
-                'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900',
-                statusFilter === 'pendente' && 'ring-2 ring-primary ring-offset-1'
-              )}
+              className={cn('rounded-lg p-2.5 text-center transition-all cursor-pointer border bg-destructive/10 border-destructive/20', statusFilter === 'pendente' && 'ring-2 ring-primary ring-offset-1')}
             >
               <Clock className="h-4 w-4 text-destructive mx-auto mb-0.5" />
               <p className="text-lg font-bold text-red-700 dark:text-red-300">{pendingCharges}</p>
@@ -611,11 +456,7 @@ export function CobrancasTab() {
             </button>
             <button
               onClick={() => setStatusFilter(statusFilter === 'isento' ? null : 'isento')}
-              className={cn(
-                'rounded-lg p-2.5 text-center transition-all cursor-pointer border',
-                'bg-muted/50 border-border',
-                statusFilter === 'isento' && 'ring-2 ring-primary ring-offset-1'
-              )}
+              className={cn('rounded-lg p-2.5 text-center transition-all cursor-pointer border bg-muted/50 border-border', statusFilter === 'isento' && 'ring-2 ring-primary ring-offset-1')}
             >
               <ShieldCheck className="h-4 w-4 text-muted-foreground mx-auto mb-0.5" />
               <p className="text-lg font-bold text-muted-foreground">{exemptCharges}</p>
@@ -625,7 +466,6 @@ export function CobrancasTab() {
         </CardContent>
       </Card>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -636,13 +476,12 @@ export function CobrancasTab() {
         />
       </div>
 
-      {/* Desktop: Table */}
       <Card className="hidden md:block">
         <CardContent className="pt-6">
           {filteredMembers.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
               {charges.length === 0
-                ? `Nenhuma cobrança gerada para ${competence}. Vá em "Configurações" para gerar.`
+                ? `Nenhuma cobrança anual gerada para ${selectedYear}. Vá em "Configurações" para gerar.`
                 : 'Nenhum membro encontrado.'}
             </p>
           ) : (
@@ -650,132 +489,63 @@ export function CobrancasTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Membro</TableHead>
-                  <TableHead>Mensalidade</TableHead>
-                  <TableHead>Per Capita</TableHead>
+                  <TableHead>Cobrança anual</TableHead>
+                  <TableHead>Pago</TableHead>
+                  <TableHead>Restante</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Vencimento</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMembers.map(member => {
-                  const mensalidade = getChargeByType(member.id, 'mensalidade');
-                  const percapita = getChargeByType(member.id, 'percapita');
-                  
-                  if (!mensalidade && !percapita) return null;
-
-                  // Check if charge can receive payment (pending or partial)
-                  const canPayMensalidade = mensalidade?.status === 'pendente' || 
-                    (mensalidade?.status === 'pago' && mensalidade.paid_amount !== null && mensalidade.paid_amount < mensalidade.amount);
-                  const canPayPercapita = percapita?.status === 'pendente' || 
-                    (percapita?.status === 'pago' && percapita.paid_amount !== null && percapita.paid_amount < percapita.amount);
-                  const hasPendingCharges = canPayMensalidade || canPayPercapita;
+                  const charge = getAnnualCharge(member.id)!;
+                  const paid = getPaidAmount(charge);
+                  const remaining = getRemainingAmount(charge);
+                  const canPay = getChargeStatus(charge) === 'pendente' || getChargeStatus(charge) === 'parcial';
 
                   return (
                     <TableRow key={member.id}>
                       <TableCell className="font-medium">{member.name}</TableCell>
                       <TableCell>
-                        {mensalidade ? (
-                          <div className="flex items-center gap-2">
-                            <span>R$ {mensalidade.amount.toFixed(2).replace('.', ',')}</span>
-                            {getStatusBadge(mensalidade)}
-                          </div>
-                        ) : '-'}
+                        <div className="space-y-1">
+                          <p className="font-semibold">{formatCurrency(charge.amount)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Contribuição {formatCurrency(contributionAmount)} + Per capita {formatCurrency(perCapitaAmount)}
+                          </p>
+                        </div>
                       </TableCell>
-                      <TableCell>
-                        {percapita ? (
-                          <div className="flex items-center gap-2">
-                            <span>R$ {percapita.amount.toFixed(2).replace('.', ',')}</span>
-                            {getStatusBadge(percapita)}
-                          </div>
-                        ) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {mensalidade?.due_date || percapita?.due_date
-                          ? new Date((mensalidade?.due_date || percapita?.due_date) + 'T12:00:00').toLocaleDateString('pt-BR')
-                          : '-'}
-                      </TableCell>
+                      <TableCell className="font-medium text-green-700 dark:text-green-400">{formatCurrency(paid)}</TableCell>
+                      <TableCell className={remaining > 0 ? 'font-medium text-destructive' : 'font-medium text-muted-foreground'}>{formatCurrency(remaining)}</TableCell>
+                      <TableCell>{getStatusBadge(charge)}</TableCell>
+                      <TableCell>{new Date(charge.due_date + 'T12:00:00').toLocaleDateString('pt-BR')}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          {hasPendingCharges && (
-                            <Button size="sm" onClick={() => openPaymentDialog(member)}>
+                          {canPay && (
+                            <Button size="sm" onClick={() => openPaymentDialog(member, charge)}>
                               <Check className="h-4 w-4 mr-1" />
                               Baixa
                             </Button>
                           )}
-                          
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
+                              <Button variant="ghost" size="sm"><MoreHorizontal className="h-4 w-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {mensalidade?.status === 'pago' && (
-                                <>
-                                  <DropdownMenuItem onClick={() => openDetailsDialog(mensalidade)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Ver Mensalidade
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openEditDialog(mensalidade)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Editar Mensalidade
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => {
-                                      setConfirmAction({ type: 'revert', charge: mensalidade });
-                                      setConfirmDialogOpen(true);
-                                    }}
-                                  >
-                                    <Undo2 className="h-4 w-4 mr-2" />
-                                    Reverter para Pendente
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {percapita?.status === 'pago' && (
-                                <>
-                                  <DropdownMenuItem onClick={() => openDetailsDialog(percapita)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Ver Per Capita
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openEditDialog(percapita)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Editar Per Capita
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => {
-                                      setConfirmAction({ type: 'revert', charge: percapita });
-                                      setConfirmDialogOpen(true);
-                                    }}
-                                  >
-                                    <Undo2 className="h-4 w-4 mr-2" />
-                                    Reverter para Pendente
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {mensalidade && (
-                                <DropdownMenuItem 
-                                  onClick={() => {
-                                    setConfirmAction({ type: 'delete', charge: mensalidade });
-                                    setConfirmDialogOpen(true);
-                                  }}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Excluir Mensalidade
+                              <DropdownMenuItem onClick={() => openDetailsDialog(member, charge)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Ver detalhes
+                              </DropdownMenuItem>
+                              {paid > 0 && (
+                                <DropdownMenuItem onClick={() => { setConfirmAction({ type: 'revert', charge }); setConfirmDialogOpen(true); }}>
+                                  <Undo2 className="h-4 w-4 mr-2" />
+                                  Reverter pagamento
                                 </DropdownMenuItem>
                               )}
-                              {percapita && (
-                                <DropdownMenuItem 
-                                  onClick={() => {
-                                    setConfirmAction({ type: 'delete', charge: percapita });
-                                    setConfirmDialogOpen(true);
-                                  }}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Excluir Per Capita
-                                </DropdownMenuItem>
-                              )}
+                              <DropdownMenuItem onClick={() => { setConfirmAction({ type: 'delete', charge }); setConfirmDialogOpen(true); }} className="text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir cobrança
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -789,245 +559,176 @@ export function CobrancasTab() {
         </CardContent>
       </Card>
 
-      {/* Mobile: Cards */}
-      <div className="md:hidden space-y-1">
+      <div className="md:hidden space-y-2">
         {filteredMembers.length === 0 ? (
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-muted-foreground">
                 {charges.length === 0
-                  ? `Nenhuma cobrança gerada para ${competence}. Vá em "Configurações" para gerar.`
+                  ? `Nenhuma cobrança anual gerada para ${selectedYear}. Vá em "Configurações" para gerar.`
                   : 'Nenhum membro encontrado.'}
               </p>
             </CardContent>
           </Card>
         ) : (
           filteredMembers.map(member => {
-            const mensalidade = getChargeByType(member.id, 'mensalidade');
-            const percapita = getChargeByType(member.id, 'percapita');
-
-            const canPayMensalidade = mensalidade?.status === 'pendente' || 
-              (mensalidade?.status === 'pago' && mensalidade.paid_amount !== null && mensalidade.paid_amount < mensalidade.amount);
-            const canPayPercapita = percapita?.status === 'pendente' || 
-              (percapita?.status === 'pago' && percapita.paid_amount !== null && percapita.paid_amount < percapita.amount);
-            const hasPendingCharges = canPayMensalidade || canPayPercapita;
+            const charge = getAnnualCharge(member.id)!;
+            const paid = getPaidAmount(charge);
+            const remaining = getRemainingAmount(charge);
+            const status = getChargeStatus(charge);
+            const canPay = status === 'pendente' || status === 'parcial';
 
             return (
-              <ChargeCard
-                key={member.id}
-                memberName={member.name}
-                variant={getMemberVariant(member.id)}
-                mensalidade={mensalidade ? {
-                  amount: mensalidade.amount,
-                  status: mensalidade.status,
-                  due_date: mensalidade.due_date,
-                  paid_amount: mensalidade.paid_amount,
-                } : null}
-                percapita={percapita ? {
-                  amount: percapita.amount,
-                  status: percapita.status,
-                  due_date: percapita.due_date,
-                  paid_amount: percapita.paid_amount,
-                } : null}
-                hasPendingCharges={hasPendingCharges}
-                onPayment={() => openPaymentDialog(member)}
-                onViewMensalidade={mensalidade?.status === 'pago' ? () => openDetailsDialog(mensalidade) : undefined}
-                onViewPercapita={percapita?.status === 'pago' ? () => openDetailsDialog(percapita) : undefined}
-              />
+              <Card key={member.id} className={cn(
+                status === 'pago' && 'border-l-4 border-l-green-500 bg-green-50 dark:bg-green-950/20',
+                status === 'parcial' && 'border-l-4 border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950/20',
+                status === 'pendente' && 'border-l-4 border-l-destructive bg-destructive/5',
+                status === 'isento' && 'border-l-4 border-l-muted bg-muted/30 opacity-75'
+              )}>
+                <CardContent className="p-3 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h4 className="font-semibold truncate">{member.name}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Contribuição {formatCurrency(contributionAmount)} + Per capita {formatCurrency(perCapitaAmount)}
+                      </p>
+                    </div>
+                    {getStatusBadge(charge)}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="rounded-md bg-background/80 p-2">
+                      <p className="text-muted-foreground">Total</p>
+                      <p className="font-bold">{formatCurrency(charge.amount)}</p>
+                    </div>
+                    <div className="rounded-md bg-background/80 p-2">
+                      <p className="text-muted-foreground">Pago</p>
+                      <p className="font-bold text-green-700 dark:text-green-400">{formatCurrency(paid)}</p>
+                    </div>
+                    <div className="rounded-md bg-background/80 p-2">
+                      <p className="text-muted-foreground">Restante</p>
+                      <p className={remaining > 0 ? 'font-bold text-destructive' : 'font-bold'}>{formatCurrency(remaining)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <CalendarDays className="h-3 w-3" />
+                      {new Date(charge.due_date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                    </span>
+                    <div className="flex gap-1">
+                      {canPay && <Button size="sm" onClick={() => openPaymentDialog(member, charge)}>Baixa</Button>}
+                      <Button size="sm" variant="outline" onClick={() => openDetailsDialog(member, charge)}>Detalhes</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })
         )}
       </div>
 
-      {/* Dialog de Dar Baixa */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Dar Baixa - {selectedMember?.name}</DialogTitle>
+            <DialogTitle>Dar baixa - {selectedMember?.name}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            {/* Toggle for partial payment */}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="partial-payment"
-                checked={isPartialPayment}
-                onCheckedChange={(checked) => setIsPartialPayment(!!checked)}
-              />
-              <label htmlFor="partial-payment" className="text-sm font-medium">
-                Pagamento parcial
-              </label>
+          {selectedCharge && (
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Contribuição</span><span className="font-medium">{formatCurrency(contributionAmount)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Per capita</span><span className="font-medium">{formatCurrency(perCapitaAmount)}</span></div>
+                <div className="flex justify-between text-sm border-t pt-2"><span className="font-semibold">Total anual</span><span className="font-bold">{formatCurrency(selectedCharge.amount)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Já recebido</span><span className="font-medium text-green-700 dark:text-green-400">{formatCurrency(getPaidAmount(selectedCharge))}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Restante</span><span className="font-medium text-destructive">{formatCurrency(getRemainingAmount(selectedCharge))}</span></div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Valor recebido</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max={getRemainingAmount(selectedCharge)}
+                    className="pl-10"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Para quitar tudo, mantenha o valor restante. Para baixa parcial, informe apenas o que entrou.</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Data e Hora do Pagamento</Label>
+                <Input type="datetime-local" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Método de Pagamento</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="transferencia">Transferência</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observação (opcional)</Label>
+                <Textarea placeholder="Observações..." value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Comprovante (opcional)</Label>
+                <Input type="file" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
+              </div>
+
+              <Button className="w-full" onClick={handlePayment} disabled={submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Receipt className="h-4 w-4 mr-2" />}
+                {submitting ? 'Processando...' : 'Confirmar baixa'}
+              </Button>
             </div>
-
-            <div className="space-y-3">
-              <Label>O que foi pago?</Label>
-              {memberCharges.map(charge => {
-                const isPending = charge.status === 'pendente';
-                const isPartialCharge = charge.status === 'pago' && charge.paid_amount !== null && charge.paid_amount < charge.amount;
-                const canPay = isPending || isPartialCharge;
-                const previouslyPaid = charge.paid_amount || 0;
-                const remainingAmount = charge.amount - previouslyPaid;
-                const isSelected = charge.type === 'mensalidade' ? payMensalidade : payPercapita;
-
-                return (
-                  <div key={charge.id} className="space-y-2 p-3 border rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id={charge.id}
-                        checked={isSelected}
-                        onCheckedChange={(checked) => {
-                          if (charge.type === 'mensalidade') setPayMensalidade(!!checked);
-                          else setPayPercapita(!!checked);
-                        }}
-                        disabled={!canPay}
-                      />
-                      <label htmlFor={charge.id} className="text-sm flex-1">
-                        <span className="font-medium">
-                          {charge.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}
-                        </span>
-                        <span className="text-muted-foreground ml-2">
-                          R$ {charge.amount.toFixed(2).replace('.', ',')}
-                        </span>
-                        {isPartialCharge && (
-                          <span className="text-warning ml-2">
-                            (Pago: R$ {previouslyPaid.toFixed(2).replace('.', ',')} | Restante: R$ {remainingAmount.toFixed(2).replace('.', ',')})
-                          </span>
-                        )}
-                        {!canPay && charge.status === 'pago' && !isPartialCharge && (
-                          <span className="text-muted-foreground ml-2">(Pago integralmente)</span>
-                        )}
-                      </label>
-                    </div>
-                    
-                    {/* Show amount input when partial payment is enabled and charge is selected */}
-                    {isPartialPayment && isSelected && canPay && (
-                      <div className="ml-6 flex items-center gap-2">
-                        <Label className="text-xs whitespace-nowrap">Valor a pagar:</Label>
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            max={remainingAmount}
-                            className="pl-10"
-                            value={partialAmounts[charge.id] || ''}
-                            onChange={(e) => setPartialAmounts(prev => ({
-                              ...prev,
-                              [charge.id]: e.target.value
-                            }))}
-                            placeholder={remainingAmount.toFixed(2)}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Data e Hora do Pagamento</Label>
-              <Input type="datetime-local" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Método de Pagamento</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="transferencia">Transferência</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Observação (opcional)</Label>
-              <Textarea placeholder="Observações..." value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Comprovante (opcional)</Label>
-              <Input type="file" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
-            </div>
-
-            <Button className="w-full" onClick={handlePayment} disabled={submitting || (!payMensalidade && !payPercapita)}>
-              {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Receipt className="h-4 w-4 mr-2" />}
-              {submitting ? 'Processando...' : 'Confirmar Pagamento'}
-            </Button>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de Editar Pagamento */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar - {editingCharge?.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Data e Hora</Label>
-              <Input type="datetime-local" value={editPaymentDate} onChange={(e) => setEditPaymentDate(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Método</Label>
-              <Select value={editPaymentMethod} onValueChange={setEditPaymentMethod}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="transferencia">Transferência</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Observação</Label>
-              <Textarea value={editPaymentNotes} onChange={(e) => setEditPaymentNotes(e.target.value)} />
-            </div>
-            <Button className="w-full" onClick={handleEditPayment} disabled={submitting}>
-              {submitting ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de Ver Detalhes */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Detalhes - {viewingCharge?.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'}</DialogTitle>
+            <DialogTitle>Detalhes - {viewingMember?.name}</DialogTitle>
           </DialogHeader>
           {viewingCharge && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Valor Total</p>
-                  <p className="font-medium">R$ {viewingCharge.amount.toFixed(2).replace('.', ',')}</p>
+                  <p className="text-muted-foreground">Total anual</p>
+                  <p className="font-medium">{formatCurrency(viewingCharge.amount)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Status</p>
                   {getStatusBadge(viewingCharge)}
                 </div>
-                {viewingCharge.paid_amount !== null && viewingCharge.paid_amount !== undefined && (
-                  <>
-                    <div>
-                      <p className="text-muted-foreground">Valor Pago</p>
-                      <p className="font-medium text-success">R$ {viewingCharge.paid_amount.toFixed(2).replace('.', ',')}</p>
-                    </div>
-                    {viewingCharge.paid_amount < viewingCharge.amount && (
-                      <div>
-                        <p className="text-muted-foreground">Valor Restante</p>
-                        <p className="font-medium text-warning">R$ {(viewingCharge.amount - viewingCharge.paid_amount).toFixed(2).replace('.', ',')}</p>
-                      </div>
-                    )}
-                  </>
-                )}
                 <div>
-                  <p className="text-muted-foreground">Data do Pagamento</p>
+                  <p className="text-muted-foreground">Contribuição</p>
+                  <p className="font-medium">{formatCurrency(contributionAmount)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Per capita</p>
+                  <p className="font-medium">{formatCurrency(perCapitaAmount)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Valor pago</p>
+                  <p className="font-medium text-green-700 dark:text-green-400">{formatCurrency(getPaidAmount(viewingCharge))}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Restante</p>
+                  <p className="font-medium text-destructive">{formatCurrency(getRemainingAmount(viewingCharge))}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Último pagamento</p>
                   <p className="font-medium">{viewingCharge.paid_at ? new Date(viewingCharge.paid_at).toLocaleString('pt-BR') : '-'}</p>
                 </div>
                 <div>
@@ -1038,7 +739,7 @@ export function CobrancasTab() {
               {viewingCharge.notes && (
                 <div>
                   <p className="text-muted-foreground text-sm">Observações</p>
-                  <p className="text-sm">{viewingCharge.notes}</p>
+                  <p className="text-sm whitespace-pre-line">{viewingCharge.notes}</p>
                 </div>
               )}
               {viewingCharge.receipt_url && (
@@ -1054,17 +755,16 @@ export function CobrancasTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Alert Dialog de Confirmação */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmAction?.type === 'revert' ? 'Reverter Pagamento?' : 'Excluir Cobrança?'}
+              {confirmAction?.type === 'revert' ? 'Reverter pagamento?' : 'Excluir cobrança?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmAction?.type === 'revert' 
-                ? 'O pagamento será revertido para pendente e a receita vinculada será excluída.'
-                : 'A cobrança será excluída permanentemente junto com a receita vinculada.'}
+              {confirmAction?.type === 'revert'
+                ? 'Todos os recebimentos ligados a esta cobrança serão removidos e ela voltará para pendente.'
+                : 'A cobrança anual será excluída permanentemente junto com receitas vinculadas.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
