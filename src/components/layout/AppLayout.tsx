@@ -88,7 +88,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile + tablet layout with hamburger menu */}
       <div className="lg:hidden flex flex-col min-h-screen">
         <MobileHeader />
-        <main className="flex-1 overflow-x-hidden pt-14 px-3 sm:px-4 pb-24 bg-background/60 backdrop-blur-sm">
+        <main className="flex-1 overflow-x-hidden pt-14 px-3 sm:px-4 pb-24 bg-background">
           <PullToRefresh>
             <div className="mx-auto w-full max-w-3xl">
               {children}
