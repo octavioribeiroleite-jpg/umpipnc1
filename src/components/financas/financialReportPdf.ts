@@ -55,10 +55,8 @@ const PDF_COLORS = {
   muted: [96, 118, 108] as [number, number, number],
   border: [211, 224, 217] as [number, number, number],
   soft: [244, 248, 246] as [number, number, number],
-  paper: [252, 253, 252] as [number, number, number],
   green: [22, 128, 82] as [number, number, number],
   red: [190, 54, 54] as [number, number, number],
-  amber: [184, 116, 35] as [number, number, number],
   blue: [46, 92, 170] as [number, number, number],
   gold: [179, 139, 61] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
@@ -137,7 +135,7 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
 
   const panelEnd = (startY: number) => {
     setDraw(PDF_COLORS.border);
-    pdf.roundedRect(margin, startY, contentWidth, y - startY, 3, 3, 'S');
+    pdf.roundedRect(margin, startY, contentWidth, Math.max(8, y - startY), 3, 3, 'S');
     y += 5;
   };
 
@@ -209,7 +207,7 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
     widths: number[],
     options?: { total?: string; accent?: [number, number, number]; subtitle?: string }
   ) => {
-    const start = sectionTitle(title, options?.subtitle);
+    let currentPanelStart = sectionTitle(title, options?.subtitle);
     const rowHeight = 8;
     const tableX = margin + 5;
     const tableW = contentWidth - 10;
@@ -234,12 +232,10 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
       const lineCounts = row.map((cell, i) => pdf.splitTextToSize(cell || '-', widths[i] - 4).length);
       const h = Math.max(rowHeight, Math.max(...lineCounts) * 4.1 + 4);
       if (y + h > pageHeight - 20) {
-        panelEnd(start);
+        panelEnd(currentPanelStart);
         addPage();
-        const nextStart = sectionTitle(`${title} (continuação)`);
+        currentPanelStart = sectionTitle(`${title} (continuacao)`);
         drawHeader();
-        setDraw(PDF_COLORS.border);
-        pdf.roundedRect(margin, nextStart, contentWidth, 0.1, 3, 3, 'S');
       }
       if (rowIndex % 2 === 1) {
         setFill([249, 251, 250]);
@@ -275,11 +271,11 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
     } else {
       y += 4;
     }
-    panelEnd(start);
+    panelEnd(currentPanelStart);
   };
 
   const drawMonthlyBars = () => {
-    const start = sectionTitle('Evolução mensal', 'Receitas e gastos em barras, separados por mês.');
+    const start = sectionTitle('Evolucao mensal', 'Receitas e gastos em barras, separados por mes.');
     const chartX = margin + 7;
     const chartY = y;
     const chartW = contentWidth - 14;
@@ -338,14 +334,14 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7.5);
     setColor(PDF_COLORS.white);
-    (pdf as any).textWithLink(label, x + 15, btnY + 6, { url, align: 'center' });
+    (pdf as any).textWithLink(label, x + 5, btnY + 6, { url });
   };
 
-  const receiptCard = async (tx: TransactionWithReceipt, index: number, mode: 'index' | 'page') => {
+  const receiptCard = async (tx: TransactionWithReceipt, index: number) => {
     if (!tx.receipt_url) return;
     const signedUrl = await getSignedUrl(tx.receipt_url);
     const isPdf = tx.receipt_url.toLowerCase().includes('.pdf');
-    const h = mode === 'index' ? 20 : 32;
+    const h = 22;
     ensure(h + 4);
     setFill(PDF_COLORS.white);
     setDraw(PDF_COLORS.border);
@@ -357,25 +353,25 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
     setColor(PDF_COLORS.muted);
-    pdf.text(`${formatDate(tx.date)} • ${tx.category_name} • ${formatCurrency(tx.amount)}`, margin + 10, y + 14, { maxWidth: contentWidth - 58 });
+    pdf.text(`${formatDate(tx.date)} | ${tx.category_name} | ${formatCurrency(tx.amount)}`, margin + 10, y + 15, { maxWidth: contentWidth - 58 });
     if (isPdf) {
-      pdfButton('Abrir PDF', pageWidth - margin - 42, y + 5.5, signedUrl);
+      pdfButton('Abrir PDF', pageWidth - margin - 42, y + 6.5, signedUrl);
     } else {
       setFill(PDF_COLORS.green);
-      pdf.roundedRect(pageWidth - margin - 42, y + 5.5, 30, 9, 2, 2, 'F');
+      pdf.roundedRect(pageWidth - margin - 42, y + 6.5, 30, 9, 2, 2, 'F');
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(7.5);
       setColor(PDF_COLORS.white);
-      pdf.text('Imagem', pageWidth - margin - 27, y + 11.5, { align: 'center' });
+      pdf.text('Imagem', pageWidth - margin - 27, y + 12.5, { align: 'center' });
     }
     y += h + 4;
   };
 
   const addReceiptPage = async (tx: TransactionWithReceipt, index: number) => {
     addPage();
-    const start = sectionTitle(`Anexo ${index + 1}: comprovante`, 'Cada anexo fica em sua própria caixa para facilitar a conferência.');
+    const start = sectionTitle(`Anexo ${index + 1}: comprovante`, 'Cada anexo fica em sua propria caixa para facilitar a conferencia.');
     try {
-      await receiptCard(tx, index, 'page');
+      await receiptCard(tx, index);
       if (tx.receipt_url && !tx.receipt_url.toLowerCase().includes('.pdf')) {
         const signedUrl = await getSignedUrl(tx.receipt_url);
         await addReceiptImage(signedUrl);
@@ -394,7 +390,6 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
     panelEnd(start);
   };
 
-  // Capa institucional
   setFill([237, 245, 241]);
   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
   setFill(PDF_COLORS.green);
@@ -458,71 +453,38 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
   y += 27;
   panelEnd(start);
 
-  table(
-    'Destaques do periodo',
-    ['Indicador', 'Resultado'],
-    [
-      ['Maior categoria de gasto', maiorCategoria ? `${maiorCategoria.name} - ${formatCurrency(maiorCategoria.value)}` : 'Sem gastos cadastrados'],
-      ['Mes com maior receita', `${maiorReceitaMes.month} - ${formatCurrency(maiorReceitaMes.receitas)}`],
-      ['Mes com maior gasto', `${maiorGastoMes.month} - ${formatCurrency(maiorGastoMes.despesas)}`],
-      ['Saldo medio mensal', formatSignedCurrency(saldoMedio)],
-    ],
-    [contentWidth * 0.39, contentWidth * 0.55]
-  );
+  table('Destaques do periodo', ['Indicador', 'Resultado'], [
+    ['Maior categoria de gasto', maiorCategoria ? `${maiorCategoria.name} - ${formatCurrency(maiorCategoria.value)}` : 'Sem gastos cadastrados'],
+    ['Mes com maior receita', `${maiorReceitaMes.month} - ${formatCurrency(maiorReceitaMes.receitas)}`],
+    ['Mes com maior gasto', `${maiorGastoMes.month} - ${formatCurrency(maiorGastoMes.despesas)}`],
+    ['Saldo medio mensal', formatSignedCurrency(saldoMedio)],
+  ], [contentWidth * 0.39, contentWidth * 0.55]);
 
-  table(
-    'Cobrancas e adimplencia',
-    ['Indicador', 'Quantidade', 'Valor'],
-    [
-      ['Pagas', String(chargeStats.pago), formatCurrency(chargeStats.paidAmount)],
-      ['Pendentes', String(chargeStats.pendente), formatCurrency(chargeStats.pendingAmount)],
-      ['Isentas', String(chargeStats.isento), '-'],
-      ['Total previsto', String(chargeStats.total), formatCurrency(chargeStats.totalAmount)],
-    ],
-    [contentWidth * 0.45, contentWidth * 0.20, contentWidth * 0.29]
-  );
+  table('Cobrancas e adimplencia', ['Indicador', 'Quantidade', 'Valor'], [
+    ['Pagas', String(chargeStats.pago), formatCurrency(chargeStats.paidAmount)],
+    ['Pendentes', String(chargeStats.pendente), formatCurrency(chargeStats.pendingAmount)],
+    ['Isentas', String(chargeStats.isento), '-'],
+    ['Total previsto', String(chargeStats.total), formatCurrency(chargeStats.totalAmount)],
+  ], [contentWidth * 0.45, contentWidth * 0.20, contentWidth * 0.29]);
 
   drawMonthlyBars();
-  table(
-    'Resumo mensal',
-    ['Mes', 'Receitas', 'Gastos', 'Saldo'],
-    monthlyData.map(m => [m.month, formatCurrency(m.receitas), formatCurrency(m.despesas), formatSignedCurrency(m.saldo)]),
-    [contentWidth * 0.18, contentWidth * 0.25, contentWidth * 0.25, contentWidth * 0.26]
-  );
+  table('Resumo mensal', ['Mes', 'Receitas', 'Gastos', 'Saldo'], monthlyData.map(m => [m.month, formatCurrency(m.receitas), formatCurrency(m.despesas), formatSignedCurrency(m.saldo)]), [contentWidth * 0.18, contentWidth * 0.25, contentWidth * 0.25, contentWidth * 0.26]);
 
-  table(
-    'Gastos por categoria',
-    ['Categoria', 'Valor', '% dos gastos'],
-    categoryData.map(c => [
-      c.name,
-      formatCurrency(c.value),
-      totalDespesas > 0 ? `${((c.value / totalDespesas) * 100).toFixed(1).replace('.', ',')}%` : '0%'
-    ]),
-    [contentWidth * 0.51, contentWidth * 0.22, contentWidth * 0.21],
-    { total: `Total de gastos: ${formatCurrency(totalDespesas)}`, accent: PDF_COLORS.red }
-  );
+  table('Gastos por categoria', ['Categoria', 'Valor', '% dos gastos'], categoryData.map(c => [
+    c.name,
+    formatCurrency(c.value),
+    totalDespesas > 0 ? `${((c.value / totalDespesas) * 100).toFixed(1).replace('.', ',')}%` : '0%'
+  ]), [contentWidth * 0.51, contentWidth * 0.22, contentWidth * 0.21], { total: `Total de gastos: ${formatCurrency(totalDespesas)}`, accent: PDF_COLORS.red });
 
-  table(
-    'Receitas detalhadas',
-    ['Data', 'Descricao', 'Valor'],
-    receitasTransactions.map(tx => [formatDate(tx.date), tx.description, formatCurrency(tx.amount)]),
-    [contentWidth * 0.18, contentWidth * 0.56, contentWidth * 0.20],
-    { total: `Total de receitas: ${formatCurrency(totalReceitas)}`, accent: PDF_COLORS.green }
-  );
+  table('Receitas detalhadas', ['Data', 'Descricao', 'Valor'], receitasTransactions.map(tx => [formatDate(tx.date), tx.description, formatCurrency(tx.amount)]), [contentWidth * 0.18, contentWidth * 0.56, contentWidth * 0.20], { total: `Total de receitas: ${formatCurrency(totalReceitas)}`, accent: PDF_COLORS.green });
 
-  table(
-    'Gastos detalhados',
-    ['Data', 'Descricao', 'Categoria', 'Valor'],
-    despesasTransactions.map(tx => [formatDate(tx.date), tx.description, tx.category_name, formatCurrency(tx.amount)]),
-    [contentWidth * 0.15, contentWidth * 0.41, contentWidth * 0.20, contentWidth * 0.18],
-    { total: `Total de gastos: ${formatCurrency(totalDespesas)}`, accent: PDF_COLORS.red }
-  );
+  table('Gastos detalhados', ['Data', 'Descricao', 'Categoria', 'Valor'], despesasTransactions.map(tx => [formatDate(tx.date), tx.description, tx.category_name, formatCurrency(tx.amount)]), [contentWidth * 0.15, contentWidth * 0.41, contentWidth * 0.20, contentWidth * 0.18], { total: `Total de gastos: ${formatCurrency(totalDespesas)}`, accent: PDF_COLORS.red });
 
   if (despesasComComprovante.length > 0) {
     start = sectionTitle('Comprovantes', 'Arquivos organizados um abaixo do outro. Quando o anexo for PDF, use o botao Abrir PDF.');
     for (let i = 0; i < despesasComComprovante.length; i += 1) {
       try {
-        await receiptCard(despesasComComprovante[i], i, 'index');
+        await receiptCard(despesasComComprovante[i], i);
       } catch (error) {
         console.error('Erro ao preparar link do comprovante:', error);
       }
@@ -538,18 +500,13 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
   }
 
   addPage();
-  table(
-    'Fechamento para conferencia',
-    ['Item', 'Valor'],
-    [
-      ['Total de receitas', formatCurrency(totalReceitas)],
-      ['Total de gastos', formatCurrency(totalDespesas)],
-      ['Saldo final', formatSignedCurrency(saldo)],
-      ['Comprovantes anexados', String(despesasComComprovante.length)],
-    ],
-    [contentWidth * 0.52, contentWidth * 0.42],
-    { subtitle: 'Espaco reservado para validacao e arquivo interno.' }
-  );
+  table('Fechamento para conferencia', ['Item', 'Valor'], [
+    ['Total de receitas', formatCurrency(totalReceitas)],
+    ['Total de gastos', formatCurrency(totalDespesas)],
+    ['Saldo final', formatSignedCurrency(saldo)],
+    ['Comprovantes anexados', String(despesasComComprovante.length)],
+  ], [contentWidth * 0.52, contentWidth * 0.42], { subtitle: 'Espaco reservado para validacao e arquivo interno.' });
+
   start = sectionTitle('Assinaturas e observacoes');
   y += 4;
   pdf.setFont('helvetica', 'normal');
