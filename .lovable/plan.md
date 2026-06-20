@@ -1,45 +1,59 @@
-## Problema
-A barra superior da Secretaria está desproporcional no mobile (384px): título grande em duas linhas, badge "Administrador" largo, vários botões competindo por espaço e o ícone de **atualizar versão** acaba ficando escondido/cortado.
+## Objetivo
 
-## Mudanças no header da Secretaria (`src/pages/Secretaria.tsx`)
+Reorganizar a aba **Camisas** (Finanças) para suportar o fluxo real de encomendas:
+1. Abre a proposta → registra as encomendas (nome, tamanho, quantidade, valor).
+2. Acompanha **pagamento** (à vista, ou 50% início / 50% final) — com baixa no relatório financeiro.
+3. Acompanha **entrega** (pendente / entregue) quando as camisas chegam.
 
-**Layout mais compacto e equilibrado:**
+## Nova estrutura da aba Camisas
 
-1. **Reduzir altura e padding**: `py-3` → `py-2`, alinhar tudo em uma única linha de 48px.
-2. **Esquerda** (apenas o essencial):
-   - Botão `←` voltar (compacto)
-   - Título `text-base` (não `text-lg`) + data em `text-[10px]` na linha de baixo, com `truncate` e `min-w-0` para não empurrar os ícones.
-3. **Direita** (cluster de ações fixas, sempre visível):
-   - Ícone **Atualizar versão** (RefreshCw) — destacado em verde/primary, sempre visível
-   - Ícone **Instalar PWA** (quando aplicável)
-   - Ícone **Home** (voltar ao menu da secretaria)
-   - Ícone **Sair** (LogOut) com `ExitConfirmDialog`
-   - Badge "Administrador" movido para **abaixo do título** como chip pequeno (`text-[10px] px-1.5 py-0`), ou ocultado em telas <400px (já que o ícone de sair já indica sessão ativa)
+A aba passa a ter 4 sub-abas:
+- **Resumo** (já existe) — adiciona indicadores de pedidos: total encomendado, valor a receber, entregues x pendentes.
+- **Encomendas / Entregas** (nova) — o coração desta funcionalidade.
+- **Compras** (já existe) — compra em lote do fornecedor, continua entrando como despesa no relatório.
+- **Vendas** (já existe) — venda avulsa do estoque, mantida como está.
 
-4. **Tamanho uniforme dos ícones**: todos `h-9 w-9` com `p-2`, gap `gap-0.5` para caber 4 ícones em 384px sem cortar.
+## Sub-aba "Encomendas / Entregas"
 
-5. **Glassmorphism consistente** com o resto do app: manter `bg-card/90 backdrop-blur-md`.
+Tabela completa com filtros (status de pagamento, status de entrega, tamanho) e busca por nome.
 
-## Resultado visual esperado
+Colunas por pedido:
+- **Nome** (texto livre)
+- **Tamanho** e **Quantidade**
+- **Valor unitário** e **Valor total**
+- **Forma de pagamento**: À vista ou Parcelado (metade/metade)
+- **Pago**: valor já pago / total, com badge **Pendente · Parcial · Pago**
+- **Entrega**: badge **Pendente · Entregue** + botão "Marcar entregue"
+- Ações: registrar pagamento, editar, excluir
 
-```text
-┌──────────────────────────────────────────────────┐
-│ ←  Secretaria EBD              [↻][⬇][⌂][⎋]      │
-│    24 de maio · Administrador                    │
-└──────────────────────────────────────────────────┘
-```
+Ações rápidas:
+- **Registrar pagamento** (valor parcial ou total) → cria uma transação de **entrada** no relatório financeiro (dando baixa em quem paga), com `reference_type = 'shirt_order_payment'`.
+- **Marcar como entregue / desfazer** → atualiza status e data de entrega.
+- Cabeçalho com totais: encomendado, recebido, a receber, entregues/pendentes.
 
-- `[↻]` Atualizar versão (verde)
-- `[⬇]` Instalar PWA
-- `[⌂]` Voltar ao menu
-- `[⎋]` Sair
+## Mudanças no banco
 
-## Ajustes complementares
+Nova tabela `public.shirt_orders`:
+- `buyer_name` (texto livre), `size`, `quantity`, `unit_price`, `total_price`
+- `payment_type` ('a_vista' | 'parcelado')
+- `amount_paid` (quanto já foi pago), status de pagamento derivado em tela
+- `delivery_status` ('pendente' | 'entregue'), `delivered_at`
+- `notes`, `date`, `society_id`, `created_by`, timestamps
 
-- Aumentar `pt-20` → `pt-16` no conteúdo (header agora é mais baixo).
-- Garantir que o `HeaderActions` mostra o ícone Refresh independente do breakpoint `xs` (remover dependência de `xs:` que pode não existir no Tailwind config).
+Nova tabela `public.shirt_order_payments` (histórico de pagamentos parciais):
+- `order_id`, `amount`, `date`, `transaction_id`, `created_by`, `society_id`
+
+Ambas com GRANTs e RLS no mesmo padrão das demais tabelas de camisas (acesso por diretoria/admin, isolado por `society_id`). Cada pagamento registrado gera uma transação de entrada para aparecer no relatório financeiro.
+
+> Observação: o estoque continua sendo controlado por Compras/Vendas. As encomendas são um controle paralelo de pedido/pagamento/entrega — se você quiser que entregar uma camisa também baixe do estoque, posso ligar isso, mas por padrão deixarei separado para não conflitar com a venda avulsa.
+
+## Detalhes técnicos
+
+- Editar `src/components/financas/CamisasTab.tsx`: adicionar a sub-aba e a tabela de encomendas; extrair a parte de encomendas para um novo componente `EncomendasTab.tsx` para manter o arquivo organizado.
+- Registro de pagamento insere em `transactions` (type `entrada`, `reference_type 'shirt_order_payment'`) e em `shirt_order_payments`, e atualiza `amount_paid` da encomenda.
+- Exclusão de pagamento/encomenda reverte as transações vinculadas (mesmo padrão atual de compras/vendas).
+- Datas sempre em fuso local (padrão do projeto).
 
 ## Fora de escopo
-
-- Não vou mexer no conteúdo abaixo do header (cards de presença, aniversariantes, grid 2x3).
-- Não vou alterar outras páginas — apenas o header da Secretaria.
+- Não vou alterar o cálculo de estoque das vendas avulsas existentes.
+- Não vou mexer no layout do header já ajustado.
