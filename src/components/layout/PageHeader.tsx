@@ -8,7 +8,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
-    <section className="relative mb-4 overflow-hidden rounded-[28px] bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-5 py-5 text-white shadow-lg md:mb-6 md:px-6 md:py-6">
+    <section className="relative mb-4 overflow-hidden rounded-[28px] bg-gradient-to-br from-emerald-950 via-emerald-800 to-teal-700 px-5 py-5 text-white shadow-lg md:mb-6 md:px-6 md:py-6">
       <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-white/10" />
       <div className="absolute bottom-2 right-5 text-[64px] font-black leading-none text-white/5 md:text-[88px]">IPNC</div>
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
