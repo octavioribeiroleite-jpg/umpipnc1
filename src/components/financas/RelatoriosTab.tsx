@@ -381,14 +381,14 @@ export function RelatoriosTab() {
       {/* Conteúdo do Relatório */}
       <div ref={reportRef} className="space-y-6 bg-background p-4 rounded-lg">
         {/* Cabeçalho */}
-        <div className="text-center border-b pb-6">
+        <div data-pdf-section className="text-center border-b pb-6">
           <h1 className="text-3xl font-bold text-foreground">Relatório Financeiro Anual</h1>
           <p className="text-xl text-muted-foreground mt-2">{selectedYear}</p>
           <p className="text-sm text-muted-foreground">Gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
 
         {/* Resumo Executivo */}
-        <Card className="border-2 border-primary/20">
+        <Card data-pdf-section className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
@@ -440,7 +440,7 @@ export function RelatoriosTab() {
         </Card>
 
         {/* Adimplência */}
-        <Card>
+        <Card data-pdf-section>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -493,7 +493,7 @@ export function RelatoriosTab() {
         </Card>
 
         {/* Gráficos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div data-pdf-section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -551,7 +551,7 @@ export function RelatoriosTab() {
         </div>
 
         {/* Tabelas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div data-pdf-section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-success">
@@ -642,7 +642,7 @@ export function RelatoriosTab() {
         </div>
 
         {/* Comprovantes */}
-        <Card>
+        <Card data-pdf-section>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ImageIcon className="h-5 w-5" />
@@ -690,7 +690,7 @@ export function RelatoriosTab() {
         </Card>
 
         {/* Rodapé */}
-        <div className="text-center pt-6 border-t">
+        <div data-pdf-section className="text-center pt-6 border-t">
           <p className="text-sm text-muted-foreground">
             Relatório gerado automaticamente pelo Sistema de Gestão Financeira
           </p>
