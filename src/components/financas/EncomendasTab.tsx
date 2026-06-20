@@ -114,7 +114,11 @@ export function EncomendasTab({ onDataChange }: Props) {
     let q = supabase.from('shirt_orders').select('*').order('buyer_name');
     if (societyId) q = q.eq('society_id', societyId);
     const { data } = await q;
-    setOrders((data as ShirtOrder[]) || []);
+    const mapped = (data || []).map((o: any) => ({
+      ...o,
+      items: Array.isArray(o.items) ? (o.items as OrderItem[]) : [],
+    })) as ShirtOrder[];
+    setOrders(mapped);
     setLoading(false);
   };
 
@@ -123,12 +127,12 @@ export function EncomendasTab({ onDataChange }: Props) {
     setOrderForm({
       date: new Date().toISOString().slice(0, 16),
       buyer_name: '',
-      size: 'M',
-      quantity: '1',
       unit_price: '',
       payment_type: 'a_vista',
+      is_gift: false,
       notes: '',
     });
+    setItems([emptyItem()]);
   };
 
   const openNew = () => {
@@ -141,38 +145,41 @@ export function EncomendasTab({ onDataChange }: Props) {
     setOrderForm({
       date: new Date(o.date).toISOString().slice(0, 16),
       buyer_name: o.buyer_name,
-      size: o.size,
-      quantity: String(o.quantity),
       unit_price: String(o.unit_price),
       payment_type: o.payment_type,
+      is_gift: !!o.is_gift,
       notes: o.notes || '',
     });
+    setItems(o.items && o.items.length ? o.items.map(i => ({ ...i })) : [emptyItem()]);
     setOrderDialogOpen(true);
   };
 
   const handleSaveOrder = async () => {
     if (!user) return;
-    const quantity = parseInt(orderForm.quantity) || 0;
+    const validItems = items.filter(i => i.qty > 0);
+    const quantity = validItems.reduce((s, i) => s + (Number(i.qty) || 0), 0);
     const unitPrice = parseFloat(orderForm.unit_price) || 0;
     if (!orderForm.buyer_name.trim()) {
       toast.error('Informe o nome da pessoa');
       return;
     }
-    if (quantity <= 0) {
-      toast.error('Informe a quantidade');
+    if (validItems.length === 0 || quantity <= 0) {
+      toast.error('Adicione pelo menos um item (cor, tamanho e quantidade)');
       return;
     }
-    const totalPrice = quantity * unitPrice;
+    const totalPrice = orderForm.is_gift ? 0 : quantity * unitPrice;
     setSubmitting(true);
     try {
       const payload = {
         date: orderForm.date,
         buyer_name: orderForm.buyer_name.trim(),
-        size: orderForm.size,
+        size: itemsSummary(validItems),
         quantity,
         unit_price: unitPrice,
         total_price: totalPrice,
         payment_type: orderForm.payment_type,
+        is_gift: orderForm.is_gift,
+        items: validItems as any,
         notes: orderForm.notes || null,
         society_id: societyId || null,
         created_by: user.id,
