@@ -639,6 +639,46 @@ export function CamisasTab() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="estoque" className="space-y-4 animate-in fade-in-50">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Estoque por Tamanho</CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Em estoque: {orderProduction.total} camisas</Badge>
+                <Badge variant="secondary">Valor: R$ {stockValue.toFixed(2).replace('.', ',')}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {orderProduction.total === 0 && (
+                <p className="text-sm text-muted-foreground mb-3">Todas as camisas foram entregues — estoque zerado.</p>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {ORDER_COLORS.map(c => {
+                  const sizes = ORDER_SIZES.filter(s => orderProduction.byColor[c.value]?.[s]);
+                  const colorTotal = sizes.reduce((s, sz) => s + orderProduction.byColor[c.value][sz], 0);
+                  return (
+                    <div key={c.value} className="rounded-lg border p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">{c.label}</span>
+                        <Badge variant="secondary">{colorTotal}</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {sizes.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        ) : sizes.map(s => (
+                          <Badge key={s} variant="outline" className="text-xs">
+                            {ORDER_SIZE_LABEL[s]}: {orderProduction.byColor[c.value][s]}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Dialog de Compra */}
