@@ -479,7 +479,7 @@ export function EncomendasTab({ onDataChange }: Props) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Tam.</TableHead>
+                    <TableHead>Itens (cor / tam.)</TableHead>
                     <TableHead>Qtd</TableHead>
                     <TableHead>Total</TableHead>
                     <TableHead>Forma</TableHead>
@@ -495,10 +495,23 @@ export function EncomendasTab({ onDataChange }: Props) {
                     return (
                       <TableRow key={o.id}>
                         <TableCell className="font-medium">{o.buyer_name}</TableCell>
-                        <TableCell><Badge variant="outline">{o.size}</Badge></TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {(o.items && o.items.length ? o.items : []).map((i, idx) => (
+                              <Badge
+                                key={idx}
+                                variant="outline"
+                                className={i.color === 'preta' ? 'border-foreground/40' : ''}
+                              >
+                                {COLOR_LABEL[i.color]?.split(' ')[0] || i.color} {i.qty}×{SIZE_LABEL[i.size]}
+                              </Badge>
+                            ))}
+                            {(!o.items || o.items.length === 0) && <span className="text-xs text-muted-foreground">{o.size}</span>}
+                          </div>
+                        </TableCell>
                         <TableCell>{o.quantity}</TableCell>
-                        <TableCell>{brl(o.total_price)}</TableCell>
-                        <TableCell className="text-xs">{o.payment_type === 'parcelado' ? 'Parcelado' : 'À vista'}</TableCell>
+                        <TableCell>{o.is_gift ? <span className="text-xs text-muted-foreground">Brinde</span> : brl(o.total_price)}</TableCell>
+                        <TableCell className="text-xs">{o.is_gift ? '—' : (o.payment_type === 'parcelado' ? 'Parcelado' : 'À vista')}</TableCell>
                         <TableCell className="text-xs">{brl(o.amount_paid)}</TableCell>
                         <TableCell>{paymentBadge(o)}</TableCell>
                         <TableCell>
