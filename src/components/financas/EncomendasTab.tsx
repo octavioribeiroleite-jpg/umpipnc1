@@ -274,7 +274,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
         total_price: totalPrice,
         payment_type: orderForm.is_gift ? 'brinde' : orderForm.payment_type,
         is_gift: orderForm.is_gift,
-        items: validItems as unknown as OrderItem[],
+        items: validItems as unknown as never,
         notes: orderForm.notes || null,
         campaign_id: selectedCampaign.id,
         society_id: societyId || null,
