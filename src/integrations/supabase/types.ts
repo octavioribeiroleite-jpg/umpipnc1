@@ -1563,6 +1563,8 @@ export type Database = {
           delivered_at: string | null
           delivery_status: string
           id: string
+          is_gift: boolean
+          items: Json
           notes: string | null
           payment_type: string
           quantity: number
@@ -1581,6 +1583,8 @@ export type Database = {
           delivered_at?: string | null
           delivery_status?: string
           id?: string
+          is_gift?: boolean
+          items?: Json
           notes?: string | null
           payment_type?: string
           quantity?: number
@@ -1599,6 +1603,8 @@ export type Database = {
           delivered_at?: string | null
           delivery_status?: string
           id?: string
+          is_gift?: boolean
+          items?: Json
           notes?: string | null
           payment_type?: string
           quantity?: number
