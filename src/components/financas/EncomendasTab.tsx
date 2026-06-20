@@ -15,9 +15,29 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Plus, Loader2, Trash2, Truck, CircleDollarSign, Search, PackageCheck } from 'lucide-react';
+import { Plus, Loader2, Trash2, Truck, CircleDollarSign, Search, PackageCheck, Gift, Shirt } from 'lucide-react';
 
-const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
+const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Inf2', 'Inf3', 'Inf4'];
+const SIZE_LABEL: Record<string, string> = {
+  PP: 'PP', P: 'P', M: 'M', G: 'G', GG: 'GG', XG: 'XG',
+  Inf2: 'Inf 2 anos', Inf3: 'Inf 3 anos', Inf4: 'Inf 4 anos',
+};
+const COLORS = [
+  { value: 'off', label: 'Off White' },
+  { value: 'preta', label: 'Preta' },
+];
+const COLOR_LABEL: Record<string, string> = { off: 'Off White', preta: 'Preta' };
+
+export interface OrderItem {
+  color: string;
+  size: string;
+  qty: number;
+}
+
+const emptyItem = (): OrderItem => ({ color: 'off', size: 'M', qty: 1 });
+
+const itemsSummary = (items: OrderItem[]) =>
+  items.map(i => `${COLOR_LABEL[i.color] || i.color}: ${i.qty} ${SIZE_LABEL[i.size] || i.size}`).join(' | ');
 
 export interface ShirtOrder {
   id: string;
@@ -32,11 +52,14 @@ export interface ShirtOrder {
   delivered_at: string | null;
   notes: string | null;
   date: string;
+  is_gift?: boolean;
+  items?: OrderItem[];
 }
 
 const brl = (v: number) => `R$ ${(v || 0).toFixed(2).replace('.', ',')}`;
 
 function paymentBadge(order: ShirtOrder) {
+  if (order.is_gift) return <Badge className="bg-primary/15 text-primary hover:bg-primary/20"><Gift className="h-3 w-3 mr-1" />Brinde</Badge>;
   if (order.amount_paid <= 0) return <Badge variant="destructive">Pendente</Badge>;
   if (order.amount_paid < order.total_price) return <Badge variant="secondary">Parcial</Badge>;
   return <Badge className="bg-success text-success-foreground hover:bg-success/90">Pago</Badge>;
@@ -57,6 +80,7 @@ export function EncomendasTab({ onDataChange }: Props) {
   const [filterPayment, setFilterPayment] = useState('all');
   const [filterDelivery, setFilterDelivery] = useState('all');
   const [filterSize, setFilterSize] = useState('all');
+  const [filterColor, setFilterColor] = useState('all');
 
   // Dialog de encomenda
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
@@ -64,12 +88,12 @@ export function EncomendasTab({ onDataChange }: Props) {
   const [orderForm, setOrderForm] = useState({
     date: new Date().toISOString().slice(0, 16),
     buyer_name: '',
-    size: 'M',
-    quantity: '1',
     unit_price: '',
     payment_type: 'a_vista',
+    is_gift: false,
     notes: '',
   });
+  const [items, setItems] = useState<OrderItem[]>([emptyItem()]);
 
   // Dialog de pagamento
   const [payDialogOpen, setPayDialogOpen] = useState(false);
@@ -90,7 +114,11 @@ export function EncomendasTab({ onDataChange }: Props) {
     let q = supabase.from('shirt_orders').select('*').order('buyer_name');
     if (societyId) q = q.eq('society_id', societyId);
     const { data } = await q;
-    setOrders((data as ShirtOrder[]) || []);
+    const mapped = (data || []).map((o: any) => ({
+      ...o,
+      items: Array.isArray(o.items) ? (o.items as OrderItem[]) : [],
+    })) as ShirtOrder[];
+    setOrders(mapped);
     setLoading(false);
   };
 
@@ -99,12 +127,12 @@ export function EncomendasTab({ onDataChange }: Props) {
     setOrderForm({
       date: new Date().toISOString().slice(0, 16),
       buyer_name: '',
-      size: 'M',
-      quantity: '1',
       unit_price: '',
       payment_type: 'a_vista',
+      is_gift: false,
       notes: '',
     });
+    setItems([emptyItem()]);
   };
 
   const openNew = () => {
@@ -117,38 +145,41 @@ export function EncomendasTab({ onDataChange }: Props) {
     setOrderForm({
       date: new Date(o.date).toISOString().slice(0, 16),
       buyer_name: o.buyer_name,
-      size: o.size,
-      quantity: String(o.quantity),
       unit_price: String(o.unit_price),
       payment_type: o.payment_type,
+      is_gift: !!o.is_gift,
       notes: o.notes || '',
     });
+    setItems(o.items && o.items.length ? o.items.map(i => ({ ...i })) : [emptyItem()]);
     setOrderDialogOpen(true);
   };
 
   const handleSaveOrder = async () => {
     if (!user) return;
-    const quantity = parseInt(orderForm.quantity) || 0;
+    const validItems = items.filter(i => i.qty > 0);
+    const quantity = validItems.reduce((s, i) => s + (Number(i.qty) || 0), 0);
     const unitPrice = parseFloat(orderForm.unit_price) || 0;
     if (!orderForm.buyer_name.trim()) {
       toast.error('Informe o nome da pessoa');
       return;
     }
-    if (quantity <= 0) {
-      toast.error('Informe a quantidade');
+    if (validItems.length === 0 || quantity <= 0) {
+      toast.error('Adicione pelo menos um item (cor, tamanho e quantidade)');
       return;
     }
-    const totalPrice = quantity * unitPrice;
+    const totalPrice = orderForm.is_gift ? 0 : quantity * unitPrice;
     setSubmitting(true);
     try {
       const payload = {
         date: orderForm.date,
         buyer_name: orderForm.buyer_name.trim(),
-        size: orderForm.size,
+        size: itemsSummary(validItems),
         quantity,
         unit_price: unitPrice,
         total_price: totalPrice,
         payment_type: orderForm.payment_type,
+        is_gift: orderForm.is_gift,
+        items: validItems as any,
         notes: orderForm.notes || null,
         society_id: societyId || null,
         created_by: user.id,
@@ -283,9 +314,13 @@ export function EncomendasTab({ onDataChange }: Props) {
   const filtered = useMemo(() => {
     return orders.filter(o => {
       if (search && !o.buyer_name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (filterSize !== 'all' && o.size !== filterSize) return false;
+      const oItems = o.items || [];
+      if (filterSize !== 'all' && !oItems.some(i => i.size === filterSize)) return false;
+      if (filterColor !== 'all' && !oItems.some(i => i.color === filterColor)) return false;
       if (filterDelivery !== 'all' && o.delivery_status !== filterDelivery) return false;
       if (filterPayment !== 'all') {
+        if (filterPayment === 'brinde') return !!o.is_gift;
+        if (o.is_gift) return false;
         const paid = o.amount_paid >= o.total_price && o.total_price > 0;
         const partial = o.amount_paid > 0 && o.amount_paid < o.total_price;
         const pending = o.amount_paid <= 0;
@@ -295,7 +330,20 @@ export function EncomendasTab({ onDataChange }: Props) {
       }
       return true;
     });
-  }, [orders, search, filterSize, filterDelivery, filterPayment]);
+  }, [orders, search, filterSize, filterColor, filterDelivery, filterPayment]);
+
+  // Resumo de produção: total por cor e por tamanho
+  const production = useMemo(() => {
+    const byColor: Record<string, Record<string, number>> = { off: {}, preta: {} };
+    let total = 0;
+    orders.forEach(o => (o.items || []).forEach(i => {
+      const c = byColor[i.color] || (byColor[i.color] = {});
+      c[i.size] = (c[i.size] || 0) + (Number(i.qty) || 0);
+      total += Number(i.qty) || 0;
+    }));
+    const colorTotal = (c: string) => Object.values(byColor[c] || {}).reduce((s, n) => s + n, 0);
+    return { byColor, total, offTotal: colorTotal('off'), pretaTotal: colorTotal('preta') };
+  }, [orders]);
 
   const totals = useMemo(() => {
     const totalOrdered = orders.reduce((s, o) => s + o.total_price, 0);
@@ -340,6 +388,35 @@ export function EncomendasTab({ onDataChange }: Props) {
         </CardContent></Card>
       </div>
 
+      {/* Resumo de produção */}
+      <Card>
+        <CardContent className="pt-4 pb-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold flex items-center gap-2"><Shirt className="h-4 w-4" /> Resumo para produção</p>
+            <Badge variant="outline">Total: {production.total} camisas</Badge>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {COLORS.map(c => (
+              <div key={c.value} className="rounded-lg border p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">{c.label}</span>
+                  <Badge variant="secondary">{c.value === 'off' ? production.offTotal : production.pretaTotal}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {SIZES.filter(s => production.byColor[c.value]?.[s]).length === 0 ? (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  ) : SIZES.filter(s => production.byColor[c.value]?.[s]).map(s => (
+                    <Badge key={s} variant="outline" className="text-xs">
+                      {SIZE_LABEL[s]}: {production.byColor[c.value][s]}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Filtros + ação */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
         <div className="relative flex-1">
@@ -359,6 +436,14 @@ export function EncomendasTab({ onDataChange }: Props) {
               <SelectItem value="pendente">Pendente</SelectItem>
               <SelectItem value="parcial">Parcial</SelectItem>
               <SelectItem value="pago">Pago</SelectItem>
+              <SelectItem value="brinde">Brinde</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterColor} onValueChange={setFilterColor}>
+            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Cor</SelectItem>
+              {COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterDelivery} onValueChange={setFilterDelivery}>
@@ -370,10 +455,10 @@ export function EncomendasTab({ onDataChange }: Props) {
             </SelectContent>
           </Select>
           <Select value={filterSize} onValueChange={setFilterSize}>
-            <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tamanho</SelectItem>
-              {SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              {SIZES.map(s => <SelectItem key={s} value={s}>{SIZE_LABEL[s]}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button onClick={openNew}>
@@ -394,7 +479,7 @@ export function EncomendasTab({ onDataChange }: Props) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Tam.</TableHead>
+                    <TableHead>Itens (cor / tam.)</TableHead>
                     <TableHead>Qtd</TableHead>
                     <TableHead>Total</TableHead>
                     <TableHead>Forma</TableHead>
@@ -406,14 +491,27 @@ export function EncomendasTab({ onDataChange }: Props) {
                 </TableHeader>
                 <TableBody>
                   {filtered.map(o => {
-                    const fullyPaid = o.amount_paid >= o.total_price && o.total_price > 0;
+                    const fullyPaid = (o.amount_paid >= o.total_price && o.total_price > 0) || !!o.is_gift;
                     return (
                       <TableRow key={o.id}>
                         <TableCell className="font-medium">{o.buyer_name}</TableCell>
-                        <TableCell><Badge variant="outline">{o.size}</Badge></TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {(o.items && o.items.length ? o.items : []).map((i, idx) => (
+                              <Badge
+                                key={idx}
+                                variant="outline"
+                                className={i.color === 'preta' ? 'border-foreground/40' : ''}
+                              >
+                                {COLOR_LABEL[i.color]?.split(' ')[0] || i.color} {i.qty}×{SIZE_LABEL[i.size]}
+                              </Badge>
+                            ))}
+                            {(!o.items || o.items.length === 0) && <span className="text-xs text-muted-foreground">{o.size}</span>}
+                          </div>
+                        </TableCell>
                         <TableCell>{o.quantity}</TableCell>
-                        <TableCell>{brl(o.total_price)}</TableCell>
-                        <TableCell className="text-xs">{o.payment_type === 'parcelado' ? 'Parcelado' : 'À vista'}</TableCell>
+                        <TableCell>{o.is_gift ? <span className="text-xs text-muted-foreground">Brinde</span> : brl(o.total_price)}</TableCell>
+                        <TableCell className="text-xs">{o.is_gift ? '—' : (o.payment_type === 'parcelado' ? 'Parcelado' : 'À vista')}</TableCell>
                         <TableCell className="text-xs">{brl(o.amount_paid)}</TableCell>
                         <TableCell>{paymentBadge(o)}</TableCell>
                         <TableCell>
@@ -478,45 +576,75 @@ export function EncomendasTab({ onDataChange }: Props) {
                 onChange={(e) => setOrderForm({ ...orderForm, buyer_name: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tamanho</Label>
-                <Select value={orderForm.size} onValueChange={(v) => setOrderForm({ ...orderForm, size: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Camisas</Label>
+                <Button type="button" variant="outline" size="sm" className="h-7"
+                  onClick={() => setItems([...items, emptyItem()])}>
+                  <Plus className="h-3 w-3 mr-1" /> Item
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label>Quantidade</Label>
-                <Input
-                  type="number" min="1"
-                  value={orderForm.quantity}
-                  onChange={(e) => setOrderForm({ ...orderForm, quantity: e.target.value })}
-                />
-              </div>
+              {items.map((it, idx) => (
+                <div key={idx} className="flex items-end gap-2">
+                  <div className="flex-1 space-y-1">
+                    {idx === 0 && <span className="text-[11px] text-muted-foreground">Cor</span>}
+                    <Select value={it.color} onValueChange={(v) => setItems(items.map((x, i) => i === idx ? { ...x, color: v } : x))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-24 space-y-1">
+                    {idx === 0 && <span className="text-[11px] text-muted-foreground">Tam.</span>}
+                    <Select value={it.size} onValueChange={(v) => setItems(items.map((x, i) => i === idx ? { ...x, size: v } : x))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {SIZES.map(s => <SelectItem key={s} value={s}>{SIZE_LABEL[s]}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-16 space-y-1">
+                    {idx === 0 && <span className="text-[11px] text-muted-foreground">Qtd</span>}
+                    <Input type="number" min="1" className="h-9" value={it.qty}
+                      onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, qty: parseInt(e.target.value) || 0 } : x))} />
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0"
+                    disabled={items.length === 1}
+                    onClick={() => setItems(items.filter((_, i) => i !== idx))}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Valor Unitário (R$)</Label>
-                <Input
-                  type="number" step="0.01" placeholder="0,00"
-                  value={orderForm.unit_price}
-                  onChange={(e) => setOrderForm({ ...orderForm, unit_price: e.target.value })}
-                />
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" className="h-4 w-4 accent-primary"
+                checked={orderForm.is_gift}
+                onChange={(e) => setOrderForm({ ...orderForm, is_gift: e.target.checked })} />
+              <Gift className="h-4 w-4" /> Brinde (gratuito)
+            </label>
+            {!orderForm.is_gift && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Valor Unitário (R$)</Label>
+                  <Input
+                    type="number" step="0.01" placeholder="65,00"
+                    value={orderForm.unit_price}
+                    onChange={(e) => setOrderForm({ ...orderForm, unit_price: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Forma de Pagamento</Label>
+                  <Select value={orderForm.payment_type} onValueChange={(v) => setOrderForm({ ...orderForm, payment_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="a_vista">À vista</SelectItem>
+                      <SelectItem value="parcelado">Parcelado (50/50)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Forma de Pagamento</Label>
-                <Select value={orderForm.payment_type} onValueChange={(v) => setOrderForm({ ...orderForm, payment_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="a_vista">À vista</SelectItem>
-                    <SelectItem value="parcelado">Parcelado (50/50)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            )}
             <div className="space-y-2">
               <Label>Observações</Label>
               <Textarea
