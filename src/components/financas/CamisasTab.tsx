@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
 import { EncomendasTab, type ShirtOrder, type OrderItem } from './EncomendasTab';
+import { CampanhasCamisasTab } from './CampanhasCamisasTab';
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 const ORDER_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Inf2', 'Inf3', 'Inf4'];
@@ -60,6 +61,7 @@ interface Sale {
 export function CamisasTab() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('resumo');
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
@@ -427,13 +429,23 @@ export function CamisasTab() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
+          <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
           <TabsTrigger value="encomendas">Encomendas</TabsTrigger>
           <TabsTrigger value="compras">Compras</TabsTrigger>
           <TabsTrigger value="vendas">Vendas</TabsTrigger>
+          <TabsTrigger value="estoque">Estoque</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="campanhas" className="space-y-4 animate-in fade-in-50">
+          <CampanhasCamisasTab
+            selectedCampaignId={selectedCampaignId}
+            onSelectCampaign={(id) => { setSelectedCampaignId(id); setActiveTab('encomendas'); }}
+            onDataChange={fetchData}
+          />
+        </TabsContent>
+
         <TabsContent value="encomendas" className="space-y-4 animate-in fade-in-50">
-          <EncomendasTab onDataChange={fetchData} />
+          <EncomendasTab onDataChange={fetchData} selectedCampaignId={selectedCampaignId} />
         </TabsContent>
 
         <TabsContent value="resumo" className="space-y-6 animate-in fade-in-50">
@@ -516,44 +528,6 @@ export function CamisasTab() {
                   <p className="text-xl font-bold">{orderDelivered}<span className="text-sm text-muted-foreground"> / {orders.length}</span></p>
                 </CardContent></Card>
               </div>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Estoque por Tamanho</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">Em estoque: {orderProduction.total} camisas</Badge>
-                    <Badge variant="secondary">Valor: R$ {stockValue.toFixed(2).replace('.', ',')}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {orderProduction.total === 0 && (
-                    <p className="text-sm text-muted-foreground mb-3">Todas as camisas foram entregues — estoque zerado.</p>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {ORDER_COLORS.map(c => {
-                      const sizes = ORDER_SIZES.filter(s => orderProduction.byColor[c.value]?.[s]);
-                      const colorTotal = sizes.reduce((s, sz) => s + orderProduction.byColor[c.value][sz], 0);
-                      return (
-                        <div key={c.value} className="rounded-lg border p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">{c.label}</span>
-                            <Badge variant="secondary">{colorTotal}</Badge>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {sizes.length === 0 ? (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            ) : sizes.map(s => (
-                              <Badge key={s} variant="outline" className="text-xs">
-                                {ORDER_SIZE_LABEL[s]}: {orderProduction.byColor[c.value][s]}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
             </>
           )}
         </TabsContent>
@@ -662,6 +636,46 @@ export function CamisasTab() {
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="estoque" className="space-y-4 animate-in fade-in-50">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Estoque por Tamanho</CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Em estoque: {orderProduction.total} camisas</Badge>
+                <Badge variant="secondary">Valor: R$ {stockValue.toFixed(2).replace('.', ',')}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {orderProduction.total === 0 && (
+                <p className="text-sm text-muted-foreground mb-3">Todas as camisas foram entregues — estoque zerado.</p>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {ORDER_COLORS.map(c => {
+                  const sizes = ORDER_SIZES.filter(s => orderProduction.byColor[c.value]?.[s]);
+                  const colorTotal = sizes.reduce((s, sz) => s + orderProduction.byColor[c.value][sz], 0);
+                  return (
+                    <div key={c.value} className="rounded-lg border p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">{c.label}</span>
+                        <Badge variant="secondary">{colorTotal}</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {sizes.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        ) : sizes.map(s => (
+                          <Badge key={s} variant="outline" className="text-xs">
+                            {ORDER_SIZE_LABEL[s]}: {orderProduction.byColor[c.value][s]}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
