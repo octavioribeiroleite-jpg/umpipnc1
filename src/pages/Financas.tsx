@@ -123,22 +123,16 @@ export default function Financas() {
       ];
       const competence = `${months[currentMonth]}/${currentYear}`;
 
-      let txQuery = supabase
-          .from('transactions')
-          .select('amount, type')
-          .gte('date', startOfMonth)
-          .lte('date', endOfMonth);
       let chargesQuery = supabase
           .from('charges')
           .select('status')
           .eq('competence', competence);
 
       if (societyId) {
-        txQuery = txQuery.eq('society_id', societyId);
         chargesQuery = chargesQuery.eq('society_id', societyId);
       }
 
-      const [transactionsRes, chargesRes] = await Promise.all([txQuery, chargesQuery]);
+      const chargesRes = await chargesQuery;
 
       // Calcular saldo total (todas as transações)
       let allTxQuery = supabase.from('transactions').select('amount, type');
