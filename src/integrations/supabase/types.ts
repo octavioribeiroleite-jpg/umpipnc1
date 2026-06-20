@@ -1477,6 +1477,62 @@ export type Database = {
         }
         Relationships: []
       }
+      shirt_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string
+          default_sale_price: number
+          id: string
+          name: string
+          purchase_date: string
+          purchased_quantity: number
+          society_id: string
+          supplier: string | null
+          total_purchase_cost: number
+          transaction_id: string | null
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          default_sale_price?: number
+          id?: string
+          name: string
+          purchase_date?: string
+          purchased_quantity: number
+          society_id: string
+          supplier?: string | null
+          total_purchase_cost?: number
+          transaction_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          default_sale_price?: number
+          id?: string
+          name?: string
+          purchase_date?: string
+          purchased_quantity?: number
+          society_id?: string
+          supplier?: string | null
+          total_purchase_cost?: number
+          transaction_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shirt_campaigns_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shirt_inventory: {
         Row: {
           average_cost: number
@@ -1519,7 +1575,9 @@ export type Database = {
           created_by: string | null
           date: string
           id: string
+          notes: string | null
           order_id: string
+          payment_method: string | null
           society_id: string | null
           transaction_id: string | null
         }
@@ -1529,7 +1587,9 @@ export type Database = {
           created_by?: string | null
           date?: string
           id?: string
+          notes?: string | null
           order_id: string
+          payment_method?: string | null
           society_id?: string | null
           transaction_id?: string | null
         }
@@ -1539,7 +1599,9 @@ export type Database = {
           created_by?: string | null
           date?: string
           id?: string
+          notes?: string | null
           order_id?: string
+          payment_method?: string | null
           society_id?: string | null
           transaction_id?: string | null
         }
@@ -1557,6 +1619,7 @@ export type Database = {
         Row: {
           amount_paid: number
           buyer_name: string
+          campaign_id: string | null
           created_at: string
           created_by: string | null
           date: string
@@ -1571,12 +1634,14 @@ export type Database = {
           size: string
           society_id: string | null
           total_price: number
+          unit_cost: number
           unit_price: number
           updated_at: string
         }
         Insert: {
           amount_paid?: number
           buyer_name: string
+          campaign_id?: string | null
           created_at?: string
           created_by?: string | null
           date?: string
@@ -1591,12 +1656,14 @@ export type Database = {
           size: string
           society_id?: string | null
           total_price?: number
+          unit_cost?: number
           unit_price?: number
           updated_at?: string
         }
         Update: {
           amount_paid?: number
           buyer_name?: string
+          campaign_id?: string | null
           created_at?: string
           created_by?: string | null
           date?: string
@@ -1611,10 +1678,19 @@ export type Database = {
           size?: string
           society_id?: string | null
           total_price?: number
+          unit_cost?: number
           unit_price?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shirt_orders_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "shirt_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shirt_purchase_items: {
         Row: {
@@ -2015,6 +2091,18 @@ export type Database = {
     }
     Functions: {
       can_manage_elections: { Args: { _user_id: string }; Returns: boolean }
+      create_shirt_campaign: {
+        Args: {
+          p_default_sale_price: number
+          p_name: string
+          p_purchase_date: string
+          p_purchased_quantity: number
+          p_society_id: string
+          p_supplier: string
+          p_unit_cost: number
+        }
+        Returns: string
+      }
       delete_task: { Args: { task_id: string }; Returns: undefined }
       get_email_by_username: { Args: { _username: string }; Returns: string }
       get_user_society_id: { Args: { _user_id: string }; Returns: string }
@@ -2030,6 +2118,16 @@ export type Database = {
       is_event_society_member: {
         Args: { _event_society_id: string; _user_id: string }
         Returns: boolean
+      }
+      register_shirt_order_payment: {
+        Args: {
+          p_amount: number
+          p_notes?: string
+          p_order_id: string
+          p_payment_date?: string
+          p_payment_method?: string
+        }
+        Returns: Json
       }
       update_task: {
         Args: {
