@@ -80,6 +80,7 @@ export function EncomendasTab({ onDataChange }: Props) {
   const [filterPayment, setFilterPayment] = useState('all');
   const [filterDelivery, setFilterDelivery] = useState('all');
   const [filterSize, setFilterSize] = useState('all');
+  const [filterColor, setFilterColor] = useState('all');
 
   // Dialog de encomenda
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
@@ -87,12 +88,12 @@ export function EncomendasTab({ onDataChange }: Props) {
   const [orderForm, setOrderForm] = useState({
     date: new Date().toISOString().slice(0, 16),
     buyer_name: '',
-    size: 'M',
-    quantity: '1',
     unit_price: '',
     payment_type: 'a_vista',
+    is_gift: false,
     notes: '',
   });
+  const [items, setItems] = useState<OrderItem[]>([emptyItem()]);
 
   // Dialog de pagamento
   const [payDialogOpen, setPayDialogOpen] = useState(false);
