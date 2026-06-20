@@ -314,9 +314,13 @@ export function EncomendasTab({ onDataChange }: Props) {
   const filtered = useMemo(() => {
     return orders.filter(o => {
       if (search && !o.buyer_name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (filterSize !== 'all' && o.size !== filterSize) return false;
+      const oItems = o.items || [];
+      if (filterSize !== 'all' && !oItems.some(i => i.size === filterSize)) return false;
+      if (filterColor !== 'all' && !oItems.some(i => i.color === filterColor)) return false;
       if (filterDelivery !== 'all' && o.delivery_status !== filterDelivery) return false;
       if (filterPayment !== 'all') {
+        if (filterPayment === 'brinde') return !!o.is_gift;
+        if (o.is_gift) return false;
         const paid = o.amount_paid >= o.total_price && o.total_price > 0;
         const partial = o.amount_paid > 0 && o.amount_paid < o.total_price;
         const pending = o.amount_paid <= 0;
@@ -326,7 +330,20 @@ export function EncomendasTab({ onDataChange }: Props) {
       }
       return true;
     });
-  }, [orders, search, filterSize, filterDelivery, filterPayment]);
+  }, [orders, search, filterSize, filterColor, filterDelivery, filterPayment]);
+
+  // Resumo de produção: total por cor e por tamanho
+  const production = useMemo(() => {
+    const byColor: Record<string, Record<string, number>> = { off: {}, preta: {} };
+    let total = 0;
+    orders.forEach(o => (o.items || []).forEach(i => {
+      const c = byColor[i.color] || (byColor[i.color] = {});
+      c[i.size] = (c[i.size] || 0) + (Number(i.qty) || 0);
+      total += Number(i.qty) || 0;
+    }));
+    const colorTotal = (c: string) => Object.values(byColor[c] || {}).reduce((s, n) => s + n, 0);
+    return { byColor, total, offTotal: colorTotal('off'), pretaTotal: colorTotal('preta') };
+  }, [orders]);
 
   const totals = useMemo(() => {
     const totalOrdered = orders.reduce((s, o) => s + o.total_price, 0);
