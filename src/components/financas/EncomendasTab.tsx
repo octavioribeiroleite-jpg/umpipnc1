@@ -15,9 +15,29 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Plus, Loader2, Trash2, Truck, CircleDollarSign, Search, PackageCheck } from 'lucide-react';
+import { Plus, Loader2, Trash2, Truck, CircleDollarSign, Search, PackageCheck, Gift, Shirt } from 'lucide-react';
 
-const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
+const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Inf2', 'Inf3', 'Inf4'];
+const SIZE_LABEL: Record<string, string> = {
+  PP: 'PP', P: 'P', M: 'M', G: 'G', GG: 'GG', XG: 'XG',
+  Inf2: 'Inf 2 anos', Inf3: 'Inf 3 anos', Inf4: 'Inf 4 anos',
+};
+const COLORS = [
+  { value: 'off', label: 'Off White' },
+  { value: 'preta', label: 'Preta' },
+];
+const COLOR_LABEL: Record<string, string> = { off: 'Off White', preta: 'Preta' };
+
+export interface OrderItem {
+  color: string;
+  size: string;
+  qty: number;
+}
+
+const emptyItem = (): OrderItem => ({ color: 'off', size: 'M', qty: 1 });
+
+const itemsSummary = (items: OrderItem[]) =>
+  items.map(i => `${COLOR_LABEL[i.color] || i.color}: ${i.qty} ${SIZE_LABEL[i.size] || i.size}`).join(' | ');
 
 export interface ShirtOrder {
   id: string;
@@ -32,11 +52,14 @@ export interface ShirtOrder {
   delivered_at: string | null;
   notes: string | null;
   date: string;
+  is_gift?: boolean;
+  items?: OrderItem[];
 }
 
 const brl = (v: number) => `R$ ${(v || 0).toFixed(2).replace('.', ',')}`;
 
 function paymentBadge(order: ShirtOrder) {
+  if (order.is_gift) return <Badge className="bg-primary/15 text-primary hover:bg-primary/20"><Gift className="h-3 w-3 mr-1" />Brinde</Badge>;
   if (order.amount_paid <= 0) return <Badge variant="destructive">Pendente</Badge>;
   if (order.amount_paid < order.total_price) return <Badge variant="secondary">Parcial</Badge>;
   return <Badge className="bg-success text-success-foreground hover:bg-success/90">Pago</Badge>;
