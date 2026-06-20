@@ -14,6 +14,7 @@ import { CamisasTab } from '@/components/financas/CamisasTab';
 import { ConfiguracoesTab } from '@/components/financas/ConfiguracoesTab';
 import { RelatoriosTab } from '@/components/financas/RelatoriosTab';
 import { ComprovantesTab } from '@/components/financas/ComprovantesTab';
+import { ExtratoDialog, type ExtratoType } from '@/components/financas/ExtratoDialog';
 
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -30,8 +31,8 @@ interface Society {
 
 interface Stats {
   saldo: number;
-  mensalidadesMes: number;
-  gastosMes: number;
+  receitasTotal: number;
+  gastosTotal: number;
   adimplencia: number;
 }
 
@@ -40,11 +41,13 @@ function StatCard({
   value,
   icon: Icon,
   variant = 'default',
+  onClick,
 }: {
   title: string;
   value: string;
   icon: any;
   variant?: 'default' | 'success' | 'destructive';
+  onClick?: () => void;
 }) {
   const colorClass = {
     default: 'text-foreground',
@@ -53,7 +56,11 @@ function StatCard({
   }[variant];
 
   return (
-    <AppCard variant="stat">
+    <AppCard
+      variant="stat"
+      className={onClick ? 'cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]' : undefined}
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs md:text-sm text-muted-foreground">{title}</p>
@@ -72,8 +79,9 @@ export default function Financas() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'cobrancas';
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [stats, setStats] = useState<Stats>({ saldo: 0, mensalidadesMes: 0, gastosMes: 0, adimplencia: 0 });
+  const [stats, setStats] = useState<Stats>({ saldo: 0, receitasTotal: 0, gastosTotal: 0, adimplencia: 0 });
   const [societies, setSocieties] = useState<Society[]>([]);
+  const [extratoType, setExtratoType] = useState<ExtratoType | null>(null);
 
   // Fetch societies for admin/pastor selector
   useEffect(() => {
@@ -115,30 +123,16 @@ export default function Financas() {
       ];
       const competence = `${months[currentMonth]}/${currentYear}`;
 
-      let txQuery = supabase
-          .from('transactions')
-          .select('amount, type')
-          .gte('date', startOfMonth)
-          .lte('date', endOfMonth);
       let chargesQuery = supabase
           .from('charges')
           .select('status')
           .eq('competence', competence);
 
       if (societyId) {
-        txQuery = txQuery.eq('society_id', societyId);
         chargesQuery = chargesQuery.eq('society_id', societyId);
       }
 
-      const [transactionsRes, chargesRes] = await Promise.all([txQuery, chargesQuery]);
-
-      const entradas = (transactionsRes.data || [])
-        .filter((t) => t.type === 'entrada')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      
-      const saidas = (transactionsRes.data || [])
-        .filter((t) => t.type === 'saida')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+      const chargesRes = await chargesQuery;
 
       // Calcular saldo total (todas as transações)
       let allTxQuery = supabase.from('transactions').select('amount, type');
@@ -161,8 +155,8 @@ export default function Financas() {
 
       setStats({
         saldo: totalEntradas - totalSaidas,
-        mensalidadesMes: entradas,
-        gastosMes: saidas,
+        receitasTotal: totalEntradas,
+        gastosTotal: totalSaidas,
         adimplencia,
       });
     };
@@ -211,18 +205,21 @@ export default function Financas() {
           value={`R$ ${stats.saldo.toFixed(2).replace('.', ',')}`}
           icon={DollarSign}
           variant={stats.saldo >= 0 ? 'success' : 'destructive'}
+          onClick={() => setExtratoType('all')}
         />
         <StatCard
-          title="Receitas (mês)"
-          value={`R$ ${stats.mensalidadesMes.toFixed(2).replace('.', ',')}`}
+          title="Receitas (total)"
+          value={`R$ ${stats.receitasTotal.toFixed(2).replace('.', ',')}`}
           icon={TrendingUp}
           variant="success"
+          onClick={() => setExtratoType('entrada')}
         />
         <StatCard
-          title="Gastos (mês)"
-          value={`R$ ${stats.gastosMes.toFixed(2).replace('.', ',')}`}
+          title="Gastos (total)"
+          value={`R$ ${stats.gastosTotal.toFixed(2).replace('.', ',')}`}
           icon={TrendingDown}
           variant="destructive"
+          onClick={() => setExtratoType('saida')}
         />
         <StatCard
           title="Adimplência"
@@ -231,6 +228,8 @@ export default function Financas() {
           variant={stats.adimplencia >= 70 ? 'success' : stats.adimplencia >= 50 ? 'default' : 'destructive'}
         />
       </div>
+
+      <ExtratoDialog type={extratoType} onClose={() => setExtratoType(null)} />
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         {/* Mobile: Select dropdown */}
