@@ -9,8 +9,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Loader2, TrendingUp, Users, PieChartIcon, Download, FileText, Wallet, ArrowDownCircle, ArrowUpCircle, Percent, ImageIcon } from 'lucide-react';
-import jsPDF from 'jspdf';
 import { toast } from 'sonner';
+import {
+  generateFinancialReportPdf,
+  formatCurrency,
+  formatDate,
+  type CategoryData,
+  type ChargeStats,
+  type MonthlyData,
+  type TransactionWithReceipt,
+} from './financialReportPdf';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -24,70 +32,6 @@ const COLORS = {
   receita: 'hsl(142, 76%, 36%)',
   despesa: 'hsl(0, 84%, 60%)'
 };
-
-const PDF_COLORS = {
-  ink: [18, 31, 27] as [number, number, number],
-  muted: [96, 118, 108] as [number, number, number],
-  border: [211, 224, 217] as [number, number, number],
-  soft: [244, 248, 246] as [number, number, number],
-  green: [22, 163, 74] as [number, number, number],
-  red: [220, 38, 38] as [number, number, number],
-  amber: [217, 119, 6] as [number, number, number],
-  blue: [37, 99, 235] as [number, number, number],
-};
-
-interface ChargeStats {
-  total: number;
-  pago: number;
-  pendente: number;
-  isento: number;
-  totalAmount: number;
-  paidAmount: number;
-  pendingAmount: number;
-}
-
-interface MonthlyData {
-  month: string;
-  receitas: number;
-  despesas: number;
-  saldo: number;
-}
-
-interface CategoryData {
-  name: string;
-  value: number;
-  color: string;
-}
-
-interface TransactionWithReceipt {
-  id: string;
-  description: string;
-  amount: number;
-  date: string;
-  type: string;
-  category_id: string | null;
-  category_name: string;
-  category_color: string;
-  receipt_url: string | null;
-}
-
-const toLocalDate = (value: string) => new Date(`${value}T12:00:00`);
-const formatDate = (value: string) => toLocalDate(value).toLocaleDateString('pt-BR');
-const formatCurrency = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace('.', ',')}`;
-const formatSignedCurrency = (v: number) => `${v < 0 ? '-' : ''}${formatCurrency(Math.abs(v))}`;
-
-const hexToRgb = (hex: string): [number, number, number] => {
-  const clean = hex.replace('#', '').slice(0, 6);
-  if (clean.length !== 6) return [148, 163, 184];
-  return [parseInt(clean.slice(0, 2), 16), parseInt(clean.slice(2, 4), 16), parseInt(clean.slice(4, 6), 16)];
-};
-
-const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => resolve(String(reader.result));
-  reader.onerror = reject;
-  reader.readAsDataURL(blob);
-});
 
 export function RelatoriosTab() {
   const { effectiveSocietyId: societyId } = useAuth();
@@ -112,7 +56,6 @@ export function RelatoriosTab() {
     fetchData();
   }, [selectedYear, societyId]);
 
-  // Load signed URLs for receipt previews on screen.
   useEffect(() => {
     const loadSignedUrls = async () => {
       const withReceipts = transactions.filter(t => t.receipt_url && !t.receipt_url.toLowerCase().includes('.pdf'));
@@ -166,7 +109,7 @@ export function RelatoriosTab() {
     const { data: charges, error } = await query;
     if (error) throw error;
 
-    const stats: ChargeStats = {
+    setChargeStats({
       total: charges?.length || 0,
       pago: (charges || []).filter(c => c.status === 'pago').length,
       pendente: (charges || []).filter(c => c.status === 'pendente').length,
@@ -174,8 +117,7 @@ export function RelatoriosTab() {
       totalAmount: (charges || []).filter(c => c.status !== 'isento').reduce((s, c) => s + Number(c.amount), 0),
       paidAmount: (charges || []).filter(c => c.status === 'pago').reduce((s, c) => s + Number(c.paid_amount || c.amount), 0),
       pendingAmount: (charges || []).filter(c => c.status === 'pendente').reduce((s, c) => s + Number(c.amount), 0),
-    };
-    setChargeStats(stats);
+    });
   };
 
   const fetchMonthlyData = async () => {
@@ -196,7 +138,7 @@ export function RelatoriosTab() {
 
     const data: MonthlyData[] = MONTHS.map((month, i) => {
       const monthTx = (transData || []).filter(t => {
-        const d = toLocalDate(t.date);
+        const d = new Date(`${t.date}T12:00:00`);
         return d.getMonth() === i && d.getFullYear() === year;
       });
       const receitas = monthTx.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0);
@@ -318,336 +260,20 @@ export function RelatoriosTab() {
     toast.info('Gerando relatório completo, aguarde...');
 
     try {
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 14;
-      const contentWidth = pageWidth - margin * 2;
-      let pageNumber = 1;
-      let y = margin;
-
-      const setColor = (color: [number, number, number]) => pdf.setTextColor(color[0], color[1], color[2]);
-      const setFill = (color: [number, number, number]) => pdf.setFillColor(color[0], color[1], color[2]);
-      const setDraw = (color: [number, number, number]) => pdf.setDrawColor(color[0], color[1], color[2]);
-
-      const footer = () => {
-        setDraw(PDF_COLORS.border);
-        pdf.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(8);
-        setColor(PDF_COLORS.muted);
-        pdf.text(`Relatorio financeiro ${selectedYear}`, margin, pageHeight - 7);
-        pdf.text(`Pagina ${pageNumber}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
-      };
-
-      const addPage = () => {
-        footer();
-        pdf.addPage();
-        pageNumber += 1;
-        y = margin;
-      };
-
-      const ensure = (height: number) => {
-        if (y + height > pageHeight - 18) addPage();
-      };
-
-      const sectionTitle = (title: string, subtitle?: string) => {
-        ensure(subtitle ? 18 : 12);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(14);
-        setColor(PDF_COLORS.ink);
-        pdf.text(title, margin, y);
-        y += 6;
-        if (subtitle) {
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(9);
-          setColor(PDF_COLORS.muted);
-          pdf.text(subtitle, margin, y);
-          y += 5;
-        }
-        setDraw(PDF_COLORS.border);
-        pdf.line(margin, y, pageWidth - margin, y);
-        y += 6;
-      };
-
-      const statCard = (x: number, width: number, title: string, value: string, color: [number, number, number]) => {
-        setFill(PDF_COLORS.soft);
-        setDraw(PDF_COLORS.border);
-        pdf.roundedRect(x, y, width, 27, 2, 2, 'FD');
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(8);
-        setColor(PDF_COLORS.muted);
-        pdf.text(title, x + 4, y + 8);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(13);
-        setColor(color);
-        pdf.text(value, x + 4, y + 19, { maxWidth: width - 8 });
-      };
-
-      const table = (
-        title: string,
-        headers: string[],
-        rows: string[][],
-        widths: number[],
-        options?: { total?: string; accent?: [number, number, number] }
-      ) => {
-        sectionTitle(title);
-        const rowHeight = 8;
-        const drawHeader = () => {
-          ensure(rowHeight + 2);
-          setFill(PDF_COLORS.soft);
-          setDraw(PDF_COLORS.border);
-          pdf.rect(margin, y, contentWidth, rowHeight, 'FD');
-          let x = margin;
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(8);
-          setColor(PDF_COLORS.ink);
-          headers.forEach((h, i) => {
-            pdf.text(h, x + 2, y + 5.3, { maxWidth: widths[i] - 4 });
-            x += widths[i];
-          });
-          y += rowHeight;
-        };
-
-        drawHeader();
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(8);
-        rows.forEach((row, rowIndex) => {
-          const lineCounts = row.map((cell, i) => pdf.splitTextToSize(cell || '-', widths[i] - 4).length);
-          const h = Math.max(rowHeight, Math.max(...lineCounts) * 4.1 + 4);
-          if (y + h > pageHeight - 20) {
-            addPage();
-            drawHeader();
-          }
-          if (rowIndex % 2 === 1) {
-            setFill([249, 251, 250]);
-            pdf.rect(margin, y, contentWidth, h, 'F');
-          }
-          setDraw(PDF_COLORS.border);
-          pdf.line(margin, y + h, pageWidth - margin, y + h);
-          let x = margin;
-          row.forEach((cell, i) => {
-            setColor(PDF_COLORS.ink);
-            const alignRight = i === row.length - 1;
-            const lines = pdf.splitTextToSize(cell || '-', widths[i] - 4);
-            pdf.text(lines, alignRight ? x + widths[i] - 2 : x + 2, y + 5.3, {
-              align: alignRight ? 'right' : 'left',
-              maxWidth: widths[i] - 4,
-            });
-            x += widths[i];
-          });
-          y += h;
-        });
-
-        if (options?.total) {
-          ensure(9);
-          setFill(PDF_COLORS.soft);
-          pdf.rect(margin, y, contentWidth, 9, 'F');
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(9);
-          setColor(options.accent || PDF_COLORS.ink);
-          pdf.text(options.total, pageWidth - margin - 2, y + 6, { align: 'right' });
-          y += 13;
-        } else {
-          y += 4;
-        }
-      };
-
-      const drawMonthlyBars = () => {
-        sectionTitle('Evolucao mensal', 'Receitas, gastos e saldo por mes no ano selecionado.');
-        const chartX = margin;
-        const chartY = y;
-        const chartH = 58;
-        const maxValue = Math.max(1, ...monthlyData.flatMap(m => [m.receitas, m.despesas]));
-        const barGroup = contentWidth / 12;
-        setDraw(PDF_COLORS.border);
-        pdf.line(chartX, chartY + chartH, chartX + contentWidth, chartY + chartH);
-        monthlyData.forEach((m, i) => {
-          const x = chartX + i * barGroup + 2;
-          const receitaH = (m.receitas / maxValue) * (chartH - 12);
-          const despesaH = (m.despesas / maxValue) * (chartH - 12);
-          setFill(PDF_COLORS.green);
-          pdf.rect(x, chartY + chartH - receitaH, 3.5, receitaH, 'F');
-          setFill(PDF_COLORS.red);
-          pdf.rect(x + 4.5, chartY + chartH - despesaH, 3.5, despesaH, 'F');
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(6.5);
-          setColor(PDF_COLORS.muted);
-          pdf.text(m.month, x, chartY + chartH + 5);
-        });
-        y += chartH + 13;
-        pdf.setFontSize(8);
-        setColor(PDF_COLORS.green);
-        pdf.text('Verde: receitas', margin, y);
-        setColor(PDF_COLORS.red);
-        pdf.text('Vermelho: gastos', margin + 32, y);
-        y += 8;
-      };
-
-      const drawCategoryBreakdown = () => {
-        table(
-          'Gastos por categoria',
-          ['Categoria', 'Valor', '% dos gastos'],
-          categoryData.map(c => [
-            c.name,
-            formatCurrency(c.value),
-            totalDespesas > 0 ? `${((c.value / totalDespesas) * 100).toFixed(1).replace('.', ',')}%` : '0%'
-          ]),
-          [contentWidth * 0.54, contentWidth * 0.23, contentWidth * 0.23],
-          { total: `Total de gastos: ${formatCurrency(totalDespesas)}`, accent: PDF_COLORS.red }
-        );
-      };
-
-      const addReceiptImage = async (tx: TransactionWithReceipt, url: string) => {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Falha ao baixar comprovante');
-        const dataUrl = await blobToDataUrl(await response.blob());
-        const props = (pdf as any).getImageProperties(dataUrl);
-        const maxW = contentWidth;
-        const maxH = pageHeight - 62;
-        let imgW = maxW;
-        let imgH = (props.height * imgW) / props.width;
-        if (imgH > maxH) {
-          imgH = maxH;
-          imgW = (props.width * imgH) / props.height;
-        }
-        const x = margin + (contentWidth - imgW) / 2;
-        pdf.addImage(dataUrl, props.fileType || 'JPEG', x, y, imgW, imgH);
-        y += imgH + 6;
-      };
-
-      const addReceiptPage = async (tx: TransactionWithReceipt, index: number) => {
-        addPage();
-        sectionTitle(`Anexo ${index + 1}: ${tx.description}`, `${formatDate(tx.date)} - ${formatCurrency(tx.amount)}`);
-        if (!tx.receipt_url) return;
-        try {
-          const signedUrl = await getSignedUrl(tx.receipt_url);
-          if (tx.receipt_url.toLowerCase().includes('.pdf')) {
-            setFill(PDF_COLORS.soft);
-            setDraw(PDF_COLORS.border);
-            pdf.roundedRect(margin, y, contentWidth, 46, 2, 2, 'FD');
-            pdf.setFont('helvetica', 'bold');
-            pdf.setFontSize(13);
-            setColor(PDF_COLORS.ink);
-            pdf.text('Comprovante em PDF anexado ao sistema', margin + 5, y + 12);
-            pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(9);
-            setColor(PDF_COLORS.muted);
-            pdf.text('Abra o comprovante original pelo link abaixo. O arquivo permanece salvo nos anexos do gasto.', margin + 5, y + 21, { maxWidth: contentWidth - 10 });
-            setColor(PDF_COLORS.blue);
-            (pdf as any).textWithLink('Abrir comprovante original', margin + 5, y + 34, { url: signedUrl });
-            y += 54;
-          } else {
-            await addReceiptImage(tx, signedUrl);
-          }
-        } catch (error) {
-          console.error('Erro ao inserir comprovante:', error);
-          setFill(PDF_COLORS.soft);
-          setDraw(PDF_COLORS.border);
-          pdf.roundedRect(margin, y, contentWidth, 30, 2, 2, 'FD');
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(9);
-          setColor(PDF_COLORS.red);
-          pdf.text('Nao foi possivel carregar este comprovante durante a exportacao.', margin + 5, y + 13, { maxWidth: contentWidth - 10 });
-          y += 38;
-        }
-      };
-
-      // Cover
-      setFill([237, 245, 241]);
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(24);
-      setColor(PDF_COLORS.ink);
-      pdf.text('Relatorio Financeiro Anual', margin, 48);
-      pdf.setFontSize(32);
-      pdf.text(selectedYear, margin, 65);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(11);
-      setColor(PDF_COLORS.muted);
-      pdf.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, margin, 76);
-      setFill([255, 255, 255]);
-      pdf.roundedRect(margin, 100, contentWidth, 72, 3, 3, 'F');
-      y = 116;
-      const cardW = (contentWidth - 9) / 4;
-      statCard(margin, cardW, 'Saldo do ano', formatSignedCurrency(saldo), saldo >= 0 ? PDF_COLORS.green : PDF_COLORS.red);
-      statCard(margin + cardW + 3, cardW, 'Receitas', formatCurrency(totalReceitas), PDF_COLORS.green);
-      statCard(margin + (cardW + 3) * 2, cardW, 'Gastos', formatCurrency(totalDespesas), PDF_COLORS.red);
-      statCard(margin + (cardW + 3) * 3, cardW, 'Adimplencia', `${adimplenciaRate}%`, PDF_COLORS.blue);
-      y = 190;
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(10);
-      setColor(PDF_COLORS.muted);
-      pdf.text('Documento gerado automaticamente a partir das transacoes, cobrancas e comprovantes cadastrados no sistema.', margin, y, { maxWidth: contentWidth });
-
-      addPage();
-
-      sectionTitle('Resumo executivo', 'Visao consolidada do caixa real e das cobrancas do periodo.');
-      statCard(margin, cardW, 'Saldo', formatSignedCurrency(saldo), saldo >= 0 ? PDF_COLORS.green : PDF_COLORS.red);
-      statCard(margin + cardW + 3, cardW, 'Total receitas', formatCurrency(totalReceitas), PDF_COLORS.green);
-      statCard(margin + (cardW + 3) * 2, cardW, 'Total gastos', formatCurrency(totalDespesas), PDF_COLORS.red);
-      statCard(margin + (cardW + 3) * 3, cardW, 'Comprovantes', String(despesasComComprovante.length), PDF_COLORS.blue);
-      y += 35;
-
-      table(
-        'Cobrancas e adimplencia',
-        ['Indicador', 'Quantidade', 'Valor'],
-        [
-          ['Pagas', String(chargeStats.pago), formatCurrency(chargeStats.paidAmount)],
-          ['Pendentes', String(chargeStats.pendente), formatCurrency(chargeStats.pendingAmount)],
-          ['Isentas', String(chargeStats.isento), '-'],
-          ['Total previsto', String(chargeStats.total), formatCurrency(chargeStats.totalAmount)],
-        ],
-        [contentWidth * 0.48, contentWidth * 0.22, contentWidth * 0.30]
-      );
-
-      drawMonthlyBars();
-      table(
-        'Resumo mensal',
-        ['Mes', 'Receitas', 'Gastos', 'Saldo'],
-        monthlyData.map(m => [m.month, formatCurrency(m.receitas), formatCurrency(m.despesas), formatSignedCurrency(m.saldo)]),
-        [contentWidth * 0.20, contentWidth * 0.27, contentWidth * 0.27, contentWidth * 0.26]
-      );
-
-      drawCategoryBreakdown();
-
-      table(
-        'Receitas detalhadas',
-        ['Data', 'Descricao', 'Valor'],
-        receitasTransactions.map(tx => [formatDate(tx.date), tx.description, formatCurrency(tx.amount)]),
-        [contentWidth * 0.20, contentWidth * 0.58, contentWidth * 0.22],
-        { total: `Total de receitas: ${formatCurrency(totalReceitas)}`, accent: PDF_COLORS.green }
-      );
-
-      table(
-        'Gastos detalhados',
-        ['Data', 'Descricao', 'Categoria', 'Valor'],
-        despesasTransactions.map(tx => [formatDate(tx.date), tx.description, tx.category_name, formatCurrency(tx.amount)]),
-        [contentWidth * 0.16, contentWidth * 0.44, contentWidth * 0.22, contentWidth * 0.18],
-        { total: `Total de gastos: ${formatCurrency(totalDespesas)}`, accent: PDF_COLORS.red }
-      );
-
-      if (despesasComComprovante.length > 0) {
-        sectionTitle('Indice de comprovantes', 'Cada comprovante cadastrado aparece nas paginas de anexo a seguir.');
-        table(
-          'Comprovantes anexados',
-          ['#', 'Data', 'Descricao', 'Valor'],
-          despesasComComprovante.map((tx, index) => [String(index + 1), formatDate(tx.date), tx.description, formatCurrency(tx.amount)]),
-          [contentWidth * 0.10, contentWidth * 0.18, contentWidth * 0.52, contentWidth * 0.20]
-        );
-        for (let i = 0; i < despesasComComprovante.length; i += 1) {
-          await addReceiptPage(despesasComComprovante[i], i);
-        }
-      } else {
-        sectionTitle('Comprovantes');
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(10);
-        setColor(PDF_COLORS.muted);
-        pdf.text('Nenhum comprovante foi anexado aos gastos deste periodo.', margin, y);
-      }
-
-      footer();
-      pdf.save(`Relatorio_Financeiro_${selectedYear}.pdf`);
+      await generateFinancialReportPdf({
+        selectedYear,
+        chargeStats,
+        monthlyData,
+        categoryData,
+        receitasTransactions,
+        despesasTransactions,
+        despesasComComprovante,
+        totalReceitas,
+        totalDespesas,
+        saldo,
+        adimplenciaRate,
+        getSignedUrl,
+      });
       toast.success('PDF completo gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
@@ -667,7 +293,6 @@ export function RelatoriosTab() {
 
   return (
     <div className="space-y-6">
-      {/* Filtro e Exportar */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -681,7 +306,7 @@ export function RelatoriosTab() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={exportToPDF} disabled={exporting}>
+            <Button onClick={exportToPDF} disabled={exporting || !societyId}>
               {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
               Exportar PDF completo
             </Button>
@@ -689,16 +314,13 @@ export function RelatoriosTab() {
         </CardContent>
       </Card>
 
-      {/* Conteúdo do Relatório */}
       <div className="space-y-6 bg-background p-4 rounded-lg">
-        {/* Cabeçalho */}
         <div className="text-center border-b pb-6">
           <h1 className="text-3xl font-bold text-foreground">Relatório Financeiro Anual</h1>
           <p className="text-xl text-muted-foreground mt-2">{selectedYear}</p>
           <p className="text-sm text-muted-foreground">Gerado em {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
 
-        {/* Resumo Executivo */}
         <Card className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -749,7 +371,6 @@ export function RelatoriosTab() {
           </CardContent>
         </Card>
 
-        {/* Adimplência */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -802,7 +423,6 @@ export function RelatoriosTab() {
           </CardContent>
         </Card>
 
-        {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -860,7 +480,6 @@ export function RelatoriosTab() {
           </Card>
         </div>
 
-        {/* Tabelas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -947,7 +566,6 @@ export function RelatoriosTab() {
           </Card>
         </div>
 
-        {/* Comprovantes */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -996,7 +614,6 @@ export function RelatoriosTab() {
           </CardContent>
         </Card>
 
-        {/* Rodapé */}
         <div className="text-center pt-6 border-t">
           <p className="text-sm text-muted-foreground">
             Relatório gerado automaticamente pelo Sistema de Gestão Financeira
@@ -1004,7 +621,6 @@ export function RelatoriosTab() {
         </div>
       </div>
 
-      {/* Preview Dialog */}
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
         <DialogContent className="max-w-3xl p-2">
           {previewImage && (
