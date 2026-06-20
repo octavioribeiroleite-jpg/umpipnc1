@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
 import { EncomendasTab, type ShirtOrder, type OrderItem } from './EncomendasTab';
+import { CampanhasCamisasTab } from './CampanhasCamisasTab';
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 const ORDER_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Inf2', 'Inf3', 'Inf4'];
@@ -60,6 +61,7 @@ interface Sale {
 export function CamisasTab() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('resumo');
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
