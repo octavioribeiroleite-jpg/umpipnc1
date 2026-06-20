@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { AppCard } from '@/components/ui/app-card';
-import { Plus, FileText, CalendarDays, Clock, CheckCircle2, Users, Search } from 'lucide-react';
+import { Plus, CalendarDays, Clock, CheckCircle2, Users, Search } from 'lucide-react';
 import { useMeetings } from '@/hooks/useMeetings';
 import { useAuth } from '@/contexts/AuthContext';
 import { ReuniaoFilters } from '@/components/reunioes/ReuniaoFilters';
@@ -14,8 +14,15 @@ import { ReuniaoCard } from '@/components/reunioes/ReuniaoCard';
 import { ReuniaoPastaData } from '@/components/reunioes/ReuniaoPastaData';
 import { FAB } from '@/components/ui/fab';
 import { cn } from '@/lib/utils';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 type QuickFilter = 'all' | 'aberta' | 'fechada' | 'pendente' | 'hoje';
+
+type DateGroup = {
+  date: string;
+  meetings: typeof import('@/hooks/useMeetings').useMeetings extends () => { meetings: infer M } ? M : never;
+};
 
 function StatCard({
   title,
@@ -109,14 +116,37 @@ export default function Reunioes() {
     });
   }, [meetings, statusFilter, monthFilter, searchFilter, quickFilter, todayIso]);
 
-  const groupedMeetings = useMemo(() => {
-    const groups: Record<string, typeof filteredMeetings> = {};
+  const groupedByMonth = useMemo(() => {
+    const monthGroups = new Map<string, Map<string, typeof filteredMeetings>>();
+
     filteredMeetings.forEach(meeting => {
-      const dateKey = meeting.date;
-      if (!groups[dateKey]) groups[dateKey] = [];
-      groups[dateKey].push(meeting);
+      const dayKey = meeting.date.slice(0, 10);
+      const monthKey = meeting.date.slice(0, 7);
+
+      if (!monthGroups.has(monthKey)) {
+        monthGroups.set(monthKey, new Map());
+      }
+
+      const dayGroups = monthGroups.get(monthKey)!;
+      if (!dayGroups.has(dayKey)) {
+        dayGroups.set(dayKey, []);
+      }
+
+      dayGroups.get(dayKey)!.push(meeting);
     });
-    return Object.entries(groups).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime());
+
+    return Array.from(monthGroups.entries())
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([monthKey, dayGroups]) => ({
+        monthKey,
+        monthLabel: format(parseISO(`${monthKey}-01`), "MMMM 'de' yyyy", { locale: ptBR }),
+        days: Array.from(dayGroups.entries())
+          .sort(([a], [b]) => b.localeCompare(a))
+          .map(([date, dayMeetings]) => ({
+            date,
+            meetings: dayMeetings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+          })),
+      }));
   }, [filteredMeetings]);
 
   const getAiStatus = (meeting: typeof meetings[0]) => {
@@ -178,14 +208,14 @@ export default function Reunioes() {
         ))}
       </div>
 
-      <div className="space-y-3 md:space-y-4">
+      <div className="space-y-5 md:space-y-6">
         {loading ? (
           <>
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
           </>
-        ) : groupedMeetings.length === 0 ? (
+        ) : groupedByMonth.length === 0 ? (
           <EmptyState
             icon={<Search className="h-12 w-12" />}
             title={meetings.length === 0 ? 'Nenhuma reunião cadastrada' : 'Nenhuma reunião encontrada'}
@@ -199,30 +229,42 @@ export default function Reunioes() {
             }
           />
         ) : (
-          groupedMeetings.map(([date, meetingsInDate]) => (
-            <ReuniaoPastaData key={date} date={date} count={meetingsInDate.length} defaultOpen={true}>
-              {meetingsInDate.map((meeting) => (
-                <ReuniaoCard
-                  key={meeting.id}
-                  id={meeting.id}
-                  title={meeting.title}
-                  date={meeting.date}
-                  moderatorName={meeting.moderatorName}
-                  status={meeting.status}
-                  participantsCount={meeting.participantsCount}
-                  progress={{
-                    pautaComplete: meeting.agendaItemsCount > 0,
-                    totalContributions: meeting.totalContributions,
-                    finalizedContributions: meeting.finalizedContributions,
-                    contributionsRevealed: meeting.contributions_revealed,
-                    aiStatus: getAiStatus(meeting),
-                  }}
-                  onDelete={isManagement ? deleteMeeting : undefined}
-                  onFinalize={refetch}
-                  canManage={isManagement}
-                />
-              ))}
-            </ReuniaoPastaData>
+          groupedByMonth.map((monthGroup) => (
+            <section key={monthGroup.monthKey} className="space-y-3">
+              <div className="sticky top-14 z-10 -mx-3 bg-background/95 px-3 py-2 backdrop-blur sm:mx-0 sm:px-0">
+                <h2 className="text-sm font-black uppercase tracking-[0.18em] text-emerald-800 dark:text-emerald-300">
+                  {monthGroup.monthLabel}
+                </h2>
+              </div>
+
+              <div className="space-y-1">
+                {monthGroup.days.map((dayGroup) => (
+                  <ReuniaoPastaData key={dayGroup.date} date={dayGroup.date} count={dayGroup.meetings.length} defaultOpen={true}>
+                    {dayGroup.meetings.map((meeting) => (
+                      <ReuniaoCard
+                        key={meeting.id}
+                        id={meeting.id}
+                        title={meeting.title}
+                        date={meeting.date}
+                        moderatorName={meeting.moderatorName}
+                        status={meeting.status}
+                        participantsCount={meeting.participantsCount}
+                        progress={{
+                          pautaComplete: meeting.agendaItemsCount > 0,
+                          totalContributions: meeting.totalContributions,
+                          finalizedContributions: meeting.finalizedContributions,
+                          contributionsRevealed: meeting.contributions_revealed,
+                          aiStatus: getAiStatus(meeting),
+                        }}
+                        onDelete={isManagement ? deleteMeeting : undefined}
+                        onFinalize={refetch}
+                        canManage={isManagement}
+                      />
+                    ))}
+                  </ReuniaoPastaData>
+                ))}
+              </div>
+            </section>
           ))
         )}
       </div>
