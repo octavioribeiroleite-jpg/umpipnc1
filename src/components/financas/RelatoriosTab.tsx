@@ -282,25 +282,56 @@ export function RelatoriosTab() {
     toast.info('Gerando PDF, aguarde...');
 
     try {
-      const element = reportRef.current;
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const ratio = Math.min(pdfWidth / canvas.width, pdfHeight / canvas.height);
-      const imgX = (pdfWidth - canvas.width * ratio) / 2;
-      let heightLeft = canvas.height * ratio;
-      let position = 0;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - margin * 2;
+      let cursorY = margin;
 
-      pdf.addImage(imgData, 'PNG', imgX, position, canvas.width * ratio, canvas.height * ratio);
-      heightLeft -= pdfHeight;
+      // Captura cada seção separadamente para uma paginação organizada (sem cortar blocos)
+      const sections = Array.from(
+        reportRef.current.querySelectorAll<HTMLElement>('[data-pdf-section]')
+      );
 
-      while (heightLeft > 0) {
-        position = heightLeft - canvas.height * ratio;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', imgX, position, canvas.width * ratio, canvas.height * ratio);
-        heightLeft -= pdfHeight;
+      for (const section of sections) {
+        const canvas = await html2canvas(section, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+        // Se a seção for maior que a página inteira, fatia ela em páginas
+        if (imgHeight > pageHeight - margin * 2) {
+          if (cursorY > margin) {
+            pdf.addPage();
+            cursorY = margin;
+          }
+          let heightLeft = imgHeight;
+          let position = margin;
+          pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+          heightLeft -= pageHeight - margin;
+          while (heightLeft > 0) {
+            pdf.addPage();
+            position = margin - (imgHeight - heightLeft);
+            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+            heightLeft -= pageHeight - margin * 2;
+          }
+          cursorY = margin;
+          continue;
+        }
+
+        // Nova página se a seção não couber no espaço restante
+        if (cursorY + imgHeight > pageHeight - margin) {
+          pdf.addPage();
+          cursorY = margin;
+        }
+
+        pdf.addImage(imgData, 'PNG', margin, cursorY, contentWidth, imgHeight);
+        cursorY += imgHeight + 6;
       }
 
       pdf.save(`Relatorio_Financeiro_${selectedYear}.pdf`);
