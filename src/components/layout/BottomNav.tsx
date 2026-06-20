@@ -28,15 +28,15 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções' }:
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-border bg-card/95 backdrop-blur-md safe-bottom">
-      <div className="mx-auto grid h-16 max-w-2xl grid-cols-5 items-stretch px-1">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-white/20 bg-white/90 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md safe-bottom dark:border-border/40 dark:bg-card/95">
+      <div className="mx-auto grid h-16 max-w-2xl grid-cols-5 items-stretch gap-1 px-1.5">
         {visibleItems.map((item) => (
           <button
             key={item.key}
             onClick={item.onClick}
             className={cn(
-              'flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors',
-              item.active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              'flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 transition-colors',
+              item.active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <item.icon className="h-5 w-5 flex-shrink-0" fill={item.active ? 'currentColor' : 'none'} />
@@ -46,7 +46,7 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções' }:
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <button className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-muted-foreground transition-colors hover:text-foreground">
+            <button className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-muted-foreground transition-colors hover:text-foreground">
               <MoreHorizontal className="h-5 w-5 flex-shrink-0" />
               <span className="w-full truncate text-center text-[10px] font-medium leading-none">Mais</span>
             </button>
