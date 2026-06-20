@@ -510,6 +510,62 @@ export function CamisasTab() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Resumo de Encomendas */}
+          {orders.length > 0 && (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <Card><CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">Encomendado</p>
+                  <p className="text-xl font-bold">R$ {orderOrdered.toFixed(2).replace('.', ',')}</p>
+                </CardContent></Card>
+                <Card><CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">Recebido</p>
+                  <p className="text-xl font-bold text-success">R$ {orderReceived.toFixed(2).replace('.', ',')}</p>
+                </CardContent></Card>
+                <Card><CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">A receber</p>
+                  <p className="text-xl font-bold text-destructive">R$ {orderToReceive.toFixed(2).replace('.', ',')}</p>
+                </CardContent></Card>
+                <Card><CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">Entregues</p>
+                  <p className="text-xl font-bold">{orderDelivered}<span className="text-sm text-muted-foreground"> / {orders.length}</span></p>
+                </CardContent></Card>
+              </div>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Encomendas por Tamanho</CardTitle>
+                  <Badge variant="outline">Total: {orderProduction.total} camisas</Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {ORDER_COLORS.map(c => {
+                      const sizes = ORDER_SIZES.filter(s => orderProduction.byColor[c.value]?.[s]);
+                      const colorTotal = sizes.reduce((s, sz) => s + orderProduction.byColor[c.value][sz], 0);
+                      return (
+                        <div key={c.value} className="rounded-lg border p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium">{c.label}</span>
+                            <Badge variant="secondary">{colorTotal}</Badge>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {sizes.length === 0 ? (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            ) : sizes.map(s => (
+                              <Badge key={s} variant="outline" className="text-xs">
+                                {ORDER_SIZE_LABEL[s]}: {orderProduction.byColor[c.value][s]}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="compras" className="space-y-4 animate-in fade-in-50">
