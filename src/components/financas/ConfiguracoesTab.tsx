@@ -13,21 +13,20 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Settings, Save, Users, CalendarDays, AlertTriangle, Trash2, History } from 'lucide-react';
 
-const MONTHS = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-];
-
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+const ANNUAL_CHARGE_TYPE = 'annual_contribution';
 
 interface LaunchGroup {
   year: string;
   competences: string[];
   totalCharges: number;
   paidCharges: number;
+  partialCharges: number;
   pendingCharges: number;
 }
+
+const formatCurrency = (value: number) => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
 
 export function ConfiguracoesTab() {
   const { effectiveSocietyId: societyId } = useAuth();
@@ -46,6 +45,10 @@ export function ConfiguracoesTab() {
   const [loadingLaunches, setLoadingLaunches] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<LaunchGroup | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const contributionAmount = parseFloat(formData.monthly_fee) || 0;
+  const perCapitaAmount = parseFloat(formData.per_capita) || 0;
+  const annualTotal = contributionAmount + perCapitaAmount;
 
   useEffect(() => {
     if (societyId) {
@@ -90,35 +93,37 @@ export function ConfiguracoesTab() {
     setLoadingLaunches(true);
     const { data: charges } = await supabase
       .from('charges')
-      .select('competence, status')
+      .select('competence, status, amount, paid_amount')
+      .eq('type', ANNUAL_CHARGE_TYPE)
       .eq('society_id', societyId!);
 
     if (charges && charges.length > 0) {
-      // Group by year extracted from competence "Mês/Ano"
-      const yearMap: Record<string, { competences: Set<string>; total: number; paid: number; pending: number }> = {};
+      const yearMap: Record<string, { competences: Set<string>; total: number; paid: number; partial: number; pending: number }> = {};
       
       for (const c of charges) {
-        const parts = c.competence.split('/');
-        const year = parts[1] || parts[0];
+        const year = c.competence;
+        const paidAmount = Number(c.paid_amount || 0);
+        const amount = Number(c.amount || 0);
+        const isPaid = c.status === 'pago' && paidAmount >= amount;
+        const isPartial = c.status === 'pago' && paidAmount > 0 && paidAmount < amount;
+
         if (!yearMap[year]) {
-          yearMap[year] = { competences: new Set(), total: 0, paid: 0, pending: 0 };
+          yearMap[year] = { competences: new Set(), total: 0, paid: 0, partial: 0, pending: 0 };
         }
         yearMap[year].competences.add(c.competence);
         yearMap[year].total++;
-        if (c.status === 'pago') yearMap[year].paid++;
+        if (isPaid) yearMap[year].paid++;
+        else if (isPartial) yearMap[year].partial++;
         else if (c.status === 'pendente') yearMap[year].pending++;
       }
 
       const groups: LaunchGroup[] = Object.entries(yearMap)
         .map(([year, data]) => ({
           year,
-          competences: Array.from(data.competences).sort((a, b) => {
-            const mA = MONTHS.indexOf(a.split('/')[0]);
-            const mB = MONTHS.indexOf(b.split('/')[0]);
-            return mA - mB;
-          }),
+          competences: Array.from(data.competences),
           totalCharges: data.total,
           paidCharges: data.paid,
+          partialCharges: data.partial,
           pendingCharges: data.pending,
         }))
         .sort((a, b) => parseInt(b.year) - parseInt(a.year));
@@ -135,18 +140,19 @@ export function ConfiguracoesTab() {
       toast.error('Sessão inválida. Faça login novamente.');
       return;
     }
-    if (!formData.monthly_fee && !formData.per_capita) {
-      toast.error('Informe pelo menos um valor (mensalidade ou per capita)');
+    if (annualTotal <= 0) {
+      toast.error('Informe a contribuição anual ou a per capita anual');
       return;
     }
 
     setLoading(true);
     try {
+      const dueDay = Math.min(parseInt(formData.due_day) || 10, 28);
       const payload = {
         competence: 'geral',
-        monthly_fee: parseFloat(formData.monthly_fee) || 0,
-        per_capita: parseFloat(formData.per_capita) || 0,
-        due_day: Math.min(parseInt(formData.due_day) || 10, 28),
+        monthly_fee: contributionAmount,
+        per_capita: perCapitaAmount,
+        due_day: dueDay,
         notes: formData.notes,
         society_id: societyId,
       };
@@ -164,56 +170,32 @@ export function ConfiguracoesTab() {
         if (error) throw error;
       }
 
-      // Update pending charges with new values
-      const monthlyFee = parseFloat(formData.monthly_fee) || 0;
-      const perCapita = parseFloat(formData.per_capita) || 0;
-      const dueDay = Math.min(parseInt(formData.due_day) || 10, 28);
+      const { data: pendingAnnualCharges } = await supabase
+        .from('charges')
+        .select('id, due_date')
+        .eq('society_id', societyId)
+        .eq('type', ANNUAL_CHARGE_TYPE)
+        .eq('status', 'pendente');
+
       let updatedCount = 0;
-
-      if (monthlyFee > 0) {
-        const { data: pendingMensalidades } = await supabase
-          .from('charges')
-          .select('id, due_date')
-          .eq('society_id', societyId)
-          .eq('type', 'mensalidade')
-          .eq('status', 'pendente');
-
-        if (pendingMensalidades && pendingMensalidades.length > 0) {
-          for (const charge of pendingMensalidades) {
-            const oldDate = new Date(charge.due_date);
-            const newDueDate = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`;
-            await supabase
-              .from('charges')
-              .update({ amount: monthlyFee, due_date: newDueDate })
-              .eq('id', charge.id);
-          }
-          updatedCount += pendingMensalidades.length;
+      if (pendingAnnualCharges && pendingAnnualCharges.length > 0) {
+        for (const charge of pendingAnnualCharges) {
+          const oldDate = new Date(`${charge.due_date}T12:00:00`);
+          const newDueDate = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`;
+          await supabase
+            .from('charges')
+            .update({
+              amount: annualTotal,
+              due_date: newDueDate,
+              notes: `Contribuição: ${formatCurrency(contributionAmount)} | Per capita: ${formatCurrency(perCapitaAmount)}`,
+            })
+            .eq('id', charge.id);
         }
-      }
-
-      if (perCapita > 0) {
-        const { data: pendingPercapita } = await supabase
-          .from('charges')
-          .select('id, due_date')
-          .eq('society_id', societyId)
-          .eq('type', 'percapita')
-          .eq('status', 'pendente');
-
-        if (pendingPercapita && pendingPercapita.length > 0) {
-          for (const charge of pendingPercapita) {
-            const oldDate = new Date(charge.due_date);
-            const newDueDate = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`;
-            await supabase
-              .from('charges')
-              .update({ amount: perCapita, due_date: newDueDate })
-              .eq('id', charge.id);
-          }
-          updatedCount += pendingPercapita.length;
-        }
+        updatedCount = pendingAnnualCharges.length;
       }
 
       const msg = updatedCount > 0
-        ? `Configurações salvas! ${updatedCount} cobrança(s) pendente(s) atualizada(s).`
+        ? `Configurações salvas! ${updatedCount} cobrança(s) anual(is) pendente(s) atualizada(s).`
         : 'Configurações salvas!';
       toast.success(msg);
       fetchSettings();
@@ -235,6 +217,14 @@ export function ConfiguracoesTab() {
       return;
     }
 
+    const contribution = Number(existingSettings.monthly_fee || 0);
+    const perCapita = Number(existingSettings.per_capita || 0);
+    const totalAnnual = contribution + perCapita;
+    if (totalAnnual <= 0) {
+      toast.error('Configure um valor anual antes de lançar');
+      return;
+    }
+
     setGenerating(true);
     try {
       const year = parseInt(chargeYear);
@@ -253,61 +243,43 @@ export function ConfiguracoesTab() {
         return;
       }
 
-      // Both mensalidade and percapita are annual single charges
-      const competenceAnual = chargeYear;
-      
       const { data: existingCharges } = await supabase
         .from('charges')
-        .select('member_id, type')
-        .eq('competence', competenceAnual)
+        .select('member_id')
+        .eq('competence', chargeYear)
+        .eq('type', ANNUAL_CHARGE_TYPE)
         .eq('society_id', societyId);
 
-      const existingSet = new Set(
-        (existingCharges || []).map(c => `${c.member_id}-${c.type}`)
-      );
-
-      const newCharges: any[] = [];
+      const existingSet = new Set((existingCharges || []).map(c => c.member_id));
       const dueDate = new Date(year, 0, dueDay).toISOString().split('T')[0];
+      const compositionNote = `Contribuição: ${formatCurrency(contribution)} | Per capita: ${formatCurrency(perCapita)}`;
 
-      for (const member of members) {
-        if (existingSettings.monthly_fee > 0 && !existingSet.has(`${member.id}-mensalidade`)) {
-          newCharges.push({
-            member_id: member.id,
-            competence: competenceAnual,
-            type: 'mensalidade',
-            amount: existingSettings.monthly_fee,
-            due_date: dueDate,
-            status: 'pendente',
-            society_id: societyId,
-          });
-        }
-        if (existingSettings.per_capita > 0 && !existingSet.has(`${member.id}-percapita`)) {
-          newCharges.push({
-            member_id: member.id,
-            competence: competenceAnual,
-            type: 'percapita',
-            amount: existingSettings.per_capita,
-            due_date: dueDate,
-            status: 'pendente',
-            society_id: societyId,
-          });
-        }
-      }
+      const newCharges = members
+        .filter(member => !existingSet.has(member.id))
+        .map(member => ({
+          member_id: member.id,
+          competence: chargeYear,
+          type: ANNUAL_CHARGE_TYPE,
+          amount: totalAnnual,
+          due_date: dueDate,
+          status: 'pendente',
+          notes: compositionNote,
+          society_id: societyId,
+        }));
 
       if (newCharges.length === 0) {
-        toast.info('Todas as cobranças já foram geradas para este ano');
+        toast.info('Todas as cobranças anuais já foram geradas para este ano');
         setGenerating(false);
         return;
       }
 
-      // Insert in batches of 500
       for (let i = 0; i < newCharges.length; i += 500) {
         const batch = newCharges.slice(i, i + 500);
         const { error } = await supabase.from('charges').insert(batch);
         if (error) throw error;
       }
 
-      toast.success(`${newCharges.length} cobranças geradas para ${chargeYear}!`);
+      toast.success(`${newCharges.length} cobrança(s) anual(is) gerada(s) para ${chargeYear}!`);
       fetchLaunches();
     } catch (error: any) {
       toast.error('Erro ao gerar cobranças: ' + error.message);
@@ -320,17 +292,15 @@ export function ConfiguracoesTab() {
     if (!deleteConfirm || !societyId) return;
     setDeleting(true);
     try {
-      // Delete all charges for this year that are still pending
-      for (const comp of deleteConfirm.competences) {
-        await supabase
-          .from('charges')
-          .delete()
-          .eq('competence', comp)
-          .eq('society_id', societyId)
-          .eq('status', 'pendente');
-      }
+      await supabase
+        .from('charges')
+        .delete()
+        .eq('competence', deleteConfirm.year)
+        .eq('type', ANNUAL_CHARGE_TYPE)
+        .eq('society_id', societyId)
+        .eq('status', 'pendente');
 
-      toast.success(`Cobranças pendentes de ${deleteConfirm.year} excluídas!`);
+      toast.success(`Cobranças anuais pendentes de ${deleteConfirm.year} excluídas!`);
       setDeleteConfirm(null);
       fetchLaunches();
     } catch (error: any) {
@@ -353,32 +323,31 @@ export function ConfiguracoesTab() {
 
   return (
     <div className="space-y-6">
-      {/* Settings Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Valores de Cobrança
+            Valores da Contribuição Anual
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Mensalidade (R$)</Label>
+              <Label>Contribuição anual do sócio (R$)</Label>
               <Input
                 type="number"
                 step="0.01"
-                placeholder="0,00"
+                placeholder="72,00"
                 value={formData.monthly_fee}
                 onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Per Capita Mensal (R$)</Label>
+              <Label>Per capita anual (R$)</Label>
               <Input
                 type="number"
                 step="0.01"
-                placeholder="0,00"
+                placeholder="30,00"
                 value={formData.per_capita}
                 onChange={(e) => setFormData({ ...formData, per_capita: e.target.value })}
               />
@@ -393,6 +362,14 @@ export function ConfiguracoesTab() {
                 onChange={(e) => setFormData({ ...formData, due_day: e.target.value })}
               />
             </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-sm font-semibold text-foreground">Total anual por sócio</p>
+            <p className="mt-1 text-3xl font-bold text-primary">{formatCurrency(annualTotal)}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Composição: contribuição {formatCurrency(contributionAmount)} + per capita {formatCurrency(perCapitaAmount)}.
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -417,7 +394,6 @@ export function ConfiguracoesTab() {
         </CardContent>
       </Card>
 
-      {/* Generate Annual Charges */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -427,7 +403,7 @@ export function ConfiguracoesTab() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Gera cobranças de mensalidade e per capita para todos os 12 meses do ano selecionado, para todos os membros ativos.
+            Gera uma cobrança anual única por membro ativo. A cobrança mostra o total e a composição da contribuição do sócio mais a per capita.
           </p>
           <div className="flex items-end gap-4">
             <div className="space-y-2">
@@ -461,7 +437,6 @@ export function ConfiguracoesTab() {
         </CardContent>
       </Card>
 
-      {/* Launch History */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -473,7 +448,7 @@ export function ConfiguracoesTab() {
           {loadingLaunches ? (
             <p className="text-sm text-muted-foreground">Carregando...</p>
           ) : launches.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum lançamento encontrado.</p>
+            <p className="text-sm text-muted-foreground">Nenhum lançamento anual encontrado.</p>
           ) : (
             <div className="space-y-3">
               {launches.map(launch => (
@@ -484,13 +459,12 @@ export function ConfiguracoesTab() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-foreground">{launch.year}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {launch.competences.length} {launch.competences.length === 1 ? 'mês' : 'meses'}
-                      </Badge>
+                      <Badge variant="outline" className="text-xs">cobrança anual</Badge>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs">
+                    <div className="flex items-center gap-3 mt-1 text-xs flex-wrap">
                       <span className="text-muted-foreground">{launch.totalCharges} cobranças</span>
-                      <span className="text-green-600 dark:text-green-400">{launch.paidCharges} pagos</span>
+                      <span className="text-green-600 dark:text-green-400">{launch.paidCharges} pagas</span>
+                      <span className="text-yellow-600 dark:text-yellow-400">{launch.partialCharges} parciais</span>
                       <span className="text-destructive">{launch.pendingCharges} pendentes</span>
                     </div>
                   </div>
@@ -511,14 +485,13 @@ export function ConfiguracoesTab() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir cobranças pendentes?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir cobranças anuais pendentes?</AlertDialogTitle>
             <AlertDialogDescription>
               Isso vai excluir todas as {deleteConfirm?.pendingCharges} cobranças <strong>pendentes</strong> de {deleteConfirm?.year}.
-              Cobranças já pagas não serão afetadas. Esta ação não pode ser desfeita.
+              Cobranças já pagas ou parciais não serão afetadas. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
