@@ -1,0 +1,2 @@
+ALTER TABLE public.charges DROP CONSTRAINT IF EXISTS charges_type_check;
+ALTER TABLE public.charges ADD CONSTRAINT charges_type_check CHECK (type = ANY (ARRAY['mensalidade'::text, 'percapita'::text, 'annual_contribution'::text]));
