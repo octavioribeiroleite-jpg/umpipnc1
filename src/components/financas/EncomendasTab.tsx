@@ -388,6 +388,35 @@ export function EncomendasTab({ onDataChange }: Props) {
         </CardContent></Card>
       </div>
 
+      {/* Resumo de produção */}
+      <Card>
+        <CardContent className="pt-4 pb-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold flex items-center gap-2"><Shirt className="h-4 w-4" /> Resumo para produção</p>
+            <Badge variant="outline">Total: {production.total} camisas</Badge>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {COLORS.map(c => (
+              <div key={c.value} className="rounded-lg border p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">{c.label}</span>
+                  <Badge variant="secondary">{c.value === 'off' ? production.offTotal : production.pretaTotal}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {SIZES.filter(s => production.byColor[c.value]?.[s]).length === 0 ? (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  ) : SIZES.filter(s => production.byColor[c.value]?.[s]).map(s => (
+                    <Badge key={s} variant="outline" className="text-xs">
+                      {SIZE_LABEL[s]}: {production.byColor[c.value][s]}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Filtros + ação */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
         <div className="relative flex-1">
@@ -407,6 +436,14 @@ export function EncomendasTab({ onDataChange }: Props) {
               <SelectItem value="pendente">Pendente</SelectItem>
               <SelectItem value="parcial">Parcial</SelectItem>
               <SelectItem value="pago">Pago</SelectItem>
+              <SelectItem value="brinde">Brinde</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterColor} onValueChange={setFilterColor}>
+            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Cor</SelectItem>
+              {COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterDelivery} onValueChange={setFilterDelivery}>
@@ -418,10 +455,10 @@ export function EncomendasTab({ onDataChange }: Props) {
             </SelectContent>
           </Select>
           <Select value={filterSize} onValueChange={setFilterSize}>
-            <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tamanho</SelectItem>
-              {SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              {SIZES.map(s => <SelectItem key={s} value={s}>{SIZE_LABEL[s]}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button onClick={openNew}>
