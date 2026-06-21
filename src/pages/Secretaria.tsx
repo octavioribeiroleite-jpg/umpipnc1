@@ -419,69 +419,6 @@ export default function Secretaria() {
       return <ProfileSelect onSelect={handleProfileSelect} />;
     }
 
-    if (loginStep === 'name-confirm' && savedProfessorName) {
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-sm">
-            <CardContent className="pt-6 space-y-5">
-              <div className="text-center space-y-3">
-                <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserCheck className="h-8 w-8 text-primary" />
-                </div>
-                <h2 className="font-semibold text-lg">Você é</h2>
-                <p className="text-2xl font-bold text-primary">{savedProfessorName}?</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" onClick={handleDifferentPerson}>
-                  Não sou eu
-                </Button>
-                <Button onClick={handleConfirmName}>
-                  Sim, sou eu!
-                </Button>
-              </div>
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-
-    if (loginStep === 'name-input') {
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-sm">
-            <CardContent className="pt-6 space-y-5">
-              <div className="text-center space-y-2">
-                <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserCheck className="h-7 w-7 text-primary" />
-                </div>
-                <h2 className="font-semibold text-lg">Qual o seu nome?</h2>
-                <p className="text-sm text-muted-foreground">Informe seu nome completo para registro</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="professor-nome">Nome completo</Label>
-                <Input
-                  id="professor-nome"
-                  placeholder="Digite seu nome completo"
-                  value={professorNome}
-                  onChange={(e) => setProfessorNome(e.target.value)}
-                  autoFocus
-                />
-              </div>
-              <Button className="w-full" disabled={!professorNome.trim()} onClick={handleSaveName}>
-                Continuar
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-
     return (
       <PinPad
         profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Professor'}
