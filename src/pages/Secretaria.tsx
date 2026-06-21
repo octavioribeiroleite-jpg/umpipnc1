@@ -431,7 +431,7 @@ export default function Secretaria() {
   // Login screens
   if (!accessLevel) {
     if (loginStep === 'profile') {
-      return <ProfileSelect onSelect={handleProfileSelect} />;
+      return <ProfileSelect onSelect={handleProfileSelect} onBack={() => navigate('/auth')} />;
     }
 
     if (loginStep === 'name') {
