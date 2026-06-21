@@ -216,6 +216,7 @@ export default function Secretaria() {
   const [pinError, setPinError] = useState(false);
   const [pendingPin, setPendingPin] = useState('');
   const [nameInput, setNameInput] = useState('');
+  const [adminPin, setAdminPin] = useState('');
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
