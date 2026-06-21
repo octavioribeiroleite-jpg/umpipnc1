@@ -216,6 +216,7 @@ export default function Secretaria() {
   const [pinError, setPinError] = useState(false);
   const [pendingPin, setPendingPin] = useState('');
   const [nameInput, setNameInput] = useState('');
+  const [adminPin, setAdminPin] = useState('');
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
@@ -254,6 +255,7 @@ export default function Secretaria() {
 
       if (data && data.value === pin) {
         setAccessLevel('admin');
+        setAdminPin(pin);
       } else {
         setPinError(true);
         toast.error('PIN incorreto');
@@ -501,6 +503,7 @@ export default function Secretaria() {
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
+    setAdminPin('');
     setCurrentView('home');
     setProfessorClassId(null);
     setProfessorNome('');
@@ -759,7 +762,7 @@ export default function Secretaria() {
         )}
 
         {currentView === 'configuracoes' && isAdmin && (
-          <ConfiguracoesEbdTab classes={classes} />
+          <ConfiguracoesEbdTab classes={classes} adminPin={adminPin} />
         )}
 
         {currentView === 'acessos' && isAdmin && (

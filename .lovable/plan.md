@@ -1,48 +1,30 @@
-# Senha por sala + registro de quem entrou
+Diagnóstico encontrado:
 
-Hoje cada professor tem uma conta (nome + PIN + sala). Vamos simplificar: **cada sala terá sua própria senha**. Quando alguém entra com a senha da sala, o sistema pede o **nome da pessoa**, registra esse nome e mostra, numa aba da Secretaria, **quem entrou em cada sala** no dia.
+- A Secretaria libera o administrador por PIN interno (`secretaria_admin_password`), mas isso não cria uma sessão autenticada no backend.
+- A função `manage-ebd-class-password`, que cria/troca/remove senha das salas, exige um usuário autenticado com permissão de diretoria/admin.
+- Por isso, ao tentar salvar senha dentro da Secretaria, a função retorna `Não autenticado`/401; a tela oculta essa mensagem e mostra apenas `Erro ao salvar a senha`.
+- As tabelas principais existem, têm as colunas esperadas e a restrição única por sala está correta.
+- O login do professor por senha da sala usa outra função (`ebd-class-login`) e está alinhado com o modelo de “senha por sala + nome do professor”, mas depende das senhas conseguirem ser criadas primeiro.
 
-## Como vai funcionar
+Plano de correção:
 
-**Para o admin (aba "Configurações"):**
-- A lista deixa de ser de professores e passa a ser de **salas**.
-- Para cada sala existente, o admin define/edita uma **senha (PIN de 6 dígitos)**.
-- Pode limpar/trocar a senha de qualquer sala.
-- Cada senha é única (duas salas não podem ter a mesma).
-
-**Para quem vai dar aula (perfil "Professor"):**
-1. Escolhe "Professor" e digita a **senha da sala**.
-2. O sistema identifica **qual sala** é aquela senha.
-3. Pede o **nome de quem está entrando** (campo de texto).
-4. Registra o acesso (nome + sala + data/hora) e libera só a chamada/histórico daquela sala.
-
-**Nova aba "Acessos" (admin):**
-- Mostra, por dia, **quais salas tiveram acesso e o nome de quem entrou** (com horário).
-- Assim o admin vê rapidamente qual professor fez login em cada sala.
-
-## Verificação do login atual
-Antes de migrar, confirmo se o login por PIN está funcionando (login admin e o de professor pela edge function). Como o modelo muda para senha por sala, o fluxo de identificação por PIN é reaproveitado, agora apontando para a sala em vez de um professor específico.
-
----
-
-## Detalhes técnicos
-
-**Banco de dados (migration)**
-- Nova tabela `public.ebd_class_passwords`: `class_id` (ref. `ebd_classes`, único), `pin_hash`, `active`, timestamps. Índice único no `pin_hash`. GRANTs (authenticated + service_role) e RLS via `has_management_role`.
-- Nova tabela `public.ebd_class_logins`: `class_id`, `teacher_name` (texto livre), `date`, `created_at`. GRANTs + RLS (gestão lê tudo; inserção via service_role pela edge function).
-- A tabela antiga `ebd_teachers` deixa de ser usada pelo fluxo (mantida sem uso ou removida no mesmo migration — removo para evitar confusão).
-
-**Edge functions**
-- `ebd-teacher-login` → ajustada (ou nova `ebd-class-login`): recebe `pin` + `name`; encontra a sala pelo hash, grava o registro em `ebd_class_logins` e retorna `{ class_id, class_name, name }`.
-- `manage-ebd-teacher` → ajustada (ou nova `manage-ebd-class-password`): ações `set` (definir/trocar senha da sala) e `clear` (remover), com hash no servidor, restrita a admin.
-
-**Frontend**
-- `ConfiguracoesEbdTab.tsx`: passa a listar **salas** e definir/editar/limpar a senha de cada uma.
-- `Secretaria.tsx`: após o PIN do professor, novo passo de **digitar o nome**; guarda `professorNome`/`professorClassId` do retorno; adiciona a view "Acessos".
-- Novo componente `AcessosEbdTab.tsx`: lista os acessos do dia por sala.
-- Novo card "Acessos" no menu home (somente admin).
-- `PinPad`: mantém o teclado; o passo de nome é uma tela simples de input após validar o PIN.
-
-## Observações
-- O nome digitado no acesso será usado também como "marcado por" na chamada e no fechamento do dia daquela sala.
-- Senhas guardadas como hash (sem texto puro).
+1. Ajustar o fluxo administrativo da Secretaria
+  - Guardar temporariamente, apenas na sessão da tela, o PIN administrativo validado.
+  - Passar esse PIN para a aba de Configurações ao criar/trocar/remover senhas de salas.
+2. Ajustar a função `manage-ebd-class-password`
+  - Permitir dois caminhos seguros de autorização:
+    - usuário autenticado com cargo de gestão; ou
+    - PIN administrativo correto da Secretaria.
+  - Validar o PIN no backend antes de aceitar alterações de senha.
+  - Manter a validação de senha de sala com exatamente 6 dígitos.
+3. Corrigir a tela de Configurações de salas
+  - Enviar o PIN administrativo junto com as ações de definir/remover senha.
+  - Melhorar a mensagem exibida quando a função retorna erro, para mostrar o motivo real.
+  - Se necessário, carregar o status “Com senha/Sem senha” por uma função segura em vez de leitura direta da tabela protegida.
+4. Validar o fluxo completo
+  - Entrar na Secretaria como administrador via PIN.
+  - Definir senha para uma sala.
+  - Trocar senha da mesma sala.
+  - Tentar usar senha repetida em outra sala e confirmar a mensagem correta.
+  - Entrar como professor usando a senha da sala + nome.
+  - Confirmar que o acesso aparece na aba de acessos da Secretaria.

@@ -24,35 +24,42 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
+    const body = await req.json()
+
+    // Authorization: either an authenticated management user OR the correct
+    // Secretaria admin PIN (the Secretaria screen logs in via an internal PIN,
+    // not a backend session).
+    let authorized = false
+
     const authHeader = req.headers.get('Authorization') ?? ''
     const token = authHeader.replace('Bearer ', '')
-    if (!token) {
-      return new Response(JSON.stringify({ error: 'Não autenticado' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (token && token !== anonKey) {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
       })
+      const { data: { user } } = await userClient.auth.getUser()
+      if (user) {
+        const { data: isMgmt } = await adminClient.rpc('has_management_role', { _user_id: user.id })
+        if (isMgmt) authorized = true
+      }
     }
 
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    })
-    const { data: { user }, error: userError } = await userClient.auth.getUser()
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Não autenticado' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (!authorized && typeof body.admin_pin === 'string' && body.admin_pin) {
+      const { data: setting } = await adminClient
+        .from('settings')
+        .select('value')
+        .eq('key', 'secretaria_admin_password')
+        .maybeSingle()
+      if (setting?.value && setting.value === body.admin_pin) authorized = true
     }
 
-    const { data: isMgmt } = await adminClient.rpc('has_management_role', { _user_id: user.id })
-    if (!isMgmt) {
+    if (!authorized) {
       return new Response(JSON.stringify({ error: 'Sem permissão' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const body = await req.json()
     const action = body.action as string
     const validatePin = (pin: unknown) =>
       typeof pin === 'string' && /^[0-9]{6}$/.test(pin)
