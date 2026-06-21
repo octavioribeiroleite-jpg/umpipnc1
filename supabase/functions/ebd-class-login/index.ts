@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 async function hashPin(pin: string): Promise<string> {
-  const data = new TextEncoder().encode(`ebd_teacher_pin:${pin}`)
+  const data = new TextEncoder().encode(`ebd_class_pin:${pin}`)
   const digest = await crypto.subtle.digest('SHA-256', data)
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, '0'))
@@ -23,40 +23,56 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
-    const { pin } = await req.json()
+    const { pin, name } = await req.json()
 
     if (!pin || typeof pin !== 'string' || !/^[0-9]{6}$/.test(pin)) {
-      return new Response(JSON.stringify({ error: 'PIN inválido' }), {
+      return new Response(JSON.stringify({ error: 'Senha inválida' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return new Response(JSON.stringify({ error: 'Informe o nome' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const teacherName = name.trim().slice(0, 120)
     const pinHash = await hashPin(pin)
 
-    const { data: teacher, error } = await adminClient
-      .from('ebd_teachers')
-      .select('id, name, class_id, active')
+    const { data: row, error } = await adminClient
+      .from('ebd_class_passwords')
+      .select('class_id, active, ebd_classes(name)')
       .eq('pin_hash', pinHash)
       .eq('active', true)
       .maybeSingle()
 
-    if (error || !teacher) {
-      return new Response(JSON.stringify({ error: 'PIN incorreto' }), {
+    if (error || !row) {
+      return new Response(JSON.stringify({ error: 'Senha incorreta' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
+    const className = (row as any).ebd_classes?.name ?? null
+
+    // Register the access
+    await adminClient.from('ebd_class_logins').insert({
+      class_id: row.class_id,
+      teacher_name: teacherName,
+    })
+
     return new Response(
       JSON.stringify({
         success: true,
-        teacher: { id: teacher.id, name: teacher.name, class_id: teacher.class_id },
+        teacher: { name: teacherName, class_id: row.class_id, class_name: className },
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {
-    console.error('ebd-teacher-login error:', error)
+    console.error('ebd-class-login error:', error)
     return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
