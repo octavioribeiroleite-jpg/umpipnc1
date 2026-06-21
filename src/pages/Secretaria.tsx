@@ -504,6 +504,7 @@ export default function Secretaria() {
     setCurrentView('home');
     setProfessorClassId(null);
     setProfessorNome('');
+    navigate('/auth');
   };
 
   const handleBackToHome = () => {
