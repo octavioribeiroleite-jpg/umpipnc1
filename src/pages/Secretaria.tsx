@@ -10,6 +10,7 @@ import ChamadaTab from '@/components/secretaria/ChamadaTab';
 import HistoricoTab from '@/components/secretaria/HistoricoTab';
 import TurmasTab from '@/components/secretaria/TurmasTab';
 import PlanilhaAlunosTab from '@/components/secretaria/PlanilhaAlunosTab';
+import ConfiguracoesEbdTab from '@/components/secretaria/ConfiguracoesEbdTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
