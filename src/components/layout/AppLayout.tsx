@@ -63,7 +63,6 @@ export function AppLayout({ children }: AppLayoutProps) {
     ...(isAdmin
       ? [
           { key: 'eleicoes', icon: Vote, label: 'Eleições', active: isActive('/eleicoes'), onClick: () => go('/eleicoes') },
-          { key: 'visitantes', icon: Globe, label: 'Visitantes', active: isActive('/visitantes'), onClick: () => go('/visitantes') },
           { key: 'usuarios', icon: UserCheck, label: 'Usuários', active: isActive('/usuarios'), onClick: () => go('/usuarios') },
           { key: 'sugestoes', icon: MessageSquare, label: 'Sugestões', active: isActive('/sugestoes'), onClick: () => go('/sugestoes') },
         ]
