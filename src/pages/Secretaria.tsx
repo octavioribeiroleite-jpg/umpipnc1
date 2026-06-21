@@ -655,6 +655,7 @@ export default function Secretaria() {
     aniversariantes: 'Aniversariantes',
     planilha: 'Planilha de Alunos',
     configuracoes: 'Configurações',
+    acessos: 'Acessos',
   };
 
   return (
