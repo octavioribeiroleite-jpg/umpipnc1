@@ -503,6 +503,7 @@ export default function Secretaria() {
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
+    setAdminPin('');
     setCurrentView('home');
     setProfessorClassId(null);
     setProfessorNome('');
