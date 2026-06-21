@@ -64,6 +64,23 @@ Deno.serve(async (req) => {
     const validatePin = (pin: unknown) =>
       typeof pin === 'string' && /^[0-9]{6}$/.test(pin)
 
+    if (action === 'list') {
+      const { data, error } = await adminClient
+        .from('ebd_class_passwords')
+        .select('class_id')
+        .eq('active', true)
+      if (error) {
+        return new Response(JSON.stringify({ error: 'Erro ao carregar senhas das salas' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({ success: true, class_ids: (data ?? []).map((r) => r.class_id) }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (action === 'set') {
       const { class_id, pin } = body
       if (!class_id || !validatePin(pin)) {
