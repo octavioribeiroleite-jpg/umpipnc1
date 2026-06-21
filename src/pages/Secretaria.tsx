@@ -11,6 +11,7 @@ import HistoricoTab from '@/components/secretaria/HistoricoTab';
 import TurmasTab from '@/components/secretaria/TurmasTab';
 import PlanilhaAlunosTab from '@/components/secretaria/PlanilhaAlunosTab';
 import ConfiguracoesEbdTab from '@/components/secretaria/ConfiguracoesEbdTab';
+import AcessosEbdTab from '@/components/secretaria/AcessosEbdTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
@@ -64,8 +65,8 @@ interface AttendanceRecord {
 }
 
 type AccessLevel = 'admin' | 'professor';
-type LoginStep = 'profile' | 'pin';
-type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha' | 'configuracoes';
+type LoginStep = 'profile' | 'pin' | 'name';
+type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha' | 'configuracoes' | 'acessos';
 
 export interface VisitorEntry {
   id: string;
@@ -213,6 +214,8 @@ export default function Secretaria() {
   const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(null);
   const [loading, setLoading] = useState(false);
   const [pinError, setPinError] = useState(false);
+  const [pendingPin, setPendingPin] = useState('');
+  const [nameInput, setNameInput] = useState('');
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
@@ -260,27 +263,41 @@ export default function Secretaria() {
       return;
     }
 
-    // Professor: identifica pela conta cadastrada (nome + sala)
-    const { data, error } = await supabase.functions.invoke('ebd-teacher-login', {
-      body: { pin },
+    // Professor: guarda a senha da sala e segue para informar o nome
+    setPendingPin(pin);
+    setNameInput('');
+    setLoginStep('name');
+    setLoading(false);
+  };
+
+  const handleNameSubmit = async () => {
+    if (!nameInput.trim()) {
+      toast.error('Informe seu nome');
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke('ebd-class-login', {
+      body: { pin: pendingPin, name: nameInput.trim() },
     });
+    setLoading(false);
 
     if (error || !data?.success) {
-      setPinError(true);
-      toast.error('PIN incorreto');
-      setTimeout(() => setPinError(false), 600);
-    } else {
-      setProfessorNome(data.teacher.name);
-      setProfessorClassId(data.teacher.class_id);
-      setAccessLevel('professor');
+      toast.error((data as any)?.error || 'Senha da sala incorreta');
+      setPendingPin('');
+      setLoginStep('pin');
+      return;
     }
-    setLoading(false);
+    setProfessorNome(data.teacher.name);
+    setProfessorClassId(data.teacher.class_id);
+    setAccessLevel('professor');
   };
 
   const handleBack = () => {
     setLoginStep('profile');
     setSelectedProfile(null);
     setPinError(false);
+    setPendingPin('');
+    setNameInput('');
   };
 
   const fetchData = useCallback(async () => {
@@ -417,9 +434,45 @@ export default function Secretaria() {
       return <ProfileSelect onSelect={handleProfileSelect} />;
     }
 
+    if (loginStep === 'name') {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="w-full max-w-xs mx-auto space-y-6">
+            <div className="flex flex-col items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => { setLoginStep('pin'); setPendingPin(''); }} className="self-start shrink-0">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <UserCheck className="h-7 w-7 text-primary" />
+              </div>
+              <div className="text-center">
+                <h2 className="font-semibold text-lg">Qual é o seu nome?</h2>
+                <p className="text-sm text-muted-foreground">Para registrar quem entrou na sala</p>
+              </div>
+            </div>
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && nameInput.trim()) handleNameSubmit(); }}
+              placeholder="Seu nome"
+              className="w-full h-12 px-4 rounded-xl border-2 border-border bg-background text-base outline-none focus:border-primary"
+            />
+            <Button
+              className="w-full h-12 text-base font-semibold gap-2 rounded-xl"
+              onClick={handleNameSubmit}
+              disabled={loading || !nameInput.trim()}
+            >
+              {loading ? 'Entrando...' : 'Entrar'}
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <PinPad
-        profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Professor'}
+        profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Senha da sala'}
         onBack={handleBack}
         onComplete={handlePinComplete}
         loading={loading}
@@ -585,6 +638,17 @@ export default function Secretaria() {
                   </div>
                   <span className="font-medium text-sm">Configurações</span>
                 </AppCard>
+
+                <AppCard
+                  variant="interactive"
+                  className="flex flex-col items-center gap-3 py-6"
+                  onClick={() => setCurrentView('acessos')}
+                >
+                  <div className="h-14 w-14 rounded-2xl bg-rose-500/10 flex items-center justify-center">
+                    <UserCheck className="h-7 w-7 text-rose-500" />
+                  </div>
+                  <span className="font-medium text-sm">Acessos</span>
+                </AppCard>
               </>
             )}
           </div>
@@ -602,6 +666,7 @@ export default function Secretaria() {
     aniversariantes: 'Aniversariantes',
     planilha: 'Planilha de Alunos',
     configuracoes: 'Configurações',
+    acessos: 'Acessos',
   };
 
   return (
@@ -694,6 +759,10 @@ export default function Secretaria() {
 
         {currentView === 'configuracoes' && isAdmin && (
           <ConfiguracoesEbdTab classes={classes} />
+        )}
+
+        {currentView === 'acessos' && isAdmin && (
+          <AcessosEbdTab classes={classes} date={sundayDate} formattedDate={formattedDate} />
         )}
       </div>
 

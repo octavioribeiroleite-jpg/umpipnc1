@@ -6,15 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { GraduationCap, Plus, Pencil, Trash2, Users } from 'lucide-react';
+import { DoorOpen, KeyRound, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EbdClass {
@@ -23,112 +22,80 @@ interface EbdClass {
   order_index: number;
 }
 
-interface Teacher {
-  id: string;
-  name: string;
-  class_id: string;
-  active: boolean;
-}
-
 interface ConfiguracoesEbdTabProps {
   classes: EbdClass[];
 }
 
 export default function ConfiguracoesEbdTab({ classes }: ConfiguracoesEbdTabProps) {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [withPassword, setWithPassword] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Teacher | null>(null);
-  const [deleting, setDeleting] = useState<Teacher | null>(null);
+  const [dialogClass, setDialogClass] = useState<EbdClass | null>(null);
+  const [clearingClass, setClearingClass] = useState<EbdClass | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const [name, setName] = useState('');
   const [pin, setPin] = useState('');
-  const [classId, setClassId] = useState('');
 
-  const classMap = Object.fromEntries(classes.map(c => [c.id, c.name]));
-
-  const fetchTeachers = useCallback(async () => {
+  const fetchPasswords = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('ebd_teachers')
-      .select('id, name, class_id, active')
-      .order('name');
+      .from('ebd_class_passwords')
+      .select('class_id')
+      .eq('active', true);
     if (error) {
-      toast.error('Erro ao carregar professores');
+      toast.error('Erro ao carregar senhas das salas');
     } else {
-      setTeachers((data as Teacher[]) || []);
+      setWithPassword(new Set((data || []).map((r: { class_id: string }) => r.class_id)));
     }
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchTeachers(); }, [fetchTeachers]);
+  useEffect(() => { fetchPasswords(); }, [fetchPasswords]);
 
-  const openCreate = () => {
-    setEditing(null);
-    setName('');
+  const openSet = (c: EbdClass) => {
+    setDialogClass(c);
     setPin('');
-    setClassId('');
-    setDialogOpen(true);
-  };
-
-  const openEdit = (t: Teacher) => {
-    setEditing(t);
-    setName(t.name);
-    setPin('');
-    setClassId(t.class_id);
-    setDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (!name.trim()) { toast.error('Informe o nome do professor'); return; }
-    if (!classId) { toast.error('Selecione a sala'); return; }
-    if (!editing && !/^[0-9]{6}$/.test(pin)) { toast.error('O PIN deve ter 6 dígitos'); return; }
-    if (editing && pin && !/^[0-9]{6}$/.test(pin)) { toast.error('O PIN deve ter 6 dígitos'); return; }
-
+    if (!dialogClass) return;
+    if (!/^[0-9]{6}$/.test(pin)) { toast.error('A senha deve ter 6 dígitos'); return; }
     setSaving(true);
-    const payload = editing
-      ? { action: 'update', id: editing.id, name: name.trim(), class_id: classId, pin: pin || undefined }
-      : { action: 'create', name: name.trim(), class_id: classId, pin };
-    const { data, error } = await supabase.functions.invoke('manage-ebd-teacher', { body: payload });
+    const { data, error } = await supabase.functions.invoke('manage-ebd-class-password', {
+      body: { action: 'set', class_id: dialogClass.id, pin },
+    });
     setSaving(false);
-
     if (error || (data && (data as any).error)) {
-      toast.error((data as any)?.error || 'Erro ao salvar professor');
+      toast.error((data as any)?.error || 'Erro ao salvar a senha');
       return;
     }
-    toast.success(editing ? 'Professor atualizado' : 'Professor cadastrado');
-    setDialogOpen(false);
-    fetchTeachers();
+    toast.success('Senha definida');
+    setDialogClass(null);
+    fetchPasswords();
   };
 
-  const handleDelete = async () => {
-    if (!deleting) return;
-    const { data, error } = await supabase.functions.invoke('manage-ebd-teacher', {
-      body: { action: 'delete', id: deleting.id },
+  const handleClear = async () => {
+    if (!clearingClass) return;
+    const { data, error } = await supabase.functions.invoke('manage-ebd-class-password', {
+      body: { action: 'clear', class_id: clearingClass.id },
     });
     if (error || (data && (data as any).error)) {
-      toast.error((data as any)?.error || 'Erro ao excluir');
+      toast.error((data as any)?.error || 'Erro ao remover a senha');
       return;
     }
-    toast.success('Professor excluído');
-    setDeleting(null);
-    fetchTeachers();
+    toast.success('Senha removida');
+    setClearingClass(null);
+    fetchPasswords();
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{teachers.length} professor(es)</p>
-        <Button size="sm" onClick={openCreate} disabled={classes.length === 0}>
-          <Plus className="h-4 w-4 mr-1" /> Novo
-        </Button>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Defina uma senha de 6 dígitos para cada sala. Os professores entram com a senha da sala.
+      </p>
 
       {classes.length === 0 && (
         <Card>
           <CardContent className="pt-4 text-sm text-muted-foreground text-center">
-            Crie ao menos uma turma antes de cadastrar professores.
+            Crie ao menos uma turma antes de definir senhas.
           </CardContent>
         </Card>
       )}
@@ -138,85 +105,74 @@ export default function ConfiguracoesEbdTab({ classes }: ConfiguracoesEbdTabProp
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />
         </div>
-      ) : teachers.length === 0 ? (
-        <p className="text-center text-muted-foreground py-8">Nenhum professor cadastrado.</p>
       ) : (
         <div className="space-y-2">
-          {teachers.map(t => (
-            <Card key={t.id}>
-              <CardContent className="pt-4 pb-4 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <GraduationCap className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{t.name}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <Users className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground truncate">
-                      {classMap[t.class_id] || 'Sala removida'}
-                    </span>
+          {classes.map(c => {
+            const has = withPassword.has(c.id);
+            return (
+              <Card key={c.id}>
+                <CardContent className="pt-4 pb-4 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <DoorOpen className="h-5 w-5 text-primary" />
                   </div>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(t)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleting(t)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{c.name}</p>
+                    <Badge variant={has ? 'default' : 'secondary'} className="text-[10px] mt-0.5">
+                      {has ? 'Com senha' : 'Sem senha'}
+                    </Badge>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-8" onClick={() => openSet(c)}>
+                    <KeyRound className="h-3.5 w-3.5 mr-1" /> {has ? 'Trocar' : 'Definir'}
+                  </Button>
+                  {has && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setClearingClass(c)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={!!dialogClass} onOpenChange={v => !v && setDialogClass(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar professor' : 'Novo professor'}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-4 w-4" /> Senha da sala
+            </DialogTitle>
+            <DialogDescription>{dialogClass?.name}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="teacher-name">Nome do professor</Label>
-              <Input id="teacher-name" value={name} onChange={e => setName(e.target.value)} placeholder="Nome completo" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="teacher-pin">PIN de 6 dígitos {editing && <span className="text-muted-foreground font-normal">(deixe em branco para manter)</span>}</Label>
-              <Input
-                id="teacher-pin"
-                value={pin}
-                onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                inputMode="numeric"
-                placeholder="••••••"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Sala</Label>
-              <Select value={classId} onValueChange={setClassId}>
-                <SelectTrigger><SelectValue placeholder="Selecione a sala" /></SelectTrigger>
-                <SelectContent>
-                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="class-pin">Senha de 6 dígitos</Label>
+            <Input
+              id="class-pin"
+              value={pin}
+              onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              inputMode="numeric"
+              placeholder="••••••"
+              autoFocus
+            />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setDialogClass(null)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleting} onOpenChange={v => !v && setDeleting(null)}>
+      <AlertDialog open={!!clearingClass} onOpenChange={v => !v && setClearingClass(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir professor?</AlertDialogTitle>
+            <AlertDialogTitle>Remover senha?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir {deleting?.name}? Ele perderá o acesso à secretaria.
+              A sala {clearingClass?.name} ficará sem senha e ninguém poderá entrar nela até definir uma nova.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+            <AlertDialogAction onClick={handleClear}>Remover</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

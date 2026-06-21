@@ -304,6 +304,73 @@ export type Database = {
           },
         ]
       }
+      ebd_class_logins: {
+        Row: {
+          class_id: string
+          created_at: string
+          date: string
+          id: string
+          teacher_name: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          date?: string
+          id?: string
+          teacher_name: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          teacher_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ebd_class_logins_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "ebd_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ebd_class_passwords: {
+        Row: {
+          active: boolean
+          class_id: string
+          created_at: string
+          id: string
+          pin_hash: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          class_id: string
+          created_at?: string
+          id?: string
+          pin_hash: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          class_id?: string
+          created_at?: string
+          id?: string
+          pin_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ebd_class_passwords_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: true
+            referencedRelation: "ebd_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ebd_class_visitor_entries: {
         Row: {
           class_id: string
@@ -452,44 +519,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ebd_students_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "ebd_classes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ebd_teachers: {
-        Row: {
-          active: boolean
-          class_id: string
-          created_at: string
-          id: string
-          name: string
-          pin_hash: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          class_id: string
-          created_at?: string
-          id?: string
-          name: string
-          pin_hash: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          class_id?: string
-          created_at?: string
-          id?: string
-          name?: string
-          pin_hash?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ebd_teachers_class_id_fkey"
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "ebd_classes"
