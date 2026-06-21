@@ -255,6 +255,7 @@ export default function Secretaria() {
 
       if (data && data.value === pin) {
         setAccessLevel('admin');
+        setAdminPin(pin);
       } else {
         setPinError(true);
         toast.error('PIN incorreto');
