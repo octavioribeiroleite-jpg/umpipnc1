@@ -1,14 +1,21 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Shield, GraduationCap, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Shield, GraduationCap, Lock, ArrowLeft } from 'lucide-react';
 
 interface ProfileSelectProps {
   onSelect: (profile: 'admin' | 'professor') => void;
+  onBack?: () => void;
 }
 
-export default function ProfileSelect({ onSelect }: ProfileSelectProps) {
+export default function ProfileSelect({ onSelect, onBack }: ProfileSelectProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
+        {onBack && (
+          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1 -ml-2">
+            <ArrowLeft className="h-4 w-4" /> Voltar à Igreja
+          </Button>
+        )}
         <div className="text-center space-y-2">
           <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
             <Lock className="h-6 w-6 text-primary" />
