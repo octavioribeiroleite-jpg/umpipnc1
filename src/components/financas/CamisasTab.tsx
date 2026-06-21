@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { AlertTriangle, ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
+import { AlertTriangle, ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2, Gift, Clock, Wallet } from 'lucide-react';
 import { EncomendasTab, type ShirtOrder, type OrderItem } from './EncomendasTab';
 import { CampanhasCamisasTab, type ShirtCampaign } from './CampanhasCamisasTab';
 
