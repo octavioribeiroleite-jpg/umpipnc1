@@ -24,9 +24,10 @@ interface EbdClass {
 
 interface ConfiguracoesEbdTabProps {
   classes: EbdClass[];
+  adminPin: string;
 }
 
-export default function ConfiguracoesEbdTab({ classes }: ConfiguracoesEbdTabProps) {
+export default function ConfiguracoesEbdTab({ classes, adminPin }: ConfiguracoesEbdTabProps) {
   const [withPassword, setWithPassword] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [dialogClass, setDialogClass] = useState<EbdClass | null>(null);
@@ -60,11 +61,11 @@ export default function ConfiguracoesEbdTab({ classes }: ConfiguracoesEbdTabProp
     if (!/^[0-9]{6}$/.test(pin)) { toast.error('A senha deve ter 6 dígitos'); return; }
     setSaving(true);
     const { data, error } = await supabase.functions.invoke('manage-ebd-class-password', {
-      body: { action: 'set', class_id: dialogClass.id, pin },
+      body: { action: 'set', class_id: dialogClass.id, pin, admin_pin: adminPin },
     });
     setSaving(false);
     if (error || (data && (data as any).error)) {
-      toast.error((data as any)?.error || 'Erro ao salvar a senha');
+      toast.error((data as any)?.error || error?.message || 'Erro ao salvar a senha');
       return;
     }
     toast.success('Senha definida');
@@ -75,10 +76,10 @@ export default function ConfiguracoesEbdTab({ classes }: ConfiguracoesEbdTabProp
   const handleClear = async () => {
     if (!clearingClass) return;
     const { data, error } = await supabase.functions.invoke('manage-ebd-class-password', {
-      body: { action: 'clear', class_id: clearingClass.id },
+      body: { action: 'clear', class_id: clearingClass.id, admin_pin: adminPin },
     });
     if (error || (data && (data as any).error)) {
-      toast.error((data as any)?.error || 'Erro ao remover a senha');
+      toast.error((data as any)?.error || error?.message || 'Erro ao remover a senha');
       return;
     }
     toast.success('Senha removida');
