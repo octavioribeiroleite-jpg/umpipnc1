@@ -603,6 +603,7 @@ export default function Secretaria() {
     turmas: 'Turmas',
     aniversariantes: 'Aniversariantes',
     planilha: 'Planilha de Alunos',
+    configuracoes: 'Configurações',
   };
 
   return (
