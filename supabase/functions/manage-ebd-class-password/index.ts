@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     if (action === 'list') {
       const { data, error } = await adminClient
         .from('ebd_class_passwords')
-        .select('class_id')
+        .select('class_id, pin_plain')
         .eq('active', true)
       if (error) {
         return new Response(JSON.stringify({ error: 'Erro ao carregar senhas das salas' }), {
@@ -75,7 +75,14 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      return new Response(JSON.stringify({ success: true, class_ids: (data ?? []).map((r) => r.class_id) }), {
+      return new Response(JSON.stringify({
+        success: true,
+        class_ids: (data ?? []).map((r) => r.class_id),
+        passwords: (data ?? []).reduce((acc: Record<string, string>, r) => {
+          if (r.pin_plain) acc[r.class_id] = r.pin_plain
+          return acc
+        }, {}),
+      }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -92,7 +99,7 @@ Deno.serve(async (req) => {
       const { error } = await adminClient
         .from('ebd_class_passwords')
         .upsert(
-          { class_id, pin_hash: await hashPin(pin), active: true, updated_at: new Date().toISOString() },
+          { class_id, pin_hash: await hashPin(pin), pin_plain: pin, active: true, updated_at: new Date().toISOString() },
           { onConflict: 'class_id' },
         )
       if (error) {
