@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { AlertTriangle, ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2 } from 'lucide-react';
+import { AlertTriangle, ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2, Gift, Clock, Wallet } from 'lucide-react';
 import { EncomendasTab, type ShirtOrder, type OrderItem } from './EncomendasTab';
 import { CampanhasCamisasTab, type ShirtCampaign } from './CampanhasCamisasTab';
 
@@ -428,6 +428,15 @@ export function CamisasTab() {
   const projectedResult = orderOrdered - realShirtCosts;
   const legacySalesTotal = sales.reduce((sum, s) => sum + Number(s.total_price || 0), 0);
 
+  // Brindes contabilizados como gasto (pelo custo de produção), apenas para controle/visualização.
+  // O custo já está embutido na compra da campanha, então NÃO é somado novamente em realShirtCosts.
+  const giftQty = orders.filter(o => o.is_gift).reduce((s, o) => s + Number(o.quantity || 0), 0);
+  const totalPurchasedQty = campaigns.reduce((s, c) => s + Number(c.purchased_quantity || 0), 0);
+  const avgUnitCost = totalPurchasedQty > 0
+    ? campaignCost / totalPurchasedQty
+    : (campaigns[0] ? Number(campaigns[0].unit_cost || 0) : 0);
+  const giftCost = giftQty * avgUnitCost;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -477,10 +486,81 @@ export function CamisasTab() {
             </Card>
           )}
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-6">
+          {/* ===== Financeiro do lote ===== */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Financeiro do lote</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {/* Recebido / Caixa atual */}
+              <Card><CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Recebido</p>
+                    <p className="text-xl font-bold text-success">{formatCurrency(orderReceived)}</p>
+                    <p className={`text-xs ${currentResult >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      Caixa: {formatCurrency(currentResult)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent></Card>
+
+              {/* A receber (total) */}
+              <Card><CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">A receber (total)</p>
+                    <p className="text-xl font-bold text-amber-500">{formatCurrency(orderToReceive)}</p>
+                    <p className="text-xs text-muted-foreground">de {formatCurrency(orderOrdered)} vendidos</p>
+                  </div>
+                </div>
+              </CardContent></Card>
+
+              {/* Gastos (com brindes) */}
+              <Card><CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <ShoppingCart className="h-5 w-5 text-destructive" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Gastos das camisas</p>
+                    <p className="text-xl font-bold">{formatCurrency(realShirtCosts)}</p>
+                    {giftQty > 0 && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Gift className="h-3 w-3" /> {giftQty} brinde{giftQty > 1 ? 's' : ''}: {formatCurrency(giftCost)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent></Card>
+
+              {/* Lucro previsto */}
+              <Card><CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className={`h-10 w-10 rounded-lg ${projectedResult >= 0 ? 'bg-success/10' : 'bg-destructive/10'} flex items-center justify-center`}>
+                    <Wallet className={`h-5 w-5 ${projectedResult >= 0 ? 'text-success' : 'text-destructive'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Lucro previsto</p>
+                    <p className={`text-xl font-bold ${projectedResult >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {formatCurrency(projectedResult)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">se todos pagarem</p>
+                  </div>
+                </div>
+              </CardContent></Card>
+            </div>
+          </div>
+
+          {/* ===== Produção e estoque ===== */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Produção e estoque</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <Card><CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Package className="h-5 w-5 text-primary" />
@@ -490,92 +570,44 @@ export function CamisasTab() {
                     <p className="text-xl font-bold">{totalStock}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-success" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Recebido</p>
-                    <p className="text-xl font-bold text-success">{formatCurrency(orderReceived)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-                    <ShoppingCart className="h-5 w-5 text-destructive" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Gastos das camisas</p>
-                    <p className="text-xl font-bold">{formatCurrency(realShirtCosts)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-lg ${currentResult >= 0 ? 'bg-success/10' : 'bg-destructive/10'} flex items-center justify-center`}>
-                    <Shirt className={`h-5 w-5 ${currentResult >= 0 ? 'text-success' : 'text-destructive'}`} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Resultado atual</p>
-                    <p className={`text-xl font-bold ${currentResult >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {formatCurrency(currentResult)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Card><CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">Encomendado</p>
-              <p className="text-xl font-bold">{formatCurrency(orderOrdered)}</p>
-            </CardContent></Card>
-            <Card><CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">A receber</p>
-              <p className="text-xl font-bold text-destructive">{formatCurrency(orderToReceive)}</p>
-            </CardContent></Card>
-            <Card><CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">Lucro previsto</p>
-              <p className={`text-xl font-bold ${projectedResult >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(projectedResult)}</p>
-            </CardContent></Card>
-            <Card><CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">Pagamentos</p>
-              <p className="text-xl font-bold"><span className="text-success">{fullyPaidOrders}</span> / <span className="text-amber-500">{halfPaidOrders}</span></p>
-              <p className="text-xs text-muted-foreground">quitados / metade</p>
-            </CardContent></Card>
-          </div>
-
-          {/* Resumo de Encomendas */}
-          {orders.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card><CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">Campanhas</p>
-                <p className="text-xl font-bold">{campaigns.length}</p>
               </CardContent></Card>
               <Card><CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">Custo de campanhas</p>
-                <p className="text-xl font-bold">{formatCurrency(campaignCost)}</p>
-              </CardContent></Card>
-              <Card><CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">Compras antigas</p>
-                <p className="text-xl font-bold">{formatCurrency(legacyPurchaseCost)}</p>
+                <p className="text-sm text-muted-foreground">Encomendado</p>
+                <p className="text-xl font-bold">{formatCurrency(orderOrdered)}</p>
               </CardContent></Card>
               <Card><CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground">Entregues</p>
                 <p className="text-xl font-bold">{orderDelivered}<span className="text-sm text-muted-foreground"> / {orders.length}</span></p>
               </CardContent></Card>
+              <Card><CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Pagamentos</p>
+                <p className="text-xl font-bold"><span className="text-success">{fullyPaidOrders}</span> / <span className="text-amber-500">{halfPaidOrders}</span></p>
+                <p className="text-xs text-muted-foreground">quitados / metade</p>
+              </CardContent></Card>
             </div>
-          )}
+
+            {orders.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <Card><CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">Campanhas</p>
+                  <p className="text-xl font-bold">{campaigns.length}</p>
+                </CardContent></Card>
+                <Card><CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">Custo de campanhas</p>
+                  <p className="text-xl font-bold">{formatCurrency(campaignCost)}</p>
+                </CardContent></Card>
+                <Card><CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">Compras antigas</p>
+                  <p className="text-xl font-bold">{formatCurrency(legacyPurchaseCost)}</p>
+                </CardContent></Card>
+                <Card><CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">Brindes</p>
+                  <p className="text-xl font-bold">{giftQty}</p>
+                  <p className="text-xs text-muted-foreground">{formatCurrency(giftCost)} em custo</p>
+                </CardContent></Card>
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="compras" className="space-y-4 animate-in fade-in-50">
