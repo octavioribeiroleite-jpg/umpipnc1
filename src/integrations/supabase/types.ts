@@ -459,6 +459,44 @@ export type Database = {
           },
         ]
       }
+      ebd_teachers: {
+        Row: {
+          active: boolean
+          class_id: string
+          created_at: string
+          id: string
+          name: string
+          pin_hash: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          class_id: string
+          created_at?: string
+          id?: string
+          name: string
+          pin_hash: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          class_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          pin_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ebd_teachers_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "ebd_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       election_attendance: {
         Row: {
           election_id: string

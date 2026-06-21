@@ -10,13 +10,12 @@ import ChamadaTab from '@/components/secretaria/ChamadaTab';
 import HistoricoTab from '@/components/secretaria/HistoricoTab';
 import TurmasTab from '@/components/secretaria/TurmasTab';
 import PlanilhaAlunosTab from '@/components/secretaria/PlanilhaAlunosTab';
+import ConfiguracoesEbdTab from '@/components/secretaria/ConfiguracoesEbdTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { AppCard } from '@/components/ui/app-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HeaderActions } from '@/components/layout/HeaderActions';
@@ -65,15 +64,13 @@ interface AttendanceRecord {
 }
 
 type AccessLevel = 'admin' | 'professor';
-type LoginStep = 'profile' | 'pin' | 'name-confirm' | 'name-input';
-type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha';
+type LoginStep = 'profile' | 'pin';
+type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha' | 'configuracoes';
 
 export interface VisitorEntry {
   id: string;
   name: string | null;
 }
-
-const PROFESSOR_NAME_KEY = 'ebd_professor_name';
 
 function getTodayDate(): string {
   const today = new Date();
@@ -221,7 +218,7 @@ export default function Secretaria() {
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [professorNome, setProfessorNome] = useState('');
-  const [savedProfessorName, setSavedProfessorName] = useState<string | null>(null);
+  const [professorClassId, setProfessorClassId] = useState<string | null>(null);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
@@ -244,61 +241,43 @@ export default function Secretaria() {
 
   const handlePinComplete = async (pin: string) => {
     setLoading(true);
-    const settingKey = selectedProfile === 'admin'
-      ? 'secretaria_admin_password'
-      : 'secretaria_professor_password';
 
-    const { data } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('key', settingKey)
-      .single();
+    if (selectedProfile === 'admin') {
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'secretaria_admin_password')
+        .single();
 
-    if (data && data.value === pin) {
-      if (selectedProfile === 'professor') {
-        const saved = localStorage.getItem(PROFESSOR_NAME_KEY);
-        if (saved) {
-          setSavedProfessorName(saved);
-          setLoginStep('name-confirm');
-        } else {
-          setLoginStep('name-input');
-        }
+      if (data && data.value === pin) {
+        setAccessLevel('admin');
       } else {
-        setAccessLevel(selectedProfile);
+        setPinError(true);
+        toast.error('PIN incorreto');
+        setTimeout(() => setPinError(false), 600);
       }
-    } else {
+      setLoading(false);
+      return;
+    }
+
+    // Professor: identifica pela conta cadastrada (nome + sala)
+    const { data, error } = await supabase.functions.invoke('ebd-teacher-login', {
+      body: { pin },
+    });
+
+    if (error || !data?.success) {
       setPinError(true);
       toast.error('PIN incorreto');
       setTimeout(() => setPinError(false), 600);
+    } else {
+      setProfessorNome(data.teacher.name);
+      setProfessorClassId(data.teacher.class_id);
+      setAccessLevel('professor');
     }
     setLoading(false);
   };
 
-  const handleConfirmName = () => {
-    setProfessorNome(savedProfessorName!);
-    setAccessLevel('professor');
-  };
-
-  const handleDifferentPerson = () => {
-    setSavedProfessorName(null);
-    setProfessorNome('');
-    setLoginStep('name-input');
-  };
-
-  const handleSaveName = () => {
-    if (!professorNome.trim()) return;
-    localStorage.setItem(PROFESSOR_NAME_KEY, professorNome.trim());
-    setProfessorNome(professorNome.trim());
-    setAccessLevel('professor');
-  };
-
   const handleBack = () => {
-    if (loginStep === 'name-confirm' || loginStep === 'name-input') {
-      setLoginStep('pin');
-      setSavedProfessorName(null);
-      setProfessorNome('');
-      return;
-    }
     setLoginStep('profile');
     setSelectedProfile(null);
     setPinError(false);
@@ -438,69 +417,6 @@ export default function Secretaria() {
       return <ProfileSelect onSelect={handleProfileSelect} />;
     }
 
-    if (loginStep === 'name-confirm' && savedProfessorName) {
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-sm">
-            <CardContent className="pt-6 space-y-5">
-              <div className="text-center space-y-3">
-                <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserCheck className="h-8 w-8 text-primary" />
-                </div>
-                <h2 className="font-semibold text-lg">Você é</h2>
-                <p className="text-2xl font-bold text-primary">{savedProfessorName}?</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" onClick={handleDifferentPerson}>
-                  Não sou eu
-                </Button>
-                <Button onClick={handleConfirmName}>
-                  Sim, sou eu!
-                </Button>
-              </div>
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-
-    if (loginStep === 'name-input') {
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-sm">
-            <CardContent className="pt-6 space-y-5">
-              <div className="text-center space-y-2">
-                <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserCheck className="h-7 w-7 text-primary" />
-                </div>
-                <h2 className="font-semibold text-lg">Qual o seu nome?</h2>
-                <p className="text-sm text-muted-foreground">Informe seu nome completo para registro</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="professor-nome">Nome completo</Label>
-                <Input
-                  id="professor-nome"
-                  placeholder="Digite seu nome completo"
-                  value={professorNome}
-                  onChange={(e) => setProfessorNome(e.target.value)}
-                  autoFocus
-                />
-              </div>
-              <Button className="w-full" disabled={!professorNome.trim()} onClick={handleSaveName}>
-                Continuar
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-
     return (
       <PinPad
         profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Professor'}
@@ -515,6 +431,14 @@ export default function Secretaria() {
   const isAdmin = accessLevel === 'admin';
   const profileLabel = isAdmin ? 'Administrador' : 'Professor';
 
+  // Professor só enxerga a própria sala; admin vê todas
+  const visibleClasses = isAdmin
+    ? classes
+    : classes.filter(c => c.id === professorClassId);
+  const visibleActiveStudents = isAdmin
+    ? activeStudents
+    : activeStudents.filter(s => s.class_id === professorClassId);
+
   const handleExitApp = () => {
     setShowExitConfirm(true);
   };
@@ -525,6 +449,8 @@ export default function Secretaria() {
     setLoginStep('profile');
     setSelectedProfile(null);
     setCurrentView('home');
+    setProfessorClassId(null);
+    setProfessorNome('');
   };
 
   const handleBackToHome = () => {
@@ -636,16 +562,31 @@ export default function Secretaria() {
               </AppCard>
             )}
 
-            <AppCard
-              variant="interactive"
-              className="flex flex-col items-center gap-3 py-6"
-              onClick={() => setCurrentView('planilha')}
-            >
-              <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-                <TableProperties className="h-7 w-7 text-emerald-500" />
-              </div>
-              <span className="font-medium text-sm">Planilha de Alunos</span>
-            </AppCard>
+            {isAdmin && (
+              <>
+                <AppCard
+                  variant="interactive"
+                  className="flex flex-col items-center gap-3 py-6"
+                  onClick={() => setCurrentView('planilha')}
+                >
+                  <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                    <TableProperties className="h-7 w-7 text-emerald-500" />
+                  </div>
+                  <span className="font-medium text-sm">Planilha de Alunos</span>
+                </AppCard>
+
+                <AppCard
+                  variant="interactive"
+                  className="flex flex-col items-center gap-3 py-6"
+                  onClick={() => setCurrentView('configuracoes')}
+                >
+                  <div className="h-14 w-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+                    <UserCheck className="h-7 w-7 text-indigo-500" />
+                  </div>
+                  <span className="font-medium text-sm">Configurações</span>
+                </AppCard>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -660,6 +601,7 @@ export default function Secretaria() {
     turmas: 'Turmas',
     aniversariantes: 'Aniversariantes',
     planilha: 'Planilha de Alunos',
+    configuracoes: 'Configurações',
   };
 
   return (
@@ -708,8 +650,8 @@ export default function Secretaria() {
       <div className="p-4 pb-8 pt-16">
         {currentView === 'chamada' && (
           <ChamadaTab
-            classes={classes}
-            students={activeStudents}
+            classes={visibleClasses}
+            students={visibleActiveStudents}
             attendance={attendance}
             setAttendance={setAttendance}
             attendanceDate={sundayDate}
@@ -726,7 +668,7 @@ export default function Secretaria() {
         )}
 
         {currentView === 'historico' && (
-          <HistoricoTab classes={classes} students={activeStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
+          <HistoricoTab classes={visibleClasses} students={visibleActiveStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
         )}
 
         {currentView === 'turmas' && isAdmin && (
@@ -741,13 +683,17 @@ export default function Secretaria() {
           <SecretariaAniversariantes />
         )}
 
-        {currentView === 'planilha' && (
+        {currentView === 'planilha' && isAdmin && (
           <PlanilhaAlunosTab
             classes={classes}
             allStudents={allStudents}
             onRefresh={fetchData}
             accessLevel={accessLevel!}
           />
+        )}
+
+        {currentView === 'configuracoes' && isAdmin && (
+          <ConfiguracoesEbdTab classes={classes} />
         )}
       </div>
 
