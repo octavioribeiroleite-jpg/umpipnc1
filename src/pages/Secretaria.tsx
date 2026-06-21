@@ -652,8 +652,8 @@ export default function Secretaria() {
       <div className="p-4 pb-8 pt-16">
         {currentView === 'chamada' && (
           <ChamadaTab
-            classes={classes}
-            students={activeStudents}
+            classes={visibleClasses}
+            students={visibleActiveStudents}
             attendance={attendance}
             setAttendance={setAttendance}
             attendanceDate={sundayDate}
@@ -670,7 +670,7 @@ export default function Secretaria() {
         )}
 
         {currentView === 'historico' && (
-          <HistoricoTab classes={classes} students={activeStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
+          <HistoricoTab classes={visibleClasses} students={visibleActiveStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
         )}
 
         {currentView === 'turmas' && isAdmin && (
@@ -685,13 +685,17 @@ export default function Secretaria() {
           <SecretariaAniversariantes />
         )}
 
-        {currentView === 'planilha' && (
+        {currentView === 'planilha' && isAdmin && (
           <PlanilhaAlunosTab
             classes={classes}
             allStudents={allStudents}
             onRefresh={fetchData}
             accessLevel={accessLevel!}
           />
+        )}
+
+        {currentView === 'configuracoes' && isAdmin && (
+          <ConfiguracoesEbdTab classes={classes} />
         )}
       </div>
 
