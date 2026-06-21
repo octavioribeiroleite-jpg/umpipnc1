@@ -51,6 +51,46 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
 
   useEffect(() => { fetchPasswords(); }, [fetchPasswords]);
 
+  // Extracts a detailed, user-friendly message from a function invocation.
+  // When the edge function returns a non-2xx status, supabase-js puts the
+  // Response in `error.context`, so the JSON body must be read from there.
+  const resolveErrorMessage = async (
+    error: unknown,
+    data: unknown,
+    fallback: string,
+  ): Promise<string> => {
+    let status: number | undefined;
+    let serverMessage: string | undefined = (data as any)?.error;
+
+    const ctx = (error as any)?.context;
+    if (ctx) {
+      status = ctx.status;
+      try {
+        const body = await ctx.clone().json();
+        if (body?.error) serverMessage = body.error;
+      } catch {
+        // body was not JSON; keep whatever we have
+      }
+    }
+
+    switch (status) {
+      case 401:
+        return 'Sessão expirada (401). Saia e entre novamente na Secretaria.';
+      case 403:
+        return serverMessage
+          ? `Sem permissão (403): ${serverMessage}`
+          : 'Sem permissão (403). PIN administrativo inválido para esta ação.';
+      case 409:
+        return serverMessage
+          ? `Conflito de dados (409): ${serverMessage}`
+          : 'Conflito de dados (409). Esta senha já está em uso por outra sala.';
+      case 400:
+        return serverMessage ? `Dados inválidos (400): ${serverMessage}` : 'Dados inválidos (400).';
+      default:
+        return serverMessage || (error as any)?.message || fallback;
+    }
+  };
+
   const openSet = (c: EbdClass) => {
     setDialogClass(c);
     setPin('');
@@ -65,7 +105,7 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
     });
     setSaving(false);
     if (error || (data && (data as any).error)) {
-      toast.error((data as any)?.error || error?.message || 'Erro ao salvar a senha');
+      toast.error(await resolveErrorMessage(error, data, 'Erro ao salvar a senha'));
       return;
     }
     toast.success('Senha definida');
@@ -79,7 +119,7 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
       body: { action: 'clear', class_id: clearingClass.id, admin_pin: adminPin },
     });
     if (error || (data && (data as any).error)) {
-      toast.error((data as any)?.error || error?.message || 'Erro ao remover a senha');
+      toast.error(await resolveErrorMessage(error, data, 'Erro ao remover a senha'));
       return;
     }
     toast.success('Senha removida');
