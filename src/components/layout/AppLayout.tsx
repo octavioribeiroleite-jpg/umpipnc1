@@ -75,9 +75,9 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen w-full max-w-full overflow-x-hidden">
       <OfflineBanner />
       {/* Desktop layout with sidebar (>= lg breakpoint to give tablets the mobile UX) */}
-      <div className="hidden lg:flex min-h-screen">
+      <div className="hidden lg:flex h-screen overflow-hidden">
         <AppSidebar />
-        <main className="flex-1 min-w-0 overflow-x-hidden bg-background/80 backdrop-blur-sm">
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-background/80 backdrop-blur-sm">
           <div className="mx-auto w-full max-w-7xl py-4 md:py-6 px-4 md:px-6 lg:px-8">
             {children}
           </div>
