@@ -1,0 +1,1 @@
+ALTER TABLE public.ebd_class_passwords ADD COLUMN IF NOT EXISTS pin_plain text;
