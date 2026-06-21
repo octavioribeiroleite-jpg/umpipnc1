@@ -37,17 +37,16 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
 
   const fetchPasswords = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('ebd_class_passwords')
-      .select('class_id')
-      .eq('active', true);
-    if (error) {
-      toast.error('Erro ao carregar senhas das salas');
+    const { data, error } = await supabase.functions.invoke('manage-ebd-class-password', {
+      body: { action: 'list', admin_pin: adminPin },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || 'Erro ao carregar senhas das salas');
     } else {
-      setWithPassword(new Set((data || []).map((r: { class_id: string }) => r.class_id)));
+      setWithPassword(new Set(((data as any)?.class_ids || []) as string[]));
     }
     setLoading(false);
-  }, []);
+  }, [adminPin]);
 
   useEffect(() => { fetchPasswords(); }, [fetchPasswords]);
 
