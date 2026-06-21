@@ -434,9 +434,45 @@ export default function Secretaria() {
       return <ProfileSelect onSelect={handleProfileSelect} />;
     }
 
+    if (loginStep === 'name') {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="w-full max-w-xs mx-auto space-y-6">
+            <div className="flex flex-col items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => { setLoginStep('pin'); setPendingPin(''); }} className="self-start shrink-0">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <UserCheck className="h-7 w-7 text-primary" />
+              </div>
+              <div className="text-center">
+                <h2 className="font-semibold text-lg">Qual é o seu nome?</h2>
+                <p className="text-sm text-muted-foreground">Para registrar quem entrou na sala</p>
+              </div>
+            </div>
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && nameInput.trim()) handleNameSubmit(); }}
+              placeholder="Seu nome"
+              className="w-full h-12 px-4 rounded-xl border-2 border-border bg-background text-base outline-none focus:border-primary"
+            />
+            <Button
+              className="w-full h-12 text-base font-semibold gap-2 rounded-xl"
+              onClick={handleNameSubmit}
+              disabled={loading || !nameInput.trim()}
+            >
+              {loading ? 'Entrando...' : 'Entrar'}
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <PinPad
-        profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Professor'}
+        profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Senha da sala'}
         onBack={handleBack}
         onComplete={handlePinComplete}
         loading={loading}
