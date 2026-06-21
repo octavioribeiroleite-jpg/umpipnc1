@@ -344,16 +344,32 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
 
   const toggleDelivery = async (o: ShirtOrder) => {
     const delivered = o.delivery_status !== 'entregue';
+    const newStatus = delivered ? 'entregue' : 'pendente';
+    const newDeliveredAt = delivered ? new Date().toISOString() : null;
+    // Optimistic update so the screen doesn't flash/reload.
+    setOrders(prev =>
+      prev.map(x =>
+        x.id === o.id ? { ...x, delivery_status: newStatus, delivered_at: newDeliveredAt } : x,
+      ),
+    );
     const { error } = await supabase
       .from('shirt_orders')
       .update({
-        delivery_status: delivered ? 'entregue' : 'pendente',
-        delivered_at: delivered ? new Date().toISOString() : null,
+        delivery_status: newStatus,
+        delivered_at: newDeliveredAt,
       })
       .eq('id', o.id);
-    if (error) { toast.error('Erro ao atualizar entrega'); return; }
+    if (error) {
+      // Revert on failure.
+      setOrders(prev =>
+        prev.map(x =>
+          x.id === o.id ? { ...x, delivery_status: o.delivery_status, delivered_at: o.delivered_at } : x,
+        ),
+      );
+      toast.error('Erro ao atualizar entrega');
+      return;
+    }
     toast.success(delivered ? 'Marcado como entregue' : 'Entrega desfeita');
-    fetchData();
     onDataChange?.();
   };
 
