@@ -451,6 +451,8 @@ export default function Secretaria() {
     setLoginStep('profile');
     setSelectedProfile(null);
     setCurrentView('home');
+    setProfessorClassId(null);
+    setProfessorNome('');
   };
 
   const handleBackToHome = () => {
