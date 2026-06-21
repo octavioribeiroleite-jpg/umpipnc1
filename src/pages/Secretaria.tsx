@@ -761,7 +761,7 @@ export default function Secretaria() {
         )}
 
         {currentView === 'configuracoes' && isAdmin && (
-          <ConfiguracoesEbdTab classes={classes} />
+          <ConfiguracoesEbdTab classes={classes} adminPin={adminPin} />
         )}
 
         {currentView === 'acessos' && isAdmin && (
