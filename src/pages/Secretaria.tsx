@@ -11,6 +11,7 @@ import HistoricoTab from '@/components/secretaria/HistoricoTab';
 import TurmasTab from '@/components/secretaria/TurmasTab';
 import PlanilhaAlunosTab from '@/components/secretaria/PlanilhaAlunosTab';
 import ConfiguracoesEbdTab from '@/components/secretaria/ConfiguracoesEbdTab';
+import AcessosEbdTab from '@/components/secretaria/AcessosEbdTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
@@ -64,8 +65,8 @@ interface AttendanceRecord {
 }
 
 type AccessLevel = 'admin' | 'professor';
-type LoginStep = 'profile' | 'pin';
-type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha' | 'configuracoes';
+type LoginStep = 'profile' | 'pin' | 'name';
+type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha' | 'configuracoes' | 'acessos';
 
 export interface VisitorEntry {
   id: string;
@@ -213,6 +214,8 @@ export default function Secretaria() {
   const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(null);
   const [loading, setLoading] = useState(false);
   const [pinError, setPinError] = useState(false);
+  const [pendingPin, setPendingPin] = useState('');
+  const [nameInput, setNameInput] = useState('');
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
@@ -260,27 +263,41 @@ export default function Secretaria() {
       return;
     }
 
-    // Professor: identifica pela conta cadastrada (nome + sala)
-    const { data, error } = await supabase.functions.invoke('ebd-teacher-login', {
-      body: { pin },
+    // Professor: guarda a senha da sala e segue para informar o nome
+    setPendingPin(pin);
+    setNameInput('');
+    setLoginStep('name');
+    setLoading(false);
+  };
+
+  const handleNameSubmit = async () => {
+    if (!nameInput.trim()) {
+      toast.error('Informe seu nome');
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke('ebd-class-login', {
+      body: { pin: pendingPin, name: nameInput.trim() },
     });
+    setLoading(false);
 
     if (error || !data?.success) {
-      setPinError(true);
-      toast.error('PIN incorreto');
-      setTimeout(() => setPinError(false), 600);
-    } else {
-      setProfessorNome(data.teacher.name);
-      setProfessorClassId(data.teacher.class_id);
-      setAccessLevel('professor');
+      toast.error((data as any)?.error || 'Senha da sala incorreta');
+      setPendingPin('');
+      setLoginStep('pin');
+      return;
     }
-    setLoading(false);
+    setProfessorNome(data.teacher.name);
+    setProfessorClassId(data.teacher.class_id);
+    setAccessLevel('professor');
   };
 
   const handleBack = () => {
     setLoginStep('profile');
     setSelectedProfile(null);
     setPinError(false);
+    setPendingPin('');
+    setNameInput('');
   };
 
   const fetchData = useCallback(async () => {
