@@ -600,43 +600,6 @@ export default function Auth() {
 
         {step === 'select' ? (
           <div className="space-y-4">
-            {/* Visitantes */}
-            <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '200ms' : '0ms' }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Visitantes</p>
-              <button
-                onClick={() => navigateWithTransition('/igreja')}
-                className="w-full rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm p-4 flex items-center gap-4 hover:scale-[1.02] hover:shadow-lg hover:bg-white/20 transition-all duration-300"
-              >
-                <div className="h-12 w-12 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
-                  <Church className="h-6 w-6 text-white" />
-                </div>
-                <div className="text-left flex-1">
-                  <h3 className="font-semibold text-base text-white">Acessar sem login</h3>
-                  <p className="text-xs text-white/60">Programações e avisos da igreja</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-white/70 animate-bounce-right flex-shrink-0" />
-              </button>
-            </div>
-
-            {/* Membros */}
-            <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '350ms' : '0ms' }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Membros</p>
-              <Card
-                className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.98]"
-                onClick={() => { setStep('membro'); setMembroStep('societies'); }}
-              >
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <UserCircle className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-base text-foreground">Entrar como membro</h3>
-                    <p className="text-xs text-muted-foreground">Eventos, pagamentos e comunicados</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
             {/* Diretoria */}
             <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '500ms' : '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Diretoria</p>
