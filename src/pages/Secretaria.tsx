@@ -433,6 +433,14 @@ export default function Secretaria() {
   const isAdmin = accessLevel === 'admin';
   const profileLabel = isAdmin ? 'Administrador' : 'Professor';
 
+  // Professor só enxerga a própria sala; admin vê todas
+  const visibleClasses = isAdmin
+    ? classes
+    : classes.filter(c => c.id === professorClassId);
+  const visibleActiveStudents = isAdmin
+    ? activeStudents
+    : activeStudents.filter(s => s.class_id === professorClassId);
+
   const handleExitApp = () => {
     setShowExitConfirm(true);
   };
