@@ -428,6 +428,15 @@ export function CamisasTab() {
   const projectedResult = orderOrdered - realShirtCosts;
   const legacySalesTotal = sales.reduce((sum, s) => sum + Number(s.total_price || 0), 0);
 
+  // Brindes contabilizados como gasto (pelo custo de produção), apenas para controle/visualização.
+  // O custo já está embutido na compra da campanha, então NÃO é somado novamente em realShirtCosts.
+  const giftQty = orders.filter(o => o.is_gift).reduce((s, o) => s + Number(o.quantity || 0), 0);
+  const totalPurchasedQty = campaigns.reduce((s, c) => s + Number(c.purchased_quantity || 0), 0);
+  const avgUnitCost = totalPurchasedQty > 0
+    ? campaignCost / totalPurchasedQty
+    : (campaigns[0] ? Number(campaigns[0].unit_cost || 0) : 0);
+  const giftCost = giftQty * avgUnitCost;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
