@@ -66,15 +66,13 @@ interface AttendanceRecord {
 }
 
 type AccessLevel = 'admin' | 'professor';
-type LoginStep = 'profile' | 'pin' | 'name-confirm' | 'name-input';
-type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha';
+type LoginStep = 'profile' | 'pin';
+type CurrentView = 'home' | 'chamada' | 'historico' | 'turmas' | 'aniversariantes' | 'planilha' | 'configuracoes';
 
 export interface VisitorEntry {
   id: string;
   name: string | null;
 }
-
-const PROFESSOR_NAME_KEY = 'ebd_professor_name';
 
 function getTodayDate(): string {
   const today = new Date();
