@@ -79,9 +79,10 @@ Deno.serve(async (req) => {
           { onConflict: 'class_id' },
         )
       if (error) {
-        const msg = error.code === '23505' ? 'Esta senha já está em uso por outra sala' : 'Erro ao salvar a senha'
+        const isConflict = error.code === '23505'
+        const msg = isConflict ? 'Esta senha já está em uso por outra sala' : 'Erro ao salvar a senha'
         return new Response(JSON.stringify({ error: msg }), {
-          status: 400,
+          status: isConflict ? 409 : 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
