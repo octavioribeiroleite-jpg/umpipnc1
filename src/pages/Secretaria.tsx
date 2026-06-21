@@ -638,6 +638,17 @@ export default function Secretaria() {
                   </div>
                   <span className="font-medium text-sm">Configurações</span>
                 </AppCard>
+
+                <AppCard
+                  variant="interactive"
+                  className="flex flex-col items-center gap-3 py-6"
+                  onClick={() => setCurrentView('acessos')}
+                >
+                  <div className="h-14 w-14 rounded-2xl bg-rose-500/10 flex items-center justify-center">
+                    <UserCheck className="h-7 w-7 text-rose-500" />
+                  </div>
+                  <span className="font-medium text-sm">Acessos</span>
+                </AppCard>
               </>
             )}
           </div>
@@ -748,6 +759,10 @@ export default function Secretaria() {
 
         {currentView === 'configuracoes' && isAdmin && (
           <ConfiguracoesEbdTab classes={classes} />
+        )}
+
+        {currentView === 'acessos' && isAdmin && (
+          <AcessosEbdTab classes={classes} date={sundayDate} formattedDate={formattedDate} />
         )}
       </div>
 
