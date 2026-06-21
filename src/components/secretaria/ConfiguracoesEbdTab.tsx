@@ -13,7 +13,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { DoorOpen, KeyRound, Lock, Trash2 } from 'lucide-react';
+import { Check, Copy, DoorOpen, Eye, EyeOff, KeyRound, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EbdClass {
@@ -29,6 +29,9 @@ interface ConfiguracoesEbdTabProps {
 
 export default function ConfiguracoesEbdTab({ classes, adminPin }: ConfiguracoesEbdTabProps) {
   const [withPassword, setWithPassword] = useState<Set<string>>(new Set());
+  const [passwords, setPasswords] = useState<Record<string, string>>({});
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogClass, setDialogClass] = useState<EbdClass | null>(null);
   const [clearingClass, setClearingClass] = useState<EbdClass | null>(null);
@@ -44,9 +47,31 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
       toast.error((data as any)?.error || 'Erro ao carregar senhas das salas');
     } else {
       setWithPassword(new Set(((data as any)?.class_ids || []) as string[]));
+      setPasswords(((data as any)?.passwords || {}) as Record<string, string>);
     }
     setLoading(false);
   }, [adminPin]);
+
+  const handleCopy = async (classId: string) => {
+    const value = passwords[classId];
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedId(classId);
+      setTimeout(() => setCopiedId(null), 1500);
+      toast.success('Senha copiada');
+    } catch {
+      toast.error('Não foi possível copiar');
+    }
+  };
+
+  const toggleReveal = (classId: string) => {
+    setRevealed(prev => {
+      const next = new Set(prev);
+      next.has(classId) ? next.delete(classId) : next.add(classId);
+      return next;
+    });
+  };
 
   useEffect(() => { fetchPasswords(); }, [fetchPasswords]);
 
@@ -149,6 +174,8 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
         <div className="space-y-2">
           {classes.map(c => {
             const has = withPassword.has(c.id);
+            const pwd = passwords[c.id];
+            const isRevealed = revealed.has(c.id);
             return (
               <Card key={c.id}>
                 <CardContent className="pt-4 pb-4 flex items-center gap-3">
@@ -157,9 +184,23 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{c.name}</p>
-                    <Badge variant={has ? 'default' : 'secondary'} className="text-[10px] mt-0.5">
-                      {has ? 'Com senha' : 'Sem senha'}
-                    </Badge>
+                    {has && pwd ? (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <code className="text-sm font-mono tracking-widest bg-muted px-2 py-0.5 rounded">
+                          {isRevealed ? pwd : '••••••'}
+                        </code>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleReveal(c.id)}>
+                          {isRevealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(c.id)}>
+                          {copiedId === c.id ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Badge variant={has ? 'default' : 'secondary'} className="text-[10px] mt-0.5">
+                        {has ? 'Com senha' : 'Sem senha'}
+                      </Badge>
+                    )}
                   </div>
                   <Button variant="outline" size="sm" className="h-8" onClick={() => openSet(c)}>
                     <KeyRound className="h-3.5 w-3.5 mr-1" /> {has ? 'Trocar' : 'Definir'}
