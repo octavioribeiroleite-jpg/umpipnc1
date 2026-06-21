@@ -49,7 +49,6 @@ const menuItems = [
 
 const adminMenuItems = [
   { icon: Vote, label: 'Eleições', path: '/eleicoes' },
-  { icon: Globe, label: 'Visitantes', path: '/visitantes' },
   { icon: UserCheck, label: 'Usuários', path: '/usuarios' },
   { icon: MessageSquare, label: 'Sugestões do Pastor', path: '/sugestoes' },
 ];
