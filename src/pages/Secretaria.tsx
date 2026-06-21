@@ -220,7 +220,7 @@ export default function Secretaria() {
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [professorNome, setProfessorNome] = useState('');
-  const [savedProfessorName, setSavedProfessorName] = useState<string | null>(null);
+  const [professorClassId, setProfessorClassId] = useState<string | null>(null);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
@@ -243,61 +243,43 @@ export default function Secretaria() {
 
   const handlePinComplete = async (pin: string) => {
     setLoading(true);
-    const settingKey = selectedProfile === 'admin'
-      ? 'secretaria_admin_password'
-      : 'secretaria_professor_password';
 
-    const { data } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('key', settingKey)
-      .single();
+    if (selectedProfile === 'admin') {
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'secretaria_admin_password')
+        .single();
 
-    if (data && data.value === pin) {
-      if (selectedProfile === 'professor') {
-        const saved = localStorage.getItem(PROFESSOR_NAME_KEY);
-        if (saved) {
-          setSavedProfessorName(saved);
-          setLoginStep('name-confirm');
-        } else {
-          setLoginStep('name-input');
-        }
+      if (data && data.value === pin) {
+        setAccessLevel('admin');
       } else {
-        setAccessLevel(selectedProfile);
+        setPinError(true);
+        toast.error('PIN incorreto');
+        setTimeout(() => setPinError(false), 600);
       }
-    } else {
+      setLoading(false);
+      return;
+    }
+
+    // Professor: identifica pela conta cadastrada (nome + sala)
+    const { data, error } = await supabase.functions.invoke('ebd-teacher-login', {
+      body: { pin },
+    });
+
+    if (error || !data?.success) {
       setPinError(true);
       toast.error('PIN incorreto');
       setTimeout(() => setPinError(false), 600);
+    } else {
+      setProfessorNome(data.teacher.name);
+      setProfessorClassId(data.teacher.class_id);
+      setAccessLevel('professor');
     }
     setLoading(false);
   };
 
-  const handleConfirmName = () => {
-    setProfessorNome(savedProfessorName!);
-    setAccessLevel('professor');
-  };
-
-  const handleDifferentPerson = () => {
-    setSavedProfessorName(null);
-    setProfessorNome('');
-    setLoginStep('name-input');
-  };
-
-  const handleSaveName = () => {
-    if (!professorNome.trim()) return;
-    localStorage.setItem(PROFESSOR_NAME_KEY, professorNome.trim());
-    setProfessorNome(professorNome.trim());
-    setAccessLevel('professor');
-  };
-
   const handleBack = () => {
-    if (loginStep === 'name-confirm' || loginStep === 'name-input') {
-      setLoginStep('pin');
-      setSavedProfessorName(null);
-      setProfessorNome('');
-      return;
-    }
     setLoginStep('profile');
     setSelectedProfile(null);
     setPinError(false);
