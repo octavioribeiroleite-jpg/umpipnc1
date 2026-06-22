@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { DiretoriaSessionProvider } from "@/contexts/DiretoriaSessionContext";
 import { MembroSessionProvider } from "@/contexts/MembroSessionContext";
 import Index from "./pages/Index";
@@ -59,6 +60,16 @@ const queryClient = new QueryClient({
   },
 });
 
+function FinancialRoute({ children }: { children: JSX.Element }) {
+  const { user, loading, rolesLoaded, isAdmin, isManagement, isPastor } = useAuth();
+
+  if (loading || !rolesLoaded) return null;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isAdmin && !isManagement && !isPastor) return <Navigate to="/membro" replace />;
+
+  return children;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -80,7 +91,7 @@ const App = () => (
             <Route path="/reunioes/:id" element={<ReuniaoDetalhe />} />
             <Route path="/tarefas" element={<Tarefas />} />
             <Route path="/calendario" element={<Calendario />} />
-            <Route path="/financas" element={<Financas />} />
+            <Route path="/financas" element={<FinancialRoute><Financas /></FinancialRoute>} />
             <Route path="/arquivos" element={<Arquivos />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/usuarios" element={<Usuarios />} />
