@@ -17,14 +17,31 @@ interface DiretoriaSessionContextType {
 
 const DiretoriaSessionContext = createContext<DiretoriaSessionContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'diretoria_session';
+
+function loadStoredSession(): DiretoriaSession | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as DiretoriaSession) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function DiretoriaSessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSessionState] = useState<DiretoriaSession | null>(null);
+  const [session, setSessionState] = useState<DiretoriaSession | null>(loadStoredSession);
 
   const setSession = useCallback((s: DiretoriaSession) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    } catch { /* ignore */ }
     setSessionState(s);
   }, []);
 
   const clearSession = useCallback(() => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch { /* ignore */ }
     setSessionState(null);
   }, []);
 
