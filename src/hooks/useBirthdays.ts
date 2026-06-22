@@ -27,6 +27,7 @@ export interface BirthdayInsert {
 }
 
 const MAX_SESSION_ERROR = 'Sua sessão expirou. Saia do aplicativo, entre novamente e repita a operação.';
+const MISSING_BIRTH_YEAR_COLUMN = 'A atualização do banco de dados ainda não foi aplicada. O cadastro foi salvo sem o ano de nascimento.';
 
 async function ensureAuthenticatedSession() {
   const { data, error } = await supabase.auth.getSession();
@@ -45,6 +46,10 @@ async function ensureAuthenticatedSession() {
   }
 }
 
+function isMissingBirthYearColumn(error: { code?: string; message: string }) {
+  return error.code === 'PGRST204' || error.message.includes('ano_nascimento');
+}
+
 function birthdayMutationError(
   error: { code?: string; message: string; details?: string | null },
   action: 'cadastrar' | 'atualizar' | 'excluir',
@@ -55,11 +60,16 @@ function birthdayMutationError(
     return new Error('Seu usuário está sem permissão para salvar aniversariantes. Entre novamente e tente outra vez.');
   }
 
-  if (error.code === 'PGRST204' || error.message.includes('ano_nascimento')) {
-    return new Error('A atualização do banco de dados ainda não foi aplicada. O campo de ano não está disponível.');
+  if (isMissingBirthYearColumn(error)) {
+    return new Error(MISSING_BIRTH_YEAR_COLUMN);
   }
 
   return new Error(`Não foi possível ${action}: ${error.message}`);
+}
+
+function withoutBirthYear<T extends { ano_nascimento?: number | null }>(data: T) {
+  const { ano_nascimento: _anoNascimento, ...rest } = data;
+  return rest;
 }
 
 function getTodayBRT() {
@@ -122,6 +132,14 @@ export function useBirthdays() {
     mutationFn: async (data: BirthdayInsert) => {
       await ensureAuthenticatedSession();
       const { error } = await supabase.from('aniversariantes').insert(data);
+
+      if (error && isMissingBirthYearColumn(error)) {
+        const { error: retryError } = await supabase.from('aniversariantes').insert(withoutBirthYear(data));
+        if (retryError) throw birthdayMutationError(retryError, 'cadastrar');
+        console.warn(`[Birthdays] ${MISSING_BIRTH_YEAR_COLUMN}`);
+        return;
+      }
+
       if (error) throw birthdayMutationError(error, 'cadastrar');
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aniversariantes'] }),
@@ -131,6 +149,14 @@ export function useBirthdays() {
     mutationFn: async ({ id, ...data }: Partial<Birthday> & { id: string }) => {
       await ensureAuthenticatedSession();
       const { error } = await supabase.from('aniversariantes').update(data).eq('id', id);
+
+      if (error && isMissingBirthYearColumn(error)) {
+        const { error: retryError } = await supabase.from('aniversariantes').update(withoutBirthYear(data)).eq('id', id);
+        if (retryError) throw birthdayMutationError(retryError, 'atualizar');
+        console.warn(`[Birthdays] ${MISSING_BIRTH_YEAR_COLUMN}`);
+        return;
+      }
+
       if (error) throw birthdayMutationError(error, 'atualizar');
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aniversariantes'] }),
