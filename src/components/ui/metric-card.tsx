@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type MetricCardTone = 'default' | 'success' | 'danger' | 'warning' | 'info';
+export type MetricCardDensity = 'compact' | 'regular';
 
 interface MetricCardProps {
   title: string;
@@ -9,6 +10,7 @@ interface MetricCardProps {
   icon?: LucideIcon;
   description?: string;
   tone?: MetricCardTone;
+  density?: MetricCardDensity;
   onClick?: () => void;
   className?: string;
   valueClassName?: string;
@@ -43,13 +45,19 @@ export function MetricCard({
   icon: Icon,
   description,
   tone = 'default',
+  density = 'regular',
   onClick,
   className,
   valueClassName,
 }: MetricCardProps) {
   const styles = toneClasses[tone];
+  const compact = density === 'compact';
+
   const rootClassName = cn(
-    'app-card-surface flex min-h-[82px] w-full min-w-0 items-center justify-between gap-3 text-left md:min-h-[102px]',
+    'w-full min-w-0 items-center justify-between text-left',
+    compact
+      ? 'flex min-h-[64px] gap-2 rounded-[14px] border border-border/70 bg-card/95 px-2.5 py-2 shadow-sm sm:min-h-[70px] sm:px-3 md:min-h-[82px] md:rounded-[16px] md:px-3.5 md:py-2.5'
+      : 'app-card-surface flex min-h-[82px] gap-3 md:min-h-[102px]',
     onClick && 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-panel active:scale-[0.99]',
     className,
   );
@@ -57,12 +65,20 @@ export function MetricCard({
   const content = (
     <>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400 xs:text-sm">
+        <p
+          className={cn(
+            'truncate font-semibold text-slate-500 dark:text-slate-400',
+            compact ? 'text-[10px] leading-none xs:text-[11px] md:text-xs' : 'text-xs xs:text-sm',
+          )}
+        >
           {title}
         </p>
         <p
           className={cn(
-            'text-metric-responsive mt-1 min-w-0 break-words tabular-nums',
+            'min-w-0 tabular-nums',
+            compact
+              ? 'mt-1 truncate text-[17px] font-extrabold leading-none tracking-tight xs:text-[18px] md:text-[21px]'
+              : 'text-metric-responsive mt-1 break-words',
             styles.value,
             valueClassName,
           )}
@@ -70,15 +86,30 @@ export function MetricCard({
           {value}
         </p>
         {description && (
-          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400 xs:text-xs">
+          <p
+            className={cn(
+              'text-slate-500 dark:text-slate-400',
+              compact
+                ? 'mt-1 truncate text-[9px] leading-none xs:text-[10px] md:text-[11px]'
+                : 'mt-1 line-clamp-2 text-[11px] leading-snug xs:text-xs',
+            )}
+          >
             {description}
           </p>
         )}
       </div>
 
       {Icon && (
-        <div className={cn('flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[14px] md:h-12 md:w-12 md:rounded-2xl', styles.icon)}>
-          <Icon className="h-5 w-5 md:h-6 md:w-6" />
+        <div
+          className={cn(
+            'flex flex-shrink-0 items-center justify-center',
+            compact
+              ? 'h-8 w-8 rounded-[11px] md:h-9 md:w-9 md:rounded-xl'
+              : 'h-10 w-10 rounded-[14px] md:h-12 md:w-12 md:rounded-2xl',
+            styles.icon,
+          )}
+        >
+          <Icon className={compact ? 'h-4 w-4 md:h-[18px] md:w-[18px]' : 'h-5 w-5 md:h-6 md:w-6'} />
         </div>
       )}
     </>
