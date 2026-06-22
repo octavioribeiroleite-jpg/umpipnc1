@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { DiretoriaSessionProvider } from "@/contexts/DiretoriaSessionContext";
+import { DiretoriaSessionProvider, useDiretoriaSession } from "@/contexts/DiretoriaSessionContext";
 import { MembroSessionProvider } from "@/contexts/MembroSessionContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -57,10 +57,20 @@ const queryClient = new QueryClient({
 
 function FinancialRoute({ children }: { children: JSX.Element }) {
   const { user, loading, rolesLoaded, isAdmin, isManagement, isPastor } = useAuth();
+  const { session: diretoriaSession } = useDiretoriaSession();
 
   if (loading || !rolesLoaded) return null;
   if (!user) return <Navigate to="/auth" replace />;
-  if (!isAdmin && !isManagement && !isPastor) return <Navigate to="/membro" replace />;
+
+  const isAuthenticatedDiretoriaService = Boolean(
+    diretoriaSession &&
+    user.email?.startsWith('diretoria-') &&
+    user.email?.endsWith('@ipnc.local'),
+  );
+
+  if (!isAdmin && !isManagement && !isPastor && !isAuthenticatedDiretoriaService) {
+    return <Navigate to="/membro" replace />;
+  }
 
   return children;
 }
