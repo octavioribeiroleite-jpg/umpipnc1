@@ -152,7 +152,8 @@ export default function PastorSociedade() {
     );
   }
 
-  const formattedBalance = `R$ ${Math.abs(stats.saldo).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+  const balanceNumber = Math.abs(stats.saldo).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const formattedBalance = `R$ ${stats.saldo < 0 ? '-' : ''}${balanceNumber}`;
 
   return (
     <PastorLayout>
@@ -193,7 +194,7 @@ export default function PastorSociedade() {
         <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 xl:grid-cols-5">
           <SummaryCard
             label="Saldo"
-            value={stats.saldo < 0 ? `-${formattedBalance}` : formattedBalance}
+            value={formattedBalance}
             meta="caixa disponível"
             icon={DollarSign}
             tone={stats.saldo >= 0 ? 'positive' : 'negative'}
