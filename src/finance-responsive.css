@@ -33,6 +33,49 @@
   min-width: 0;
 }
 
+/* Hierarquia visual para cards numéricos legados dentro de Finanças. */
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 > div {
+  min-width: 0;
+  border-color: hsl(var(--border) / 0.72);
+  background: hsl(var(--card) / 0.96);
+  box-shadow: var(--shadow-card);
+}
+
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 > div > div {
+  min-width: 0;
+}
+
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 > div > div > .flex > div:last-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-sm,
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xs {
+  color: hsl(var(--muted-foreground));
+}
+
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xl {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xs.text-success,
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xs.text-destructive,
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xs.text-amber-500,
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xs.text-red-500,
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xs.text-green-500 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xl > .text-success,
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xl > .text-amber-500,
+.finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xl > .text-destructive {
+  color: inherit !important;
+}
+
 @media (max-width: 767px) {
   .finance-tabs-scroller {
     scrollbar-width: none;
@@ -89,7 +132,6 @@
     font-size: 16px;
   }
 
-  /* Abas internas dos módulos financeiros, como Camisas. */
   .finance-tab-panel [role="tablist"] {
     display: flex;
     width: 100%;
@@ -118,9 +160,7 @@
     white-space: nowrap;
   }
 
-  /* Cards de resumo internos: remove o aspecto de blocos altos. */
   .finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 > div {
-    min-width: 0;
     min-height: 0;
     border-radius: 0.9rem;
   }
