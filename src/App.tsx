@@ -3,14 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DiretoriaSessionProvider } from "@/contexts/DiretoriaSessionContext";
 import { MembroSessionProvider } from "@/contexts/MembroSessionContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
-
 import Reunioes from "./pages/Reunioes";
 import NovaReuniao from "./pages/NovaReuniao";
 import ReuniaoDetalhe from "./pages/ReuniaoDetalhe";
@@ -39,19 +37,16 @@ import Visitantes from "./pages/Visitantes";
 import Estudos from "./pages/Estudos";
 import Secretaria from "./pages/Secretaria";
 import Aniversariantes from "./pages/Aniversariantes";
-
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { UpdateAvailableBanner } from "@/components/UpdateAvailableBanner";
-import { BackConfirmGuard } from "@/components/layout/BackConfirmGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      gcTime: 1000 * 60 * 60 * 24, // 24 hours
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: (failureCount, error) => {
-        // Don't retry when offline
+      gcTime: 1000 * 60 * 60 * 24,
+      staleTime: 1000 * 60 * 5,
+      retry: (failureCount) => {
         if (!navigator.onLine) return false;
         return failureCount < 3;
       },
@@ -79,50 +74,46 @@ const App = () => (
       <PWAInstallPrompt />
       <BrowserRouter>
         <AuthProvider>
-        <DiretoriaSessionProvider>
-        <MembroSessionProvider>
-          <BackConfirmGuard />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/reunioes" element={<Reunioes />} />
-            <Route path="/reunioes/nova" element={<NovaReuniao />} />
-            <Route path="/reunioes/:id" element={<ReuniaoDetalhe />} />
-            <Route path="/tarefas" element={<Tarefas />} />
-            <Route path="/calendario" element={<Calendario />} />
-            <Route path="/financas" element={<FinancialRoute><Financas /></FinancialRoute>} />
-            <Route path="/arquivos" element={<Arquivos />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="/usuarios" element={<Usuarios />} />
-            <Route path="/plenarias" element={<Plenarias />} />
-            <Route path="/plenarias/:id" element={<PlenariaDetalhe />} />
-            <Route path="/pastor" element={<PainelPastor />} />
-            <Route path="/pastor/sociedade/:slug" element={<PastorSociedade />} />
-            <Route path="/pastor/calendario" element={<PastorCalendario />} />
-            <Route path="/pastor/comunicados" element={<PastorComunicados />} />
-            <Route path="/pastor/sugestoes" element={<PastorSugestoes />} />
-            <Route path="/pastor-sugestoes" element={<PastorSugestoes />} />
-            <Route path="/sugestoes" element={<PastorSugestoes />} />
-            <Route path="/comunicados" element={<DiretoriaComunicados />} />
-            <Route path="/membro" element={<MembroHome />} />
-            <Route path="/eleicoes" element={<Eleicoes />} />
-            <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />
-            <Route path="/vote/:electionId" element={<VotePublic />} />
-            <Route path="/eleicao/:id/apresentar" element={<EleicaoApresentar />} />
-            <Route path="/dizimos" element={<Dizimos />} />
-            <Route path="/igreja" element={<PortalIgreja />} />
-            <Route path="/visitantes" element={<Visitantes />} />
-            <Route path="/estudos" element={<Estudos />} />
-            <Route path="/secretaria" element={<Secretaria />} />
-            <Route path="/aniversariantes" element={<Aniversariantes />} />
-
-
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </MembroSessionProvider>
-        </DiretoriaSessionProvider>
+          <DiretoriaSessionProvider>
+            <MembroSessionProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/reunioes" element={<Reunioes />} />
+                <Route path="/reunioes/nova" element={<NovaReuniao />} />
+                <Route path="/reunioes/:id" element={<ReuniaoDetalhe />} />
+                <Route path="/tarefas" element={<Tarefas />} />
+                <Route path="/calendario" element={<Calendario />} />
+                <Route path="/financas" element={<FinancialRoute><Financas /></FinancialRoute>} />
+                <Route path="/arquivos" element={<Arquivos />} />
+                <Route path="/configuracoes" element={<Configuracoes />} />
+                <Route path="/usuarios" element={<Usuarios />} />
+                <Route path="/plenarias" element={<Plenarias />} />
+                <Route path="/plenarias/:id" element={<PlenariaDetalhe />} />
+                <Route path="/pastor" element={<PainelPastor />} />
+                <Route path="/pastor/sociedade/:slug" element={<PastorSociedade />} />
+                <Route path="/pastor/calendario" element={<PastorCalendario />} />
+                <Route path="/pastor/comunicados" element={<PastorComunicados />} />
+                <Route path="/pastor/sugestoes" element={<PastorSugestoes />} />
+                <Route path="/pastor-sugestoes" element={<PastorSugestoes />} />
+                <Route path="/sugestoes" element={<PastorSugestoes />} />
+                <Route path="/comunicados" element={<DiretoriaComunicados />} />
+                <Route path="/membro" element={<MembroHome />} />
+                <Route path="/eleicoes" element={<Eleicoes />} />
+                <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />
+                <Route path="/vote/:electionId" element={<VotePublic />} />
+                <Route path="/eleicao/:id/apresentar" element={<EleicaoApresentar />} />
+                <Route path="/dizimos" element={<Dizimos />} />
+                <Route path="/igreja" element={<PortalIgreja />} />
+                <Route path="/visitantes" element={<Visitantes />} />
+                <Route path="/estudos" element={<Estudos />} />
+                <Route path="/secretaria" element={<Secretaria />} />
+                <Route path="/aniversariantes" element={<Aniversariantes />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </MembroSessionProvider>
+          </DiretoriaSessionProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
