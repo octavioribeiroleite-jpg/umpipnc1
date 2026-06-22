@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, Award, AlertTriangle, Lock, Download, Users, ArrowLeft, CircleDot, ChevronRight, User } from 'lucide-react';
 import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { generateEbdAttendancePDF, generateEbdPeriodPDF } from '@/utils/generateEbdPDF';
+import { generateEbdAttendancePDF, generateEbdPeriodPDF, generateEbdQuarterlyPDF } from '@/utils/generateEbdPDF';
 import { toast } from 'sonner';
 import { reportClientError } from '@/utils/reportClientError';
 import {
@@ -78,6 +78,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   const [closingDay, setClosingDay] = useState(false);
   const [openDialog, setOpenDialog] = useState<'perfect' | 'lowFreq' | 'absent' | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [generatingQuarterly, setGeneratingQuarterly] = useState(false);
 
   const fetchHistory = async () => {
     setLoading(true);
