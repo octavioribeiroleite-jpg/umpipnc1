@@ -618,6 +618,13 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         >
           <Download className="h-4 w-4 mr-2" /> Baixar relatório
         </Button>
+        <Button
+          size="sm"
+          onClick={handleDownloadQuarterlyPDF}
+          disabled={dayRecords.length === 0 || generatingQuarterly}
+        >
+          <Download className="h-4 w-4 mr-2" /> {generatingQuarterly ? 'Gerando...' : 'Relatório completo'}
+        </Button>
       </div>
 
       {/* Compact day cards */}
