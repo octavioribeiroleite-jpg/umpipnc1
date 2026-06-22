@@ -383,3 +383,214 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
   const dateSlug = date.replace(/-/g, '');
   doc.save(`chamada-ebd-${dateSlug}.pdf`);
 }
+
+interface PeriodDay {
+  date: string;
+  present: number;
+  total: number;
+  percentage: number;
+  visitorCount: number;
+}
+
+interface PeriodClass {
+  name: string;
+  totalPresent: number;
+  avgPercentage: number;
+}
+
+interface GenerateEbdPeriodPDFParams {
+  periodLabel: string;
+  days: PeriodDay[];
+  classes: PeriodClass[];
+}
+
+export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
+  const { periodLabel, days, classes } = params;
+
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const contentWidth = pageWidth - margin * 2;
+  let y = 0;
+  let pageNum = 1;
+  const totalPagesPlaceholder = '{total_ebd_period}';
+
+  const addFooter = () => {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, margin, pageHeight - 10);
+    doc.text(`Página ${pageNum} de ${totalPagesPlaceholder}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+  };
+
+  const checkPage = (needed: number) => {
+    if (y + needed > pageHeight - 20) {
+      addFooter();
+      doc.addPage();
+      pageNum++;
+      y = 20;
+    }
+  };
+
+  const pctColorOf = (pct: number): [number, number, number] =>
+    pct > 70 ? [34, 139, 34] : pct >= 40 ? [200, 160, 0] : [200, 50, 50];
+
+  // === HEADER ===
+  doc.setFillColor(30, 58, 95);
+  doc.rect(0, 0, pageWidth, 42, 'F');
+  try { doc.addImage(logoBase64, 'PNG', margin, 5, 20, 20); } catch { /* skip */ }
+  const textX = margin + 26;
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Relatório de Chamadas — EBD', textX, 14);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(periodLabel, textX, 22);
+  doc.setFontSize(8);
+  doc.setTextColor(180, 200, 220);
+  doc.text('Igreja Presbiteriana de Nova Carapina', textX, 29);
+  doc.setDrawColor(52, 152, 219);
+  doc.setLineWidth(1);
+  doc.line(margin, 45, pageWidth - margin, 45);
+  y = 50;
+
+  // === RESUMO GERAL DO PERÍODO ===
+  const totalDays = days.length;
+  const sumPresent = days.reduce((s, d) => s + d.present, 0);
+  const sumVisitors = days.reduce((s, d) => s + d.visitorCount, 0);
+  const avgPresent = totalDays > 0 ? Math.round(sumPresent / totalDays) : 0;
+  const avgPct = totalDays > 0 ? Math.round(days.reduce((s, d) => s + d.percentage, 0) / totalDays) : 0;
+
+  doc.setFillColor(240, 245, 250);
+  doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'F');
+  doc.setDrawColor(200, 210, 220);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'S');
+  doc.setTextColor(30, 58, 95);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Resumo do Período', margin + 6, y + 8);
+
+  const statsY = y + 15;
+  const cols = [margin + 6, margin + 50, margin + 94, margin + 140];
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 80);
+  doc.text('Domingos', cols[0], statsY);
+  doc.text('Média presentes', cols[1], statsY);
+  doc.text('Visitantes', cols[2], statsY);
+  doc.text('Frequência média', cols[3], statsY);
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 58, 95);
+  doc.text(`${totalDays}`, cols[0], statsY + 8);
+  doc.setTextColor(34, 139, 34);
+  doc.text(`${avgPresent}`, cols[1], statsY + 8);
+  doc.setTextColor(46, 92, 170);
+  doc.text(`${sumVisitors}`, cols[2], statsY + 8);
+  const ac = pctColorOf(avgPct);
+  doc.setTextColor(ac[0], ac[1], ac[2]);
+  doc.text(`${avgPct}%`, cols[3], statsY + 8);
+  y += 34;
+
+  // === FREQUÊNCIA POR DOMINGO ===
+  checkPage(20);
+  doc.setFillColor(30, 58, 95);
+  doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('FREQUÊNCIA POR DOMINGO', margin + 5, y + 5.5);
+  y += 12;
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Data', margin + 3, y);
+  doc.text('Presentes', margin + 70, y);
+  doc.text('Total', margin + 100, y);
+  doc.text('Visit.', margin + 122, y);
+  doc.text('%', margin + 145, y);
+  y += 2;
+  doc.setDrawColor(200, 210, 220);
+  doc.setLineWidth(0.2);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 4;
+
+  [...days].sort((a, b) => a.date.localeCompare(b.date)).forEach((d, i) => {
+    checkPage(9);
+    if (i % 2 === 0) {
+      doc.setFillColor(248, 249, 252);
+      doc.rect(margin, y - 4, contentWidth, 8, 'F');
+    }
+    const dObj = new Date(d.date + 'T12:00:00');
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(40, 40, 40);
+    doc.text(format(dObj, "dd/MM/yyyy", { locale: ptBR }), margin + 3, y);
+    doc.setTextColor(34, 139, 34);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${d.present}`, margin + 75, y);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${d.total}`, margin + 103, y);
+    doc.setTextColor(46, 92, 170);
+    doc.text(`${d.visitorCount}`, margin + 125, y);
+    const c = pctColorOf(d.percentage);
+    doc.setTextColor(c[0], c[1], c[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${d.percentage}%`, margin + 145, y);
+    y += 8;
+  });
+  y += 6;
+
+  // === MÉDIA POR TURMA ===
+  if (classes.length > 0) {
+    checkPage(20);
+    doc.setFillColor(30, 58, 95);
+    doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MÉDIA POR TURMA', margin + 5, y + 5.5);
+    y += 12;
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 100, 100);
+    doc.text('Turma', margin + 3, y);
+    doc.text('Presenças (total)', margin + 100, y);
+    doc.text('Freq. média', margin + 150, y);
+    y += 2;
+    doc.setDrawColor(200, 210, 220);
+    doc.setLineWidth(0.2);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 4;
+
+    [...classes].sort((a, b) => b.avgPercentage - a.avgPercentage).forEach((c, i) => {
+      checkPage(9);
+      if (i % 2 === 0) {
+        doc.setFillColor(248, 249, 252);
+        doc.rect(margin, y - 4, contentWidth, 8, 'F');
+      }
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(40, 40, 40);
+      doc.text(c.name, margin + 3, y);
+      doc.setTextColor(34, 139, 34);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${c.totalPresent}`, margin + 105, y);
+      const cc = pctColorOf(c.avgPercentage);
+      doc.setTextColor(cc[0], cc[1], cc[2]);
+      doc.text(`${c.avgPercentage}%`, margin + 152, y);
+      y += 8;
+    });
+  }
+
+  addFooter();
+  doc.putTotalPages(totalPagesPlaceholder);
+  doc.save(`relatorio-chamadas-ebd.pdf`);
+}
