@@ -1,0 +1,87 @@
+/* Readability improvements for the IPNC login screen. */
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) > .fixed.inset-0.z-10 {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(47, 191, 122, 0.12), transparent 32%),
+    linear-gradient(
+      180deg,
+      rgba(2, 12, 8, 0.62) 0%,
+      rgba(2, 10, 7, 0.80) 52%,
+      rgba(1, 6, 4, 0.90) 100%
+    ) !important;
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) .font-display {
+  color: #fff !important;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.95);
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) .font-display + p {
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-weight: 500;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.95);
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) p.uppercase {
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2em !important;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.group.w-full {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(255, 255, 255, 0.72) !important;
+  color: #0f172a !important;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.3) !important;
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.group.w-full h3 {
+  color: #0f172a !important;
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.group.w-full h3 + p {
+  color: #475569 !important;
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.group.w-full svg:last-child {
+  color: #475569 !important;
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.rounded-full.border {
+  background: rgba(0, 0, 0, 0.58) !important;
+  border-color: rgba(255, 255, 255, 0.42) !important;
+  color: rgba(255, 255, 255, 0.96) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.rounded-full.border:hover {
+  background: rgba(0, 0, 0, 0.72) !important;
+  color: #fff !important;
+}
+
+.min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) [class*="max-w-[560px]"] > p:last-child {
+  color: rgba(255, 255, 255, 0.78) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+}
+
+@media (max-width: 480px) {
+  .min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.group.w-full {
+    padding: 16px !important;
+  }
+
+  .min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.group.w-full h3 {
+    font-size: 18px !important;
+  }
+
+  .min-h-screen.relative.overflow-hidden.bg-black:has(video source[src="/videos/bg-home.mp4"]) button.group.w-full h3 + p {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+}
