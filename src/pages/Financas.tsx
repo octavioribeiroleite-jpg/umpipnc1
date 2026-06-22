@@ -216,8 +216,9 @@ export default function Financas() {
           </div>
         )}
 
-        <MetricGrid className="mb-section-gap">
+        <MetricGrid className="mb-section-gap gap-1.5 xs:gap-2 md:gap-3">
           <MetricCard
+            density="compact"
             title="Saldo atual"
             value={formatCurrency(stats.saldo)}
             icon={DollarSign}
@@ -226,6 +227,7 @@ export default function Financas() {
             onClick={() => setExtratoType('all')}
           />
           <MetricCard
+            density="compact"
             title="Receitas"
             value={formatCurrency(stats.receitasTotal)}
             icon={TrendingUp}
@@ -234,6 +236,7 @@ export default function Financas() {
             onClick={() => setExtratoType('entrada')}
           />
           <MetricCard
+            density="compact"
             title="Gastos"
             value={formatCurrency(stats.gastosTotal)}
             icon={TrendingDown}
@@ -242,6 +245,7 @@ export default function Financas() {
             onClick={() => setExtratoType('saida')}
           />
           <MetricCard
+            density="compact"
             title="Adimplência"
             value={`${stats.adimplencia}%`}
             icon={Users}
@@ -258,7 +262,7 @@ export default function Financas() {
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="h-13 min-w-0 flex-col gap-1 rounded-[14px] px-1.5 py-1.5 text-[10px] font-semibold leading-none text-slate-500 transition-all data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-[0_6px_16px_rgba(4,120,87,0.22)] md:h-11 md:flex-row md:gap-2 md:rounded-[15px] md:px-2 md:py-2 md:text-xs lg:text-sm"
+                  className="min-w-0 flex-col gap-1 rounded-[14px] px-1.5 py-1.5 text-[10px] font-semibold leading-none text-slate-500 transition-all data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-[0_6px_16px_rgba(4,120,87,0.22)] md:flex-row md:gap-2 md:rounded-[15px] md:px-2 md:py-2 md:text-xs lg:text-sm"
                 >
                   <Icon className="h-4 w-4 flex-shrink-0 md:h-[18px] md:w-[18px]" />
                   <span className="md:hidden">{shortLabel}</span>
