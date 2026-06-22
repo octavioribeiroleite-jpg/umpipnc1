@@ -374,6 +374,66 @@ export default function Auth() {
 
   // ========== RENDER CONTENT (conditional by step) ==========
   const renderContent = () => {
+    const AccessCard = ({
+      label,
+      title,
+      description,
+      icon: Icon,
+      onClick,
+      delay,
+      variant = 'light',
+    }: {
+      label: string;
+      title: string;
+      description: string;
+      icon: typeof Lock;
+      onClick: () => void;
+      delay: string;
+      variant?: 'light' | 'glass';
+    }) => (
+      <div
+        className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        style={{ transitionDelay: showCards ? delay : '0ms' }}
+      >
+        <p className="px-1 text-[11px] font-bold uppercase tracking-[0.24em] text-white/65">
+          {label}
+        </p>
+        <button
+          onClick={onClick}
+          className={`group w-full rounded-[24px] border p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.20)] backdrop-blur-xl transition-all duration-300 active:scale-[0.98] sm:p-5 ${
+            variant === 'glass'
+              ? 'border-white/20 bg-white/12 text-white hover:bg-white/18'
+              : 'border-white/45 bg-[#F7FAF6]/95 text-foreground hover:bg-white'
+          } hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(0,0,0,0.26)]`}
+        >
+          <div className="flex items-center gap-4">
+            <div
+              className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-[18px] transition-transform duration-300 group-hover:scale-105 ${
+                variant === 'glass'
+                  ? 'bg-white/18 text-white'
+                  : 'bg-emerald-50 text-primary ring-1 ring-emerald-100'
+              }`}
+            >
+              <Icon className="h-7 w-7" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className={`text-lg font-bold leading-tight ${variant === 'glass' ? 'text-white' : 'text-foreground'}`}>
+                {title}
+              </h3>
+              <p className={`mt-1 text-sm leading-snug ${variant === 'glass' ? 'text-white/70' : 'text-muted-foreground'}`}>
+                {description}
+              </p>
+            </div>
+            <ArrowRight
+              className={`h-5 w-5 flex-shrink-0 transition-transform duration-300 group-hover:translate-x-1 ${
+                variant === 'glass' ? 'text-white/75' : 'text-muted-foreground'
+              }`}
+            />
+          </div>
+        </button>
+      </div>
+    );
+
     if (isEnteringApp) {
       return (
         <div className="w-full max-w-md">
@@ -580,71 +640,53 @@ export default function Auth() {
 
     // Main screen (select / societies / pin / login)
     return (
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-[560px]">
         {/* Logo */}
         <div className={`text-center mb-8 transition-all duration-700 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <div className="inline-block animate-logo-pulse mb-4">
             <img
               src={logoIpnc}
               alt="Renovo IPNC"
-              className="h-60 w-60 sm:h-72 sm:w-72 mx-auto object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.6)]"
+              className="h-52 w-52 sm:h-64 sm:w-64 mx-auto object-contain drop-shadow-[0_24px_45px_rgba(0,0,0,0.55)]"
             />
           </div>
-          <h1 className="font-display text-3xl font-bold text-white drop-shadow-lg">
+          <h1 className="font-display text-4xl font-bold text-white drop-shadow-lg">
             Bem-vindo
           </h1>
-          <p className="text-white/70 text-sm mt-2">
+          <p className="text-white/78 text-base mt-2">
             Igreja Presbiteriana de Nova Carapina
           </p>
         </div>
 
         {step === 'select' ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Diretoria */}
-            <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '500ms' : '0ms' }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Diretoria</p>
-              <Card
-                className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.98]"
-                onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }}
-              >
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Lock className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-base text-foreground">Entrar com PIN</h3>
-                    <p className="text-xs text-muted-foreground">Pastor, Presidente, Tesoureiro e demais cargos</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <AccessCard
+              label="Diretoria"
+              title="Entrar com PIN"
+              description="Pastor, presidente, tesoureiro e demais cargos"
+              icon={Lock}
+              onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }}
+              delay="500ms"
+            />
 
             {/* Secretaria EBD */}
-            <div className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '650ms' : '0ms' }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/50 font-semibold px-1">Secretaria EBD</p>
-              <Card
-                className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.98]"
-                onClick={() => navigateWithTransition('/secretaria')}
-              >
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-base text-foreground">Escola Dominical</h3>
-                    <p className="text-xs text-muted-foreground">Chamada e frequência da EBD</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <AccessCard
+              label="Secretaria EBD"
+              title="Escola Dominical"
+              description="Chamada, frequência e acompanhamento da EBD"
+              icon={BookOpen}
+              onClick={() => navigateWithTransition('/secretaria')}
+              delay="650ms"
+            />
 
             {/* Administrador */}
             <div className={`transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
               <button
                 onClick={() => setStep('login')}
-                className="w-full text-center text-xs text-white/40 hover:text-white/70 transition-colors py-2"
+                className="mx-auto flex items-center justify-center rounded-full border border-white/15 bg-black/20 px-4 py-2 text-center text-xs font-medium text-white/55 backdrop-blur-md transition-colors hover:bg-white/10 hover:text-white/85"
               >
-                <ShieldCheck className="h-3.5 w-3.5 inline mr-1" />
+                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
                 Acesso Administrativo
               </button>
             </div>
@@ -788,7 +830,7 @@ export default function Auth() {
           </div>
         )}
 
-        <p className={`text-center text-xs text-white/40 mt-6 transition-all duration-500 ${showCards ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
+        <p className={`text-center text-xs text-white/45 mt-6 transition-all duration-500 ${showCards ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
           © 2025 IPNC - Todos os direitos reservados
         </p>
       </div>
@@ -812,7 +854,7 @@ export default function Auth() {
       </video>
 
       {/* Dark overlay */}
-      <div className={`fixed inset-0 bg-black/60 z-10 transition-opacity duration-1000 ${splashPhase === 'done' ? 'opacity-100' : 'opacity-0'}`} />
+      <div className={`fixed inset-0 z-10 bg-[radial-gradient(circle_at_50%_18%,rgba(47,191,122,0.18),transparent_34%),linear-gradient(180deg,rgba(7,25,17,0.55),rgba(3,12,8,0.78))] transition-opacity duration-1000 ${splashPhase === 'done' ? 'opacity-100' : 'opacity-0'}`} />
 
       {/* Splash screen */}
       {splashPhase !== 'done' && (
