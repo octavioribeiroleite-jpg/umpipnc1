@@ -6,6 +6,7 @@ export interface Birthday {
   nome: string;
   dia: number;
   mes: number;
+  ano_nascimento: number | null;
   departamento: string | null;
   observacao: string | null;
   ativo: boolean;
@@ -18,10 +19,47 @@ export interface BirthdayInsert {
   nome: string;
   dia: number;
   mes: number;
+  ano_nascimento?: number | null;
   departamento?: string;
   observacao?: string;
   ativo?: boolean;
   pendente_revisao?: boolean;
+}
+
+const MAX_SESSION_ERROR = 'Sua sessão expirou. Saia do aplicativo, entre novamente e repita a operação.';
+
+async function ensureAuthenticatedSession() {
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    console.error('[Birthdays] Erro ao verificar sessão:', error);
+    throw new Error(MAX_SESSION_ERROR);
+  }
+
+  if (!data.session) {
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError || !refreshed.session) {
+      console.error('[Birthdays] Não foi possível renovar a sessão:', refreshError);
+      throw new Error(MAX_SESSION_ERROR);
+    }
+  }
+}
+
+function birthdayMutationError(
+  error: { code?: string; message: string; details?: string | null },
+  action: 'cadastrar' | 'atualizar' | 'excluir',
+) {
+  console.error(`[Birthdays] Erro ao ${action}:`, error);
+
+  if (error.code === '42501' || error.message.toLowerCase().includes('row-level security')) {
+    return new Error('Seu usuário está sem permissão para salvar aniversariantes. Entre novamente e tente outra vez.');
+  }
+
+  if (error.code === 'PGRST204' || error.message.includes('ano_nascimento')) {
+    return new Error('A atualização do banco de dados ainda não foi aplicada. O campo de ano não está disponível.');
+  }
+
+  return new Error(`Não foi possível ${action}: ${error.message}`);
 }
 
 function getTodayBRT() {
@@ -33,12 +71,12 @@ function getTodayBRT() {
 export function getDaysUntilBirthday(dia: number, mes: number): number {
   const { fullDate } = getTodayBRT();
   const todayYear = fullDate.getFullYear();
-  
+
   let nextBirthday = new Date(todayYear, mes - 1, dia);
   if (nextBirthday < new Date(fullDate.getFullYear(), fullDate.getMonth(), fullDate.getDate())) {
     nextBirthday = new Date(todayYear + 1, mes - 1, dia);
   }
-  
+
   const today = new Date(fullDate.getFullYear(), fullDate.getMonth(), fullDate.getDate());
   const diffTime = nextBirthday.getTime() - today.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -82,24 +120,27 @@ export function useBirthdays() {
 
   const createBirthday = useMutation({
     mutationFn: async (data: BirthdayInsert) => {
+      await ensureAuthenticatedSession();
       const { error } = await supabase.from('aniversariantes').insert(data);
-      if (error) throw error;
+      if (error) throw birthdayMutationError(error, 'cadastrar');
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aniversariantes'] }),
   });
 
   const updateBirthday = useMutation({
     mutationFn: async ({ id, ...data }: Partial<Birthday> & { id: string }) => {
+      await ensureAuthenticatedSession();
       const { error } = await supabase.from('aniversariantes').update(data).eq('id', id);
-      if (error) throw error;
+      if (error) throw birthdayMutationError(error, 'atualizar');
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aniversariantes'] }),
   });
 
   const deleteBirthday = useMutation({
     mutationFn: async (id: string) => {
+      await ensureAuthenticatedSession();
       const { error } = await supabase.from('aniversariantes').delete().eq('id', id);
-      if (error) throw error;
+      if (error) throw birthdayMutationError(error, 'excluir');
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aniversariantes'] }),
   });
