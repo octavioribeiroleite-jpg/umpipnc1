@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { AppCard } from '@/components/ui/app-card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MensalidadesTab } from '@/components/financas/MensalidadesTab';
@@ -15,13 +16,19 @@ import { ConfiguracoesTab } from '@/components/financas/ConfiguracoesTab';
 import { RelatoriosTab } from '@/components/financas/RelatoriosTab';
 import { ComprovantesTab } from '@/components/financas/ComprovantesTab';
 import { ExtratoDialog, type ExtratoType } from '@/components/financas/ExtratoDialog';
-
 import { useAuth } from '@/contexts/AuthContext';
 import {
+  ArrowLeftRight,
+  BarChart3,
   DollarSign,
-  TrendingUp,
+  FileCheck2,
+  MoreHorizontal,
+  ReceiptText,
+  Shirt,
   TrendingDown,
+  TrendingUp,
   Users,
+  WalletCards,
 } from 'lucide-react';
 
 interface Society {
@@ -34,6 +41,29 @@ interface Stats {
   receitasTotal: number;
   gastosTotal: number;
   adimplencia: number;
+}
+
+type MainFinanceTab = 'cobrancas' | 'comprovantes' | 'movimentacoes' | 'camisas' | 'relatorios' | 'mais';
+type MovementView = 'receitas' | 'gastos';
+
+const mainTabs: Array<{
+  value: MainFinanceTab;
+  label: string;
+  icon: typeof ReceiptText;
+}> = [
+  { value: 'cobrancas', label: 'Cobranças', icon: ReceiptText },
+  { value: 'comprovantes', label: 'Comprovantes', icon: FileCheck2 },
+  { value: 'movimentacoes', label: 'Movimentações', icon: ArrowLeftRight },
+  { value: 'camisas', label: 'Camisas', icon: Shirt },
+  { value: 'relatorios', label: 'Relatórios', icon: BarChart3 },
+  { value: 'mais', label: 'Mais', icon: MoreHorizontal },
+];
+
+function normalizeMainTab(tab: string | null): MainFinanceTab {
+  if (tab === 'receitas' || tab === 'gastos') return 'movimentacoes';
+  if (tab === 'configuracoes') return 'mais';
+  if (mainTabs.some((item) => item.value === tab)) return tab as MainFinanceTab;
+  return 'cobrancas';
 }
 
 function StatCard({
@@ -55,19 +85,23 @@ function StatCard({
     destructive: 'text-destructive',
   }[variant];
 
+  const iconClass = variant === 'destructive'
+    ? 'bg-red-50 text-red-600'
+    : 'bg-emerald-50 text-emerald-700';
+
   return (
     <AppCard
       variant="stat"
-      className={onClick ? 'cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]' : undefined}
+      className={`rounded-[24px] border-white/70 bg-white/95 p-1 shadow-[0_12px_30px_rgba(15,23,42,0.07)] ${onClick ? 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,23,42,0.10)] active:scale-[0.99]' : ''}`}
       onClick={onClick}
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs md:text-sm text-muted-foreground">{title}</p>
-          <p className={`text-lg md:text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
+      <div className="flex min-h-[92px] items-center justify-between gap-3 p-3 md:min-h-[112px] md:p-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-slate-500 md:text-base">{title}</p>
+          <p className={`mt-2 truncate text-xl font-extrabold tracking-tight md:text-3xl ${colorClass}`}>{value}</p>
         </div>
-        <div className="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[16px] md:h-14 md:w-14 ${iconClass}`}>
+          <Icon className="h-6 w-6 md:h-7 md:w-7" />
         </div>
       </div>
     </AppCard>
@@ -77,80 +111,83 @@ function StatCard({
 export default function Financas() {
   const { isAdmin, isPastor, selectedSocietyId, setSelectedSocietyId, effectiveSocietyId: societyId } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'cobrancas';
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const initialRawTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<MainFinanceTab>(normalizeMainTab(initialRawTab));
+  const [movementView, setMovementView] = useState<MovementView>(initialRawTab === 'gastos' ? 'gastos' : 'receitas');
   const [stats, setStats] = useState<Stats>({ saldo: 0, receitasTotal: 0, gastosTotal: 0, adimplencia: 0 });
   const [societies, setSocieties] = useState<Society[]>([]);
   const [extratoType, setExtratoType] = useState<ExtratoType | null>(null);
 
-  // Fetch societies for admin/pastor selector
   useEffect(() => {
     if (isAdmin || isPastor) {
       supabase.from('societies').select('id, name').eq('active', true).order('name')
         .then(({ data }) => {
           if (data) setSocieties(data);
-          // Auto-select first if none selected
           if (data && data.length > 0 && !selectedSocietyId) {
             setSelectedSocietyId(data[0].id);
           }
         });
     }
-  }, [isAdmin, isPastor]);
-  
-  // Sync tab with URL
+  }, [isAdmin, isPastor, selectedSocietyId, setSelectedSocietyId]);
+
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
+    const normalized = normalizeMainTab(tabFromUrl);
+    setActiveTab(normalized);
+    if (tabFromUrl === 'receitas' || tabFromUrl === 'gastos') {
+      setMovementView(tabFromUrl);
     }
   }, [searchParams]);
-  
+
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setSearchParams({ tab: value });
+    const tab = value as MainFinanceTab;
+    setActiveTab(tab);
+    const urlTab = tab === 'movimentacoes'
+      ? movementView
+      : tab === 'mais'
+        ? 'configuracoes'
+        : tab;
+    setSearchParams({ tab: urlTab });
+  };
+
+  const handleMovementChange = (view: MovementView) => {
+    setMovementView(view);
+    setActiveTab('movimentacoes');
+    setSearchParams({ tab: view });
   };
 
   useEffect(() => {
     const fetchStats = async () => {
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
-      const startOfMonth = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
-      const endOfMonth = new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0];
-
       const months = [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
       ];
       const competence = `${months[currentMonth]}/${currentYear}`;
 
       let chargesQuery = supabase
-          .from('charges')
-          .select('status')
-          .eq('competence', competence);
+        .from('charges')
+        .select('status')
+        .eq('competence', competence);
 
-      if (societyId) {
-        chargesQuery = chargesQuery.eq('society_id', societyId);
-      }
-
+      if (societyId) chargesQuery = chargesQuery.eq('society_id', societyId);
       const chargesRes = await chargesQuery;
 
-      // Calcular saldo total (todas as transações)
       let allTxQuery = supabase.from('transactions').select('amount, type');
-      if (societyId) {
-        allTxQuery = allTxQuery.eq('society_id', societyId);
-      }
+      if (societyId) allTxQuery = allTxQuery.eq('society_id', societyId);
       const allTransactions = await allTxQuery;
-      const totalEntradas = (allTransactions.data || [])
-        .filter((t) => t.type === 'entrada')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      const totalSaidas = (allTransactions.data || [])
-        .filter((t) => t.type === 'saida')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      // Calcular adimplência
+      const totalEntradas = (allTransactions.data || [])
+        .filter((transaction) => transaction.type === 'entrada')
+        .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+      const totalSaidas = (allTransactions.data || [])
+        .filter((transaction) => transaction.type === 'saida')
+        .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+
       const charges = chargesRes.data || [];
       const totalCharges = charges.length;
-      const paidCharges = charges.filter(c => c.status === 'pago').length;
+      const paidCharges = charges.filter((charge) => charge.status === 'pago').length;
       const adimplencia = totalCharges > 0 ? Math.round((paidCharges / totalCharges) * 100) : 0;
 
       setStats({
@@ -161,9 +198,8 @@ export default function Financas() {
       });
     };
 
-    fetchStats();
+    void fetchStats();
 
-    // Subscribe to changes
     const channel = supabase
       .channel('financas-stats')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, fetchStats)
@@ -175,31 +211,30 @@ export default function Financas() {
     };
   }, [societyId]);
 
+  const societySelector = (isAdmin || isPastor) && societies.length > 0 ? (
+    <Select value={selectedSocietyId || ''} onValueChange={setSelectedSocietyId}>
+      <SelectTrigger className="h-12 w-full rounded-2xl border-white/25 bg-white/15 px-4 text-white shadow-sm backdrop-blur-md sm:w-64 [&>svg]:text-white/80">
+        <SelectValue placeholder="Selecione a sociedade" />
+      </SelectTrigger>
+      <SelectContent>
+        {societies.map((society) => (
+          <SelectItem key={society.id} value={society.id}>{society.name}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  ) : undefined;
+
   return (
     <AppLayout>
       <PageHeader
         title="Finanças"
         description="Gerencie cobranças, membros, camisas e gastos"
+        eyebrow="Gestão financeira"
+        icon={<WalletCards className="h-8 w-8 md:h-10 md:w-10" />}
+        action={societySelector}
       />
 
-      {/* Society Selector for admin/pastor */}
-      {(isAdmin || isPastor) && societies.length > 0 && (
-        <div className="mb-4">
-          <Select value={selectedSocietyId || ''} onValueChange={setSelectedSocietyId}>
-            <SelectTrigger className="w-full sm:w-64">
-              <SelectValue placeholder="Selecione a sociedade" />
-            </SelectTrigger>
-            <SelectContent>
-              {societies.map(s => (
-                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
+      <div className="mb-5 grid grid-cols-2 gap-3 md:mb-6 md:gap-4 lg:grid-cols-4">
         <StatCard
           title="Saldo Atual"
           value={`R$ ${stats.saldo.toFixed(2).replace('.', ',')}`}
@@ -232,34 +267,18 @@ export default function Financas() {
       <ExtratoDialog type={extratoType} onClose={() => setExtratoType(null)} />
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        {/* Mobile: Select dropdown */}
-        <div className="md:hidden mb-4">
-          <Select value={activeTab} onValueChange={handleTabChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cobrancas">Cobranças</SelectItem>
-              <SelectItem value="comprovantes">Comprovantes</SelectItem>
-              <SelectItem value="receitas">Receitas</SelectItem>
-              <SelectItem value="gastos">Gastos</SelectItem>
-              <SelectItem value="camisas">Camisas</SelectItem>
-              <SelectItem value="relatorios">Relatórios</SelectItem>
-              <SelectItem value="configuracoes">Configurações</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Desktop: TabsList */}
-        <div className="hidden md:block mb-4">
-          <TabsList className="inline-flex w-auto gap-1">
-            <TabsTrigger value="cobrancas">Cobranças</TabsTrigger>
-            <TabsTrigger value="comprovantes">Comprovantes</TabsTrigger>
-            <TabsTrigger value="receitas">Receitas</TabsTrigger>
-            <TabsTrigger value="gastos">Gastos</TabsTrigger>
-            <TabsTrigger value="camisas">Camisas</TabsTrigger>
-            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-            <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
+        <div className="mb-5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="inline-flex h-auto min-w-full w-max items-stretch gap-1 rounded-[24px] border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_12px_30px_rgba(15,23,42,0.07)] backdrop-blur-xl">
+            {mainTabs.map(({ value, label, icon: Icon }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="min-w-[98px] flex-1 flex-col gap-1.5 rounded-[18px] px-3 py-2.5 text-xs font-semibold text-slate-500 transition-all data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-[0_8px_20px_rgba(4,120,87,0.24)] sm:min-w-[112px] sm:text-sm"
+              >
+                <Icon className="h-5 w-5" />
+                <span>{label}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
 
@@ -271,12 +290,31 @@ export default function Financas() {
           <ComprovantesTab />
         </TabsContent>
 
-        <TabsContent value="receitas" className="animate-in fade-in-50">
-          <MensalidadesTab />
-        </TabsContent>
+        <TabsContent value="movimentacoes" className="animate-in fade-in-50">
+          <Card className="mb-4 rounded-[22px] border-slate-200/70 bg-white/95 shadow-sm">
+            <CardContent className="flex gap-2 p-2">
+              <Button
+                type="button"
+                variant={movementView === 'receitas' ? 'default' : 'ghost'}
+                className={`flex-1 rounded-[16px] ${movementView === 'receitas' ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'text-slate-600'}`}
+                onClick={() => handleMovementChange('receitas')}
+              >
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Receitas
+              </Button>
+              <Button
+                type="button"
+                variant={movementView === 'gastos' ? 'default' : 'ghost'}
+                className={`flex-1 rounded-[16px] ${movementView === 'gastos' ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'text-slate-600'}`}
+                onClick={() => handleMovementChange('gastos')}
+              >
+                <TrendingDown className="mr-2 h-4 w-4" />
+                Gastos
+              </Button>
+            </CardContent>
+          </Card>
 
-        <TabsContent value="gastos" className="animate-in fade-in-50">
-          <GastosTab />
+          {movementView === 'receitas' ? <MensalidadesTab /> : <GastosTab />}
         </TabsContent>
 
         <TabsContent value="camisas" className="animate-in fade-in-50">
@@ -287,10 +325,9 @@ export default function Financas() {
           <RelatoriosTab />
         </TabsContent>
 
-        <TabsContent value="configuracoes" className="animate-in fade-in-50">
+        <TabsContent value="mais" className="animate-in fade-in-50">
           <ConfiguracoesTab />
         </TabsContent>
-
       </Tabs>
     </AppLayout>
   );
