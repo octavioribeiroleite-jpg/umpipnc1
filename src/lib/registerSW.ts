@@ -1,17 +1,45 @@
-const SW_SCRIPT_URL = "/sw.js?v=2026-04-17-v6";
-const CURRENT_CACHE = "ump-cache-v6";
+const SW_SCRIPT_URL = "/sw.js?v=2026-06-22-v7";
+const CURRENT_CACHE = "ump-cache-v7";
+const PREVIEW_RELOAD_KEY = "__preview_sw_cleanup_reloaded__";
+const ROUTE_RESTORE_KEY = "__sw_restore_path__";
+
+function currentRoute() {
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
+function rememberCurrentRoute() {
+  try {
+    sessionStorage.setItem(ROUTE_RESTORE_KEY, currentRoute());
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function restoreRouteIfNeeded() {
+  try {
+    const savedRoute = sessionStorage.getItem(ROUTE_RESTORE_KEY);
+    sessionStorage.removeItem(ROUTE_RESTORE_KEY);
+
+    if (savedRoute && savedRoute !== "/" && window.location.pathname === "/") {
+      window.history.replaceState(window.history.state, "", savedRoute);
+    }
+  } catch {
+    // ignore storage failures
+  }
+}
+
+restoreRouteIfNeeded();
 
 async function purgeOldCaches() {
   try {
     if (!("caches" in window)) return;
     const keys = await caches.keys();
-    const old = keys.filter((k) => k.startsWith("ump-cache") && k !== CURRENT_CACHE);
-    await Promise.all(old.map((k) => caches.delete(k).catch(() => false)));
+    const old = keys.filter((key) => key.startsWith("ump-cache") && key !== CURRENT_CACHE);
+    await Promise.all(old.map((key) => caches.delete(key).catch(() => false)));
   } catch {
     // ignore
   }
 }
-const PREVIEW_RELOAD_KEY = "__preview_sw_cleanup_reloaded__";
 
 const isInIframe = (() => {
   try {
@@ -32,9 +60,9 @@ async function unregisterAndClear() {
 
   if ("serviceWorker" in navigator) {
     try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      if (regs.length > 0) hadArtifacts = true;
-      await Promise.all(regs.map((r) => r.unregister().catch(() => false)));
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      if (registrations.length > 0) hadArtifacts = true;
+      await Promise.all(registrations.map((registration) => registration.unregister().catch(() => false)));
     } catch {
       // ignore cleanup failures
     }
@@ -43,9 +71,9 @@ async function unregisterAndClear() {
   try {
     if ("caches" in window) {
       const keys = await caches.keys();
-      const appKeys = keys.filter((k) => k.startsWith("ump-cache"));
+      const appKeys = keys.filter((key) => key.startsWith("ump-cache"));
       if (appKeys.length > 0) hadArtifacts = true;
-      await Promise.all(appKeys.map((k) => caches.delete(k)));
+      await Promise.all(appKeys.map((key) => caches.delete(key)));
     }
   } catch {
     // ignore cleanup failures
@@ -58,24 +86,18 @@ function emitUpdateAvailable() {
   window.dispatchEvent(new CustomEvent("sw-update-available"));
 }
 
-function activateWaitingWorker(reg: ServiceWorkerRegistration) {
-  reg.waiting?.postMessage({ type: "SKIP_WAITING" });
-}
-
-function trackWaiting(reg: ServiceWorkerRegistration) {
-  if (reg.waiting) {
+function trackWaiting(registration: ServiceWorkerRegistration) {
+  if (registration.waiting) {
     emitUpdateAvailable();
-    activateWaitingWorker(reg);
   }
 
-  reg.addEventListener("updatefound", () => {
-    const installing = reg.installing;
+  registration.addEventListener("updatefound", () => {
+    const installing = registration.installing;
     if (!installing) return;
 
     installing.addEventListener("statechange", () => {
       if (installing.state === "installed" && navigator.serviceWorker.controller) {
         emitUpdateAvailable();
-        activateWaitingWorker(reg);
       }
     });
   });
@@ -88,6 +110,7 @@ export function registerServiceWorker() {
     void unregisterAndClear().then((hadArtifacts) => {
       if (hadArtifacts && !sessionStorage.getItem(PREVIEW_RELOAD_KEY)) {
         sessionStorage.setItem(PREVIEW_RELOAD_KEY, "1");
+        rememberCurrentRoute();
         window.location.reload();
         return;
       }
@@ -101,17 +124,18 @@ export function registerServiceWorker() {
 
   window.addEventListener("load", () => {
     void purgeOldCaches();
+
     navigator.serviceWorker
       .register(SW_SCRIPT_URL)
-      .then((reg) => {
-        trackWaiting(reg);
-        void reg.update().catch(() => {});
+      .then((registration) => {
+        trackWaiting(registration);
+        void registration.update().catch(() => {});
 
         const checkForUpdates = () => {
-          void reg.update().catch(() => {});
+          void registration.update().catch(() => {});
         };
 
-        setInterval(checkForUpdates, 5 * 60 * 1000);
+        window.setInterval(checkForUpdates, 5 * 60 * 1000);
         document.addEventListener("visibilitychange", () => {
           if (document.visibilityState === "visible") {
             checkForUpdates();
@@ -124,27 +148,30 @@ export function registerServiceWorker() {
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (refreshing) return;
       refreshing = true;
+      rememberCurrentRoute();
       window.location.reload();
     });
   });
 }
 
 export async function applyUpdateNow() {
+  rememberCurrentRoute();
+
   if (!("serviceWorker" in navigator)) {
     window.location.reload();
     return;
   }
 
   try {
-    const regs = await navigator.serviceWorker.getRegistrations();
-    const reg = regs[0] ?? (await navigator.serviceWorker.getRegistration());
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    const registration = registrations[0] ?? (await navigator.serviceWorker.getRegistration());
 
-    if (reg?.waiting) {
-      reg.waiting.postMessage({ type: "SKIP_WAITING" });
+    if (registration?.waiting) {
+      registration.waiting.postMessage({ type: "SKIP_WAITING" });
       return;
     }
 
-    await Promise.all(regs.map((item) => item.update().catch(() => {})));
+    await Promise.all(registrations.map((item) => item.update().catch(() => {})));
   } catch {
     // ignore
   }
@@ -152,16 +179,12 @@ export async function applyUpdateNow() {
   window.location.reload();
 }
 
-/**
- * Verificação silenciosa: limpa caches antigos e dispara update do SW
- * SEM forçar reload. Usada em navegações entre páginas.
- */
 export async function silentUpdateCheck() {
   try {
     await purgeOldCaches();
     if ("serviceWorker" in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.update().catch(() => {})));
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((registration) => registration.update().catch(() => {})));
     }
   } catch {
     // ignore
