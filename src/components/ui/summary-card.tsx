@@ -66,7 +66,7 @@ const densityClasses: Record<SummaryDensity, {
     meta: 'mt-1.5 text-[11px] leading-snug md:text-xs',
   },
   featured: {
-    root: 'min-h-[104px] gap-3.5 rounded-[20px] px-4 py-4 md:min-h-[118px] md:px-5 md:py-4.5',
+    root: 'min-h-[104px] gap-3.5 rounded-[20px] px-4 py-4 md:min-h-[118px] md:px-5 md:py-[1.125rem]',
     iconBox: 'h-10 w-10 rounded-[14px] md:h-12 md:w-12 md:rounded-2xl',
     icon: 'h-5 w-5 md:h-6 md:w-6',
     label: 'text-xs leading-tight md:text-sm',
