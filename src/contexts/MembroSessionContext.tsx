@@ -17,14 +17,31 @@ interface MembroSessionContextType {
 
 const MembroSessionContext = createContext<MembroSessionContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'membro_session';
+
+function loadStoredSession(): MembroSession | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as MembroSession) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function MembroSessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSessionState] = useState<MembroSession | null>(null);
+  const [session, setSessionState] = useState<MembroSession | null>(loadStoredSession);
 
   const setSession = useCallback((s: MembroSession) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    } catch { /* ignore */ }
     setSessionState(s);
   }, []);
 
   const clearSession = useCallback(() => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch { /* ignore */ }
     setSessionState(null);
   }, []);
 
