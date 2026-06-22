@@ -740,7 +740,7 @@ export default function Secretaria() {
           />
         )}
 
-        {currentView === 'historico' && (
+        {currentView === 'historico' && isAdmin && (
           <HistoricoTab classes={visibleClasses} students={visibleActiveStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
         )}
 
@@ -752,7 +752,7 @@ export default function Secretaria() {
           />
         )}
 
-        {currentView === 'aniversariantes' && (
+        {currentView === 'aniversariantes' && isAdmin && (
           <SecretariaAniversariantes />
         )}
 
