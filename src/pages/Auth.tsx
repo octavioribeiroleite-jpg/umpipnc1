@@ -276,18 +276,16 @@ export default function Auth() {
     const saved = localStorage.getItem(savedKey);
     const savedId = localStorage.getItem(savedIdKey);
 
-    const { data } = await supabase
-      .from('members')
-      .select('id, name, society_id')
-      .eq('society_id', society.id)
-      .eq('active', true)
-      .order('name');
+    const { data } = await supabase.functions.invoke('member-list', {
+      body: { society_id: society.id },
+    });
 
-    setMembers((data || []) as Member[]);
+    const societyMembers = (data?.members || []) as Member[];
+    setMembers(societyMembers);
     setMembersLoading(false);
 
     if (saved && savedId) {
-      const exists = (data || []).some((m: any) => m.id === savedId);
+      const exists = societyMembers.some((m: any) => m.id === savedId);
       if (exists) {
         setMembroSavedName(saved);
         setMembroSavedId(savedId);
@@ -305,7 +303,7 @@ export default function Auth() {
 
     try {
       const { data, error } = await supabase.functions.invoke('member-login', {
-        body: { society_slug: selectedMembroSociety.slug },
+        body: { society_slug: selectedMembroSociety.slug, member_id: member.id },
       });
 
       if (error || !data?.success) {
@@ -657,10 +655,10 @@ export default function Auth() {
               className="h-52 w-52 sm:h-64 sm:w-64 mx-auto object-contain drop-shadow-[0_24px_45px_rgba(0,0,0,0.55)]"
             />
           </div>
-          <h1 className="font-display text-4xl font-bold text-white drop-shadow-lg">
+          <h1 className="font-display text-4xl font-bold text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.65)]">
             Bem-vindo
           </h1>
-          <p className="text-white/78 text-base mt-2">
+          <p className="mt-2 text-base font-medium text-white/90 drop-shadow-[0_3px_14px_rgba(0,0,0,0.75)]">
             Igreja Presbiteriana de Nova Carapina
           </p>
         </div>
@@ -837,7 +835,7 @@ export default function Auth() {
           </div>
         )}
 
-        <p className={`text-center text-xs text-white/45 mt-6 transition-all duration-500 ${showCards ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
+        <p className={`text-center text-xs font-medium text-white/70 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] mt-6 transition-all duration-500 ${showCards ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
           © 2025 IPNC - Todos os direitos reservados
         </p>
       </div>
