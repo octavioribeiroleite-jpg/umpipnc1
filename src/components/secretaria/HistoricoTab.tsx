@@ -8,6 +8,7 @@ import { TrendingUp, TrendingDown, Award, AlertTriangle, Lock, Download, Users, 
 import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
+import { generateEbdPeriodPDF } from '@/utils/generateEbdPDF';
 import { toast } from 'sonner';
 import {
   ResponsiveDialog,
