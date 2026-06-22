@@ -78,6 +78,24 @@ function getTodayDate(): string {
   return format(today, 'yyyy-MM-dd');
 }
 
+const EBD_SESSION_KEY = 'ebd_session';
+
+interface StoredEbdSession {
+  accessLevel: AccessLevel;
+  adminPin?: string;
+  professorNome?: string;
+  professorClassId?: string | null;
+}
+
+function loadStoredEbdSession(): StoredEbdSession | null {
+  try {
+    const raw = sessionStorage.getItem(EBD_SESSION_KEY);
+    return raw ? (JSON.parse(raw) as StoredEbdSession) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Embedded birthdays component
 function SecretariaAniversariantes() {
   const {
@@ -209,20 +227,21 @@ function SecretariaAniversariantes() {
 export default function Secretaria() {
   const navigate = useNavigate();
   useSwipeBack();
-  const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(null);
+  const storedSession = loadStoredEbdSession();
+  const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(storedSession?.accessLevel ?? null);
   const [loginStep, setLoginStep] = useState<LoginStep>('profile');
-  const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(storedSession?.accessLevel ?? null);
   const [loading, setLoading] = useState(false);
   const [pinError, setPinError] = useState(false);
   const [pendingPin, setPendingPin] = useState('');
   const [nameInput, setNameInput] = useState('');
-  const [adminPin, setAdminPin] = useState('');
+  const [adminPin, setAdminPin] = useState(storedSession?.adminPin ?? '');
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [professorNome, setProfessorNome] = useState('');
-  const [professorClassId, setProfessorClassId] = useState<string | null>(null);
+  const [professorNome, setProfessorNome] = useState(storedSession?.professorNome ?? '');
+  const [professorClassId, setProfessorClassId] = useState<string | null>(storedSession?.professorClassId ?? null);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
@@ -256,6 +275,9 @@ export default function Secretaria() {
       if (data && data.value === pin) {
         setAccessLevel('admin');
         setAdminPin(pin);
+        try {
+          sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({ accessLevel: 'admin', adminPin: pin }));
+        } catch { /* ignore */ }
       } else {
         setPinError(true);
         toast.error('PIN incorreto');
@@ -292,6 +314,13 @@ export default function Secretaria() {
     setProfessorNome(data.teacher.name);
     setProfessorClassId(data.teacher.class_id);
     setAccessLevel('professor');
+    try {
+      sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+        accessLevel: 'professor',
+        professorNome: data.teacher.name,
+        professorClassId: data.teacher.class_id,
+      }));
+    } catch { /* ignore */ }
   };
 
   const handleBack = () => {
@@ -500,6 +529,9 @@ export default function Secretaria() {
 
   const confirmExit = () => {
     setShowExitConfirm(false);
+    try {
+      sessionStorage.removeItem(EBD_SESSION_KEY);
+    } catch { /* ignore */ }
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
