@@ -1,31 +1,21 @@
-import { ReactNode } from 'react';
-import { AppSidebar } from './AppSidebar';
-import { MobileHeader } from './MobileHeader';
-import { OfflineBanner } from '@/components/OfflineBanner';
-import { PullToRefresh } from './PullToRefresh';
-import { BottomNav, type BottomNavItem } from './BottomNav';
-import { useAuth } from '@/contexts/AuthContext';
+import { type ReactNode, useEffect } from 'react';
+import { LogOut } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { silentUpdateCheck } from '@/lib/registerSW';
+import { OfflineBanner } from '@/components/OfflineBanner';
+import { AppSidebar } from './AppSidebar';
+import { BottomNav, type BottomNavItem } from './BottomNav';
+import { MobileHeader } from './MobileHeader';
+import { PullToRefresh } from './PullToRefresh';
+import { TabletNavigationRail } from './TabletNavigationRail';
 import {
-  Home,
-  Users,
-  Calendar,
-  CheckSquare,
-  DollarSign,
-  FolderOpen,
-  Settings,
-  UserCheck,
-  ClipboardCheck,
-  ClipboardList,
-  MessageSquare,
-  Vote,
-  Heart,
-  BookOpen,
-  Cake,
-  LogOut,
-} from 'lucide-react';
+  adminNavigationItems,
+  isNavigationPathActive,
+  primaryNavigationItems,
+  secondaryNavigationItems,
+  type AppNavigationItem,
+} from './appNavigation';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -40,60 +30,64 @@ export function AppLayout({ children }: AppLayoutProps) {
     void silentUpdateCheck();
   }, [location.pathname]);
 
-  const go = (path: string) => navigate(path);
-  const isActive = (path: string) => (path === '/' ? location.pathname === '/' : location.pathname.startsWith(path));
+  const toBottomItem = (item: AppNavigationItem): BottomNavItem => ({
+    key: item.key,
+    icon: item.icon,
+    label: item.label,
+    active: isNavigationPathActive(location.pathname, item.path),
+    onClick: () => navigate(item.path),
+  });
 
-  const mainItems: BottomNavItem[] = [
-    { key: 'home', icon: Home, label: 'Home', active: isActive('/'), onClick: () => go('/') },
-    { key: 'reunioes', icon: Users, label: 'Reuniões', active: isActive('/reunioes'), onClick: () => go('/reunioes') },
-    { key: 'calendario', icon: Calendar, label: 'Calendário', active: isActive('/calendario'), onClick: () => go('/calendario') },
-    { key: 'tarefas', icon: CheckSquare, label: 'Tarefas', active: isActive('/tarefas'), onClick: () => go('/tarefas') },
-  ];
-
+  const mainItems = primaryNavigationItems.map(toBottomItem);
   const moreItems: BottomNavItem[] = [
-    { key: 'financas', icon: DollarSign, label: 'Finanças', active: isActive('/financas'), onClick: () => go('/financas') },
-    { key: 'plenarias', icon: ClipboardCheck, label: 'Plenárias', active: isActive('/plenarias'), onClick: () => go('/plenarias') },
-    { key: 'dizimos', icon: Heart, label: 'Dízimos', active: isActive('/dizimos'), onClick: () => go('/dizimos') },
-    { key: 'comunicados', icon: MessageSquare, label: 'Comunicados', active: isActive('/comunicados'), onClick: () => go('/comunicados') },
-    { key: 'estudos', icon: BookOpen, label: 'Estudos', active: isActive('/estudos'), onClick: () => go('/estudos') },
-    { key: 'secretaria', icon: ClipboardList, label: 'Secretaria', active: isActive('/secretaria'), onClick: () => go('/secretaria') },
-    { key: 'aniversariantes', icon: Cake, label: 'Aniversários', active: isActive('/aniversariantes'), onClick: () => go('/aniversariantes') },
-    { key: 'arquivos', icon: FolderOpen, label: 'Arquivos', active: isActive('/arquivos'), onClick: () => go('/arquivos') },
-    ...(isAdmin
-      ? [
-          { key: 'eleicoes', icon: Vote, label: 'Eleições', active: isActive('/eleicoes'), onClick: () => go('/eleicoes') },
-          { key: 'usuarios', icon: UserCheck, label: 'Usuários', active: isActive('/usuarios'), onClick: () => go('/usuarios') },
-          { key: 'sugestoes', icon: MessageSquare, label: 'Sugestões', active: isActive('/sugestoes'), onClick: () => go('/sugestoes') },
-        ]
-      : []),
-    { key: 'config', icon: Settings, label: 'Configurações', active: isActive('/configuracoes'), onClick: () => go('/configuracoes') },
-    { key: 'sair', icon: LogOut, label: 'Sair', onClick: async () => { await signOut(); go('/auth'); } },
+    ...secondaryNavigationItems.map(toBottomItem),
+    ...(isAdmin ? adminNavigationItems.map(toBottomItem) : []),
+    {
+      key: 'sair',
+      icon: LogOut,
+      label: 'Sair',
+      onClick: async () => {
+        await signOut();
+        navigate('/auth');
+      },
+    },
   ];
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden">
+    <div className="app-page min-h-screen overflow-x-hidden">
       <OfflineBanner />
-      {/* Desktop layout with sidebar (>= lg breakpoint to give tablets the mobile UX) */}
-      <div className="hidden lg:flex h-screen overflow-hidden">
-        <AppSidebar />
-        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-background/80 backdrop-blur-sm">
-          <div className="mx-auto w-full max-w-7xl py-4 md:py-6 px-4 md:px-6 lg:px-8">
-            {children}
-          </div>
-        </main>
-      </div>
 
-      {/* Mobile + tablet layout with institutional header */}
-      <div className="lg:hidden flex flex-col min-h-screen">
+      {/* Telefone: cabeçalho superior + navegação inferior */}
+      <div className="flex min-h-screen flex-col md:hidden">
         <MobileHeader />
-        <main className="flex-1 overflow-x-hidden bg-background/80 px-2.5 pb-20 pt-14 sm:px-4 sm:pb-24 sm:pt-16">
+        <main className="safe-bottom-content min-w-0 flex-1 overflow-x-hidden bg-background/80 px-page-x pt-mobile-header">
           <PullToRefresh>
-            <div className="mx-auto w-full max-w-3xl">
+            <div className="mx-auto w-full min-w-0 max-w-reading py-3">
               {children}
             </div>
           </PullToRefresh>
         </main>
         <BottomNav mainItems={mainItems} moreItems={moreItems} />
+      </div>
+
+      {/* Tablet: rail lateral compacto, sem navegação inferior */}
+      <div className="hidden h-screen min-w-0 overflow-hidden md:flex lg:hidden">
+        <TabletNavigationRail />
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background/80 backdrop-blur-sm">
+          <div className="mx-auto w-full min-w-0 max-w-app px-page-x py-5">
+            {children}
+          </div>
+        </main>
+      </div>
+
+      {/* Computador: sidebar completa e conteúdo amplo */}
+      <div className="hidden h-screen min-w-0 overflow-hidden lg:flex">
+        <AppSidebar />
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background/80 backdrop-blur-sm">
+          <div className="mx-auto w-full min-w-0 max-w-app px-page-x py-6">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );
