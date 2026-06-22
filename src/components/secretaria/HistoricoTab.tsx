@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, Award, AlertTriangle, Lock, Download, Users, ArrowLeft, CircleDot, ChevronRight, User } from 'lucide-react';
 import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { generateEbdAttendancePDF, generateEbdPeriodPDF } from '@/utils/generateEbdPDF';
+import { generateEbdAttendancePDF, generateEbdPeriodPDF, generateEbdQuarterlyPDF } from '@/utils/generateEbdPDF';
 import { toast } from 'sonner';
 import { reportClientError } from '@/utils/reportClientError';
 import {
@@ -78,6 +78,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   const [closingDay, setClosingDay] = useState(false);
   const [openDialog, setOpenDialog] = useState<'perfect' | 'lowFreq' | 'absent' | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [generatingQuarterly, setGeneratingQuarterly] = useState(false);
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -208,6 +209,108 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         description: `Tente novamente. Se o erro persistir, informe o código ${errorId}.`,
         duration: 8000,
       });
+    }
+  };
+
+  const handleDownloadQuarterlyPDF = async () => {
+    if (dayRecords.length === 0) {
+      toast.error('Nenhuma chamada registrada neste período.');
+      return;
+    }
+    setGeneratingQuarterly(true);
+    try {
+      const sundayDates = dayRecords.map(r => r.date);
+
+      // Fetch visitor data for the period
+      const minDate = [...sundayDates].sort()[0];
+      const [{ data: visitorEntries }, { data: visitorCounts }] = await Promise.all([
+        supabase.from('ebd_class_visitor_entries').select('class_id, date, name').gte('date', minDate),
+        supabase.from('ebd_class_visitors').select('class_id, date, visitor_count').gte('date', minDate),
+      ]);
+
+      const entriesInPeriod = (visitorEntries || []).filter(v => sundayDates.includes(v.date));
+      const countsInPeriod = (visitorCounts || []).filter(v => sundayDates.includes(v.date));
+
+      const studentsByClass = new Map<string, EbdStudent[]>();
+      students.forEach(s => {
+        const arr = studentsByClass.get(s.class_id) || [];
+        arr.push(s);
+        studentsByClass.set(s.class_id, arr);
+      });
+
+      // General per-Sunday rows
+      const days = dayRecords.map(r => ({
+        date: r.date,
+        present: r.presentStudents,
+        total: r.totalStudents,
+        percentage: r.totalStudents > 0 ? Math.round((r.presentStudents / r.totalStudents) * 100) : 0,
+        visitorCount: r.visitorCount,
+      }));
+
+      const classesDetail = classes.map(cls => {
+        const classStudents = studentsByClass.get(cls.id) || [];
+        const classTotal = classStudents.length;
+
+        const classDays = sundayDates.map(date => {
+          const dayAtt = allAttendance.filter(a => a.class_id === cls.id && a.date === date);
+          const present = dayAtt.filter(a => a.present).length;
+          const names = entriesInPeriod
+            .filter(v => v.class_id === cls.id && v.date === date && v.name)
+            .map(v => v.name as string);
+          const countRow = countsInPeriod.find(v => v.class_id === cls.id && v.date === date);
+          const visitorCount = Math.max(countRow?.visitor_count ?? 0, names.length);
+          return {
+            date,
+            present,
+            total: classTotal,
+            percentage: classTotal > 0 ? Math.round((present / classTotal) * 100) : 0,
+            visitorCount,
+            visitorNames: names,
+          };
+        }).filter(d => d.total > 0 || d.present > 0 || d.visitorCount > 0);
+
+        const totalPresent = classDays.reduce((s, d) => s + d.present, 0);
+        const avgPercentage = classDays.length > 0
+          ? Math.round(classDays.reduce((s, d) => s + d.percentage, 0) / classDays.length)
+          : 0;
+        const totalVisitors = classDays.reduce((s, d) => s + d.visitorCount, 0);
+
+        const studentStatsList = classStudents.map(st => {
+          const att = allAttendance.filter(a => a.student_id === st.id && sundayDates.includes(a.date));
+          const present = att.filter(a => a.present).length;
+          const total = sundayDates.length;
+          return {
+            name: st.name,
+            present,
+            total,
+            percentage: total > 0 ? Math.round((present / total) * 100) : 0,
+          };
+        });
+
+        return {
+          name: cls.name,
+          totalPresent,
+          avgPercentage,
+          totalVisitors,
+          days: classDays,
+          students: studentStatsList,
+        };
+      }).filter(c => c.days.length > 0 || c.students.length > 0);
+
+      generateEbdQuarterlyPDF({ periodLabel, days, classesDetail });
+      toast.success('Relatório trimestral gerado com sucesso!');
+    } catch (e) {
+      const errorId = await reportClientError('EBD:relatorio-trimestral', e, {
+        period,
+        periodLabel,
+        diasNoPeriodo: dayRecords.length,
+      });
+      toast.error('Não foi possível gerar o relatório trimestral.', {
+        description: `Tente novamente. Se o erro persistir, informe o código ${errorId}.`,
+        duration: 8000,
+      });
+    } finally {
+      setGeneratingQuarterly(false);
     }
   };
 
@@ -514,6 +617,13 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           disabled={dayRecords.length === 0}
         >
           <Download className="h-4 w-4 mr-2" /> Baixar relatório
+        </Button>
+        <Button
+          size="sm"
+          onClick={handleDownloadQuarterlyPDF}
+          disabled={dayRecords.length === 0 || generatingQuarterly}
+        >
+          <Download className="h-4 w-4 mr-2" /> {generatingQuarterly ? 'Gerando...' : 'Relatório completo'}
         </Button>
       </div>
 
