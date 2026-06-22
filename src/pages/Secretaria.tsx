@@ -275,6 +275,9 @@ export default function Secretaria() {
       if (data && data.value === pin) {
         setAccessLevel('admin');
         setAdminPin(pin);
+        try {
+          sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({ accessLevel: 'admin', adminPin: pin }));
+        } catch { /* ignore */ }
       } else {
         setPinError(true);
         toast.error('PIN incorreto');
