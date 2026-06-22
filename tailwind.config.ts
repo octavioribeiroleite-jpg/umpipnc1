@@ -47,7 +47,7 @@ export default {
         "page-title": ["var(--font-page-title)", { lineHeight: "1.1", fontWeight: "800" }],
         "section-title": ["var(--font-section-title)", { lineHeight: "1.2", fontWeight: "750" }],
         "card-title": ["var(--font-card-title)", { lineHeight: "1.25", fontWeight: "700" }],
-        "body-responsive": ["var(--font-body)", { lineHeight: "1.5" }],
+        "body-responsive": ["var(--font-body-responsive)", { lineHeight: "1.5" }],
         "metric-responsive": ["var(--font-metric)", { lineHeight: "1.1", fontWeight: "800" }],
       },
       colors: {
