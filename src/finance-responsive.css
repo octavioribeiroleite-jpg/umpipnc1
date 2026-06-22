@@ -7,7 +7,7 @@
 
 .finance-metric-value {
   white-space: nowrap;
-  font-size: clamp(0.98rem, 4.15vw, 1.55rem);
+  font-size: clamp(0.82rem, 3.45vw, 1.1rem);
 }
 
 .finance-tabs-scroller [role="tab"] {
@@ -146,7 +146,7 @@
 
 @media (min-width: 768px) {
   .finance-metric-value {
-    font-size: clamp(1.05rem, 1.8vw, 1.85rem);
+    font-size: clamp(1rem, 1.55vw, 1.55rem);
   }
 
   .finance-tabs-scroller [role="tab"] {
