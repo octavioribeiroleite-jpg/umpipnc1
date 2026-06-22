@@ -86,7 +86,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile + tablet layout with institutional header */}
       <div className="lg:hidden flex flex-col min-h-screen">
         <MobileHeader />
-        <main className="flex-1 overflow-x-hidden pt-20 sm:pt-24 px-3 sm:px-4 pb-24 bg-background/80">
+        <main className="flex-1 overflow-x-hidden bg-background/80 px-2.5 pb-20 pt-14 sm:px-4 sm:pb-24 sm:pt-16">
           <PullToRefresh>
             <div className="mx-auto w-full max-w-3xl">
               {children}
