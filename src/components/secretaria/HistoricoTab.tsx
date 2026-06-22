@@ -9,6 +9,7 @@ import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { generateEbdAttendancePDF, generateEbdPeriodPDF } from '@/utils/generateEbdPDF';
 import { toast } from 'sonner';
+import { reportClientError } from '@/utils/reportClientError';
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -167,7 +168,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
 
   const periodLabel = period === '4weeks' ? 'Últimas 4 semanas' : period === '3months' ? 'Últimos 3 meses' : 'Todo o período';
 
-  const handleDownloadPeriodPDF = () => {
+  const handleDownloadPeriodPDF = async () => {
     if (dayRecords.length === 0) {
       toast.error('Nenhuma chamada registrada neste período.');
       return;
@@ -196,9 +197,17 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         avgPercentage: c.count > 0 ? Math.round(c.pctSum / c.count) : 0,
       }));
       generateEbdPeriodPDF({ periodLabel, days, classes: classes2 });
+      toast.success('Relatório gerado com sucesso!');
     } catch (e) {
-      console.error('Erro ao gerar relatório do período:', e);
-      toast.error('Erro ao gerar relatório do período.');
+      const errorId = await reportClientError('EBD:relatorio-periodo', e, {
+        period,
+        periodLabel,
+        diasNoPeriodo: dayRecords.length,
+      });
+      toast.error('Não foi possível gerar o relatório.', {
+        description: `Tente novamente. Se o erro persistir, informe o código ${errorId}.`,
+        duration: 8000,
+      });
     }
   };
 
