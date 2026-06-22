@@ -84,7 +84,7 @@
 
 .society-selector-card {
   overflow: hidden;
-  min-height: 92px;
+  min-height: 94px;
   border: 1px solid rgba(255, 255, 255, 0.72) !important;
   border-radius: 22px !important;
   background: rgba(255, 255, 255, 0.96) !important;
@@ -105,26 +105,77 @@
 
 .society-selector-card-content {
   display: grid !important;
-  grid-template-columns: 64px minmax(0, 1fr) 24px;
+  grid-template-columns: 68px minmax(0, 1fr) 24px;
   grid-template-rows: auto auto;
   column-gap: 16px !important;
   row-gap: 4px !important;
   align-items: center !important;
   justify-content: stretch !important;
-  padding: 14px 16px !important;
+  padding: 13px 16px !important;
   text-align: left !important;
 }
 
 .society-selector-badge {
+  position: relative;
+  isolation: isolate;
   grid-column: 1;
   grid-row: 1 / 3;
-  width: 64px !important;
-  height: 64px !important;
-  border-radius: 18px !important;
+  display: flex !important;
+  width: 68px !important;
+  height: 68px !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 20px !important;
   color: #fff !important;
-  font-size: 17px !important;
-  font-weight: 800 !important;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 9px 20px rgba(15, 23, 42, 0.22);
+}
+
+.society-selector-badge::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.24), transparent 45%, rgba(0, 0, 0, 0.12));
+  content: '';
+}
+
+.society-selector-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.society-selector-icon svg {
+  width: 29px;
+  height: 29px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.16));
+}
+
+.society-selector-badge-label {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.society-selector-card[data-society="pastor"] .society-selector-icon svg {
+  width: 35px;
+  height: 35px;
+  stroke-width: 1.65;
 }
 
 .society-selector-title {
@@ -186,19 +237,28 @@
   }
 
   .society-selector-card {
-    min-height: 86px;
+    min-height: 88px;
   }
 
   .society-selector-card-content {
-    grid-template-columns: 58px minmax(0, 1fr) 20px;
+    grid-template-columns: 62px minmax(0, 1fr) 20px;
     column-gap: 13px !important;
-    padding: 13px 14px !important;
+    padding: 12px 14px !important;
   }
 
   .society-selector-badge {
-    width: 58px !important;
-    height: 58px !important;
-    font-size: 16px !important;
+    width: 62px !important;
+    height: 62px !important;
+    border-radius: 18px !important;
+  }
+
+  .society-selector-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .society-selector-badge-label {
+    font-size: 11px;
   }
 
   .society-selector-title {
