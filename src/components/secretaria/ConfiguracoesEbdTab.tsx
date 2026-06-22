@@ -196,6 +196,10 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
                           {copiedId === c.id ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
                         </Button>
                       </div>
+                    ) : has && !pwd ? (
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Senha antiga não visível. Toque em "Trocar" para definir uma nova e poder visualizá-la.
+                      </p>
                     ) : (
                       <Badge variant={has ? 'default' : 'secondary'} className="text-[10px] mt-0.5">
                         {has ? 'Com senha' : 'Sem senha'}
