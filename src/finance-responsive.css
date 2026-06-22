@@ -10,6 +10,10 @@
   font-size: clamp(0.98rem, 4.15vw, 1.55rem);
 }
 
+.finance-tabs-scroller [role="tab"] {
+  min-height: 52px;
+}
+
 .finance-tab-panel table {
   font-variant-numeric: tabular-nums;
 }
@@ -143,6 +147,10 @@
 @media (min-width: 768px) {
   .finance-metric-value {
     font-size: clamp(1.05rem, 1.8vw, 1.85rem);
+  }
+
+  .finance-tabs-scroller [role="tab"] {
+    min-height: 44px;
   }
 }
 
