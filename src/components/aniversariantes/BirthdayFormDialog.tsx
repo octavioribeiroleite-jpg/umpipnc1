@@ -22,6 +22,7 @@ export function BirthdayFormDialog({ open, onOpenChange, birthday, onSave, isSav
   const [nome, setNome] = useState('');
   const [dia, setDia] = useState('');
   const [mes, setMes] = useState('');
+  const [anoNascimento, setAnoNascimento] = useState('');
   const [departamento, setDepartamento] = useState('IPNC');
   const [observacao, setObservacao] = useState('');
   const [pendente, setPendente] = useState(false);
@@ -31,21 +32,44 @@ export function BirthdayFormDialog({ open, onOpenChange, birthday, onSave, isSav
       setNome(birthday.nome);
       setDia(String(birthday.dia));
       setMes(String(birthday.mes));
+      setAnoNascimento(birthday.ano_nascimento ? String(birthday.ano_nascimento) : '');
       setDepartamento(birthday.departamento || 'IPNC');
       setObservacao(birthday.observacao || '');
       setPendente(birthday.pendente_revisao);
     } else {
-      setNome(''); setDia(''); setMes(''); setDepartamento('IPNC'); setObservacao(''); setPendente(false);
+      setNome('');
+      setDia('');
+      setMes('');
+      setAnoNascimento('');
+      setDepartamento('IPNC');
+      setObservacao('');
+      setPendente(false);
     }
   }, [birthday, open]);
 
   const handleSubmit = () => {
     const diaNum = parseInt(dia);
     const mesNum = parseInt(mes);
+    const anoAtual = new Date().getFullYear();
+    const anoNum = anoNascimento.trim() ? parseInt(anoNascimento) : null;
+
     if (!nome.trim()) { toast.error('Informe o nome.'); return; }
     if (isNaN(mesNum) || mesNum < 1 || mesNum > 12) { toast.error('Mês inválido.'); return; }
     if (isNaN(diaNum) || diaNum < 1 || diaNum > MAX_DAYS[mesNum]) { toast.error(`Dia inválido para o mês ${mesNum}.`); return; }
-    onSave({ nome: nome.trim(), dia: diaNum, mes: mesNum, departamento, observacao: observacao || undefined, pendente_revisao: pendente });
+    if (anoNascimento.trim() && (anoNum === null || isNaN(anoNum) || anoNum < 1900 || anoNum > anoAtual)) {
+      toast.error(`Informe um ano entre 1900 e ${anoAtual}.`);
+      return;
+    }
+
+    onSave({
+      nome: nome.trim(),
+      dia: diaNum,
+      mes: mesNum,
+      ano_nascimento: anoNum,
+      departamento,
+      observacao: observacao || undefined,
+      pendente_revisao: pendente,
+    });
   };
 
   return (
@@ -59,14 +83,26 @@ export function BirthdayFormDialog({ open, onOpenChange, birthday, onSave, isSav
             <Label>Nome</Label>
             <Input value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome completo" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Dia</Label>
-              <Input type="number" min={1} max={31} value={dia} onChange={e => setDia(e.target.value)} placeholder="DD" />
+              <Input type="number" inputMode="numeric" min={1} max={31} value={dia} onChange={e => setDia(e.target.value)} placeholder="DD" />
             </div>
             <div>
               <Label>Mês</Label>
-              <Input type="number" min={1} max={12} value={mes} onChange={e => setMes(e.target.value)} placeholder="MM" />
+              <Input type="number" inputMode="numeric" min={1} max={12} value={mes} onChange={e => setMes(e.target.value)} placeholder="MM" />
+            </div>
+            <div>
+              <Label>Ano</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={1900}
+                max={new Date().getFullYear()}
+                value={anoNascimento}
+                onChange={e => setAnoNascimento(e.target.value)}
+                placeholder="AAAA"
+              />
             </div>
           </div>
           <div>
