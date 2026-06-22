@@ -1,0 +1,29 @@
+name: Validate responsive shell
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/validate-responsive-shell.yml'
+      - 'tailwind.config.ts'
+      - 'src/components/layout/AppLayout.tsx'
+      - 'src/components/layout/AppSidebar.tsx'
+      - 'src/components/layout/BottomNav.tsx'
+      - 'src/components/layout/TabletNavigationRail.tsx'
+      - 'src/components/layout/appNavigation.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
