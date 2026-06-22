@@ -227,20 +227,21 @@ function SecretariaAniversariantes() {
 export default function Secretaria() {
   const navigate = useNavigate();
   useSwipeBack();
-  const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(null);
+  const storedSession = loadStoredEbdSession();
+  const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(storedSession?.accessLevel ?? null);
   const [loginStep, setLoginStep] = useState<LoginStep>('profile');
-  const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(storedSession?.accessLevel ?? null);
   const [loading, setLoading] = useState(false);
   const [pinError, setPinError] = useState(false);
   const [pendingPin, setPendingPin] = useState('');
   const [nameInput, setNameInput] = useState('');
-  const [adminPin, setAdminPin] = useState('');
+  const [adminPin, setAdminPin] = useState(storedSession?.adminPin ?? '');
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [professorNome, setProfessorNome] = useState('');
-  const [professorClassId, setProfessorClassId] = useState<string | null>(null);
+  const [professorNome, setProfessorNome] = useState(storedSession?.professorNome ?? '');
+  const [professorClassId, setProfessorClassId] = useState<string | null>(storedSession?.professorClassId ?? null);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
