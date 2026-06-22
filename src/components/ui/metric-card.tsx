@@ -14,10 +14,7 @@ interface MetricCardProps {
   valueClassName?: string;
 }
 
-const toneClasses: Record<MetricCardTone, {
-  value: string;
-  icon: string;
-}> = {
+const toneClasses: Record<MetricCardTone, { value: string; icon: string }> = {
   default: {
     value: 'text-slate-950 dark:text-slate-50',
     icon: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
@@ -51,19 +48,14 @@ export function MetricCard({
   valueClassName,
 }: MetricCardProps) {
   const styles = toneClasses[tone];
-  const Component = onClick ? 'button' : 'div';
+  const rootClassName = cn(
+    'app-card-surface flex min-h-[82px] w-full min-w-0 items-center justify-between gap-3 text-left md:min-h-[102px]',
+    onClick && 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-panel active:scale-[0.99]',
+    className,
+  );
 
-  return (
-    <Component
-      type={onClick ? 'button' : undefined}
-      onClick={onClick}
-      className={cn(
-        'app-card-surface flex min-h-[82px] w-full min-w-0 items-center justify-between gap-3 text-left',
-        'md:min-h-[102px]',
-        onClick && 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-panel active:scale-[0.99]',
-        className,
-      )}
-    >
+  const content = (
+    <>
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400 xs:text-sm">
           {title}
@@ -89,6 +81,16 @@ export function MetricCard({
           <Icon className="h-5 w-5 md:h-6 md:w-6" />
         </div>
       )}
-    </Component>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={rootClassName}>
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={rootClassName}>{content}</div>;
 }
