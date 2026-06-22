@@ -1,0 +1,27 @@
+name: Validate responsive home
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/validate-responsive-home.yml'
+      - 'src/pages/Index.tsx'
+      - 'src/components/layout/SectionHeader.tsx'
+      - 'src/components/layout/ResponsivePrimitives.tsx'
+      - 'src/components/ui/metric-card.tsx'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
