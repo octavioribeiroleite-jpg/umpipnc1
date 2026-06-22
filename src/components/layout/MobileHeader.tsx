@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { ArrowLeft, LogOut } from 'lucide-react';
-import { InstallButton } from '@/components/layout/InstallButton';
 import { UpdateAppButton } from '@/components/UpdateAppButton';
 import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 
@@ -42,57 +41,55 @@ export function MobileHeader() {
   };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-[linear-gradient(135deg,#064e43_0%,#064237_54%,#04332d_100%)] text-white shadow-[0_8px_24px_rgba(3,35,29,0.18)] safe-top">
+    <header className="safe-top fixed inset-x-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-[linear-gradient(135deg,#064e43_0%,#064237_54%,#04332d_100%)] text-white shadow-[0_8px_24px_rgba(3,35,29,0.18)] md:hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-16 -top-24 h-40 w-40 rounded-full border border-emerald-200/10 sm:h-52 sm:w-52" />
-        <div className="absolute right-20 top-0 h-20 w-40 rotate-[-18deg] rounded-[100%] bg-emerald-300/5 sm:h-24 sm:w-48" />
+        <div className="absolute -right-14 -top-20 h-36 w-36 rounded-full border border-emerald-200/10" />
+        <div className="absolute right-16 top-0 h-16 w-32 rotate-[-18deg] rounded-[100%] bg-emerald-300/5" />
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-200/30 to-transparent" />
       </div>
 
-      <div className="relative flex h-14 items-center justify-between gap-2 px-2.5 sm:h-16 sm:px-4">
-        <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+      <div className="relative flex h-mobile-header items-center justify-between gap-2 px-page-x">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           {!isHome && (
             <button
+              type="button"
               onClick={() => navigate(-1)}
               aria-label="Voltar"
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-sm backdrop-blur-md transition-colors hover:bg-white/20 sm:h-10 sm:w-10"
+              className="touch-target flex flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-sm backdrop-blur-md transition-colors hover:bg-white/20"
             >
-              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </button>
           )}
 
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md sm:h-12 sm:w-12">
-            <img src={logoIpnc} alt="Renovo IPNC" className="h-8 w-8 object-contain sm:h-9 sm:w-9" />
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/10 shadow-[0_6px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+            <img src={logoIpnc} alt="Renovo IPNC" className="h-7 w-7 object-contain" />
           </div>
 
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-extrabold leading-tight tracking-tight text-white sm:text-lg">
+            <h1 className="truncate text-sm font-extrabold leading-tight tracking-tight text-white xs:text-base">
               {title}
             </h1>
-            <p className="mt-0.5 truncate text-[11px] font-medium text-emerald-50/80 sm:text-xs">
+            <p className="mt-0.5 hidden truncate text-[10px] font-medium leading-none text-emerald-50/80 xs:block">
               {subtitle}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-1 sm:gap-1.5">
+        <div className="flex flex-shrink-0 items-center gap-1">
           <UpdateAppButton
             variant="icon"
-            className="!h-9 !w-9 rounded-full border border-white/15 bg-white/10 !text-white backdrop-blur-md hover:!bg-white/20 hover:!text-white sm:!h-10 sm:!w-10"
+            className="!h-9 !w-9 rounded-full border border-white/15 bg-white/10 !text-white backdrop-blur-md hover:!bg-white/20 hover:!text-white"
           />
-
-          <div className="hidden sm:block [&_button]:h-10 [&_button]:w-10 [&_button]:rounded-full [&_button]:border [&_button]:border-white/15 [&_button]:bg-white/10 [&_button]:text-white [&_button]:backdrop-blur-md hover:[&_button]:bg-white/20">
-            <InstallButton />
-          </div>
 
           {profile && (
             <button
+              type="button"
               onClick={requestExit}
               aria-label="Sair"
               title="Sair"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20 sm:h-10 sm:w-10"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
             >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+              <LogOut className="h-4 w-4" />
             </button>
           )}
         </div>
