@@ -37,17 +37,19 @@ export function MembroInicio({ onTabChange }: MembroInicioProps) {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(10),
-        supabase
-          .from('charges')
-          .select('amount')
-          .eq('member_id', session.memberId)
-          .eq('status', 'pendente'),
+        supabase.functions.invoke('member-get-charges'),
       ]);
 
-      if (chargesRes.data) {
+      const memberCharges = (chargesRes.data?.charges || []).filter((charge: any) =>
+        charge.status === 'pendente' || charge.status === 'parcial'
+      );
+      if (memberCharges) {
         setPendingCharges({
-          count: chargesRes.data.length,
-          total: chargesRes.data.reduce((sum, c) => sum + Number(c.amount), 0),
+          count: memberCharges.length,
+          total: memberCharges.reduce((sum: number, c: any) => {
+            const paid = Number(c.paid_amount || 0);
+            return sum + Math.max(Number(c.amount || 0) - paid, 0);
+          }, 0),
         });
       }
 
