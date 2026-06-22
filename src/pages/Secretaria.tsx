@@ -529,6 +529,9 @@ export default function Secretaria() {
 
   const confirmExit = () => {
     setShowExitConfirm(false);
+    try {
+      sessionStorage.removeItem(EBD_SESSION_KEY);
+    } catch { /* ignore */ }
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
