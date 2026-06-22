@@ -9,6 +9,7 @@ import { format, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { generateEbdAttendancePDF, generateEbdPeriodPDF } from '@/utils/generateEbdPDF';
 import { toast } from 'sonner';
+import { reportClientError } from '@/utils/reportClientError';
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
