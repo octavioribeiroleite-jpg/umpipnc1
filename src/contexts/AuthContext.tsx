@@ -42,6 +42,9 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const PROFILE_RETRY_DELAYS = [0, 350, 900];
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -52,86 +55,182 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const [society, setSociety] = useState<Society | null>(null);
   const [selectedSocietyId, setSelectedSocietyIdState] = useState<string | null>(null);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hydrationRef = useRef(0);
 
   const setSelectedSocietyId = (id: string | null) => {
     setSelectedSocietyIdState(id);
     try {
-      if (id) {
-        localStorage.setItem('selectedSocietyId', id);
-      } else {
-        localStorage.removeItem('selectedSocietyId');
-      }
+      if (id) localStorage.setItem('selectedSocietyId', id);
+      else localStorage.removeItem('selectedSocietyId');
     } catch {
       // ignore storage errors
     }
   };
-  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetAuthData = () => {
+    setProfile(null);
+    setRoles([]);
+    setSociety(null);
+    setSelectedSocietyIdState(null);
+  };
+
+  const fetchProfileAndRoles = async (userId: string) => {
+    const hydrationId = ++hydrationRef.current;
+    setLoading(true);
+    setRolesLoaded(false);
+
+    let profileData: Profile | null = null;
+    let fetchedRoles: AppRole[] = [];
+    let lastProfileError: unknown = null;
+    let lastRolesError: unknown = null;
+
+    for (const delay of PROFILE_RETRY_DELAYS) {
+      if (delay) await wait(delay);
+      if (hydrationId !== hydrationRef.current) return;
+
+      const [profileResult, rolesResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle(),
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId),
+      ]);
+
+      lastProfileError = profileResult.error;
+      lastRolesError = rolesResult.error;
+      profileData = (profileResult.data as Profile | null) ?? null;
+      fetchedRoles = rolesResult.data?.map((item) => item.role as AppRole) ?? [];
+
+      if (!profileResult.error && !rolesResult.error && profileData && fetchedRoles.length > 0) {
+        break;
+      }
+    }
+
+    if (hydrationId !== hydrationRef.current) return;
+
+    if (lastProfileError) console.error('[Auth] Profile fetch error:', lastProfileError);
+    if (lastRolesError) console.error('[Auth] Roles fetch error:', lastRolesError);
+
+    if (profileData && !profileData.active) {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      resetAuthData();
+      setLoading(false);
+      setRolesLoaded(true);
+      setTimeout(() => {
+        import('sonner').then(({ toast }) => {
+          toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
+        });
+      }, 0);
+      return;
+    }
+
+    setProfile(profileData);
+    setRoles(fetchedRoles);
+
+    if (profileData?.society_id) {
+      const { data: societyData, error: societyError } = await supabase
+        .from('societies')
+        .select('*')
+        .eq('id', profileData.society_id)
+        .maybeSingle();
+
+      if (societyError) console.error('[Auth] Society fetch error:', societyError);
+      setSociety((societyData as Society | null) ?? null);
+    } else {
+      setSociety(null);
+    }
+
+    const fetchedIsAdmin = fetchedRoles.includes('admin');
+    const fetchedIsPastor = fetchedRoles.includes('pastor');
+    if (fetchedIsAdmin || fetchedIsPastor) {
+      try {
+        const saved = localStorage.getItem('selectedSocietyId');
+        if (saved) setSelectedSocietyIdState(saved);
+      } catch {
+        // ignore storage errors
+      }
+    } else {
+      try {
+        localStorage.removeItem('selectedSocietyId');
+      } catch {
+        // ignore storage errors
+      }
+      setSelectedSocietyIdState(null);
+    }
+
+    if (!profileData || fetchedRoles.length === 0) {
+      console.error('[Auth] Incomplete authenticated account', {
+        userId,
+        hasProfile: Boolean(profileData),
+        roles: fetchedRoles,
+      });
+    }
+
+    setRolesLoaded(true);
+    setLoading(false);
+  };
 
   useEffect(() => {
     let isMounted = true;
 
-    // Safety timeout: only unblocks UI, does NOT destroy session
     safetyTimerRef.current = setTimeout(() => {
-      if (isMounted && loading) {
-        console.warn('[Auth] Safety timeout - unblocking UI (session preserved)');
+      if (isMounted) {
+        console.warn('[Auth] Safety timeout - unblocking UI');
         setLoading(false);
-        setRolesLoaded(true);
       }
     }, 10000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        if (!isMounted) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (!isMounted) return;
 
-        console.log('[Auth] onAuthStateChange:', event);
+      console.log('[Auth] onAuthStateChange:', event);
 
-        if (event === 'TOKEN_REFRESHED') {
-          // Token refreshed: just update session/user, don't re-fetch profile
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          return;
-        }
-
-        if (event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setRoles([]);
-          setSociety(null);
-          setLoading(false);
-          setRolesLoaded(true);
-          return;
-        }
-
+      if (event === 'TOKEN_REFRESHED') {
         setSession(newSession);
         setUser(newSession?.user ?? null);
-
-        const isNewUser = newSession?.user?.id !== user?.id;
-        if (newSession?.user && (!profile || isNewUser)) {
-          if (isNewUser) {
-            setProfile(null);
-            setRoles([]);
-            setSociety(null);
-          }
-          setTimeout(() => {
-            if (isMounted) fetchProfileAndRoles(newSession.user.id);
-          }, 0);
-        } else if (!newSession) {
-          setProfile(null);
-          setRoles([]);
-          setSociety(null);
-          setLoading(false);
-        }
+        return;
       }
-    );
+
+      if (event === 'SIGNED_OUT') {
+        hydrationRef.current += 1;
+        setSession(null);
+        setUser(null);
+        resetAuthData();
+        setLoading(false);
+        setRolesLoaded(true);
+        return;
+      }
+
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      if (newSession?.user) {
+        setLoading(true);
+        setRolesLoaded(false);
+        setProfile(null);
+        setRoles([]);
+        setSociety(null);
+        setTimeout(() => {
+          if (isMounted) void fetchProfileAndRoles(newSession.user.id);
+        }, 0);
+      } else {
+        resetAuthData();
+        setLoading(false);
+        setRolesLoaded(true);
+      }
+    });
 
     const initializeAuth = async () => {
       try {
-        console.log('[Auth] Starting getSession...');
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        console.log('[Auth] getSession completed', { hasSession: !!currentSession, error: error?.message });
 
-        // Cancel safety timer since getSession completed
         if (safetyTimerRef.current) {
           clearTimeout(safetyTimerRef.current);
           safetyTimerRef.current = null;
@@ -143,6 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('[Auth] getSession error:', error.message);
           setUser(null);
           setSession(null);
+          resetAuthData();
           setLoading(false);
           setRolesLoaded(true);
           return;
@@ -152,23 +252,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentSession?.user ?? null);
 
         if (currentSession?.user) {
-          // Set a separate longer timeout for profile fetch
-          const profileTimer = setTimeout(() => {
-            if (isMounted && loading) {
-              console.warn('[Auth] Profile fetch timeout - unblocking UI');
-              setLoading(false);
-              setRolesLoaded(true);
-            }
-          }, 8000);
-
           await fetchProfileAndRoles(currentSession.user.id);
-          clearTimeout(profileTimer);
         } else {
+          resetAuthData();
           setLoading(false);
           setRolesLoaded(true);
         }
-      } catch (err: any) {
-        console.error('[Auth] Initialization error:', err?.message || err);
+      } catch (error) {
+        console.error('[Auth] Initialization error:', error);
         if (isMounted) {
           setLoading(false);
           setRolesLoaded(true);
@@ -176,104 +267,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    initializeAuth();
+    void initializeAuth();
 
     return () => {
       isMounted = false;
-      if (safetyTimerRef.current) {
-        clearTimeout(safetyTimerRef.current);
-      }
+      hydrationRef.current += 1;
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       subscription.unsubscribe();
     };
   }, []);
 
-  const fetchProfileAndRoles = async (userId: string) => {
-    try {
-      // Fetch profile with individual error handling
-      let profileData: any = null;
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-        profileData = data;
-      } catch (err) {
-        console.error('[Auth] Profile fetch network error:', err);
-        // Don't destroy session on network error, just proceed
-      }
-
-      if (profileData && !profileData.active) {
-        await supabase.auth.signOut();
-        setUser(null);
-        setSession(null);
-        setProfile(null);
-        setRoles([]);
-        setSociety(null);
-        setTimeout(() => {
-          import('sonner').then(({ toast }) => {
-            toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
-          });
-        }, 0);
-        setLoading(false);
-        setRolesLoaded(true);
-        return;
-      }
-
-      if (profileData) {
-        setProfile(profileData as Profile);
-
-        // Fetch society independently
-        if (profileData.society_id) {
-          try {
-            const { data: societyData } = await supabase
-              .from('societies')
-              .select('*')
-              .eq('id', profileData.society_id)
-              .maybeSingle();
-            if (societyData) setSociety(societyData as Society);
-          } catch (err) {
-            console.error('[Auth] Society fetch error:', err);
-          }
-        } else {
-          setSociety(null);
-        }
-      }
-
-      // Fetch roles independently
-      try {
-        const { data: rolesData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId);
-        const fetchedRoles = rolesData?.map(r => r.role as AppRole) || [];
-        setRoles(fetchedRoles);
-
-        const fetchedIsAdmin = fetchedRoles.includes('admin');
-        if (fetchedIsAdmin) {
-          try {
-            const saved = localStorage.getItem('selectedSocietyId');
-            if (saved) setSelectedSocietyIdState(saved);
-          } catch {}
-        } else {
-          try { localStorage.removeItem('selectedSocietyId'); } catch {}
-          setSelectedSocietyIdState(null);
-        }
-      } catch (err) {
-        console.error('[Auth] Roles fetch error:', err);
-      }
-    } catch (error) {
-      console.error('[Auth] fetchProfileAndRoles error:', error);
-    } finally {
-      setRolesLoaded(true);
-      setLoading(false);
-    }
-  };
-
   const signIn = async (username: string, password: string) => {
     try {
       localStorage.removeItem('selectedSocietyId');
-    } catch {}
+    } catch {
+      // ignore storage errors
+    }
     setSelectedSocietyIdState(null);
 
     const cleanUsername = username.toLowerCase().replace(/\s+/g, '');
@@ -290,21 +299,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    hydrationRef.current += 1;
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setProfile(null);
-    setRoles([]);
-    setSociety(null);
+    resetAuthData();
     setRolesLoaded(false);
-    setSelectedSocietyId(null);
   };
 
   const isAdmin = roles.includes('admin');
   const isManagement = roles.includes('admin') || roles.includes('diretoria');
   const isPastor = roles.includes('pastor');
 
-  const effectiveSocietyId = isAdmin
+  const effectiveSocietyId = (isAdmin || isPastor)
     ? selectedSocietyId
     : (profile?.society_id ?? null);
 
