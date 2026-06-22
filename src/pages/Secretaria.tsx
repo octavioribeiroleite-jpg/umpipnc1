@@ -314,6 +314,13 @@ export default function Secretaria() {
     setProfessorNome(data.teacher.name);
     setProfessorClassId(data.teacher.class_id);
     setAccessLevel('professor');
+    try {
+      sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+        accessLevel: 'professor',
+        professorNome: data.teacher.name,
+        professorClassId: data.teacher.class_id,
+      }));
+    } catch { /* ignore */ }
   };
 
   const handleBack = () => {
