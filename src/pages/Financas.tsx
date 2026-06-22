@@ -92,16 +92,16 @@ function StatCard({
   return (
     <AppCard
       variant="stat"
-      className={`rounded-[24px] border-white/70 bg-white/95 p-1 shadow-[0_12px_30px_rgba(15,23,42,0.07)] ${onClick ? 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,23,42,0.10)] active:scale-[0.99]' : ''}`}
+      className={`rounded-2xl border-white/70 bg-white/95 p-1 shadow-[0_10px_24px_rgba(15,23,42,0.06)] sm:rounded-[24px] ${onClick ? 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,23,42,0.10)] active:scale-[0.99]' : ''}`}
       onClick={onClick}
     >
-      <div className="flex min-h-[92px] items-center justify-between gap-3 p-3 md:min-h-[112px] md:p-4">
+      <div className="flex min-h-[76px] items-center justify-between gap-2 p-2.5 md:min-h-[112px] md:gap-3 md:p-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-500 md:text-base">{title}</p>
-          <p className={`mt-2 truncate text-xl font-extrabold tracking-tight md:text-3xl ${colorClass}`}>{value}</p>
+          <p className="truncate text-xs font-medium text-slate-500 md:text-base">{title}</p>
+          <p className={`mt-1 break-words text-base font-extrabold leading-tight tracking-tight md:mt-2 md:text-3xl ${colorClass}`}>{value}</p>
         </div>
-        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[16px] md:h-14 md:w-14 ${iconClass}`}>
-          <Icon className="h-6 w-6 md:h-7 md:w-7" />
+        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl md:h-14 md:w-14 md:rounded-[16px] ${iconClass}`}>
+          <Icon className="h-4.5 w-4.5 md:h-7 md:w-7" />
         </div>
       </div>
     </AppCard>
@@ -234,7 +234,7 @@ export default function Financas() {
         action={societySelector}
       />
 
-      <div className="mb-5 grid grid-cols-2 gap-3 md:mb-6 md:gap-4 lg:grid-cols-4">
+      <div className="mb-3 grid grid-cols-2 gap-2 md:mb-6 md:gap-4 lg:grid-cols-4">
         <StatCard
           title="Saldo Atual"
           value={`R$ ${stats.saldo.toFixed(2).replace('.', ',')}`}
