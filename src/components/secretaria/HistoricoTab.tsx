@@ -166,6 +166,43 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     }
   };
 
+  const periodLabel = period === '4weeks' ? 'Últimas 4 semanas' : period === '3months' ? 'Últimos 3 meses' : 'Todo o período';
+
+  const handleDownloadPeriodPDF = () => {
+    if (dayRecords.length === 0) {
+      toast.error('Nenhuma chamada registrada neste período.');
+      return;
+    }
+    try {
+      const days = dayRecords.map(r => ({
+        date: r.date,
+        present: r.presentStudents,
+        total: r.totalStudents,
+        percentage: r.totalStudents > 0 ? Math.round((r.presentStudents / r.totalStudents) * 100) : 0,
+        visitorCount: r.visitorCount,
+      }));
+      const classAgg = new Map<string, { name: string; totalPresent: number; pctSum: number; count: number }>();
+      dayRecords.forEach(r => {
+        r.classSummary.forEach(cs => {
+          const cur = classAgg.get(cs.classId) || { name: cs.className, totalPresent: 0, pctSum: 0, count: 0 };
+          cur.totalPresent += cs.present;
+          cur.pctSum += cs.percentage;
+          cur.count += 1;
+          classAgg.set(cs.classId, cur);
+        });
+      });
+      const classes2 = [...classAgg.values()].map(c => ({
+        name: c.name,
+        totalPresent: c.totalPresent,
+        avgPercentage: c.count > 0 ? Math.round(c.pctSum / c.count) : 0,
+      }));
+      generateEbdPeriodPDF({ periodLabel, days, classes: classes2 });
+    } catch (e) {
+      console.error('Erro ao gerar relatório do período:', e);
+      toast.error('Erro ao gerar relatório do período.');
+    }
+  };
+
   const handleCloseDay = async (record: DayRecord) => {
     setClosingDay(true);
     const { data: dayAttendance } = await supabase.from('ebd_attendance').select('*').eq('date', record.date);
