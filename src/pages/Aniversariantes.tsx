@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { useBirthdays, getDaysUntilBirthday } from '@/hooks/useBirthdays';
+import { useBirthdays } from '@/hooks/useBirthdays';
 import type { Birthday, BirthdayInsert } from '@/hooks/useBirthdays';
 import { NextBirthdayCard } from '@/components/aniversariantes/NextBirthdayCard';
 import { TodayBirthdays } from '@/components/aniversariantes/TodayBirthdays';
@@ -27,6 +27,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+
+function mutationErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 
 export default function Aniversariantes() {
   const { isManagement, isAdmin } = useAuth();
@@ -63,12 +67,12 @@ export default function Aniversariantes() {
     if (editingBirthday) {
       updateBirthday.mutate({ id: editingBirthday.id, ...data }, {
         onSuccess: () => { toast.success('Atualizado!'); setFormOpen(false); setEditingBirthday(null); },
-        onError: () => toast.error('Erro ao atualizar.'),
+        onError: error => toast.error(mutationErrorMessage(error, 'Erro ao atualizar.')),
       });
     } else {
       createBirthday.mutate(data, {
         onSuccess: () => { toast.success('Cadastrado!'); setFormOpen(false); },
-        onError: () => toast.error('Erro ao cadastrar.'),
+        onError: error => toast.error(mutationErrorMessage(error, 'Erro ao cadastrar.')),
       });
     }
   };
@@ -77,13 +81,14 @@ export default function Aniversariantes() {
   const handleToggleActive = (b: Birthday) => {
     updateBirthday.mutate({ id: b.id, ativo: !b.ativo }, {
       onSuccess: () => toast.success(b.ativo ? 'Inativado' : 'Ativado'),
+      onError: error => toast.error(mutationErrorMessage(error, 'Erro ao alterar o status.')),
     });
   };
   const handleDelete = () => {
     if (!deletingBirthday) return;
     deleteBirthday.mutate(deletingBirthday.id, {
       onSuccess: () => { toast.success('Excluído!'); setDeletingBirthday(null); },
-      onError: () => toast.error('Erro ao excluir.'),
+      onError: error => toast.error(mutationErrorMessage(error, 'Erro ao excluir.')),
     });
   };
 
