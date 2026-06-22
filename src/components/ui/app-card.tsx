@@ -15,13 +15,13 @@ const variantClasses = {
 
 const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(
   ({ className, variant = 'default', noPadding, colorStripe, children, ...props }, ref) => {
-    const padding = noPadding ? '' : variant === 'stat' ? 'p-3' : 'p-4';
+    const padding = noPadding ? '' : variant === 'stat' ? 'p-2.5 sm:p-3' : 'p-3 sm:p-4';
 
     return (
       <div
         ref={ref}
         className={cn(
-          'rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm overflow-hidden',
+          'rounded-xl sm:rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm overflow-hidden',
           variantClasses[variant],
           !noPadding && !colorStripe && padding,
           className,
@@ -30,7 +30,7 @@ const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(
       >
         {colorStripe ? (
           <div className="flex">
-            <div className="w-[3px] shrink-0 rounded-l-[18px]" style={{ backgroundColor: colorStripe }} />
+            <div className="w-[3px] shrink-0 rounded-l-xl sm:rounded-l-[18px]" style={{ backgroundColor: colorStripe }} />
             <div className={cn('flex-1 min-w-0', padding)}>{children}</div>
           </div>
         ) : (
