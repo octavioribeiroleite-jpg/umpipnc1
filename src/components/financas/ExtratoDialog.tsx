@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Loader2, TrendingDown, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 
 export type ExtratoType = 'all' | 'entrada' | 'saida';
 
@@ -20,12 +19,12 @@ const MONTHS = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
-const brl = (v: number) => `R$ ${(v || 0).toFixed(2).replace('.', ',')}`;
+const brl = (value: number) => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
 
 const TITLES: Record<ExtratoType, string> = {
-  all: 'Extrato Completo',
-  entrada: 'Extrato de Receitas',
-  saida: 'Extrato de Gastos',
+  all: 'Extrato completo',
+  entrada: 'Extrato de receitas',
+  saida: 'Extrato de gastos',
 };
 
 interface Props {
@@ -36,109 +35,121 @@ interface Props {
 export function ExtratoDialog({ type, onClose }: Props) {
   const { effectiveSocietyId: societyId } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [txs, setTxs] = useState<Tx[]>([]);
+  const [transactions, setTransactions] = useState<Tx[]>([]);
 
   useEffect(() => {
     if (!type) return;
-    const fetchTx = async () => {
+
+    const fetchTransactions = async () => {
       setLoading(true);
-      let q = supabase
+      let query = supabase
         .from('transactions')
         .select('id, date, description, amount, type')
         .order('date', { ascending: false });
-      if (type !== 'all') q = q.eq('type', type);
-      if (societyId) q = q.eq('society_id', societyId);
-      const { data } = await q;
-      setTxs((data || []) as Tx[]);
+
+      if (type !== 'all') query = query.eq('type', type);
+      if (societyId) query = query.eq('society_id', societyId);
+
+      const { data } = await query;
+      setTransactions((data || []) as Tx[]);
       setLoading(false);
     };
-    fetchTx();
+
+    void fetchTransactions();
   }, [type, societyId]);
 
   const groups = useMemo(() => {
     const map = new Map<string, Tx[]>();
-    for (const t of txs) {
-      const [y, m] = t.date.split('-');
-      const key = `${y}-${m}`;
+
+    for (const transaction of transactions) {
+      const [year, month] = transaction.date.split('-');
+      const key = `${year}-${month}`;
       if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(t);
+      map.get(key)!.push(transaction);
     }
+
     return Array.from(map.entries()).map(([key, items]) => {
-      const [y, m] = key.split('-');
-      const entradas = items.filter(i => i.type === 'entrada').reduce((s, i) => s + Number(i.amount), 0);
-      const saidas = items.filter(i => i.type === 'saida').reduce((s, i) => s + Number(i.amount), 0);
+      const [year, month] = key.split('-');
+      const entradas = items
+        .filter((item) => item.type === 'entrada')
+        .reduce((sum, item) => sum + Number(item.amount), 0);
+      const saidas = items
+        .filter((item) => item.type === 'saida')
+        .reduce((sum, item) => sum + Number(item.amount), 0);
+
       return {
         key,
-        label: `${MONTHS[parseInt(m, 10) - 1]} / ${y}`,
+        label: `${MONTHS[parseInt(month, 10) - 1]} / ${year}`,
         items,
-        entradas,
-        saidas,
         saldo: entradas - saidas,
       };
     });
-  }, [txs]);
+  }, [transactions]);
 
-  const totalEntradas = txs.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0);
-  const totalSaidas = txs.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0);
+  const totalEntradas = transactions
+    .filter((transaction) => transaction.type === 'entrada')
+    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+  const totalSaidas = transactions
+    .filter((transaction) => transaction.type === 'saida')
+    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+  const saldo = totalEntradas - totalSaidas;
 
   return (
-    <Dialog open={!!type} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{type ? TITLES[type] : ''}</DialogTitle>
+    <Dialog open={Boolean(type)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[92dvh] w-[calc(100%-1.25rem)] max-w-2xl overflow-y-auto rounded-[22px] p-4 sm:w-full sm:p-6">
+        <DialogHeader className="pr-7">
+          <DialogTitle className="text-lg sm:text-xl">{type ? TITLES[type] : ''}</DialogTitle>
         </DialogHeader>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-        ) : txs.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">Nenhuma movimentação registrada</p>
+        ) : transactions.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma movimentação registrada</p>
         ) : (
-          <div className="space-y-4">
-            {/* Totais gerais */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-lg bg-success/10 p-3 text-center">
-                <p className="text-xs text-muted-foreground">Receitas</p>
-                <p className="text-sm font-bold text-success">{brl(totalEntradas)}</p>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+              <div className="min-w-0 rounded-xl bg-success/10 p-2 text-center sm:p-3">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">Receitas</p>
+                <p className="mt-0.5 truncate text-xs font-bold tabular-nums text-success sm:text-sm">{brl(totalEntradas)}</p>
               </div>
-              <div className="rounded-lg bg-destructive/10 p-3 text-center">
-                <p className="text-xs text-muted-foreground">Gastos</p>
-                <p className="text-sm font-bold text-destructive">{brl(totalSaidas)}</p>
+              <div className="min-w-0 rounded-xl bg-destructive/10 p-2 text-center sm:p-3">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">Gastos</p>
+                <p className="mt-0.5 truncate text-xs font-bold tabular-nums text-destructive sm:text-sm">{brl(totalSaidas)}</p>
               </div>
-              <div className="rounded-lg bg-muted p-3 text-center">
-                <p className="text-xs text-muted-foreground">Saldo</p>
-                <p className={`text-sm font-bold ${totalEntradas - totalSaidas >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  {brl(totalEntradas - totalSaidas)}
+              <div className="min-w-0 rounded-xl bg-muted p-2 text-center sm:p-3">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">Saldo</p>
+                <p className={`mt-0.5 truncate text-xs font-bold tabular-nums sm:text-sm ${saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {brl(saldo)}
                 </p>
               </div>
             </div>
 
-            {/* Por mês (extrato) */}
-            {groups.map(g => (
-              <div key={g.key} className="rounded-lg border">
-                <div className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-t-lg">
-                  <span className="text-sm font-semibold">{g.label}</span>
-                  <span className={`text-sm font-bold ${g.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {brl(g.saldo)}
+            {groups.map((group) => (
+              <div key={group.key} className="overflow-hidden rounded-xl border">
+                <div className="flex items-center justify-between gap-2 bg-muted/50 px-3 py-2">
+                  <span className="truncate text-xs font-semibold sm:text-sm">{group.label}</span>
+                  <span className={`flex-shrink-0 text-xs font-bold tabular-nums sm:text-sm ${group.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    {brl(group.saldo)}
                   </span>
                 </div>
                 <div className="divide-y">
-                  {g.items.map(t => (
-                    <div key={t.id} className="flex items-center justify-between px-3 py-2 gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        {t.type === 'entrada'
-                          ? <TrendingUp className="h-4 w-4 text-success shrink-0" />
-                          : <TrendingDown className="h-4 w-4 text-destructive shrink-0" />}
+                  {group.items.map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between gap-2 px-3 py-2.5">
+                      <div className="flex min-w-0 items-center gap-2">
+                        {transaction.type === 'entrada'
+                          ? <TrendingUp className="h-4 w-4 flex-shrink-0 text-success" />
+                          : <TrendingDown className="h-4 w-4 flex-shrink-0 text-destructive" />}
                         <div className="min-w-0">
-                          <p className="text-sm truncate">{t.description}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(t.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                          <p className="truncate text-xs sm:text-sm">{transaction.description}</p>
+                          <p className="text-[10px] text-muted-foreground sm:text-xs">
+                            {new Date(`${transaction.date}T00:00:00`).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
                       </div>
-                      <span className={`text-sm font-medium shrink-0 ${t.type === 'entrada' ? 'text-success' : 'text-destructive'}`}>
-                        {t.type === 'entrada' ? '+' : '-'}{brl(Number(t.amount))}
+                      <span className={`flex-shrink-0 text-xs font-semibold tabular-nums sm:text-sm ${transaction.type === 'entrada' ? 'text-success' : 'text-destructive'}`}>
+                        {transaction.type === 'entrada' ? '+' : '-'}{brl(Number(transaction.amount))}
                       </span>
                     </div>
                   ))}
