@@ -3,6 +3,9 @@ project_id = "dceldfybzabjlgudbzah"
 [functions.organize-meeting]
 verify_jwt = false
 
+[functions.log-client-error]
+verify_jwt = false
+
 [functions.summarize-contributions]
 verify_jwt = false
 
