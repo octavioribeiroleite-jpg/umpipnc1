@@ -8,18 +8,47 @@ export default {
     container: {
       center: true,
       padding: {
-        DEFAULT: "1rem",
-        sm: "1.5rem",
-        lg: "2rem",
+        DEFAULT: "var(--page-x)",
+        sm: "var(--page-x)",
+        lg: "var(--page-x)",
       },
       screens: {
-        "2xl": "1400px",
+        "2xl": "1440px",
       },
     },
     extend: {
+      screens: {
+        xs: "390px",
+        "3xl": "1920px",
+      },
+      spacing: {
+        "page-x": "var(--page-x)",
+        "section-gap": "var(--section-gap)",
+        "card-gap": "var(--card-gap)",
+        "card-padding": "var(--card-padding)",
+        "mobile-header": "var(--mobile-header-height)",
+        "bottom-nav": "var(--bottom-nav-height)",
+      },
+      maxWidth: {
+        app: "var(--content-max-width)",
+        reading: "var(--reading-max-width)",
+      },
+      minHeight: {
+        touch: "var(--touch-target)",
+      },
+      minWidth: {
+        touch: "var(--touch-target)",
+      },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
         display: ["Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
+      },
+      fontSize: {
+        "page-title": ["var(--font-page-title)", { lineHeight: "1.1", fontWeight: "800" }],
+        "section-title": ["var(--font-section-title)", { lineHeight: "1.2", fontWeight: "750" }],
+        "card-title": ["var(--font-card-title)", { lineHeight: "1.25", fontWeight: "700" }],
+        "body-responsive": ["var(--font-body)", { lineHeight: "1.5" }],
+        "metric-responsive": ["var(--font-metric)", { lineHeight: "1.1", fontWeight: "800" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -83,6 +112,14 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        card: "var(--card-radius)",
+        panel: "var(--panel-radius)",
+        hero: "var(--hero-radius)",
+      },
+      boxShadow: {
+        card: "var(--shadow-card)",
+        panel: "var(--shadow-panel)",
+        floating: "var(--shadow-floating)",
       },
       keyframes: {
         "accordion-down": {
