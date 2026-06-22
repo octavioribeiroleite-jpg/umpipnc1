@@ -22,7 +22,6 @@ import {
   MessageSquare,
   Vote,
   Heart,
-  Globe,
   BookOpen,
   Cake,
   LogOut,
@@ -84,10 +83,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         </main>
       </div>
 
-      {/* Mobile + tablet layout with hamburger menu */}
+      {/* Mobile + tablet layout with institutional header */}
       <div className="lg:hidden flex flex-col min-h-screen">
         <MobileHeader />
-        <main className="flex-1 overflow-x-hidden pt-14 px-3 sm:px-4 pb-24 bg-background/80">
+        <main className="flex-1 overflow-x-hidden pt-20 sm:pt-24 px-3 sm:px-4 pb-24 bg-background/80">
           <PullToRefresh>
             <div className="mx-auto w-full max-w-3xl">
               {children}
