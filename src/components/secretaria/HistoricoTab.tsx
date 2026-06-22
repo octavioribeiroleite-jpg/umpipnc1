@@ -488,7 +488,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   return (
     <div className="space-y-4">
       {/* Period selector */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {([
           { key: '4weeks' as PeriodFilter, label: '4 semanas' },
           { key: '3months' as PeriodFilter, label: '3 meses' },
@@ -498,6 +498,15 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
             {p.label}
           </Button>
         ))}
+        <Button
+          variant="secondary"
+          size="sm"
+          className="ml-auto"
+          onClick={handleDownloadPeriodPDF}
+          disabled={dayRecords.length === 0}
+        >
+          <Download className="h-4 w-4 mr-2" /> Baixar relatório
+        </Button>
       </div>
 
       {/* Compact day cards */}
