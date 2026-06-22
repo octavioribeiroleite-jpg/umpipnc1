@@ -584,27 +584,31 @@ export default function Secretaria() {
               <span className="font-medium text-sm">Chamada</span>
             </AppCard>
 
-            <AppCard
-              variant="interactive"
-              className="flex flex-col items-center gap-3 py-6"
-              onClick={() => setCurrentView('historico')}
-            >
-              <div className="h-14 w-14 rounded-2xl bg-sky-500/10 flex items-center justify-center">
-                <BarChart3 className="h-7 w-7 text-sky-500" />
-              </div>
-              <span className="font-medium text-sm">Histórico</span>
-            </AppCard>
+            {isAdmin && (
+              <>
+                <AppCard
+                  variant="interactive"
+                  className="flex flex-col items-center gap-3 py-6"
+                  onClick={() => setCurrentView('historico')}
+                >
+                  <div className="h-14 w-14 rounded-2xl bg-sky-500/10 flex items-center justify-center">
+                    <BarChart3 className="h-7 w-7 text-sky-500" />
+                  </div>
+                  <span className="font-medium text-sm">Histórico</span>
+                </AppCard>
 
-            <AppCard
-              variant="interactive"
-              className="flex flex-col items-center gap-3 py-6"
-              onClick={() => setCurrentView('aniversariantes')}
-            >
-              <div className="h-14 w-14 rounded-2xl bg-pink-500/10 flex items-center justify-center">
-                <Cake className="h-7 w-7 text-pink-500" />
-              </div>
-              <span className="font-medium text-sm">Aniversariantes</span>
-            </AppCard>
+                <AppCard
+                  variant="interactive"
+                  className="flex flex-col items-center gap-3 py-6"
+                  onClick={() => setCurrentView('aniversariantes')}
+                >
+                  <div className="h-14 w-14 rounded-2xl bg-pink-500/10 flex items-center justify-center">
+                    <Cake className="h-7 w-7 text-pink-500" />
+                  </div>
+                  <span className="font-medium text-sm">Aniversariantes</span>
+                </AppCard>
+              </>
+            )}
 
             {isAdmin && (
               <AppCard
