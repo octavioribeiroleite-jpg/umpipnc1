@@ -25,7 +25,7 @@ export function SectionHeader({
     >
       <div className="flex min-w-0 items-center gap-3">
         {icon && (
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 [&_svg]:h-4.5 [&_svg]:w-4.5 sm:h-10 sm:w-10 sm:[&_svg]:h-5 sm:[&_svg]:w-5">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 [&_svg]:h-[18px] [&_svg]:w-[18px] sm:h-10 sm:w-10 sm:[&_svg]:h-5 sm:[&_svg]:w-5">
             {icon}
           </div>
         )}
