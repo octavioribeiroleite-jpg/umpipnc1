@@ -96,7 +96,7 @@ export function ExtratoDialog({ type, onClose }: Props) {
 
   return (
     <Dialog open={Boolean(type)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100%-1.25rem)] max-w-2xl overflow-y-auto rounded-[22px] p-4 sm:w-full sm:p-6">
+      <DialogContent className="max-h-[92dvh] w-[calc(100%_-_1.25rem)] max-w-2xl overflow-y-auto rounded-[22px] p-4 sm:w-full sm:p-6">
         <DialogHeader className="pr-7">
           <DialogTitle className="text-lg sm:text-xl">{type ? TITLES[type] : ''}</DialogTitle>
         </DialogHeader>
