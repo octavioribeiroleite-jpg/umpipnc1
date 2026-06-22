@@ -42,6 +42,7 @@ import Aniversariantes from "./pages/Aniversariantes";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { UpdateAvailableBanner } from "@/components/UpdateAvailableBanner";
+import { BackConfirmGuard } from "@/components/layout/BackConfirmGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +70,7 @@ const App = () => (
         <AuthProvider>
         <DiretoriaSessionProvider>
         <MembroSessionProvider>
+          <BackConfirmGuard />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
