@@ -2,8 +2,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
+
+const normalizeId = (value: string) => value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -15,36 +17,15 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
-    const { society_slug } = await req.json()
+    const { society_slug, member_id } = await req.json()
 
-    if (!society_slug) {
-      return new Response(JSON.stringify({ error: 'society_slug é obrigatório' }), {
+    if (!society_slug || !member_id) {
+      return new Response(JSON.stringify({ error: 'society_slug e member_id são obrigatórios' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Reuse the same service account as diretoria
-    const serviceEmail = `diretoria-${society_slug}@ipnc.local`
-    const servicePassword = `svc_dir_${society_slug}_2025!`
-
-    // Try to sign in
-    const { data: signInData, error: signInError } = await adminClient.auth.signInWithPassword({
-      email: serviceEmail,
-      password: servicePassword,
-    })
-
-    if (signInData?.session) {
-      return new Response(JSON.stringify({
-        success: true,
-        session: signInData.session,
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Account doesn't exist, create it (same logic as validate-diretoria-pin)
     const { data: society } = await adminClient
       .from('societies')
       .select('id, name')
@@ -58,40 +39,101 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-      email: serviceEmail,
-      password: servicePassword,
-      email_confirm: true,
-      user_metadata: {
-        full_name: `Diretoria ${society.name}`,
-        username: `diretoria-${society_slug}`,
-      },
-    })
+    const { data: member, error: memberError } = await adminClient
+      .from('members')
+      .select('id, name, society_id, active, user_id')
+      .eq('id', member_id)
+      .eq('society_id', society.id)
+      .eq('active', true)
+      .single()
 
-    if (createError) {
-      console.error('Error creating service account:', createError)
-      return new Response(JSON.stringify({ error: 'Erro ao criar conta de serviço' }), {
-        status: 500,
+    if (memberError || !member) {
+      return new Response(JSON.stringify({ error: 'Membro não encontrado nessa sociedade' }), {
+        status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    await adminClient.from('profiles').update({
-      society_id: society.id,
-      username: `diretoria-${society_slug}`,
-    }).eq('user_id', newUser.user.id)
+    const memberKey = normalizeId(member.id)
+    const serviceEmail = `membro-${memberKey}@ipnc.local`
+    const servicePassword = `svc_member_${memberKey}_2026!`
+    const username = `membro-${memberKey}`
 
-    await adminClient.from('user_roles').insert({
-      user_id: newUser.user.id,
-      role: 'diretoria',
-    })
-
-    const { data: loginData, error: loginError } = await adminClient.auth.signInWithPassword({
+    const signIn = async () => adminClient.auth.signInWithPassword({
       email: serviceEmail,
       password: servicePassword,
     })
 
+    let authUserId = member.user_id as string | null
+
+    if (authUserId) {
+      const { error: updatePasswordError } = await adminClient.auth.admin.updateUserById(authUserId, {
+        email: serviceEmail,
+        password: servicePassword,
+        user_metadata: {
+          full_name: member.name,
+          username,
+          portal: 'membro',
+        },
+      })
+
+      if (updatePasswordError) {
+        console.error('Error updating member account:', updatePasswordError)
+        authUserId = null
+      }
+    }
+
+    if (!authUserId) {
+      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+        email: serviceEmail,
+        password: servicePassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: member.name,
+          username,
+          portal: 'membro',
+        },
+      })
+
+      if (createError) {
+        console.error('Error creating member account:', createError)
+        return new Response(JSON.stringify({ error: 'Erro ao criar acesso do membro' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      authUserId = newUser.user.id
+    }
+
+    await adminClient.from('profiles').update({
+      full_name: member.name,
+      society_id: society.id,
+      username,
+    }).eq('user_id', authUserId)
+
+    await adminClient
+      .from('members')
+      .update({ user_id: authUserId })
+      .eq('id', member.id)
+
+    const { data: existingRoles } = await adminClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', authUserId)
+
+    const roles = existingRoles?.map((item: { role: string }) => item.role) || []
+    if (!roles.includes('visualizador') && !roles.includes('admin') && !roles.includes('diretoria') && !roles.includes('pastor')) {
+      await adminClient.from('user_roles').insert({
+        user_id: authUserId,
+        role: 'visualizador',
+      })
+    }
+
+    const { data: loginData, error: loginError } = await signIn()
+
     if (loginError || !loginData?.session) {
+      console.error('Error signing in member account:', loginError)
       return new Response(JSON.stringify({ error: 'Erro ao fazer login' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -101,6 +143,12 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       session: loginData.session,
+      member: {
+        id: member.id,
+        name: member.name,
+        society_id: society.id,
+        society_name: society.name,
+      },
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
