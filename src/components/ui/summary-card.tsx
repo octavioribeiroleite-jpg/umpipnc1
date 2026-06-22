@@ -75,6 +75,19 @@ const densityClasses: Record<SummaryDensity, {
   },
 };
 
+function renderValue(value: ReactNode) {
+  if (typeof value !== 'string') return value;
+  const currencyMatch = value.match(/^R\$\s*(.+)$/);
+  if (!currencyMatch) return value;
+
+  return (
+    <span className="inline-flex min-w-0 items-baseline gap-1">
+      <span className="text-[0.62em] font-bold tracking-normal opacity-70">R$</span>
+      <span className="truncate">{currencyMatch[1]}</span>
+    </span>
+  );
+}
+
 export function SummaryCard({
   label,
   value,
@@ -116,7 +129,7 @@ export function SummaryCard({
             valueClassName,
           )}
         >
-          {value}
+          {renderValue(value)}
         </div>
         {meta !== undefined && meta !== null && (
           <div className={cn('truncate font-medium text-slate-500 dark:text-slate-400', densityStyle.meta, metaClassName)}>
