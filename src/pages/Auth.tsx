@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDiretoriaSession } from '@/contexts/DiretoriaSessionContext';
 import { useMembroSession } from '@/contexts/MembroSessionContext';
@@ -73,6 +73,8 @@ export default function Auth() {
   const { setSession: setDiretoriaSession } = useDiretoriaSession();
   const { setSession: setMembroSession } = useMembroSession();
   const navigate = useNavigate();
+  const location = useLocation();
+  const skipSplash = Boolean((location.state as { skipSplash?: boolean } | null)?.skipSplash);
   const { toast } = useToast();
 
   // Exit transition helper
@@ -102,6 +104,11 @@ export default function Auth() {
 
   // Splash → video transition (minimum 2s splash)
   useEffect(() => {
+    if (skipSplash) {
+      setSplashPhase('done');
+      setShowCards(true);
+      return;
+    }
     if (!videoReady) return;
     const elapsed = Date.now() - splashStartRef.current;
     const remaining = Math.max(0, 2000 - elapsed);
@@ -114,7 +121,7 @@ export default function Auth() {
       setShowCards(true);
     }, remaining + 800);
     return () => { clearTimeout(t0); clearTimeout(t1); };
-  }, [videoReady]);
+  }, [videoReady, skipSplash]);
 
   // ========== HANDLERS ==========
 

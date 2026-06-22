@@ -462,7 +462,7 @@ export default function Secretaria() {
   // Login screens
   if (!accessLevel) {
     if (loginStep === 'profile') {
-      return <ProfileSelect onSelect={handleProfileSelect} onBack={() => navigate('/auth')} />;
+      return <ProfileSelect onSelect={handleProfileSelect} onBack={() => navigate('/auth', { replace: true, state: { skipSplash: true } })} />;
     }
 
     if (loginStep === 'name') {
@@ -539,7 +539,7 @@ export default function Secretaria() {
     setCurrentView('home');
     setProfessorClassId(null);
     setProfessorNome('');
-    navigate('/auth');
+    navigate('/auth', { replace: true, state: { skipSplash: true } });
   };
 
   const handleBackToHome = () => {
@@ -558,7 +558,8 @@ export default function Secretaria() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
-                onClick={handleExitApp}
+                onClick={() => navigate('/auth', { replace: true, state: { skipSplash: true } })}
+                aria-label="Voltar"
                 className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -693,6 +694,21 @@ export default function Secretaria() {
             )}
           </div>
         </div>
+
+        <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Sair da Secretaria?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você será desconectado e voltará para a tela de login da secretaria.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmExit}>Sair</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
