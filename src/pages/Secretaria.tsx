@@ -78,6 +78,24 @@ function getTodayDate(): string {
   return format(today, 'yyyy-MM-dd');
 }
 
+const EBD_SESSION_KEY = 'ebd_session';
+
+interface StoredEbdSession {
+  accessLevel: AccessLevel;
+  adminPin?: string;
+  professorNome?: string;
+  professorClassId?: string | null;
+}
+
+function loadStoredEbdSession(): StoredEbdSession | null {
+  try {
+    const raw = sessionStorage.getItem(EBD_SESSION_KEY);
+    return raw ? (JSON.parse(raw) as StoredEbdSession) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Embedded birthdays component
 function SecretariaAniversariantes() {
   const {
