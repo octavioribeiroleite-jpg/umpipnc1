@@ -23,6 +23,9 @@ interface Props {
 
 export function SocietyOverviewCard({ society, stats }: Props) {
   const navigate = useNavigate();
+  const formattedBalance = stats
+    ? `R$ ${stats.saldo < 0 ? '-' : ''}${Math.abs(stats.saldo).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`
+    : '';
 
   return (
     <AppCard
@@ -67,7 +70,7 @@ export function SocietyOverviewCard({ society, stats }: Props) {
                 stats.saldo >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-300',
               )}
             >
-              R$ {Math.abs(stats.saldo).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+              {formattedBalance}
             </p>
           </div>
 
