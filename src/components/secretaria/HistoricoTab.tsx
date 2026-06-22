@@ -213,7 +213,6 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   };
 
   const handleCloseDay = async (record: DayRecord) => {
-    void handleCloseDay;
     setClosingDay(true);
     const { data: dayAttendance } = await supabase.from('ebd_attendance').select('*').eq('date', record.date);
     if (!dayAttendance) { setClosingDay(false); return; }
