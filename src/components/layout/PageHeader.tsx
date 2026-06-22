@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-type PageHeaderVariant = 'auto' | 'compact' | 'hero';
+export type PageHeaderVariant = 'auto' | 'compact' | 'hero';
 
 interface PageHeaderProps {
   title: string;
@@ -45,7 +45,7 @@ export function PageHeader({
         />
         <div
           className={cn(
-            'absolute rotate-[28deg] rounded-[100%_0_100%_0] bg-white/8',
+            'absolute rotate-[28deg] rounded-[100%_0_100%_0] bg-white/[0.08]',
             compact ? 'right-7 top-0 h-16 w-10' : 'right-8 top-0 h-28 w-16',
             variant === 'auto' && 'right-7 top-0 h-16 w-10 md:right-8 md:h-28 md:w-16',
           )}
@@ -70,7 +70,7 @@ export function PageHeader({
           {icon && (
             <div
               className={cn(
-                'flex flex-shrink-0 items-center justify-center border border-white/20 bg-white/12 text-white shadow-md backdrop-blur-md',
+                'flex flex-shrink-0 items-center justify-center border border-white/20 bg-white/[0.12] text-white shadow-md backdrop-blur-md',
                 compact ? 'h-10 w-10 rounded-xl [&_svg]:h-5 [&_svg]:w-5' : 'h-16 w-16 rounded-[18px] [&_svg]:h-8 [&_svg]:w-8',
                 variant === 'auto' && 'h-10 w-10 rounded-xl [&_svg]:h-5 [&_svg]:w-5 md:h-16 md:w-16 md:rounded-[18px] md:[&_svg]:h-8 md:[&_svg]:w-8',
               )}
