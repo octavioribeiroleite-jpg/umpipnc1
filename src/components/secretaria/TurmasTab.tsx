@@ -80,15 +80,29 @@ function getAgeStatus(student: EbdStudent, cls: EbdClass): AgeStatus {
   return 'regular';
 }
 
+function parseAgeInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.floor(parsed);
+}
+
 export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTabProps) {
   const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentBirthDate, setNewStudentBirthDate] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
   const [newClassName, setNewClassName] = useState('');
+  const [newClassMinAge, setNewClassMinAge] = useState('');
+  const [newClassMaxAge, setNewClassMaxAge] = useState('');
   const [creatingClass, setCreatingClass] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   const [editClassName, setEditClassName] = useState('');
+  const [editClassMinAge, setEditClassMinAge] = useState('');
+  const [editClassMaxAge, setEditClassMaxAge] = useState('');
+  const [editNextClassId, setEditNextClassId] = useState('__none__');
+  const [editAgeTracking, setEditAgeTracking] = useState<'enabled' | 'disabled'>('enabled');
   const [transferStudent, setTransferStudent] = useState<EbdStudent | null>(null);
   const [transferTargetClass, setTransferTargetClass] = useState('');
   const [editingBirthDateId, setEditingBirthDateId] = useState<string | null>(null);
@@ -119,6 +133,26 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     }).length,
     [allStudents, classById],
   );
+
+  const validateAgeRange = (minValue: string, maxValue: string) => {
+    const min = parseAgeInput(minValue);
+    const max = parseAgeInput(maxValue);
+
+    if (minValue.trim() && min == null) {
+      toast.error('Informe uma idade mínima válida');
+      return null;
+    }
+    if (maxValue.trim() && max == null) {
+      toast.error('Informe uma idade máxima válida');
+      return null;
+    }
+    if (min != null && max != null && max < min) {
+      toast.error('A idade máxima não pode ser menor que a mínima');
+      return null;
+    }
+
+    return { min, max };
+  };
 
   const handleAddStudent = async () => {
     if (!selectedClass || !newStudentName.trim()) return;
@@ -214,13 +248,18 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
 
   const handleCreateClass = async () => {
     if (!newClassName.trim()) return;
+    const range = validateAgeRange(newClassMinAge, newClassMaxAge);
+    if (!range) return;
+
     setCreatingClass(true);
     const maxOrder = classes.reduce((max, cls) => Math.max(max, cls.order_index), 0);
     const { error } = await supabase.from('ebd_classes').insert({
       name: newClassName.trim(),
       order_index: maxOrder + 1,
       active: true,
-      age_tracking_enabled: false,
+      min_age: range.min,
+      max_age: range.max,
+      age_tracking_enabled: range.min != null,
     } as any);
 
     if (error) {
@@ -228,22 +267,43 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     } else {
       toast.success('Turma criada');
       setNewClassName('');
+      setNewClassMinAge('');
+      setNewClassMaxAge('');
       onRefresh();
     }
     setCreatingClass(false);
   };
 
-  const handleRenameClass = async (classId: string) => {
+  const startClassEdit = (cls: EbdClass) => {
+    setEditingClassId(cls.id);
+    setEditClassName(cls.name);
+    setEditClassMinAge(cls.min_age == null ? '' : String(cls.min_age));
+    setEditClassMaxAge(cls.max_age == null ? '' : String(cls.max_age));
+    setEditNextClassId(cls.next_class_id || '__none__');
+    setEditAgeTracking(cls.age_tracking_enabled === false ? 'disabled' : 'enabled');
+  };
+
+  const handleSaveClass = async (classId: string) => {
     if (!editClassName.trim()) return;
+    const trackingEnabled = editAgeTracking === 'enabled';
+    const range = validateAgeRange(editClassMinAge, editClassMaxAge);
+    if (!range) return;
+
     const { error } = await supabase
       .from('ebd_classes')
-      .update({ name: editClassName.trim() })
+      .update({
+        name: editClassName.trim(),
+        min_age: trackingEnabled ? range.min : null,
+        max_age: trackingEnabled ? range.max : null,
+        next_class_id: trackingEnabled && editNextClassId !== '__none__' ? editNextClassId : null,
+        age_tracking_enabled: trackingEnabled,
+      } as any)
       .eq('id', classId);
 
     if (error) {
-      toast.error('Erro ao renomear turma');
+      toast.error('Erro ao salvar turma');
     } else {
-      toast.success('Turma renomeada');
+      toast.success('Turma atualizada');
       setEditingClassId(null);
       onRefresh();
     }
@@ -516,13 +576,25 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
               event.preventDefault();
               void handleCreateClass();
             }}
-            className="flex gap-2"
+            className="grid gap-2 md:grid-cols-[minmax(0,1fr)_110px_110px_auto]"
           >
             <Input
               placeholder="Nova turma..."
               value={newClassName}
               onChange={(event) => setNewClassName(event.target.value)}
               className="flex-1"
+            />
+            <Input
+              inputMode="numeric"
+              placeholder="Idade mín."
+              value={newClassMinAge}
+              onChange={(event) => setNewClassMinAge(event.target.value)}
+            />
+            <Input
+              inputMode="numeric"
+              placeholder="Idade máx."
+              value={newClassMaxAge}
+              onChange={(event) => setNewClassMaxAge(event.target.value)}
             />
             <Button size="sm" disabled={creatingClass || !newClassName.trim()}>
               <Plus className="h-4 w-4" />
@@ -550,17 +622,53 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 shrink-0 text-primary" />
                   {isEditing ? (
-                    <div className="flex flex-1 gap-2">
+                    <div className="grid flex-1 gap-2 xl:grid-cols-[minmax(0,1fr)_140px_96px_96px_210px_auto_auto]">
                       <Input
                         value={editClassName}
                         onChange={(event) => setEditClassName(event.target.value)}
-                        className="h-8 text-sm"
+                        className="h-9 text-sm"
                         autoFocus
                       />
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRenameClass(cls.id)}>
+                      <Select value={editAgeTracking} onValueChange={(value) => setEditAgeTracking(value as 'enabled' | 'disabled')}>
+                        <SelectTrigger className="h-9 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="enabled">Com faixa</SelectItem>
+                          <SelectItem value="disabled">Sem faixa</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        inputMode="numeric"
+                        value={editClassMinAge}
+                        onChange={(event) => setEditClassMinAge(event.target.value)}
+                        placeholder="Mín."
+                        className="h-9 text-sm"
+                        disabled={editAgeTracking === 'disabled'}
+                      />
+                      <Input
+                        inputMode="numeric"
+                        value={editClassMaxAge}
+                        onChange={(event) => setEditClassMaxAge(event.target.value)}
+                        placeholder="Máx."
+                        className="h-9 text-sm"
+                        disabled={editAgeTracking === 'disabled'}
+                      />
+                      <Select value={editNextClassId} onValueChange={setEditNextClassId} disabled={editAgeTracking === 'disabled'}>
+                        <SelectTrigger className="h-9 text-xs">
+                          <SelectValue placeholder="Próxima turma" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Sem próxima turma</SelectItem>
+                          {classes.filter((item) => item.id !== cls.id).map((item) => (
+                            <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleSaveClass(cls.id)}>
                         <Check className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingClassId(null)}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setEditingClassId(null)}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -588,8 +696,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                         className="h-8 w-8"
                         onClick={(event) => {
                           event.stopPropagation();
-                          setEditingClassId(cls.id);
-                          setEditClassName(cls.name);
+                          startClassEdit(cls);
                         }}
                       >
                         <Pencil className="h-3.5 w-3.5" />
