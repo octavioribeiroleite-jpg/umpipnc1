@@ -1,7 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ClipboardList, BarChart3, Settings2, ArrowLeft, UserCheck, LogOut, Cake, Home, Plus, TableProperties } from 'lucide-react';
+import {
+  ArrowLeft,
+  BarChart3,
+  Cake,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
+  Home,
+  LogOut,
+  Plus,
+  Settings2,
+  TableProperties,
+  UserCheck,
+  Users,
+} from 'lucide-react';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -15,9 +30,7 @@ import AcessosEbdTab from '@/components/secretaria/AcessosEbdTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AppCard } from '@/components/ui/app-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HeaderActions } from '@/components/layout/HeaderActions';
 import { useBirthdays } from '@/hooks/useBirthdays';
@@ -76,6 +89,69 @@ export interface VisitorEntry {
 function getTodayDate(): string {
   const today = new Date();
   return format(today, 'yyyy-MM-dd');
+}
+
+function SecretariaMetric({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  hint?: string;
+  icon: any;
+  tone: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/70 bg-white/85 p-3 shadow-sm backdrop-blur-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-[11px] font-semibold text-slate-500">{label}</p>
+          <p className="mt-1 text-xl font-extrabold leading-none text-slate-950">{value}</p>
+          {hint && <p className="mt-1 truncate text-[11px] text-slate-500">{hint}</p>}
+        </div>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+          <Icon className="h-[18px] w-[18px]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SecretariaMenuCard({
+  title,
+  description,
+  icon: Icon,
+  tone,
+  onClick,
+  disabled,
+}: {
+  title: string;
+  description: string;
+  icon: any;
+  tone: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="group flex w-full items-center gap-3 rounded-2xl border border-white/70 bg-white/95 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tone}`}>
+        <Icon className="h-6 w-6" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-extrabold text-slate-950">{title}</p>
+        <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500">{description}</p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-primary" />
+    </button>
+  );
 }
 
 const EBD_SESSION_KEY = 'ebd_session';
@@ -548,151 +624,152 @@ export default function Secretaria() {
 
   // Calculate stats for home cards
   const presentCount = attendance.filter(a => a.present && a.date === sundayDate).length;
-  const totalCount = activeStudents.length;
+  const totalCount = visibleActiveStudents.length;
 
   // Home view with cards
   if (currentView === 'home') {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 safe-top">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+      <div className="min-h-screen bg-[linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--secondary)/0.55)_100%)]">
+        <div className="sticky top-0 z-20 border-b border-white/70 bg-white/85 px-3 py-2.5 shadow-sm backdrop-blur-xl safe-top">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
               <button
                 onClick={() => navigate('/auth', { replace: true, state: { skipSplash: true } })}
                 aria-label="Voltar"
-                className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <div>
-                <h1 className="font-semibold text-lg">Secretaria EBD</h1>
-                <p className="text-xs text-muted-foreground">{formattedDate}</p>
+              <div className="min-w-0">
+                <h1 className="truncate text-lg font-extrabold leading-tight text-slate-950">Secretaria EBD</h1>
+                <p className="truncate text-xs font-medium text-slate-500">{formattedDate}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
+            <div className="flex shrink-0 items-center gap-2">
+              <Badge className={isAdmin ? 'rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground' : 'rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700'}>
                 {profileLabel}
               </Badge>
               <button
                 onClick={handleExitApp}
-                className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-red-50 hover:text-destructive"
                 title="Sair da Secretaria"
               >
-                <LogOut className="h-4.5 w-4.5" />
+                <LogOut className="h-[18px] w-[18px]" />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="p-4 space-y-4">
-          {/* Status card */}
-          <AppCard className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Presença de Hoje</p>
-                <p className="text-2xl font-bold">{presentCount}/{totalCount}</p>
-                {visitorCount > 0 && (
-                  <p className="text-xs text-muted-foreground">+{visitorCount} visitante{visitorCount > 1 ? 's' : ''}</p>
-                )}
+        <div className="mx-auto max-w-3xl space-y-4 p-3 pb-8 sm:p-4">
+          <section className="overflow-hidden rounded-[28px] border border-emerald-200/70 bg-[linear-gradient(135deg,#006a53_0%,#118463_100%)] p-4 text-white shadow-[0_16px_40px_rgba(5,74,57,0.18)]">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-50/75">Resumo do domingo</p>
+                <h2 className="mt-2 text-2xl font-extrabold leading-tight">Escola Dominical</h2>
+                <p className="mt-1 text-sm font-medium text-emerald-50/85">{formattedDate}</p>
               </div>
-              <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${dayIsClosed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
-                {dayIsClosed ? '✓ Dia fechado' : 'Em andamento'}
+              <div className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${dayIsClosed ? 'bg-white text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                {dayIsClosed ? 'Dia fechado' : 'Em andamento'}
               </div>
             </div>
-          </AppCard>
 
-          {/* Birthday announcement card */}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-2xl bg-white/12 p-3 backdrop-blur">
+                <p className="text-xs font-medium text-emerald-50/75">Presença</p>
+                <p className="mt-1 text-3xl font-black leading-none">{presentCount}<span className="text-lg font-bold text-emerald-50/70">/{totalCount}</span></p>
+              </div>
+              <div className="rounded-2xl bg-white/12 p-3 backdrop-blur">
+                <p className="text-xs font-medium text-emerald-50/75">Visitantes</p>
+                <p className="mt-1 text-3xl font-black leading-none">{visitorCount}</p>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid grid-cols-2 gap-2">
+            <SecretariaMetric
+              label="Alunos ativos"
+              value={totalCount}
+              hint={`${visibleClasses.length} turma${visibleClasses.length === 1 ? '' : 's'}`}
+              icon={Users}
+              tone="bg-emerald-50 text-emerald-700"
+            />
+            <SecretariaMetric
+              label="Status"
+              value={dayIsClosed ? 'Fechado' : 'Aberto'}
+              hint={dayIsClosed ? 'Chamada concluída' : 'Recebendo presença'}
+              icon={CheckCircle2}
+              tone={dayIsClosed ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}
+            />
+          </div>
+
           <WeekAnnouncementCard birthdays={allWeekAnnouncements} />
 
-          {/* Menu cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <AppCard
-              variant="interactive"
-              className="flex flex-col items-center gap-3 py-6"
-              onClick={() => setCurrentView('chamada')}
-            >
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <ClipboardList className="h-7 w-7 text-primary" />
+          <section className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-950">Acesso rápido</h2>
+                <p className="text-xs text-slate-500">Escolha o que deseja gerenciar agora</p>
               </div>
-              <span className="font-medium text-sm">Chamada</span>
-            </AppCard>
+              <CalendarDays className="h-5 w-5 text-primary" />
+            </div>
 
-            {isAdmin && (
-              <>
-                <AppCard
-                  variant="interactive"
-                  className="flex flex-col items-center gap-3 py-6"
-                  onClick={() => setCurrentView('historico')}
-                >
-                  <div className="h-14 w-14 rounded-2xl bg-sky-500/10 flex items-center justify-center">
-                    <BarChart3 className="h-7 w-7 text-sky-500" />
-                  </div>
-                  <span className="font-medium text-sm">Histórico</span>
-                </AppCard>
+            <div className="grid gap-2">
+              <SecretariaMenuCard
+                title="Chamada"
+                description="Registrar presenças, visitantes e fechar o domingo."
+                icon={ClipboardList}
+                tone="bg-emerald-50 text-emerald-700"
+                onClick={() => setCurrentView('chamada')}
+              />
 
-                <AppCard
-                  variant="interactive"
-                  className="flex flex-col items-center gap-3 py-6"
-                  onClick={() => setCurrentView('aniversariantes')}
-                >
-                  <div className="h-14 w-14 rounded-2xl bg-pink-500/10 flex items-center justify-center">
-                    <Cake className="h-7 w-7 text-pink-500" />
-                  </div>
-                  <span className="font-medium text-sm">Aniversariantes</span>
-                </AppCard>
-              </>
-            )}
-
-            {isAdmin && (
-              <AppCard
-                variant="interactive"
-                className="flex flex-col items-center gap-3 py-6"
-                onClick={() => setCurrentView('turmas')}
-              >
-                <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-                  <Settings2 className="h-7 w-7 text-amber-500" />
-                </div>
-                <span className="font-medium text-sm">Turmas</span>
-              </AppCard>
-            )}
-
-            {isAdmin && (
-              <>
-                <AppCard
-                  variant="interactive"
-                  className="flex flex-col items-center gap-3 py-6"
-                  onClick={() => setCurrentView('planilha')}
-                >
-                  <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-                    <TableProperties className="h-7 w-7 text-emerald-500" />
-                  </div>
-                  <span className="font-medium text-sm">Planilha de Alunos</span>
-                </AppCard>
-
-                <AppCard
-                  variant="interactive"
-                  className="flex flex-col items-center gap-3 py-6"
-                  onClick={() => setCurrentView('configuracoes')}
-                >
-                  <div className="h-14 w-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
-                    <UserCheck className="h-7 w-7 text-indigo-500" />
-                  </div>
-                  <span className="font-medium text-sm">Configurações</span>
-                </AppCard>
-
-                <AppCard
-                  variant="interactive"
-                  className="flex flex-col items-center gap-3 py-6"
-                  onClick={() => setCurrentView('acessos')}
-                >
-                  <div className="h-14 w-14 rounded-2xl bg-rose-500/10 flex items-center justify-center">
-                    <UserCheck className="h-7 w-7 text-rose-500" />
-                  </div>
-                  <span className="font-medium text-sm">Acessos</span>
-                </AppCard>
-              </>
-            )}
-          </div>
+              {isAdmin && (
+                <>
+                  <SecretariaMenuCard
+                    title="Histórico"
+                    description="Acompanhar frequência, médias e relatórios anteriores."
+                    icon={BarChart3}
+                    tone="bg-sky-50 text-sky-600"
+                    onClick={() => setCurrentView('historico')}
+                  />
+                  <SecretariaMenuCard
+                    title="Aniversariantes"
+                    description="Consultar, cadastrar e gerar comunicados da semana."
+                    icon={Cake}
+                    tone="bg-pink-50 text-pink-600"
+                    onClick={() => setCurrentView('aniversariantes')}
+                  />
+                  <SecretariaMenuCard
+                    title="Turmas"
+                    description="Organizar classes, professores e alunos da EBD."
+                    icon={Settings2}
+                    tone="bg-amber-50 text-amber-600"
+                    onClick={() => setCurrentView('turmas')}
+                  />
+                  <SecretariaMenuCard
+                    title="Planilha de Alunos"
+                    description="Visualizar e atualizar a base de alunos cadastrados."
+                    icon={TableProperties}
+                    tone="bg-teal-50 text-teal-600"
+                    onClick={() => setCurrentView('planilha')}
+                  />
+                  <SecretariaMenuCard
+                    title="Configurações"
+                    description="Ajustar regras, PINs e preferências da secretaria."
+                    icon={UserCheck}
+                    tone="bg-indigo-50 text-indigo-600"
+                    onClick={() => setCurrentView('configuracoes')}
+                  />
+                  <SecretariaMenuCard
+                    title="Acessos"
+                    description="Consultar entradas, professores e registros de acesso."
+                    icon={UserCheck}
+                    tone="bg-rose-50 text-rose-600"
+                    onClick={() => setCurrentView('acessos')}
+                  />
+                </>
+              )}
+            </div>
+          </section>
         </div>
 
         <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
