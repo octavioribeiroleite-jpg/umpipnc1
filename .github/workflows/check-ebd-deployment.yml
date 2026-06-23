@@ -33,6 +33,7 @@ jobs:
           classes_file="$(mktemp)"
           students_file="$(mktemp)"
           state="success"
+          reason="ok"
           description="Schema e faixas etárias confirmados no Supabase"
 
           if ! curl --fail --silent --show-error --get \
@@ -43,6 +44,7 @@ jobs:
             --data-urlencode "order=order_index.asc" \
             -o "$classes_file"; then
             state="failure"
+            reason="class-columns"
             description="Colunas de faixa etária não estão disponíveis no Supabase"
           elif ! curl --fail --silent --show-error --get \
             "$VITE_SUPABASE_URL/rest/v1/ebd_students" \
@@ -52,6 +54,7 @@ jobs:
             --data-urlencode "limit=1" \
             -o "$students_file"; then
             state="failure"
+            reason="birth-date"
             description="Coluna birth_date não está disponível no Supabase"
           elif ! python3 - "$classes_file" <<'PY'
           import json
@@ -90,10 +93,12 @@ jobs:
           PY
           then
             state="failure"
+            reason="values"
             description="Migration existe, mas as faixas não foram gravadas corretamente"
           fi
 
           echo "state=$state" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
           echo "description=$description" >> "$GITHUB_OUTPUT"
 
       - name: Publicar resultado do schema no commit
@@ -101,12 +106,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           STATE: ${{ steps.schema.outputs.state || 'error' }}
+          REASON: ${{ steps.schema.outputs.reason || 'execution-error' }}
           DESCRIPTION: ${{ steps.schema.outputs.description || 'Falha ao executar diagnóstico do Supabase' }}
         run: |
+          context="diagnostico/ebd-schema-${REASON}"
           payload=$(jq -n \
             --arg state "$STATE" \
             --arg description "$DESCRIPTION" \
-            --arg context "diagnostico/ebd-schema" \
+            --arg context "$context" \
             '{state: $state, description: $description, context: $context}')
           curl --fail --silent --show-error \
             -X POST \
