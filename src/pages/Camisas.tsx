@@ -11,7 +11,8 @@ export default function Camisas() {
         <PageHeader
           title="Camisas"
           description="Controle de lotes, pedidos, pagamentos, entregas e resultado financeiro"
-          icon={Shirt}
+          eyebrow="Gestão de camisas"
+          icon={<Shirt />}
         />
 
         <div className="finance-tab-panel">
