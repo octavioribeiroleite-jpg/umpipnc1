@@ -12,6 +12,7 @@ import {
   Home,
   MessageSquare,
   Settings,
+  Shirt,
   UserCheck,
   Users,
   Vote,
@@ -34,6 +35,7 @@ export const primaryNavigationItems: AppNavigationItem[] = [
 
 export const secondaryNavigationItems: AppNavigationItem[] = [
   { key: 'financas', icon: DollarSign, label: 'Finanças', path: '/financas' },
+  { key: 'camisas', icon: Shirt, label: 'Camisas', path: '/camisas' },
   { key: 'plenarias', icon: ClipboardCheck, label: 'Plenárias', path: '/plenarias' },
   { key: 'dizimos', icon: Heart, label: 'Dízimos', path: '/dizimos' },
   { key: 'comunicados', icon: MessageSquare, label: 'Comunicados', path: '/comunicados' },
