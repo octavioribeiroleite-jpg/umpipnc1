@@ -34,7 +34,6 @@
   min-width: 0;
 }
 
-/* Abas internas da página de finanças */
 .finance-tab-panel [role="tablist"] {
   min-height: 44px;
   border-radius: 0.9rem;
@@ -50,7 +49,6 @@
   white-space: nowrap;
 }
 
-/* Seções numéricas da aba Camisas */
 .finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 {
   align-items: stretch;
 }
@@ -152,6 +150,92 @@
 .finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xl > .text-amber-500,
 .finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xl > .text-destructive {
   color: inherit !important;
+}
+
+/* Controle de camisas: foco em pedido e entrega */
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(3),
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(4),
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(5),
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(6),
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(7),
+.finance-tab-panel table:has(th:nth-child(10)) td:nth-child(3),
+.finance-tab-panel table:has(th:nth-child(10)) td:nth-child(4),
+.finance-tab-panel table:has(th:nth-child(10)) td:nth-child(5),
+.finance-tab-panel table:has(th:nth-child(10)) td:nth-child(6),
+.finance-tab-panel table:has(th:nth-child(10)) td:nth-child(7) {
+  display: none;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(1) { width: 18%; }
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(2) { width: 34%; }
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(8) { width: 15%; }
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(9) { width: 15%; }
+.finance-tab-panel table:has(th:nth-child(10)) th:nth-child(10) { width: 18%; }
+
+.finance-tab-panel table:has(th:nth-child(10)) tbody tr {
+  background: hsl(var(--card)) !important;
+  border-bottom: 1px solid hsl(var(--border) / 0.7);
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) tbody tr:hover {
+  background: hsl(var(--muted) / 0.35) !important;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) td {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  vertical-align: middle;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) td:nth-child(1) {
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) td:nth-child(2) .badge {
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) td:nth-child(10) > div {
+  gap: 0.35rem;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) button[title="Marcar entregue"] {
+  width: auto;
+  min-width: 92px;
+  padding-inline: 0.75rem;
+  border-radius: 0.65rem;
+  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary));
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) button[title="Marcar entregue"]::after {
+  content: "Entregar";
+  margin-left: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) button[title="Desfazer entrega"] {
+  width: auto;
+  min-width: 92px;
+  padding-inline: 0.75rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.65rem;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) button[title="Desfazer entrega"]::after {
+  content: "Desfazer";
+  margin-left: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.finance-tab-panel table:has(th:nth-child(10)) button[title="Registrar pagamento"] {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.65rem;
 }
 
 @media (max-width: 767px) {
@@ -267,6 +351,15 @@
 
   .finance-cobrancas > div > :first-child > div {
     padding: 0.875rem;
+  }
+
+  .finance-tab-panel table:has(th:nth-child(10)) {
+    min-width: 720px;
+  }
+
+  .finance-tab-panel table:has(th:nth-child(10)) th:nth-child(8),
+  .finance-tab-panel table:has(th:nth-child(10)) td:nth-child(8) {
+    display: none;
   }
 }
 
