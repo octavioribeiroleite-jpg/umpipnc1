@@ -2,6 +2,7 @@ import { Shirt } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { CamisasTab } from '@/components/financas/CamisasTab';
+import { StableRefreshBoundary } from '@/components/ui/stable-refresh-boundary';
 import '@/finance-responsive.css';
 import '@/camisas.css';
 
@@ -16,9 +17,9 @@ export default function Camisas() {
           icon={<Shirt />}
         />
 
-        <div className="finance-tab-panel">
+        <StableRefreshBoundary className="finance-tab-panel">
           <CamisasTab />
-        </div>
+        </StableRefreshBoundary>
       </div>
     </AppLayout>
   );
