@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import {
-  Check, CheckCircle2, CircleDollarSign, Gift, Loader2,
+  Check, CheckCircle2, CircleDollarSign, Gift, Layers3, Loader2,
   Pencil, Plus, Search, Trash2, Truck,
 } from 'lucide-react';
 import type { ShirtCampaign } from './CampanhasCamisasTab';
@@ -44,12 +44,23 @@ type OrderView = 'open' | 'finished' | 'all';
 type PaymentMode = 'total' | 'partial';
 
 export interface OrderItem { color: string; size: string; qty: number }
+export interface ShirtCampaignLot {
+  id: string;
+  campaign_id: string;
+  quantity: number;
+  unit_cost: number;
+  total_cost: number;
+  supplier: string | null;
+  purchase_date: string;
+  created_at: string;
+}
 export interface ShirtOrder {
   id: string; buyer_name: string; size: string; quantity: number;
   unit_price: number; unit_cost: number; total_price: number;
   payment_type: string; amount_paid: number; delivery_status: string;
   delivered_at: string | null; notes: string | null; date: string;
   is_gift?: boolean; items?: OrderItem[]; campaign_id?: string | null;
+  lot_id?: string | null;
 }
 export interface CampaignFinancialSummary {
   purchasedQuantity: number; orderedQuantity: number; availableQuantity: number;
@@ -112,6 +123,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
   const { user, effectiveSocietyId: societyId } = useAuth();
   const [orders, setOrders] = useState<ShirtOrder[]>([]);
   const [campaigns, setCampaigns] = useState<ShirtCampaign[]>([]);
+  const [lots, setLots] = useState<ShirtCampaignLot[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [view, setView] = useState<OrderView>('open');
@@ -122,12 +134,13 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
   const [filterSize, setFilterSize] = useState('all');
   const [filterColor, setFilterColor] = useState('all');
   const [filterCampaign, setFilterCampaign] = useState('all');
+  const [filterLot, setFilterLot] = useState('all');
 
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [orderForm, setOrderForm] = useState({
     date: new Date().toISOString().slice(0, 16), buyer_name: '', unit_price: '',
-    payment_type: 'a_vista', is_gift: false, notes: '', campaign_id: '',
+    payment_type: 'a_vista', is_gift: false, notes: '', campaign_id: '', lot_id: '',
   });
   const [items, setItems] = useState<OrderItem[]>([emptyItem()]);
 
@@ -142,42 +155,86 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const orderedLots = useMemo(() => [...lots].sort((a, b) => {
+    const dateCompare = String(a.purchase_date).localeCompare(String(b.purchase_date));
+    return dateCompare !== 0 ? dateCompare : String(a.created_at).localeCompare(String(b.created_at));
+  }), [lots]);
+
+  const lotNumberMap = useMemo(() => {
+    const map = new Map<string, number>();
+    const grouped = new Map<string, ShirtCampaignLot[]>();
+    orderedLots.forEach((lot) => grouped.set(lot.campaign_id, [...(grouped.get(lot.campaign_id) || []), lot]));
+    grouped.forEach((campaignLots) => campaignLots.forEach((lot, index) => map.set(lot.id, index + 1)));
+    return map;
+  }, [orderedLots]);
+
+  const lotLabel = (lotId?: string | null) => {
+    if (!lotId) return 'Sem lote';
+    const number = lotNumberMap.get(lotId);
+    return number ? `${number}º lote` : 'Lote';
+  };
+
+  const campaignLots = (campaignId: string) => orderedLots.filter((lot) => lot.campaign_id === campaignId);
+  const latestLotId = (campaignId: string) => campaignLots(campaignId).at(-1)?.id || '';
+
   const fetchData = useCallback(async () => {
     setLoading(true);
-    let ordersQuery = supabase.from('shirt_orders').select('*').order('buyer_name');
+    let ordersQuery = (supabase as any).from('shirt_orders').select('*').order('buyer_name');
     let campaignsQuery = supabase.from('shirt_campaigns').select('*').order('purchase_date', { ascending: false });
+    let lotsQuery = (supabase as any).from('shirt_campaign_lots').select('*').order('purchase_date', { ascending: true });
+
     if (societyId) {
       ordersQuery = ordersQuery.eq('society_id', societyId);
       campaignsQuery = campaignsQuery.eq('society_id', societyId);
+      lotsQuery = lotsQuery.eq('society_id', societyId);
     }
-    const [{ data: orderData, error }, { data: campaignData }] = await Promise.all([ordersQuery, campaignsQuery]);
+
+    const [{ data: orderData, error }, { data: campaignData }, { data: lotData }] = await Promise.all([
+      ordersQuery, campaignsQuery, lotsQuery,
+    ]);
+
     if (error) toast.error('Erro ao carregar encomendas');
     setOrders(((orderData || []) as any[]).map((order) => ({
       ...order, items: Array.isArray(order.items) ? order.items as OrderItem[] : [],
     })) as ShirtOrder[]);
     setCampaigns((campaignData || []) as ShirtCampaign[]);
+    setLots((lotData || []) as ShirtCampaignLot[]);
     setLoading(false);
   }, [societyId]);
 
   useEffect(() => { void fetchData(); }, [fetchData]);
-  useEffect(() => { if (selectedCampaignId) setFilterCampaign(selectedCampaignId); }, [selectedCampaignId]);
+  useEffect(() => {
+    if (selectedCampaignId) {
+      setFilterCampaign(selectedCampaignId);
+      setFilterLot('all');
+    }
+  }, [selectedCampaignId]);
 
   const defaultCampaignId = () => filterCampaign !== 'all' && filterCampaign !== 'none'
     ? filterCampaign : selectedCampaignId || '';
 
   const resetForm = () => {
+    const campaignId = defaultCampaignId();
     setEditingId(null);
     setOrderForm({
       date: new Date().toISOString().slice(0, 16), buyer_name: '', unit_price: '',
-      payment_type: 'a_vista', is_gift: false, notes: '', campaign_id: defaultCampaignId(),
+      payment_type: 'a_vista', is_gift: false, notes: '', campaign_id: campaignId,
+      lot_id: campaignId ? latestLotId(campaignId) : '',
     });
     setItems([emptyItem()]);
   };
 
   const openNew = () => {
-    resetForm();
-    const campaign = campaigns.find((item) => item.id === defaultCampaignId());
-    if (campaign) setOrderForm((current) => ({ ...current, campaign_id: campaign.id, unit_price: String(campaign.default_sale_price) }));
+    const campaignId = defaultCampaignId();
+    const campaign = campaigns.find((item) => item.id === campaignId);
+    setEditingId(null);
+    setOrderForm({
+      date: new Date().toISOString().slice(0, 16), buyer_name: '',
+      unit_price: campaign ? String(campaign.default_sale_price) : '',
+      payment_type: 'a_vista', is_gift: false, notes: '', campaign_id: campaignId,
+      lot_id: campaignId ? latestLotId(campaignId) : '',
+    });
+    setItems([emptyItem()]);
     setOrderDialogOpen(true);
   };
 
@@ -187,6 +244,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       date: new Date(order.date).toISOString().slice(0, 16), buyer_name: order.buyer_name,
       unit_price: String(order.unit_price), payment_type: order.payment_type,
       is_gift: Boolean(order.is_gift), notes: order.notes || '', campaign_id: order.campaign_id || '',
+      lot_id: order.lot_id || '',
     });
     setItems(order.items?.length ? order.items.map((item) => ({ ...item })) : [emptyItem()]);
     setOrderDialogOpen(true);
@@ -195,7 +253,9 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
   const applyCampaignDefaults = (campaignId: string) => {
     const campaign = campaigns.find((item) => item.id === campaignId);
     setOrderForm((current) => ({
-      ...current, campaign_id: campaignId,
+      ...current,
+      campaign_id: campaignId,
+      lot_id: latestLotId(campaignId),
       unit_price: campaign && !current.is_gift ? String(campaign.default_sale_price) : current.unit_price,
     }));
   };
@@ -206,36 +266,50 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
     const quantity = validItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
     const unitPrice = Number(orderForm.unit_price || 0);
     const campaign = campaigns.find((item) => item.id === orderForm.campaign_id);
+    const selectedLot = lots.find((lot) => lot.id === orderForm.lot_id);
+
     if (!orderForm.buyer_name.trim()) return void toast.error('Informe o nome da pessoa');
     if (!campaign) return void toast.error('Selecione uma campanha');
     if (!validItems.length || quantity <= 0) return void toast.error('Adicione pelo menos uma camisa');
+    if (campaignLots(campaign.id).length > 0 && !selectedLot) return void toast.error('Selecione o lote da encomenda');
 
-    const alreadyOrdered = orders.filter((order) => order.campaign_id === campaign.id && order.id !== editingId)
-      .reduce((sum, order) => sum + Number(order.quantity || 0), 0);
-    const available = Number(campaign.purchased_quantity || 0) - alreadyOrdered;
-    if (quantity > available) return void toast.error(`Saldo insuficiente. Disponível: ${available}`);
+    if (selectedLot) {
+      const alreadyOrderedInLot = orders
+        .filter((order) => order.lot_id === selectedLot.id && order.id !== editingId)
+        .reduce((sum, order) => sum + Number(order.quantity || 0), 0);
+      const availableInLot = Number(selectedLot.quantity || 0) - alreadyOrderedInLot;
+      if (quantity > availableInLot) return void toast.error(`Saldo insuficiente no ${lotLabel(selectedLot.id)}. Disponível: ${availableInLot}`);
+    } else {
+      const alreadyOrdered = orders.filter((order) => order.campaign_id === campaign.id && order.id !== editingId)
+        .reduce((sum, order) => sum + Number(order.quantity || 0), 0);
+      const available = Number(campaign.purchased_quantity || 0) - alreadyOrdered;
+      if (quantity > available) return void toast.error(`Saldo insuficiente. Disponível: ${available}`);
+    }
 
     const payload = {
       date: orderForm.date, buyer_name: orderForm.buyer_name.trim(), size: itemsSummary(validItems), quantity,
-      unit_price: orderForm.is_gift ? 0 : unitPrice, unit_cost: Number(campaign.unit_cost || 0),
+      unit_price: orderForm.is_gift ? 0 : unitPrice,
+      unit_cost: Number(selectedLot?.unit_cost ?? campaign.unit_cost ?? 0),
       total_price: orderForm.is_gift ? 0 : quantity * unitPrice,
       payment_type: orderForm.is_gift ? 'brinde' : orderForm.payment_type,
-      is_gift: orderForm.is_gift, items: validItems as unknown as never,
-      notes: orderForm.notes || null, campaign_id: campaign.id, society_id: societyId || null, created_by: user.id,
+      is_gift: orderForm.is_gift, items: validItems,
+      notes: orderForm.notes || null, campaign_id: campaign.id,
+      lot_id: selectedLot?.id || null,
+      society_id: societyId || null, created_by: user.id,
     };
 
     setSubmitting(true);
     try {
       if (editingId) {
-        const { data, error } = await supabase.from('shirt_orders').update(payload).eq('id', editingId).select('*').single();
+        const { data, error } = await (supabase as any).from('shirt_orders').update(payload).eq('id', editingId).select('*').single();
         if (error) throw error;
-        setOrders((current) => current.map((order) => order.id === editingId ? { ...(data as unknown as ShirtOrder), items: validItems } : order));
+        setOrders((current) => current.map((order) => order.id === editingId ? { ...(data as ShirtOrder), items: validItems } : order));
         toast.success('Encomenda atualizada!');
       } else {
-        const { data, error } = await supabase.from('shirt_orders').insert(payload).select('*').single();
+        const { data, error } = await (supabase as any).from('shirt_orders').insert(payload).select('*').single();
         if (error) throw error;
-        setOrders((current) => [...current, { ...(data as unknown as ShirtOrder), items: validItems }].sort((a, b) => a.buyer_name.localeCompare(b.buyer_name)));
-        toast.success('Encomenda registrada!');
+        setOrders((current) => [...current, { ...(data as ShirtOrder), items: validItems }].sort((a, b) => a.buyer_name.localeCompare(b.buyer_name)));
+        toast.success(`Encomenda registrada no ${selectedLot ? lotLabel(selectedLot.id) : 'lote atual'}!`);
       }
       setOrderDialogOpen(false);
       resetForm();
@@ -322,12 +396,18 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
     finally { setDeleting(false); }
   };
 
+  const visibleLots = useMemo(() => {
+    if (filterCampaign !== 'all' && filterCampaign !== 'none') return campaignLots(filterCampaign);
+    return orderedLots;
+  }, [filterCampaign, orderedLots]);
+
   const filtered = useMemo(() => orders.filter((order) => {
     if (view === 'open' && isFinished(order)) return false;
     if (view === 'finished' && !isFinished(order)) return false;
     if (search && !order.buyer_name.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterCampaign === 'none' && order.campaign_id) return false;
     if (filterCampaign !== 'all' && filterCampaign !== 'none' && order.campaign_id !== filterCampaign) return false;
+    if (filterLot !== 'all' && order.lot_id !== filterLot) return false;
     if (filterDelivery !== 'all' && order.delivery_status !== filterDelivery) return false;
     const orderItems = order.items || [];
     if (filterSize !== 'all' && !orderItems.some((item) => item.size === filterSize)) return false;
@@ -340,7 +420,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       if (filterPayment === 'pendente' && status !== 'pending') return false;
     }
     return true;
-  }), [orders, view, search, filterCampaign, filterDelivery, filterSize, filterColor, filterPayment]);
+  }), [orders, view, search, filterCampaign, filterLot, filterDelivery, filterSize, filterColor, filterPayment]);
 
   const openCount = orders.filter((order) => !isFinished(order)).length;
   const finishedCount = orders.filter(isFinished).length;
@@ -360,7 +440,8 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
         <div className="relative flex-1"><Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar por nome..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
         <div className="flex flex-wrap gap-2">
-          <Select value={filterCampaign} onValueChange={setFilterCampaign}><SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas as campanhas</SelectItem><SelectItem value="none">Sem campanha</SelectItem>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select>
+          <Select value={filterCampaign} onValueChange={(value) => { setFilterCampaign(value); setFilterLot('all'); }}><SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas as campanhas</SelectItem><SelectItem value="none">Sem campanha</SelectItem>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select>
+          {visibleLots.length > 0 && <Select value={filterLot} onValueChange={setFilterLot}><SelectTrigger className="w-[125px]"><SelectValue placeholder="Lote" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os lotes</SelectItem>{visibleLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lotLabel(lot.id)}</SelectItem>)}</SelectContent></Select>}
           <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Pagamento</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="parcial">Parcial</SelectItem><SelectItem value="pago">Pago</SelectItem><SelectItem value="brinde">Brinde</SelectItem></SelectContent></Select>
           <Select value={filterDelivery} onValueChange={setFilterDelivery}><SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Entrega</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="entregue">Entregue</SelectItem></SelectContent></Select>
           <Select value={filterColor} onValueChange={setFilterColor}><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Cor</SelectItem>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select>
@@ -383,8 +464,9 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
                 <CardContent className="p-3">
                   <div className="grid gap-3 lg:grid-cols-[minmax(220px,1.35fr)_minmax(180px,.8fr)_minmax(150px,.65fr)_auto] lg:items-center">
                     <div className="min-w-0">
-                      <div className="mb-2 flex items-center gap-2">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
                         <p className="truncate font-bold">{order.buyer_name}</p>
+                        {order.lot_id && <Badge variant="outline" className="gap-1"><Layers3 className="h-3 w-3" />{lotLabel(order.lot_id)}</Badge>}
                         {finished && <Badge className="bg-success text-success-foreground"><CheckCircle2 className="mr-1 h-3 w-3" />Finalizado</Badge>}
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -399,35 +481,17 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
                       </div>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      className={`h-auto min-h-12 justify-between px-3 py-2 ${paymentDone ? 'border-success/30 bg-success/5' : ''}`}
-                      disabled={paymentDone}
-                      onClick={() => openPay(order)}
-                    >
-                      <span className="flex min-w-0 flex-col items-start leading-tight">
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Pagamento</span>
-                        <span className="text-xs font-semibold">{order.is_gift ? 'Brinde' : paymentDone ? 'Pago' : paymentStatus === 'partial' ? `Falta ${brl(remaining)}` : brl(order.total_price)}</span>
-                      </span>
+                    <Button variant="outline" className={`h-auto min-h-12 justify-between px-3 py-2 ${paymentDone ? 'border-success/30 bg-success/5' : ''}`} disabled={paymentDone} onClick={() => openPay(order)}>
+                      <span className="flex min-w-0 flex-col items-start leading-tight"><span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Pagamento</span><span className="text-xs font-semibold">{order.is_gift ? 'Brinde' : paymentDone ? 'Pago' : paymentStatus === 'partial' ? `Falta ${brl(remaining)}` : brl(order.total_price)}</span></span>
                       <PaymentBadge order={order} />
                     </Button>
 
-                    <Button
-                      variant={delivered ? 'default' : 'outline'}
-                      className={`h-12 justify-between px-3 ${delivered ? 'bg-success hover:bg-success/90' : ''}`}
-                      onClick={() => toggleDelivery(order)}
-                    >
-                      <span className="flex flex-col items-start leading-tight">
-                        <span className={`text-[10px] font-bold uppercase tracking-wide ${delivered ? 'text-success-foreground/80' : 'text-muted-foreground'}`}>Entrega</span>
-                        <span className="text-xs font-semibold">{delivered ? 'Entregue' : 'Pendente'}</span>
-                      </span>
+                    <Button variant={delivered ? 'default' : 'outline'} className={`h-12 justify-between px-3 ${delivered ? 'bg-success hover:bg-success/90' : ''}`} onClick={() => toggleDelivery(order)}>
+                      <span className="flex flex-col items-start leading-tight"><span className={`text-[10px] font-bold uppercase tracking-wide ${delivered ? 'text-success-foreground/80' : 'text-muted-foreground'}`}>Entrega</span><span className="text-xs font-semibold">{delivered ? 'Entregue' : 'Pendente'}</span></span>
                       {delivered ? <Check className="h-4 w-4" /> : <Truck className="h-4 w-4" />}
                     </Button>
 
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" title="Editar" onClick={() => openEdit(order)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" title="Excluir" onClick={() => requestDelete(order)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
+                    <div className="flex justify-end gap-1"><Button variant="ghost" size="icon" title="Editar" onClick={() => openEdit(order)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" title="Excluir" onClick={() => requestDelete(order)}><Trash2 className="h-4 w-4" /></Button></div>
                   </div>
                 </CardContent>
               </Card>
@@ -440,7 +504,10 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
         <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader><DialogTitle>{editingId ? 'Editar Encomenda' : 'Nova Encomenda'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2"><Label>Campanha</Label><Select value={orderForm.campaign_id} onValueChange={applyCampaignDefaults}><SelectTrigger><SelectValue placeholder="Selecione uma campanha" /></SelectTrigger><SelectContent>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-2"><Label>Campanha</Label><Select value={orderForm.campaign_id} onValueChange={applyCampaignDefaults}><SelectTrigger><SelectValue placeholder="Selecione uma campanha" /></SelectTrigger><SelectContent>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-2"><Label>Lote</Label><Select value={orderForm.lot_id} onValueChange={(value) => setOrderForm({ ...orderForm, lot_id: value })} disabled={!orderForm.campaign_id || campaignLots(orderForm.campaign_id).length === 0}><SelectTrigger><SelectValue placeholder="Selecione o lote" /></SelectTrigger><SelectContent>{campaignLots(orderForm.campaign_id).map((lot) => <SelectItem key={lot.id} value={lot.id}>{lotLabel(lot.id)} · {lot.quantity} camisas</SelectItem>)}</SelectContent></Select></div>
+            </div>
             <div className="space-y-2"><Label>Nome</Label><Input value={orderForm.buyer_name} onChange={(event) => setOrderForm({ ...orderForm, buyer_name: event.target.value })} /></div>
             <div className="space-y-2">
               <div className="flex items-center justify-between"><Label>Camisas</Label><Button type="button" variant="outline" size="sm" onClick={() => setItems([...items, emptyItem()])}><Plus className="mr-1 h-3 w-3" />Item</Button></div>
@@ -462,22 +529,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       </Dialog>
 
       <Dialog open={payDialogOpen} onOpenChange={(open) => { setPayDialogOpen(open); if (!open) setPayOrder(null); }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Registrar pagamento</DialogTitle></DialogHeader>
-          {payOrder && (
-            <div className="space-y-4">
-              <div className="rounded-xl bg-muted/40 p-3 text-sm"><p className="font-bold">{payOrder.buyer_name}</p><p>Restante: <strong className="text-destructive">{brl(Math.max(0, payOrder.total_price - payOrder.amount_paid))}</strong></p></div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant={payMode === 'total' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('total')}><CheckCircle2 className="mb-1 h-5 w-5" /><span>Total</span><span className="text-xs font-normal opacity-80">Quitar tudo</span></Button>
-                <Button variant={payMode === 'partial' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('partial')}><CircleDollarSign className="mb-1 h-5 w-5" /><span>Parcial</span><span className="text-xs font-normal opacity-80">Informar valor</span></Button>
-              </div>
-              {payMode === 'partial' && <div className="space-y-2"><Label>Valor parcial</Label><Input autoFocus type="number" step="0.01" value={payAmount} onChange={(event) => setPayAmount(event.target.value)} /></div>}
-              <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Data</Label><Input type="date" value={payDate} onChange={(event) => setPayDate(event.target.value)} /></div><div className="space-y-2"><Label>Forma</Label><Select value={payMethod} onValueChange={setPayMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pix">PIX</SelectItem><SelectItem value="dinheiro">Dinheiro</SelectItem><SelectItem value="transferencia">Transferência</SelectItem><SelectItem value="cartao">Cartão</SelectItem></SelectContent></Select></div></div>
-              <div className="space-y-2"><Label>Observação</Label><Textarea value={payNotes} onChange={(event) => setPayNotes(event.target.value)} /></div>
-              <Button className="w-full" onClick={handleRegisterPayment} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Confirmar {payMode === 'total' ? 'pagamento total' : 'pagamento parcial'}</Button>
-            </div>
-          )}
-        </DialogContent>
+        <DialogContent className="max-w-sm"><DialogHeader><DialogTitle>Registrar pagamento</DialogTitle></DialogHeader>{payOrder && <div className="space-y-4"><div className="rounded-xl bg-muted/40 p-3 text-sm"><p className="font-bold">{payOrder.buyer_name}</p><p>Restante: <strong className="text-destructive">{brl(Math.max(0, payOrder.total_price - payOrder.amount_paid))}</strong></p></div><div className="grid grid-cols-2 gap-2"><Button variant={payMode === 'total' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('total')}><CheckCircle2 className="mb-1 h-5 w-5" /><span>Total</span><span className="text-xs font-normal opacity-80">Quitar tudo</span></Button><Button variant={payMode === 'partial' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('partial')}><CircleDollarSign className="mb-1 h-5 w-5" /><span>Parcial</span><span className="text-xs font-normal opacity-80">Informar valor</span></Button></div>{payMode === 'partial' && <div className="space-y-2"><Label>Valor parcial</Label><Input autoFocus type="number" step="0.01" value={payAmount} onChange={(event) => setPayAmount(event.target.value)} /></div>}<div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Data</Label><Input type="date" value={payDate} onChange={(event) => setPayDate(event.target.value)} /></div><div className="space-y-2"><Label>Forma</Label><Select value={payMethod} onValueChange={setPayMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pix">PIX</SelectItem><SelectItem value="dinheiro">Dinheiro</SelectItem><SelectItem value="transferencia">Transferência</SelectItem><SelectItem value="cartao">Cartão</SelectItem></SelectContent></Select></div></div><div className="space-y-2"><Label>Observação</Label><Textarea value={payNotes} onChange={(event) => setPayNotes(event.target.value)} /></div><Button className="w-full" onClick={handleRegisterPayment} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Confirmar {payMode === 'total' ? 'pagamento total' : 'pagamento parcial'}</Button></div>}</DialogContent>
       </Dialog>
 
       <AlertDialog open={Boolean(deleteId)} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
