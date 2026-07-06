@@ -1547,6 +1547,62 @@ export type Database = {
         }
         Relationships: []
       }
+      shirt_campaign_lots: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          purchase_date: string
+          quantity: number
+          society_id: string
+          supplier: string | null
+          total_cost: number
+          transaction_id: string | null
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          purchase_date?: string
+          quantity: number
+          society_id: string
+          supplier?: string | null
+          total_cost?: number
+          transaction_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          purchase_date?: string
+          quantity?: number
+          society_id?: string
+          supplier?: string | null
+          total_cost?: number
+          transaction_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shirt_campaign_lots_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "shirt_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shirt_campaigns: {
         Row: {
           created_at: string
@@ -2160,6 +2216,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_shirt_campaign_lot: {
+        Args: {
+          p_campaign_id: string
+          p_notes?: string
+          p_purchase_date?: string
+          p_quantity: number
+          p_supplier?: string
+          p_unit_cost: number
+        }
+        Returns: string
+      }
       can_manage_elections: { Args: { _user_id: string }; Returns: boolean }
       create_shirt_campaign: {
         Args: {
@@ -2198,6 +2265,19 @@ export type Database = {
           p_payment_method?: string
         }
         Returns: Json
+      }
+      update_shirt_campaign_with_optional_lot: {
+        Args: {
+          p_additional_quantity?: number
+          p_additional_unit_cost?: number
+          p_campaign_id: string
+          p_default_sale_price: number
+          p_name: string
+          p_notes?: string
+          p_purchase_date?: string
+          p_supplier?: string
+        }
+        Returns: string
       }
       update_task: {
         Args: {
