@@ -1547,6 +1547,62 @@ export type Database = {
         }
         Relationships: []
       }
+      shirt_campaign_lots: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          purchase_date: string
+          quantity: number
+          society_id: string
+          supplier: string | null
+          total_cost: number
+          transaction_id: string | null
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          purchase_date?: string
+          quantity: number
+          society_id: string
+          supplier?: string | null
+          total_cost?: number
+          transaction_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          purchase_date?: string
+          quantity?: number
+          society_id?: string
+          supplier?: string | null
+          total_cost?: number
+          transaction_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shirt_campaign_lots_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "shirt_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shirt_campaigns: {
         Row: {
           created_at: string
