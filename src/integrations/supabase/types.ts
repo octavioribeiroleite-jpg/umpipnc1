@@ -2266,6 +2266,19 @@ export type Database = {
         }
         Returns: Json
       }
+      update_shirt_campaign_with_optional_lot: {
+        Args: {
+          p_additional_quantity?: number
+          p_additional_unit_cost?: number
+          p_campaign_id: string
+          p_default_sale_price: number
+          p_name: string
+          p_notes?: string
+          p_purchase_date?: string
+          p_supplier?: string
+        }
+        Returns: string
+      }
       update_task: {
         Args: {
           clear_assignee?: boolean
