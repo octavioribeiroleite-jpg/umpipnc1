@@ -6,9 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Loader2, Trash2, CheckCircle2 } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  Loader2,
+  MoreVertical,
+  Package,
+  Plus,
+  ShoppingBag,
+  Trash2,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 
 export interface ShirtCampaign {
   id: string;
@@ -28,7 +41,6 @@ export const brl = (value: number) =>
 
 const toLocalDate = (d: string) => {
   const date = new Date(d);
-  // purchase_date is a DATE (YYYY-MM-DD); avoid UTC off-by-one
   if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
     const [y, m, day] = d.split('-').map(Number);
     return new Date(y, m - 1, day).toLocaleDateString('pt-BR');
@@ -46,11 +58,12 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
   const { effectiveSocietyId: societyId } = useAuth();
   const [campaigns, setCampaigns] = useState<ShirtCampaign[]>([]);
   const [orderedByCampaign, setOrderedByCampaign] = useState<Record<string, number>>({});
-  const [hasPayments, setHasPayments] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     name: '',
     purchasedQuantity: '',
@@ -59,8 +72,6 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
     supplier: '',
     purchaseDate: new Date().toISOString().slice(0, 10),
   });
-
-  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -73,15 +84,15 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
     if (societyId) oQuery = oQuery.eq('society_id', societyId);
     const { data: orders } = await oQuery;
     const map: Record<string, number> = {};
-    (orders || []).forEach((o: { campaign_id: string | null; quantity: number }) => {
-      if (o.campaign_id) map[o.campaign_id] = (map[o.campaign_id] || 0) + Number(o.quantity || 0);
+    (orders || []).forEach((order: { campaign_id: string | null; quantity: number }) => {
+      if (order.campaign_id) map[order.campaign_id] = (map[order.campaign_id] || 0) + Number(order.quantity || 0);
     });
     setOrderedByCampaign(map);
     setLoading(false);
   }, [societyId]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   const resetForm = () => setForm({
@@ -92,9 +103,10 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
   const totalCostPreview = (parseFloat(form.purchasedQuantity) || 0) * (parseFloat(form.unitCost) || 0);
 
   const handleCreate = async () => {
-    if (!form.name.trim()) { toast.error('Informe o nome da campanha'); return; }
-    if ((parseInt(form.purchasedQuantity) || 0) <= 0) { toast.error('Informe a quantidade comprada'); return; }
-    if (!societyId) { toast.error('Selecione uma sociedade'); return; }
+    if (!form.name.trim()) return void toast.error('Informe o nome da campanha');
+    if ((parseInt(form.purchasedQuantity) || 0) <= 0) return void toast.error('Informe a quantidade comprada');
+    if (!societyId) return void toast.error('Selecione uma sociedade');
+
     setSubmitting(true);
     try {
       const { error } = await supabase.rpc('create_shirt_campaign', {
@@ -110,98 +122,143 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       toast.success('Campanha criada! Saída financeira registrada.');
       setDialogOpen(false);
       resetForm();
-      fetchData();
+      await fetchData();
       onDataChange?.();
-    } catch (e) {
-      toast.error('Erro ao criar campanha: ' + (e as Error).message);
+    } catch (error) {
+      toast.error('Erro ao criar campanha: ' + (error as Error).message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const requestDelete = async (c: ShirtCampaign) => {
-    const ordered = orderedByCampaign[c.id] || 0;
-    if (ordered > 0) {
-      toast.error('Esta campanha possui encomendas vinculadas. Não é possível excluir.');
-      return;
-    }
-    if (c.transaction_id) {
-      toast.error('Esta campanha possui uma saída financeira vinculada. Não é possível excluir.');
-      return;
-    }
-    setDeleteId(c.id);
+  const requestDelete = async (campaign: ShirtCampaign) => {
+    const ordered = orderedByCampaign[campaign.id] || 0;
+    if (ordered > 0) return void toast.error('Esta campanha possui encomendas vinculadas. Não é possível excluir.');
+    if (campaign.transaction_id) return void toast.error('Esta campanha possui uma saída financeira vinculada. Não é possível excluir.');
+    setDeleteId(campaign.id);
   };
 
   const confirmDelete = async () => {
     if (!deleteId) return;
     const { error } = await supabase.from('shirt_campaigns').delete().eq('id', deleteId);
-    if (error) { toast.error('Erro ao excluir: ' + error.message); return; }
+    if (error) return void toast.error('Erro ao excluir: ' + error.message);
     toast.success('Campanha excluída.');
     setDeleteId(null);
-    fetchData();
+    await fetchData();
     onDataChange?.();
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" /> Nova Campanha
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold">Campanhas de camisas</h3>
+          <p className="text-xs text-muted-foreground">Acompanhe cada lote, custo e disponibilidade.</p>
+        </div>
+        <Button size="sm" onClick={() => { resetForm(); setDialogOpen(true); }}>
+          <Plus className="mr-2 h-4 w-4" />Nova campanha
         </Button>
       </div>
 
       {campaigns.length === 0 ? (
-        <Card><CardContent className="py-10 text-center text-muted-foreground">
-          Nenhuma campanha cadastrada. Crie uma campanha para começar o controle por lote.
-        </CardContent></Card>
+        <Card><CardContent className="py-10 text-center text-muted-foreground">Nenhuma campanha cadastrada. Crie uma campanha para começar o controle por lote.</CardContent></Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {campaigns.map(c => {
-            const ordered = orderedByCampaign[c.id] || 0;
-            const available = Math.max(0, c.purchased_quantity - ordered);
-            const selected = selectedCampaignId === c.id;
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {campaigns.map((campaign) => {
+            const ordered = orderedByCampaign[campaign.id] || 0;
+            const purchased = Number(campaign.purchased_quantity || 0);
+            const available = Math.max(0, purchased - ordered);
+            const progress = purchased > 0 ? Math.min(100, (ordered / purchased) * 100) : 0;
+            const projectedRevenue = ordered * Number(campaign.default_sale_price || 0);
+            const projectedProfit = projectedRevenue - Number(campaign.total_purchase_cost || 0);
+            const selected = selectedCampaignId === campaign.id;
+            const soldOut = available === 0 && purchased > 0;
+
             return (
-              <Card
-                key={c.id}
-                className={`cursor-pointer transition-colors ${selected ? 'border-primary ring-1 ring-primary' : 'hover:bg-muted/40'}`}
-                onClick={() => onSelectCampaign?.(c.id)}
-              >
-                <CardContent className="pt-4 pb-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold flex items-center gap-1.5">
-                        {selected && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                        {c.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {toLocalDate(c.purchase_date)}{c.supplier ? ` · ${c.supplier}` : ''}
-                      </p>
+              <Card key={campaign.id} className={`overflow-hidden transition-shadow ${selected ? 'border-primary ring-1 ring-primary/35' : 'hover:shadow-md'}`}>
+                <CardContent className="p-0">
+                  <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="truncate text-base font-bold">{campaign.name}</h4>
+                        <Badge variant={soldOut ? 'secondary' : 'default'} className={soldOut ? '' : 'bg-success text-success-foreground'}>
+                          {soldOut ? 'Esgotada' : 'Ativa'}
+                        </Badge>
+                        {selected && <Badge variant="outline"><CheckCircle2 className="mr-1 h-3 w-3" />Selecionada</Badge>}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{toLocalDate(campaign.purchase_date)}</span>
+                        {campaign.supplier && <span>{campaign.supplier}</span>}
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost" size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
-                      onClick={(e) => { e.stopPropagation(); requestDelete(c); }}
-                    >
-                      <Trash2 className="h-4 w-4" />
+
+                    <div className="relative">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMenuOpenId(menuOpenId === campaign.id ? null : campaign.id)}>
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                      {menuOpenId === campaign.id && (
+                        <div className="absolute right-0 top-9 z-20 w-40 rounded-md border bg-popover p-1 shadow-lg">
+                          <button className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm text-destructive hover:bg-muted" onClick={() => { setMenuOpenId(null); void requestDelete(campaign); }}>
+                            <Trash2 className="h-4 w-4" />Excluir campanha
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
+                    <div className="bg-card px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Compradas</p>
+                      <p className="mt-1 text-xl font-bold">{purchased}</p>
+                    </div>
+                    <div className="bg-card px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Encomendadas</p>
+                      <p className="mt-1 text-xl font-bold">{ordered}</p>
+                    </div>
+                    <div className="bg-card px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Disponíveis</p>
+                      <p className={`mt-1 text-xl font-bold ${available === 0 ? 'text-muted-foreground' : 'text-success'}`}>{available}</p>
+                    </div>
+                    <div className="bg-card px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Preço</p>
+                      <p className="mt-1 text-lg font-bold">{brl(campaign.default_sale_price)}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 px-4 py-3">
+                    <div>
+                      <div className="mb-1.5 flex items-center justify-between text-xs">
+                        <span className="font-medium">{ordered} de {purchased} encomendadas</span>
+                        <span className="text-muted-foreground">{Math.round(progress)}%</span>
+                      </div>
+                      <Progress value={progress} className="h-2" />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="rounded-lg bg-muted/35 p-2.5">
+                        <div className="flex items-center gap-1.5 text-muted-foreground"><Package className="h-3.5 w-3.5" /><span className="text-xs">Custo unit.</span></div>
+                        <p className="mt-1 font-semibold">{brl(campaign.unit_cost)}</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/35 p-2.5">
+                        <div className="flex items-center gap-1.5 text-muted-foreground"><Wallet className="h-3.5 w-3.5" /><span className="text-xs">Custo total</span></div>
+                        <p className="mt-1 font-semibold">{brl(campaign.total_purchase_cost)}</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/35 p-2.5">
+                        <div className="flex items-center gap-1.5 text-muted-foreground"><TrendingUp className="h-3.5 w-3.5" /><span className="text-xs">Lucro previsto</span></div>
+                        <p className={`mt-1 font-semibold ${projectedProfit >= 0 ? 'text-success' : 'text-destructive'}`}>{brl(projectedProfit)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end border-t px-4 py-2.5">
+                    <Button size="sm" variant="outline" onClick={() => onSelectCampaign?.(campaign.id)}>
+                      <ShoppingBag className="mr-2 h-4 w-4" />Ver encomendas<ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><span className="text-muted-foreground">Comprado: </span><strong>{c.purchased_quantity}</strong></div>
-                    <div><span className="text-muted-foreground">Disponível: </span><strong>{available}</strong></div>
-                    <div><span className="text-muted-foreground">Custo unit.: </span>{brl(c.unit_cost)}</div>
-                    <div><span className="text-muted-foreground">Custo total: </span>{brl(c.total_purchase_cost)}</div>
-                    <div><span className="text-muted-foreground">Preço padrão: </span>{brl(c.default_sale_price)}</div>
-                    <div><span className="text-muted-foreground">Encomendado: </span><strong>{ordered}</strong></div>
-                  </div>
-                  {selected && <Badge variant="secondary" className="text-xs">Selecionada para encomendas</Badge>}
                 </CardContent>
               </Card>
             );
@@ -209,68 +266,31 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) resetForm(); }}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Nova Campanha de Camisas</DialogTitle>
-          </DialogHeader>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+          <DialogHeader><DialogTitle>Nova campanha de camisas</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome da campanha</Label>
-              <Input placeholder="Ex.: Camisas UMP 2026" value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <div className="space-y-2"><Label>Nome da campanha</Label><Input placeholder="Ex.: Camisas UMP 2026" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Qtd. comprada</Label><Input type="number" min="1" placeholder="44" value={form.purchasedQuantity} onChange={(event) => setForm({ ...form, purchasedQuantity: event.target.value })} /></div>
+              <div className="space-y-2"><Label>Custo unitário (R$)</Label><Input type="number" step="0.01" placeholder="55,00" value={form.unitCost} onChange={(event) => setForm({ ...form, unitCost: event.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Qtd. comprada</Label>
-                <Input type="number" min="1" placeholder="44" value={form.purchasedQuantity}
-                  onChange={(e) => setForm({ ...form, purchasedQuantity: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Custo unitário (R$)</Label>
-                <Input type="number" step="0.01" placeholder="55,00" value={form.unitCost}
-                  onChange={(e) => setForm({ ...form, unitCost: e.target.value })} />
-              </div>
+              <div className="space-y-2"><Label>Preço padrão venda (R$)</Label><Input type="number" step="0.01" placeholder="65,00" value={form.defaultSalePrice} onChange={(event) => setForm({ ...form, defaultSalePrice: event.target.value })} /></div>
+              <div className="space-y-2"><Label>Data da compra</Label><Input type="date" value={form.purchaseDate} onChange={(event) => setForm({ ...form, purchaseDate: event.target.value })} /></div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Preço padrão venda (R$)</Label>
-                <Input type="number" step="0.01" placeholder="65,00" value={form.defaultSalePrice}
-                  onChange={(e) => setForm({ ...form, defaultSalePrice: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Data da compra</Label>
-                <Input type="date" value={form.purchaseDate}
-                  onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Fornecedor</Label>
-              <Input placeholder="Opcional" value={form.supplier}
-                onChange={(e) => setForm({ ...form, supplier: e.target.value })} />
-            </div>
-            <div className="rounded-md bg-muted/40 p-3 text-sm">
-              Custo total: <strong>{brl(totalCostPreview)}</strong>
-              <p className="text-xs text-muted-foreground mt-1">Será criada uma única saída financeira com este valor.</p>
-            </div>
-            <Button className="w-full" onClick={handleCreate} disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Criar Campanha
-            </Button>
+            <div className="space-y-2"><Label>Fornecedor</Label><Input placeholder="Opcional" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} /></div>
+            <div className="rounded-md bg-muted/40 p-3 text-sm">Custo total: <strong>{brl(totalCostPreview)}</strong><p className="mt-1 text-xs text-muted-foreground">Será criada uma única saída financeira com este valor.</p></div>
+            <Button className="w-full" onClick={handleCreate} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar campanha</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!deleteId} onOpenChange={(v) => { if (!v) setDeleteId(null); }}>
+      <Dialog open={Boolean(deleteId)} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Excluir campanha</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Tem certeza? Esta ação não pode ser desfeita.
-          </p>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={confirmDelete}>Excluir</Button>
-          </div>
+          <p className="text-sm text-muted-foreground">Tem certeza? Esta ação não pode ser desfeita.</p>
+          <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button><Button variant="destructive" onClick={confirmDelete}>Excluir</Button></div>
         </DialogContent>
       </Dialog>
     </div>
