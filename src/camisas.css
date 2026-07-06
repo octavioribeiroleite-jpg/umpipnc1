@@ -117,6 +117,62 @@
   color: hsl(var(--muted-foreground));
 }
 
+/* Encomendas: cards horizontais mais compactos */
+.shirts-page .finance-tab-panel [role="tabpanel"] .grid.gap-3:has(> div > div > .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\]) {
+  gap: 0.55rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .grid.gap-3 > div:has(.lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\]) {
+  border-radius: 0.85rem;
+  box-shadow: 0 4px 14px hsl(var(--foreground) / 0.035);
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] {
+  gap: 0.7rem !important;
+  padding: 0.72rem 0.85rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] > div:first-child > div:first-child {
+  margin-bottom: 0.45rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] p.text-base {
+  font-size: 0.9rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] .rounded-xl.border {
+  border-radius: 0.65rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] > .rounded-xl.border {
+  padding: 0.58rem 0.65rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] .flex.flex-wrap.gap-2 {
+  gap: 0.35rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] .flex.flex-wrap.gap-2 > div {
+  gap: 0.4rem !important;
+  padding: 0.35rem 0.5rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] button.mt-3 {
+  margin-top: 0.45rem !important;
+  height: 1.95rem;
+  font-size: 0.74rem;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] + .border-t {
+  padding: 0.35rem 0.85rem !important;
+}
+
+@media (min-width: 1024px) {
+  .shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] {
+    grid-template-columns: minmax(200px, 1.3fr) minmax(190px, 0.9fr) minmax(190px, 0.9fr) auto !important;
+  }
+}
+
 @media (max-width: 900px) {
   .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -149,5 +205,14 @@
   .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:first-of-type > h3::after,
   .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > h3::after {
     display: none;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] {
+    gap: 0.55rem !important;
+    padding: 0.65rem !important;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.2fr\)_minmax\(220px\,1fr\)_minmax\(220px\,1fr\)_auto\] > .rounded-xl.border {
+    padding: 0.52rem 0.6rem !important;
   }
 }
