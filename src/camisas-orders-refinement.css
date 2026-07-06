@@ -1,0 +1,67 @@
+/* Ajustes finais da lista de encomendas */
+
+/* Remove a segunda informação textual de pagamento; mantém apenas o selo. */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+.lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\]
+> button:nth-of-type(1) > span:first-child > span:last-child {
+  display: none !important;
+}
+
+/* Mantém o título do bloco de pagamento discreto e o selo como informação principal. */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+.lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\]
+> button:nth-of-type(1) {
+  justify-content: space-between !important;
+}
+
+/* Itens sem balão e sem marcador de cor. */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+.lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\]
+> div:first-child > div:last-child > div {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+.lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\]
+> div:first-child > div:last-child > div > span:first-child {
+  display: none !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+.lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\]
+> div:first-child > div:last-child > div > span:nth-child(2) {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+.lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\]
+> div:first-child > div:last-child > div > span:last-child {
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Separador visual entre dois ou mais itens. */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+.lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\]
+> div:first-child > div:last-child > div + div::before {
+  content: "|";
+  margin-right: 0.45rem;
+  color: hsl(var(--border));
+  font-weight: 400;
+}
+
+@media (max-width: 719px) {
+  .shirts-page .finance-tab-panel [role="tabpanel"]
+  .lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\]
+  > div:first-child > div:last-child {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+  }
+}
