@@ -1,9 +1,9 @@
-/* Campanhas: neutraliza regras globais dos cards e mantém o padrão compacto do site. */
+/* Campanhas: card compacto, com bordas e divisórias internas bem recuadas. */
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2 {
-  gap: 0.75rem !important;
+  gap: 0.85rem !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -11,6 +11,11 @@
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 > div {
   min-height: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid hsl(var(--border) / 0.78) !important;
+  border-radius: 1.15rem !important;
+  background: hsl(var(--card)) !important;
+  box-shadow: 0 10px 28px hsl(var(--foreground) / 0.045) !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -24,27 +29,18 @@
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 > div > div > .p-4 {
-  padding: 0.9rem !important;
+  padding: 1rem 1.1rem !important;
 }
 
-.shirts-page .finance-tab-panel [role="tabpanel"]
-> .space-y-4
-> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
-> div {
-  border-radius: 0.9rem !important;
-  box-shadow: 0 5px 16px hsl(var(--foreground) / 0.035) !important;
-}
-
-/* Cabeçalho */
 .shirts-page .finance-tab-panel [role="tabpanel"]
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 h4.text-base {
-  font-size: 0.95rem !important;
-  line-height: 1.2 !important;
+  font-size: 0.98rem !important;
+  line-height: 1.25 !important;
 }
 
-/* Métricas: sem blocos internos grandes */
+/* Indicadores principais */
 .shirts-page .finance-tab-panel [role="tabpanel"]
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
@@ -52,10 +48,10 @@ h4.text-base {
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 0 !important;
-  margin-top: 0.8rem !important;
-  padding: 0.7rem 0 !important;
-  border-top: 1px solid hsl(var(--border) / 0.65);
-  border-bottom: 1px solid hsl(var(--border) / 0.65);
+  margin-top: 0.85rem !important;
+  padding: 0.85rem 0 !important;
+  border-top: 1px solid hsl(var(--border) / 0.58) !important;
+  border-bottom: 1px solid hsl(var(--border) / 0.58) !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -64,10 +60,28 @@ h4.text-base {
 .grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
 > div {
   min-height: 0 !important;
-  padding: 0 0.7rem !important;
+  padding: 0 1rem !important;
+  border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
+> div:first-child {
+  padding-left: 0 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
+> div:last-child {
+  padding-right: 0 !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -75,7 +89,7 @@ h4.text-base {
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
 > div + div {
-  border-left: 1px solid hsl(var(--border) / 0.55);
+  border-left: 1px solid hsl(var(--border) / 0.48) !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -83,8 +97,8 @@ h4.text-base {
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
 p:first-child {
-  font-size: 0.62rem !important;
-  letter-spacing: 0.06em !important;
+  font-size: 0.64rem !important;
+  letter-spacing: 0.07em !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -92,9 +106,9 @@ p:first-child {
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
 p:last-child {
-  margin-top: 0.15rem !important;
-  font-size: 1rem !important;
-  line-height: 1.15 !important;
+  margin-top: 0.18rem !important;
+  font-size: 1.03rem !important;
+  line-height: 1.2 !important;
 }
 
 /* Progresso */
@@ -102,10 +116,10 @@ p:last-child {
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .mt-4:has(> .mb-1\.5) {
-  margin-top: 0.75rem !important;
+  margin-top: 0.9rem !important;
 }
 
-/* Custos: linha simples, sem aparência de três cards */
+/* Custos */
 .shirts-page .finance-tab-panel [role="tabpanel"]
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
@@ -113,8 +127,9 @@ p:last-child {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 0 !important;
-  margin-top: 0.75rem !important;
-  padding-top: 0.7rem !important;
+  margin-top: 0.9rem !important;
+  padding-top: 0.85rem !important;
+  border-top: 1px solid hsl(var(--border) / 0.58) !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -123,10 +138,12 @@ p:last-child {
 .grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
 > div {
   min-height: 0 !important;
-  padding: 0 0.7rem !important;
+  padding: 0 1rem !important;
+  border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  overflow: visible !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -141,8 +158,16 @@ p:last-child {
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
+> div:last-child {
+  padding-right: 0 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
 > div + div {
-  border-left: 1px solid hsl(var(--border) / 0.55);
+  border-left: 1px solid hsl(var(--border) / 0.48) !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -150,7 +175,7 @@ p:last-child {
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
 span {
-  font-size: 0.68rem !important;
+  font-size: 0.7rem !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -158,22 +183,22 @@ span {
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
 p {
-  margin-top: 0.12rem !important;
-  font-size: 0.82rem !important;
+  margin-top: 0.16rem !important;
+  font-size: 0.86rem !important;
 }
 
-/* Rodapé de ações integrado ao card */
+/* Rodapé: sem margens negativas, dentro do card */
 .shirts-page .finance-tab-panel [role="tabpanel"]
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .mt-4.flex.flex-wrap.justify-end.gap-2 {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 0.5rem !important;
-  margin: 0.85rem -0.9rem -0.9rem !important;
-  padding: 0.75rem 0.9rem 0.9rem !important;
-  border-top: 1px solid hsl(var(--border) / 0.65);
-  background: hsl(var(--muted) / 0.14);
+  gap: 0.6rem !important;
+  margin-top: 0.95rem !important;
+  padding-top: 0.85rem !important;
+  border-top: 1px solid hsl(var(--border) / 0.58) !important;
+  background: transparent !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -181,29 +206,36 @@ p {
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .mt-4.flex.flex-wrap.justify-end.gap-2 > button {
   width: 100% !important;
-  height: 2.45rem !important;
+  height: 2.5rem !important;
   justify-content: center !important;
-  border: 1px solid hsl(var(--border)) !important;
-  border-radius: 0.7rem !important;
+  border: 1px solid hsl(var(--border) / 0.78) !important;
+  border-radius: 0.78rem !important;
   background: hsl(var(--background)) !important;
   color: hsl(var(--foreground)) !important;
-  box-shadow: 0 2px 8px hsl(var(--foreground) / 0.035) !important;
+  box-shadow: none !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .mt-4.flex.flex-wrap.justify-end.gap-2 > button:hover {
-  background: hsl(var(--muted) / 0.55) !important;
+  background: hsl(var(--muted) / 0.5) !important;
 }
 
 @media (max-width: 700px) {
   .shirts-page .finance-tab-panel [role="tabpanel"]
   > .space-y-4
   > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+  > div > div > .p-4 {
+    padding: 0.85rem !important;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"]
+  > .space-y-4
+  > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
   .grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    row-gap: 0.6rem !important;
+    row-gap: 0.75rem !important;
   }
 
   .shirts-page .finance-tab-panel [role="tabpanel"]
@@ -219,7 +251,7 @@ p {
   > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
   .grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3 {
     grid-template-columns: 1fr !important;
-    gap: 0.45rem !important;
+    gap: 0.5rem !important;
   }
 
   .shirts-page .finance-tab-panel [role="tabpanel"]
