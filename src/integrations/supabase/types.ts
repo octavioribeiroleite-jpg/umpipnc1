@@ -2216,6 +2216,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_shirt_campaign_lot: {
+        Args: {
+          p_campaign_id: string
+          p_notes?: string
+          p_purchase_date?: string
+          p_quantity: number
+          p_supplier?: string
+          p_unit_cost: number
+        }
+        Returns: string
+      }
       can_manage_elections: { Args: { _user_id: string }; Returns: boolean }
       create_shirt_campaign: {
         Args: {
