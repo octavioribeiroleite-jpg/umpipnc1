@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
@@ -15,12 +14,9 @@ import {
   CheckCircle2,
   Loader2,
   MoreVertical,
-  Package,
   Plus,
   ShoppingBag,
   Trash2,
-  TrendingUp,
-  Wallet,
 } from 'lucide-react';
 
 export interface ShirtCampaign {
@@ -39,13 +35,12 @@ export interface ShirtCampaign {
 export const brl = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
 
-const toLocalDate = (d: string) => {
-  const date = new Date(d);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-    const [y, m, day] = d.split('-').map(Number);
-    return new Date(y, m - 1, day).toLocaleDateString('pt-BR');
+const toLocalDate = (value: string) => {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
   }
-  return date.toLocaleDateString('pt-BR');
+  return new Date(value).toLocaleDateString('pt-BR');
 };
 
 interface Props {
@@ -75,19 +70,24 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    let cQuery = supabase.from('shirt_campaigns').select('*').order('purchase_date', { ascending: false });
-    if (societyId) cQuery = cQuery.eq('society_id', societyId);
-    const { data: camps } = await cQuery;
-    setCampaigns((camps || []) as ShirtCampaign[]);
+    let campaignQuery = supabase.from('shirt_campaigns').select('*').order('purchase_date', { ascending: false });
+    let orderQuery = supabase.from('shirt_orders').select('campaign_id, quantity');
 
-    let oQuery = supabase.from('shirt_orders').select('campaign_id, quantity');
-    if (societyId) oQuery = oQuery.eq('society_id', societyId);
-    const { data: orders } = await oQuery;
-    const map: Record<string, number> = {};
-    (orders || []).forEach((order: { campaign_id: string | null; quantity: number }) => {
-      if (order.campaign_id) map[order.campaign_id] = (map[order.campaign_id] || 0) + Number(order.quantity || 0);
+    if (societyId) {
+      campaignQuery = campaignQuery.eq('society_id', societyId);
+      orderQuery = orderQuery.eq('society_id', societyId);
+    }
+
+    const [{ data: campaignData }, { data: orderData }] = await Promise.all([campaignQuery, orderQuery]);
+    setCampaigns((campaignData || []) as ShirtCampaign[]);
+
+    const orderMap: Record<string, number> = {};
+    (orderData || []).forEach((order: { campaign_id: string | null; quantity: number }) => {
+      if (order.campaign_id) {
+        orderMap[order.campaign_id] = (orderMap[order.campaign_id] || 0) + Number(order.quantity || 0);
+      }
     });
-    setOrderedByCampaign(map);
+    setOrderedByCampaign(orderMap);
     setLoading(false);
   }, [societyId]);
 
@@ -96,7 +96,11 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
   }, [fetchData]);
 
   const resetForm = () => setForm({
-    name: '', purchasedQuantity: '', unitCost: '', defaultSalePrice: '', supplier: '',
+    name: '',
+    purchasedQuantity: '',
+    unitCost: '',
+    defaultSalePrice: '',
+    supplier: '',
     purchaseDate: new Date().toISOString().slice(0, 10),
   });
 
@@ -119,6 +123,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
         p_society_id: societyId,
       });
       if (error) throw error;
+
       toast.success('Campanha criada! Saída financeira registrada.');
       setDialogOpen(false);
       resetForm();
@@ -131,7 +136,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
     }
   };
 
-  const requestDelete = async (campaign: ShirtCampaign) => {
+  const requestDelete = (campaign: ShirtCampaign) => {
     const ordered = orderedByCampaign[campaign.id] || 0;
     if (ordered > 0) return void toast.error('Esta campanha possui encomendas vinculadas. Não é possível excluir.');
     if (campaign.transaction_id) return void toast.error('Esta campanha possui uma saída financeira vinculada. Não é possível excluir.');
@@ -142,6 +147,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
     if (!deleteId) return;
     const { error } = await supabase.from('shirt_campaigns').delete().eq('id', deleteId);
     if (error) return void toast.error('Erro ao excluir: ' + error.message);
+
     toast.success('Campanha excluída.');
     setDeleteId(null);
     await fetchData();
@@ -154,10 +160,10 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-bold">Campanhas de camisas</h3>
-          <p className="text-xs text-muted-foreground">Acompanhe cada lote, custo e disponibilidade.</p>
+          <h3 className="text-sm font-semibold">Campanhas de camisas</h3>
+          <p className="text-xs text-muted-foreground">Acompanhe os lotes cadastrados e suas encomendas.</p>
         </div>
         <Button size="sm" onClick={() => { resetForm(); setDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" />Nova campanha
@@ -165,44 +171,65 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       </div>
 
       {campaigns.length === 0 ? (
-        <Card><CardContent className="py-10 text-center text-muted-foreground">Nenhuma campanha cadastrada. Crie uma campanha para começar o controle por lote.</CardContent></Card>
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            Nenhuma campanha cadastrada. Crie uma campanha para começar o controle por lote.
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {campaigns.map((campaign) => {
             const ordered = orderedByCampaign[campaign.id] || 0;
             const purchased = Number(campaign.purchased_quantity || 0);
             const available = Math.max(0, purchased - ordered);
-            const progress = purchased > 0 ? Math.min(100, (ordered / purchased) * 100) : 0;
-            const projectedRevenue = ordered * Number(campaign.default_sale_price || 0);
-            const projectedProfit = projectedRevenue - Number(campaign.total_purchase_cost || 0);
             const selected = selectedCampaignId === campaign.id;
             const soldOut = available === 0 && purchased > 0;
+            const progress = purchased > 0 ? Math.min(100, (ordered / purchased) * 100) : 0;
+            const projectedProfit = (ordered * Number(campaign.default_sale_price || 0)) - Number(campaign.total_purchase_cost || 0);
 
             return (
-              <Card key={campaign.id} className={`overflow-hidden transition-shadow ${selected ? 'border-primary ring-1 ring-primary/35' : 'hover:shadow-md'}`}>
-                <CardContent className="p-0">
-                  <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
+              <Card key={campaign.id} className={`overflow-hidden ${selected ? 'border-primary/70 ring-1 ring-primary/20' : ''}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="truncate text-base font-bold">{campaign.name}</h4>
-                        <Badge variant={soldOut ? 'secondary' : 'default'} className={soldOut ? '' : 'bg-success text-success-foreground'}>
+                        <h4 className="truncate text-base font-semibold">{campaign.name}</h4>
+                        <Badge variant="secondary" className="font-medium">
                           {soldOut ? 'Esgotada' : 'Ativa'}
                         </Badge>
-                        {selected && <Badge variant="outline"><CheckCircle2 className="mr-1 h-3 w-3" />Selecionada</Badge>}
+                        {selected && (
+                          <Badge variant="outline" className="font-medium">
+                            <CheckCircle2 className="mr-1 h-3 w-3" />Selecionada
+                          </Badge>
+                        )}
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{toLocalDate(campaign.purchase_date)}</span>
+                        <span className="flex items-center gap-1">
+                          <CalendarDays className="h-3.5 w-3.5" />
+                          {toLocalDate(campaign.purchase_date)}
+                        </span>
                         {campaign.supplier && <span>{campaign.supplier}</span>}
                       </div>
                     </div>
 
-                    <div className="relative">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMenuOpenId(menuOpenId === campaign.id ? null : campaign.id)}>
+                    <div className="relative shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => setMenuOpenId(menuOpenId === campaign.id ? null : campaign.id)}
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                       {menuOpenId === campaign.id && (
                         <div className="absolute right-0 top-9 z-20 w-40 rounded-md border bg-popover p-1 shadow-lg">
-                          <button className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm text-destructive hover:bg-muted" onClick={() => { setMenuOpenId(null); void requestDelete(campaign); }}>
+                          <button
+                            className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm text-destructive hover:bg-muted"
+                            onClick={() => {
+                              setMenuOpenId(null);
+                              requestDelete(campaign);
+                            }}
+                          >
                             <Trash2 className="h-4 w-4" />Excluir campanha
                           </button>
                         </div>
@@ -210,51 +237,53 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
-                    <div className="bg-card px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Compradas</p>
-                      <p className="mt-1 text-xl font-bold">{purchased}</p>
-                    </div>
-                    <div className="bg-card px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Encomendadas</p>
-                      <p className="mt-1 text-xl font-bold">{ordered}</p>
-                    </div>
-                    <div className="bg-card px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Disponíveis</p>
-                      <p className={`mt-1 text-xl font-bold ${available === 0 ? 'text-muted-foreground' : 'text-success'}`}>{available}</p>
-                    </div>
-                    <div className="bg-card px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Preço</p>
-                      <p className="mt-1 text-lg font-bold">{brl(campaign.default_sale_price)}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 px-4 py-3">
+                  <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
                     <div>
-                      <div className="mb-1.5 flex items-center justify-between text-xs">
-                        <span className="font-medium">{ordered} de {purchased} encomendadas</span>
-                        <span className="text-muted-foreground">{Math.round(progress)}%</span>
-                      </div>
-                      <Progress value={progress} className="h-2" />
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Compradas</p>
+                      <p className="mt-0.5 text-lg font-semibold">{purchased}</p>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div className="rounded-lg bg-muted/35 p-2.5">
-                        <div className="flex items-center gap-1.5 text-muted-foreground"><Package className="h-3.5 w-3.5" /><span className="text-xs">Custo unit.</span></div>
-                        <p className="mt-1 font-semibold">{brl(campaign.unit_cost)}</p>
-                      </div>
-                      <div className="rounded-lg bg-muted/35 p-2.5">
-                        <div className="flex items-center gap-1.5 text-muted-foreground"><Wallet className="h-3.5 w-3.5" /><span className="text-xs">Custo total</span></div>
-                        <p className="mt-1 font-semibold">{brl(campaign.total_purchase_cost)}</p>
-                      </div>
-                      <div className="rounded-lg bg-muted/35 p-2.5">
-                        <div className="flex items-center gap-1.5 text-muted-foreground"><TrendingUp className="h-3.5 w-3.5" /><span className="text-xs">Lucro previsto</span></div>
-                        <p className={`mt-1 font-semibold ${projectedProfit >= 0 ? 'text-success' : 'text-destructive'}`}>{brl(projectedProfit)}</p>
-                      </div>
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Encomendadas</p>
+                      <p className="mt-0.5 text-lg font-semibold">{ordered}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Disponíveis</p>
+                      <p className="mt-0.5 text-lg font-semibold">{available}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Preço</p>
+                      <p className="mt-0.5 text-lg font-semibold">{brl(campaign.default_sale_price)}</p>
                     </div>
                   </div>
 
-                  <div className="flex justify-end border-t px-4 py-2.5">
+                  <div className="mt-4">
+                    <div className="mb-1.5 flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{ordered} de {purchased} encomendadas</span>
+                      <span className="font-medium">{Math.round(progress)}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-2 border-t pt-3 text-sm sm:grid-cols-3">
+                    <div className="flex items-center justify-between gap-2 sm:block">
+                      <span className="text-muted-foreground">Custo unitário</span>
+                      <p className="font-medium">{brl(campaign.unit_cost)}</p>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 sm:block">
+                      <span className="text-muted-foreground">Custo total</span>
+                      <p className="font-medium">{brl(campaign.total_purchase_cost)}</p>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 sm:block">
+                      <span className="text-muted-foreground">Lucro previsto</span>
+                      <p className={`font-medium ${projectedProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {brl(projectedProfit)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-end">
                     <Button size="sm" variant="outline" onClick={() => onSelectCampaign?.(campaign.id)}>
                       <ShoppingBag className="mr-2 h-4 w-4" />Ver encomendas<ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -270,18 +299,42 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
         <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader><DialogTitle>Nova campanha de camisas</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2"><Label>Nome da campanha</Label><Input placeholder="Ex.: Camisas UMP 2026" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Qtd. comprada</Label><Input type="number" min="1" placeholder="44" value={form.purchasedQuantity} onChange={(event) => setForm({ ...form, purchasedQuantity: event.target.value })} /></div>
-              <div className="space-y-2"><Label>Custo unitário (R$)</Label><Input type="number" step="0.01" placeholder="55,00" value={form.unitCost} onChange={(event) => setForm({ ...form, unitCost: event.target.value })} /></div>
+            <div className="space-y-2">
+              <Label>Nome da campanha</Label>
+              <Input placeholder="Ex.: Camisas UMP 2026" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Preço padrão venda (R$)</Label><Input type="number" step="0.01" placeholder="65,00" value={form.defaultSalePrice} onChange={(event) => setForm({ ...form, defaultSalePrice: event.target.value })} /></div>
-              <div className="space-y-2"><Label>Data da compra</Label><Input type="date" value={form.purchaseDate} onChange={(event) => setForm({ ...form, purchaseDate: event.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>Qtd. comprada</Label>
+                <Input type="number" min="1" placeholder="44" value={form.purchasedQuantity} onChange={(event) => setForm({ ...form, purchasedQuantity: event.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Custo unitário (R$)</Label>
+                <Input type="number" step="0.01" placeholder="55,00" value={form.unitCost} onChange={(event) => setForm({ ...form, unitCost: event.target.value })} />
+              </div>
             </div>
-            <div className="space-y-2"><Label>Fornecedor</Label><Input placeholder="Opcional" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} /></div>
-            <div className="rounded-md bg-muted/40 p-3 text-sm">Custo total: <strong>{brl(totalCostPreview)}</strong><p className="mt-1 text-xs text-muted-foreground">Será criada uma única saída financeira com este valor.</p></div>
-            <Button className="w-full" onClick={handleCreate} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar campanha</Button>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Preço padrão venda (R$)</Label>
+                <Input type="number" step="0.01" placeholder="65,00" value={form.defaultSalePrice} onChange={(event) => setForm({ ...form, defaultSalePrice: event.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Data da compra</Label>
+                <Input type="date" value={form.purchaseDate} onChange={(event) => setForm({ ...form, purchaseDate: event.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Fornecedor</Label>
+              <Input placeholder="Opcional" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
+            </div>
+            <div className="rounded-md bg-muted/40 p-3 text-sm">
+              Custo total: <strong>{brl(totalCostPreview)}</strong>
+              <p className="mt-1 text-xs text-muted-foreground">Será criada uma única saída financeira com este valor.</p>
+            </div>
+            <Button className="w-full" onClick={handleCreate} disabled={submitting}>
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Criar campanha
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -290,7 +343,10 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Excluir campanha</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">Tem certeza? Esta ação não pode ser desfeita.</p>
-          <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button><Button variant="destructive" onClick={confirmDelete}>Excluir</Button></div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={confirmDelete}>Excluir</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
