@@ -6,6 +6,7 @@ import { StableRefreshBoundary } from '@/components/ui/stable-refresh-boundary';
 import '@/finance-responsive.css';
 import '@/camisas.css';
 import '@/camisas-orders-refinement.css';
+import '@/camisas-summary-refinement.css';
 
 export default function Camisas() {
   return (
