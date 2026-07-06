@@ -1754,6 +1754,7 @@ export type Database = {
           id: string
           is_gift: boolean
           items: Json
+          lot_id: string | null
           notes: string | null
           payment_type: string
           quantity: number
@@ -1776,6 +1777,7 @@ export type Database = {
           id?: string
           is_gift?: boolean
           items?: Json
+          lot_id?: string | null
           notes?: string | null
           payment_type?: string
           quantity?: number
@@ -1798,6 +1800,7 @@ export type Database = {
           id?: string
           is_gift?: boolean
           items?: Json
+          lot_id?: string | null
           notes?: string | null
           payment_type?: string
           quantity?: number
@@ -1814,6 +1817,13 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "shirt_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shirt_orders_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "shirt_campaign_lots"
             referencedColumns: ["id"]
           },
         ]
