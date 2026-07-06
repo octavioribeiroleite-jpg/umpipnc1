@@ -11,23 +11,64 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
   const lastStableHtmlRef = useRef('');
   const lastStableHeightRef = useRef(0);
   const savedScrollYRef = useRef(0);
+  const scrollLockUntilRef = useRef(0);
   const wasRefreshingRef = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
   const [snapshotHtml, setSnapshotHtml] = useState('');
-  const [snapshotHeight, setSnapshotHeight] = useState(0);
+  const [stableHeight, setStableHeight] = useState(0);
 
   useEffect(() => {
     const element = contentRef.current;
     if (!element) return;
 
-    const restoreScrollPosition = () => {
-      const targetScrollY = savedScrollYRef.current;
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: targetScrollY, left: window.scrollX, behavior: 'auto' });
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: targetScrollY, left: window.scrollX, behavior: 'auto' });
-        });
-      });
+    const savePosition = () => {
+      savedScrollYRef.current = window.scrollY;
+      scrollLockUntilRef.current = Date.now() + 3500;
+      const height = element.getBoundingClientRect().height;
+      if (height > 0) {
+        lastStableHeightRef.current = height;
+        setStableHeight(height);
+      }
+    };
+
+    const forceSavedPosition = () => {
+      if (Date.now() > scrollLockUntilRef.current) return;
+      const target = savedScrollYRef.current;
+      if (Math.abs(window.scrollY - target) > 1) {
+        window.scrollTo({ top: target, left: window.scrollX, behavior: 'auto' });
+      }
+    };
+
+    const restoreRepeatedly = () => {
+      let frames = 0;
+      const restore = () => {
+        forceSavedPosition();
+        frames += 1;
+        if (frames < 12 && Date.now() <= scrollLockUntilRef.current) {
+          requestAnimationFrame(restore);
+        }
+      };
+      requestAnimationFrame(restore);
+    };
+
+    const isRelevantAction = (target: EventTarget | null) => {
+      const node = target instanceof Element ? target.closest('button,[role="button"]') : null;
+      if (!node) return false;
+      const title = node.getAttribute('title') || '';
+      const text = node.textContent?.trim().toLowerCase() || '';
+      return (
+        title === 'Registrar pagamento' ||
+        title === 'Marcar entregue' ||
+        title === 'Desfazer entrega' ||
+        text.includes('registrar pagamento') ||
+        text === 'entregar' ||
+        text === 'desfazer' ||
+        text.includes('confirmar pagamento')
+      );
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (isRelevantAction(event.target)) savePosition();
     };
 
     const inspect = () => {
@@ -35,40 +76,57 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
 
       if (hasLoader) {
         if (!wasRefreshingRef.current) {
-          savedScrollYRef.current = window.scrollY;
+          if (scrollLockUntilRef.current < Date.now()) savePosition();
           wasRefreshingRef.current = true;
         }
 
         if (lastStableHtmlRef.current) {
           setSnapshotHtml(lastStableHtmlRef.current);
-          setSnapshotHeight(lastStableHeightRef.current);
           setRefreshing(true);
+          restoreRepeatedly();
         }
         return;
       }
 
-      lastStableHtmlRef.current = element.innerHTML;
-      lastStableHeightRef.current = element.getBoundingClientRect().height;
+      const height = element.getBoundingClientRect().height;
+      if (height > 0) {
+        lastStableHtmlRef.current = element.innerHTML;
+        lastStableHeightRef.current = height;
+        setStableHeight(height);
+      }
       setRefreshing(false);
 
       if (wasRefreshingRef.current) {
         wasRefreshingRef.current = false;
-        restoreScrollPosition();
+        restoreRepeatedly();
       }
     };
 
     inspect();
-    const observer = new MutationObserver(inspect);
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    window.addEventListener('scroll', forceSavedPosition, { passive: true });
+
+    const observer = new MutationObserver(() => {
+      inspect();
+      forceSavedPosition();
+    });
     observer.observe(element, { childList: true, subtree: true, attributes: true });
 
     const resizeObserver = new ResizeObserver(() => {
       if (!element.querySelector('.animate-spin')) {
-        lastStableHeightRef.current = element.getBoundingClientRect().height;
+        const height = element.getBoundingClientRect().height;
+        if (height > 0) {
+          lastStableHeightRef.current = height;
+          setStableHeight(height);
+        }
       }
+      forceSavedPosition();
     });
     resizeObserver.observe(element);
 
     return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+      window.removeEventListener('scroll', forceSavedPosition);
       observer.disconnect();
       resizeObserver.disconnect();
     };
@@ -77,7 +135,10 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
   return (
     <div
       className={`relative ${className || ''}`}
-      style={refreshing && snapshotHeight ? { minHeight: snapshotHeight } : undefined}
+      style={{
+        minHeight: stableHeight || undefined,
+        overflowAnchor: 'none',
+      }}
     >
       {refreshing && snapshotHtml && (
         <div className="absolute inset-x-0 top-0 z-10 pointer-events-none select-none" aria-hidden="true">
