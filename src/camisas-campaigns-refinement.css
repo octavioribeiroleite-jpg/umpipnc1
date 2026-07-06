@@ -162,12 +162,39 @@ p {
   font-size: 0.82rem !important;
 }
 
-/* Ação */
+/* Rodapé de ações integrado ao card */
 .shirts-page .finance-tab-panel [role="tabpanel"]
 > .space-y-4
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
-.mt-4.flex.justify-end {
-  margin-top: 0.75rem !important;
+.mt-4.flex.flex-wrap.justify-end.gap-2 {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  margin: 0.85rem -0.9rem -0.9rem !important;
+  padding: 0.75rem 0.9rem 0.9rem !important;
+  border-top: 1px solid hsl(var(--border) / 0.65);
+  background: hsl(var(--muted) / 0.14);
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.mt-4.flex.flex-wrap.justify-end.gap-2 > button {
+  width: 100% !important;
+  height: 2.45rem !important;
+  justify-content: center !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.7rem !important;
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  box-shadow: 0 2px 8px hsl(var(--foreground) / 0.035) !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.mt-4.flex.flex-wrap.justify-end.gap-2 > button:hover {
+  background: hsl(var(--muted) / 0.55) !important;
 }
 
 @media (max-width: 700px) {
@@ -204,5 +231,12 @@ p {
     justify-content: space-between !important;
     padding: 0 !important;
     border-left: 0 !important;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"]
+  > .space-y-4
+  > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+  .mt-4.flex.flex-wrap.justify-end.gap-2 {
+    grid-template-columns: 1fr !important;
   }
 }
