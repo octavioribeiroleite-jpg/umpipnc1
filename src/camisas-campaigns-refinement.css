@@ -1,0 +1,208 @@
+/* Campanhas: neutraliza regras globais dos cards e mantém o padrão compacto do site. */
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2 {
+  gap: 0.75rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+> div {
+  min-height: 0 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+> div > div {
+  padding: 0 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+> div > div > .p-4 {
+  padding: 0.9rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+> div {
+  border-radius: 0.9rem !important;
+  box-shadow: 0 5px 16px hsl(var(--foreground) / 0.035) !important;
+}
+
+/* Cabeçalho */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+h4.text-base {
+  font-size: 0.95rem !important;
+  line-height: 1.2 !important;
+}
+
+/* Métricas: sem blocos internos grandes */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4 {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  margin-top: 0.8rem !important;
+  padding: 0.7rem 0 !important;
+  border-top: 1px solid hsl(var(--border) / 0.65);
+  border-bottom: 1px solid hsl(var(--border) / 0.65);
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
+> div {
+  min-height: 0 !important;
+  padding: 0 0.7rem !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
+> div + div {
+  border-left: 1px solid hsl(var(--border) / 0.55);
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
+p:first-child {
+  font-size: 0.62rem !important;
+  letter-spacing: 0.06em !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
+p:last-child {
+  margin-top: 0.15rem !important;
+  font-size: 1rem !important;
+  line-height: 1.15 !important;
+}
+
+/* Progresso */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.mt-4:has(> .mb-1\.5) {
+  margin-top: 0.75rem !important;
+}
+
+/* Custos: linha simples, sem aparência de três cards */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3 {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  margin-top: 0.75rem !important;
+  padding-top: 0.7rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
+> div {
+  min-height: 0 !important;
+  padding: 0 0.7rem !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
+> div:first-child {
+  padding-left: 0 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
+> div + div {
+  border-left: 1px solid hsl(var(--border) / 0.55);
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
+span {
+  font-size: 0.68rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
+p {
+  margin-top: 0.12rem !important;
+  font-size: 0.82rem !important;
+}
+
+/* Ação */
+.shirts-page .finance-tab-panel [role="tabpanel"]
+> .space-y-4
+> .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+.mt-4.flex.justify-end {
+  margin-top: 0.75rem !important;
+}
+
+@media (max-width: 700px) {
+  .shirts-page .finance-tab-panel [role="tabpanel"]
+  > .space-y-4
+  > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+  .grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    row-gap: 0.6rem !important;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"]
+  > .space-y-4
+  > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+  .grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
+  > div:nth-child(3) {
+    border-left: 0 !important;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"]
+  > .space-y-4
+  > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+  .grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+    gap: 0.45rem !important;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"]
+  > .space-y-4
+  > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
+  .grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
+  > div {
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 0 !important;
+    border-left: 0 !important;
+  }
+}
