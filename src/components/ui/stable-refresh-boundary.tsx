@@ -10,6 +10,8 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
   const contentRef = useRef<HTMLDivElement>(null);
   const lastStableHtmlRef = useRef('');
   const lastStableHeightRef = useRef(0);
+  const savedScrollYRef = useRef(0);
+  const wasRefreshingRef = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
   const [snapshotHtml, setSnapshotHtml] = useState('');
   const [snapshotHeight, setSnapshotHeight] = useState(0);
@@ -18,10 +20,25 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
     const element = contentRef.current;
     if (!element) return;
 
+    const restoreScrollPosition = () => {
+      const targetScrollY = savedScrollYRef.current;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: targetScrollY, left: window.scrollX, behavior: 'auto' });
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: targetScrollY, left: window.scrollX, behavior: 'auto' });
+        });
+      });
+    };
+
     const inspect = () => {
       const hasLoader = Boolean(element.querySelector('.animate-spin'));
 
       if (hasLoader) {
+        if (!wasRefreshingRef.current) {
+          savedScrollYRef.current = window.scrollY;
+          wasRefreshingRef.current = true;
+        }
+
         if (lastStableHtmlRef.current) {
           setSnapshotHtml(lastStableHtmlRef.current);
           setSnapshotHeight(lastStableHeightRef.current);
@@ -33,6 +50,11 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
       lastStableHtmlRef.current = element.innerHTML;
       lastStableHeightRef.current = element.getBoundingClientRect().height;
       setRefreshing(false);
+
+      if (wasRefreshingRef.current) {
+        wasRefreshingRef.current = false;
+        restoreScrollPosition();
+      }
     };
 
     inspect();
@@ -53,7 +75,10 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
   }, []);
 
   return (
-    <div className={`relative ${className || ''}`} style={refreshing && snapshotHeight ? { minHeight: snapshotHeight } : undefined}>
+    <div
+      className={`relative ${className || ''}`}
+      style={refreshing && snapshotHeight ? { minHeight: snapshotHeight } : undefined}
+    >
       {refreshing && snapshotHtml && (
         <div className="absolute inset-x-0 top-0 z-10 pointer-events-none select-none" aria-hidden="true">
           <div dangerouslySetInnerHTML={{ __html: snapshotHtml }} />
