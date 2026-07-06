@@ -18,6 +18,7 @@ import {
   Loader2,
   MoreVertical,
   PackagePlus,
+  Pencil,
   Plus,
   ShoppingBag,
   Trash2,
@@ -77,6 +78,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [lotDialogCampaign, setLotDialogCampaign] = useState<ShirtCampaign | null>(null);
   const [historyCampaign, setHistoryCampaign] = useState<ShirtCampaign | null>(null);
+  const [editCampaign, setEditCampaign] = useState<ShirtCampaign | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -91,6 +93,16 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
     quantity: '',
     unitCost: '',
     supplier: '',
+    purchaseDate: new Date().toISOString().slice(0, 10),
+    notes: '',
+  });
+
+  const [editForm, setEditForm] = useState({
+    name: '',
+    defaultSalePrice: '',
+    supplier: '',
+    additionalQuantity: '',
+    additionalUnitCost: '',
     purchaseDate: new Date().toISOString().slice(0, 10),
     notes: '',
   });
@@ -152,8 +164,22 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
     notes: '',
   });
 
+  const openEditCampaign = (campaign: ShirtCampaign) => {
+    setEditCampaign(campaign);
+    setEditForm({
+      name: campaign.name,
+      defaultSalePrice: String(campaign.default_sale_price || ''),
+      supplier: campaign.supplier || '',
+      additionalQuantity: '',
+      additionalUnitCost: String(campaign.unit_cost || ''),
+      purchaseDate: new Date().toISOString().slice(0, 10),
+      notes: '',
+    });
+  };
+
   const totalCostPreview = (parseFloat(form.purchasedQuantity) || 0) * (parseFloat(form.unitCost) || 0);
   const lotTotalPreview = (parseFloat(lotForm.quantity) || 0) * (parseFloat(lotForm.unitCost) || 0);
+  const editAdditionalCost = (parseFloat(editForm.additionalQuantity) || 0) * (parseFloat(editForm.additionalUnitCost) || 0);
 
   const handleCreate = async () => {
     if (!form.name.trim()) return void toast.error('Informe o nome da campanha');
@@ -180,6 +206,43 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       onDataChange?.();
     } catch (error) {
       toast.error('Erro ao criar campanha: ' + (error as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditCampaign = async () => {
+    if (!editCampaign) return;
+    const additionalQuantity = Number(editForm.additionalQuantity || 0);
+    const additionalUnitCost = Number(editForm.additionalUnitCost || 0);
+
+    if (!editForm.name.trim()) return void toast.error('Informe o nome da campanha');
+    if (Number(editForm.defaultSalePrice || 0) < 0) return void toast.error('Informe um preço válido');
+    if (additionalQuantity < 0) return void toast.error('A quantidade adicional não pode ser negativa');
+    if (additionalQuantity > 0 && additionalUnitCost < 0) return void toast.error('Informe um custo unitário válido');
+
+    setSubmitting(true);
+    try {
+      const { error } = await (supabase as any).rpc('update_shirt_campaign_with_optional_lot', {
+        p_campaign_id: editCampaign.id,
+        p_name: editForm.name.trim(),
+        p_default_sale_price: Number(editForm.defaultSalePrice) || 0,
+        p_supplier: editForm.supplier || null,
+        p_additional_quantity: additionalQuantity,
+        p_additional_unit_cost: additionalUnitCost,
+        p_purchase_date: editForm.purchaseDate,
+        p_notes: editForm.notes || null,
+      });
+      if (error) throw error;
+
+      toast.success(additionalQuantity > 0
+        ? `Campanha atualizada e ${additionalQuantity} camisas adicionadas.`
+        : 'Campanha atualizada.');
+      setEditCampaign(null);
+      await fetchData();
+      onDataChange?.();
+    } catch (error) {
+      toast.error('Erro ao editar campanha: ' + (error as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -309,6 +372,15 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                             className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-muted"
                             onClick={() => {
                               setMenuOpenId(null);
+                              openEditCampaign(campaign);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />Editar campanha
+                          </button>
+                          <button
+                            className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-muted"
+                            onClick={() => {
+                              setMenuOpenId(null);
                               resetLotForm(campaign);
                               setLotDialogCampaign(campaign);
                             }}
@@ -362,6 +434,9 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                   </div>
 
                   <div className="mt-4 flex flex-wrap justify-end gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => openEditCampaign(campaign)}>
+                      <Pencil className="mr-2 h-4 w-4" />Editar
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
@@ -400,6 +475,71 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
             <div className="rounded-md bg-muted/40 p-3 text-sm">Custo total: <strong>{brl(totalCostPreview)}</strong><p className="mt-1 text-xs text-muted-foreground">Será criada uma única saída financeira com este valor.</p></div>
             <Button className="w-full" onClick={handleCreate} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar campanha</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(editCampaign)} onOpenChange={(open) => { if (!open) setEditCampaign(null); }}>
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar campanha</DialogTitle></DialogHeader>
+          {editCampaign && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Nome da campanha</Label>
+                <Input value={editForm.name} onChange={(event) => setEditForm({ ...editForm, name: event.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Preço padrão (R$)</Label>
+                  <Input type="number" min="0" step="0.01" value={editForm.defaultSalePrice} onChange={(event) => setEditForm({ ...editForm, defaultSalePrice: event.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fornecedor</Label>
+                  <Input placeholder="Opcional" value={editForm.supplier} onChange={(event) => setEditForm({ ...editForm, supplier: event.target.value })} />
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <div className="mb-3">
+                  <p className="text-sm font-semibold">Adicionar quantidade</p>
+                  <p className="text-xs text-muted-foreground">Opcional. A quantidade será registrada como um novo lote e somada ao total.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Quantidade adicional</Label>
+                    <Input type="number" min="0" placeholder="0" value={editForm.additionalQuantity} onChange={(event) => setEditForm({ ...editForm, additionalQuantity: event.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Custo unitário (R$)</Label>
+                    <Input type="number" min="0" step="0.01" value={editForm.additionalUnitCost} onChange={(event) => setEditForm({ ...editForm, additionalUnitCost: event.target.value })} />
+                  </div>
+                </div>
+                {Number(editForm.additionalQuantity || 0) > 0 && (
+                  <div className="mt-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>Data da compra</Label>
+                        <Input type="date" value={editForm.purchaseDate} onChange={(event) => setEditForm({ ...editForm, purchaseDate: event.target.value })} />
+                      </div>
+                      <div className="rounded-md bg-muted/40 p-3 text-sm">
+                        <p className="text-xs text-muted-foreground">Custo adicional</p>
+                        <p className="font-semibold">{brl(editAdditionalCost)}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Novo total: {Number(editCampaign.purchased_quantity) + Number(editForm.additionalQuantity || 0)} camisas</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Observação do novo lote</Label>
+                      <Textarea placeholder="Ex.: Reposição, segundo lote..." value={editForm.notes} onChange={(event) => setEditForm({ ...editForm, notes: event.target.value })} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Button className="w-full" onClick={handleEditCampaign} disabled={submitting}>
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar alterações
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
