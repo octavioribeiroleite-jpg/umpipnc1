@@ -15,16 +15,25 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import {
-  Check, CheckCircle2, CircleDollarSign, Gift, Loader2, PackageCheck,
+  Check, CheckCircle2, CircleDollarSign, Gift, Loader2,
   Pencil, Plus, Search, Trash2, Truck,
 } from 'lucide-react';
 import type { ShirtCampaign } from './CampanhasCamisasTab';
 
-const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Inf2', 'Inf3', 'Inf4'];
+const SIZES = [
+  'PP', 'P', 'M', 'G', 'GG', 'XG',
+  'Inf1', 'Inf2', 'Inf3', 'Inf4', 'Inf5', 'Inf6', 'Inf7',
+  'Inf8', 'Inf9', 'Inf10', 'Inf11', 'Inf12', 'Inf13', 'Inf14',
+];
+
 const SIZE_LABEL: Record<string, string> = {
   PP: 'PP', P: 'P', M: 'M', G: 'G', GG: 'GG', XG: 'XG',
-  Inf2: 'Inf 2 anos', Inf3: 'Inf 3 anos', Inf4: 'Inf 4 anos',
+  Inf1: '1 ano', Inf2: '2 anos', Inf3: '3 anos', Inf4: '4 anos',
+  Inf5: '5 anos', Inf6: '6 anos', Inf7: '7 anos', Inf8: '8 anos',
+  Inf9: '9 anos', Inf10: '10 anos', Inf11: '11 anos', Inf12: '12 anos',
+  Inf13: '13 anos', Inf14: '14 anos',
 };
+
 const COLORS = [
   { value: 'off', label: 'Off White' },
   { value: 'preta', label: 'Preta' },
@@ -355,7 +364,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
           <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Pagamento</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="parcial">Parcial</SelectItem><SelectItem value="pago">Pago</SelectItem><SelectItem value="brinde">Brinde</SelectItem></SelectContent></Select>
           <Select value={filterDelivery} onValueChange={setFilterDelivery}><SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Entrega</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="entregue">Entregue</SelectItem></SelectContent></Select>
           <Select value={filterColor} onValueChange={setFilterColor}><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Cor</SelectItem>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select>
-          <Select value={filterSize} onValueChange={setFilterSize}><SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Tamanho</SelectItem>{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select>
+          <Select value={filterSize} onValueChange={setFilterSize}><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Tamanho</SelectItem>{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select>
           <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" />Nova Encomenda</Button>
         </div>
       </div>
@@ -438,7 +447,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
               {items.map((item, index) => (
                 <div key={index} className="flex items-end gap-2">
                   <div className="flex-1 space-y-1"><Label className="text-xs">Cor</Label><Select value={item.color} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, color: value } : current))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="w-28 space-y-1"><Label className="text-xs">Tamanho</Label><Select value={item.size} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, size: value } : current))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="w-32 space-y-1"><Label className="text-xs">Tamanho</Label><Select value={item.size} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, size: value } : current))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent className="max-h-72">{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select></div>
                   <div className="w-20 space-y-1"><Label className="text-xs">Qtd.</Label><Input type="number" min="1" value={item.qty} onChange={(event) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, qty: Number(event.target.value) || 0 } : current))} /></div>
                   <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={items.length === 1} onClick={() => setItems(items.filter((_, itemIndex) => itemIndex !== index))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
