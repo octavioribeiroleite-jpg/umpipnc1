@@ -303,12 +303,12 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       if (editingId) {
         const { data, error } = await (supabase as any).from('shirt_orders').update(payload).eq('id', editingId).select('*').single();
         if (error) throw error;
-        setOrders((current) => current.map((order) => order.id === editingId ? { ...(data as ShirtOrder), items: validItems } : order));
+        setOrders((current) => current.map((order) => order.id === editingId ? { ...(data as unknown as ShirtOrder), items: validItems } : order));
         toast.success('Encomenda atualizada!');
       } else {
         const { data, error } = await (supabase as any).from('shirt_orders').insert(payload).select('*').single();
         if (error) throw error;
-        setOrders((current) => [...current, { ...(data as ShirtOrder), items: validItems }].sort((a, b) => a.buyer_name.localeCompare(b.buyer_name)));
+        setOrders((current) => [...current, { ...(data as unknown as ShirtOrder), items: validItems }].sort((a, b) => a.buyer_name.localeCompare(b.buyer_name)));
         toast.success(`Encomenda registrada no ${selectedLot ? lotLabel(selectedLot.id) : 'lote atual'}!`);
       }
       setOrderDialogOpen(false);
