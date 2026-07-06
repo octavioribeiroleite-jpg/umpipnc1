@@ -41,6 +41,7 @@ import Aniversariantes from "./pages/Aniversariantes";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { UpdateAvailableBanner } from "@/components/UpdateAvailableBanner";
+import "./camisas-separation.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
