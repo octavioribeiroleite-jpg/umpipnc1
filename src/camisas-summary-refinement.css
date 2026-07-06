@@ -1,0 +1,168 @@
+/* Resumo de camisas: mais compacto, leve e hierárquico */
+
+.shirts-page .finance-tab-panel [role="tabpanel"][data-state="active"] > .space-y-3 {
+  padding: 0.9rem 1rem !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 8px 22px hsl(var(--foreground) / 0.045) !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > h3 {
+  margin-bottom: 0.65rem !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.1em !important;
+}
+
+/* Cards principais: menores e com menos área vazia */
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type {
+  gap: 0.65rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type > div {
+  min-height: 78px !important;
+  border-radius: 0.8rem !important;
+  border-color: hsl(var(--border) / 0.65) !important;
+  box-shadow: none !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type > div > div {
+  padding: 0.75rem 0.8rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type .h-10.w-10 {
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: 0.6rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type .h-10.w-10 svg {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type .gap-3 {
+  gap: 0.65rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type p.text-sm {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type p.text-xl {
+  font-size: 1.15rem !important;
+  line-height: 1.15 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type p.text-xs {
+  margin-top: 0.15rem !important;
+  font-size: 0.62rem !important;
+}
+
+/* Segundo bloco: transforma em faixa operacional compacta */
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) {
+  padding-bottom: 0.75rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type {
+  gap: 0.65rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div {
+  min-height: 70px !important;
+  border-radius: 0.8rem !important;
+  box-shadow: none !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div > div {
+  padding: 0.7rem 0.8rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type p.text-sm {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type p.text-xl {
+  font-size: 1.15rem !important;
+}
+
+/* Remove o card redundante de valor encomendado do bloco operacional */
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div:nth-child(2) {
+  display: none !important;
+}
+
+@media (min-width: 640px) {
+  .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Detalhes do lote vira uma faixa simples, sem cards grandes */
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) {
+  margin-top: 0.7rem !important;
+  padding-top: 0.7rem !important;
+  gap: 0.35rem !important;
+  border-top: 1px solid hsl(var(--border) / 0.55) !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2)::before {
+  margin-bottom: 0.15rem !important;
+  font-size: 0.65rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) > div {
+  min-height: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) > div > div {
+  padding: 0.45rem 0.65rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) p.text-sm {
+  font-size: 0.65rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) p.text-xl {
+  font-size: 0.92rem !important;
+  margin-top: 0.1rem !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) p.text-xs {
+  font-size: 0.6rem !important;
+}
+
+/* Renomeia visualmente alguns rótulos sem alterar os dados */
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:first-of-type > .grid > div:nth-child(3) p.text-sm,
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div:first-child p.text-sm {
+  font-size: 0 !important;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:first-of-type > .grid > div:nth-child(3) p.text-sm::after {
+  content: "Custo do lote";
+  font-size: 0.7rem;
+}
+
+.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div:first-child p.text-sm::after {
+  content: "Disponíveis";
+  font-size: 0.7rem;
+}
+
+@media (max-width: 767px) {
+  .shirts-page .finance-tab-panel [role="tabpanel"][data-state="active"] > .space-y-3 {
+    padding: 0.75rem !important;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type,
+  .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type {
+    gap: 0.5rem !important;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type > div,
+  .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div {
+    min-height: 68px !important;
+  }
+}
