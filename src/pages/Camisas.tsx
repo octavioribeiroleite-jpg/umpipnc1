@@ -7,6 +7,7 @@ import '@/finance-responsive.css';
 import '@/camisas.css';
 import '@/camisas-orders-refinement.css';
 import '@/camisas-summary-refinement.css';
+import '@/camisas-campaigns-refinement.css';
 
 export default function Camisas() {
   return (
