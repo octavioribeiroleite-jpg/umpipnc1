@@ -15,6 +15,7 @@ import ReuniaoDetalhe from "./pages/ReuniaoDetalhe";
 import Tarefas from "./pages/Tarefas";
 import Calendario from "./pages/Calendario";
 import Financas from "./pages/Financas";
+import Camisas from "./pages/Camisas";
 import Arquivos from "./pages/Arquivos";
 import Configuracoes from "./pages/Configuracoes";
 import Usuarios from "./pages/Usuarios";
@@ -96,6 +97,7 @@ const App = () => (
                 <Route path="/tarefas" element={<Tarefas />} />
                 <Route path="/calendario" element={<Calendario />} />
                 <Route path="/financas" element={<FinancialRoute><Financas /></FinancialRoute>} />
+                <Route path="/camisas" element={<FinancialRoute><Camisas /></FinancialRoute>} />
                 <Route path="/arquivos" element={<Arquivos />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/usuarios" element={<Usuarios />} />
