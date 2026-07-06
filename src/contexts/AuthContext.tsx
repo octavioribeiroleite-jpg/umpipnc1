@@ -57,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [selectedSocietyId, setSelectedSocietyIdState] = useState<string | null>(null);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hydrationRef = useRef(0);
+  const authenticatedUserIdRef = useRef<string | null>(null);
+  const authReadyRef = useRef(false);
 
   const setSelectedSocietyId = (id: string | null) => {
     setSelectedSocietyIdState(id);
@@ -73,12 +75,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles([]);
     setSociety(null);
     setSelectedSocietyIdState(null);
+    authenticatedUserIdRef.current = null;
+    authReadyRef.current = false;
   };
 
-  const fetchProfileAndRoles = async (userId: string) => {
+  const fetchProfileAndRoles = async (userId: string, options?: { silent?: boolean }) => {
     const hydrationId = ++hydrationRef.current;
-    setLoading(true);
-    setRolesLoaded(false);
+    const silent = Boolean(options?.silent && authReadyRef.current);
+
+    if (!silent) {
+      setLoading(true);
+      setRolesLoaded(false);
+    }
 
     let profileData: Profile | null = null;
     let fetchedRoles: AppRole[] = [];
@@ -173,6 +181,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     }
 
+    authenticatedUserIdRef.current = userId;
+    authReadyRef.current = true;
     setRolesLoaded(true);
     setLoading(false);
   };
@@ -208,17 +218,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
+      const nextUser = newSession?.user ?? null;
+      const sameAuthenticatedUser = Boolean(
+        nextUser &&
+        authReadyRef.current &&
+        authenticatedUserIdRef.current === nextUser.id,
+      );
 
-      if (newSession?.user) {
-        setLoading(true);
-        setRolesLoaded(false);
-        setProfile(null);
-        setRoles([]);
-        setSociety(null);
+      setSession(newSession);
+      setUser(nextUser);
+
+      if (sameAuthenticatedUser) {
+        // Eventos repetidos ao recuperar foco não devem desmontar a interface.
+        // A sessão é atualizada, mas perfil, papéis e sociedade permanecem visíveis.
+        return;
+      }
+
+      if (nextUser) {
         setTimeout(() => {
-          if (isMounted) void fetchProfileAndRoles(newSession.user.id);
+          if (isMounted) void fetchProfileAndRoles(nextUser.id);
         }, 0);
       } else {
         resetAuthData();
@@ -252,7 +270,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentSession?.user ?? null);
 
         if (currentSession?.user) {
-          await fetchProfileAndRoles(currentSession.user.id);
+          if (
+            authReadyRef.current &&
+            authenticatedUserIdRef.current === currentSession.user.id
+          ) {
+            setLoading(false);
+            setRolesLoaded(true);
+          } else {
+            await fetchProfileAndRoles(currentSession.user.id);
+          }
         } else {
           resetAuthData();
           setLoading(false);
@@ -300,6 +326,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     hydrationRef.current += 1;
+    authReadyRef.current = false;
+    authenticatedUserIdRef.current = null;
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
