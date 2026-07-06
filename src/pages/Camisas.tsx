@@ -5,6 +5,7 @@ import { CamisasTab } from '@/components/financas/CamisasTab';
 import { StableRefreshBoundary } from '@/components/ui/stable-refresh-boundary';
 import '@/finance-responsive.css';
 import '@/camisas.css';
+import '@/camisas-orders-refinement.css';
 
 export default function Camisas() {
   return (
