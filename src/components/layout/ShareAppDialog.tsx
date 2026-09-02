@@ -10,13 +10,12 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-const APP_URL = 'https://umpipnc1.lovable.app';
-
 export function ShareAppDialog({ trigger }: { trigger?: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
+  const appUrl = window.location.origin;
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(APP_URL);
+    await navigator.clipboard.writeText(appUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -37,7 +36,7 @@ export function ShareAppDialog({ trigger }: { trigger?: React.ReactNode }) {
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-2">
           <div className="bg-white p-4 rounded-xl">
-            <QRCodeSVG value={APP_URL} size={200} level="H" />
+            <QRCodeSVG value={appUrl} size={200} level="H" />
           </div>
           <p className="text-xs text-muted-foreground text-center">
             Escaneie o QR Code para acessar o app

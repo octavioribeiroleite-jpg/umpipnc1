@@ -51,6 +51,9 @@ const isInIframe = (() => {
 
 const host = window.location.hostname;
 const isPreviewHost =
+  host === "localhost" ||
+  host === "127.0.0.1" ||
+  host === "::1" ||
   host.includes("id-preview--") ||
   host.includes("lovableproject.com") ||
   (host.includes("lovable.app") && host.includes("id-preview"));
