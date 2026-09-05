@@ -36,12 +36,12 @@ export function YearCalendar({ birthdays, onEdit }: Props) {
                 {m.items.map(b => (
                   <div
                     key={b.id}
-                    className={`text-xs truncate flex items-center gap-1 ${onEdit ? 'cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 py-0.5' : ''}`}
+                    className={`text-xs min-w-0 whitespace-normal break-words flex items-center gap-1 ${onEdit ? 'cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 py-0.5' : ''}`}
                     onClick={() => onEdit?.(b)}
                   >
                     <span className="font-medium text-muted-foreground">{String(b.dia).padStart(2, '0')}</span>
                     <span className="text-muted-foreground">—</span>
-                    <span className="flex-1 truncate">{b.nome}</span>
+                    <span className="flex-1 min-w-0 whitespace-normal break-words">{b.nome}</span>
                     {onEdit && <Edit className="h-3 w-3 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100" />}
                   </div>
                 ))}

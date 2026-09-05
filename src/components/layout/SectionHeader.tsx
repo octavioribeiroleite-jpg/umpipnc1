@@ -31,7 +31,7 @@ export function SectionHeader({
         )}
 
         <div className="min-w-0">
-          <h2 className="text-section-title truncate text-slate-950 dark:text-slate-50">
+          <h2 className="text-section-title min-w-0 whitespace-normal break-words text-slate-950 dark:text-slate-50">
             {title}
           </h2>
           {description && (

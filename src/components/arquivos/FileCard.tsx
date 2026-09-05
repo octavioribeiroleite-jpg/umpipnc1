@@ -87,7 +87,7 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
           )}
           
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">{file.name}</p>
+            <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{file.name}</p>
             <div className="flex items-center gap-2 mt-1">
               <Badge 
                 variant="secondary" 

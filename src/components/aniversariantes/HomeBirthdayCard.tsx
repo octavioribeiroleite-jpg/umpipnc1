@@ -19,7 +19,7 @@ export function HomeBirthdayCard() {
 
   return (
     <AppCard className="mb-4">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <Cake className="h-5 w-5 text-primary" />
           <h3 className="font-semibold text-sm">Aniversários da semana</h3>
@@ -33,8 +33,8 @@ export function HomeBirthdayCard() {
           const dateStr = `${String(b.dia).padStart(2, '0')}/${String(b.mes).padStart(2, '0')}`;
           return (
             <div key={b.id} className="flex items-center gap-2 text-sm">
-              <span className="font-medium text-muted-foreground w-12 text-xs">{dateStr}</span>
-              <span className="truncate flex-1">{b.nome}</span>
+              <span className="shrink-0 font-medium text-muted-foreground w-12 text-xs">{dateStr}</span>
+              <span className="min-w-0 whitespace-normal break-words flex-1">{b.nome}</span>
               {b.daysUntil === 0 && <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">🎉 Hoje!</span>}
             </div>
           );

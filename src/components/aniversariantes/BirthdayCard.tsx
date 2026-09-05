@@ -23,7 +23,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
   };
 
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+    <div className={`flex flex-wrap items-center gap-3 p-3 rounded-xl border transition-colors ${
       highlight === 'today' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' :
       highlight === 'week' ? 'bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-800' :
       'bg-card border-border'
@@ -40,9 +40,9 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
         }`} />
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 basis-[10rem] flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm truncate">{birthday.nome}</span>
+          <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{birthday.nome}</span>
           {birthday.pendente_revisao && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
               <AlertTriangle className="h-3 w-3 mr-0.5" />
@@ -53,7 +53,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Inativo</Badge>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
           <span className="text-xs text-muted-foreground">{dateStr}</span>
           {birthday.departamento && (
             <span className="text-xs text-muted-foreground">• {birthday.departamento}</span>
@@ -61,7 +61,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="ml-auto flex items-center gap-1 shrink-0">
         {highlight === 'today' && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopy} title="Copiar mensagem">
             <Copy className="h-4 w-4" />

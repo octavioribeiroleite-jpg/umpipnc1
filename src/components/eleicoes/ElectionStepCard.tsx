@@ -51,8 +51,8 @@ export function ElectionStepCard({ state, icon, title, summary, onToggle, onAdva
           <Check className="h-3.5 w-3.5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">{title}</p>
-          {summary && <p className="text-[11px] text-muted-foreground truncate">{summary}</p>}
+          <p className="text-sm font-medium text-foreground min-w-0 whitespace-normal break-words">{title}</p>
+          {summary && <p className="text-[11px] text-muted-foreground min-w-0 whitespace-normal break-words">{summary}</p>}
         </div>
         {onToggle && <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
       </button>
@@ -71,8 +71,8 @@ export function ElectionStepCard({ state, icon, title, summary, onToggle, onAdva
         {onToggle ? <ChevronDown className="h-3.5 w-3.5" /> : <Lock className="h-3 w-3" />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
-        {summary && <p className="text-[11px] text-muted-foreground/80 truncate">{summary}</p>}
+        <p className="text-sm font-medium text-muted-foreground min-w-0 whitespace-normal break-words">{title}</p>
+        {summary && <p className="text-[11px] text-muted-foreground/80 min-w-0 whitespace-normal break-words">{summary}</p>}
       </div>
     </div>
   );

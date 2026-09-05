@@ -112,15 +112,15 @@ export function ExtratoDialog({ type, onClose }: Props) {
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               <div className="min-w-0 rounded-xl bg-success/10 p-2 text-center sm:p-3">
                 <p className="text-[10px] text-muted-foreground sm:text-xs">Receitas</p>
-                <p className="mt-0.5 truncate text-xs font-bold tabular-nums text-success sm:text-sm">{brl(totalEntradas)}</p>
+                <p className="mt-0.5 min-w-0 whitespace-normal break-words text-xs font-bold tabular-nums text-success sm:text-sm">{brl(totalEntradas)}</p>
               </div>
               <div className="min-w-0 rounded-xl bg-destructive/10 p-2 text-center sm:p-3">
                 <p className="text-[10px] text-muted-foreground sm:text-xs">Gastos</p>
-                <p className="mt-0.5 truncate text-xs font-bold tabular-nums text-destructive sm:text-sm">{brl(totalSaidas)}</p>
+                <p className="mt-0.5 min-w-0 whitespace-normal break-words text-xs font-bold tabular-nums text-destructive sm:text-sm">{brl(totalSaidas)}</p>
               </div>
               <div className="min-w-0 rounded-xl bg-muted p-2 text-center sm:p-3">
                 <p className="text-[10px] text-muted-foreground sm:text-xs">Saldo</p>
-                <p className={`mt-0.5 truncate text-xs font-bold tabular-nums sm:text-sm ${saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <p className={`mt-0.5 min-w-0 whitespace-normal break-words text-xs font-bold tabular-nums sm:text-sm ${saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {brl(saldo)}
                 </p>
               </div>
@@ -129,7 +129,7 @@ export function ExtratoDialog({ type, onClose }: Props) {
             {groups.map((group) => (
               <div key={group.key} className="overflow-hidden rounded-xl border">
                 <div className="flex items-center justify-between gap-2 bg-muted/50 px-3 py-2">
-                  <span className="truncate text-xs font-semibold sm:text-sm">{group.label}</span>
+                  <span className="min-w-0 whitespace-normal break-words text-xs font-semibold sm:text-sm">{group.label}</span>
                   <span className={`flex-shrink-0 text-xs font-bold tabular-nums sm:text-sm ${group.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {brl(group.saldo)}
                   </span>
@@ -142,7 +142,7 @@ export function ExtratoDialog({ type, onClose }: Props) {
                           ? <TrendingUp className="h-4 w-4 flex-shrink-0 text-success" />
                           : <TrendingDown className="h-4 w-4 flex-shrink-0 text-destructive" />}
                         <div className="min-w-0">
-                          <p className="truncate text-xs sm:text-sm">{transaction.description}</p>
+                          <p className="min-w-0 whitespace-normal break-words text-xs sm:text-sm">{transaction.description}</p>
                           <p className="text-[10px] text-muted-foreground sm:text-xs">
                             {new Date(`${transaction.date}T00:00:00`).toLocaleDateString('pt-BR')}
                           </p>

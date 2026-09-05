@@ -227,7 +227,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
         >
           <div className="flex items-center gap-2">
             <h4 className={cn(
-              'text-sm font-medium truncate flex-1',
+              'text-sm font-medium min-w-0 whitespace-normal break-words flex-1',
               isDone && 'line-through text-muted-foreground'
             )}>
               {task.title}

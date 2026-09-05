@@ -465,7 +465,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
                   <div className="grid gap-3 lg:grid-cols-[minmax(220px,1.35fr)_minmax(180px,.8fr)_minmax(150px,.65fr)_auto] lg:items-center">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <p className="truncate font-bold">{order.buyer_name}</p>
+                        <p className="min-w-0 whitespace-normal break-words font-bold">{order.buyer_name}</p>
                         {order.lot_id && <Badge variant="outline" className="gap-1"><Layers3 className="h-3 w-3" />{lotLabel(order.lot_id)}</Badge>}
                         {finished && <Badge className="bg-success text-success-foreground"><CheckCircle2 className="mr-1 h-3 w-3" />Finalizado</Badge>}
                       </div>

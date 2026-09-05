@@ -34,7 +34,7 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             {isCamisa && <Shirt className="h-4 w-4 text-primary shrink-0" />}
-            <h3 className="font-semibold text-foreground truncate">{election.name}</h3>
+            <h3 className="font-semibold text-foreground min-w-0 whitespace-normal break-words">{election.name}</h3>
             <Badge variant={status.variant}>{status.label}</Badge>
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">

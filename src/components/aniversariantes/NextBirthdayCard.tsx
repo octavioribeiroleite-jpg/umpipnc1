@@ -18,7 +18,7 @@ export function NextBirthdayCard({ birthday }: Props) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Próximo aniversariante</p>
-          <p className="font-semibold text-base truncate">{birthday.nome}</p>
+          <p className="font-semibold text-base min-w-0 whitespace-normal break-words">{birthday.nome}</p>
           <p className="text-sm text-muted-foreground">{dateStr} — faltam {birthday.daysUntil} dia{birthday.daysUntil !== 1 ? 's' : ''}</p>
         </div>
       </div>

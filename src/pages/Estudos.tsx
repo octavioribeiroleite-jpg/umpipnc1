@@ -200,7 +200,7 @@ export default function Estudos() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold truncate">{selectedStudy.title}</h1>
+              <h1 className="text-xl font-bold min-w-0 whitespace-normal break-words">{selectedStudy.title}</h1>
               <p className="text-sm text-muted-foreground">
                 {format(new Date(selectedStudy.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </p>
@@ -388,7 +388,7 @@ export default function Estudos() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold truncate">{study.title}</h3>
+                    <h3 className="font-semibold min-w-0 whitespace-normal break-words">{study.title}</h3>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(study.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                     </p>

@@ -562,7 +562,7 @@ export default function Usuarios() {
     <div key={user.id} className="rounded-lg border bg-card p-3 space-y-2">
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{user.full_name}</p>
+          <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{user.full_name}</p>
           <p className="text-xs text-muted-foreground">@{user.username}</p>
         </div>
         <div className="flex items-center gap-1 ml-2">
@@ -676,7 +676,7 @@ export default function Usuarios() {
     <div key={member.id} className="rounded-lg border bg-card p-3 space-y-2">
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{member.name}</p>
+          <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{member.name}</p>
           <div className="flex items-center gap-1.5 mt-0.5">
             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getSocietyColor(member.society_id) }} />
             <span className="text-xs text-muted-foreground">{getSocietyName(member.society_id)}</span>

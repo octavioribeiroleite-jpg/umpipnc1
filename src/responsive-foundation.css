@@ -149,6 +149,74 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Card content adapts to its own width, including narrow dashboard columns. */
+.summary-card {
+  container-type: inline-size;
+  height: 100%;
+  gap: 0.75rem;
+}
+
+.summary-card .summary-label {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.summary-card .summary-value {
+  font-size: clamp(1.125rem, 10cqi, 1.875rem);
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.summary-card .summary-meta {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* Keep controls and long translated labels inside shared dialog surfaces. */
+[role="dialog"],
+[role="alertdialog"] {
+  max-width: calc(100vw - 1.5rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 1rem;
+  overflow-wrap: anywhere;
+}
+
+[role="dialog"] h2 {
+  padding-right: 1.5rem;
+  line-height: 1.4;
+}
+
+[role="dialog"] button,
+[role="alertdialog"] button {
+  white-space: normal;
+  min-height: 2.75rem;
+  height: auto;
+}
+
+[role="tablist"] {
+  max-width: 100%;
+  height: auto;
+}
+
+[role="tab"] {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  min-height: 2.75rem;
+}
+
+@media (max-width: 639px) {
+  [role="dialog"] input,
+  [role="dialog"] textarea,
+  [role="dialog"] select {
+    font-size: 1rem;
+  }
+}
+
 .app-card-surface,
 .app-panel-surface {
   min-width: 0;
@@ -242,7 +310,7 @@ textarea {
   }
 
   .metric-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   }
 
   .mobile-only,

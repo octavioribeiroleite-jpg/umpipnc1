@@ -81,9 +81,9 @@ function renderValue(value: ReactNode) {
   if (!currencyMatch) return value;
 
   return (
-    <span className="inline-flex min-w-0 items-baseline gap-1">
+    <span className="inline-flex max-w-full flex-wrap items-baseline gap-x-1">
       <span className="text-[0.62em] font-bold tracking-normal opacity-70">R$</span>
-      <span className="truncate">{currencyMatch[1]}</span>
+      <span className="min-w-0 [overflow-wrap:anywhere]">{currencyMatch[1]}</span>
     </span>
   );
 }
@@ -103,7 +103,7 @@ export function SummaryCard({
   const styles = toneClasses[tone];
   const densityStyle = densityClasses[density];
   const rootClassName = cn(
-    'flex w-full min-w-0 items-center border border-border/70 bg-card/95 text-left shadow-sm',
+    'summary-card flex w-full min-w-0 flex-col items-start border border-border/70 bg-card/95 text-left shadow-sm',
     densityStyle.root,
     onClick && 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-card active:scale-[0.99]',
     className,
@@ -117,13 +117,13 @@ export function SummaryCard({
         </div>
       )}
 
-      <div className="min-w-0 flex-1">
-        <p className={cn('truncate font-medium text-slate-500 dark:text-slate-400', densityStyle.label)}>
+      <div className="summary-card-content w-full min-w-0 flex-1">
+        <p className={cn('summary-label whitespace-normal break-words font-medium text-slate-600 dark:text-slate-300', densityStyle.label)}>
           {label}
         </p>
         <div
           className={cn(
-            'min-w-0 truncate font-extrabold tracking-[-0.025em] tabular-nums',
+            'summary-value min-w-0 font-extrabold tracking-[-0.025em] tabular-nums',
             densityStyle.value,
             styles.value,
             valueClassName,
@@ -132,7 +132,7 @@ export function SummaryCard({
           {renderValue(value)}
         </div>
         {meta !== undefined && meta !== null && (
-          <div className={cn('truncate font-medium text-slate-500 dark:text-slate-400', densityStyle.meta, metaClassName)}>
+          <div className={cn('summary-meta whitespace-normal break-words font-medium text-slate-500 dark:text-slate-400', densityStyle.meta, metaClassName)}>
             {meta}
           </div>
         )}

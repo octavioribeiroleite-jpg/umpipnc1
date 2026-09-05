@@ -61,7 +61,7 @@ function QuickAction({
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 sm:h-9 sm:w-9">
         <Icon className="h-4 w-4" />
       </div>
-      <span className="w-full truncate text-[10px] font-semibold leading-tight text-foreground sm:text-[11px]">
+      <span className="w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground">
         {label}
       </span>
     </button>
@@ -325,7 +325,7 @@ export default function Index() {
     <AppLayout>
       <PastorLoginNotification />
 
-      <section className="relative mb-section-gap overflow-hidden rounded-hero bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-4 py-4 text-white shadow-panel sm:px-5 sm:py-5 lg:min-h-[164px] lg:px-7 lg:py-6">
+      <section className="relative mb-section-gap overflow-hidden rounded-hero bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-4 py-5 text-white shadow-card sm:px-5 lg:px-6 lg:py-6">
         <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-white/10 lg:h-52 lg:w-52" />
         <div className="pointer-events-none absolute bottom-2 right-4 text-[58px] font-black leading-none text-white/[0.05] sm:text-[72px] lg:right-8 lg:text-[100px]">
           IPNC
@@ -333,10 +333,10 @@ export default function Index() {
 
         <div className="relative flex min-w-0 items-start justify-between gap-3 lg:items-center">
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-medium text-emerald-100 sm:text-sm">
+            <p className="min-w-0 whitespace-normal break-words text-[11px] font-medium text-emerald-100 sm:text-sm">
               {capitalizedDate}
             </p>
-            <h1 className="mt-1.5 text-[22px] font-extrabold leading-tight tracking-tight sm:text-3xl lg:text-4xl">
+            <h1 className="mt-1.5 break-words text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
               {greeting}, {firstName || 'Diretoria'} 👋
             </h1>
             <p className="mt-1 text-xs leading-snug text-emerald-50/90 sm:text-sm lg:text-base">
@@ -374,7 +374,7 @@ export default function Index() {
               : <Megaphone className="h-5 w-5" />}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground sm:text-base">
+            <p className="min-w-0 whitespace-normal break-words text-sm font-semibold text-foreground sm:text-base">
               {pendingSubmissions > 0 ? 'Comprovantes pendentes' : 'Central da diretoria'}
             </p>
             <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-muted-foreground sm:text-sm">
@@ -464,10 +464,10 @@ export default function Index() {
                       </span>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground sm:text-base">
+                      <p className="min-w-0 whitespace-normal break-words text-sm font-semibold text-foreground sm:text-base">
                         {event.title}
                       </p>
-                      <p className="truncate text-xs text-muted-foreground sm:text-sm">
+                      <p className="min-w-0 whitespace-normal break-words text-xs text-muted-foreground sm:text-sm">
                         {format(eventDate, 'HH:mm')} {event.location ? `• ${event.location}` : ''}
                       </p>
                     </div>

@@ -109,9 +109,9 @@ function SecretariaMetric({
     <div className="rounded-2xl border border-white/70 bg-white/85 p-3 shadow-sm backdrop-blur-sm">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-[11px] font-semibold text-slate-500">{label}</p>
+          <p className="min-w-0 whitespace-normal break-words text-[11px] font-semibold text-slate-500">{label}</p>
           <p className="mt-1 text-xl font-extrabold leading-none text-slate-950">{value}</p>
-          {hint && <p className="mt-1 truncate text-[11px] text-slate-500">{hint}</p>}
+          {hint && <p className="mt-1 min-w-0 whitespace-normal break-words text-[11px] text-slate-500">{hint}</p>}
         </div>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone}`}>
           <Icon className="h-[18px] w-[18px]" />
@@ -147,7 +147,7 @@ function SecretariaMenuCard({
         <Icon className="h-6 w-6" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-extrabold text-slate-950">{title}</p>
+        <p className="min-w-0 whitespace-normal break-words text-sm font-extrabold text-slate-950">{title}</p>
         <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500">{description}</p>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-primary" />
@@ -740,8 +740,8 @@ export default function Secretaria() {
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div className="min-w-0">
-                <h1 className="truncate text-lg font-extrabold leading-tight text-slate-950">Secretaria EBD</h1>
-                <p className="truncate text-xs font-medium text-slate-500">{formattedDate}</p>
+                <h1 className="min-w-0 whitespace-normal break-words text-lg font-extrabold leading-tight text-slate-950">Secretaria EBD</h1>
+                <p className="min-w-0 whitespace-normal break-words text-xs font-medium text-slate-500">{formattedDate}</p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -920,8 +920,8 @@ export default function Secretaria() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="min-w-0 leading-tight">
-              <h1 className="font-semibold text-sm sm:text-base truncate">{viewTitles[currentView]}</h1>
-              <p className="text-[10px] text-muted-foreground truncate">
+              <h1 className="font-semibold text-sm sm:text-base min-w-0 whitespace-normal break-words">{viewTitles[currentView]}</h1>
+              <p className="text-[10px] text-muted-foreground min-w-0 whitespace-normal break-words">
                 {formattedDate}
                 <span className="mx-1">·</span>
                 <span className={isAdmin ? 'text-primary font-medium' : ''}>{profileLabel}</span>

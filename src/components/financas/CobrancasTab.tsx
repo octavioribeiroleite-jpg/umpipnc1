@@ -589,7 +589,7 @@ export function CobrancasTab() {
                 <CardContent className="p-3 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <h4 className="font-semibold truncate">{member.name}</h4>
+                      <h4 className="font-semibold min-w-0 whitespace-normal break-words">{member.name}</h4>
                       <p className="text-xs text-muted-foreground">
                         Contribuição {formatCurrency(contributionAmount)} + Per capita {formatCurrency(perCapitaAmount)}
                       </p>

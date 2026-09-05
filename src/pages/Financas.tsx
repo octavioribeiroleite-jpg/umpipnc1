@@ -382,7 +382,7 @@ export default function Financas() {
               <p className="text-sm text-muted-foreground md:text-base">{roleLabel}</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(160px,1fr)_minmax(180px,1fr)_auto] lg:min-w-[520px]">
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:w-1/2">
               <Button type="button" variant="outline" className="justify-between rounded-xl bg-white/80">
                 <span>{monthWindow.label}</span>
                 <CalendarDays className="h-4 w-4" />
@@ -621,7 +621,7 @@ export default function Financas() {
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="min-w-0">
           <HorizontalScroller className="finance-tabs-scroller sticky top-[calc(var(--mobile-header-height)+0.25rem)] z-20 -mx-1 mb-3 px-1 pb-1 md:static md:mx-0 md:mb-5 md:px-0">
-            <TabsList className="inline-grid h-auto w-max min-w-full grid-flow-col auto-cols-[78px] items-stretch gap-1 rounded-[18px] border border-slate-200/70 bg-white/95 p-1 shadow-card backdrop-blur-xl md:grid-flow-row md:auto-cols-auto md:grid-cols-6 md:rounded-[20px] md:p-1.5">
+            <TabsList className="inline-grid h-auto w-max min-w-full grid-flow-col auto-cols-[100px] items-stretch gap-1 rounded-[18px] border border-slate-200/70 bg-white/95 p-1 shadow-card backdrop-blur-xl md:grid-flow-row md:auto-cols-auto md:grid-cols-5 md:rounded-[20px] md:p-1.5">
               {mainTabs.map(({ value, label, shortLabel, icon: Icon }) => (
                 <TabsTrigger
                   key={value}
@@ -630,7 +630,7 @@ export default function Financas() {
                 >
                   <Icon className="h-4 w-4 flex-shrink-0 md:h-[18px] md:w-[18px]" />
                   <span className="md:hidden">{shortLabel}</span>
-                  <span className="hidden truncate md:inline">{label}</span>
+                  <span className="hidden min-w-0 whitespace-normal break-words md:inline">{label}</span>
                 </TabsTrigger>
               ))}
             </TabsList>

@@ -172,7 +172,7 @@ export default function Plenarias() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold truncate">{p.title}</h3>
+                        <h3 className="font-semibold min-w-0 whitespace-normal break-words">{p.title}</h3>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
