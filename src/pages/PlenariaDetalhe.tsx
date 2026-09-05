@@ -535,7 +535,7 @@ export default function PlenariaDetalhe() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold truncate">{plenary.title}</h1>
+          <h1 className="text-xl font-bold min-w-0 whitespace-normal break-words">{plenary.title}</h1>
           <p className="text-sm text-muted-foreground">
             {format(new Date(plenary.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
@@ -664,7 +664,7 @@ export default function PlenariaDetalhe() {
                       ) : (
                         <XCircle className="h-5 w-5 mb-1" />
                       )}
-                      <span className="text-xs font-medium leading-tight truncate w-full">
+                      <span className="text-xs font-medium leading-tight min-w-0 whitespace-normal break-words w-full">
                         {record.member_name}
                       </span>
                     </button>

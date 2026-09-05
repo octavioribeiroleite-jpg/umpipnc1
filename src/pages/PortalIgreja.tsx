@@ -472,7 +472,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
                   {/* Visitor + Login section */}
                   <div className="p-4 border-t border-border">
                     <div className="mb-3 px-2">
-                      <p className="font-medium text-sm truncate">{visitor.fullName}</p>
+                      <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{visitor.fullName}</p>
                       <p className="text-xs text-muted-foreground">{visitor.isVisitor ? 'Visitante' : 'Membro'}</p>
                     </div>
                     <Button

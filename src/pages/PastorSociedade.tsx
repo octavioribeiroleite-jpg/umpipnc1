@@ -167,7 +167,7 @@ export default function PastorSociedade() {
               {society.name.substring(0, 3)}
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold sm:text-xl">{society.name}</h1>
+              <h1 className="min-w-0 whitespace-normal break-words text-lg font-bold sm:text-xl">{society.name}</h1>
               <p className="text-xs text-muted-foreground sm:text-sm">Dados da sociedade</p>
             </div>
           </div>

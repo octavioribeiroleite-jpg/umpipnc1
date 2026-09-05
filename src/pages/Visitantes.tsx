@@ -327,7 +327,7 @@ export default function Visitantes() {
                 {recurringVisitors.slice(0, 20).map((rv, i) => (
                   <div key={i} className="rounded-lg border p-3 space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm truncate">{rv.fullName}</span>
+                      <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{rv.fullName}</span>
                       <Badge variant="secondary" className="text-[10px] shrink-0">{rv.visitCount} dias</Badge>
                     </div>
                     <div className="flex items-center gap-2">

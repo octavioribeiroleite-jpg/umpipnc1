@@ -375,7 +375,7 @@ export default function Calendario() {
                           </div>
                           <div className="flex-1 min-w-0 space-y-0.5">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-sm truncate">{event.title}</span>
+                              <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{event.title}</span>
                               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${event.color || '#6b7280'}15`, color: event.color || '#6b7280' }}>
                                 {societyName}
                               </span>
@@ -393,7 +393,7 @@ export default function Calendario() {
                                 </span>
                               )}
                               {event.location && (
-                                <span className="flex items-center gap-1 truncate">
+                                <span className="flex items-center gap-1 min-w-0 whitespace-normal break-words">
                                   <MapPin className="h-3 w-3 flex-shrink-0" />
                                   {event.location}
                                 </span>

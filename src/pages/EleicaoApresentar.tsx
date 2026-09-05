@@ -122,8 +122,8 @@ export default function EleicaoApresentar() {
           <div className="flex items-center gap-3 lg:gap-4 min-w-0">
             <img src={logo} alt="Renovo IPNC" className="h-10 lg:h-14 w-auto shrink-0" />
             <div className="min-w-0">
-              <h1 className="text-xl lg:text-3xl font-bold truncate">{election.name}</h1>
-              <p className="text-sm lg:text-base text-muted-foreground truncate">
+              <h1 className="text-xl lg:text-3xl font-bold min-w-0 whitespace-normal break-words">{election.name}</h1>
+              <p className="text-sm lg:text-base text-muted-foreground min-w-0 whitespace-normal break-words">
                 {election.position}
               </p>
             </div>

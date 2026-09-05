@@ -221,7 +221,7 @@ export default function EleicaoDetalhe() {
           </Button>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-semibold truncate">{election.name}</h1>
+              <h1 className="text-base font-semibold min-w-0 whitespace-normal break-words">{election.name}</h1>
               <Badge
                 variant={election.status === 'open' ? 'default' : 'secondary'}
                 className="shrink-0 gap-1"

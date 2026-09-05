@@ -174,7 +174,7 @@ textarea {
 }
 
 /* Keep controls and long translated labels inside shared dialog surfaces. */
-[role="dialog"],
+[role="dialog"]:not([data-vaul-drawer]):not([class*="inset-"]),
 [role="alertdialog"] {
   max-width: calc(100vw - 1.5rem);
   max-height: calc(100dvh - 2rem);

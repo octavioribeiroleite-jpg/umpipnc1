@@ -329,7 +329,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                 {visitorList.map(v => (
                   <div key={v.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-background border border-border/60">
                     <UserPlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className={`flex-1 text-sm truncate ${v.name ? '' : 'text-muted-foreground italic'}`}>
+                    <span className={`flex-1 text-sm min-w-0 whitespace-normal break-words ${v.name ? '' : 'text-muted-foreground italic'}`}>
                       {v.name || 'Visitante sem nome'}
                     </span>
                     {!isReadOnly && (

@@ -42,7 +42,7 @@ export function SocietyOverviewCard({ society, stats }: Props) {
           >
             {society.name.substring(0, 3)}
           </div>
-          <p className="truncate text-sm font-semibold">{society.name}</p>
+          <p className="min-w-0 whitespace-normal break-words text-sm font-semibold">{society.name}</p>
         </div>
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
       </div>
@@ -52,9 +52,9 @@ export function SocietyOverviewCard({ society, stats }: Props) {
           <div className="min-w-0">
             <div className="flex items-center gap-1 text-muted-foreground">
               <Users className="h-3.5 w-3.5" />
-              <span className="truncate text-[10px] font-medium">Membros</span>
+              <span className="min-w-0 whitespace-normal break-words text-[10px] font-medium">Membros</span>
             </div>
-            <p className="mt-1 truncate text-sm font-bold tabular-nums text-foreground">
+            <p className="mt-1 min-w-0 whitespace-normal break-words text-sm font-bold tabular-nums text-foreground">
               {stats.membersActive}
             </p>
           </div>
@@ -62,11 +62,11 @@ export function SocietyOverviewCard({ society, stats }: Props) {
           <div className="min-w-0">
             <div className="flex items-center gap-1 text-muted-foreground">
               <DollarSign className="h-3.5 w-3.5" />
-              <span className="truncate text-[10px] font-medium">Saldo</span>
+              <span className="min-w-0 whitespace-normal break-words text-[10px] font-medium">Saldo</span>
             </div>
             <p
               className={cn(
-                'mt-1 truncate text-sm font-bold tabular-nums',
+                'mt-1 min-w-0 whitespace-normal break-words text-sm font-bold tabular-nums',
                 stats.saldo >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-300',
               )}
             >
@@ -77,11 +77,11 @@ export function SocietyOverviewCard({ society, stats }: Props) {
           <div className="min-w-0">
             <div className="flex items-center gap-1 text-muted-foreground">
               <ListTodo className="h-3.5 w-3.5" />
-              <span className="truncate text-[10px] font-medium">Pendentes</span>
+              <span className="min-w-0 whitespace-normal break-words text-[10px] font-medium">Pendentes</span>
             </div>
             <p
               className={cn(
-                'mt-1 truncate text-sm font-bold tabular-nums',
+                'mt-1 min-w-0 whitespace-normal break-words text-sm font-bold tabular-nums',
                 stats.tasksPending > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-foreground',
               )}
             >

@@ -6,7 +6,8 @@
 }
 
 .finance-metric-value {
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-size: clamp(0.95rem, 1.8vw, 1.5rem);
   font-variant-numeric: tabular-nums;
 }
@@ -120,11 +121,10 @@
 
 .finance-tab-panel [role="tabpanel"] .grid.grid-cols-2 p.text-xl {
   margin-top: 0.25rem;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-size: clamp(1.28rem, 1.55vw, 1.65rem);
-  line-height: 1.08;
+  line-height: 1.25;
   letter-spacing: -0.025em;
   font-weight: 750;
   font-variant-numeric: tabular-nums;

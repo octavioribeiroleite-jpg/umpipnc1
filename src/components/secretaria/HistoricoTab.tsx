@@ -652,7 +652,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium capitalize truncate">{dayName}</p>
+                    <p className="text-sm font-medium capitalize min-w-0 whitespace-normal break-words">{dayName}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       {record.isClosed ? (
                         <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-green-500/40 text-green-700 bg-green-500/10">
@@ -863,7 +863,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
                     <Users className={`h-4 w-4 ${textColor}`} />
                     <span className={`text-2xl font-bold ${textColor}`}>{cls.media}%</span>
                   </div>
-                  <p className="text-sm font-medium truncate">{cls.name}</p>
+                  <p className="text-sm font-medium min-w-0 whitespace-normal break-words">{cls.name}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">média de presença</p>
                 </button>
               );

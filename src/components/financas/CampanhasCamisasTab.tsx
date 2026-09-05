@@ -338,7 +338,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="truncate text-base font-semibold">{campaign.name}</h4>
+                        <h4 className="min-w-0 whitespace-normal break-words text-base font-semibold">{campaign.name}</h4>
                         <Badge variant="secondary" className="font-medium">{soldOut ? 'Esgotada' : 'Ativa'}</Badge>
                         <Badge variant="outline" className="font-medium">
                           <Layers3 className="mr-1 h-3 w-3" />{lots.length || 1} lote{(lots.length || 1) !== 1 ? 's' : ''}

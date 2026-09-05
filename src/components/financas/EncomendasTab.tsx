@@ -512,11 +512,11 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
             <div className="space-y-2">
               <div className="flex items-center justify-between"><Label>Camisas</Label><Button type="button" variant="outline" size="sm" onClick={() => setItems([...items, emptyItem()])}><Plus className="mr-1 h-3 w-3" />Item</Button></div>
               {items.map((item, index) => (
-                <div key={index} className="flex items-end gap-2">
-                  <div className="flex-1 space-y-1"><Label className="text-xs">Cor</Label><Select value={item.color} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, color: value } : current))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select></div>
+                <div key={index} className="flex flex-wrap items-end gap-2 rounded-lg border p-3">
+                  <div className="min-w-0 basis-[8rem] flex-1 space-y-1"><Label className="text-xs">Cor</Label><Select value={item.color} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, color: value } : current))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select></div>
                   <div className="w-32 space-y-1"><Label className="text-xs">Tamanho</Label><Select value={item.size} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, size: value } : current))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent className="max-h-72">{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select></div>
                   <div className="w-20 space-y-1"><Label className="text-xs">Qtd.</Label><Input type="number" min="1" value={item.qty} onChange={(event) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, qty: Number(event.target.value) || 0 } : current))} /></div>
-                  <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={items.length === 1} onClick={() => setItems(items.filter((_, itemIndex) => itemIndex !== index))}><Trash2 className="h-4 w-4" /></Button>
+                  <Button type="button" variant="ghost" size="icon" className="ml-auto shrink-0 text-destructive" aria-label={`Remover item ${index + 1}`} disabled={items.length === 1} onClick={() => setItems(items.filter((_, itemIndex) => itemIndex !== index))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               ))}
             </div>

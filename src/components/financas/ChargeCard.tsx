@@ -87,7 +87,7 @@ export function ChargeCard({
         <div className="flex items-center justify-between gap-1">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h4 className="text-sm font-semibold truncate">{memberName}</h4>
+              <h4 className="text-sm font-semibold min-w-0 whitespace-normal break-words">{memberName}</h4>
               <span className="text-xs font-bold text-foreground whitespace-nowrap">
                 R$ {totalValue.toFixed(2).replace('.', ',')}
               </span>

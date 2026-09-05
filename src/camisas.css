@@ -162,16 +162,16 @@
   height: 2.15rem;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 1200px) {
   .shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\] {
     grid-template-columns: minmax(300px, 1.55fr) minmax(175px, 0.8fr) minmax(145px, 0.65fr) auto !important;
     align-items: center !important;
   }
 }
 
-@media (max-width: 719px) {
+@media (max-width: 1199px) {
   .shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\] {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
   }
 
   .shirts-page .finance-tab-panel [role="tabpanel"] .lg\:grid-cols-\[minmax\(220px\,1\.35fr\)_minmax\(180px\,\.8fr\)_minmax\(150px\,\.65fr\)_auto\] > div:first-child {

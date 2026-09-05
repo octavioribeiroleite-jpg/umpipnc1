@@ -74,9 +74,9 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
           {timeStr}
         </span>
         {event.location && (
-          <span className="flex items-center gap-1 truncate">
+          <span className="flex items-center gap-1 min-w-0 whitespace-normal break-words">
             <MapPin className="h-3 w-3 shrink-0" />
-            <span className="truncate">{event.location}</span>
+            <span className="min-w-0 whitespace-normal break-words">{event.location}</span>
           </span>
         )}
       </div>

@@ -8,7 +8,7 @@
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > h3 {
   margin-bottom: 0.65rem !important;
-  font-size: 0.7rem !important;
+  font-size: 0.8125rem !important;
   letter-spacing: 0.1em !important;
 }
 
@@ -44,7 +44,7 @@
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type p.text-sm {
-  font-size: 0.7rem !important;
+  font-size: 0.8125rem !important;
   font-weight: 700 !important;
 }
 
@@ -55,7 +55,7 @@
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 > .grid.grid-cols-2:first-of-type p.text-xs {
   margin-top: 0.15rem !important;
-  font-size: 0.62rem !important;
+  font-size: 0.8125rem !important;
 }
 
 /* Segundo bloco: transforma em faixa operacional compacta */
@@ -78,7 +78,7 @@
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type p.text-sm {
-  font-size: 0.7rem !important;
+  font-size: 0.8125rem !important;
   font-weight: 700 !important;
 }
 
@@ -107,7 +107,7 @@
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2)::before {
   margin-bottom: 0.15rem !important;
-  font-size: 0.65rem !important;
+  font-size: 0.8125rem !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) > div {
@@ -123,7 +123,7 @@
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) p.text-sm {
-  font-size: 0.65rem !important;
+  font-size: 0.8125rem !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) p.text-xl {
@@ -132,7 +132,7 @@
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:nth-of-type(2) p.text-xs {
-  font-size: 0.6rem !important;
+  font-size: 0.8125rem !important;
 }
 
 /* Renomeia visualmente alguns rótulos sem alterar os dados */
@@ -143,15 +143,24 @@
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:first-of-type > .grid > div:nth-child(3) p.text-sm::after {
   content: "Custo do lote";
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div:first-child p.text-sm::after {
   content: "Disponíveis";
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
 }
 
 @media (max-width: 767px) {
+  .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 .grid.grid-cols-2 > div > div > .flex {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 .grid.grid-cols-2 > div > div > .flex > div:last-child {
+    width: 100%;
+  }
+
   .shirts-page .finance-tab-panel [role="tabpanel"][data-state="active"] > .space-y-3 {
     padding: 0.75rem !important;
   }

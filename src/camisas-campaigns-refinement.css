@@ -97,7 +97,7 @@ h4.text-base {
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .grid.grid-cols-2.gap-x-4.gap-y-3.sm\:grid-cols-4
 p:first-child {
-  font-size: 0.64rem !important;
+  font-size: 0.8125rem !important;
   letter-spacing: 0.07em !important;
 }
 
@@ -175,7 +175,7 @@ p:last-child {
 > .grid.grid-cols-1.gap-3.xl\:grid-cols-2
 .grid.grid-cols-1.gap-2.border-t.pt-3.text-sm.sm\:grid-cols-3
 span {
-  font-size: 0.7rem !important;
+  font-size: 0.8125rem !important;
 }
 
 .shirts-page .finance-tab-panel [role="tabpanel"]

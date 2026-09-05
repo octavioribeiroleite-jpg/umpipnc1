@@ -259,7 +259,7 @@ export default function ReuniaoDetalhe() {
           <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setOpenSheet(null)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-lg font-semibold truncate">{sheetTitles[openSheet]}</h1>
+          <h1 className="text-lg font-semibold min-w-0 whitespace-normal break-words">{sheetTitles[openSheet]}</h1>
         </div>
 
         {/* Full-width content */}
@@ -378,7 +378,7 @@ export default function ReuniaoDetalhe() {
             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/reunioes')}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-lg font-semibold truncate">{meeting.title}</h1>
+            <h1 className="text-lg font-semibold min-w-0 whitespace-normal break-words">{meeting.title}</h1>
           </div>
           <p className="text-sm text-muted-foreground ml-10">
             {new Date(meeting.date).toLocaleDateString('pt-BR', {

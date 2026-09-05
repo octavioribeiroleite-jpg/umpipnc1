@@ -370,7 +370,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0">
-            <h2 className="truncate font-semibold">{selectedClass.name}</h2>
+            <h2 className="min-w-0 whitespace-normal break-words font-semibold">{selectedClass.name}</h2>
             <p className="text-xs text-muted-foreground">
               {formatAgeRange(selectedClass)} · {active.length} ativos · {inactive.length} inativos
             </p>
@@ -468,7 +468,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                   <div className="flex items-center gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="truncate text-sm font-medium">{student.name}</span>
+                        <span className="min-w-0 whitespace-normal break-words text-sm font-medium">{student.name}</span>
                         {age != null && (
                           <Badge variant="outline" className="text-[10px]">{age} anos</Badge>
                         )}
@@ -675,7 +675,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                   ) : (
                     <>
                       <div className="min-w-0 flex-1" onClick={() => setSelectedClass(cls)}>
-                        <p className="truncate text-sm font-medium">{cls.name}</p>
+                        <p className="min-w-0 whitespace-normal break-words text-sm font-medium">{cls.name}</p>
                         <p className="mt-0.5 text-[10px] text-muted-foreground">{formatAgeRange(cls)}</p>
                       </div>
                       <Badge variant="secondary" className="text-xs">{activeCount}</Badge>
