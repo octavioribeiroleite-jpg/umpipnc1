@@ -209,6 +209,29 @@ textarea {
   min-height: 2.75rem;
 }
 
+/* Select values remain readable in narrow filters and form columns. */
+button[role="combobox"] {
+  min-width: 0;
+  min-height: 2.75rem;
+  height: auto;
+  gap: 0.5rem;
+}
+
+button[role="combobox"] > span {
+  min-width: 0;
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  line-height: 1.4;
+}
+
+button[role="combobox"] > svg {
+  flex-shrink: 0;
+}
+
 @media (max-width: 639px) {
   [role="dialog"] input,
   [role="dialog"] textarea,
