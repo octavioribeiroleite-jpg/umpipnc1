@@ -1,3 +1,7 @@
+import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
+import { serverLimiter } from "../_shared/server-limiter.ts";
+import { resolveAiActor } from "../_shared/ai-actor.ts";
+import { canSummarizeStudy } from "../_shared/ai-auth-policy.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -16,13 +20,8 @@ serve(async (req) => {
     const { meetingId } = await req.json();
     console.log('Auto-processing meeting:', meetingId);
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
 
     // Create admin client for full access
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
@@ -67,7 +66,16 @@ serve(async (req) => {
       throw new Error('Meeting not found');
     }
 
+    const actor = await resolveAiActor(supabaseAdmin, authHeader);
+    if (!actor || !canSummarizeStudy(actor, meeting.society_id)) {
+      return Response.json({ error: 'Sem permissão para esta reunião.' }, { status: 403, headers: corsHeaders });
+    }
+
     console.log('Meeting found:', meeting.title);
+
+    // Reserve the whole workflow before model calls or business writes.
+    const rate = await serverLimiter(corsHeaders).aiGeneration({ actor: `user:${actor.userId}`, modelCalls: 5 });
+    if (!rate.allowed) return rate.response;
 
     // Fetch agenda items
     const { data: agendaItems } = await supabaseAdmin
@@ -97,7 +105,7 @@ serve(async (req) => {
 
     // Get content to process - prefer meeting_notes (new flow) over contributions (old flow)
     let contentToProcess = '';
-    
+
     if (meeting.meeting_notes && meeting.meeting_notes.trim()) {
       // New flow: use meeting_notes directly
       contentToProcess = meeting.meeting_notes;
@@ -120,7 +128,7 @@ serve(async (req) => {
     console.log(`Content length: ${contentToProcess.length} characters`);
 
     // ===== STEP 2: Organize with AI =====
-    const organizeSystemPrompt = `Você é um assistente para organizar reuniões de igreja. 
+    const organizeSystemPrompt = `Você é um assistente para organizar reuniões de igreja.
 Analise o texto da reunião e organize em categorias.
 
 REGRAS:
@@ -145,25 +153,18 @@ Retorne um JSON assim:
 }`;
 
     const pautaText = (agendaItems || []).map((item, i) => `${i + 1}. ${item.title}`).join('\n');
-    
+
     const organizeUserPrompt = `PAUTA:\n${pautaText || 'Sem pauta definida'}\n\nREGISTRO DA REUNIÃO:\n${contentToProcess || 'Sem conteúdo'}`;
 
     console.log('Calling AI to organize content...');
-    
-    const organizeResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+
+    const organizeResponse = await openAIChat({
+
         messages: [
           { role: "system", content: organizeSystemPrompt },
           { role: "user", content: organizeUserPrompt }
         ],
-      }),
-    });
+      });
 
     if (!organizeResponse.ok) {
       const status = organizeResponse.status;
@@ -203,7 +204,7 @@ Retorne um JSON assim:
 
     // Save to ai_suggestions
     await supabaseAdmin.from('ai_suggestions').delete().eq('meeting_id', meetingId);
-    
+
     if (organizedItems.length > 0) {
       const suggestions = organizedItems.map(item => ({
         meeting_id: meetingId,
@@ -307,20 +308,13 @@ FORMATO DE SAÍDA:
 
     console.log('Calling AI to format minutes...');
 
-    const formatResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+    const formatResponse = await openAIChat({
+
         messages: [
           { role: "system", content: formatSystemPrompt },
           { role: "user", content: rawContent }
         ],
-      }),
-    });
+      });
 
     let finalMinutes = '';
     if (formatResponse.ok) {
@@ -353,7 +347,7 @@ ESTRUTURA OBRIGATÓRIA (nesta ordem):
 
 3. AGENDA - PRÓXIMOS EVENTOS
    Título: *📅 AGENDA DA GALERA:*
-   
+
    Formato OBRIGATÓRIO para cada evento:
    DD/MM/AAAA: NOME DO EVENTO
    📍 Local | ⏰ Horário
@@ -406,20 +400,13 @@ REGRAS TÉCNICAS:
 
     console.log('Calling AI to generate WhatsApp message...');
 
-    const whatsappResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+    const whatsappResponse = await openAIChat({
+
         messages: [
           { role: "system", content: whatsappSystemPrompt },
           { role: "user", content: whatsappUserPrompt }
         ],
-      }),
-    });
+      });
 
     if (!whatsappResponse.ok) {
       console.error('WhatsApp generation failed, continuing without it');
@@ -434,7 +421,7 @@ REGRAS TÉCNICAS:
 
     // ===== STEP 5: Extract and create calendar events =====
     console.log('Extracting events from meeting content...');
-    
+
     const eventsSystemPrompt = `Você é um assistente que extrai eventos e compromissos de atas de reunião.
 Analise o conteúdo e extraia APENAS decisões confirmadas com datas objetivas.
 
@@ -451,14 +438,8 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
 
     const eventsUserPrompt = `Extraia os eventos desta ata de reunião:\n\n${finalMinutes}`;
 
-    const eventsResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+    const eventsResponse = await openAIChat({
+
         messages: [
           { role: "system", content: eventsSystemPrompt },
           { role: "user", content: eventsUserPrompt }
@@ -492,21 +473,20 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
           }
         }],
         tool_choice: { type: "function", function: { name: "extract_events" } }
-      }),
-    });
+      });
 
     let eventsCreated = 0;
     if (eventsResponse.ok) {
       const eventsData = await eventsResponse.json();
       const toolCall = eventsData.choices?.[0]?.message?.tool_calls?.[0];
-      
+
       if (toolCall?.function?.arguments) {
         try {
           const parsed = JSON.parse(toolCall.function.arguments);
           const extractedEvents = parsed.events || [];
-          
+
           console.log(`Extracted ${extractedEvents.length} events from meeting`);
-          
+
           for (const event of extractedEvents) {
             // Validate the date is valid
             const startDate = new Date(event.start_date);
@@ -514,20 +494,20 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
               console.log(`Skipping event with invalid date: ${event.title}`);
               continue;
             }
-            
+
             // Skip events in the past
             if (startDate < new Date()) {
               console.log(`Skipping past event: ${event.title}`);
               continue;
             }
-            
+
             // Check if event on same date already exists for this meeting (by date, not title)
             const eventDate = new Date(event.start_date);
             const startOfDay = new Date(eventDate);
             startOfDay.setHours(0, 0, 0, 0);
             const endOfDay = new Date(eventDate);
             endOfDay.setHours(23, 59, 59, 999);
-            
+
             const { data: existingEvent } = await supabaseAdmin
               .from('events')
               .select('id')
@@ -535,16 +515,17 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
               .gte('start_date', startOfDay.toISOString())
               .lte('start_date', endOfDay.toISOString())
               .maybeSingle();
-            
+
             if (existingEvent) {
               console.log(`Event already exists for this date, skipping: ${event.title}`);
               continue;
             }
-            
+
             const { error: eventError } = await supabaseAdmin
               .from('events')
               .insert({
                 title: event.title,
+                society_id: meeting.society_id,
                 start_date: event.start_date,
                 end_date: event.end_date || null,
                 location: event.location || null,
@@ -556,7 +537,7 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
                 origem: 'reuniao',
                 reuniao_id: meetingId
               });
-            
+
             if (eventError) {
               console.error(`Error creating event ${event.title}:`, eventError);
             } else {
@@ -571,16 +552,16 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
     } else {
       console.error('Events extraction failed, continuing without it');
     }
-    
+
     console.log(`Total events created: ${eventsCreated}`);
 
     // ===== STEP 6: Extract and create tasks =====
     console.log('Extracting tasks from meeting content...');
-    
+
     // Build a list of available assignees for the AI
     const activeProfiles = profiles?.filter(p => p.full_name) || [];
     const assigneeList = activeProfiles.map(p => `- "${p.full_name}" (ID: ${p.user_id})`).join('\n');
-    
+
     const tasksSystemPrompt = `Você é um assistente que extrai tarefas e encaminhamentos de atas de reunião.
 Analise o conteúdo e extraia APENAS tarefas que foram claramente atribuídas ou decididas.
 
@@ -602,14 +583,8 @@ Você DEVE responder APENAS com a chamada da função extract_tasks.`;
 
     const tasksUserPrompt = `Extraia as tarefas e encaminhamentos desta ata de reunião:\n\n${finalMinutes}\n\nRegistro original:\n${contentToProcess}`;
 
-    const tasksResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+    const tasksResponse = await openAIChat({
+
         messages: [
           { role: "system", content: tasksSystemPrompt },
           { role: "user", content: tasksUserPrompt }
@@ -643,19 +618,18 @@ Você DEVE responder APENAS com a chamada da função extract_tasks.`;
           }
         }],
         tool_choice: { type: "function", function: { name: "extract_tasks" } }
-      }),
-    });
+      });
 
     let tasksCreated = 0;
     if (tasksResponse.ok) {
       const tasksData = await tasksResponse.json();
       const toolCall = tasksData.choices?.[0]?.message?.tool_calls?.[0];
-      
+
       if (toolCall?.function?.arguments) {
         try {
           const parsed = JSON.parse(toolCall.function.arguments);
           const extractedTasks = parsed.tasks || [];
-          
+
           console.log(`Extracted ${extractedTasks.length} tasks from meeting`);
 
           // If this meeting already has tasks, don't create more to avoid duplicates on re-processing
@@ -698,6 +672,7 @@ Você DEVE responder APENAS com a chamada da função extract_tasks.`;
                 .from('tasks')
                 .insert({
                   title: task.title,
+                  society_id: meeting.society_id,
                   description: task.description || null,
                   status: 'todo',
                   priority: task.priority || 'medium',
@@ -722,7 +697,7 @@ Você DEVE responder APENAS com a chamada da função extract_tasks.`;
     } else {
       console.error('Tasks extraction failed, continuing without it');
     }
-    
+
     console.log(`Total tasks created: ${tasksCreated}`);
 
     // ===== STEP 7: Save everything =====

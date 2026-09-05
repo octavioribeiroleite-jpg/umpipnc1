@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, Download, Lock, LockOpen, UserPlus, Plus, X, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/ebd-client';
 import {
   AlertDialog,
   AlertDialogAction,

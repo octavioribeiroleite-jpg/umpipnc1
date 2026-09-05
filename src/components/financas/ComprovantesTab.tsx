@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { signedReceiptUrl } from '@/lib/receipts';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,17 +36,18 @@ export function ComprovantesTab() {
   const [rejectDialog, setRejectDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const [rejectReason, setRejectReason] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewRequest = useRef(0);
 
   useEffect(() => {
     fetchSubmissions();
 
     const channel = supabase
-      .channel('comprovantes-realtime')
+      .channel(`comprovantes-realtime-${crypto.randomUUID()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'member_payment_submissions' }, fetchSubmissions)
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [societyId]);
 
   const fetchSubmissions = async () => {
     let query = supabase
@@ -80,14 +82,18 @@ export function ComprovantesTab() {
   const handleApprove = async (sub: Submission) => {
     setActionLoading(sub.id);
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('member_payment_submissions')
         .update({
           status: 'aprovado',
           reviewed_by: user!.id,
           reviewed_at: new Date().toISOString(),
         })
-        .eq('id', sub.id);
+        .eq('id', sub.id)
+        .eq('status', 'pendente')
+        .select('id')
+        .single();
+      if (error || !data) throw new Error('Não foi possível aprovar. Atualize a lista e tente novamente.');
 
       toast({ title: 'Comprovante aprovado!', description: `Pagamento de ${sub.member_name} aprovado.` });
       fetchSubmissions();
@@ -102,7 +108,7 @@ export function ComprovantesTab() {
     if (!rejectDialog.id) return;
     setActionLoading(rejectDialog.id);
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('member_payment_submissions')
         .update({
           status: 'rejeitado',
@@ -110,7 +116,11 @@ export function ComprovantesTab() {
           reviewed_by: user!.id,
           reviewed_at: new Date().toISOString(),
         })
-        .eq('id', rejectDialog.id);
+        .eq('id', rejectDialog.id)
+        .eq('status', 'pendente')
+        .select('id')
+        .single();
+      if (error || !data) throw new Error('Não foi possível rejeitar. Atualize a lista e tente novamente.');
 
       toast({ title: 'Comprovante rejeitado' });
       setRejectDialog({ open: false, id: null });
@@ -169,7 +179,15 @@ export function ComprovantesTab() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPreviewUrl(sub.receipt_url)}
+                  onClick={async () => {
+                    const request = ++previewRequest.current;
+                    try {
+                      const url = await signedReceiptUrl(sub.receipt_url);
+                      if (request === previewRequest.current) setPreviewUrl(url);
+                    } catch {
+                      if (request === previewRequest.current) toast({ variant: 'destructive', title: 'Não foi possível abrir o comprovante' });
+                    }
+                  }}
                 >
                   <Eye className="h-3 w-3 mr-1" />
                   Ver Comprovante
@@ -227,7 +245,10 @@ export function ComprovantesTab() {
       </Dialog>
 
       {/* Preview Dialog */}
-      <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
+      <Dialog open={!!previewUrl} onOpenChange={() => {
+        previewRequest.current += 1;
+        setPreviewUrl(null);
+      }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Comprovante</DialogTitle>

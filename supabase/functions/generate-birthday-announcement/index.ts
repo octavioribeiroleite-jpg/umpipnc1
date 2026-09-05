@@ -1,3 +1,7 @@
+import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
+import { serverLimiter } from "../_shared/server-limiter.ts";
+import { createEbdBirthdayTokens } from "../_shared/ebd-birthday-token.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -11,18 +15,36 @@ serve(async (req) => {
   }
 
   try {
-    const { birthdays } = await req.json();
+    const { birthdays, ebd_ai_token } = await req.json();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const admin = createClient(supabaseUrl, serviceKey);
+    const tokens = createEbdBirthdayTokens({
+      issuer: supabaseUrl,
+      secret: Deno.env.get('EBD_AI_SIGNING_SECRET') ?? serviceKey,
+    });
+    const claims = await tokens.verify(ebd_ai_token, async principal => {
+      if (principal.kind === 'admin') {
+        const { data, error } = await admin.from('settings').select('value')
+          .eq('key', 'secretaria_admin_password').maybeSingle();
+        return !error && data?.value ? data.value : null;
+      }
+      const { data, error } = await admin.from('ebd_class_passwords').select('pin_hash')
+        .eq('class_id', principal.id).eq('active', true).maybeSingle();
+      return !error && data?.pin_hash ? data.pin_hash : null;
+    });
+    if (!claims) {
+      return Response.json({ error: 'Confirme seu PIN para gerar a mensagem.', code: 'ebd_ai_session_expired_or_invalid' },
+        { status: 401, headers: corsHeaders });
+    }
 
-    if (!birthdays || !Array.isArray(birthdays) || birthdays.length === 0) {
+    if (!Array.isArray(birthdays) || birthdays.length === 0 || birthdays.length > 100 || birthdays.some(b =>
+      !b || typeof b.nome !== 'string' || !b.nome.trim() || b.nome.length > 180 ||
+      !Number.isInteger(b.dia) || b.dia < 1 || b.dia > 31 || !Number.isInteger(b.mes) || b.mes < 1 || b.mes > 12)) {
       return new Response(
         JSON.stringify({ error: 'Nenhum aniversariante informado.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    }
-
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const listText = birthdays
@@ -50,20 +72,17 @@ REGRAS:
 
     const userPrompt = `Gere a mensagem de WhatsApp para os seguintes aniversariantes da semana:\n\n${listText}`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+    const rate = await serverLimiter(corsHeaders).aiGeneration({
+      actor: claims.principal.kind === 'admin' ? 'ebd-admin:secretaria' : `ebd-class:${claims.principal.id}`,
+    });
+    if (!rate.allowed) return rate.response;
+    const response = await openAIChat({
+
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-      }),
-    });
+      });
 
     if (!response.ok) {
       const errorText = await response.text();

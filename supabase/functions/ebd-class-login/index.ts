@@ -1,4 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createEbdBirthdayTokens } from '../_shared/ebd-birthday-token.ts'
+import { serverLimiter } from '../_shared/server-limiter.ts'
+import { portalSession } from '../_shared/portal-account.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,6 +43,8 @@ Deno.serve(async (req) => {
     }
 
     const teacherName = name.trim().slice(0, 120)
+    const rate = await serverLimiter(corsHeaders).pinAttempt({ mode: 'class', identifier: pin })
+    if (!rate.allowed) return rate.response
     const pinHash = await hashPin(pin)
 
     const { data: row, error } = await adminClient
@@ -57,6 +62,11 @@ Deno.serve(async (req) => {
     }
 
     const className = (row as any).ebd_classes?.name ?? null
+    const session = await portalSession({ namespace: 'ebd', id: row.class_id, name: `EBD ${className ?? ''}`, credential: pinHash })
+    const capability = await createEbdBirthdayTokens({
+      issuer: supabaseUrl,
+      secret: Deno.env.get('EBD_AI_SIGNING_SECRET') ?? serviceRoleKey,
+    }).issue({ kind: 'class', id: row.class_id }, pinHash)
 
     // Register the access
     await adminClient.from('ebd_class_logins').insert({
@@ -67,6 +77,9 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        session,
+        birthday_ai_token: capability.token,
+        birthday_ai_expires_at: capability.expiresAt,
         teacher: { name: teacherName, class_id: row.class_id, class_name: className },
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

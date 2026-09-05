@@ -1,3 +1,7 @@
+import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
+import { serverLimiter } from "../_shared/server-limiter.ts";
+import { resolveAiActor } from "../_shared/ai-actor.ts";
+import { canSummarizeYear } from "../_shared/ai-auth-policy.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -11,12 +15,22 @@ serve(async (req) => {
 
   try {
     const { year, society_id } = await req.json();
-    if (!year) throw new Error("year is required");
-    if (!society_id) throw new Error("society_id is required");
+    if (!Number.isInteger(Number(year)) || Number(year) < 1900 || Number(year) > 2200) {
+      return Response.json({ error: "Ano inválido." }, { status: 400, headers: corsHeaders });
+    }
+    if (typeof society_id !== "string" || !/^[0-9a-f-]{36}$/i.test(society_id)) {
+      return Response.json({ error: "Sociedade inválida." }, { status: 400, headers: corsHeaders });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const actor = await resolveAiActor(supabase, req.headers.get("Authorization"));
+    if (!actor) return Response.json({ error: "Faça login novamente." }, { status: 401, headers: corsHeaders });
+    if (!canSummarizeYear(actor, society_id)) {
+      return Response.json({ error: "Sem permissão para esta sociedade." }, { status: 403, headers: corsHeaders });
+    }
 
     const startDate = `${year}-01-01`;
     const endDate = `${year}-12-31`;
@@ -40,17 +54,10 @@ serve(async (req) => {
 
     const studiesList = studies.map((s: any) => `Tema: ${s.title}\nData: ${s.date}\nAnotações:\n${s.notes}\n`).join("\n---\n\n");
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const rate = await serverLimiter(corsHeaders).aiGeneration({ actor: `user:${actor.userId}` });
+    if (!rate.allowed) return rate.response;
+    const aiResponse = await openAIChat({
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
         messages: [
           {
             role: "system",
@@ -77,8 +84,7 @@ Regras:
             content: `Gere o relatório anual de ${year} com ${studies.length} estudos bíblicos:\n\n${studiesList}`
           }
         ],
-      }),
-    });
+      });
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {

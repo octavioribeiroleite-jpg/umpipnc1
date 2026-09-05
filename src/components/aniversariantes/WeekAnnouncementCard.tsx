@@ -8,9 +8,12 @@ import type { Birthday } from '@/hooks/useBirthdays';
 
 interface Props {
   birthdays: (Birthday & { daysUntil: number })[];
+  aiToken?: string;
+  aiExpiresAt?: string;
+  onAiSessionExpired: () => void;
 }
 
-export function WeekAnnouncementCard({ birthdays }: Props) {
+export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSessionExpired }: Props) {
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -27,16 +30,29 @@ export function WeekAnnouncementCard({ birthdays }: Props) {
   };
 
   const handleGenerate = async () => {
+    if (!aiToken || !aiExpiresAt || !Number.isFinite(Date.parse(aiExpiresAt)) || Date.parse(aiExpiresAt) <= Date.now()) {
+      onAiSessionExpired();
+      return;
+    }
     setLoading(true);
     setAiMessage(null);
     try {
       const { data, error } = await supabase.functions.invoke('generate-birthday-announcement', {
         body: {
+          ebd_ai_token: aiToken,
           birthdays: birthdays.map(b => ({ nome: b.nome, dia: b.dia, mes: b.mes })),
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        let details: { error?: string; code?: string } | null = null;
+        try { details = await error.context?.clone().json(); } catch { /* sanitized fallback */ }
+        if (details?.code === 'ebd_ai_session_expired_or_invalid') {
+          onAiSessionExpired();
+          return;
+        }
+        throw new Error(details?.error || 'Não foi possível gerar a mensagem agora.');
+      }
       if (data?.error) throw new Error(data.error);
 
       setAiMessage(data.message);

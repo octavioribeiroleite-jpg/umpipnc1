@@ -1,45 +1,81 @@
-project_id = "dceldfybzabjlgudbzah"
+project_id = "xhhfgnkpgtnzlvpvqjpl"
 
-[functions.organize-meeting]
+# Public entrypoints validate credentials or constrain operations internally.
+[functions.account-login]
+verify_jwt = false
+
+[functions.validate-diretoria-pin]
+verify_jwt = false
+
+[functions.ebd-class-login]
+verify_jwt = false
+
+[functions.manage-ebd-class-password]
+verify_jwt = false
+
+[functions.election-vote]
+verify_jwt = false
+
+[functions.member-list]
+verify_jwt = false
+
+# Closed until the church member portal is explicitly released.
+[functions.member-login]
 verify_jwt = false
 
 [functions.log-client-error]
 verify_jwt = false
 
-[functions.summarize-contributions]
-verify_jwt = false
-
-[functions.generate-whatsapp-message]
-verify_jwt = false
-
-[functions.auto-process-meeting]
-verify_jwt = false
-
-[functions.create-user]
-verify_jwt = false
-
-[functions.update-user-password]
-verify_jwt = false
-
-[functions.summarize-for-pastor]
-verify_jwt = false
-
-[functions.seed-calendar-events]
-verify_jwt = false
-
-[functions.summarize-study]
-verify_jwt = false
-
-[functions.summarize-yearly-studies]
-verify_jwt = false
-
-[functions.generate-poster]
-verify_jwt = false
-
-[functions.generate-birthday-reminders]
-verify_jwt = false
-
 [functions.generate-birthday-announcement]
 verify_jwt = false
 
+[functions.generate-birthday-reminders]
+verify_jwt = true
 
+[functions.organize-meeting]
+verify_jwt = true
+
+[functions.summarize-contributions]
+verify_jwt = true
+
+[functions.generate-whatsapp-message]
+verify_jwt = true
+
+[functions.auto-process-meeting]
+verify_jwt = true
+
+[functions.create-user]
+verify_jwt = true
+
+[functions.update-user-password]
+verify_jwt = true
+
+[functions.summarize-for-pastor]
+verify_jwt = true
+
+[functions.seed-calendar-events]
+verify_jwt = true
+
+[functions.summarize-study]
+verify_jwt = true
+
+[functions.summarize-yearly-studies]
+verify_jwt = true
+
+[functions.manage-task]
+verify_jwt = true
+
+[functions.member-cancel-pending-submission]
+verify_jwt = true
+
+[functions.member-get-charges]
+verify_jwt = true
+
+[functions.member-get-payment-history]
+verify_jwt = true
+
+[functions.member-get-submissions]
+verify_jwt = true
+
+[functions.member-submit-payment-receipt]
+verify_jwt = true

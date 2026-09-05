@@ -11,6 +11,8 @@ async function getMember(req: Request, adminClient: any) {
 
   const { data: userData, error: userError } = await adminClient.auth.getUser(token)
   if (userError || !userData?.user) throw new Error('Sessão inválida')
+  const { data: profile, error: profileError } = await adminClient.from('profiles').select('active').eq('user_id',userData.user.id).maybeSingle()
+  if (profileError || !profile?.active) throw new Error('Acesso indisponível')
 
   const { data: member, error: memberError } = await adminClient
     .from('members')

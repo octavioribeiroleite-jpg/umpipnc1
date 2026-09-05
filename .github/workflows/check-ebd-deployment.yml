@@ -1,196 +1,23 @@
-name: Verificar schema e deploy da EBD
-
+name: Validar Renovo IPNC
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/check-ebd-deployment.yml"
-      - "supabase/migrations/**"
-      - "src/components/secretaria/TurmasTab.tsx"
-      - "src/pages/Secretaria.tsx"
-
+    branches: [main]
+  pull_request:
 permissions:
   contents: read
-  statuses: write
-
 jobs:
-  diagnostico:
+  validate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Baixar repositório
-        uses: actions/checkout@v4
-
-      - name: Verificar schema e faixas no Supabase
-        id: schema
-        shell: bash
-        run: |
-          set -uo pipefail
-          source .env
-
-          classes_file="$(mktemp)"
-          students_file="$(mktemp)"
-          state="success"
-          reason="ok"
-          description="Schema e faixas etárias confirmados no Supabase"
-
-          if ! curl --fail --silent --show-error --get \
-            "$VITE_SUPABASE_URL/rest/v1/ebd_classes" \
-            -H "apikey: $VITE_SUPABASE_PUBLISHABLE_KEY" \
-            -H "Authorization: Bearer $VITE_SUPABASE_PUBLISHABLE_KEY" \
-            --data-urlencode "select=name,min_age,max_age,next_class_id,age_tracking_enabled" \
-            --data-urlencode "order=order_index.asc" \
-            -o "$classes_file"; then
-            state="failure"
-            reason="class-columns"
-            description="Colunas de faixa etária não estão disponíveis no Supabase"
-          elif ! curl --fail --silent --show-error --get \
-            "$VITE_SUPABASE_URL/rest/v1/ebd_students" \
-            -H "apikey: $VITE_SUPABASE_PUBLISHABLE_KEY" \
-            -H "Authorization: Bearer $VITE_SUPABASE_PUBLISHABLE_KEY" \
-            --data-urlencode "select=birth_date" \
-            --data-urlencode "limit=1" \
-            -o "$students_file"; then
-            state="failure"
-            reason="birth-date"
-            description="Coluna birth_date não está disponível no Supabase"
-          elif ! python3 - "$classes_file" <<'PY'
-          import json
-          import sys
-
-          with open(sys.argv[1], encoding="utf-8") as file:
-              rows = json.load(file)
-
-          expected = {
-              "Cordeirinhos do Senhor": (0, 3, True),
-              "Brilho Celeste": (4, 5, True),
-              "Rosa de Saron": (6, 8, True),
-              "Joias de Cristo": (9, 11, True),
-              "Geração do Senhor": (12, 17, True),
-              "Vencedores por Cristo": (18, 34, True),
-              "Heróis da Fé": (35, None, True),
-              "Oficiais": (None, None, False),
-          }
-
-          found = {row.get("name"): row for row in rows}
-          errors = []
-          for name, (min_age, max_age, enabled) in expected.items():
-              row = found.get(name)
-              if row is None:
-                  errors.append(f"turma ausente: {name}")
-                  continue
-              actual = (row.get("min_age"), row.get("max_age"), row.get("age_tracking_enabled"))
-              if actual != (min_age, max_age, enabled):
-                  errors.append(f"{name}: esperado {(min_age, max_age, enabled)}, recebido {actual}")
-
-          if errors:
-              print("; ".join(errors))
-              raise SystemExit(1)
-
-          print("Faixas etárias confirmadas para as oito turmas.")
-          PY
-          then
-            state="failure"
-            reason="values"
-            description="Migration existe, mas as faixas não foram gravadas corretamente"
-          fi
-
-          echo "state=$state" >> "$GITHUB_OUTPUT"
-          echo "reason=$reason" >> "$GITHUB_OUTPUT"
-          echo "description=$description" >> "$GITHUB_OUTPUT"
-
-      - name: Publicar resultado do schema no commit
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          STATE: ${{ steps.schema.outputs.state || 'error' }}
-          REASON: ${{ steps.schema.outputs.reason || 'execution-error' }}
-          DESCRIPTION: ${{ steps.schema.outputs.description || 'Falha ao executar diagnóstico do Supabase' }}
-        run: |
-          context="diagnostico/ebd-schema-${REASON}"
-          payload=$(jq -n \
-            --arg state "$STATE" \
-            --arg description "$DESCRIPTION" \
-            --arg context "$context" \
-            '{state: $state, description: $description, context: $context}')
-          curl --fail --silent --show-error \
-            -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
-            -d "$payload" >/dev/null
-
-      - name: Verificar interface no app publicado
-        id: deploy
-        shell: bash
-        run: |
-          set -uo pipefail
-          app_url="https://umpipnc1.lovable.app"
-          html_file="$(mktemp)"
-          state="failure"
-          description="Interface de faixas etárias não encontrada no deploy publicado"
-
-          if curl --fail --silent --show-error --location \
-            -H "Cache-Control: no-cache" \
-            "$app_url/?diagnostico=${GITHUB_SHA}" \
-            -o "$html_file"; then
-            mapfile -t scripts < <(
-              grep -oE '<script[^>]+src="[^"]+"' "$html_file" \
-                | sed -E 's/.*src="([^"]+)".*/\1/' \
-                | sort -u
-            )
-
-            for script in "${scripts[@]}"; do
-              if [[ "$script" =~ ^https?:// ]]; then
-                script_url="$script"
-              else
-                script_url="$app_url/${script#/}"
-              fi
-
-              bundle_file="$(mktemp)"
-              if curl --fail --silent --show-error --location \
-                -H "Cache-Control: no-cache" \
-                "$script_url?diagnostico=${GITHUB_SHA}" \
-                -o "$bundle_file"; then
-                if grep -Fq "Sem faixa etária" "$bundle_file" \
-                  && grep -Fq "Sugestão por idade" "$bundle_file" \
-                  && grep -Fq "data de nascimento para acompanhar a faixa etária" "$bundle_file"; then
-                  state="success"
-                  description="Interface atualizada encontrada no bundle publicado"
-                  break
-                fi
-              fi
-            done
-          else
-            description="Não foi possível acessar o app publicado no Lovable"
-          fi
-
-          echo "state=$state" >> "$GITHUB_OUTPUT"
-          echo "description=$description" >> "$GITHUB_OUTPUT"
-
-      - name: Publicar resultado do deploy no commit
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          STATE: ${{ steps.deploy.outputs.state || 'error' }}
-          DESCRIPTION: ${{ steps.deploy.outputs.description || 'Falha ao executar diagnóstico do deploy' }}
-        run: |
-          payload=$(jq -n \
-            --arg state "$STATE" \
-            --arg description "$DESCRIPTION" \
-            --arg context "diagnostico/ebd-deploy" \
-            '{state: $state, description: $description, context: $context}')
-          curl --fail --silent --show-error \
-            -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
-            -d "$payload" >/dev/null
-
-      - name: Encerrar com falha quando houver divergência
-        if: steps.schema.outputs.state != 'success' || steps.deploy.outputs.state != 'success'
-        run: exit 1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx tsc -p tsconfig.app.json --noEmit
+      - run: node --experimental-strip-types --test tests/*.mjs tests/*.ts
+      - run: npm run build
+      # EBD tables must NOT be readable anonymously. Authenticated integration
+      # tests use isolated fixtures, never real student data in CI logs.

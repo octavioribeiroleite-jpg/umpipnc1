@@ -1,0 +1,134 @@
+{
+  "audit_id": "RENOVO-MIGRATION-20260903",
+  "mode": "PRE_RELEASE_GATE",
+  "status": "pending_member_identity_decision_and_remaining_cutover_checks",
+  "phases": [
+    {
+      "id": "00",
+      "status": "PASS",
+      "evidence": [
+        ".security/audit-scope.yaml"
+      ],
+      "notes": "User authorizes complete migration and public Site access. Source preserved."
+    },
+    {
+      "id": "01",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "Architecture and backup inventoried previously; new bounded independent reviews running."
+    },
+    {
+      "id": "02",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "Private backup outside checkout; real data excluded from evidence."
+    },
+    {
+      "id": "03",
+      "status": "FAIL",
+      "evidence": [],
+      "notes": "Member-name-only login cannot establish individual identity; user decision requested."
+    },
+    {
+      "id": "04",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "Target RLS/tenant fixes implemented; local negative tests pass; wider real workflow verification pending."
+    },
+    {
+      "id": "05",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "49-table normalized final source/target comparison passes; intentional legacy account deactivation excluded."
+    },
+    {
+      "id": "06",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "25 app functions deployed; unsafe member-login not deployed pending user decision. Gemini9AIfunctions active."
+    },
+    {
+      "id": "07",
+      "status": "PARTIAL",
+      "evidence": [
+        "private migration-research/storage/upload-validation-2026-09-03.md"
+      ],
+      "notes": "32/32files previously verified; signed private URL transport implemented; remaining authenticated financial workflow tests pending."
+    },
+    {
+      "id": "08",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "TypeScript and Vite production build pass."
+    },
+    {
+      "id": "09",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "Local SQL isolation and live synthetic EBD login/attendance pass; broader workflow tests pending."
+    },
+    {
+      "id": "10",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "Gemini secret presence verified without value; owner confirms paid billing."
+    },
+    {
+      "id": "11",
+      "status": "NOT_VERIFIED",
+      "evidence": [],
+      "notes": "Existing package manager preserved; dependency audit pending."
+    },
+    {
+      "id": "12",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "No Site publication yet; public sharing explicitly authorized but not applied to oldunsafe version."
+    },
+    {
+      "id": "13",
+      "status": "NOT_VERIFIED",
+      "evidence": [],
+      "notes": "Cutover not published."
+    },
+    {
+      "id": "14",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "Gemini synthetic text/JSON/forcedtool live tests pass;26offline tests pass."
+    },
+    {
+      "id": "15",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "Official backup retained privately; staged import independently verified before subsequent bounded rewrites."
+    },
+    {
+      "id": "16",
+      "status": "PARTIAL",
+      "evidence": [
+        "tests/"
+      ],
+      "notes": "Temporary main/EBD Auth accounts and businessfixtures cleaned; Authcount32, testcounts0."
+    },
+    {
+      "id": "17",
+      "status": "FAIL",
+      "evidence": [],
+      "notes": "Cutover remains gated by memberidentitydecision, Authredirect/cron and remaining workflowvalidation."
+    },
+    {
+      "id": "18",
+      "status": "PARTIAL",
+      "evidence": [],
+      "notes": "React/Vite, Supabase and Sites references inspected."
+    },
+    {
+      "id": "19",
+      "status": "PENDING",
+      "evidence": [],
+      "notes": "Consolidated gate and reports pending."
+    }
+  ],
+  "updated_at": "2026-09-05T12:13:00Z"
+}

@@ -1,3 +1,5 @@
+import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
+import { serverLimiter } from "../_shared/server-limiter.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -13,14 +15,9 @@ serve(async (req) => {
 
   try {
     const { meetingId } = await req.json();
-    
+
     if (!meetingId) {
       throw new Error('meetingId is required');
-    }
-
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -132,22 +129,17 @@ ${contributionsContext || 'Sem contribuições'}
 
 Gere um resumo consolidado.`;
 
-    console.log('Calling Lovable AI for summary...');
+    console.log('Generating summary...');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+    const rate = await serverLimiter(corsHeaders).aiGeneration({ actor: `user:${user.id}` });
+    if (!rate.allowed) return rate.response;
+    const response = await openAIChat({
+
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-      }),
-    });
+      });
 
     if (!response.ok) {
       if (response.status === 429) {

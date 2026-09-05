@@ -1,3 +1,5 @@
+import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
+import { serverLimiter } from "../_shared/server-limiter.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -14,14 +16,9 @@ serve(async (req) => {
 
   try {
     const { meetingId } = await req.json();
-    
+
     if (!meetingId) {
       throw new Error('meetingId is required');
-    }
-
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -69,7 +66,6 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
 
     // Fetch meeting
     const { data: meeting, error: meetingError } = await supabase
@@ -128,7 +124,6 @@ serve(async (req) => {
       const context = agendaItem ? ` (sobre: ${agendaItem.title})` : ' (contribuição geral)';
       return `- ${userName}${context}: ${c.content}`;
     }).join('\n');
-
 
     const systemPrompt = `Você é um assistente de secretaria de reuniões da diretoria da Igreja Presbiteriana de Nova Carapina (IPNC).
 
@@ -195,27 +190,22 @@ ${contributionsContext || 'Sem anotações'}
 
 Retorne o JSON estruturado conforme instruído.`;
 
-    console.log('Calling Lovable AI Gateway...');
-    
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+    console.log('Organizing meeting...');
+
+    const rate = await serverLimiter(corsHeaders).aiGeneration({ actor: `user:${user.id}` });
+    if (!rate.allowed) return rate.response;
+    const response = await openAIChat({
+
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-      }),
-    });
+      });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI Gateway error:', response.status, errorText);
-      
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em alguns minutos.' }),
@@ -233,7 +223,7 @@ Retorne o JSON estruturado conforme instruído.`;
 
     const aiResponse = await response.json();
     const aiContent = aiResponse.choices?.[0]?.message?.content;
-    
+
     console.log('AI Response:', aiContent);
 
     if (!aiContent) {
@@ -251,7 +241,7 @@ Retorne o JSON estruturado conforme instruído.`;
       const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        
+
         // Convert structured object to flat items array
         const categoryMap: Record<string, string> = {
           'pauta': 'pauta',

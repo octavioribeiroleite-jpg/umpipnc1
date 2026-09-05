@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,9 @@ import {
 import { toast } from 'sonner';
 import { Plus, Trash2, Edit, Loader2, FileImage } from 'lucide-react';
 import { GastoWizard } from './GastoWizard';
+import { ReceiptLink } from '@/components/ReceiptLink';
+import { receiptReference } from '@/lib/receipt-path';
+import { signedReceiptUrl } from '@/lib/receipts';
 
 interface Transaction {
   id: string;
@@ -57,6 +60,7 @@ export function GastosTab() {
     date: new Date().toISOString().split('T')[0],
   });
   const [initialReceiptPreview, setInitialReceiptPreview] = useState<string | null>(null);
+  const receiptRequest = useRef(0);
 
 
   const fetchData = async () => {
@@ -71,28 +75,36 @@ export function GastosTab() {
   useEffect(() => { fetchData(); }, [societyId]);
 
   const openNewDialog = () => {
+    receiptRequest.current += 1;
     setEditingTransaction(null);
     setInitialFormData({ description: '', amount: '', date: new Date().toISOString().split('T')[0] });
     setInitialReceiptPreview(null);
     setDialogOpen(true);
   };
 
-  const openEditDialog = (tx: Transaction) => {
+  const openEditDialog = async (tx: Transaction) => {
+    const request = ++receiptRequest.current;
+    let preview: string | null = null;
+    if (tx.receipt_url) {
+      try { preview = await signedReceiptUrl(tx.receipt_url); }
+      catch { if (request === receiptRequest.current) toast.error('Não foi possível carregar o comprovante'); }
+    }
+    if (request !== receiptRequest.current) return;
     setEditingTransaction(tx);
     setInitialFormData({ description: tx.description, amount: tx.amount.toString(), date: tx.date });
-    setInitialReceiptPreview(tx.receipt_url);
+    setInitialReceiptPreview(preview);
     setDialogOpen(true);
   };
 
   const uploadReceipt = async (id: string, file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `gastos/${id}.${fileExt}`;
+    if (!societyId) throw new Error('Selecione a sociedade.');
+    const fileName = `${societyId}/${new Date().getFullYear()}/gastos/${id}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
       .from('receipts')
       .upload(fileName, file, { upsert: true });
     if (uploadError) throw uploadError;
-    const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(fileName);
-    return urlData.publicUrl;
+    return receiptReference(fileName);
   };
 
   const handleWizardSubmit = async (
@@ -122,7 +134,7 @@ export function GastosTab() {
         if (receiptFile) {
           const tempId = crypto.randomUUID();
           const fileExt = receiptFile.name.split('.').pop();
-          uploadedFilePath = `gastos/${tempId}.${fileExt}`;
+          uploadedFilePath = `${societyId}/${new Date().getFullYear()}/gastos/${tempId}.${fileExt}`;
           receiptUrl = await uploadReceipt(tempId, receiptFile);
         }
         const { error } = await supabase.from('transactions').insert({
@@ -219,15 +231,12 @@ export function GastosTab() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {tx.receipt_url && (
-                          <a
-                            href={tx.receipt_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <ReceiptLink
+                            reference={tx.receipt_url}
                             className="text-primary hover:text-primary/80"
-                            title="Ver comprovante"
                           >
                             <FileImage className="h-4 w-4" />
-                          </a>
+                          </ReceiptLink>
                         )}
                         {tx.description}
                       </div>
@@ -253,7 +262,10 @@ export function GastosTab() {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        if (!open) receiptRequest.current += 1;
+        setDialogOpen(open);
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingTransaction ? 'Editar Gasto' : 'Novo Gasto'}</DialogTitle>

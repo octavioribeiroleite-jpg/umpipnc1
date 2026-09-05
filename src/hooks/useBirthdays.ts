@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as mainSupabase } from '@/integrations/supabase/client';
 
 export interface Birthday {
   id: string;
@@ -29,7 +29,7 @@ export interface BirthdayInsert {
 const MAX_SESSION_ERROR = 'Sua sessão expirou. Saia do aplicativo, entre novamente e repita a operação.';
 const MISSING_BIRTH_YEAR_COLUMN = 'A atualização do banco de dados ainda não foi aplicada. O cadastro foi salvo sem o ano de nascimento.';
 
-async function ensureAuthenticatedSession() {
+async function ensureAuthenticatedSession(supabase: typeof mainSupabase) {
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
@@ -92,17 +92,13 @@ export function getDaysUntilBirthday(dia: number, mes: number): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-export function useBirthdays() {
+export function useBirthdays(supabase = mainSupabase, scope = 'main') {
   const queryClient = useQueryClient();
 
   const { data: birthdays = [], isLoading } = useQuery({
-    queryKey: ['aniversariantes'],
+queryKey: ['aniversariantes', scope],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('aniversariantes')
-        .select('*')
-        .order('mes', { ascending: true })
-        .order('dia', { ascending: true });
+      const { data, error } = await supabase.rpc('list_birthdays' as any);
       if (error) throw error;
       return data as Birthday[];
     },
@@ -130,7 +126,7 @@ export function useBirthdays() {
 
   const createBirthday = useMutation({
     mutationFn: async (data: BirthdayInsert) => {
-      await ensureAuthenticatedSession();
+      await ensureAuthenticatedSession(supabase);
       const { error } = await supabase.from('aniversariantes').insert(data);
 
       if (error && isMissingBirthYearColumn(error)) {
@@ -147,7 +143,7 @@ export function useBirthdays() {
 
   const updateBirthday = useMutation({
     mutationFn: async ({ id, ...data }: Partial<Birthday> & { id: string }) => {
-      await ensureAuthenticatedSession();
+      await ensureAuthenticatedSession(supabase);
       const { error } = await supabase.from('aniversariantes').update(data).eq('id', id);
 
       if (error && isMissingBirthYearColumn(error)) {
@@ -164,7 +160,7 @@ export function useBirthdays() {
 
   const deleteBirthday = useMutation({
     mutationFn: async (id: string) => {
-      await ensureAuthenticatedSession();
+      await ensureAuthenticatedSession(supabase);
       const { error } = await supabase.from('aniversariantes').delete().eq('id', id);
       if (error) throw birthdayMutationError(error, 'excluir');
     },

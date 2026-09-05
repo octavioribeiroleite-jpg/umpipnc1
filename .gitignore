@@ -11,9 +11,11 @@ node_modules
 dist
 dist-ssr
 .wrangler
+supabase/.temp/
 .env
 .env.*
 !.env.example
+!.env.production
 *.local
 
 # Editor directories and files

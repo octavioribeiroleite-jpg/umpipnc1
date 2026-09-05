@@ -26,7 +26,7 @@ import PastorSugestoes from "./pages/PastorSugestoes";
 import PastorSociedade from "./pages/PastorSociedade";
 import PastorCalendario from "./pages/PastorCalendario";
 import PastorComunicados from "./pages/PastorComunicados";
-import MembroHome from "./pages/MembroHome";
+import { PageErrorBoundary } from "./components/PageErrorBoundary";
 import DiretoriaComunicados from "./pages/DiretoriaComunicados";
 import Eleicoes from "./pages/Eleicoes";
 import EleicaoDetalhe from "./pages/EleicaoDetalhe";
@@ -62,7 +62,7 @@ function FinancialRoute({ children }: { children: JSX.Element }) {
   const { user, loading, rolesLoaded, isAdmin, isManagement, isPastor } = useAuth();
   const { session: diretoriaSession } = useDiretoriaSession();
 
-  if (loading || !rolesLoaded) return null;
+  if (loading || !rolesLoaded) return <main role="status" className="min-h-screen flex items-center justify-center p-6">Carregando seu acesso às finanças…</main>;
   if (!user) return <Navigate to="/auth" replace />;
 
   const isAuthenticatedDiretoriaService = Boolean(
@@ -79,6 +79,7 @@ function FinancialRoute({ children }: { children: JSX.Element }) {
 }
 
 const App = () => (
+  <PageErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -113,7 +114,7 @@ const App = () => (
                 <Route path="/pastor-sugestoes" element={<PastorSugestoes />} />
                 <Route path="/sugestoes" element={<PastorSugestoes />} />
                 <Route path="/comunicados" element={<DiretoriaComunicados />} />
-                <Route path="/membro" element={<MembroHome />} />
+                <Route path="/membro" element={<main className="min-h-screen flex items-center justify-center p-6"><section className="max-w-md space-y-4 text-center"><h1 className="text-xl font-semibold">Portal dos membros ainda não liberado</h1><p>Por enquanto, o acesso está disponível apenas para a diretoria e os responsáveis autorizados.</p><a href="/auth" className="underline">Acessar como responsável</a></section></main>} />
                 <Route path="/eleicoes" element={<Eleicoes />} />
                 <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />
                 <Route path="/vote/:electionId" element={<VotePublic />} />
@@ -132,6 +133,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </PageErrorBoundary>
 );
 
 export default App;

@@ -54,7 +54,7 @@ export default function Arquivos() {
   };
 
   const handleDelete = (file: FileRecord) => {
-    deleteMutation.mutate({ id: file.id, url: file.url });
+    deleteMutation.mutate({ id: file.id, url: file.storageReference || file.url });
   };
 
   const handleView = (file: FileRecord) => {

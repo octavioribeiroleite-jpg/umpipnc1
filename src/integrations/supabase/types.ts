@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -95,6 +95,7 @@ export type Database = {
       }
       aniversariantes: {
         Row: {
+          ano_nascimento: number | null
           ativo: boolean
           created_at: string
           departamento: string | null
@@ -107,6 +108,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ano_nascimento?: number | null
           ativo?: boolean
           created_at?: string
           departamento?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ano_nascimento?: number | null
           ativo?: boolean
           created_at?: string
           departamento?: string | null
@@ -434,26 +437,46 @@ export type Database = {
       ebd_classes: {
         Row: {
           active: boolean
+          age_tracking_enabled: boolean
           created_at: string
           id: string
+          max_age: number | null
+          min_age: number | null
           name: string
+          next_class_id: string | null
           order_index: number
         }
         Insert: {
           active?: boolean
+          age_tracking_enabled?: boolean
           created_at?: string
           id?: string
+          max_age?: number | null
+          min_age?: number | null
           name: string
+          next_class_id?: string | null
           order_index?: number
         }
         Update: {
           active?: boolean
+          age_tracking_enabled?: boolean
           created_at?: string
           id?: string
+          max_age?: number | null
+          min_age?: number | null
           name?: string
+          next_class_id?: string | null
           order_index?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ebd_classes_next_class_id_fkey"
+            columns: ["next_class_id"]
+            isOneToOne: false
+            referencedRelation: "ebd_classes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ebd_day_closures: {
         Row: {
@@ -497,6 +520,7 @@ export type Database = {
       ebd_students: {
         Row: {
           active: boolean
+          birth_date: string | null
           class_id: string
           created_at: string
           id: string
@@ -505,6 +529,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          birth_date?: string | null
           class_id: string
           created_at?: string
           id?: string
@@ -513,6 +538,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          birth_date?: string | null
           class_id?: string
           created_at?: string
           id?: string
@@ -1054,11 +1080,15 @@ export type Database = {
       member_payment_submissions: {
         Row: {
           amount: number | null
+          charge_id: string | null
           competence: string
           created_at: string
           id: string
           member_id: string
           notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          receipt_path: string | null
           receipt_url: string
           rejection_reason: string | null
           reviewed_at: string | null
@@ -1070,11 +1100,15 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          charge_id?: string | null
           competence: string
           created_at?: string
           id?: string
           member_id: string
           notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          receipt_path?: string | null
           receipt_url: string
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -1086,11 +1120,15 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          charge_id?: string | null
           competence?: string
           created_at?: string
           id?: string
           member_id?: string
           notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          receipt_path?: string | null
           receipt_url?: string
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -1101,6 +1139,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "member_payment_submissions_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "charges"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "member_payment_submissions_member_id_fkey"
             columns: ["member_id"]
@@ -2238,6 +2283,7 @@ export type Database = {
         Returns: string
       }
       can_manage_elections: { Args: { _user_id: string }; Returns: boolean }
+      consume_ipnc_limits: { Args: { p_requests: Json }; Returns: Json }
       create_shirt_campaign: {
         Args: {
           p_default_sale_price: number
@@ -2251,6 +2297,9 @@ export type Database = {
         Returns: string
       }
       delete_task: { Args: { task_id: string }; Returns: undefined }
+      ebd_closure: { Args: { p_date: string }; Returns: Json }
+      ebd_is_admin: { Args: never; Returns: boolean }
+      ebd_session_valid: { Args: never; Returns: boolean }
       get_email_by_username: { Args: { _username: string }; Returns: string }
       get_user_society_id: { Args: { _user_id: string }; Returns: string }
       has_management_role: { Args: { _user_id: string }; Returns: boolean }
@@ -2265,6 +2314,28 @@ export type Database = {
       is_event_society_member: {
         Args: { _event_society_id: string; _user_id: string }
         Returns: boolean
+      }
+      list_birthdays: {
+        Args: never
+        Returns: {
+          ano_nascimento: number | null
+          ativo: boolean
+          created_at: string
+          departamento: string | null
+          dia: number
+          id: string
+          mes: number
+          nome: string
+          observacao: string | null
+          pendente_revisao: boolean
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "aniversariantes"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       register_shirt_order_payment: {
         Args: {
@@ -2352,12 +2423,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2381,11 +2452,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2406,11 +2477,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2431,11 +2502,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2448,11 +2519,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

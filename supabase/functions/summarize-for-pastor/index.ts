@@ -1,3 +1,7 @@
+import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
+import { serverLimiter } from "../_shared/server-limiter.ts";
+import { resolveAiActor } from "../_shared/ai-actor.ts";
+import { canSummarizeYear } from "../_shared/ai-auth-policy.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -17,7 +21,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!
+
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
     const authHeader = req.headers.get('Authorization')!
@@ -34,7 +38,7 @@ Deno.serve(async (req) => {
 
     const { data: isPastor } = await callerClient.rpc('has_role', { _user_id: user.id, _role: 'pastor' })
     const { data: isManagement } = await callerClient.rpc('has_management_role', { _user_id: user.id })
-    
+
     if (!isPastor && !isManagement) {
       return new Response(JSON.stringify({ error: 'Acesso negado' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -52,13 +56,22 @@ Deno.serve(async (req) => {
       societyId = body?.society_id || null
     } catch { /* no body */ }
 
+    const actor = await resolveAiActor(serviceClient, authHeader)
+    if (!actor) return Response.json({ error: 'Faça login novamente.' }, { status: 401, headers: corsHeaders })
+    if (!actor.roles.includes('admin') && !actor.roles.includes('pastor')) {
+      societyId = societyId || actor.societyId
+      if (!societyId || !canSummarizeYear(actor, societyId)) {
+        return Response.json({ error: 'Sem permissão para esta sociedade.' }, { status: 403, headers: corsHeaders })
+      }
+    }
+
     // ====== SOCIETY-SPECIFIC MODE ======
     if (societyId) {
-      return await handleSocietySpecific(serviceClient, societyId, forceRefresh, lovableApiKey, corsHeaders)
+      return await handleSocietySpecific(serviceClient, societyId, forceRefresh, corsHeaders, actor.userId)
     }
 
     // ====== GLOBAL MODE (all societies) ======
-    return await handleGlobal(serviceClient, forceRefresh, lovableApiKey, corsHeaders)
+    return await handleGlobal(serviceClient, forceRefresh, corsHeaders, actor.userId)
 
   } catch (error) {
     console.error('summarize-for-pastor error:', error)
@@ -71,7 +84,7 @@ Deno.serve(async (req) => {
 
 // ========== SOCIETY-SPECIFIC: fetch only data for one society ==========
 async function handleSocietySpecific(
-  serviceClient: any, societyId: string, forceRefresh: boolean, lovableApiKey: string, corsHeaders: Record<string, string>
+  serviceClient: any, societyId: string, forceRefresh: boolean, corsHeaders: Record<string, string>, actorId: string
 ) {
   // Get society info
   const { data: society } = await serviceClient
@@ -182,14 +195,10 @@ PRÓXIMOS EVENTOS:
 ${eventsData.map((e: any) => `- "${e.title}" em ${e.start_date}${e.location ? ` (${e.location})` : ''} - ${e.status}${!e.society_id ? ' (evento geral da igreja)' : ''}`).join('\n') || 'Nenhum evento próximo'}
 `
 
-  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${lovableApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-3-flash-preview',
+  const rate = await serverLimiter(corsHeaders).aiGeneration({ actor: `user:${actorId}` })
+  if (!rate.allowed) return rate.response
+  const aiResponse = await openAIChat({
+
       messages: [
         {
           role: 'system',
@@ -211,8 +220,7 @@ Retorne APENAS JSON válido, sem markdown.`
         },
         { role: 'user', content: dataContext }
       ],
-    }),
-  })
+    })
 
   if (!aiResponse.ok) {
     if (aiResponse.status === 429) {
@@ -230,7 +238,7 @@ Retorne APENAS JSON válido, sem markdown.`
 
   const aiData = await aiResponse.json()
   const content = aiData.choices?.[0]?.message?.content || '{}'
-  
+
   let summaries
   try {
     summaries = JSON.parse(content)
@@ -266,7 +274,7 @@ Retorne APENAS JSON válido, sem markdown.`
 
 // ========== GLOBAL: fetch all societies, compare ==========
 async function handleGlobal(
-  serviceClient: any, forceRefresh: boolean, lovableApiKey: string, corsHeaders: Record<string, string>
+  serviceClient: any, forceRefresh: boolean, corsHeaders: Record<string, string>, actorId: string
 ) {
   const { data: allSocieties } = await serviceClient
     .from('societies').select('id, name, slug').eq('active', true).order('name')
@@ -299,11 +307,11 @@ async function handleGlobal(
     const socTasks = tasks.filter((t: any) => t.society_id === soc.id)
     const socTrans = transactions.filter((t: any) => t.society_id === soc.id)
     const socPayments = payments.filter((p: any) => p.status === 'pago' && socMemberIds.has(p.member_id))
-    
+
     const totalEntradas = socTrans.filter((t: any) => t.type === 'entrada').reduce((s: number, t: any) => s + Number(t.amount), 0)
     const totalSaidas = socTrans.filter((t: any) => t.type === 'saida').reduce((s: number, t: any) => s + Number(t.amount), 0)
     const totalMensalidades = socPayments.reduce((s: number, p: any) => s + Number(p.amount), 0)
-    
+
     societyStats[soc.id] = {
       membersActive: socMembers.filter((m: any) => m.active).length,
       tasksDone: socTasks.filter((t: any) => t.status === 'done').length,
@@ -381,14 +389,10 @@ PLENÁRIAS RECENTES:
 ${plenariesData.map((p: any) => `- "${p.title}" em ${p.date} (quórum mínimo: ${p.quorum_required}%)`).join('\n') || 'Nenhuma plenária recente'}
 `
 
-  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${lovableApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-3-flash-preview',
+  const rate = await serverLimiter(corsHeaders).aiGeneration({ actor: `user:${actorId}` })
+  if (!rate.allowed) return rate.response
+  const aiResponse = await openAIChat({
+
       messages: [
         {
           role: 'system',
@@ -408,8 +412,7 @@ Retorne APENAS JSON válido, sem markdown.`
         },
         { role: 'user', content: dataContext }
       ],
-    }),
-  })
+    })
 
   if (!aiResponse.ok) {
     if (aiResponse.status === 429) {
@@ -427,7 +430,7 @@ Retorne APENAS JSON válido, sem markdown.`
 
   const aiData = await aiResponse.json()
   const content = aiData.choices?.[0]?.message?.content || '{}'
-  
+
   let summaries
   try {
     summaries = JSON.parse(content)

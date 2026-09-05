@@ -1,73 +1,48 @@
-# Welcome to your Lovable project
+# Renovo IPNC
 
-## Project info
+Aplicativo da igreja em React, TypeScript e Vite. Hospedagem pelo Sites; banco,
+autenticação, arquivos privados e funções no Supabase próprio. A IA usa a API
+Gemini do Google diretamente no servidor, sem intermediário.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Desenvolvimento
 
-## How can I edit this code?
+Use Node.js 22 e npm. Copie `.env.example` para `.env.local`, preencha a chave
+publicável do Supabase e execute `npm ci` e `npm run dev`.
 
-There are several ways of editing your application.
+Valide com `npx tsc -p tsconfig.app.json --noEmit`, `node --experimental-strip-types --test tests/*.mjs tests/*.ts`
+e `npm run build`. O resultado está em `dist/client`.
 
-**Use Lovable**
+## Configuração
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Variáveis VITE são públicas. Nunca coloque service-role, senhas ou chaves de IA
+nelas. Configure `GEMINI_API_KEY` exclusivamente nos segredos das Edge Functions.
+O nome existente `Gemini API Key` também é reconhecido. Modelo:
+`gemini-3.1-flash-lite`. O proprietário confirmou plano pago em 05/09/2026.
+Não use a modalidade gratuita para dados pessoais da igreja. Reavalie os termos
+de privacidade ao trocar a chave/projeto. Não há fallback automático de provedor.
 
-Changes made via Lovable will be committed automatically to this repo.
+O projeto próprio é `xhhfgnkpgtnzlvpvqjpl`. O manifesto `.openai/hosting.json`
+identifica o Site e configura fallback de navegação para rotas como `/auth`.
+Sites publica o conteúdo estático após validação. Acesso público ao Site não
+dispensa os controles de autorização internos da igreja.
 
-**Use your preferred IDE**
+A configuração pública de produção está em `.env.production`, para que a main
+gere o mesmo aplicativo sem depender de arquivos locais. Segredos nunca entram
+nesse arquivo. O portal dos membros ainda não está liberado; as contas e dados
+existentes foram preservados. A diretoria mantém o acesso por PIN.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Os lembretes de aniversários rodam diariamente às 08h de São Paulo no próprio
+banco, sem chaves em tarefas agendadas. A geração é atômica e não duplica avisos.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Segurança e migração
 
-Follow these steps:
+Comprovantes usam o bucket privado `receipts` com URLs assinadas de curta duração;
+fotos eleitorais são públicas. A EBD usa sessão separada de 15 minutos, emitida
+após validação de PIN, e permissões de banco por turma. Trocar o PIN invalida o
+acesso anterior.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+As migrations históricas documentam a origem e não devem ser reaplicadas
+cegamente em um banco vazio: a migração para o projeto próprio usa um baseline
+canônico e migrations de acesso posteriores. Backups, dados pessoais e segredos
+ficam fora deste repositório. Consulte os relatórios de publicação para os testes
+realizados e pendências; build bem-sucedido não prova migração concluída.

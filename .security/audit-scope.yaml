@@ -1,0 +1,28 @@
+audit_id: RENOVO-MIGRATION-20260903
+owner: Octavio Ribeiro Leite
+authorization_reference: "User requests complete publication to GitHub main, public Site, owned Supabase, paid Gemini and Computer-based review including finance. Church member portal not released."
+mode: PRE_RELEASE_GATE
+environments: [local, staging, production]
+in_scope:
+  repositories: [umpipnc1]
+  branches: [codex/renovo-supabase-migration, main]
+  domains: [renovo-ipnc.octavioribeiroleite.chatgpt.site]
+  projects: [xhhfgnkpgtnzlvpvqjpl]
+environments_config:
+  local: {authorized: true}
+  staging: {authorized: true, url: "https://xhhfgnkpgtnzlvpvqjpl.supabase.co"}
+  production: {authorized: true, url: "https://renovo-ipnc.octavioribeiroleite.chatgpt.site", read_allowed: true, passive_tests_allowed: true}
+permissions:
+  create_synthetic_staging_users_and_data: true
+  write_dedicated_branch: true
+  create_unapplied_migration: true
+  deploy: true
+conditions:
+  - Deploy only after migration validation, resolving identity decisions and access gate.
+  - Public Site explicitly authorized; preserve internal permissions and source backend.
+  - No production password resets or creation of real accounts as tests.
+allowed_connectors: [Supabase, Sites, Chrome, Computer, GitHub]
+out_of_scope: [VetSync, Essencia Capixaba, source deletion, real account password resets]
+production_constraints: {real_business_data_read_only: true, isolated_fixture_cleanup_required: true}
+data_handling: {allow_personal_data: false, evidence_directory: security-reports, retention_days: 30}
+stop_conditions: [availability degradation, unexpected cross-tenant real data, scope ambiguity, missing identity-model decision]

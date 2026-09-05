@@ -57,37 +57,19 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="app-page min-h-screen overflow-x-hidden">
       <OfflineBanner />
 
-      {/* Telefone: cabeçalho superior + navegação inferior */}
-      <div className="flex min-h-screen flex-col md:hidden">
-        <MobileHeader />
-        <main className="safe-bottom-content min-w-0 flex-1 overflow-x-hidden bg-background/80 px-page-x pt-mobile-header">
+      {/* Keep one content tree: CSS-hidden copies still mount effects and channels. */}
+      <div className="min-h-screen min-w-0 md:flex md:h-screen md:overflow-hidden">
+        <div className="md:hidden"><MobileHeader /></div>
+        <div className="hidden md:flex lg:hidden"><TabletNavigationRail /></div>
+        <div className="hidden lg:flex"><AppSidebar /></div>
+        <main className="safe-bottom-content min-w-0 flex-1 overflow-x-hidden bg-background/80 px-page-x pt-mobile-header md:overflow-y-auto md:pb-0 md:pt-0 md:backdrop-blur-sm">
           <PullToRefresh>
-            <div className="mx-auto w-full min-w-0 max-w-reading py-3">
+            <div className="mx-auto w-full min-w-0 max-w-reading py-3 md:max-w-app md:py-5 lg:py-6">
               {children}
             </div>
           </PullToRefresh>
         </main>
-        <BottomNav mainItems={mainItems} moreItems={moreItems} />
-      </div>
-
-      {/* Tablet: rail lateral compacto, sem navegação inferior */}
-      <div className="hidden h-screen min-w-0 overflow-hidden md:flex lg:hidden">
-        <TabletNavigationRail />
-        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background/80 backdrop-blur-sm">
-          <div className="mx-auto w-full min-w-0 max-w-app px-page-x py-5">
-            {children}
-          </div>
-        </main>
-      </div>
-
-      {/* Computador: sidebar completa e conteúdo amplo */}
-      <div className="hidden h-screen min-w-0 overflow-hidden lg:flex">
-        <AppSidebar />
-        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background/80 backdrop-blur-sm">
-          <div className="mx-auto w-full min-w-0 max-w-app px-page-x py-6">
-            {children}
-          </div>
-        </main>
+        <div className="md:hidden"><BottomNav mainItems={mainItems} moreItems={moreItems} /></div>
       </div>
     </div>
   );

@@ -116,6 +116,16 @@ Deno.serve(async (req) => {
       })
     }
 
+    const adminScope = createClient(supabaseUrl, serviceRoleKey)
+    const { data: callerProfile, error: profileError } = await adminScope.from('profiles').select('active,society_id').eq('user_id',caller.id).single()
+    if (profileError || !callerProfile?.active || (!isAdmin && (!society_id || society_id !== callerProfile.society_id))) {
+      return Response.json({ error: 'Sociedade não autorizada' }, { status: 403, headers: corsHeaders })
+    }
+    if (/^(portal-|diretoria-|membro-)/i.test(username)) return Response.json({ error: 'Escolha outro nome de usuário' }, { status: 400, headers: corsHeaders })
+    if (member_id) {
+      const { data: member, error } = await adminScope.from('members').select('id,user_id,society_id').eq('id',member_id).single()
+      if (error || !member || member.user_id || member.society_id !== society_id) return Response.json({ error: 'Membro já vinculado ou de outra sociedade' }, { status: 400, headers: corsHeaders })
+    }
     const email = `${username.toLowerCase().replace(/\s+/g, '')}@ipnc.local`
 
     // Create user with service role
@@ -134,31 +144,6 @@ Deno.serve(async (req) => {
       const errMsg = createError.message || ''
       const isDuplicate = errMsg.includes('already been registered') || errMsg.includes('already exists')
       
-      if (isDuplicate && member_id) {
-        const { data: existingProfile } = await adminClient
-          .from('profiles')
-          .select('user_id, username')
-          .eq('email', email)
-          .maybeSingle()
-
-        if (existingProfile?.user_id) {
-          await adminClient.from('members').update({ user_id: existingProfile.user_id }).eq('id', member_id)
-
-          if (society_id) {
-            await adminClient.from('profiles').update({ society_id }).eq('user_id', existingProfile.user_id)
-          }
-
-          return new Response(JSON.stringify({
-            success: true,
-            user_id: existingProfile.user_id,
-            linked_existing: true,
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        }
-      }
-
       const userFriendlyError = isDuplicate
         ? `Já existe um usuário com o login '${username}'. Escolha outro nome de usuário.`
         : createError.message
@@ -169,25 +154,19 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Update profile with username and society_id (no plain_password)
-    const profileUpdate: Record<string, unknown> = {
-      username: username.toLowerCase(),
-    }
-    if (society_id) {
-      profileUpdate.society_id = society_id
-    }
-
-    await adminClient.from('profiles').update(profileUpdate).eq('user_id', newUser.user.id)
-
-    // Assign role
-    await adminClient.from('user_roles').insert({
-      user_id: newUser.user.id,
-      role,
+    // One transaction locks any selected member and cannot overwrite an existing link.
+    const { error: finalizeError } = await adminClient.rpc('finalize_ipnc_account', {
+      p_user_id: newUser.user.id,
+      p_username: username.toLowerCase(),
+      p_role: role,
+      p_society_id: society_id || null,
+      p_member_id: member_id || null,
     })
-
-    // Link member_id if provided
-    if (member_id) {
-      await adminClient.from('members').update({ user_id: newUser.user.id }).eq('id', member_id)
+    if (finalizeError) {
+      // Only the account created by this request is rolled back; existing users are untouched.
+      const { error: cleanupError } = await adminClient.auth.admin.deleteUser(newUser.user.id)
+      if (cleanupError) console.error('[create-user] New account cleanup requires administrator review')
+      return Response.json({ error: 'Não foi possível concluir o cadastro. Atualize a página e tente novamente.' }, { status: 409, headers: corsHeaders })
     }
 
     return new Response(JSON.stringify({ success: true, user_id: newUser.user.id }), {

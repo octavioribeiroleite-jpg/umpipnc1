@@ -16,6 +16,8 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Check, MoreHorizontal, Receipt, Loader2, Undo2, Trash2, Eye, Search, Clock, ShieldCheck, Wallet, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ReceiptLink } from '@/components/ReceiptLink';
+import { receiptReference } from '@/lib/receipt-path';
 
 const ANNUAL_CHARGE_TYPE = 'annual_contribution';
 
@@ -89,7 +91,7 @@ export function CobrancasTab() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('annual-charges-realtime')
+      .channel(`annual-charges-realtime-${crypto.randomUUID()}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -208,14 +210,14 @@ export function CobrancasTab() {
 
       if (receiptFile) {
         const fileExt = receiptFile.name.split('.').pop();
-        const fileName = `${Date.now()}-${selectedMember.id}.${fileExt}`;
+        if (!societyId) throw new Error('Selecione a sociedade.');
+        const fileName = `${societyId}/${currentYear}/cobrancas/${crypto.randomUUID()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('receipts')
           .upload(fileName, receiptFile);
 
         if (!uploadError) {
-          const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(fileName);
-          receiptUrl = urlData.publicUrl;
+          receiptUrl = receiptReference(fileName);
         }
       }
 
@@ -744,9 +746,9 @@ export function CobrancasTab() {
               {viewingCharge.receipt_url && (
                 <div>
                   <p className="text-muted-foreground text-sm mb-2">Comprovante</p>
-                  <a href={viewingCharge.receipt_url} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">
+                  <ReceiptLink reference={viewingCharge.receipt_url} className="text-primary underline text-sm">
                     Ver comprovante
-                  </a>
+                  </ReceiptLink>
                 </div>
               )}
             </div>

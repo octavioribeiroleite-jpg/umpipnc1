@@ -14,7 +14,7 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
 
   const canPull = useCallback(() => {
     // Only allow pull when scrolled to top
-    return window.scrollY <= 0;
+    return window.matchMedia('(max-width: 767px)').matches && window.scrollY <= 0;
   }, []);
 
   useEffect(() => {

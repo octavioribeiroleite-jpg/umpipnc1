@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/ebd-client';
 import {
   ArrowLeft,
   BarChart3,
@@ -32,6 +32,7 @@ import PinPad from '@/components/secretaria/PinPad';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { HeaderActions } from '@/components/layout/HeaderActions';
 import { useBirthdays } from '@/hooks/useBirthdays';
 import type { Birthday, BirthdayInsert } from '@/hooks/useBirthdays';
@@ -161,6 +162,8 @@ interface StoredEbdSession {
   adminPin?: string;
   professorNome?: string;
   professorClassId?: string | null;
+  birthdayAiToken?: string;
+  birthdayAiExpiresAt?: string;
 }
 
 function loadStoredEbdSession(): StoredEbdSession | null {
@@ -177,7 +180,7 @@ function SecretariaAniversariantes() {
   const {
     activeBirthdays, todayBirthdays, weekBirthdays, monthBirthdays, nextBirthday,
     departments, isLoading, createBirthday, updateBirthday, deleteBirthday, birthdays,
-  } = useBirthdays();
+  } = useBirthdays(supabase, 'ebd-admin');
 
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('all');
@@ -312,6 +315,9 @@ export default function Secretaria() {
   const [pendingPin, setPendingPin] = useState('');
   const [nameInput, setNameInput] = useState('');
   const [adminPin, setAdminPin] = useState(storedSession?.adminPin ?? '');
+  const [birthdayAiToken, setBirthdayAiToken] = useState(storedSession?.birthdayAiToken ?? '');
+  const [birthdayAiExpiresAt, setBirthdayAiExpiresAt] = useState(storedSession?.birthdayAiExpiresAt ?? '');
+  const [aiReauthOpen, setAiReauthOpen] = useState(false);
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
@@ -324,7 +330,7 @@ export default function Secretaria() {
   const [classVisitors, setClassVisitors] = useState<Record<string, VisitorEntry[]>>({});
   const [currentView, setCurrentView] = useState<CurrentView>('home');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const { weekBirthdays, todayBirthdays } = useBirthdays();
+  const { weekBirthdays, todayBirthdays } = useBirthdays(supabase, `ebd-${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}`);
   const allWeekAnnouncements = [
     ...todayBirthdays.map(b => ({ ...b, daysUntil: 0 })),
     ...weekBirthdays,
@@ -342,17 +348,22 @@ export default function Secretaria() {
     setLoading(true);
 
     if (selectedProfile === 'admin') {
-      const { data } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'secretaria_admin_password')
-        .single();
+      const { data, error } = await supabase.functions.invoke('manage-ebd-class-password', {
+        body: { action: 'birthday-ai-session', admin_pin: pin },
+      });
 
-      if (data && data.value === pin) {
+      if (!error && data?.success && data.birthday_ai_token && data.session) {
+        const accepted = await supabase.auth.setSession(data.session);
+        if (accepted.error) { toast.error('Não foi possível entrar.'); setLoading(false); return; }
         setAccessLevel('admin');
         setAdminPin(pin);
+        setBirthdayAiToken(data.birthday_ai_token);
+        setBirthdayAiExpiresAt(data.birthday_ai_expires_at);
         try {
-          sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({ accessLevel: 'admin', adminPin: pin }));
+          sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+            accessLevel: 'admin',
+            birthdayAiToken: data.birthday_ai_token, birthdayAiExpiresAt: data.birthday_ai_expires_at,
+          }));
         } catch { /* ignore */ }
       } else {
         setPinError(true);
@@ -381,22 +392,63 @@ export default function Secretaria() {
     });
     setLoading(false);
 
-    if (error || !data?.success) {
+    if (error || !data?.success || !data.session) {
       toast.error((data as any)?.error || 'Senha da sala incorreta');
       setPendingPin('');
       setLoginStep('pin');
       return;
     }
+    const accepted = await supabase.auth.setSession(data.session);
+    if (accepted.error) { toast.error('Não foi possível entrar.'); return; }
     setProfessorNome(data.teacher.name);
     setProfessorClassId(data.teacher.class_id);
+    setBirthdayAiToken(data.birthday_ai_token ?? '');
+    setBirthdayAiExpiresAt(data.birthday_ai_expires_at ?? '');
+    setPendingPin('');
     setAccessLevel('professor');
     try {
       sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
         accessLevel: 'professor',
         professorNome: data.teacher.name,
         professorClassId: data.teacher.class_id,
+        birthdayAiToken: data.birthday_ai_token,
+        birthdayAiExpiresAt: data.birthday_ai_expires_at,
       }));
     } catch { /* ignore */ }
+  };
+
+  const refreshBirthdaySession = async (pin: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = accessLevel === 'admin'
+        ? await supabase.functions.invoke('manage-ebd-class-password', { body: { action: 'birthday-ai-session', admin_pin: pin } })
+        : await supabase.functions.invoke('ebd-class-login', { body: { pin, name: professorNome } });
+      if (error || !data?.success || !data.birthday_ai_token ||
+          (accessLevel === 'professor' && data.teacher?.class_id !== professorClassId)) {
+        let message = 'Confira o PIN do seu acesso atual.';
+        try { const details = await error?.context?.clone().json(); if (details?.error) message = details.error; } catch { /* fallback */ }
+        throw new Error(message);
+      }
+      if (!data.session) throw new Error('Não foi possível renovar o acesso.');
+      const accepted = await supabase.auth.setSession(data.session);
+      if (accepted.error) throw accepted.error;
+      setBirthdayAiToken(data.birthday_ai_token);
+      setBirthdayAiExpiresAt(data.birthday_ai_expires_at);
+      try {
+        sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+          accessLevel,
+          professorNome, professorClassId,
+          birthdayAiToken: data.birthday_ai_token, birthdayAiExpiresAt: data.birthday_ai_expires_at,
+        }));
+      } catch { /* session remains in memory */ }
+      if (accessLevel === 'admin') setAdminPin(pin);
+      setAiReauthOpen(false);
+      toast.success('PIN confirmado. Toque em Gerar com IA para continuar.');
+    } catch (error) {
+      setPinError(true);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível validar o acesso.');
+      setTimeout(() => setPinError(false), 600);
+    } finally { setLoading(false); }
   };
 
   const handleBack = () => {
@@ -408,12 +460,17 @@ export default function Secretaria() {
   };
 
   const fetchData = useCallback(async () => {
+    const { data: authorized, error: sessionError } = await supabase.rpc('ebd_session_valid' as any);
+    if (sessionError || !authorized) {
+      setAiReauthOpen(true);
+      return;
+    }
     const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes] = await Promise.all([
       supabase.from('ebd_classes').select('*').eq('active', true).order('order_index'),
       supabase.from('ebd_students').select('*').eq('active', true).order('name'),
       supabase.from('ebd_students').select('*').order('name'),
       supabase.from('ebd_attendance').select('*').eq('date', sundayDate),
-      supabase.from('ebd_day_closures').select('*').eq('date', sundayDate).maybeSingle(),
+      supabase.rpc('ebd_closure' as any, { p_date: sundayDate }),
       (supabase.from('ebd_class_visitor_entries' as any).select('id, class_id, name').eq('date', sundayDate)),
     ]);
 
@@ -441,7 +498,14 @@ export default function Secretaria() {
 
   useEffect(() => {
     if (accessLevel) fetchData();
-  }, [accessLevel, fetchData]);
+  }, [accessLevel, fetchData, birthdayAiExpiresAt]);
+
+  useEffect(() => {
+    if (!accessLevel || !birthdayAiExpiresAt) return;
+    const remaining = Date.parse(birthdayAiExpiresAt) - Date.now();
+    const timer = window.setTimeout(() => setAiReauthOpen(true), Math.max(0, remaining));
+    return () => window.clearTimeout(timer);
+  }, [accessLevel, birthdayAiExpiresAt]);
 
   const handleAddClassVisitor = useCallback(async (classId: string, name: string | null) => {
     const cleanName = name?.trim() || null;
@@ -535,6 +599,25 @@ export default function Secretaria() {
     await fetchData();
   };
 
+  const reauthDialog = (
+<Dialog open={aiReauthOpen} onOpenChange={setAiReauthOpen}>
+            <DialogContent className="max-h-[90dvh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Confirmar acesso</DialogTitle>
+                <DialogDescription>Digite novamente o PIN do seu acesso. Seus dados preenchidos continuam na tela.</DialogDescription>
+              </DialogHeader>
+              <PinPad
+                embedded
+                profileLabel={accessLevel === 'admin' ? 'Administrador' : 'Senha da sala'}
+                onBack={() => setAiReauthOpen(false)}
+                onComplete={refreshBirthdaySession}
+                loading={loading}
+                error={pinError}
+              />
+            </DialogContent>
+          </Dialog>
+  );
+
   // Login screens
   if (!accessLevel) {
     if (loginStep === 'profile') {
@@ -604,6 +687,8 @@ export default function Secretaria() {
   };
 
   const confirmExit = () => {
+    void supabase.auth.signOut({ scope: 'local' });
+    setClasses([]); setActiveStudents([]); setAllStudents([]); setAttendance([]); setClassVisitors({});
     setShowExitConfirm(false);
     try {
       sessionStorage.removeItem(EBD_SESSION_KEY);
@@ -612,6 +697,9 @@ export default function Secretaria() {
     setLoginStep('profile');
     setSelectedProfile(null);
     setAdminPin('');
+    setBirthdayAiToken('');
+    setBirthdayAiExpiresAt('');
+    setAiReauthOpen(false);
     setCurrentView('home');
     setProfessorClassId(null);
     setProfessorNome('');
@@ -702,7 +790,13 @@ export default function Secretaria() {
             />
           </div>
 
-          <WeekAnnouncementCard birthdays={allWeekAnnouncements} />
+          <WeekAnnouncementCard
+            birthdays={allWeekAnnouncements}
+            aiToken={birthdayAiToken}
+            aiExpiresAt={birthdayAiExpiresAt}
+            onAiSessionExpired={() => { setBirthdayAiToken(''); setBirthdayAiExpiresAt(''); setAiReauthOpen(true); }}
+          />
+          {reauthDialog}
 
           <section className="space-y-2">
             <div className="flex items-center justify-between px-1">
@@ -845,6 +939,7 @@ export default function Secretaria() {
         </div>
       </div>
 
+      {reauthDialog}
       <div className="p-4 pb-8 pt-16">
         {currentView === 'chamada' && (
           <ChamadaTab

@@ -1,3 +1,7 @@
+import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
+import { serverLimiter } from "../_shared/server-limiter.ts";
+import { resolveAiActor } from "../_shared/ai-actor.ts";
+import { canSummarizeStudy } from "../_shared/ai-auth-policy.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -17,6 +21,9 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const actor = await resolveAiActor(supabase, req.headers.get("Authorization"));
+    if (!actor) return Response.json({ error: "Faça login novamente." }, { status: 401, headers: corsHeaders });
+
     const { data: study, error } = await supabase
       .from("study_notes")
       .select("*")
@@ -24,19 +31,15 @@ serve(async (req) => {
       .single();
 
     if (error || !study) throw new Error("Estudo não encontrado");
+    if (!canSummarizeStudy(actor, study.society_id)) {
+      return Response.json({ error: "Sem permissão para este estudo." }, { status: 403, headers: corsHeaders });
+    }
     if (!study.notes || study.notes.trim() === "") throw new Error("Sem anotações para resumir");
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const rate = await serverLimiter(corsHeaders).aiGeneration({ actor: `user:${actor.userId}` });
+    if (!rate.allowed) return rate.response;
+    const aiResponse = await openAIChat({
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
         messages: [
           {
             role: "system",
@@ -56,8 +59,7 @@ Regras:
             content: `Tema: ${study.title}\nData: ${study.date}\n\nAnotações:\n${study.notes}`
           }
         ],
-      }),
-    });
+      });
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
@@ -70,9 +72,11 @@ Regras:
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await aiResponse.text();
-      console.error("AI error:", aiResponse.status, t);
-      throw new Error("Erro ao gerar resumo com IA");
+      // The shared adapter returns only sanitized, actionable error codes.
+      return new Response(await aiResponse.text(), {
+        status: aiResponse.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const aiData = await aiResponse.json();

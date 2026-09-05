@@ -12,25 +12,18 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const {
-      errorId = 'unknown',
-      context = 'unknown',
-      message = '',
-      stack = '',
-      details = null,
-    } = body ?? {};
-
-    // Structured server-side log (visible in edge function logs)
-    console.error(
-      `[CLIENT_ERROR] id=${errorId} context=${context} message=${message}`,
-      JSON.stringify({ errorId, context, message, stack, details }, null, 2),
-    );
+    const allowedContexts = ['EBD:relatorio-periodo', 'EBD:relatorio-trimestral'];
+    const context = allowedContexts.includes(body?.context) ? body.context : 'unknown';
+    const errorId = typeof body?.errorId === 'string' && /^[A-Z0-9]{6,14}-[A-Z0-9]{4}$/.test(body.errorId)
+      ? body.errorId : 'unknown';
+    // Never retain arbitrary exception text, stack traces, tokens or report data.
+    if (context !== 'unknown' && errorId !== 'unknown') console.error('[CLIENT_ERROR]', { errorId, context });
 
     return new Response(JSON.stringify({ ok: true, errorId }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    console.error('[log-client-error] failed to process log:', e);
+    console.error('[log-client-error] invalid request');
     return new Response(JSON.stringify({ ok: false }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

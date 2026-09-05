@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Loader2, TrendingUp, Users, PieChartIcon, Download, FileText, Wallet, ArrowDownCircle, ArrowUpCircle, Percent, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { signedReceiptUrl, openReceipt } from '@/lib/receipts';
 import {
   generateFinancialReportPdf,
   formatCurrency,
@@ -279,22 +280,13 @@ export function RelatoriosTab() {
     setSaldo(receitas - despesas);
   };
 
-  const getSignedUrl = async (url: string): Promise<string> => {
-    const match = url.match(/\/receipts\/(.+)$/);
-    if (!match) return url;
-    const path = match[1];
-    const { data, error } = await supabase.storage.from('receipts').createSignedUrl(path, 3600);
-    if (error) throw error;
-    return data?.signedUrl || url;
-  };
+  const getSignedUrl = signedReceiptUrl;
 
   const handleViewReceipt = async (url: string) => {
-    const signedUrl = await getSignedUrl(url);
-    if (url.toLowerCase().includes('.pdf')) {
-      window.open(signedUrl, '_blank');
-    } else {
-      setPreviewImage(signedUrl);
-    }
+    try {
+      if (url.toLowerCase().includes('.pdf')) await openReceipt(url);
+      else setPreviewImage(await getSignedUrl(url));
+    } catch { toast.error('Não foi possível abrir o comprovante'); }
   };
 
   const adimplenciaRate = chargeStats.total > 0

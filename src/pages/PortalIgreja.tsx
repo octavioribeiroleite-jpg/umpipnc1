@@ -138,14 +138,10 @@ function ReturnVisitorConfirm({
   const handleConfirm = async () => {
     setConfirming(true);
     try {
-      await supabase
-        .from('portal_visitors' as any)
-        .insert({
-          full_name: visitor.fullName,
-          society_id: visitor.societyId,
-          is_visitor: visitor.isVisitor,
-          device_id: visitor.deviceId,
-        } as any);
+      await supabase.rpc('register_portal_visit' as any, {
+        p_name: visitor.fullName, p_society: visitor.societyId,
+        p_visitor: visitor.isVisitor, p_device: visitor.deviceId,
+      });
     } catch (e) {
       console.warn('Erro ao registrar visita:', e);
     }
@@ -306,14 +302,10 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
     const isVisitor = societyChoice === 'visitante';
     const societyId = isVisitor ? null : societyChoice;
 
-    const { error } = await supabase
-      .from('portal_visitors' as any)
-      .insert({
-        full_name: trimmedName.slice(0, 100),
-        society_id: societyId,
-        is_visitor: isVisitor,
-        device_id: deviceId,
-      } as any);
+    const { error } = await supabase.rpc('register_portal_visit' as any, {
+      p_name: trimmedName.slice(0, 100), p_society: societyId,
+      p_visitor: isVisitor, p_device: deviceId,
+    });
 
     if (error) {
       console.warn('Erro ao registrar visitante:', error.message);

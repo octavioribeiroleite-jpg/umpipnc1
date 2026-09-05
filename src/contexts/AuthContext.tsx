@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [rolesLoaded, setRolesLoaded] = useState(false);
+  const [authError, setAuthError] = useState(false);
   const [society, setSociety] = useState<Society | null>(null);
   const [selectedSocietyId, setSelectedSocietyIdState] = useState<string | null>(null);
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,11 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSelectedSocietyIdState(null);
     authenticatedUserIdRef.current = null;
     authReadyRef.current = false;
+    setAuthError(false);
   };
 
-  const fetchProfileAndRoles = async (userId: string, options?: { silent?: boolean }) => {
+  const hydrateProfileAndRoles = async (userId: string, options?: { silent?: boolean }) => {
     const hydrationId = ++hydrationRef.current;
     const silent = Boolean(options?.silent && authReadyRef.current);
+    setAuthError(false);
 
     if (!silent) {
       setLoading(true);
@@ -102,11 +105,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from('profiles')
           .select('*')
           .eq('user_id', userId)
+          .abortSignal(AbortSignal.timeout(5000))
           .maybeSingle(),
         supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', userId),
+          .eq('user_id', userId)
+          .abortSignal(AbortSignal.timeout(5000)),
       ]);
 
       lastProfileError = profileResult.error;
@@ -147,9 +152,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('societies')
         .select('*')
         .eq('id', profileData.society_id)
+        .abortSignal(AbortSignal.timeout(5000))
         .maybeSingle();
 
-      if (societyError) console.error('[Auth] Society fetch error:', societyError);
+      if (hydrationId !== hydrationRef.current) return;
+      if (societyError) throw new Error('Society unavailable');
       setSociety((societyData as Society | null) ?? null);
     } else {
       setSociety(null);
@@ -174,11 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!profileData || fetchedRoles.length === 0) {
-      console.error('[Auth] Incomplete authenticated account', {
-        userId,
-        hasProfile: Boolean(profileData),
-        roles: fetchedRoles,
-      });
+      throw new Error('Account permissions unavailable');
     }
 
     authenticatedUserIdRef.current = userId;
@@ -187,13 +190,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   };
 
+  const fetchProfileAndRoles = async (userId: string, options?: { silent?: boolean }) => {
+    const expectedHydrationId = hydrationRef.current + 1;
+    try {
+      await hydrateProfileAndRoles(userId, options);
+    } catch {
+      if (expectedHydrationId !== hydrationRef.current) return;
+      setRoles([]);
+      setProfile(null);
+      setSociety(null);
+      authReadyRef.current = false;
+      setAuthError(true);
+      setLoading(false);
+      setRolesLoaded(true);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
     safetyTimerRef.current = setTimeout(() => {
       if (isMounted) {
-        console.warn('[Auth] Safety timeout - unblocking UI');
+        hydrationRef.current += 1;
+        setAuthError(true);
         setLoading(false);
+        setRolesLoaded(true);
       }
     }, 10000);
 
@@ -312,16 +333,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSelectedSocietyIdState(null);
 
     const cleanUsername = username.toLowerCase().replace(/\s+/g, '');
-    const { data: email } = await supabase.rpc('get_email_by_username', {
-      _username: cleanUsername,
+    const { data, error } = await supabase.functions.invoke('account-login', {
+      body: { username: cleanUsername, password },
     });
-
-    const loginEmail = email || `${cleanUsername}@ipnc.local`;
-    const { error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password,
-    });
-    return { error };
+    if (error || !data?.session) return { error: new Error('Usuário ou senha incorretos') };
+    const result = await supabase.auth.setSession(data.session);
+    return { error: result.error };
   };
 
   const signOut = async () => {
@@ -332,7 +349,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     resetAuthData();
-    setRolesLoaded(false);
+    setRolesLoaded(true);
   };
 
   const isAdmin = roles.includes('admin');
@@ -363,7 +380,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         effectiveSocietyId,
       }}
     >
-      {children}
+      {authError ? (
+        <main className="min-h-screen flex items-center justify-center p-6">
+          <section role="alert" className="max-w-md space-y-4 text-center">
+            <h1 className="text-xl font-semibold">Não foi possível confirmar seu acesso</h1>
+            <p>Confira sua conexão e tente novamente. Nenhum dado foi alterado.</p>
+            <button className="rounded-lg bg-primary px-5 py-3 text-primary-foreground" onClick={() => window.location.reload()}>Tentar novamente</button>
+            <button className="block w-full underline" onClick={() => void signOut()}>Voltar ao login</button>
+          </section>
+        </main>
+      ) : children}
     </AuthContext.Provider>
   );
 }

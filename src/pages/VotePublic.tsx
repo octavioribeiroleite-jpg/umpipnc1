@@ -282,6 +282,15 @@ export default function VotePublic() {
   const resetTimeoutRef = useRef<number | null>(null);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
+  const ballotRequestRef = useRef<string | null>(null);
+  const readVotes = async () => {
+    const { data, error } = await supabase.functions.invoke('election-vote', { body: { action: 'history', election_id: electionId } });
+    return { data: data?.votes ?? [], error };
+  };
+  const checkPreviousVote = async (deviceId: string) => {
+    const { data, error } = await supabase.functions.invoke('election-vote', { body: { action: 'already', election_id: electionId, device_id: deviceId } });
+    return { count: data?.count ?? 0, error };
+  };
   const isCamisa = election?.type === 'camisa';
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
@@ -328,19 +337,10 @@ export default function VotePublic() {
 
       if (isUrnaMode) {
         if (!urnaToken) { setInvalidToken(true); setLoading(false); return; }
-        const { data: deviceData, error: deviceError } = await supabase
-          .from('election_devices' as any).select('*')
-          .eq('election_id', electionId).eq('token', urnaToken).single();
+        const { data: result, error: deviceError } = await supabase.functions.invoke('election-vote', { body: { action: 'device', election_id: electionId, token: urnaToken } });
+        const deviceData = result?.device;
         if (deviceError || !deviceData) { setInvalidToken(true); setLoading(false); return; }
-        setDeviceLabel((deviceData as any).label || '');
-        // Token válido → marca a urna como ativada (online) automaticamente
-        // e libera a tela de votação sem pedir senha.
-        if (!(deviceData as any).activated) {
-          await supabase
-            .from('election_devices' as any)
-            .update({ activated: true } as any)
-            .eq('token', urnaToken);
-        }
+        setDeviceLabel(deviceData.label || '');
         setUrnaAuthenticated(true);
       }
 
@@ -358,21 +358,14 @@ export default function VotePublic() {
 
       const round = elData?.current_round || 1;
       const seats = elData?.seats_count || 1;
-      const { data: voteRows } = await supabase
-        .from('election_votes' as any).select('*')
-        .eq('election_id', electionId);
+      const { data: voteRows } = await readVotes();
       const votesData = (voteRows as any[]) || [];
       setAllVotes(votesData);
       setElectedIds(computeElectedIds(votesData, seats, round, elData?.majority_rule || 'simple', candidatesData));
 
       if (!isUrnaMode) {
         const deviceId = getDeviceId();
-        const { count } = await supabase
-          .from('election_votes' as any)
-          .select('*', { count: 'exact', head: true })
-          .eq('election_id', electionId)
-          .eq('device_id', deviceId)
-          .eq('round_number', round);
+        const { count } = await checkPreviousVote(deviceId);
         if (count && count > 0) {
           setAlreadyVoted(true);
         }
@@ -386,10 +379,7 @@ export default function VotePublic() {
     if (!electionId || !election) return;
     const round = election.current_round || 1;
     const seats = election.seats_count || 1;
-    supabase
-      .from('election_votes' as any)
-      .select('*')
-      .eq('election_id', electionId)
+    readVotes()
       .then(({ data }) => {
         const votesData = (data as any[]) || [];
         setAllVotes(votesData);
@@ -425,10 +415,7 @@ export default function VotePublic() {
           if (updated.current_round !== previous.current_round) {
             setElection(updated);
 
-            const { data: voteRows } = await supabase
-              .from('election_votes' as any)
-              .select('*')
-              .eq('election_id', electionId);
+            const { data: voteRows } = await readVotes();
             const votesData = (voteRows as any[]) || [];
             setAllVotes(votesData);
             setElectedIds(
@@ -597,21 +584,19 @@ export default function VotePublic() {
     if ((!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
-    const ballotId = crypto.randomUUID();
+    const ballotId = ballotRequestRef.current ??= crypto.randomUUID();
     const baseVoteData: any = { election_id: electionId, ballot_id: ballotId, round_number: currentRound };
     if (isIndividual) {
       const deviceId = getDeviceId();
-      const { count } = await supabase
-        .from('election_votes' as any).select('*', { count: 'exact', head: true })
-        .eq('election_id', electionId).eq('device_id', deviceId).eq('round_number', currentRound);
+      const { count } = await checkPreviousVote(deviceId);
       if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); setVoting(false); return; }
       baseVoteData.device_id = deviceId;
     }
-    const rows = [
-      ...choices.map((choice) => ({ ...baseVoteData, candidate_id: choice.id, is_blank: false })),
-      ...Array.from({ length: blanksToRecord }, () => ({ ...baseVoteData, candidate_id: null, is_blank: true })),
-    ];
-    const { error } = await supabase.from('election_votes' as any).insert(rows as any);
+    const { error } = await supabase.functions.invoke('election-vote', { body: {
+      action: 'cast', election_id: electionId, token: isUrnaMode ? urnaToken : null,
+      device_id: isIndividual ? getDeviceId() : null, ballot_id: ballotId, round_number: currentRound,
+      choices: choices.map(c => c.id), blanks: blanksToRecord,
+    } });
     if (error) { setVoting(false); return; }
     if (isIndividual) localStorage.setItem(`voted_${electionId}_${currentRound}`, 'true');
     await audioWarmup;
@@ -621,6 +606,7 @@ export default function VotePublic() {
     setConfirmBlank(false);
     setConfirmSelection(false);
     setShowNullWarning(false);
+    ballotRequestRef.current = null;
     setVoteSuccess(true);
     setVoting(false);
     if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {

@@ -1,4 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createEbdBirthdayTokens } from '../_shared/ebd-birthday-token.ts'
+import { serverLimiter } from '../_shared/server-limiter.ts'
+import { portalSession } from '../_shared/portal-account.ts'
+import { resolveAiActor } from '../_shared/ai-actor.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,12 +43,16 @@ Deno.serve(async (req) => {
       })
       const { data: { user } } = await userClient.auth.getUser()
       if (user) {
-        const { data: isMgmt } = await adminClient.rpc('has_management_role', { _user_id: user.id })
-        if (isMgmt) authorized = true
+        const actor = await resolveAiActor(adminClient, authHeader)
+        if (actor?.roles.some(r => r === 'admin' || r === 'diretoria')) authorized = true
+        const { data: isEbdAdmin } = await userClient.rpc('ebd_is_admin' as any)
+        if (isEbdAdmin && body.action !== 'birthday-ai-session') authorized = true
       }
     }
 
     if (!authorized && typeof body.admin_pin === 'string' && body.admin_pin) {
+      const rate = await serverLimiter(corsHeaders).pinAttempt({ mode: 'admin', identifier: 'secretaria' })
+      if (!rate.allowed) return rate.response
       const { data: setting } = await adminClient
         .from('settings')
         .select('value')
@@ -63,6 +71,21 @@ Deno.serve(async (req) => {
     const action = body.action as string
     const validatePin = (pin: unknown) =>
       typeof pin === 'string' && /^[0-9]{6}$/.test(pin)
+
+    if (action === 'birthday-ai-session') {
+      const { data: setting, error } = await adminClient.from('settings').select('value')
+        .eq('key', 'secretaria_admin_password').maybeSingle()
+      if (error || !setting?.value) {
+        return Response.json({ error: 'Acesso da secretaria não configurado.' }, { status: 503, headers: corsHeaders })
+      }
+      const capability = await createEbdBirthdayTokens({
+        issuer: supabaseUrl,
+        secret: Deno.env.get('EBD_AI_SIGNING_SECRET') ?? serviceRoleKey,
+      }).issue({ kind: 'admin', id: 'secretaria' }, setting.value)
+      const session = await portalSession({ namespace: 'ebd', id: 'admin', name: 'Secretaria EBD', credential: setting.value })
+      return Response.json({ success: true, session, birthday_ai_token: capability.token, birthday_ai_expires_at: capability.expiresAt },
+        { headers: corsHeaders })
+    }
 
     if (action === 'list') {
       const { data, error } = await adminClient

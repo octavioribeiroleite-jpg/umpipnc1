@@ -11,6 +11,8 @@ async function getMember(req: Request, adminClient: any) {
 
   const { data: userData, error: userError } = await adminClient.auth.getUser(token)
   if (userError || !userData?.user) throw new Error('Sessão inválida')
+  const { data: profile, error: profileError } = await adminClient.from('profiles').select('active').eq('user_id',userData.user.id).maybeSingle()
+  if (profileError || !profile?.active) throw new Error('Acesso indisponível')
 
   const { data: member, error: memberError } = await adminClient
     .from('members')
@@ -39,6 +41,14 @@ Deno.serve(async (req) => {
     }
 
     const paymentAmount = Number(amount)
+    if (typeof receipt_path !== 'string' || !new RegExp('^' + member.society_id + '/[0-9]{4}/member-submissions/' + member.id + '/[^/]+$').test(receipt_path)
+        || receipt_path.includes('..') || receipt_url !== 'storage://receipts/' + receipt_path) {
+      return Response.json({ error: 'Comprovante inválido para este membro' }, { status: 400, headers: corsHeaders })
+    }
+    const { data: receiptObjects, error: receiptError } = await adminClient.storage.from('receipts').list(receipt_path.slice(0, receipt_path.lastIndexOf('/')), { search: receipt_path.split('/').pop(), limit: 10 })
+    if (receiptError || !receiptObjects?.some((o: any) => o.name === receipt_path.split('/').pop() && o.id)) {
+      return Response.json({ error: 'Envie o comprovante antes de continuar' }, { status: 400, headers: corsHeaders })
+    }
     if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
       return new Response(JSON.stringify({ error: 'Valor do pagamento inválido' }), {
         status: 400,

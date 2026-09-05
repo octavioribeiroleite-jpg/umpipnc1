@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { receiptReference } from '@/lib/receipt-path';
 import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -130,15 +131,13 @@ export function MembroPagamentos() {
       const { error: uploadError } = await supabase.storage.from('receipts').upload(filePath, selectedFile);
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(filePath);
-
       const { error: submitError } = await supabase.functions.invoke('member-submit-payment-receipt', {
         body: {
           charge_id: selectedCharge.id,
           amount: Number(amount.replace(',', '.')),
           payment_date: paymentDate,
           payment_method: paymentMethod,
-          receipt_url: urlData.publicUrl,
+          receipt_url: receiptReference(filePath),
           receipt_path: filePath,
           notes: notes || null,
         },

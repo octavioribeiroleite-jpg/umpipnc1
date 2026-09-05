@@ -1,3 +1,6 @@
+import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
+import { serverLimiter } from "../_shared/server-limiter.ts";
+import { resolveAiActor } from "../_shared/ai-actor.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
@@ -19,7 +22,6 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
 
     const userClient = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
@@ -34,6 +36,8 @@ serve(async (req) => {
 
     // Check management role
     const adminClient = createClient(supabaseUrl, serviceKey);
+    const actor = await resolveAiActor(adminClient, authHeader);
+    if (!actor || !actor.roles.some(r => r === 'admin' || r === 'diretoria')) return Response.json({error:'Sem permissão'},{status:403,headers:corsHeaders});
     const { data: hasRole } = await adminClient.rpc("has_management_role", { _user_id: userId });
     if (!hasRole) {
       return new Response(JSON.stringify({ error: "Sem permissão" }), { status: 403, headers: corsHeaders });
@@ -85,20 +89,15 @@ INSTRUÇÕES:
 5. NÃO invente informações que não estejam nas anotações
 6. Responda APENAS com a ata organizada, sem comentários extras`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+    const rate = await serverLimiter(corsHeaders).aiGeneration({ actor: `user:${userId}` });
+    if (!rate.allowed) return rate.response;
+    const aiResponse = await openAIChat({
+
         messages: [
           { role: "system", content: "Você é um assistente especializado em redação de atas de reuniões eclesiásticas." },
           { role: "user", content: prompt },
         ],
-      }),
-    });
+      });
 
     if (!aiResponse.ok) {
       const status = aiResponse.status;
