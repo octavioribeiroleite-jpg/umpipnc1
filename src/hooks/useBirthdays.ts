@@ -27,9 +27,10 @@ export interface BirthdayInsert {
 }
 
 const MAX_SESSION_ERROR = 'Sua sessão expirou. Saia do aplicativo, entre novamente e repita a operação.';
+const EBD_ADMIN_SESSION_ERROR = 'A sessão da Secretaria expirou. Digite novamente o PIN e repita a operação.';
 const MISSING_BIRTH_YEAR_COLUMN = 'A atualização do banco de dados ainda não foi aplicada. O cadastro foi salvo sem o ano de nascimento.';
 
-async function ensureAuthenticatedSession(supabase: typeof mainSupabase) {
+async function ensureAuthenticatedSession(supabase: typeof mainSupabase, requireEbdAdmin: boolean) {
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
@@ -44,6 +45,20 @@ async function ensureAuthenticatedSession(supabase: typeof mainSupabase) {
       throw new Error(MAX_SESSION_ERROR);
     }
   }
+
+  if (requireEbdAdmin) {
+    const { data: isAdmin, error: permissionError } = await supabase.rpc('ebd_is_admin');
+    if (permissionError || !isAdmin) {
+      console.error('[Birthdays] Sessão administrativa da Secretaria inválida:', permissionError);
+      throw new Error(EBD_ADMIN_SESSION_ERROR);
+    }
+  }
+}
+
+export function isBirthdaySessionExpiredError(error: unknown) {
+  return error instanceof Error && (
+    error.message === MAX_SESSION_ERROR || error.message === EBD_ADMIN_SESSION_ERROR
+  );
 }
 
 function isMissingBirthYearColumn(error: { code?: string; message: string }) {
@@ -94,11 +109,12 @@ export function getDaysUntilBirthday(dia: number, mes: number): number {
 
 export function useBirthdays(supabase = mainSupabase, scope = 'main') {
   const queryClient = useQueryClient();
+  const requiresEbdAdmin = scope.startsWith('ebd-admin');
 
   const { data: birthdays = [], isLoading } = useQuery({
-queryKey: ['aniversariantes', scope],
+    queryKey: ['aniversariantes', scope],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('list_birthdays' as any);
+      const { data, error } = await supabase.rpc('list_birthdays');
       if (error) throw error;
       return data as Birthday[];
     },
@@ -126,11 +142,11 @@ queryKey: ['aniversariantes', scope],
 
   const createBirthday = useMutation({
     mutationFn: async (data: BirthdayInsert) => {
-      await ensureAuthenticatedSession(supabase);
-      const { error } = await supabase.from('aniversariantes').insert(data);
+      await ensureAuthenticatedSession(supabase, requiresEbdAdmin);
+      const { error } = await supabase.from('aniversariantes').insert(data).select('id').single();
 
       if (error && isMissingBirthYearColumn(error)) {
-        const { error: retryError } = await supabase.from('aniversariantes').insert(withoutBirthYear(data));
+        const { error: retryError } = await supabase.from('aniversariantes').insert(withoutBirthYear(data)).select('id').single();
         if (retryError) throw birthdayMutationError(retryError, 'cadastrar');
         console.warn(`[Birthdays] ${MISSING_BIRTH_YEAR_COLUMN}`);
         return;
@@ -143,26 +159,29 @@ queryKey: ['aniversariantes', scope],
 
   const updateBirthday = useMutation({
     mutationFn: async ({ id, ...data }: Partial<Birthday> & { id: string }) => {
-      await ensureAuthenticatedSession(supabase);
-      const { error } = await supabase.from('aniversariantes').update(data).eq('id', id);
+      await ensureAuthenticatedSession(supabase, requiresEbdAdmin);
+      const { data: updated, error } = await supabase.from('aniversariantes').update(data).eq('id', id).select('id').maybeSingle();
 
       if (error && isMissingBirthYearColumn(error)) {
-        const { error: retryError } = await supabase.from('aniversariantes').update(withoutBirthYear(data)).eq('id', id);
+        const { data: retried, error: retryError } = await supabase.from('aniversariantes').update(withoutBirthYear(data)).eq('id', id).select('id').maybeSingle();
         if (retryError) throw birthdayMutationError(retryError, 'atualizar');
+        if (!retried) throw new Error('O aniversariante não foi atualizado. Atualize a página e tente novamente.');
         console.warn(`[Birthdays] ${MISSING_BIRTH_YEAR_COLUMN}`);
         return;
       }
 
       if (error) throw birthdayMutationError(error, 'atualizar');
+      if (!updated) throw new Error('O aniversariante não foi atualizado. Atualize a página e tente novamente.');
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aniversariantes'] }),
   });
 
   const deleteBirthday = useMutation({
     mutationFn: async (id: string) => {
-      await ensureAuthenticatedSession(supabase);
-      const { error } = await supabase.from('aniversariantes').delete().eq('id', id);
+      await ensureAuthenticatedSession(supabase, requiresEbdAdmin);
+      const { data: deleted, error } = await supabase.from('aniversariantes').delete().eq('id', id).select('id').maybeSingle();
       if (error) throw birthdayMutationError(error, 'excluir');
+      if (!deleted) throw new Error('O aniversariante não foi excluído. Atualize a página e tente novamente.');
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aniversariantes'] }),
   });

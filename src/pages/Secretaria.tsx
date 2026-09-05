@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { HeaderActions } from '@/components/layout/HeaderActions';
-import { useBirthdays } from '@/hooks/useBirthdays';
+import { isBirthdaySessionExpiredError, useBirthdays } from '@/hooks/useBirthdays';
 import type { Birthday, BirthdayInsert } from '@/hooks/useBirthdays';
 import { NextBirthdayCard } from '@/components/aniversariantes/NextBirthdayCard';
 import { TodayBirthdays } from '@/components/aniversariantes/TodayBirthdays';
@@ -176,7 +176,7 @@ function loadStoredEbdSession(): StoredEbdSession | null {
 }
 
 // Embedded birthdays component
-function SecretariaAniversariantes() {
+function SecretariaAniversariantes({ onSessionExpired }: { onSessionExpired: () => void }) {
   const {
     activeBirthdays, todayBirthdays, weekBirthdays, monthBirthdays, nextBirthday,
     departments, isLoading, createBirthday, updateBirthday, deleteBirthday, birthdays,
@@ -204,16 +204,21 @@ function SecretariaAniversariantes() {
   const filteredAll = filter(activeBirthdays);
   const pendingReview = birthdays.filter(b => b.pendente_revisao);
 
+  const handleMutationError = (error: unknown, fallback: string) => {
+    if (isBirthdaySessionExpiredError(error)) onSessionExpired();
+    toast.error(error instanceof Error && error.message ? error.message : fallback);
+  };
+
   const handleSave = (data: BirthdayInsert) => {
     if (editingBirthday) {
       updateBirthday.mutate({ id: editingBirthday.id, ...data }, {
         onSuccess: () => { toast.success('Atualizado!'); setFormOpen(false); setEditingBirthday(null); },
-        onError: () => toast.error('Erro ao atualizar.'),
+        onError: error => handleMutationError(error, 'Erro ao atualizar.'),
       });
     } else {
       createBirthday.mutate(data, {
         onSuccess: () => { toast.success('Cadastrado!'); setFormOpen(false); },
-        onError: () => toast.error('Erro ao cadastrar.'),
+        onError: error => handleMutationError(error, 'Erro ao cadastrar.'),
       });
     }
   };
@@ -222,13 +227,14 @@ function SecretariaAniversariantes() {
   const handleToggleActive = (b: Birthday) => {
     updateBirthday.mutate({ id: b.id, ativo: !b.ativo }, {
       onSuccess: () => toast.success(b.ativo ? 'Inativado' : 'Ativado'),
+      onError: error => handleMutationError(error, 'Erro ao alterar o status.'),
     });
   };
   const handleDelete = () => {
     if (!deletingBirthday) return;
     deleteBirthday.mutate(deletingBirthday.id, {
       onSuccess: () => { toast.success('Excluído!'); setDeletingBirthday(null); },
-      onError: () => toast.error('Erro ao excluir.'),
+      onError: error => handleMutationError(error, 'Erro ao excluir.'),
     });
   };
 
@@ -295,7 +301,12 @@ function SecretariaAniversariantes() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+            <AlertDialogAction
+              disabled={deleteBirthday.isPending}
+              onClick={event => { event.preventDefault(); handleDelete(); }}
+            >
+              {deleteBirthday.isPending ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -973,7 +984,7 @@ export default function Secretaria() {
         )}
 
         {currentView === 'aniversariantes' && isAdmin && (
-          <SecretariaAniversariantes />
+          <SecretariaAniversariantes onSessionExpired={() => setAiReauthOpen(true)} />
         )}
 
         {currentView === 'planilha' && isAdmin && (

@@ -170,7 +170,12 @@ export default function Aniversariantes() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+            <AlertDialogAction
+              disabled={deleteBirthday.isPending}
+              onClick={event => { event.preventDefault(); handleDelete(); }}
+            >
+              {deleteBirthday.isPending ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
