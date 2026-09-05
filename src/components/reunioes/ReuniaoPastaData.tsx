@@ -1,8 +1,5 @@
-import { useState } from 'react';
-import { Folder, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 
 interface ReuniaoPastaDataProps {
@@ -12,48 +9,46 @@ interface ReuniaoPastaDataProps {
   defaultOpen?: boolean;
 }
 
-export function ReuniaoPastaData({ date, count, children, defaultOpen = true }: ReuniaoPastaDataProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  const formattedDate = format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+export function ReuniaoPastaData({ date, count, children }: ReuniaoPastaDataProps) {
+  const parsedDate = parseISO(date);
+  const day = format(parsedDate, 'dd', { locale: ptBR });
+  const month = format(parsedDate, 'MMM', { locale: ptBR }).replace('.', '');
+  const weekday = format(parsedDate, 'EEEE', { locale: ptBR });
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="w-full">
-        <div className={cn(
-          "flex items-center gap-3 p-3 rounded-lg transition-colors",
-          "bg-muted/50 hover:bg-muted cursor-pointer",
-          "border border-border/50"
-        )}>
-          {isOpen ? (
-            <FolderOpen className="h-5 w-5 text-primary" />
-          ) : (
-            <Folder className="h-5 w-5 text-muted-foreground" />
-          )}
-          
-          <span className="font-medium text-foreground">
-            {formattedDate}
-          </span>
-          
-          <span className="text-sm text-muted-foreground">
-            ({count} {count === 1 ? 'reunião' : 'reuniões'})
-          </span>
-          
-          <div className="ml-auto">
-            {isOpen ? (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
+    <div className="relative flex gap-3">
+      <div className="flex w-14 shrink-0 flex-col items-center">
+        <div className="z-10 flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-emerald-100 bg-white text-emerald-800 shadow-sm dark:border-emerald-900 dark:bg-card dark:text-emerald-300">
+          <span className="text-lg font-black leading-none">{day}</span>
+          <span className="text-[10px] font-bold uppercase leading-none">{month}</span>
         </div>
-      </CollapsibleTrigger>
-      
-      <CollapsibleContent>
-        <div className="ml-4 mt-2 pl-4 border-l-2 border-border/50 space-y-3">
+        <div className="mt-2 h-full min-h-6 w-px bg-border" />
+      </div>
+
+      <div className="min-w-0 flex-1 pb-5">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+              {weekday}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {count} {count === 1 ? 'reunião' : 'reuniões'} neste dia
+            </p>
+          </div>
+          <span
+            className={cn(
+              'rounded-full border px-2.5 py-1 text-[11px] font-semibold',
+              'border-border bg-card text-muted-foreground'
+            )}
+          >
+            Timeline
+          </span>
+        </div>
+
+        <div className="space-y-3">
           {children}
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      </div>
+    </div>
   );
 }
