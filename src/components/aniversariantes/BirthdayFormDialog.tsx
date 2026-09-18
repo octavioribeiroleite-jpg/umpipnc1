@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Birthday, BirthdayInsert } from '@/hooks/useBirthdays';
 
@@ -15,10 +16,11 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   birthday?: Birthday | null;
   onSave: (data: BirthdayInsert) => void;
+  onDelete?: () => void;
   isSaving: boolean;
 }
 
-export function BirthdayFormDialog({ open, onOpenChange, birthday, onSave, isSaving }: Props) {
+export function BirthdayFormDialog({ open, onOpenChange, birthday, onSave, onDelete, isSaving }: Props) {
   const [nome, setNome] = useState('');
   const [dia, setDia] = useState('');
   const [mes, setMes] = useState('');
@@ -118,7 +120,19 @@ export function BirthdayFormDialog({ open, onOpenChange, birthday, onSave, isSav
             <Label htmlFor="pendente" className="text-sm">Pendente de revisão</Label>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2">
+          {birthday && onDelete && (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={onDelete}
+              disabled={isSaving}
+              className="sm:mr-auto"
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir
+            </Button>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={isSaving}>{isSaving ? 'Salvando...' : 'Salvar'}</Button>
         </DialogFooter>

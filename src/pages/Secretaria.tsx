@@ -288,6 +288,10 @@ function SecretariaAniversariantes({ onSessionExpired }: { onSessionExpired: () 
         onOpenChange={v => { setFormOpen(v); if (!v) setEditingBirthday(null); }}
         birthday={editingBirthday}
         onSave={handleSave}
+        onDelete={editingBirthday ? () => {
+          setDeletingBirthday(editingBirthday);
+          setFormOpen(false);
+        } : undefined}
         isSaving={createBirthday.isPending || updateBirthday.isPending}
       />
 
