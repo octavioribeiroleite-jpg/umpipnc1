@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
+import { reportEbdWriteError } from '@/lib/ebd-mutations';
 import { toast } from 'sonner';
 import {
   Plus,
@@ -252,11 +253,11 @@ export default function PlanilhaAlunosTab({
   const handleSaveEdit = async (id: string) => {
     if (!editingName.trim()) return;
     setSavingEdit(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_students')
       .update({ name: editingName.trim() })
-      .eq('id', id);
-    if (error) toast.error('Erro ao salvar nome');
+      .eq('id', id).select('id').single();
+    if (error || !data) await reportEbdWriteError(error, 'Nome não foi salvo. Atualize os dados e tente novamente.');
     else {
       toast.success('Nome atualizado');
       setEditingId(null);
@@ -266,11 +267,11 @@ export default function PlanilhaAlunosTab({
   };
 
   const handleToggleActive = async (student: EbdStudent) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_students')
       .update({ active: !student.active })
-      .eq('id', student.id);
-    if (error) toast.error('Erro ao atualizar status');
+      .eq('id', student.id).select('id').single();
+    if (error || !data) await reportEbdWriteError(error, 'Erro ao atualizar status');
     else {
       toast.success(student.active ? 'Aluno desativado' : 'Aluno reativado');
       onRefresh();
@@ -280,11 +281,14 @@ export default function PlanilhaAlunosTab({
   const handleBulkToggle = async (activate: boolean) => {
     if (selectedIds.size === 0) return;
     const ids = Array.from(selectedIds);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_students')
       .update({ active: activate })
-      .in('id', ids);
-    if (error) toast.error('Erro na operação em massa');
+      .in('id', ids).select('id');
+    if (error || data?.length !== ids.length) {
+      await reportEbdWriteError(error, 'Nem todos os alunos foram atualizados. Confira a lista.');
+      onRefresh();
+    }
     else {
       toast.success(
         `${ids.length} aluno(s) ${activate ? 'ativados' : 'desativados'}`,
@@ -296,11 +300,11 @@ export default function PlanilhaAlunosTab({
 
   const handleTransfer = async () => {
     if (!transferStudent || !transferTarget) return;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_students')
       .update({ class_id: transferTarget })
-      .eq('id', transferStudent.id);
-    if (error) toast.error('Erro ao transferir aluno');
+      .eq('id', transferStudent.id).select('id').single();
+    if (error || !data) await reportEbdWriteError(error, 'Erro ao transferir aluno');
     else {
       toast.success('Aluno transferido');
       setTransferStudent(null);
@@ -496,11 +500,11 @@ export default function PlanilhaAlunosTab({
     for (const row of importRows.filter(
       (r) => r.action === 'substituir' && r.similarId,
     )) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('ebd_students')
         .update({ name: row.name })
-        .eq('id', row.similarId!);
-      if (error) errors++;
+        .eq('id', row.similarId!).select('id').single();
+      if (error || !data) errors++;
       else replaced++;
     }
 

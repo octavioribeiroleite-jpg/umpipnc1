@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ump-cache-v7';
+const CACHE_NAME = 'ump-cache-v8';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/icons/icon-512x512.png'
@@ -55,6 +55,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (request.method !== 'GET') return;
+  if (url.origin !== self.location.origin) return;
   if (isApiRequest(url)) return;
   if (isOAuthRoute(url)) return;
   if (isNavigationRequest(request)) return;
@@ -64,7 +65,7 @@ self.addEventListener('fetch', (event) => {
       caches.match(request).then((cached) => {
         if (cached) return cached;
 
-        return fetch(request).then((response) => {
+        return fetch(request, { cache: 'no-store' }).then((response) => {
           if (response.ok) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));

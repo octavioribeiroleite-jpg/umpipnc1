@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
+import { reportEbdWriteError } from '@/lib/ebd-mutations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,7 +90,8 @@ function parseAgeInput(value: string): number | null {
 }
 
 export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTabProps) {
-  const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
+  const [selectedClassChoice, setSelectedClass] = useState<EbdClass | null>(null);
+  const selectedClass = classes.find(cls => cls.id === selectedClassChoice?.id) || null;
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentBirthDate, setNewStudentBirthDate] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
@@ -182,13 +184,13 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
   };
 
   const handleToggleActive = async (student: EbdStudent) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_students')
       .update({ active: !student.active })
-      .eq('id', student.id);
+      .eq('id', student.id).select('id').single();
 
-    if (error) {
-      toast.error('Erro ao atualizar aluno');
+    if (error || !data) {
+      await reportEbdWriteError(error, 'Erro ao atualizar aluno');
     } else {
       toast.success(student.active ? 'Aluno desativado' : 'Aluno reativado');
       onRefresh();
@@ -203,13 +205,13 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
 
   const handleTransfer = async () => {
     if (!transferStudent || !transferTargetClass) return;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_students')
       .update({ class_id: transferTargetClass })
-      .eq('id', transferStudent.id);
+      .eq('id', transferStudent.id).select('id').single();
 
-    if (error) {
-      toast.error('Erro ao transferir aluno');
+    if (error || !data) {
+      await reportEbdWriteError(error, 'Erro ao transferir aluno');
     } else {
       toast.success('Aluno transferido');
       setTransferStudent(null);
@@ -230,13 +232,13 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     }
 
     setSavingBirthDate(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_students')
       .update({ birth_date: editingBirthDate } as any)
-      .eq('id', studentId);
+      .eq('id', studentId).select('id').single();
 
-    if (error) {
-      toast.error('Erro ao salvar data de nascimento');
+    if (error || !data) {
+      await reportEbdWriteError(error, 'Erro ao salvar data de nascimento');
     } else {
       toast.success('Data de nascimento atualizada');
       setEditingBirthDateId(null);
@@ -289,7 +291,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     const range = validateAgeRange(editClassMinAge, editClassMaxAge);
     if (!range) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_classes')
       .update({
         name: editClassName.trim(),
@@ -298,10 +300,10 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
         next_class_id: trackingEnabled && editNextClassId !== '__none__' ? editNextClassId : null,
         age_tracking_enabled: trackingEnabled,
       } as any)
-      .eq('id', classId);
+      .eq('id', classId).select('id').single();
 
-    if (error) {
-      toast.error('Erro ao salvar turma');
+    if (error || !data) {
+      await reportEbdWriteError(error, 'Erro ao salvar turma');
     } else {
       toast.success('Turma atualizada');
       setEditingClassId(null);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -67,9 +67,10 @@ interface HistoricoTabProps {
   students: EbdStudent[];
   accessLevel: 'admin' | 'professor';
   onRefreshParent?: () => Promise<void>;
+  refreshedAt?: number;
 }
 
-export default function HistoricoTab({ classes, students, accessLevel, onRefreshParent }: HistoricoTabProps) {
+export default function HistoricoTab({ classes, students, accessLevel, onRefreshParent, refreshedAt }: HistoricoTabProps) {
   const [period, setPeriod] = useState<PeriodFilter>('4weeks');
   const [allAttendance, setAllAttendance] = useState<{ student_id: string; class_id: string; date: string; present: boolean; marked_by: string | null }[]>([]);
   const [closures, setClosures] = useState<{ id: string; date: string; closed_by: string; total_students: number; present_students: number; class_summary: ClassSummaryItem[] }[]>([]);
@@ -79,9 +80,12 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   const [openDialog, setOpenDialog] = useState<'perfect' | 'lowFreq' | 'absent' | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [generatingQuarterly, setGeneratingQuarterly] = useState(false);
+  const requestId = useRef(0);
+  const [historyError, setHistoryError] = useState(false);
 
   const fetchHistory = async () => {
-    setLoading(true);
+    const request = ++requestId.current;
+    try {
     let attendanceQuery = supabase.from('ebd_attendance').select('student_id, class_id, date, present, marked_by');
     let closureQuery = supabase.from('ebd_day_closures').select('*').order('date', { ascending: false });
 
@@ -95,20 +99,30 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       closureQuery = closureQuery.gte('date', cutoff);
     }
 
-    const [{ data: attData }, { data: closureData }] = await Promise.all([
+    const [{ data: attData, error: attError }, { data: closureData, error: closureError }] = await Promise.all([
       attendanceQuery.order('date', { ascending: true }),
       closureQuery,
     ]);
 
+    if (request !== requestId.current) return;
+    if (attError || closureError) throw attError || closureError;
+    setHistoryError(false);
     setAllAttendance(attData || []);
     setClosures((closureData || []).map((c: any) => ({
       ...c,
       class_summary: (c.class_summary || []) as ClassSummaryItem[],
     })));
-    setLoading(false);
+    } catch {
+      if (request === requestId.current) setHistoryError(true);
+    } finally {
+      if (request === requestId.current) setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchHistory(); }, [period]);
+  useEffect(() => {
+    void fetchHistory();
+    return () => { requestId.current++; };
+  }, [period, refreshedAt]);
 
   const totalMembers = students.length;
 
@@ -152,6 +166,10 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       return { date, isClosed: false, totalStudents: totalMembers, presentStudents: presentCount, classSummary, markedByNames, visitorCount: 0 };
     });
   }, [allAttendance, closures, classes, students, totalMembers]);
+
+  useEffect(() => {
+    setSelectedDay(previous => previous ? dayRecords.find(day => day.date === previous.date) || null : null);
+  }, [dayRecords]);
 
   const getPercentColor = (pct: number) => {
     if (pct > 70) return 'text-green-600';
@@ -471,6 +489,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
 
     return (
       <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-200">
+        {historyError && <p role="status" className="text-sm text-destructive">Não foi possível atualizar o histórico. Tentaremos novamente.</p>}
         {/* Back button */}
         <Button variant="ghost" size="sm" onClick={() => setSelectedDay(null)} className="text-xs -ml-2">
           <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar ao histórico
@@ -598,6 +617,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   // ─── LIST VIEW ───
   return (
     <div className="space-y-4">
+      {historyError && <p role="status" className="text-sm text-destructive">Não foi possível atualizar o histórico. Tentaremos novamente.</p>}
       {/* Period selector */}
       <div className="flex flex-wrap items-center gap-2">
         {([

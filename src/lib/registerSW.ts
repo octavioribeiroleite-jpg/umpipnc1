@@ -1,5 +1,8 @@
-const SW_SCRIPT_URL = "/sw.js?v=2026-06-22-v7";
-const CURRENT_CACHE = "ump-cache-v7";
+import { refreshSite } from './refresh-site';
+
+const SW_SCRIPT_URL = "/sw.js?v=2026-09-20-v8";
+const CURRENT_CACHE = "ump-cache-v8";
+let manualRefresh: Promise<void> | null = null;
 const PREVIEW_RELOAD_KEY = "__preview_sw_cleanup_reloaded__";
 const ROUTE_RESTORE_KEY = "__sw_restore_path__";
 
@@ -29,6 +32,11 @@ function restoreRouteIfNeeded() {
 }
 
 restoreRouteIfNeeded();
+const cleanUrl = new URL(window.location.href);
+if (cleanUrl.searchParams.has('__refresh')) {
+  cleanUrl.searchParams.delete('__refresh');
+  window.history.replaceState(window.history.state, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+}
 
 async function purgeOldCaches() {
   try {
@@ -126,7 +134,7 @@ export function registerServiceWorker() {
     void purgeOldCaches();
 
     navigator.serviceWorker
-      .register(SW_SCRIPT_URL)
+      .register(SW_SCRIPT_URL, { updateViaCache: 'none' })
       .then((registration) => {
         trackWaiting(registration);
         void registration.update().catch(() => {});
@@ -146,7 +154,7 @@ export function registerServiceWorker() {
 
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshing) return;
+      if (refreshing || manualRefresh) return;
       refreshing = true;
       rememberCurrentRoute();
       window.location.reload();
@@ -154,29 +162,15 @@ export function registerServiceWorker() {
   });
 }
 
-export async function applyUpdateNow() {
-  rememberCurrentRoute();
-
-  if (!("serviceWorker" in navigator)) {
-    window.location.reload();
-    return;
+export function applyUpdateNow() {
+  if (!manualRefresh) {
+    rememberCurrentRoute();
+    manualRefresh = refreshSite(window, navigator).catch(error => {
+      manualRefresh = null;
+      throw error;
+    });
   }
-
-  try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    const registration = registrations[0] ?? (await navigator.serviceWorker.getRegistration());
-
-    if (registration?.waiting) {
-      registration.waiting.postMessage({ type: "SKIP_WAITING" });
-      return;
-    }
-
-    await Promise.all(registrations.map((item) => item.update().catch(() => {})));
-  } catch {
-    // ignore
-  }
-
-  window.location.reload();
+  return manualRefresh;
 }
 
 export async function silentUpdateCheck() {

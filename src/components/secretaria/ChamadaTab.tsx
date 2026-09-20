@@ -8,6 +8,7 @@ import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle
 import { Input } from '@/components/ui/input';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 import { supabase } from '@/integrations/supabase/ebd-client';
+import { ensureEbdSession, notifyEbdChange, reportEbdWriteError } from '@/lib/ebd-mutations';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,6 +52,8 @@ interface ChamadaTabProps {
   students: EbdStudent[];
   attendance: AttendanceRecord[];
   setAttendance: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
+  callStatuses?: Record<string, 'aberta' | 'finalizada'>;
+  onCallStatusChange: (classId: string, status: 'aberta' | 'finalizada') => Promise<void>;
   attendanceDate: string;
   formattedDate: string;
   initialProfessorName?: string;
@@ -63,10 +66,13 @@ interface ChamadaTabProps {
   onRemoveClassVisitor?: (classId: string, entryId: string) => Promise<void> | void;
 }
 
-export default function ChamadaTab({ classes, students, attendance, setAttendance, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, classVisitors = {}, onAddClassVisitor, onRemoveClassVisitor }: ChamadaTabProps) {
-  const [selectedClass, setSelectedClass] = useState<EbdClass | null>(null);
+export default function ChamadaTab({ classes, students, attendance, setAttendance, callStatuses = {}, onCallStatusChange, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, classVisitors = {}, onAddClassVisitor, onRemoveClassVisitor }: ChamadaTabProps) {
+  const [selectedClassChoice, setSelectedClass] = useState<EbdClass | null>(null);
+  const selectedClass = classes.find(cls => cls.id === selectedClassChoice?.id) || null;
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
-  const [chamadaStatusMap, setChamadaStatusMap] = useState<Record<string, ChamadaStatus>>({});
+  const savingRef = useRef(false);
+  const chamadaStatusMap = callStatuses;
+  const [savingStatus, setSavingStatus] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [showReopenConfirm, setShowReopenConfirm] = useState(false);
   const [closingDay, setClosingDay] = useState(false);
@@ -84,42 +90,40 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     return chamadaStatusMap[classId] || 'idle';
   };
 
-  const setClassChamadaStatus = (classId: string, status: ChamadaStatus) => {
-    setChamadaStatusMap(prev => ({ ...prev, [classId]: status }));
+  const setClassChamadaStatus = async (classId: string, status: 'aberta' | 'finalizada') => {
+    if (savingStatus) return;
+    setSavingStatus(true);
+    try { await onCallStatusChange(classId, status); }
+    finally { setSavingStatus(false); }
   };
 
   const toggleAttendance = async (student: EbdStudent, currentlyPresent: boolean) => {
+    if (savingRef.current || dayIsClosed) return;
+    savingRef.current = true;
     setSavingStudent(student.id);
-    const existing = attendance.find(a => a.student_id === student.id && a.date === attendanceDate);
-
-    if (existing) {
-      const { error } = await supabase
-        .from('ebd_attendance')
-        .update({ present: !currentlyPresent })
-        .eq('id', existing.id);
-
-      if (!error) {
-        setAttendance(prev =>
-          prev.map(a => a.id === existing.id ? { ...a, present: !currentlyPresent } : a)
-        );
-      }
-    } else {
+    try {
+      await ensureEbdSession();
+      // One record per student/day even when two devices mark it together.
       const { data, error } = await supabase
         .from('ebd_attendance')
-        .insert({
+        .upsert({
           student_id: student.id,
           class_id: student.class_id,
           date: attendanceDate,
-          present: true,
-        })
+          present: !currentlyPresent,
+          marked_by: initialProfessorName || 'Administrador',
+        }, { onConflict: 'student_id,date' })
         .select()
         .single();
-
-      if (!error && data) {
-        setAttendance(prev => [...prev, data]);
-      }
+      if (error || !data) throw error || new Error('Presença não foi salva.');
+      setAttendance(prev => [...prev.filter(a => !(a.student_id === student.id && a.date === attendanceDate)), data]);
+      notifyEbdChange();
+    } catch (error) {
+      await reportEbdWriteError(error, 'Não foi possível salvar a presença.');
+    } finally {
+      savingRef.current = false;
+      setSavingStudent(null);
     }
-    setSavingStudent(null);
   };
 
   const getClassStats = (classId: string) => {
@@ -199,6 +203,8 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
         await onAddClassVisitor?.(selectedClass.id, visitorNameDraft || null);
         setVisitorNameDraft('');
         setVisitorInputOpen(false);
+      } catch {
+        // Parent reports the error; keep the draft for retry after PIN renewal.
       } finally {
         setAddingVisitor(false);
       }
@@ -236,6 +242,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                 </div>
                 <Button
                   className="w-full"
+                  disabled={savingStatus}
                   onClick={() => setClassChamadaStatus(selectedClass.id, 'aberta')}
                 >
                   <PlayCircle className="h-4 w-4 mr-2" />
@@ -294,7 +301,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               <button
                 key={student.id}
                 onClick={() => !isReadOnly && toggleAttendance(student, isPresent)}
-                disabled={isSaving || isReadOnly}
+                disabled={!!savingStudent || isReadOnly}
                 className={`flex items-center gap-3 w-full p-3 rounded-lg border transition-colors text-left ${
                   isPresent
                     ? 'bg-primary/5 border-primary/20'
@@ -404,6 +411,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             {status === 'aberta' && (
               <Button
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
+                disabled={!!savingStudent || addingVisitor || savingStatus}
                 onClick={() => setClassChamadaStatus(selectedClass.id, 'finalizada')}
               >
                 <StopCircle className="h-4 w-4 mr-2" />
@@ -414,6 +422,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               <Button
                 variant="outline"
                 className="w-full"
+                disabled={savingStatus}
                 onClick={() => setClassChamadaStatus(selectedClass.id, 'aberta')}
               >
                 <Pencil className="h-4 w-4 mr-2" />

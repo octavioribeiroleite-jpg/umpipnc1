@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { applyUpdateNow } from '@/lib/registerSW';
+import { toast } from 'sonner';
 
 const THRESHOLD = 80;
 const MAX_PULL = 120;
@@ -10,6 +12,8 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
+  const distanceRef = useRef(0);
+  const refreshingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const canPull = useCallback(() => {
@@ -24,19 +28,28 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
     let active = false;
 
     const onTouchStart = (e: TouchEvent) => {
-      if (refreshing || !canPull()) return;
+      if (refreshingRef.current || !canPull() || e.touches.length !== 1) return;
+      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
+      let target = e.target instanceof Element ? e.target : null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      while (target && target !== container) {
+        if (target.scrollTop > 0) return;
+        target = target.parentElement;
+      }
       startY.current = e.touches[0].clientY;
+      distanceRef.current = 0;
       active = true;
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!active || refreshing) return;
+      if (!active || refreshingRef.current) return;
       const y = e.touches[0].clientY;
       const diff = y - startY.current;
 
-      if (diff > 10 && canPull()) {
-        setPulling(true);
-        const distance = Math.min(diff * 0.5, MAX_PULL);
+      if (canPull()) {
+        const distance = Math.min(Math.max(0, diff * 0.5), MAX_PULL);
+        distanceRef.current = distance;
+        setPulling(distance > 5);
         setPullDistance(distance);
         if (distance > 20) {
           e.preventDefault();
@@ -48,39 +61,37 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
       if (!active) return;
       active = false;
 
-      if (pullDistance >= THRESHOLD && !refreshing) {
+      if (distanceRef.current >= THRESHOLD && !refreshingRef.current) {
+        refreshingRef.current = true;
         setRefreshing(true);
         setPullDistance(THRESHOLD * 0.6);
-
-        // Check for SW update + reload
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
-            const updatePromises = registrations.map(reg => reg.update().catch(() => {}));
-            Promise.all(updatePromises).then(() => {
-              setTimeout(() => {
-                window.location.reload();
-              }, 600);
-            });
-          });
-        } else {
-          setTimeout(() => window.location.reload(), 600);
-        }
+        void applyUpdateNow().catch(error => {
+          toast.error(error instanceof Error ? error.message : 'Não foi possível atualizar. Tente novamente.');
+          refreshingRef.current = false;
+          setRefreshing(false);
+          setPulling(false);
+          setPullDistance(0);
+        });
       } else {
         setPulling(false);
         setPullDistance(0);
       }
+      distanceRef.current = 0;
     };
+    const onTouchCancel = () => { active = false; distanceRef.current = 0; setPulling(false); setPullDistance(0); };
 
     container.addEventListener('touchstart', onTouchStart, { passive: true });
     container.addEventListener('touchmove', onTouchMove, { passive: false });
     container.addEventListener('touchend', onTouchEnd, { passive: true });
+    container.addEventListener('touchcancel', onTouchCancel, { passive: true });
 
     return () => {
       container.removeEventListener('touchstart', onTouchStart);
       container.removeEventListener('touchmove', onTouchMove);
       container.removeEventListener('touchend', onTouchEnd);
+      container.removeEventListener('touchcancel', onTouchCancel);
     };
-  }, [pullDistance, refreshing, canPull]);
+  }, [canPull]);
 
   const progress = Math.min(pullDistance / THRESHOLD, 1);
 

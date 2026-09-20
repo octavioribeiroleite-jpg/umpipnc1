@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import {
@@ -34,6 +34,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { HeaderActions } from '@/components/layout/HeaderActions';
+import { PullToRefresh } from '@/components/layout/PullToRefresh';
+import { useEbdSync } from '@/hooks/useEbdSync';
+import { ensureEbdSession, notifyEbdChange, reportEbdWriteError } from '@/lib/ebd-mutations';
 import { isBirthdaySessionExpiredError, useBirthdays } from '@/hooks/useBirthdays';
 import type { Birthday, BirthdayInsert } from '@/hooks/useBirthdays';
 import { NextBirthdayCard } from '@/components/aniversariantes/NextBirthdayCard';
@@ -337,6 +340,7 @@ export default function Secretaria() {
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [callStatuses, setCallStatuses] = useState<Record<string, 'aberta' | 'finalizada'>>({});
   const [professorNome, setProfessorNome] = useState(storedSession?.professorNome ?? '');
   const [professorClassId, setProfessorClassId] = useState<string | null>(storedSession?.professorClassId ?? null);
   const [dayIsClosed, setDayIsClosed] = useState(false);
@@ -352,6 +356,9 @@ export default function Secretaria() {
   ];
 
   const sundayDate = getTodayDate();
+  const dataScope = `${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}-${sundayDate}`;
+  const dataScopeRef = useRef(dataScope);
+  dataScopeRef.current = dataScope;
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   const handleProfileSelect = (profile: 'admin' | 'professor') => {
@@ -458,7 +465,7 @@ export default function Secretaria() {
       } catch { /* session remains in memory */ }
       if (accessLevel === 'admin') setAdminPin(pin);
       setAiReauthOpen(false);
-      toast.success('PIN confirmado. Toque em Gerar com IA para continuar.');
+      toast.success('Acesso renovado. Os dados serão atualizados; repita a operação desejada.');
     } catch (error) {
       setPinError(true);
       toast.error(error instanceof Error ? error.message : 'Não foi possível validar o acesso.');
@@ -474,20 +481,29 @@ export default function Secretaria() {
     setNameInput('');
   };
 
-  const fetchData = useCallback(async () => {
+  const readData = useCallback(async () => {
+    const scope = dataScopeRef.current;
     const { data: authorized, error: sessionError } = await supabase.rpc('ebd_session_valid' as any);
-    if (sessionError || !authorized) {
+    if (scope !== dataScopeRef.current) throw new Error('Acesso alterado durante a atualização.');
+    if (sessionError) throw sessionError;
+    if (!authorized) {
       setAiReauthOpen(true);
-      return;
+      throw new Error('Confirme o PIN para atualizar os dados.');
     }
-    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes] = await Promise.all([
+    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes] = await Promise.all([
       supabase.from('ebd_classes').select('*').eq('active', true).order('order_index'),
       supabase.from('ebd_students').select('*').eq('active', true).order('name'),
       supabase.from('ebd_students').select('*').order('name'),
       supabase.from('ebd_attendance').select('*').eq('date', sundayDate),
       supabase.rpc('ebd_closure' as any, { p_date: sundayDate }),
       (supabase.from('ebd_class_visitor_entries' as any).select('id, class_id, name').eq('date', sundayDate)),
+      supabase.from('ebd_call_status' as any).select('class_id, status').eq('date', sundayDate),
     ]);
+
+    if (scope !== dataScopeRef.current) throw new Error('Acesso alterado durante a atualização.');
+    const readError = [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes].find(result => result.error)?.error;
+    if (readError) throw readError;
+    setCallStatuses(Object.fromEntries((statusRes.data || []).map((row: any) => [row.class_id, row.status])));
 
     if (classesRes.data) setClasses(classesRes.data);
     if (activeStudentsRes.data) setActiveStudents(activeStudentsRes.data);
@@ -509,11 +525,20 @@ export default function Secretaria() {
       setClosureId(null);
       setVisitorCount(totalV);
     }
+    return { classes: classesRes.data || [], activeStudents: activeStudentsRes.data || [], attendance: attendanceRes.data || [], classVisitors: cvMap };
   }, [sundayDate]);
 
+  const { refresh: fetchData, lastSynced, syncError, syncing } = useEbdSync(
+    !!accessLevel && !aiReauthOpen,
+    dataScope,
+    readData,
+  );
+
   useEffect(() => {
-    if (accessLevel) fetchData();
-  }, [accessLevel, fetchData, birthdayAiExpiresAt]);
+    const expired = () => setAiReauthOpen(true);
+    window.addEventListener('ebd-session-expired', expired);
+    return () => window.removeEventListener('ebd-session-expired', expired);
+  }, []);
 
   useEffect(() => {
     if (!accessLevel || !birthdayAiExpiresAt) return;
@@ -529,9 +554,10 @@ export default function Secretaria() {
       .select('id, class_id, name')
       .single() as any);
     if (error || !data) {
-      toast.error('Erro ao adicionar visitante');
-      return;
+      await reportEbdWriteError(error, 'Erro ao adicionar visitante');
+      throw new Error('Visitante não foi salvo.');
     }
+    notifyEbdChange();
     setClassVisitors(prev => {
       const list = prev[classId] ? [...prev[classId]] : [];
       list.push({ id: data.id, name: data.name ?? null });
@@ -542,11 +568,12 @@ export default function Secretaria() {
   }, [sundayDate, professorNome]);
 
   const handleRemoveClassVisitor = useCallback(async (classId: string, entryId: string) => {
-    const { error } = await (supabase.from('ebd_class_visitor_entries' as any).delete().eq('id', entryId) as any);
-    if (error) {
-      toast.error('Erro ao remover visitante');
+    const { data, error } = await (supabase.from('ebd_class_visitor_entries' as any).delete().eq('id', entryId).select('id').single() as any);
+    if (error || !data) {
+      await reportEbdWriteError(error, 'Erro ao remover visitante');
       return;
     }
+    notifyEbdChange();
     setClassVisitors(prev => {
       const list = (prev[classId] || []).filter(v => v.id !== entryId);
       const next = { ...prev, [classId]: list };
@@ -556,6 +583,10 @@ export default function Secretaria() {
   }, []);
 
   const handleCloseDay = async () => {
+    let snapshot: Awaited<ReturnType<typeof readData>>;
+    try { snapshot = await readData(); }
+    catch (error) { await reportEbdWriteError(error, 'Atualize os dados antes de fechar o dia.'); return; }
+    const { classes, activeStudents, attendance, classVisitors } = snapshot;
     const classSummary = classes.map(cls => {
       const classStudents = activeStudents.filter(s => s.class_id === cls.id);
       const classAttendance = attendance.filter(a => a.class_id === cls.id && a.date === sundayDate);
@@ -589,7 +620,7 @@ export default function Secretaria() {
       } as any);
 
     if (error) {
-      toast.error('Erro ao fechar o dia');
+      await reportEbdWriteError(error, 'Erro ao fechar o dia');
       return;
     }
 
@@ -597,16 +628,28 @@ export default function Secretaria() {
     await fetchData();
   };
 
+  const handleCallStatusChange = async (classId: string, status: 'aberta' | 'finalizada') => {
+    try {
+      await ensureEbdSession();
+      const { data, error } = await supabase.from('ebd_call_status' as any)
+        .upsert({ class_id: classId, date: sundayDate, status, changed_by: professorNome || 'Administrador' }, { onConflict: 'class_id,date' })
+        .select('class_id, status').single();
+      if (error || !data) throw error || new Error('O status da chamada não foi salvo.');
+      setCallStatuses(previous => ({ ...previous, [classId]: status }));
+      notifyEbdChange();
+    } catch (error) { await reportEbdWriteError(error, 'Não foi possível alterar o status da chamada.'); }
+  };
+
   const handleReopenDay = async () => {
     if (!closureId) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('ebd_day_closures')
       .delete()
-      .eq('id', closureId);
+      .eq('id', closureId).select('id').single();
 
-    if (error) {
-      toast.error('Erro ao reabrir o dia');
+    if (error || !data) {
+      await reportEbdWriteError(error, 'Erro ao reabrir o dia');
       return;
     }
 
@@ -631,6 +674,15 @@ export default function Secretaria() {
               />
             </DialogContent>
           </Dialog>
+  );
+
+  const syncNotice = (
+    <p role="status" className={`px-4 py-2 text-sm ${syncError ? 'text-destructive' : 'text-muted-foreground'}`}>
+      {aiReauthOpen ? 'Confirme o PIN para retomar a sincronização.' : syncError
+        ? 'Não foi possível atualizar. Confira a conexão; tentaremos novamente.'
+        : lastSynced ? `Dados atualizados às ${lastSynced.toLocaleTimeString('pt-BR')}`
+        : syncing ? 'Buscando dados da Secretaria...' : 'Aguardando atualização...'}
+    </p>
   );
 
   // Login screens
@@ -703,7 +755,7 @@ export default function Secretaria() {
 
   const confirmExit = () => {
     void supabase.auth.signOut({ scope: 'local' });
-    setClasses([]); setActiveStudents([]); setAllStudents([]); setAttendance([]); setClassVisitors({});
+    setClasses([]); setActiveStudents([]); setAllStudents([]); setAttendance([]); setClassVisitors({}); setCallStatuses({});
     setShowExitConfirm(false);
     try {
       sessionStorage.removeItem(EBD_SESSION_KEY);
@@ -732,6 +784,7 @@ export default function Secretaria() {
   // Home view with cards
   if (currentView === 'home') {
     return (
+      <PullToRefresh>
       <div className="min-h-screen bg-[linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--secondary)/0.55)_100%)]">
         <div className="sticky top-0 z-20 border-b border-white/70 bg-white/85 px-3 py-2.5 shadow-sm backdrop-blur-xl safe-top">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
@@ -764,6 +817,7 @@ export default function Secretaria() {
         </div>
 
         <div className="mx-auto max-w-3xl space-y-4 p-3 pb-8 sm:p-4">
+          {syncNotice}
           <section className="overflow-hidden rounded-[28px] border border-emerald-200/70 bg-[linear-gradient(135deg,#006a53_0%,#118463_100%)] p-4 text-white shadow-[0_16px_40px_rgba(5,74,57,0.18)]">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -896,6 +950,7 @@ export default function Secretaria() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      </PullToRefresh>
     );
   }
 
@@ -912,6 +967,7 @@ export default function Secretaria() {
   };
 
   return (
+    <PullToRefresh>
     <div className="min-h-screen bg-background">
       <div className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border px-2 py-1.5 safe-top">
         <div className="flex items-center justify-between gap-1">
@@ -956,12 +1012,15 @@ export default function Secretaria() {
 
       {reauthDialog}
       <div className="p-4 pb-8 pt-16">
+        {syncNotice}
         {currentView === 'chamada' && (
           <ChamadaTab
             classes={visibleClasses}
             students={visibleActiveStudents}
             attendance={attendance}
             setAttendance={setAttendance}
+            callStatuses={callStatuses}
+            onCallStatusChange={handleCallStatusChange}
             attendanceDate={sundayDate}
             formattedDate={formattedDate}
             initialProfessorName={professorNome || undefined}
@@ -976,7 +1035,7 @@ export default function Secretaria() {
         )}
 
         {currentView === 'historico' && isAdmin && (
-          <HistoricoTab classes={visibleClasses} students={visibleActiveStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} />
+          <HistoricoTab classes={visibleClasses} students={visibleActiveStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} refreshedAt={lastSynced?.getTime()} />
         )}
 
         {currentView === 'turmas' && isAdmin && (
@@ -1024,5 +1083,6 @@ export default function Secretaria() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </PullToRefresh>
   );
 }

@@ -17,17 +17,10 @@ export function UpdateAppButton({ variant = 'full', className }: Props) {
     setLoading(true);
     toast.loading('Limpando cache e buscando atualização...', { id: 'app-update' });
     try {
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k).catch(() => false)));
-      }
-    } catch {
-      // ignore
-    }
-    try {
       await applyUpdateNow();
-    } catch {
-      window.location.reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível atualizar. Tente novamente.', { id: 'app-update' });
+      setLoading(false);
     }
   };
 
