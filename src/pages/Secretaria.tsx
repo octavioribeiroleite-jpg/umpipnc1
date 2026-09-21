@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import {
   ArrowLeft,
+  ArrowRight,
+  UserRound,
+  ShieldCheck,
   BarChart3,
   Cake,
   CalendarDays,
-  CheckCircle2,
   ChevronRight,
   ClipboardList,
   Home,
   LogOut,
   Plus,
   Settings2,
-  TableProperties,
   UserCheck,
   Users,
 } from 'lucide-react';
@@ -29,7 +30,8 @@ import ConfiguracoesEbdTab from '@/components/secretaria/ConfiguracoesEbdTab';
 import AcessosEbdTab from '@/components/secretaria/AcessosEbdTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
-import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import './secretaria-home.css';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -95,65 +97,16 @@ function getTodayDate(): string {
   return format(today, 'yyyy-MM-dd');
 }
 
-function SecretariaMetric({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  tone,
-}: {
-  label: string;
-  value: string | number;
-  hint?: string;
-  icon: any;
-  tone: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/70 bg-white/85 p-3 shadow-sm backdrop-blur-sm">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="min-w-0 whitespace-normal break-words text-[11px] font-semibold text-slate-500">{label}</p>
-          <p className="mt-1 text-xl font-extrabold leading-none text-slate-950">{value}</p>
-          {hint && <p className="mt-1 min-w-0 whitespace-normal break-words text-[11px] text-slate-500">{hint}</p>}
-        </div>
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone}`}>
-          <Icon className="h-[18px] w-[18px]" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SecretariaMenuCard({
-  title,
-  description,
-  icon: Icon,
-  tone,
-  onClick,
-  disabled,
-}: {
+function SecretariaMenuCard({ title, description, icon: Icon, onClick }: {
   title: string;
   description: string;
-  icon: any;
-  tone: string;
+  icon: typeof Users;
   onClick: () => void;
-  disabled?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-white/70 bg-white/95 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tone}`}>
-        <Icon className="h-6 w-6" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="min-w-0 whitespace-normal break-words text-sm font-extrabold text-slate-950">{title}</p>
-        <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500">{description}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-primary" />
+    <button type="button" className="ebd-menu-card" onClick={onClick}>
+      <span className="ebd-icon"><Icon aria-hidden="true" /></span>
+      <span className="ebd-menu-copy"><strong>{title}</strong><span>{description}</span></span>
     </button>
   );
 }
@@ -349,7 +302,7 @@ export default function Secretaria() {
   const [classVisitors, setClassVisitors] = useState<Record<string, VisitorEntry[]>>({});
   const [currentView, setCurrentView] = useState<CurrentView>('home');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const { weekBirthdays, todayBirthdays } = useBirthdays(supabase, `ebd-${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}`);
+  const { weekBirthdays, todayBirthdays, isLoading: birthdaysLoading } = useBirthdays(supabase, `ebd-${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}`);
   const allWeekAnnouncements = [
     ...todayBirthdays.map(b => ({ ...b, daysUntil: 0 })),
     ...weekBirthdays,
@@ -785,155 +738,80 @@ export default function Secretaria() {
   if (currentView === 'home') {
     return (
       <PullToRefresh>
-      <div className="min-h-screen bg-[linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--secondary)/0.55)_100%)]">
-        <div className="sticky top-0 z-20 border-b border-white/70 bg-white/85 px-3 py-2.5 shadow-sm backdrop-blur-xl safe-top">
-          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <button
-                onClick={() => navigate('/auth', { replace: true, state: { skipSplash: true } })}
-                aria-label="Voltar"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <div className="min-w-0">
-                <h1 className="min-w-0 whitespace-normal break-words text-lg font-extrabold leading-tight text-slate-950">Secretaria EBD</h1>
-                <p className="min-w-0 whitespace-normal break-words text-xs font-medium text-slate-500">{formattedDate}</p>
-              </div>
+      <div className="ebd-home">
+        <header className="ebd-header safe-top">
+          <div className="ebd-header-inner">
+            <button type="button" onClick={() => navigate('/auth', { replace: true, state: { skipSplash: true } })} aria-label="Voltar" className="ebd-back">
+              <ArrowLeft aria-hidden="true" />
+            </button>
+            <div className="ebd-heading">
+              <h1>Secretaria EBD</h1>
+              <p>Escola Bíblica Dominical</p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Badge className={isAdmin ? 'rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground' : 'rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700'}>
-                {profileLabel}
-              </Badge>
-              <button
-                onClick={handleExitApp}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-red-50 hover:text-destructive"
-                title="Sair da Secretaria"
-              >
-                <LogOut className="h-[18px] w-[18px]" />
-              </button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label="Menu do usuário" className="ebd-profile"><UserRound aria-hidden="true" /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-52">
+                <DropdownMenuLabel>{profileLabel}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleExitApp} className="min-h-11 gap-2"><LogOut className="h-4 w-4" />Sair da Secretaria</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </div>
+        </header>
 
-        <div className="mx-auto max-w-3xl space-y-4 p-3 pb-8 sm:p-4">
-          {syncNotice}
-          <section className="overflow-hidden rounded-[28px] border border-emerald-200/70 bg-[linear-gradient(135deg,#006a53_0%,#118463_100%)] p-4 text-white shadow-[0_16px_40px_rgba(5,74,57,0.18)]">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-50/75">Resumo do domingo</p>
-                <h2 className="mt-2 text-2xl font-extrabold leading-tight">Escola Dominical</h2>
-                <p className="mt-1 text-sm font-medium text-emerald-50/85">{formattedDate}</p>
-              </div>
-              <div className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${dayIsClosed ? 'bg-white text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                {dayIsClosed ? 'Dia fechado' : 'Em andamento'}
-              </div>
+        <main className="ebd-content">
+          <div className={`ebd-sync ${lastSynced && !syncError && !aiReauthOpen ? 'ebd-sync-ok' : ''}`}>{syncNotice}</div>
+          <section className="ebd-summary ebd-surface" aria-labelledby="ebd-summary-title" aria-busy={!lastSynced && syncing}>
+            <div className="ebd-summary-heading">
+              <h2 id="ebd-summary-title">Resumo do encontro</h2>
+              <span className={`ebd-status ${dayIsClosed ? 'ebd-status-closed' : ''}`}>{!lastSynced ? (syncError ? 'Indisponível' : 'Carregando') : dayIsClosed ? 'Encerrado' : 'Em aberto'}</span>
             </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="rounded-2xl bg-white/12 p-3 backdrop-blur">
-                <p className="text-xs font-medium text-emerald-50/75">Presença</p>
-                <p className="mt-1 text-3xl font-black leading-none">{presentCount}<span className="text-lg font-bold text-emerald-50/70">/{totalCount}</span></p>
-              </div>
-              <div className="rounded-2xl bg-white/12 p-3 backdrop-blur">
-                <p className="text-xs font-medium text-emerald-50/75">Visitantes</p>
-                <p className="mt-1 text-3xl font-black leading-none">{visitorCount}</p>
-              </div>
-            </div>
+            <p className="ebd-date"><CalendarDays aria-hidden="true" /><span>{format(new Date(`${sundayDate}T12:00:00`), "EEEE, dd 'de' MMM 'de' yyyy", { locale: ptBR })}</span></p>
+            <dl className="ebd-metrics">
+              <div><dt>Presentes</dt><dd>{lastSynced ? presentCount : '—'}</dd><span>{lastSynced ? `de ${totalCount} alunos` : 'Aguardando dados'}</span></div>
+              <div><dt>Visitantes</dt><dd>{lastSynced ? visitorCount : '—'}</dd></div>
+              <div><dt>Alunos ativos</dt><dd>{lastSynced ? totalCount : '—'}</dd><span>{lastSynced ? `${visibleClasses.length} turma${visibleClasses.length === 1 ? '' : 's'}` : 'Aguardando dados'}</span></div>
+            </dl>
+            <p className="ebd-summary-note">{!lastSynced ? 'Aguardando atualização dos dados' : dayIsClosed ? 'Chamada encerrada para este encontro' : 'Encontro aberto para registro de presenças'}</p>
           </section>
 
-          <div className="grid grid-cols-2 gap-2">
-            <SecretariaMetric
-              label="Alunos ativos"
-              value={totalCount}
-              hint={`${visibleClasses.length} turma${visibleClasses.length === 1 ? '' : 's'}`}
-              icon={Users}
-              tone="bg-emerald-50 text-emerald-700"
-            />
-            <SecretariaMetric
-              label="Status"
-              value={dayIsClosed ? 'Fechado' : 'Aberto'}
-              hint={dayIsClosed ? 'Chamada concluída' : 'Recebendo presença'}
-              icon={CheckCircle2}
-              tone={dayIsClosed ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}
-            />
-          </div>
+          <Button className="ebd-call" onClick={() => setCurrentView('chamada')}><ClipboardList aria-hidden="true" /><span>Abrir chamada</span><ArrowRight aria-hidden="true" /></Button>
+
+          {isAdmin && (
+            <section className="ebd-section" aria-labelledby="ebd-management-title">
+              <h2 id="ebd-management-title">Gestão da EBD</h2>
+              <div className="ebd-menu-grid">
+                <SecretariaMenuCard title="Turmas" description="Classes e professores" icon={Users} onClick={() => setCurrentView('turmas')} />
+                <SecretariaMenuCard title="Alunos" description="Base de cadastros" icon={UserRound} onClick={() => setCurrentView('planilha')} />
+                <SecretariaMenuCard title="Histórico" description="Frequência e relatórios" icon={BarChart3} onClick={() => setCurrentView('historico')} />
+                <SecretariaMenuCard title="Aniversariantes" description="Datas e comunicados" icon={Cake} onClick={() => setCurrentView('aniversariantes')} />
+              </div>
+            </section>
+          )}
 
           <WeekAnnouncementCard
             birthdays={allWeekAnnouncements}
             aiToken={birthdayAiToken}
             aiExpiresAt={birthdayAiExpiresAt}
             onAiSessionExpired={() => { setBirthdayAiToken(''); setBirthdayAiExpiresAt(''); setAiReauthOpen(true); }}
+            variant="secretaria"
+            isLoading={birthdaysLoading}
+            onViewAll={isAdmin ? () => setCurrentView('aniversariantes') : undefined}
           />
           {reauthDialog}
 
-          <section className="space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-950">Acesso rápido</h2>
-                <p className="text-xs text-slate-500">Escolha o que deseja gerenciar agora</p>
+          {isAdmin && (
+            <section className="ebd-section ebd-administration" aria-labelledby="ebd-admin-title">
+              <h2 id="ebd-admin-title">Administração</h2>
+              <div className="ebd-surface">
+                <button type="button" onClick={() => setCurrentView('configuracoes')}><Settings2 aria-hidden="true" /><span>Configurações</span><ChevronRight aria-hidden="true" /></button>
+                <button type="button" onClick={() => setCurrentView('acessos')}><ShieldCheck aria-hidden="true" /><span>Acessos</span><ChevronRight aria-hidden="true" /></button>
               </div>
-              <CalendarDays className="h-5 w-5 text-primary" />
-            </div>
-
-            <div className="grid gap-2">
-              <SecretariaMenuCard
-                title="Chamada"
-                description="Registrar presenças, visitantes e fechar o domingo."
-                icon={ClipboardList}
-                tone="bg-emerald-50 text-emerald-700"
-                onClick={() => setCurrentView('chamada')}
-              />
-
-              {isAdmin && (
-                <>
-                  <SecretariaMenuCard
-                    title="Histórico"
-                    description="Acompanhar frequência, médias e relatórios anteriores."
-                    icon={BarChart3}
-                    tone="bg-sky-50 text-sky-600"
-                    onClick={() => setCurrentView('historico')}
-                  />
-                  <SecretariaMenuCard
-                    title="Aniversariantes"
-                    description="Consultar, cadastrar e gerar comunicados da semana."
-                    icon={Cake}
-                    tone="bg-pink-50 text-pink-600"
-                    onClick={() => setCurrentView('aniversariantes')}
-                  />
-                  <SecretariaMenuCard
-                    title="Turmas"
-                    description="Organizar classes, professores e alunos da EBD."
-                    icon={Settings2}
-                    tone="bg-amber-50 text-amber-600"
-                    onClick={() => setCurrentView('turmas')}
-                  />
-                  <SecretariaMenuCard
-                    title="Planilha de Alunos"
-                    description="Visualizar e atualizar a base de alunos cadastrados."
-                    icon={TableProperties}
-                    tone="bg-teal-50 text-teal-600"
-                    onClick={() => setCurrentView('planilha')}
-                  />
-                  <SecretariaMenuCard
-                    title="Configurações"
-                    description="Ajustar regras, PINs e preferências da secretaria."
-                    icon={UserCheck}
-                    tone="bg-indigo-50 text-indigo-600"
-                    onClick={() => setCurrentView('configuracoes')}
-                  />
-                  <SecretariaMenuCard
-                    title="Acessos"
-                    description="Consultar entradas, professores e registros de acesso."
-                    icon={UserCheck}
-                    tone="bg-rose-50 text-rose-600"
-                    onClick={() => setCurrentView('acessos')}
-                  />
-                </>
-              )}
-            </div>
-          </section>
-        </div>
+            </section>
+          )}
+        </main>
 
         <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
           <AlertDialogContent>

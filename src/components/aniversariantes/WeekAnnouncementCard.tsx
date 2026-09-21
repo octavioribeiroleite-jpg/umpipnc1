@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Cake, Copy, Sparkles, Check, Loader2 } from 'lucide-react';
+import { Cake, Copy, Sparkles, Check, Loader2, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -7,18 +7,22 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Birthday } from '@/hooks/useBirthdays';
 
 interface Props {
+  variant?: 'default' | 'secretaria';
+  onViewAll?: () => void;
+  isLoading?: boolean;
   birthdays: (Birthday & { daysUntil: number })[];
   aiToken?: string;
   aiExpiresAt?: string;
   onAiSessionExpired: () => void;
 }
 
-export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSessionExpired }: Props) {
+export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSessionExpired, variant = 'default', onViewAll, isLoading = false }: Props) {
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  if (birthdays.length === 0) return null;
+  const isSecretaria = variant === 'secretaria';
+  if (birthdays.length === 0 && !isSecretaria) return null;
 
   const simpleList = birthdays
     .map(b => `${String(b.dia).padStart(2, '0')}/${String(b.mes).padStart(2, '0')} - ${b.nome}`)
@@ -72,8 +76,14 @@ export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSess
   };
 
   return (
-    <Card className="border-pink-200 dark:border-pink-800/40 bg-gradient-to-br from-pink-50/80 to-orange-50/50 dark:from-pink-950/20 dark:to-orange-950/10">
-      <CardContent className="pt-4 pb-4 space-y-3">
+    <Card className={isSecretaria ? "ebd-birthdays ebd-surface" : "border-pink-200 dark:border-pink-800/40 bg-gradient-to-br from-pink-50/80 to-orange-50/50 dark:from-pink-950/20 dark:to-orange-950/10"}>
+      <CardContent className={isSecretaria ? "ebd-birthdays-content" : "pt-4 pb-4 space-y-3"}>
+        {isSecretaria ? (
+          <div className="ebd-birthdays-heading">
+            <div><h2>Aniversariantes da semana</h2><p>{isLoading ? "Carregando aniversariantes…" : `${birthdays.length} aniversariante${birthdays.length === 1 ? "" : "s"}`}</p></div>
+            {onViewAll && <button type="button" className="ebd-view-all" onClick={onViewAll}>Ver todos<ChevronRight aria-hidden="true" /></button>}
+          </div>
+        ) : (
         <div className="flex items-center gap-2">
           <Cake className="h-5 w-5 text-pink-500" />
           <h2 className="font-semibold text-sm">Aniversariantes da Semana</h2>
@@ -82,28 +92,32 @@ export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSess
           </span>
         </div>
 
-        <div className="space-y-1">
-          {birthdays.map(b => (
-            <div key={b.id} className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground font-mono text-xs w-12">
+        )}
+
+        {isSecretaria && !isLoading && birthdays.length === 0 && <p className="ebd-empty">Nenhum aniversariante nesta semana.</p>}
+        <div className={isSecretaria ? "ebd-birthday-list" : "space-y-1"}>
+          {(isSecretaria && onViewAll ? birthdays.slice(0, 3) : birthdays).map(b => (
+            <div key={b.id} className={isSecretaria ? "ebd-birthday-row" : "flex items-center gap-2 text-sm"}>
+              <span className={isSecretaria ? "ebd-birthday-date" : "text-muted-foreground font-mono text-xs w-12"}>
                 {String(b.dia).padStart(2, '0')}/{String(b.mes).padStart(2, '0')}
               </span>
-              <span className="font-medium">{b.nome}</span>
+              <span className={isSecretaria ? "ebd-birthday-name" : "font-medium"}>{b.nome}</span>
               {b.daysUntil === 0 && (
-                <span className="text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded-full">HOJE</span>
+                <span className={isSecretaria ? "ebd-birthday-today" : "text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded-full"}>HOJE</span>
               )}
             </div>
           ))}
         </div>
 
-        <div className="flex gap-2 pt-1">
-          <Button variant="outline" size="sm" className="text-xs flex-1" onClick={handleCopyList}>
+        {birthdays.length > 0 && <div className={isSecretaria ? "ebd-birthday-actions" : "flex gap-2 pt-1"}>
+          <Button variant="outline" size="sm" className={isSecretaria ? "ebd-secondary-button" : "text-xs flex-1"} onClick={handleCopyList}>
             <Copy className="h-3.5 w-3.5 mr-1" />
             Copiar lista
           </Button>
           <Button
             size="sm"
-            className="text-xs flex-1 bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white border-0"
+            variant={isSecretaria ? "outline" : "default"}
+            className={isSecretaria ? "ebd-secondary-button" : "text-xs flex-1 bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white border-0"}
             onClick={handleGenerate}
             disabled={loading}
           >
@@ -112,9 +126,9 @@ export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSess
             ) : (
               <Sparkles className="h-3.5 w-3.5 mr-1" />
             )}
-            {loading ? 'Gerando...' : 'Gerar com IA'}
+            {loading ? 'Gerando...' : isSecretaria ? 'Gerar mensagem' : 'Gerar com IA'}
           </Button>
-        </div>
+        </div>}
 
         {aiMessage && (
           <div className="space-y-2 pt-1">
