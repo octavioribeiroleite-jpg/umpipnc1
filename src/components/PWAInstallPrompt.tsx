@@ -1,88 +1,64 @@
-import { useState, useEffect } from "react";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Download, Smartphone, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { pwaInstall } from '@/lib/pwaInstall';
 import logoIpnc from '@/assets/logo-ipnc.png';
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-export const PWAInstallPrompt = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-
-  useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
-
-    // Check if dismissed recently
-    const dismissed = localStorage.getItem("pwa-install-dismissed");
-    if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
-
-    // iOS detection
-    const ua = navigator.userAgent;
-    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
-
-    if (isIOSDevice) {
-      // Show iOS instructions after a short delay
-      const timer = setTimeout(() => setShowPrompt(true), 2000);
-      return () => clearTimeout(timer);
-    }
-
-    // Android/Desktop - listen for beforeinstallprompt
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => setShowPrompt(true), 2000);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setShowPrompt(false);
-    }
-    setDeferredPrompt(null);
-  };
-
-  const handleDismiss = () => {
-    setShowPrompt(false);
-    localStorage.setItem("pwa-install-dismissed", String(Date.now()));
-  };
-
-  if (!showPrompt) return null;
+export function PWAInstallPrompt() {
+  const pwa = usePWAInstall();
+  const steps = pwa.isEmbedded
+    ? ['Abra o menu deste navegador e escolha “Abrir no navegador”.', `Use ${pwa.isIOS ? 'o Safari' : 'o Chrome'} e toque novamente em “Instalar aplicativo” no Renovo.`]
+    : pwa.isIOS
+      ? ['Abra este site no Safari e toque em Compartilhar.', 'Escolha “Adicionar à Tela de Início”. Se necessário, role a lista de ações.', 'Mantenha “Abrir como App” ativado, se aparecer, e toque em “Adicionar”.']
+      : pwa.isAndroid
+        ? ['No Chrome, abra o menu de três pontos (⋮).', 'Toque em “Instalar aplicativo” ou “Adicionar à tela inicial”.', 'Confirme a opção exibida pelo navegador.']
+        : pwa.isMacSafari
+          ? ['No Safari, abra o menu Arquivo.', 'Escolha “Adicionar ao Dock” e confirme em “Adicionar”.']
+          : ['Abra este site no Chrome ou no Edge.', 'Procure o ícone de instalação na barra de endereço ou a opção de instalar no menu do navegador.', 'Confirme a instalação. Se a opção não aparecer, tente novamente em um navegador atualizado.'];
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:max-w-sm animate-in slide-in-from-bottom-5 duration-300">
-      <div className="rounded-xl border bg-card p-4 shadow-lg">
-        <div className="flex items-start gap-3">
-          <img src={logoIpnc} alt="Renovo IPNC" className="h-10 w-10 shrink-0 object-contain" />
-          <div className="flex-1 space-y-1">
-            <p className="text-sm font-semibold text-card-foreground">Instalar IPNC</p>
-            <p className="text-xs text-muted-foreground">
-              {isIOS
-                ? 'Toque no botão de compartilhar e depois em "Adicionar à Tela de Início".'
-                : "Instale o app no seu dispositivo para acesso rápido."}
-            </p>
-          </div>
-          <button onClick={handleDismiss} className="text-muted-foreground hover:text-foreground">
-            <X className="h-4 w-4" />
+    <Dialog open={pwa.isOpen && !pwa.isInstalled} onOpenChange={open => { if (!open) pwa.close(); }}>
+      <DialogContent
+        style={{ maxWidth: 'min(28rem, calc(100vw - 1.5rem))', borderRadius: '1.5rem' }}
+        className="max-w-md gap-5 rounded-3xl border-emerald-200/70 bg-white p-6 text-slate-900 shadow-2xl sm:rounded-3xl [&>button:last-child]:hidden"
+        onCloseAutoFocus={event => { event.preventDefault(); pwaInstall.restoreFocus(); }}
+      >
+        <DialogClose asChild>
+          <button type="button" aria-label="Fechar instalação" className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700">
+            <X className="h-5 w-5" />
           </button>
+        </DialogClose>
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-950 shadow-md">
+          <img src={logoIpnc} alt="Renovo IPNC" className="h-16 w-16 object-contain" />
         </div>
-        {!isIOS && (
-          <Button onClick={handleInstall} size="sm" className="mt-3 w-full">
-            Instalar agora
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="pr-2 text-2xl font-bold leading-tight sm:text-2xl">Tenha o Renovo na sua tela inicial</DialogTitle>
+          <DialogDescription className="text-base leading-relaxed text-slate-600">Abra o aplicativo pelo ícone no seu aparelho e acesse sua igreja com facilidade.</DialogDescription>
+        </DialogHeader>
+        {pwa.message && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm leading-relaxed text-emerald-950">{pwa.message}</p>}
+        {pwa.canPrompt || pwa.isInstalling ? (
+          <Button type="button" onClick={() => void pwa.install()} disabled={pwa.isInstalling} className="h-auto min-h-12 gap-2 whitespace-normal rounded-xl bg-emerald-800 px-4 py-3 text-base text-white hover:bg-emerald-900">
+            <Download className="h-5 w-5 shrink-0" />
+            {pwa.isInstalling ? 'Aguardando o navegador…' : 'Instalar agora'}
           </Button>
+        ) : (
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+            <p className="mb-4 flex items-center gap-2 text-base font-semibold text-emerald-950"><Smartphone className="h-5 w-5 shrink-0" />Como instalar</p>
+            <ol className="space-y-4">
+              {steps.map((step, index) => (
+                <li key={step} className="flex items-start gap-3 text-base leading-relaxed text-slate-700">
+                  <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-800 text-sm font-semibold text-white">{index + 1}</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
         )}
-      </div>
-    </div>
+        <DialogClose asChild>
+          <Button type="button" variant="ghost" className="min-h-11 rounded-xl text-base text-slate-600 hover:bg-slate-100 hover:text-slate-900">Agora não</Button>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
   );
-};
+}

@@ -14,6 +14,7 @@ import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import { BuildStamp } from '@/components/BuildStamp';
+import { InstallButton } from '@/components/layout/InstallButton';
 
 interface Society {
   id: string;
@@ -661,6 +662,7 @@ export default function Auth() {
           <p className="mt-2 text-base font-medium text-white/90 drop-shadow-[0_3px_14px_rgba(0,0,0,0.75)]">
             Igreja Presbiteriana de Nova Carapina
           </p>
+          <div className="mt-5"><InstallButton variant="entry" /></div>
         </div>
 
         {step === 'select' ? (
