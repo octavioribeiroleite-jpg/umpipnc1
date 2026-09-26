@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import { BuildStamp } from '@/components/BuildStamp';
 import { InstallButton } from '@/components/layout/InstallButton';
+import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 
 interface Society {
   id: string;
@@ -847,6 +848,7 @@ export default function Auth() {
   // ========== SINGLE RETURN — video never remounts ==========
   return (
     <div className="min-h-screen relative overflow-hidden bg-black">
+      <div className="absolute right-3 z-40 text-white/80" style={{ top: 'max(12px, env(safe-area-inset-top))' }}><UpdateAvailableBanner className="bg-black/15 backdrop-blur-sm hover:bg-white/10" /></div>
       {/* Video background — always mounted, never re-created */}
       <video
         autoPlay

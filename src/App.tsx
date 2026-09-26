@@ -40,7 +40,6 @@ import Secretaria from "./pages/Secretaria";
 import Aniversariantes from "./pages/Aniversariantes";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-import { UpdateAvailableBanner } from "@/components/UpdateAvailableBanner";
 import "./camisas-separation.css";
 
 const queryClient = new QueryClient({
@@ -84,7 +83,6 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <UpdateAvailableBanner />
       <PWAInstallPrompt />
       <BrowserRouter>
         <AuthProvider>
