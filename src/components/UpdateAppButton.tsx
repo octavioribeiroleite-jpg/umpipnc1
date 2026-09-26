@@ -15,11 +15,13 @@ export function UpdateAppButton({ variant = 'full', className }: Props) {
   const handleUpdate = async () => {
     if (loading) return;
     setLoading(true);
-    toast.loading('Limpando cache e buscando atualização...', { id: 'app-update' });
+    toast.loading('Buscando a atualização…', { id: 'app-update' });
     try {
       await applyUpdateNow();
+      toast.dismiss('app-update');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível atualizar. Tente novamente.', { id: 'app-update' });
+    } finally {
       setLoading(false);
     }
   };

@@ -90,13 +90,14 @@ async function unregisterAndClear() {
   return hadArtifacts;
 }
 
-function emitUpdateAvailable() {
-  window.dispatchEvent(new CustomEvent("sw-update-available"));
+function emitUpdateAvailable(worker: ServiceWorker) {
+  if (manualRefresh) return;
+  window.dispatchEvent(new CustomEvent("sw-update-available", { detail: { version: worker.scriptURL } }));
 }
 
 function trackWaiting(registration: ServiceWorkerRegistration) {
   if (registration.waiting) {
-    emitUpdateAvailable();
+    emitUpdateAvailable(registration.waiting);
   }
 
   registration.addEventListener("updatefound", () => {
@@ -105,7 +106,7 @@ function trackWaiting(registration: ServiceWorkerRegistration) {
 
     installing.addEventListener("statechange", () => {
       if (installing.state === "installed" && navigator.serviceWorker.controller) {
-        emitUpdateAvailable();
+        emitUpdateAvailable(installing);
       }
     });
   });
@@ -166,6 +167,7 @@ export function registerServiceWorker() {
 
 export function applyUpdateNow() {
   if (!manualRefresh) {
+    window.dispatchEvent(new Event("app-update-start"));
     rememberCurrentRoute();
     manualRefresh = refreshSite(window, navigator).catch(error => {
       manualRefresh = null;
