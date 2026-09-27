@@ -41,7 +41,7 @@ export function MobileHeader() {
   };
 
   return (
-    <header className="safe-top fixed inset-x-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-[linear-gradient(135deg,#064e43_0%,#064237_54%,#04332d_100%)] text-white shadow-[0_8px_24px_rgba(3,35,29,0.18)] md:hidden">
+    <header className="diretoria-mobile-header safe-top fixed inset-x-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-[linear-gradient(135deg,#064e43_0%,#064237_54%,#04332d_100%)] text-white shadow-[0_8px_24px_rgba(3,35,29,0.18)] md:hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -right-14 -top-20 h-36 w-36 rounded-full border border-emerald-200/10" />
         <div className="absolute right-16 top-0 h-16 w-32 rotate-[-18deg] rounded-[100%] bg-emerald-300/5" />
@@ -66,9 +66,9 @@ export function MobileHeader() {
           </div>
 
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-extrabold leading-tight tracking-tight text-white xs:text-base">
+            <p className="truncate text-sm font-extrabold leading-tight tracking-tight text-white xs:text-base">
               {title}
-            </h1>
+            </p>
             <p className="mt-0.5 hidden truncate text-[10px] font-medium leading-none text-emerald-50/80 xs:block">
               {subtitle}
             </p>

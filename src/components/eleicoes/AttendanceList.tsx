@@ -140,10 +140,10 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
           disabled={disabled}
           className="h-9"
         />
-        <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleAdd} disabled={disabled}>
+        <Button aria-label="Adicionar participante" size="icon" className="h-9 w-9 shrink-0" onClick={handleAdd} disabled={disabled}>
           <Plus className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" className="h-9 shrink-0" onClick={handleImportMembers} disabled={importing || disabled}>
+        <Button aria-label="Importar membros" variant="outline" size="sm" className="h-9 shrink-0" onClick={handleImportMembers} disabled={importing || disabled}>
           {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
         </Button>
       </div>
@@ -156,13 +156,14 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
           return (
             <div key={item.id} className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-muted/50">
               <Checkbox
+                aria-label={`Presença de ${item.name}`}
                 checked={isPresent}
                 onCheckedChange={(checked) => handleToggle(item.id, !!checked)}
                 disabled={disabled}
               />
-              <span className="flex-1 text-sm truncate">{item.name}</span>
+              <span className="flex-1 min-w-0 text-sm break-words">{item.name}</span>
               {!disabled && (
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive shrink-0" onClick={() => handleRemove(item.id)}>
+                <Button aria-label={`Remover ${item.name}`} variant="ghost" size="icon" className="h-6 w-6 text-destructive shrink-0" onClick={() => handleRemove(item.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               )}

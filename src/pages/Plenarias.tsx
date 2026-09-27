@@ -189,6 +189,7 @@ export default function Plenarias() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label={`Excluir plenária ${p.title}`}
                         className="text-destructive shrink-0"
                         onClick={(e) => { e.stopPropagation(); setDeleteId(p.id); }}
                       >

@@ -164,7 +164,7 @@ export default function PastorSugestoes() {
     return (
       <Card key={f.id} className={isUnread ? 'border-primary/20 bg-primary/5' : 'opacity-80'}>
         <CardContent className="p-3">
-          <div className="flex items-start gap-2.5">
+          <div className="suggestion-layout flex items-start gap-2.5">
             <div className={`h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0 ${config.color}`}>
               <Icon className="h-3.5 w-3.5" />
             </div>
@@ -180,18 +180,18 @@ export default function PastorSugestoes() {
                   <p className="text-xs">{f.response}</p>
                 </div>
               )}
-              <div className="flex items-center gap-1 mt-1.5 text-[11px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-1 mt-1.5 text-xs text-muted-foreground">
                 {senderName && <span className="font-medium">{senderName}</span>}
                 {senderName && <span>·</span>}
                 <span>{formatDistanceToNow(new Date(f.created_at), { addSuffix: true, locale: ptBR })}</span>
               </div>
             </div>
             <TooltipProvider delayDuration={300}>
-              <div className="flex items-center gap-0.5 flex-shrink-0">
+              <div className="suggestion-actions flex items-center gap-0.5 flex-shrink-0">
                 {isUnread && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleMarkRead(f.id)}>
+                      <Button aria-label="Marcar como lida" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleMarkRead(f.id)}>
                         <Check className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -200,7 +200,7 @@ export default function PastorSugestoes() {
                 )}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRespondingTo(respondingTo === f.id ? null : f.id); setResponseText(f.response || ''); }}>
+                    <Button aria-label="Responder sugestão" size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRespondingTo(respondingTo === f.id ? null : f.id); setResponseText(f.response || ''); }}>
                       <Send className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -208,7 +208,7 @@ export default function PastorSugestoes() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeletingId(f.id)}>
+                    <Button aria-label="Excluir sugestão" size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeletingId(f.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>

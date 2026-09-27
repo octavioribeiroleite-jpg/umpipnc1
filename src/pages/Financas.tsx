@@ -174,7 +174,6 @@ export default function Financas() {
     : isCentralScope
       ? 'Geral'
       : society?.name || 'Sociedade';
-  const firstName = profile?.full_name?.split(' ')[0] || 'Tesouraria';
   const roleLabel = isCentralScope ? 'Tesouraria central das sociedades' : `Tesouraria ${selectedScopeLabel}`;
 
   useEffect(() => {
@@ -378,21 +377,20 @@ export default function Financas() {
                 <Landmark className="h-4 w-4" />
                 Escopo financeiro
               </div>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Olá, {firstName}!</h1>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Finanças</h1>
               <p className="text-sm text-muted-foreground md:text-base">{roleLabel}</p>
             </div>
 
             <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:w-1/2">
-              <Button type="button" variant="outline" className="justify-between rounded-xl bg-white/80">
-                <span>{monthWindow.label}</span>
-                <CalendarDays className="h-4 w-4" />
-              </Button>
+              <div className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 text-sm">
+                <span>{monthWindow.label}</span><CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0" />
+              </div>
               {showSocietySelector ? (
                 societySelector('border-border bg-white text-foreground shadow-sm [&>svg]:text-muted-foreground')
               ) : (
-                <Button type="button" variant="outline" className="justify-start rounded-xl bg-white/80">{selectedScopeLabel}</Button>
+                <div className="flex min-h-11 items-center rounded-xl border border-border bg-card px-3 text-sm">{selectedScopeLabel}</div>
               )}
-              <Button type="button" variant="outline" size="icon" className="relative rounded-xl bg-white/80" aria-label="Notificações financeiras">
+              <Button type="button" variant="outline" size="icon" className="relative rounded-xl bg-white/80" aria-label="Ver pendências financeiras" onClick={() => document.getElementById("finance-pending")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
                 <Bell className="h-4 w-4" />
                 {stats.pendencias > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
@@ -470,7 +468,7 @@ export default function Financas() {
         <div className="mb-4 grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
           <AppCard className="rounded-[22px] p-4">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Pendências do dia</h2>
+              <h2 id="finance-pending" className="scroll-mt-20 text-lg font-semibold">Pendências do dia</h2>
               <Button type="button" variant="link" className="h-auto p-0" onClick={() => handleTabChange('comprovantes')}>Ver todas</Button>
             </div>
             <div className="space-y-2">
@@ -621,7 +619,7 @@ export default function Financas() {
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="min-w-0">
           <HorizontalScroller className="finance-tabs-scroller sticky top-[calc(var(--mobile-header-height)+0.25rem)] z-20 -mx-1 mb-3 px-1 pb-1 md:static md:mx-0 md:mb-5 md:px-0">
-            <TabsList className="inline-grid h-auto w-max min-w-full grid-flow-col auto-cols-[100px] items-stretch gap-1 rounded-[18px] border border-slate-200/70 bg-white/95 p-1 shadow-card backdrop-blur-xl md:grid-flow-row md:auto-cols-auto md:grid-cols-5 md:rounded-[20px] md:p-1.5">
+            <TabsList className="finance-primary-tabs inline-grid h-auto w-max min-w-full grid-flow-col auto-cols-[100px] items-stretch gap-1 rounded-[18px] border border-slate-200/70 bg-white/95 p-1 shadow-card backdrop-blur-xl md:grid-flow-row md:auto-cols-auto md:grid-cols-5 md:rounded-[20px] md:p-1.5">
               {mainTabs.map(({ value, label, shortLabel, icon: Icon }) => (
                 <TabsTrigger
                   key={value}

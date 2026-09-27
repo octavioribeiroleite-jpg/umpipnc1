@@ -448,7 +448,7 @@ export function CamisasTab() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="shirt-tabs">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
           <TabsTrigger value="encomendas">Encomendas</TabsTrigger>

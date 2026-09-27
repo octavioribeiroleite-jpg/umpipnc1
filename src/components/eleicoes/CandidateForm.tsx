@@ -143,13 +143,13 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             className="h-9"
           />
-          <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleAdd}>
+          <Button aria-label={`Adicionar ${label}`} size="icon" className="h-9 w-9 shrink-0" onClick={handleAdd}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
       )}
 
-      <div className={`grid ${isCamisa ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-3 md:grid-cols-4'} gap-2`}>
+      <div className={`grid ${isCamisa ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'} gap-2`}>
         {candidates.map((c) => {
           const photos = getPhotoUrls(c);
           return (
@@ -185,13 +185,15 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
                 </div>
               )}
 
-              <span className="text-xs font-medium text-center leading-tight line-clamp-2">{c.name}</span>
+              <span className="text-xs font-medium text-center leading-snug break-words min-w-0 w-full">{c.name}</span>
               
               {!disabled && (
                 <div className="flex gap-1">
-                  <label className="cursor-pointer">
+                  <label className="cursor-pointer rounded-lg" role="button" aria-label={`Enviar foto de ${c.name}`} tabIndex={uploading === c.id ? -1 : 0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click(); } }}>
                     <input
                       type="file"
+                      disabled={uploading === c.id}
+                      aria-label={`Enviar foto de ${c.name}`}
                       accept="image/*"
                       className="hidden"
                       onChange={(e) => {
@@ -206,7 +208,7 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
                       <span>{isCamisa ? <ImagePlus className="h-3 w-3" /> : <Upload className="h-3 w-3" />}</span>
                     </Button>
                   </label>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemove(c.id)}>
+                  <Button aria-label={`Excluir ${c.name}`} variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemove(c.id)}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>

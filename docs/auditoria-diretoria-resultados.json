@@ -1,0 +1,1120 @@
+{
+  "pages": [
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/",
+      "title": "Bom dia, Maria 👋",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes",
+      "title": "Reuniões",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/nova",
+      "title": "Nova Reunião",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/meeting",
+      "title": "Planejamento das atividades e encontro de famílias",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/tarefas",
+      "title": "Tarefas",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/calendario",
+      "title": "Calendário",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/financas",
+      "title": "Finanças",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/camisas",
+      "title": "Camisas",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/arquivos",
+      "title": "Arquivos",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/configuracoes",
+      "title": "Configurações",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/usuarios",
+      "title": "Gestão de Usuários",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias",
+      "title": "Plenárias",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias/plenary",
+      "title": "Plenária de planejamento — exemplo",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/comunicados",
+      "title": "Comunicados",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes",
+      "title": "Eleições",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes/election",
+      "title": "Eleição da diretoria — exemplo",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicao/election/apresentar",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/dizimos",
+      "title": "Dízimos e Ofertas",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/visitantes",
+      "title": "Visitantes",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/estudos",
+      "title": "Estudos",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/aniversariantes",
+      "title": "Aniversariantes 🎂",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/sugestoes",
+      "title": "Sugestões",
+      "width": 375
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/",
+      "title": "Bom dia, Maria 👋",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes",
+      "title": "Reuniões",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/nova",
+      "title": "Nova Reunião",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/meeting",
+      "title": "Planejamento das atividades e encontro de famílias",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/tarefas",
+      "title": "Tarefas",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/calendario",
+      "title": "Calendário",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/financas",
+      "title": "Finanças",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/camisas",
+      "title": "Camisas",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/arquivos",
+      "title": "Arquivos",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/configuracoes",
+      "title": "Configurações",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/usuarios",
+      "title": "Gestão de Usuários",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias",
+      "title": "Plenárias",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias/plenary",
+      "title": "Plenária de planejamento — exemplo",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/comunicados",
+      "title": "Comunicados",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes",
+      "title": "Eleições",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes/election",
+      "title": "Eleição da diretoria — exemplo",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicao/election/apresentar",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/dizimos",
+      "title": "Dízimos e Ofertas",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/visitantes",
+      "title": "Visitantes",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/estudos",
+      "title": "Estudos",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/aniversariantes",
+      "title": "Aniversariantes 🎂",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/sugestoes",
+      "title": "Sugestões",
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/",
+      "title": "Bom dia, Maria 👋",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes",
+      "title": "Reuniões",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/nova",
+      "title": "Nova Reunião",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/meeting",
+      "title": "Planejamento das atividades e encontro de famílias",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/tarefas",
+      "title": "Tarefas",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/calendario",
+      "title": "Calendário",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/financas",
+      "title": "Finanças",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/camisas",
+      "title": "Camisas",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/arquivos",
+      "title": "Arquivos",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/configuracoes",
+      "title": "Configurações",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/usuarios",
+      "title": "Gestão de Usuários",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias",
+      "title": "Plenárias",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias/plenary",
+      "title": "Plenária de planejamento — exemplo",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/comunicados",
+      "title": "Comunicados",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes",
+      "title": "Eleições",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes/election",
+      "title": "Eleição da diretoria — exemplo",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicao/election/apresentar",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/dizimos",
+      "title": "Dízimos e Ofertas",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/visitantes",
+      "title": "Visitantes",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/estudos",
+      "title": "Estudos",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/aniversariantes",
+      "title": "Aniversariantes 🎂",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/sugestoes",
+      "title": "Sugestões",
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/",
+      "title": "Bom dia, Maria 👋",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes",
+      "title": "Reuniões",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/nova",
+      "title": "Nova Reunião",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/meeting",
+      "title": "Planejamento das atividades e encontro de famílias",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/tarefas",
+      "title": "Tarefas",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/calendario",
+      "title": "Calendário",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/financas",
+      "title": "Finanças",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/camisas",
+      "title": "Camisas",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/arquivos",
+      "title": "Arquivos",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/configuracoes",
+      "title": "Configurações",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/usuarios",
+      "title": "Gestão de Usuários",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias",
+      "title": "Plenárias",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias/plenary",
+      "title": "Plenária de planejamento — exemplo",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/comunicados",
+      "title": "Comunicados",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes",
+      "title": "Eleições",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes/election",
+      "title": "Eleição da diretoria — exemplo",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicao/election/apresentar",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/dizimos",
+      "title": "Dízimos e Ofertas",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/visitantes",
+      "title": "Visitantes",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/estudos",
+      "title": "Estudos",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/aniversariantes",
+      "title": "Aniversariantes 🎂",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/sugestoes",
+      "title": "Sugestões",
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/",
+      "title": "Bom dia, Maria 👋",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes",
+      "title": "Reuniões",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/nova",
+      "title": "Nova Reunião",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/meeting",
+      "title": "Planejamento das atividades e encontro de famílias",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/tarefas",
+      "title": "Tarefas",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/calendario",
+      "title": "Calendário",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/financas",
+      "title": "Finanças",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/camisas",
+      "title": "Camisas",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/arquivos",
+      "title": "Arquivos",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/configuracoes",
+      "title": "Configurações",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/usuarios",
+      "title": "Gestão de Usuários",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias",
+      "title": "Plenárias",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias/plenary",
+      "title": "Plenária de planejamento — exemplo",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/comunicados",
+      "title": "Comunicados",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes",
+      "title": "Eleições",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes/election",
+      "title": "Eleição da diretoria — exemplo",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/eleicao/election/apresentar",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/dizimos",
+      "title": "Dízimos e Ofertas",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/visitantes",
+      "title": "Visitantes",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/estudos",
+      "title": "Estudos",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/aniversariantes",
+      "title": "Aniversariantes 🎂",
+      "width": 1440
+    },
+    {
+      "clipped": [],
+      "error": false,
+      "route": "/sugestoes",
+      "title": "Sugestões",
+      "width": 1440
+    }
+  ],
+  "states": [
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/",
+      "title": "Bom dia, Maria 👋",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes",
+      "title": "Reuniões",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/nova",
+      "title": "Nova Reunião",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/meeting",
+      "title": "Reuniões",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/tarefas",
+      "title": "Tarefas",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/calendario",
+      "title": "Calendário",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/financas",
+      "title": "Finanças",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/camisas",
+      "title": "Camisas",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/arquivos",
+      "title": "Arquivos",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/configuracoes",
+      "title": "Configurações",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/usuarios",
+      "title": "Gestão de Usuários",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias",
+      "title": "Plenárias",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias/plenary",
+      "title": "Plenárias",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/comunicados",
+      "title": "Comunicados",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes",
+      "title": "Eleições",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes/election",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/eleicao/election/apresentar",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/dizimos",
+      "title": "Dízimos e Ofertas",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/visitantes",
+      "title": "Visitantes",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/estudos",
+      "title": "Estudos",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/aniversariantes",
+      "title": "Aniversariantes 🎂",
+      "width": 375
+    },
+    {
+      "state": "empty",
+      "clipped": [],
+      "error": false,
+      "route": "/sugestoes",
+      "title": "Sugestões",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/",
+      "title": "Bom dia, Maria 👋",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes",
+      "title": "Reuniões",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/nova",
+      "title": "Nova Reunião",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/reunioes/meeting",
+      "title": "Reuniões",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/tarefas",
+      "title": "Tarefas",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/calendario",
+      "title": "Calendário",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/financas",
+      "title": "Finanças",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/camisas",
+      "title": "Camisas",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/arquivos",
+      "title": "Arquivos",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/configuracoes",
+      "title": "Configurações",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/usuarios",
+      "title": "Gestão de Usuários",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias",
+      "title": "Plenárias",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/plenarias/plenary",
+      "title": "Plenárias",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/comunicados",
+      "title": "Comunicados",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes",
+      "title": "Eleições",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/eleicoes/election",
+      "title": "Eleições",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/eleicao/election/apresentar",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/dizimos",
+      "title": "Dízimos e Ofertas",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/visitantes",
+      "title": "Visitantes",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/estudos",
+      "title": "Estudos",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/aniversariantes",
+      "title": "Aniversariantes 🎂",
+      "width": 375
+    },
+    {
+      "state": "error",
+      "clipped": [],
+      "error": false,
+      "route": "/sugestoes",
+      "title": "Sugestões",
+      "width": 375
+    }
+  ]
+}

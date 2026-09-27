@@ -29,14 +29,14 @@ export function PageHeader({
   return (
     <section
       className={cn(
-        'relative overflow-hidden border border-emerald-300/15 bg-[linear-gradient(135deg,#006a53_0%,#00755b_55%,#168166_100%)] text-white',
+        'diretoria-page-header relative overflow-hidden border border-emerald-300/15 bg-[linear-gradient(135deg,#006a53_0%,#00755b_55%,#168166_100%)] text-white',
         compact && 'mb-3 rounded-[18px] px-3.5 py-3 shadow-[0_8px_20px_rgba(5,74,57,0.14)]',
         hero && 'mb-5 rounded-[30px] px-6 py-6 shadow-[0_16px_38px_rgba(5,74,57,0.22)]',
         automatic && 'mb-3 rounded-[18px] px-3.5 py-3 shadow-[0_8px_20px_rgba(5,74,57,0.14)] md:mb-5 md:rounded-[28px] md:px-6 md:py-6 md:shadow-[0_16px_38px_rgba(5,74,57,0.20)]',
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="page-header-decoration pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className={cn(
             'absolute rounded-full bg-emerald-200/10 blur-2xl',
@@ -75,7 +75,7 @@ export function PageHeader({
           {icon && (
             <div
               className={cn(
-                'flex flex-shrink-0 items-center justify-center border border-white/20 bg-white/[0.12] text-white shadow-md backdrop-blur-md',
+                'page-header-icon flex flex-shrink-0 items-center justify-center border border-white/20 bg-white/[0.12] text-white shadow-md backdrop-blur-md',
                 compact && 'h-10 w-10 rounded-xl [&_svg]:h-5 [&_svg]:w-5',
                 hero && 'h-16 w-16 rounded-[18px] [&_svg]:h-8 [&_svg]:w-8',
                 automatic && 'h-10 w-10 rounded-xl [&_svg]:h-5 [&_svg]:w-5 md:h-16 md:w-16 md:rounded-[18px] md:[&_svg]:h-8 md:[&_svg]:w-8',
@@ -128,7 +128,7 @@ export function PageHeader({
         {action && (
           <div
             className={cn(
-              'flex-shrink-0 [&_button]:border-white/25 [&_button]:bg-white/15 [&_button]:text-white [&_button]:backdrop-blur-sm hover:[&_button]:bg-white/25',
+              'page-header-actions flex-shrink-0 [&_button]:border-white/25 [&_button]:bg-white/15 [&_button]:text-white [&_button]:backdrop-blur-sm hover:[&_button]:bg-white/25',
               compact && 'w-full [&_button]:w-full',
               hero && 'w-full sm:w-auto [&_button]:w-full sm:[&_button]:w-auto',
               automatic && 'w-full md:w-auto [&_button]:w-full md:[&_button]:w-auto',

@@ -315,7 +315,7 @@ export function ConfiguracoesTab() {
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          Sessão inválida ou sociedade não selecionada. Faça login novamente pela tela inicial.
+          Selecione uma sociedade no filtro de escopo acima para configurar a contribuição anual.
         </AlertDescription>
       </Alert>
     );

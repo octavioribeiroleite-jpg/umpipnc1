@@ -579,6 +579,7 @@ export default function Configuracoes() {
                                       <Button 
                                         variant="ghost" 
                                         size="icon"
+                                        aria-label={`Excluir usuário ${userItem.full_name}`}
                                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                         disabled={userItem.user_id === user?.id || deletingUser === userItem.user_id}
                                       >

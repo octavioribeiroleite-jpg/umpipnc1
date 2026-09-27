@@ -1,0 +1,86 @@
+/* Scoped to AppLayout: shared portals inherit the theme while Diretoria is open. */
+.diretoria-theme {
+  --section-gap: 1rem;
+  --card-gap: .75rem;
+  --card-padding: .875rem;
+  --card-radius: .875rem;
+  --panel-radius: 1rem;
+  --hero-radius: 1rem;
+  --content-max-width: 76rem;
+  --font-page-title: 1.25rem;
+  --font-section-title: 1rem;
+  --font-card-title: .875rem;
+  --font-body-responsive: .8125rem;
+  font-size: 14px;
+}
+.diretoria-theme .app-page { background: hsl(var(--background)); }
+.diretoria-theme .app-page main { background: hsl(var(--background)); backdrop-filter: none; }
+.diretoria-theme main h1 { font-size: 20px; line-height: 1.35; letter-spacing: -.025em; }
+.diretoria-theme main h2, .diretoria-theme .ui-card-title { font-size: 16px; line-height: 1.4; }
+.diretoria-theme .text-sm { font-size: 13px; }
+.diretoria-theme .text-base { font-size: 14px; }
+.diretoria-theme .text-lg { font-size: 16px; }
+.diretoria-theme .text-xl { font-size: 18px; }
+.diretoria-theme .text-2xl { font-size: 22px; }
+.diretoria-theme .text-3xl { font-size: 26px; }
+.diretoria-theme .diretoria-page-header { background: hsl(var(--card)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 14px; margin-bottom: 16px; box-shadow: none; }
+.diretoria-theme .page-header-decoration { display: none; }
+.diretoria-theme .diretoria-page-header h1 { color: hsl(var(--foreground)); text-shadow: none; filter: none; }
+.diretoria-theme .diretoria-page-header p { color: hsl(var(--muted-foreground)); font-size: 13px; }
+.diretoria-theme .page-header-icon { width: 36px; height: 36px; border-radius: 10px; background: hsl(var(--primary)/.08); color: hsl(var(--primary)); box-shadow: none; }
+.diretoria-theme .page-header-icon svg { width: 20px; height: 20px; }
+.diretoria-theme .page-header-actions button { color: hsl(var(--primary-foreground)); background: hsl(var(--primary)); border-color: transparent; backdrop-filter: none; }
+.diretoria-theme .page-header-actions button:hover { background: hsl(var(--primary)/.9); }
+.diretoria-theme .diretoria-mobile-header { background: hsl(var(--card)); color: hsl(var(--foreground)); border-color: hsl(var(--border)); box-shadow: none; }
+.diretoria-theme .diretoria-mobile-header > .pointer-events-none { display: none; }
+.diretoria-theme .diretoria-mobile-header p { color: hsl(var(--foreground)); }
+.diretoria-theme .diretoria-mobile-header p + p { color: hsl(var(--muted-foreground)); font-size: 11px; }
+.diretoria-theme .diretoria-mobile-header button { color: hsl(var(--primary)) !important; background: transparent; box-shadow: none; border-color: transparent; min-width: 44px; min-height: 44px; }
+.diretoria-theme .diretoria-welcome { padding: 16px; box-shadow: none; }
+.diretoria-theme .ui-card, .diretoria-theme .ui-app-card, .diretoria-theme .summary-card { border: 1px solid hsl(var(--border)); border-radius: 14px; background: hsl(var(--card)); box-shadow: none; backdrop-filter: none; }
+.diretoria-theme .ui-card-header { padding: 14px; }
+.diretoria-theme .ui-card-content { padding: 14px; }
+.diretoria-theme .ui-card-header + .ui-card-content { padding-top: 0; }
+.diretoria-theme .ui-card-content.p-0 { padding: 0; }
+.diretoria-theme .summary-card { padding: 12px; min-height: 0; gap: 8px; }
+.diretoria-theme .summary-card > div:first-child:not(.summary-card-content) { width: 30px; height: 30px; border-radius: 9px; }
+.diretoria-theme .summary-card svg { width: 16px; height: 16px; }
+.diretoria-theme .summary-label { font-size: 12px; line-height: 1.4; }
+.diretoria-theme .summary-value { font-size: clamp(18px, 10cqi, 24px); }
+.diretoria-theme .summary-meta { font-size: 12px; line-height: 1.4; }
+.diretoria-theme .ui-button { min-height: 44px; height: auto; font-size: 13px; line-height: 1.35; white-space: normal; border-radius: 10px; box-shadow: none; backdrop-filter: none; }
+.diretoria-theme .ui-button[data-size='icon'] { min-width: 44px; width: 44px; flex-shrink: 0; }
+.diretoria-theme .ui-button[data-variant='outline'], .diretoria-theme .ui-button[data-variant='secondary'] { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); }
+.diretoria-theme .ui-badge { line-height: 1.35; height: auto; min-height: 20px; font-size: 12px; }
+.diretoria-theme :is(input:not([type='checkbox']):not([type='radio']), textarea, [role='combobox']) { min-width: 0; max-width: 100%; border-radius: 10px; }
+.diretoria-theme input:not([type='checkbox']):not([type='radio']) { min-height: 44px; }
+.diretoria-theme .ui-dialog, .diretoria-theme [role='alertdialog'] { grid-template-columns: minmax(0, 1fr); width: calc(100vw - 24px); max-width: min(640px, calc(100vw - 24px)); border-radius: 16px; padding: 20px; background: hsl(var(--card)); }
+.diretoria-theme .ui-dialog > *, .diretoria-theme [role='alertdialog'] > * { min-width: 0; }
+.diretoria-theme .ui-dialog h2, .diretoria-theme [role='alertdialog'] h2 { font-size: 18px; }
+.diretoria-theme [role='tablist'] { gap: 4px; }
+.diretoria-theme [role='tab'] { font-size: 12px; min-height: 44px; }
+.diretoria-theme [role='menuitem'], .diretoria-theme [role='option'] { min-height: 40px; }
+.diretoria-theme :is(button, a, input, textarea, [role='button']):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+@media (max-width: 767px) {
+  .diretoria-theme main h1 { font-size: 18px; }
+  .diretoria-theme :is(input:not([type='checkbox']):not([type='radio']), textarea, [role='combobox']) { font-size: 16px; }
+}
+@media (min-width: 768px) {
+  .diretoria-theme .metric-grid { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+}
+/* Keep every shirt section discoverable without a hidden horizontal menu. */
+.diretoria-theme .finance-tab-panel .shirt-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; height: auto; overflow: visible; }
+.diretoria-theme .finance-tab-panel .shirt-tabs [role='tab'] { min-width: 0; min-height: 44px; font-size: 12px; line-height: 1.35; padding-inline: 6px; }
+.diretoria-theme .ui-dialog > button:last-child { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; top: 4px; right: 4px; }
+.diretoria-theme .ui-dialog h2 { padding-right: 28px; }
+@media (min-width: 768px) {
+  .diretoria-theme .finance-tab-panel .shirt-tabs { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .diretoria-theme .suggestion-layout { flex-wrap: wrap; }
+  .diretoria-theme .suggestion-actions { flex-basis: 100%; justify-content: flex-end; border-top: 1px solid hsl(var(--border)); padding-top: 4px; }
+}
+@media (max-width: 767px) {
+  .diretoria-theme .finance-primary-tabs { width: 100%; grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-columns: auto; }
+}
+.diretoria-theme .user-card-actions button { min-width: 44px; min-height: 44px; }

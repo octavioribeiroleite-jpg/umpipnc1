@@ -63,7 +63,7 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções' }:
             <SheetHeader className="text-left">
               <SheetTitle>{moreTitle}</SheetTitle>
             </SheetHeader>
-            <div className="grid grid-cols-4 gap-2 py-3">
+            <div className="grid grid-cols-3 gap-2 py-3 sm:grid-cols-4">
               {moreItems.map((item) => (
                 <button
                   key={item.key}

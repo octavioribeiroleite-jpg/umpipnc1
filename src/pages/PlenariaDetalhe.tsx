@@ -531,7 +531,7 @@ export default function PlenariaDetalhe() {
     <AppLayout>
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/plenarias')}>
+        <Button variant="ghost" size="icon" aria-label="Voltar às plenárias" onClick={() => navigate('/plenarias')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">

@@ -166,7 +166,7 @@ export default function Eleicoes() {
         }
       />
 
-      <FAB onClick={() => setDialogOpen(true)} />
+      <FAB aria-label="Nova eleição" onClick={() => setDialogOpen(true)} />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'cargo' | 'camisa')} className="mb-4">
         <TabsList className="grid w-full grid-cols-2">

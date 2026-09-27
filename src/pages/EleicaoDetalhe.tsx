@@ -216,7 +216,7 @@ export default function EleicaoDetalhe() {
       {/* Header */}
       <div className="rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm p-3 mb-3">
         <div className="flex items-center gap-2 mb-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/eleicoes')}>
+          <Button aria-label="Voltar às eleições" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/eleicoes')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1 min-w-0">

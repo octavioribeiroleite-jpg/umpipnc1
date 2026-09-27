@@ -280,10 +280,10 @@ export default function Calendario() {
                 {months[month]} {year}
               </CardTitle>
               <div className="flex gap-1">
-                <Button variant="outline" size="icon" onClick={prevMonth}>
+                <Button variant="outline" size="icon" aria-label="Mês anterior" onClick={prevMonth}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={nextMonth}>
+                <Button variant="outline" size="icon" aria-label="Próximo mês" onClick={nextMonth}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

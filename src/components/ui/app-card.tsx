@@ -21,7 +21,7 @@ const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-xl sm:rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm overflow-hidden',
+          'ui-app-card rounded-xl sm:rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm overflow-hidden',
           variantClasses[variant],
           !noPadding && !colorStripe && padding,
           className,

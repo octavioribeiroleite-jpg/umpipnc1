@@ -361,6 +361,8 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label={`Opções da campanha ${campaign.name}`}
+                        aria-expanded={menuOpenId === campaign.id}
                         className="h-8 w-8"
                         onClick={() => setMenuOpenId(menuOpenId === campaign.id ? null : campaign.id)}
                       >

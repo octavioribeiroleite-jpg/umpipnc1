@@ -560,24 +560,24 @@ export default function Usuarios() {
 
   const renderDiretoriaCard = (user: UserWithRole) => (
     <div key={user.id} className="rounded-lg border bg-card p-3 space-y-2">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col items-stretch gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{user.full_name}</p>
           <p className="text-xs text-muted-foreground">@{user.username}</p>
         </div>
-        <div className="flex items-center gap-1 ml-2">
+        <div className="user-card-actions flex items-center justify-end gap-1">
           <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => copyCredentials(user)} title="Copiar credenciais">
             <Copy className="h-3.5 w-3.5" />
           </Button>
           <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleResetPassword(user)} disabled={resettingPassword === user.user_id} title="Resetar senha">
             {resettingPassword === user.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditUserId(user.user_id); setEditFullName(user.full_name); setEditUsername(user.username); setEditPassword(''); setEditDialogOpen(true); }}>
+          <Button aria-label={`Editar ${user.full_name}`} size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditUserId(user.user_id); setEditFullName(user.full_name); setEditUsername(user.username); setEditPassword(''); setEditDialogOpen(true); }}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deletingUser === user.user_id}>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" aria-label={`Remover ${user.full_name}`} disabled={deletingUser === user.user_id}>
                 {deletingUser === user.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               </Button>
             </AlertDialogTrigger>
@@ -640,12 +640,12 @@ export default function Usuarios() {
                   <Button size="sm" variant="ghost" onClick={() => handleResetPassword(user)} disabled={resettingPassword === user.user_id} title="Resetar senha">
                     {resettingPassword === user.user_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setEditUserId(user.user_id); setEditFullName(user.full_name); setEditUsername(user.username); setEditPassword(''); setEditDialogOpen(true); }}>
+                  <Button aria-label={`Editar ${user.full_name}`} size="sm" variant="ghost" onClick={() => { setEditUserId(user.user_id); setEditFullName(user.full_name); setEditUsername(user.username); setEditPassword(''); setEditDialogOpen(true); }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deletingUser === user.user_id}>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label={`Remover ${user.full_name}`} disabled={deletingUser === user.user_id}>
                         {deletingUser === user.user_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
                     </AlertDialogTrigger>
@@ -674,7 +674,7 @@ export default function Usuarios() {
 
   const renderMemberCard = (member: MemberRow) => (
     <div key={member.id} className="rounded-lg border bg-card p-3 space-y-2">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col items-stretch gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{member.name}</p>
           <div className="flex items-center gap-1.5 mt-0.5">
@@ -682,7 +682,7 @@ export default function Usuarios() {
             <span className="text-xs text-muted-foreground">{getSocietyName(member.society_id)}</span>
           </div>
         </div>
-        <div className="flex items-center gap-1 ml-2">
+        <div className="user-card-actions flex items-center justify-end gap-1">
           {member.user_id ? (
             <>
               <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => copyMemberCredentials(member)} title="Copiar credenciais">
@@ -778,7 +778,7 @@ export default function Usuarios() {
   };
 
   const renderCopyAllButton = (societyId: string | null) => (
-    <Button variant="outline" size="sm" onClick={() => copyAllCredentials(societyId)} className="gap-1.5">
+    <Button variant="outline" size="sm" aria-label="Copiar todas as credenciais" onClick={() => copyAllCredentials(societyId)} className="gap-1.5">
       <ClipboardList className="h-4 w-4" />
       <span className="hidden sm:inline">Copiar todos</span>
     </Button>
@@ -864,7 +864,7 @@ export default function Usuarios() {
         }
       />
 
-      <FAB icon={<UserPlus className="h-6 w-6" />} onClick={() => setCreateOpen(true)} />
+      <FAB aria-label="Criar usuário" icon={<UserPlus className="h-6 w-6" />} onClick={() => setCreateOpen(true)} />
 
       {createDialog}
 

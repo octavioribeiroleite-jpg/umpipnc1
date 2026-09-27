@@ -207,6 +207,7 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label={`Excluir item ${item.title}`}
                       onClick={() => handleDeleteItem(item.id)}
                       className="text-destructive hover:text-destructive"
                     >

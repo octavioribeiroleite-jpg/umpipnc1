@@ -207,6 +207,7 @@ export function MembrosTab() {
                     variant="ghost"
                     size="icon"
                     className="text-destructive h-8 w-8"
+                    aria-label={`Excluir membro ${member.name}`}
                     onClick={() => setDeleteId(member.id)}
                   >
                     <Trash2 className="h-4 w-4" />

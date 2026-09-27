@@ -194,9 +194,9 @@ export default function Estudos() {
   if (selectedStudy) {
     return (
       <AppLayout>
-        <div className="p-4 md:p-6 space-y-4 max-w-3xl mx-auto">
+        <div className="space-y-4 max-w-3xl mx-auto">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={handleBack}>
+            <Button variant="ghost" size="icon" aria-label="Voltar aos estudos" onClick={handleBack}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
@@ -262,7 +262,7 @@ export default function Estudos() {
   // Studies list view
   return (
     <AppLayout>
-      <div className="p-4 md:p-6 space-y-4 max-w-3xl mx-auto">
+      <div className="space-y-4 max-w-3xl mx-auto">
         <PageHeader
           title="Estudos"
           description="Anotações dos estudos bíblicos de sexta-feira"
@@ -383,6 +383,9 @@ export default function Estudos() {
             {studies.map((study) => (
               <AppCard
                 key={study.id}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedStudy(study); notesRef.current = study.notes; } }}
                 variant="interactive"
                 onClick={() => { setSelectedStudy(study); notesRef.current = study.notes; }}
               >

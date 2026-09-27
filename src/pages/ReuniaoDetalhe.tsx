@@ -256,7 +256,7 @@ export default function ReuniaoDetalhe() {
       <AppLayout>
         {/* Back header */}
         <div className="flex items-center gap-2 mb-4">
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setOpenSheet(null)}>
+          <Button variant="ghost" size="icon" aria-label="Voltar à reunião" className="h-8 w-8 shrink-0" onClick={() => setOpenSheet(null)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-lg font-semibold min-w-0 whitespace-normal break-words">{sheetTitles[openSheet]}</h1>
@@ -375,7 +375,7 @@ export default function ReuniaoDetalhe() {
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/reunioes')}>
+            <Button variant="ghost" size="icon" aria-label="Voltar às reuniões" className="h-8 w-8 shrink-0" onClick={() => navigate('/reunioes')}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-lg font-semibold min-w-0 whitespace-normal break-words">{meeting.title}</h1>
@@ -410,6 +410,15 @@ export default function ReuniaoDetalhe() {
         {toolCards.filter(c => !c.hidden).map((card) => (
           <Card
             key={card.key}
+            role="button"
+            tabIndex={0}
+            aria-label={card.title}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setOpenSheet(card.key);
+              }
+            }}
             className="cursor-pointer transition-all hover:shadow-md active:scale-[0.98] relative"
             onClick={() => setOpenSheet(card.key)}
           >
