@@ -1,0 +1,66 @@
+// Run with PGLITE_MODULE pointing to a locally installed @electric-sql/pglite module.
+// All fixtures live in an ephemeral PostgreSQL instance; no production credentials.
+import { readFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const db = new PGlite();
+await db.exec(`
+create role anon; create role authenticated;
+create schema ipnc_private;
+create function public.ebd_is_admin() returns boolean language sql stable as $$ select current_setting('test.admin',true)='true' $$;
+create table ebd_classes(id uuid primary key default gen_random_uuid(),name text,order_index integer default 0,active boolean default true);
+create table ebd_students(id uuid primary key default gen_random_uuid(),class_id uuid references ebd_classes,name text,active boolean default true,created_at timestamptz default '2026-01-01');
+create table ebd_attendance(id uuid primary key default gen_random_uuid(),student_id uuid references ebd_students,class_id uuid references ebd_classes,date date,present boolean,marked_by text,unique(student_id,date));
+create table ebd_day_closures(id uuid primary key default gen_random_uuid(),date date unique,closed_by text,total_students integer,present_students integer,class_summary jsonb,visitor_count integer);
+create table ebd_class_visitor_entries(id uuid primary key default gen_random_uuid(),date date,class_id uuid references ebd_classes,name text);
+create table ebd_call_status(class_id uuid references ebd_classes,date date,status text,changed_by text,primary key(class_id,date));
+grant usage on schema public,ipnc_private to authenticated,anon;
+grant select,insert,update,delete on all tables in schema public to authenticated;
+`);
+await db.exec(await readFile(new URL('../supabase/migrations/20260927121700_ebd_historical_attendance.sql', import.meta.url),'utf8'));
+await db.exec(`
+create trigger guard before insert or update or delete on ebd_attendance for each row execute function ipnc_private.guard_ebd_day();
+create trigger guard before insert or update or delete on ebd_day_closures for each row execute function ipnc_private.guard_ebd_day();
+create trigger guard before insert or update or delete on ebd_call_status for each row execute function ipnc_private.guard_ebd_day();
+create trigger guard before insert or update or delete on ebd_class_visitor_entries for each row execute function ipnc_private.guard_ebd_day();
+do $$ declare t text; begin foreach t in array array['ebd_attendance','ebd_day_closures','ebd_call_status','ebd_students','ebd_classes','ebd_class_visitor_entries'] loop
+execute format('alter table %I enable row level security',t);
+execute format('create policy admin on %I for all to authenticated using(ebd_is_admin()) with check(ebd_is_admin())',t);
+end loop; end $$;
+set test.admin='true';
+insert into ebd_classes(id,name) values ('00000000-0000-0000-0000-000000000001','Turma antiga'),('00000000-0000-0000-0000-000000000002','Turma nova');
+insert into ebd_students(id,class_id,name) values ('00000000-0000-0000-0000-000000000011','00000000-0000-0000-0000-000000000001','Aluno transferido'),('00000000-0000-0000-0000-000000000012','00000000-0000-0000-0000-000000000001','Aluno inativo');
+insert into ebd_attendance(student_id,class_id,date,present) select id,class_id,'2026-09-20',false from ebd_students;
+update ebd_students set class_id='00000000-0000-0000-0000-000000000002' where name='Aluno transferido';
+update ebd_students set active=false where name='Aluno inativo';
+set role authenticated;
+update ebd_attendance set present=true where date='2026-09-20';
+`);
+const closure = (await db.query(`select ebd_close_day('2026-09-20') value`)).rows[0].value;
+assert.equal(closure.present_students,2);assert.equal(closure.total_students,2);
+assert.equal(closure.class_summary.find(c=>c.className==='Turma antiga').present,2);
+assert.equal(closure.class_summary.find(c=>c.className==='Turma nova').total,0);
+assert.equal((await db.query(`select ebd_close_day('2026-09-20') value`)).rows[0].value.id,closure.id);
+await assert.rejects(db.exec(`update ebd_attendance set present=false where date='2026-09-20'`),/Dia fechado/);
+await assert.rejects(db.exec(`select ebd_reopen_day('2026-09-20','00000000-0000-0000-0000-000000000099')`),/fechamento mudou/);
+await db.query(`select ebd_reopen_day('2026-09-20',$1)`,[closure.id]);
+assert.equal((await db.query('select count(*)::int n from ebd_attendance')).rows[0].n,2);
+await db.exec(`update ebd_attendance set present=false where student_id='00000000-0000-0000-0000-000000000012'`);
+await assert.rejects(db.exec(`update ebd_attendance set class_id='00000000-0000-0000-0000-000000000002'`),/mover/);
+await assert.rejects(db.exec(`update ebd_attendance set date='2026-09-21'`),/mover/);
+await assert.rejects(db.exec(`insert into ebd_attendance(student_id,class_id,date,present) values ('00000000-0000-0000-0000-000000000012','00000000-0000-0000-0000-000000000001','2026-09-21',true)`),/indisponível/);
+const corrected=(await db.query(`select ebd_close_day('2026-09-20') value`)).rows[0].value;
+assert.equal(corrected.present_students,1);
+const empty = (await db.query(`select ebd_close_day('2026-09-13') value`)).rows[0].value;
+assert.equal(empty.present_students,0);
+await db.query(`select ebd_reopen_day('2026-09-13',$1)`,[empty.id]);
+assert.equal((await db.query(`select count(*)::int n from ebd_call_status where date='2026-09-13'`)).rows[0].n,2);
+assert.equal((await db.query(`select count(*)::int n from ebd_attendance where date='2026-09-13'`)).rows[0].n,0);
+await db.exec(`set test.admin='false'`);
+await assert.rejects(db.exec(`select ebd_close_day('2026-09-21')`),/exclusivo/);
+await assert.rejects(db.query(`select ebd_reopen_day('2026-09-20',$1)`,[corrected.id]),/exclusivo/);
+assert.equal((await db.query('select * from ebd_attendance')).rows.length,0);
+await db.exec('reset role; set role anon');
+await assert.rejects(db.exec(`select ebd_close_day('2026-09-20')`),/permission denied/);
+console.log('PASS: admin corrections, historical pupils, immutable identity, close/reopen/reclose, stale closure, RLS and anonymous denial');
+await db.close();

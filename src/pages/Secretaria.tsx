@@ -1,3 +1,4 @@
+import { closeEbdDay, reopenEbdDay, setEbdCallStatus } from '@/lib/ebd-day';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/ebd-client';
@@ -536,80 +537,22 @@ export default function Secretaria() {
   }, []);
 
   const handleCloseDay = async () => {
-    let snapshot: Awaited<ReturnType<typeof readData>>;
-    try { snapshot = await readData(); }
-    catch (error) { await reportEbdWriteError(error, 'Atualize os dados antes de fechar o dia.'); return; }
-    const { classes, activeStudents, attendance, classVisitors } = snapshot;
-    const classSummary = classes.map(cls => {
-      const classStudents = activeStudents.filter(s => s.class_id === cls.id);
-      const classAttendance = attendance.filter(a => a.class_id === cls.id && a.date === sundayDate);
-      const present = classAttendance.filter(a => a.present).length;
-      const total = classStudents.length;
-      const visitorEntries = classVisitors[cls.id] || [];
-      return {
-        classId: cls.id,
-        className: cls.name,
-        total,
-        present,
-        percentage: total > 0 ? Math.round((present / total) * 100) : 0,
-        visitor_count: visitorEntries.length,
-        visitors: visitorEntries.map(v => ({ name: v.name })),
-      };
-    });
-
-    const totalStudents = activeStudents.length;
-    const presentStudents = attendance.filter(a => a.present && a.date === sundayDate).length;
-    const totalVisitors = Object.values(classVisitors).reduce((s, l) => s + l.length, 0);
-
-    const { error } = await supabase
-      .from('ebd_day_closures')
-      .insert({
-        date: sundayDate,
-        closed_by: professorNome || 'Administrador',
-        total_students: totalStudents,
-        present_students: presentStudents,
-        class_summary: classSummary,
-        visitor_count: totalVisitors,
-      } as any);
-
-    if (error) {
-      await reportEbdWriteError(error, 'Erro ao fechar o dia');
-      return;
-    }
-
-    toast.success('Dia fechado com sucesso!');
+    await closeEbdDay(sundayDate);
     await fetchData();
+    toast.success('Dia fechado com sucesso!');
   };
 
   const handleCallStatusChange = async (classId: string, status: 'aberta' | 'finalizada') => {
-    try {
-      await ensureEbdSession();
-      const { data, error } = await supabase.from('ebd_call_status' as any)
-        .upsert({ class_id: classId, date: sundayDate, status, changed_by: professorNome || 'Administrador' }, { onConflict: 'class_id,date' })
-        .select('class_id, status').single();
-      if (error || !data) throw error || new Error('O status da chamada não foi salvo.');
-      setCallStatuses(previous => ({ ...previous, [classId]: status }));
-      notifyEbdChange();
-    } catch (error) { await reportEbdWriteError(error, 'Não foi possível alterar o status da chamada.'); }
+    await setEbdCallStatus(sundayDate, classId, status, professorNome || 'Administrador');
+    setCallStatuses(previous => ({ ...previous, [classId]: status }));
   };
 
   const handleReopenDay = async () => {
     if (!closureId) return;
-
-    const { data, error } = await supabase
-      .from('ebd_day_closures')
-      .delete()
-      .eq('id', closureId).select('id').single();
-
-    if (error || !data) {
-      await reportEbdWriteError(error, 'Erro ao reabrir o dia');
-      return;
-    }
-
-    toast.success('Dia reaberto!');
+    await reopenEbdDay(sundayDate, closureId);
     await fetchData();
+    toast.success('Dia reaberto!');
   };
-
   const reauthDialog = (
 <Dialog open={aiReauthOpen} onOpenChange={setAiReauthOpen}>
             <DialogContent className="max-h-[90dvh] overflow-y-auto">
