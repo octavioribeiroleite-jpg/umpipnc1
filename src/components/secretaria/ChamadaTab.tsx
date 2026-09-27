@@ -1,3 +1,4 @@
+import { useEbdNavigation } from '@/hooks/useEbdNavigation';
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,13 @@ interface ChamadaTabProps {
 }
 
 export default function ChamadaTab({ classes, students, attendance, setAttendance, callStatuses = {}, onCallStatusChange, attendanceDate, formattedDate, initialProfessorName, accessLevel, dayIsClosed, onCloseDay, onReopenDay, classVisitors = {}, onAddClassVisitor, onRemoveClassVisitor }: ChamadaTabProps) {
-  const [selectedClassChoice, setSelectedClass] = useState<EbdClass | null>(null);
+  const navigation = useEbdNavigation();
+  const [localClass, setLocalClass] = useState<EbdClass | null>(null);
+  const selectedClassChoice = navigation ? classes.find(cls => cls.id === navigation.screen.classId) || null : localClass;
+  const setSelectedClass = (cls: EbdClass | null) => {
+    if (navigation) { if (cls) navigation.open({ ...navigation.screen, classId: cls.id }); else navigation.back(); }
+    else setLocalClass(cls);
+  };
   useEffect(() => { window.scrollTo({ top: 0 }); }, [selectedClassChoice?.id, attendanceDate]);
   const selectedClass = classes.find(cls => cls.id === selectedClassChoice?.id) || null;
   const [saveMessage, setSaveMessage] = useState('');

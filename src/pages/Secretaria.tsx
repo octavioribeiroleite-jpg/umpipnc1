@@ -1,3 +1,5 @@
+import { EbdNavigationContext, useSecretariaNavigation } from '@/hooks/useEbdNavigation';
+import { loadStoredEbdSession, saveStoredEbdSession, clearStoredEbdSession } from '@/lib/ebd-session-storage';
 import { closeEbdDay, reopenEbdDay, setEbdCallStatus } from '@/lib/ebd-day';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +21,6 @@ import {
   UserCheck,
   Users,
 } from 'lucide-react';
-import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -110,26 +111,6 @@ function SecretariaMenuCard({ title, description, icon: Icon, onClick }: {
       <span className="ebd-menu-copy"><strong>{title}</strong><span>{description}</span></span>
     </button>
   );
-}
-
-const EBD_SESSION_KEY = 'ebd_session';
-
-interface StoredEbdSession {
-  accessLevel: AccessLevel;
-  adminPin?: string;
-  professorNome?: string;
-  professorClassId?: string | null;
-  birthdayAiToken?: string;
-  birthdayAiExpiresAt?: string;
-}
-
-function loadStoredEbdSession(): StoredEbdSession | null {
-  try {
-    const raw = sessionStorage.getItem(EBD_SESSION_KEY);
-    return raw ? (JSON.parse(raw) as StoredEbdSession) : null;
-  } catch {
-    return null;
-  }
 }
 
 // Embedded birthdays component
@@ -277,8 +258,7 @@ function SecretariaAniversariantes({ onSessionExpired }: { onSessionExpired: () 
 
 export default function Secretaria() {
   const navigate = useNavigate();
-  useSwipeBack();
-  const storedSession = loadStoredEbdSession();
+  const [storedSession] = useState(loadStoredEbdSession);
   const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(storedSession?.accessLevel ?? null);
   const [loginStep, setLoginStep] = useState<LoginStep>('profile');
   const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(storedSession?.accessLevel ?? null);
@@ -286,7 +266,7 @@ export default function Secretaria() {
   const [pinError, setPinError] = useState(false);
   const [pendingPin, setPendingPin] = useState('');
   const [nameInput, setNameInput] = useState('');
-  const [adminPin, setAdminPin] = useState(storedSession?.adminPin ?? '');
+  const [adminPin, setAdminPin] = useState('');
   const [birthdayAiToken, setBirthdayAiToken] = useState(storedSession?.birthdayAiToken ?? '');
   const [birthdayAiExpiresAt, setBirthdayAiExpiresAt] = useState(storedSession?.birthdayAiExpiresAt ?? '');
   const [aiReauthOpen, setAiReauthOpen] = useState(false);
@@ -301,8 +281,13 @@ export default function Secretaria() {
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
   const [classVisitors, setClassVisitors] = useState<Record<string, VisitorEntry[]>>({});
-  const [currentView, setCurrentView] = useState<CurrentView>('home');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const navigation = useSecretariaNavigation(accessLevel ? `${accessLevel}:${professorClassId || ''}` : null,
+    () => setShowExitConfirm(true),
+    () => { if (showExitConfirm) { if (!signingOut) setShowExitConfirm(false); return true; } if (aiReauthOpen) return true; return false; });
+  const currentView = navigation.screen.view;
+  const setCurrentView = (view: CurrentView) => navigation.open({ view });
   const { weekBirthdays, todayBirthdays, isLoading: birthdaysLoading } = useBirthdays(supabase, `ebd-${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}`);
   const allWeekAnnouncements = [
     ...todayBirthdays.map(b => ({ ...b, daysUntil: 0 })),
@@ -336,10 +321,10 @@ export default function Secretaria() {
         setBirthdayAiToken(data.birthday_ai_token);
         setBirthdayAiExpiresAt(data.birthday_ai_expires_at);
         try {
-          sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+          saveStoredEbdSession({
             accessLevel: 'admin',
             birthdayAiToken: data.birthday_ai_token, birthdayAiExpiresAt: data.birthday_ai_expires_at,
-          }));
+          });
         } catch { /* ignore */ }
       } else {
         setPinError(true);
@@ -383,13 +368,13 @@ export default function Secretaria() {
     setPendingPin('');
     setAccessLevel('professor');
     try {
-      sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+      saveStoredEbdSession({
         accessLevel: 'professor',
         professorNome: data.teacher.name,
         professorClassId: data.teacher.class_id,
         birthdayAiToken: data.birthday_ai_token,
         birthdayAiExpiresAt: data.birthday_ai_expires_at,
-      }));
+      });
     } catch { /* ignore */ }
   };
 
@@ -411,11 +396,11 @@ export default function Secretaria() {
       setBirthdayAiToken(data.birthday_ai_token);
       setBirthdayAiExpiresAt(data.birthday_ai_expires_at);
       try {
-        sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+        saveStoredEbdSession({
           accessLevel,
           professorNome, professorClassId,
           birthdayAiToken: data.birthday_ai_token, birthdayAiExpiresAt: data.birthday_ai_expires_at,
-        }));
+        });
       } catch { /* session remains in memory */ }
       if (accessLevel === 'admin') setAdminPin(pin);
       setAiReauthOpen(false);
@@ -649,13 +634,15 @@ export default function Secretaria() {
     setShowExitConfirm(true);
   };
 
-  const confirmExit = () => {
-    void supabase.auth.signOut({ scope: 'local' });
+  const confirmExit = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try { await supabase.auth.signOut({ scope: 'local' }); }
+    catch { /* Explicit logout still clears this device when offline. */ }
+    finally { clearStoredEbdSession(); navigation.clear(); }
+    setSigningOut(false);
     setClasses([]); setActiveStudents([]); setAllStudents([]); setAttendance([]); setClassVisitors({}); setCallStatuses({});
     setShowExitConfirm(false);
-    try {
-      sessionStorage.removeItem(EBD_SESSION_KEY);
-    } catch { /* ignore */ }
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
@@ -663,7 +650,6 @@ export default function Secretaria() {
     setBirthdayAiToken('');
     setBirthdayAiExpiresAt('');
     setAiReauthOpen(false);
-    setCurrentView('home');
     setProfessorClassId(null);
     setProfessorNome('');
     navigate('/auth', { replace: true, state: { skipSplash: true } });
@@ -680,11 +666,11 @@ export default function Secretaria() {
   // Home view with cards
   if (currentView === 'home') {
     return (
-      <PullToRefresh>
+      <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
       <div className="ebd-home">
         <header className="ebd-header safe-top">
           <div className="ebd-header-inner">
-            <button type="button" onClick={() => navigate('/auth', { replace: true, state: { skipSplash: true } })} aria-label="Voltar" className="ebd-back">
+            <button type="button" onClick={navigation.back} aria-label="Voltar" className="ebd-back">
               <ArrowLeft aria-hidden="true" />
             </button>
             <div className="ebd-heading">
@@ -756,7 +742,7 @@ export default function Secretaria() {
           )}
         </main>
 
-        <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+        <AlertDialog open={showExitConfirm} onOpenChange={open => { if (!signingOut) setShowExitConfirm(open); }}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Sair da Secretaria?</AlertDialogTitle>
@@ -765,13 +751,13 @@ export default function Secretaria() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmExit}>Sair</AlertDialogAction>
+              <AlertDialogCancel disabled={signingOut}>Continuar na Secretaria</AlertDialogCancel>
+              <AlertDialogAction disabled={signingOut} onClick={event => { event.preventDefault(); void confirmExit(); }}>{signingOut ? 'Saindo…' : 'Sair e voltar ao login'}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
-      </PullToRefresh>
+      </PullToRefresh></EbdNavigationContext.Provider>
     );
   }
 
@@ -788,13 +774,13 @@ export default function Secretaria() {
   };
 
   return (
-    <PullToRefresh>
+    <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
     <div className="min-h-screen bg-background">
       <div className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border px-2 py-1.5 safe-top">
         <div className="flex items-center justify-between gap-1">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <button
-              onClick={handleBackToHome}
+              onClick={navigation.back}
               aria-label="Voltar"
               className="p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
             >
@@ -889,7 +875,7 @@ export default function Secretaria() {
         )}
       </div>
 
-      <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+      <AlertDialog open={showExitConfirm} onOpenChange={open => { if (!signingOut) setShowExitConfirm(open); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Sair da Secretaria?</AlertDialogTitle>
@@ -898,12 +884,12 @@ export default function Secretaria() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmExit}>Sair</AlertDialogAction>
+            <AlertDialogCancel disabled={signingOut}>Continuar na Secretaria</AlertDialogCancel>
+            <AlertDialogAction disabled={signingOut} onClick={event => { event.preventDefault(); void confirmExit(); }}>{signingOut ? 'Saindo…' : 'Sair e voltar ao login'}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </PullToRefresh>
+    </PullToRefresh></EbdNavigationContext.Provider>
   );
 }

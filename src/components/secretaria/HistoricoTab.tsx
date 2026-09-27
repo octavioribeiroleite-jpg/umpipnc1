@@ -1,3 +1,4 @@
+import { useEbdNavigation } from '@/hooks/useEbdNavigation';
 import HistoricalChamada from './HistoricalChamada';
 import { closeEbdDay, reopenEbdDay, readEbdDay } from '@/lib/ebd-day';
 import { buildDayRoster, buildDayClasses, type DayStudent, type DayClass } from '@/lib/ebd-roster';
@@ -76,18 +77,31 @@ interface HistoricoTabProps {
 }
 
 export default function HistoricoTab({ classes, students, accessLevel, onRefreshParent, refreshedAt }: HistoricoTabProps) {
-  const [editingDate, setEditingDate] = useState<string | null>(null);
+  const navigation = useEbdNavigation();
+  const [localEditingDate, setLocalEditingDate] = useState<string | null>(null);
+  const editingDate = navigation ? (navigation.screen.editing ? navigation.screen.day || null : null) : localEditingDate;
+  const setEditingDate = (date: string | null) => {
+    if (navigation) {
+      if (date) navigation.open({ view: 'historico', day: date, editing: true });
+      else navigation.backTo(screen => screen.view === 'historico' && screen.day === editingDate && !screen.editing);
+    } else setLocalEditingDate(date);
+  };
   const [confirmAction, setConfirmAction] = useState<'close' | 'reopen' | null>(null);
   const [historyStudents, setHistoryStudents] = useState<DayStudent[]>(students);
   const [historyClasses, setHistoryClasses] = useState<DayClass[]>(classes);
   const [otherDates, setOtherDates] = useState<string[]>([]);
   const [historyVisitors, setHistoryVisitors] = useState<{ date: string; class_id: string; name: string | null }[]>([]);
-  const [period, setPeriod] = useState<PeriodFilter>('4weeks');
+  const [period, setPeriod] = useState<PeriodFilter>(navigation?.screen.day ? 'all' : '4weeks');
   const [allAttendance, setAllAttendance] = useState<{ student_id: string; class_id: string; date: string; present: boolean; marked_by: string | null }[]>([]);
   const [closures, setClosures] = useState<{ id: string; date: string; closed_by: string; total_students: number; present_students: number; class_summary: ClassSummaryItem[] }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
-  useEffect(() => { window.scrollTo({ top: 0 }); }, [selectedDay?.date, editingDate]);
+  const [localSelectedDate, setLocalSelectedDate] = useState<string | null>(null);
+  const selectedDate = navigation ? navigation.screen.day || null : localSelectedDate;
+  const setSelectedDay = (day: DayRecord | null) => {
+    if (navigation) { if (day) navigation.open({ view: 'historico', day: day.date }); else navigation.back(); }
+    else setLocalSelectedDate(day?.date || null);
+  };
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [selectedDate, editingDate]);
   const [closingDay, setClosingDay] = useState(false);
   const [openDialog, setOpenDialog] = useState<'perfect' | 'lowFreq' | 'absent' | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
@@ -192,9 +206,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     });
   }, [allAttendance, closures, historyClasses, historyStudents, otherDates, historyVisitors]);
 
-  useEffect(() => {
-    setSelectedDay(previous => previous ? dayRecords.find(day => day.date === previous.date) || null : null);
-  }, [dayRecords]);
+  const selectedDay = dayRecords.find(day => day.date === selectedDate) || null;
 
   const getPercentColor = (pct: number) => {
     if (pct > 70) return 'text-green-600';

@@ -1,3 +1,4 @@
+import { useEbdNavigation } from '@/hooks/useEbdNavigation';
 import { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { reportEbdWriteError } from '@/lib/ebd-mutations';
@@ -90,7 +91,13 @@ function parseAgeInput(value: string): number | null {
 }
 
 export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTabProps) {
-  const [selectedClassChoice, setSelectedClass] = useState<EbdClass | null>(null);
+  const navigation = useEbdNavigation();
+  const [localClass, setLocalClass] = useState<EbdClass | null>(null);
+  const selectedClassChoice = navigation ? classes.find(cls => cls.id === navigation.screen.managedClassId) || null : localClass;
+  const setSelectedClass = (cls: EbdClass | null) => {
+    if (navigation) { if (cls) navigation.open({ ...navigation.screen, managedClassId: cls.id }); else navigation.back(); }
+    else setLocalClass(cls);
+  };
   const selectedClass = classes.find(cls => cls.id === selectedClassChoice?.id) || null;
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentBirthDate, setNewStudentBirthDate] = useState('');

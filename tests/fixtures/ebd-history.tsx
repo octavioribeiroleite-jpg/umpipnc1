@@ -40,6 +40,7 @@ window.fetch=async (input,init) => {
   const endpoint=url.pathname.split('/').at(-1);
   const respond=(data:unknown,status=200)=>Promise.resolve(new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}}));
   if(endpoint==='ebd_session_valid')return respond(true);
+  if(endpoint==='ebd_closure')return respond(closures.find(c=>c.date===body.p_date)||null);
   if(endpoint==='ebd_attendance' && method==='PATCH' && failNext){failNext=false;return respond({message:'Falha simulada. Tente novamente.'},400);}
   if(endpoint==='ebd_close_day')return respond(closeDay(body.p_date));
   if(endpoint==='ebd_reopen_day'){closures=closures.filter(c=>c.id!==body.p_closure_id);return respond(true);}
@@ -60,7 +61,21 @@ supabase.channel=(()=>{const channel={on:()=>channel,subscribe:()=>channel,unsub
 supabase.removeChannel=async()=> 'ok';
 const {default:HistoricoTab}=await import('../../src/components/secretaria/HistoricoTab');
 const role=new URLSearchParams(location.search).get('role')==='professor'?'professor':'admin';
-createRoot(document.getElementById('root')!).render(<>
+if (location.pathname.includes('ebd-back')) {
+  const { BrowserRouter, Routes, Route } = await import('react-router-dom');
+  const { QueryClientProvider, QueryClient } = await import('@tanstack/react-query');
+  const { default: Secretaria } = await import('../../src/pages/Secretaria');
+  const { saveStoredEbdSession } = await import('../../src/lib/ebd-session-storage');
+  if (!localStorage.getItem('ebd-test-initialized-v2')) {
+    saveStoredEbdSession({ accessLevel:'admin', birthdayAiToken:'synthetic', birthdayAiExpiresAt:new Date(Date.now()+3600000).toISOString() });
+    localStorage.setItem('ebd-test-initialized-v2','yes');
+  }
+  createRoot(document.getElementById('root')!).render(<QueryClientProvider client={new QueryClient()}><BrowserRouter>
+    <Routes><Route path="/auth" element={<h1>Login do teste — saída confirmada</h1>}/><Route path="*" element={<Secretaria/>}/></Routes>
+    <aside className="fixed bottom-0 right-0 z-[100] bg-white border p-2 flex gap-2"><button onClick={()=>history.back()}>Voltar nativo (teste)</button><button onClick={()=>location.reload()}>Recarregar (teste)</button></aside>
+    <Toaster/>
+  </BrowserRouter></QueryClientProvider>);
+} else createRoot(document.getElementById('root')!).render(<>
   <header className="fixed inset-x-0 top-0 z-30 border-b bg-background px-4 py-3"><strong>Histórico</strong><p className="text-xs text-muted-foreground">Ambiente de teste · {role==='admin'?'Administrador':'Professor'}</p></header>
   <main className="mx-auto max-w-3xl px-4 pb-8 pt-20"><HistoricoTab classes={classes} students={students.filter(s=>s.active)} accessLevel={role}/></main>
   <aside className="m-4 rounded border p-3 text-xs"><p>Controles do teste local</p><button className="p-2 underline" onClick={()=>{failNext=true;document.getElementById('test-output')!.textContent='Falha preparada';}}>Simular próxima falha</button><button className="p-2 underline" onClick={()=>{closeDay(date);window.dispatchEvent(new Event('ebd-data-changed'));}}>Simular fechamento remoto</button><button className="p-2 underline" onClick={()=>{document.getElementById('test-output')!.textContent=JSON.stringify(attendance);}}>Conferir dados simulados</button><output id="test-output" className="block break-all"/></aside>

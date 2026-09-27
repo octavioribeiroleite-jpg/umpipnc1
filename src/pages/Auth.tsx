@@ -1,3 +1,4 @@
+import { loadStoredEbdSession } from '@/lib/ebd-session-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,6 +77,9 @@ export default function Auth() {
   const { setSession: setMembroSession } = useMembroSession();
   const navigate = useNavigate();
   const location = useLocation();
+  useEffect(() => {
+    if (loadStoredEbdSession()) navigate('/secretaria', { replace: true });
+  }, [navigate]);
   const skipSplash = Boolean((location.state as { skipSplash?: boolean } | null)?.skipSplash);
   const { toast } = useToast();
 
