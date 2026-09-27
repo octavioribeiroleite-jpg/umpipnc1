@@ -550,7 +550,7 @@ export default function Secretaria() {
   };
   const reauthDialog = (
 <Dialog open={aiReauthOpen} onOpenChange={setAiReauthOpen}>
-            <DialogContent className="max-h-[90dvh] overflow-y-auto">
+            <DialogContent className="ebd-reauth">
               <DialogHeader>
                 <DialogTitle>Confirmar acesso</DialogTitle>
                 <DialogDescription>Digite novamente o PIN do seu acesso. Seus dados preenchidos continuam na tela.</DialogDescription>

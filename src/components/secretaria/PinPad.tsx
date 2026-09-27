@@ -72,10 +72,10 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
       ref={containerRef}
       tabIndex={0}
       className={cn(
-        "w-full mx-auto space-y-6 outline-none",
+        "w-full min-w-0 mx-auto outline-none",
         embedded
-          ? "max-w-[420px] rounded-[28px] border border-white/50 bg-[#F7FAF6]/95 p-5 shadow-[0_28px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-6"
-          : "max-w-xs"
+          ? "ebd-pin-embedded space-y-4"
+          : "max-w-xs space-y-6"
       )}
     >
       {/* Header */}
@@ -95,15 +95,15 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
       )}
 
       {embedded && (
-        <div className="flex items-center gap-3 mb-1">
-          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-muted-foreground hover:bg-emerald-50 hover:text-primary" onClick={onBack}>
+        <div className="flex min-w-0 items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-muted-foreground hover:bg-emerald-50 hover:text-primary" aria-label="Voltar" onClick={onBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-primary ring-1 ring-emerald-100">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-primary ring-1 ring-emerald-100">
             <Lock className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-lg font-bold leading-tight text-foreground">{profileLabel}</h2>
+            <h2 className="text-base font-bold leading-tight break-words text-foreground">{profileLabel}</h2>
             <p className="text-sm font-medium text-muted-foreground">Informe o PIN de 6 dígitos</p>
           </div>
         </div>
@@ -111,14 +111,14 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
 
       {/* PIN Slots */}
       <div className={cn(
-        "flex items-center justify-center gap-3 transition-transform",
+        "grid min-w-0 grid-cols-6 gap-2 transition-transform",
         shaking && "animate-shake"
       )}>
         {[0, 1, 2, 3, 4, 5].map(i => (
           <div
             key={i}
             className={cn(
-              "h-12 w-11 rounded-xl border-2 flex items-center justify-center transition-all duration-200",
+              "h-12 w-full min-w-0 rounded-xl border-2 flex items-center justify-center transition-all duration-200",
               pin.length > i
                 ? shaking ? "border-destructive bg-destructive/10" : "border-primary bg-primary/10"
                 : pin.length === i

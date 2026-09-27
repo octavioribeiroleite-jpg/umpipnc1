@@ -77,7 +77,7 @@ if (location.pathname.includes('ebd-back')) {
   }
   createRoot(document.getElementById('root')!).render(<QueryClientProvider client={new QueryClient()}><BrowserRouter>
     <Routes><Route path="/auth" element={<h1>Login do teste — saída confirmada</h1>}/><Route path="*" element={<Secretaria/>}/></Routes>
-    <aside className="bg-white border p-2 flex gap-2"><button onClick={()=>history.back()}>Voltar nativo (teste)</button><button onClick={()=>location.reload()}>Recarregar (teste)</button></aside>
+    <aside className="bg-white border p-2 flex gap-2"><button onClick={()=>window.dispatchEvent(new Event("ebd-session-expired"))}>Simular confirmação de acesso</button><button onClick={()=>history.back()}>Voltar nativo (teste)</button><button onClick={()=>location.reload()}>Recarregar (teste)</button></aside>
     <Toaster/>
   </BrowserRouter></QueryClientProvider>);
 } else createRoot(document.getElementById('root')!).render(<>
