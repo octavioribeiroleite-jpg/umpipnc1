@@ -43,6 +43,7 @@ window.fetch=async (input,init) => {
   if(endpoint==='list_birthdays')return respond([{id:'birthday-test',nome:'Mariana de Oliveira — exemplo',dia:27,mes:9,ano_nascimento:1998,departamento:'EBD',observacao:null,ativo:true,pendente_revisao:false,created_at:'2026-01-01',updated_at:'2026-01-01'}]);
   if(endpoint==='ebd_session_valid')return respond(true);
   if(endpoint==='ebd_closure')return respond(closures.find(c=>c.date===body.p_date)||null);
+  if(endpoint==='ebd_attendance' && ['POST','PATCH'].includes(method) && !/^[0-9a-f-]{36}$/i.test(body.marked_by || ''))return respond({message:'invalid input syntax for type uuid'},400);
   if(endpoint==='ebd_attendance' && method==='PATCH' && failNext){failNext=false;return respond({message:'Falha simulada. Tente novamente.'},400);}
   if(endpoint==='ebd_close_day')return respond(closeDay(body.p_date));
   if(endpoint==='ebd_reopen_day'){closures=closures.filter(c=>c.id!==body.p_closure_id);return respond(true);}
@@ -61,6 +62,8 @@ window.fetch=async (input,init) => {
 const {supabase}=await import('../../src/integrations/supabase/ebd-client');
 supabase.channel=(()=>{const channel={on:()=>channel,subscribe:()=>channel,unsubscribe:async()=>{}};return channel;}) as typeof supabase.channel;
 supabase.removeChannel=async()=> 'ok';
+// Synthetic identity used only by this local fixture, never a production login.
+supabase.auth.getSession=(async()=>({data:{session:{user:{id:'00000000-0000-0000-0000-000000000099'}}},error:null})) as typeof supabase.auth.getSession;
 const {default:HistoricoTab}=await import('../../src/components/secretaria/HistoricoTab');
 const role=new URLSearchParams(location.search).get('role')==='professor'?'professor':'admin';
 if (location.pathname.includes('ebd-back')) {

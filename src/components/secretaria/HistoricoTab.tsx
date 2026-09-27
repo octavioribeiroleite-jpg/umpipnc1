@@ -108,6 +108,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   const [generatingQuarterly, setGeneratingQuarterly] = useState(false);
   const requestId = useRef(0);
   const [historyError, setHistoryError] = useState(false);
+  const [callActors, setCallActors] = useState<{date: string; changed_by: string}[]>([]);
 
   const fetchHistory = async () => {
     const request = ++requestId.current;
@@ -140,7 +141,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       readPages((from, to) => closureQuery.range(from, to)),
       readPages((from, to) => supabase.from('ebd_students').select('*').order('id').range(from, to)),
       readPages((from, to) => supabase.from('ebd_classes').select('*').order('id').range(from, to)),
-      readPages((from, to) => supabase.from('ebd_call_status' as never).select('date,class_id').gte('date', cutoff).order('date').order('class_id').range(from, to)),
+      readPages((from, to) => supabase.from('ebd_call_status' as never).select('date,class_id,changed_by').gte('date', cutoff).order('date').order('class_id').range(from, to)),
       readPages((from, to) => supabase.from('ebd_class_visitor_entries' as never).select('date,class_id,name').gte('date', cutoff).order('date').order('id').range(from, to)),
     ]);
 
@@ -148,6 +149,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     setHistoryStudents(pupils);
     setHistoryClasses(groups);
     setOtherDates((calls as { date: string }[]).map(row => row.date));
+    setCallActors(calls as {date: string; changed_by: string}[]);
     setHistoryVisitors(visits as { date: string; class_id: string; name: string | null }[]);
     setHistoryError(false);
     setAllAttendance(attData || []);
@@ -176,7 +178,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     return dates.map(date => {
       const closure = closureMap.get(date);
       const dayAtt = allAttendance.filter(a => a.date === date);
-      const markedByNames = [...new Set(dayAtt.map(a => a.marked_by).filter(Boolean))] as string[];
+      const markedByNames = [...new Set(callActors.filter(c => c.date === date).map(c => c.changed_by).filter(Boolean))];
 
       if (closure) {
         return {
@@ -204,7 +206,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       });
       return { date, isClosed: false, totalStudents: roster.length, presentStudents: presentCount, classSummary, markedByNames, visitorCount: visitors.length };
     });
-  }, [allAttendance, closures, historyClasses, historyStudents, otherDates, historyVisitors]);
+  }, [callActors, allAttendance, closures, historyClasses, historyStudents, otherDates, historyVisitors]);
 
   const selectedDay = dayRecords.find(day => day.date === selectedDate) || null;
 
@@ -444,7 +446,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       absentStudents,
       lowFreqStudents
     };
-  }, [allAttendance, historyClasses, students, dayRecords]);
+  }, [callActors, allAttendance, historyClasses, students, dayRecords]);
 
   // Student stats for selected class
   const studentStats = useMemo<StudentStats[]>(() => {

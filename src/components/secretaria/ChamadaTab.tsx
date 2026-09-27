@@ -113,7 +113,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     try {
       setSaveMessage('Salvando presença…');
       const existing = attendance.find(row => row.student_id === student.id && row.date === attendanceDate);
-      const data = await saveEbdAttendance(student, attendanceDate, !currentlyPresent, initialProfessorName || 'Administrador', existing);
+      const data = await saveEbdAttendance(student, attendanceDate, !currentlyPresent, existing);
       setAttendance(prev => [...prev.filter(a => !(a.student_id === student.id && a.date === attendanceDate)), data]);
       setSaveMessage('Presença salva.');
     } catch (error) {

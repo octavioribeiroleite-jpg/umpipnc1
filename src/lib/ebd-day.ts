@@ -30,8 +30,13 @@ export async function readEbdDay(date: string) {
   };
 }
 
-export async function saveEbdAttendance(student: { id: string; class_id: string }, date: string, present: boolean, markedBy: string, existing?: DayAttendance) {
+export async function saveEbdAttendance(student: { id: string; class_id: string }, date: string, present: boolean, existing?: DayAttendance) {
   await ensureEbdSession();
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const markedBy = sessionData.session?.user.id;
+  if (sessionError || !markedBy || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(markedBy)) {
+    throw new Error("Confirme novamente o PIN antes de registrar a presença.");
+  }
   const mutation = existing
     ? supabase.from('ebd_attendance').update({ present, marked_by: markedBy }).eq('id', existing.id).eq('date', date).eq('class_id', student.class_id).eq('student_id', student.id)
     : supabase.from('ebd_attendance').upsert({ student_id: student.id, class_id: student.class_id, date, present, marked_by: markedBy }, { onConflict: 'student_id,date' });
