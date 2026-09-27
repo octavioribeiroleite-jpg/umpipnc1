@@ -24,7 +24,7 @@ export function YearCalendar({ birthdays, onEdit }: Props) {
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {byMonth.map(m => (
-          <div key={m.month} className="rounded-xl border border-border bg-card p-3">
+          <div key={m.month} className="ebd-month-card rounded-xl border border-border bg-card p-3">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{m.name}</h3>
               <Badge variant="secondary" className="text-[10px]">{m.items.length}</Badge>

@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import {
+  Download,
   ArrowLeft,
   ArrowRight,
   UserRound,
@@ -34,11 +35,13 @@ import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import './secretaria-home.css';
+import './secretaria-theme.css';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { HeaderActions } from '@/components/layout/HeaderActions';
 import { PullToRefresh } from '@/components/layout/PullToRefresh';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useEbdSync } from '@/hooks/useEbdSync';
 import { ensureEbdSession, notifyEbdChange, reportEbdWriteError } from '@/lib/ebd-mutations';
 import { isBirthdaySessionExpiredError, useBirthdays } from '@/hooks/useBirthdays';
@@ -258,6 +261,12 @@ function SecretariaAniversariantes({ onSessionExpired }: { onSessionExpired: () 
 
 export default function Secretaria() {
   const navigate = useNavigate();
+  const { isInstalled, open: openInstall } = usePWAInstall();
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    document.body.classList.add('ebd-theme');
+    return () => document.body.classList.remove('ebd-theme');
+  }, []);
   const [storedSession] = useState(loadStoredEbdSession);
   const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(storedSession?.accessLevel ?? null);
   const [loginStep, setLoginStep] = useState<LoginStep>('profile');
@@ -287,6 +296,7 @@ export default function Secretaria() {
     () => setShowExitConfirm(true),
     () => { if (showExitConfirm) { if (!signingOut) setShowExitConfirm(false); return true; } if (aiReauthOpen) return true; return false; });
   const currentView = navigation.screen.view;
+  useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); }, [navigation.screen]);
   const setCurrentView = (view: CurrentView) => navigation.open({ view });
   const { weekBirthdays, todayBirthdays, isLoading: birthdaysLoading } = useBirthdays(supabase, `ebd-${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}`);
   const allWeekAnnouncements = [
@@ -663,32 +673,50 @@ export default function Secretaria() {
   const presentCount = attendance.filter(a => a.present && a.date === sundayDate).length;
   const totalCount = visibleActiveStudents.length;
 
-  // Home view with cards
-  if (currentView === 'home') {
-    return (
-      <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
-      <div className="ebd-home">
+  const viewTitles: Record<CurrentView, string> = {
+    home: 'Secretaria EBD',
+    chamada: 'Chamada',
+    historico: 'Histórico',
+    turmas: 'Turmas',
+    aniversariantes: 'Aniversariantes',
+    planilha: 'Planilha de Alunos',
+    configuracoes: 'Configurações',
+    acessos: 'Acessos',
+  };
+
+  const pageHeader = (
         <header className="ebd-header safe-top">
           <div className="ebd-header-inner">
             <button type="button" onClick={navigation.back} aria-label="Voltar" className="ebd-back">
               <ArrowLeft aria-hidden="true" />
             </button>
             <div className="ebd-heading">
-              <h1>Secretaria EBD</h1>
-              <p>Escola Bíblica Dominical</p>
+              <h1>{viewTitles[currentView]}</h1>
+              <p>{profileLabel} · EBD</p>
             </div>
+            <HeaderActions showInstall={false} showVersion={false} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button type="button" aria-label="Menu do usuário" className="ebd-profile"><UserRound aria-hidden="true" /></button>
+                <button type="button" ref={profileButtonRef} aria-label="Menu do usuário" className="ebd-profile"><UserRound aria-hidden="true" /></button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-52">
                 <DropdownMenuLabel>{profileLabel}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleBackToHome} className="min-h-11 gap-2"><Home className="h-4 w-4" />Menu da Secretaria</DropdownMenuItem>
+                {!isInstalled && <DropdownMenuItem onSelect={() => openInstall(profileButtonRef.current ?? undefined)} className="min-h-11 gap-2"><Download className="h-4 w-4" />Instalar aplicativo</DropdownMenuItem>}
                 <DropdownMenuItem onSelect={handleExitApp} className="min-h-11 gap-2"><LogOut className="h-4 w-4" />Sair da Secretaria</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
+  );
+
+  // Home view with cards
+  if (currentView === 'home') {
+    return (
+      <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
+      <div className="ebd-home ebd-app">
+        {pageHeader}
 
         <main className="ebd-content">
           <div className={`ebd-sync ${lastSynced && !syncError && !aiReauthOpen ? 'ebd-sync-ok' : ''}`}>{syncNotice}</div>
@@ -761,65 +789,15 @@ export default function Secretaria() {
     );
   }
 
-  // Sub-views with back button
-  const viewTitles: Record<CurrentView, string> = {
-    home: 'Secretaria EBD',
-    chamada: 'Chamada',
-    historico: 'Histórico',
-    turmas: 'Turmas',
-    aniversariantes: 'Aniversariantes',
-    planilha: 'Planilha de Alunos',
-    configuracoes: 'Configurações',
-    acessos: 'Acessos',
-  };
 
   return (
     <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
-    <div className="min-h-screen bg-background">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border px-2 py-1.5 safe-top">
-        <div className="flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <button
-              onClick={navigation.back}
-              aria-label="Voltar"
-              className="p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div className="min-w-0 leading-tight">
-              <h1 className="font-semibold text-sm sm:text-base min-w-0 whitespace-normal break-words">{viewTitles[currentView]}</h1>
-              <p className="text-[10px] text-muted-foreground min-w-0 whitespace-normal break-words">
-                {formattedDate}
-                <span className="mx-1">·</span>
-                <span className={isAdmin ? 'text-primary font-medium' : ''}>{profileLabel}</span>
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            <HeaderActions />
-            <button
-              onClick={handleBackToHome}
-              aria-label="Menu da Secretaria"
-              title="Menu da Secretaria"
-              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-            >
-              <Home className="h-5 w-5" />
-            </button>
-            <button
-              onClick={handleExitApp}
-              aria-label="Sair"
-              title="Sair"
-              className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="ebd-app">
+      {pageHeader}
 
       {reauthDialog}
-      <div className="p-4 pb-8 pt-16">
-        {syncNotice}
+      <main className="ebd-content ebd-subview">
+        <div className="ebd-sync">{syncNotice}</div>
         {currentView === 'chamada' && (
           <ChamadaTab
             classes={visibleClasses}
@@ -873,7 +851,7 @@ export default function Secretaria() {
         {currentView === 'acessos' && isAdmin && (
           <AcessosEbdTab classes={classes} date={sundayDate} formattedDate={formattedDate} />
         )}
-      </div>
+      </main>
 
       <AlertDialog open={showExitConfirm} onOpenChange={open => { if (!signingOut) setShowExitConfirm(open); }}>
         <AlertDialogContent>

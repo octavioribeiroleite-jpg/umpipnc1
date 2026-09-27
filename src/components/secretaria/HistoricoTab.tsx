@@ -502,7 +502,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         {/* Date header */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold capitalize">{dateFormatted}</h2>
+            <h2 className="text-lg font-bold first-letter:uppercase">{dateFormatted}</h2>
           </div>
           <div className="flex items-center gap-2">
             {freshRecord.isClosed ? (
@@ -596,11 +596,11 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
                   <Progress value={cs.percentage} className="h-1.5" />
                   {(cs.visitor_count ?? 0) > 0 && (
                     <div className="pt-0.5 space-y-0.5">
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Users className="h-3 w-3" /> {cs.visitor_count} visitante{(cs.visitor_count ?? 0) > 1 ? 's' : ''}
                       </p>
                       {cs.visitors && cs.visitors.length > 0 && (
-                        <p className="text-[11px] text-muted-foreground pl-4">
+                        <p className="text-xs text-muted-foreground pl-4">
                           {cs.visitors.map((v, idx) => v.name || 'sem nome').join(', ')}
                         </p>
                       )}
@@ -636,20 +636,22 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     <div className="space-y-4">
       {historyError && <p role="status" className="text-sm text-destructive">Não foi possível atualizar o histórico. Tentaremos novamente.</p>}
       {/* Period selector */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="ebd-history-toolbar">
+        <div className="ebd-periods" role="group" aria-label="Período do histórico">
         {([
           { key: '4weeks' as PeriodFilter, label: '4 semanas' },
           { key: '3months' as PeriodFilter, label: '3 meses' },
           { key: 'all' as PeriodFilter, label: 'Todo período' },
         ]).map(p => (
-          <Button key={p.key} variant={period === p.key ? 'default' : 'outline'} size="sm" onClick={() => setPeriod(p.key)}>
+          <Button key={p.key} variant={period === p.key ? 'default' : 'outline'} size="sm" aria-pressed={period === p.key} onClick={() => setPeriod(p.key)}>
             {p.label}
           </Button>
         ))}
+        </div>
+        <div className="ebd-report-actions">
         <Button
           variant="secondary"
           size="sm"
-          className="ml-auto"
           onClick={handleDownloadPeriodPDF}
           disabled={dayRecords.length === 0}
         >
@@ -662,6 +664,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         >
           <Download className="h-4 w-4 mr-2" /> {generatingQuarterly ? 'Gerando...' : 'Relatório completo'}
         </Button>
+        </div>
       </div>
 
       {/* Compact day cards */}
@@ -688,19 +691,19 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
                   {/* Date block */}
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex flex-col items-center justify-center shrink-0">
                     <span className="text-lg font-bold text-primary leading-none">{dayNum}</span>
-                    <span className="text-[10px] text-primary/70 uppercase">{monthName}</span>
+                    <span className="text-xs text-primary/70 uppercase">{monthName}</span>
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium capitalize min-w-0 whitespace-normal break-words">{dayName}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
                       {record.isClosed ? (
-                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-green-500/40 text-green-700 bg-green-500/10">
+                        <Badge variant="outline" className="text-xs px-1 py-0 h-4 border-green-500/40 text-green-700 bg-green-500/10">
                           Fechado
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-blue-500/40 text-blue-700 bg-blue-500/10">
+                        <Badge variant="outline" className="text-xs px-1 py-0 h-4 border-blue-500/40 text-blue-700 bg-blue-500/10">
                           Em aberto
                         </Badge>
                       )}
@@ -732,15 +735,15 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <p className="text-2xl font-bold text-primary">{metrics.totalSundays}</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">Domingos registrados</p>
+              <p className="text-xs text-muted-foreground leading-tight">Domingos registrados</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-primary">{totalMembers}</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">Alunos cadastrados</p>
+              <p className="text-xs text-muted-foreground leading-tight">Alunos cadastrados</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-primary">{metrics.avgAll}%</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">Média geral</p>
+              <p className="text-xs text-muted-foreground leading-tight">Média geral</p>
             </div>
           </div>
 
@@ -748,22 +751,22 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Melhor domingo</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Melhor domingo</p>
               {metrics.best ? (
                 <div className="flex items-center gap-1">
                   <TrendingUp className="h-3.5 w-3.5 text-green-600" />
                   <span className="text-sm font-bold text-green-600">{metrics.best.presenca}%</span>
-                  <span className="text-[10px] text-muted-foreground">{metrics.best.date}</span>
+                  <span className="text-xs text-muted-foreground">{metrics.best.date}</span>
                 </div>
               ) : <span className="text-xs text-muted-foreground">—</span>}
             </div>
             <div className="space-y-1">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Pior domingo</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Pior domingo</p>
               {metrics.worst ? (
                 <div className="flex items-center gap-1">
                   <TrendingDown className="h-3.5 w-3.5 text-red-500" />
                   <span className="text-sm font-bold text-red-500">{metrics.worst.presenca}%</span>
-                  <span className="text-[10px] text-muted-foreground">{metrics.worst.date}</span>
+                  <span className="text-xs text-muted-foreground">{metrics.worst.date}</span>
                 </div>
               ) : <span className="text-xs text-muted-foreground">—</span>}
             </div>
@@ -774,7 +777,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
               <div className="h-px bg-border" />
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Melhor turma</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Melhor turma</p>
                   <p className="text-sm font-medium">{metrics.bestClass.name}</p>
                 </div>
                 <Badge className="bg-primary/10 text-primary border-primary/20 text-sm font-bold">{metrics.bestClass.media}%</Badge>
@@ -794,7 +797,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         >
           <Award className="h-5 w-5 text-yellow-500 mb-1.5" />
           <p className="text-2xl font-bold text-green-600">{perfectStudents.length}</p>
-          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">100% presença</p>
+          <p className="text-xs text-muted-foreground leading-tight mt-0.5">100% presença</p>
         </button>
 
         {/* Frequência Baixa */}
@@ -805,7 +808,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         >
           <TrendingDown className="h-5 w-5 text-yellow-500 mb-1.5" />
           <p className="text-2xl font-bold text-yellow-600">{lowFreqStudents.length}</p>
-          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Freq. baixa &lt;30%</p>
+          <p className="text-xs text-muted-foreground leading-tight mt-0.5">Freq. baixa &lt;30%</p>
         </button>
 
         {/* Nunca compareceram */}
@@ -816,7 +819,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         >
           <AlertTriangle className="h-5 w-5 text-red-500 mb-1.5" />
           <p className="text-2xl font-bold text-red-600">{absentStudents.length}</p>
-          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Nunca vieram</p>
+          <p className="text-xs text-muted-foreground leading-tight mt-0.5">Nunca vieram</p>
         </button>
       </div>
 
@@ -905,7 +908,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
                     <span className={`text-2xl font-bold ${textColor}`}>{cls.media}%</span>
                   </div>
                   <p className="text-sm font-medium min-w-0 whitespace-normal break-words">{cls.name}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">média de presença</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">média de presença</p>
                 </button>
               );
             })}

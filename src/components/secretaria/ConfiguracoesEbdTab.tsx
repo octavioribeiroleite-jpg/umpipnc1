@@ -178,7 +178,7 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
             const isRevealed = revealed.has(c.id);
             return (
               <Card key={c.id}>
-                <CardContent className="pt-4 pb-4 flex items-center gap-3">
+                <CardContent className="ebd-password-row pt-4 pb-4 flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <DoorOpen className="h-5 w-5 text-primary" />
                   </div>
@@ -189,19 +189,19 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
                         <code className="text-sm font-mono tracking-widest bg-muted px-2 py-0.5 rounded">
                           {isRevealed ? pwd : '••••••'}
                         </code>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleReveal(c.id)}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={isRevealed ? `Ocultar senha de ${c.name}` : `Mostrar senha de ${c.name}`} onClick={() => toggleReveal(c.id)}>
                           {isRevealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(c.id)}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={`Copiar senha de ${c.name}`} onClick={() => handleCopy(c.id)}>
                           {copiedId === c.id ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
                         </Button>
                       </div>
                     ) : has && !pwd ? (
-                      <p className="text-[11px] text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Senha antiga não visível. Toque em "Trocar" para definir uma nova e poder visualizá-la.
                       </p>
                     ) : (
-                      <Badge variant={has ? 'default' : 'secondary'} className="text-[10px] mt-0.5">
+                      <Badge variant={has ? 'default' : 'secondary'} className="text-xs mt-0.5">
                         {has ? 'Com senha' : 'Sem senha'}
                       </Badge>
                     )}
@@ -210,7 +210,7 @@ export default function ConfiguracoesEbdTab({ classes, adminPin }: Configuracoes
                     <KeyRound className="h-3.5 w-3.5 mr-1" /> {has ? 'Trocar' : 'Definir'}
                   </Button>
                   {has && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setClearingClass(c)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label={`Remover senha de ${c.name}`} onClick={() => setClearingClass(c)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   )}

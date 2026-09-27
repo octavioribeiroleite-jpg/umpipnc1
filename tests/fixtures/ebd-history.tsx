@@ -31,6 +31,7 @@ function closeDay(d: string) {
 const nativeFetch=window.fetch.bind(window);
 window.fetch=async (input,init) => {
   const url=new URL(typeof input==='string'?input:input instanceof URL?input.href:input.url,location.origin);
+  if (url.pathname.endsWith('/functions/v1/manage-ebd-class-password')) return new Response(JSON.stringify({class_ids:['old'],passwords:{old:'123456'}}),{headers:{'Content-Type':'application/json'}});
   if (!url.pathname.includes('/rest/v1/')) {
     if(url.hostname.endsWith('.supabase.co')) throw Error('Fixture blocked unexpected backend request');
     return nativeFetch(input,init);
@@ -39,6 +40,7 @@ window.fetch=async (input,init) => {
   const body=init?.body?JSON.parse(String(init.body)):{};
   const endpoint=url.pathname.split('/').at(-1);
   const respond=(data:unknown,status=200)=>Promise.resolve(new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}}));
+  if(endpoint==='list_birthdays')return respond([{id:'birthday-test',nome:'Mariana de Oliveira — exemplo',dia:27,mes:9,ano_nascimento:1998,departamento:'EBD',observacao:null,ativo:true,pendente_revisao:false,created_at:'2026-01-01',updated_at:'2026-01-01'}]);
   if(endpoint==='ebd_session_valid')return respond(true);
   if(endpoint==='ebd_closure')return respond(closures.find(c=>c.date===body.p_date)||null);
   if(endpoint==='ebd_attendance' && method==='PATCH' && failNext){failNext=false;return respond({message:'Falha simulada. Tente novamente.'},400);}
@@ -66,13 +68,13 @@ if (location.pathname.includes('ebd-back')) {
   const { QueryClientProvider, QueryClient } = await import('@tanstack/react-query');
   const { default: Secretaria } = await import('../../src/pages/Secretaria');
   const { saveStoredEbdSession } = await import('../../src/lib/ebd-session-storage');
-  if (!localStorage.getItem('ebd-test-initialized-v2')) {
+  if (!localStorage.getItem('ebd-test-initialized-design-v1')) {
     saveStoredEbdSession({ accessLevel:'admin', birthdayAiToken:'synthetic', birthdayAiExpiresAt:new Date(Date.now()+3600000).toISOString() });
-    localStorage.setItem('ebd-test-initialized-v2','yes');
+    localStorage.setItem('ebd-test-initialized-design-v1','yes');
   }
   createRoot(document.getElementById('root')!).render(<QueryClientProvider client={new QueryClient()}><BrowserRouter>
     <Routes><Route path="/auth" element={<h1>Login do teste — saída confirmada</h1>}/><Route path="*" element={<Secretaria/>}/></Routes>
-    <aside className="fixed bottom-0 right-0 z-[100] bg-white border p-2 flex gap-2"><button onClick={()=>history.back()}>Voltar nativo (teste)</button><button onClick={()=>location.reload()}>Recarregar (teste)</button></aside>
+    <aside className="bg-white border p-2 flex gap-2"><button onClick={()=>history.back()}>Voltar nativo (teste)</button><button onClick={()=>location.reload()}>Recarregar (teste)</button></aside>
     <Toaster/>
   </BrowserRouter></QueryClientProvider>);
 } else createRoot(document.getElementById('root')!).render(<>

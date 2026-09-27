@@ -23,7 +23,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
   };
 
   return (
-    <div className={`flex flex-wrap items-center gap-3 p-3 rounded-xl border transition-colors ${
+    <div className={`ebd-birthday-card flex flex-wrap items-center gap-3 p-3 rounded-xl border transition-colors ${
       highlight === 'today' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' :
       highlight === 'week' ? 'bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-800' :
       'bg-card border-border'
@@ -69,13 +69,13 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
         )}
         {showActions && (
           <>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit?.(birthday)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Editar ${birthday.nome}`} onClick={() => onEdit?.(birthday)}>
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onToggleActive?.(birthday)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${birthday.ativo ? "Inativar" : "Ativar"} ${birthday.nome}`} onClick={() => onToggleActive?.(birthday)}>
               {birthday.ativo ? <ToggleRight className="h-4 w-4 text-emerald-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete?.(birthday)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label={`Excluir ${birthday.nome}`} onClick={() => onDelete?.(birthday)}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </>

@@ -325,7 +325,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setTransferStudent(null)}>
+          <Button variant="ghost" size="icon" aria-label="Cancelar transferência" onClick={() => setTransferStudent(null)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -375,7 +375,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setSelectedClass(null)}>
+          <Button variant="ghost" size="icon" aria-label="Voltar às turmas" onClick={() => setSelectedClass(null)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0">
@@ -479,31 +479,31 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="min-w-0 whitespace-normal break-words text-sm font-medium">{student.name}</span>
                         {age != null && (
-                          <Badge variant="outline" className="text-[10px]">{age} anos</Badge>
+                          <Badge variant="outline" className="text-xs">{age} anos</Badge>
                         )}
                         {statusLabel && (
                           <Badge
                             variant={status === 'exceeded' ? 'destructive' : 'secondary'}
-                            className={status === 'limit' ? 'border-amber-500/30 bg-amber-500/10 text-amber-700' : 'text-[10px]'}
+                            className={status === 'limit' ? 'border-amber-500/30 bg-amber-500/10 text-amber-700' : 'text-xs'}
                           >
                             {statusLabel}
                           </Badge>
                         )}
                       </div>
                       {student.birth_date && (
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                           Nascimento: {new Date(`${student.birth_date}T12:00:00`).toLocaleDateString('pt-BR')}
                         </p>
                       )}
                     </div>
 
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startBirthDateEdit(student)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Editar nascimento de ${student.name}`} onClick={() => startBirthDateEdit(student)}>
                       <CalendarDays className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startTransfer(student)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Transferir ${student.name}`} onClick={() => startTransfer(student)}>
                       <ArrowRightLeft className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleToggleActive(student)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" aria-label={`${student.active ? "Inativar" : "Reativar"} ${student.name}`} onClick={() => handleToggleActive(student)}>
                       <UserMinus className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -547,7 +547,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
               {inactive.map((student) => (
                 <div key={student.id} className="flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 p-2.5">
                   <span className="flex-1 text-sm text-muted-foreground">{student.name}</span>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => handleToggleActive(student)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" aria-label={`${student.active ? "Inativar" : "Reativar"} ${student.name}`} onClick={() => handleToggleActive(student)}>
                     <UserCheck className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -605,8 +605,8 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
               value={newClassMaxAge}
               onChange={(event) => setNewClassMaxAge(event.target.value)}
             />
-            <Button size="sm" disabled={creatingClass || !newClassName.trim()}>
-              <Plus className="h-4 w-4" />
+            <Button aria-label="Criar turma" size="sm" disabled={creatingClass || !newClassName.trim()}>
+              <Plus className="h-4 w-4" /><span>Criar turma</span>
             </Button>
           </form>
         </CardContent>
@@ -629,9 +629,9 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
             <Card key={cls.id} className="cursor-pointer transition-shadow hover:shadow-md">
               <CardContent className="pb-4 pt-4">
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 shrink-0 text-primary" />
+                  {!isEditing && <Users className="h-4 w-4 shrink-0 text-primary" />}
                   {isEditing ? (
-                    <div className="grid flex-1 gap-2 xl:grid-cols-[minmax(0,1fr)_140px_96px_96px_210px_auto_auto]">
+                    <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-2">
                       <Input
                         value={editClassName}
                         onChange={(event) => setEditClassName(event.target.value)}
@@ -674,27 +674,29 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleSaveClass(cls.id)}>
-                        <Check className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setEditingClassId(null)}>
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+                        <Button variant="outline" size="sm" onClick={() => setEditingClassId(null)}>
+                          <X className="h-4 w-4" /> Cancelar
+                        </Button>
+                        <Button size="sm" onClick={() => handleSaveClass(cls.id)}>
+                          <Check className="h-4 w-4" /> Salvar turma
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <>
-                      <div className="min-w-0 flex-1" onClick={() => setSelectedClass(cls)}>
+                      <div className="min-w-0 flex-1" role="button" tabIndex={0} aria-label={`Abrir turma ${cls.name}`} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedClass(cls); } }} onClick={() => setSelectedClass(cls)}>
                         <p className="min-w-0 whitespace-normal break-words text-sm font-medium">{cls.name}</p>
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">{formatAgeRange(cls)}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{formatAgeRange(cls)}</p>
                       </div>
                       <Badge variant="secondary" className="text-xs">{activeCount}</Badge>
                       {reviewCount > 0 && (
-                        <Badge className="border-amber-500/30 bg-amber-500/10 text-[10px] text-amber-700">
+                        <Badge className="border-amber-500/30 bg-amber-500/10 text-xs text-amber-700">
                           {reviewCount} revisar
                         </Badge>
                       )}
                       {missingCount > 0 && (
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground">{missingCount} sem data</Badge>
+                        <Badge variant="outline" className="text-xs text-muted-foreground">{missingCount} sem data</Badge>
                       )}
                       {inactiveCount > 0 && (
                         <Badge variant="outline" className="text-xs text-muted-foreground">{inactiveCount} inativos</Badge>
@@ -703,6 +705,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
+                        aria-label={`Editar turma ${cls.name}`}
                         onClick={(event) => {
                           event.stopPropagation();
                           startClassEdit(cls);

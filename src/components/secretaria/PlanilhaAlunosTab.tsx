@@ -908,15 +908,15 @@ export default function PlanilhaAlunosTab({
                     <div className="flex items-center gap-1.5">
                       <Badge
                         variant={s.active ? 'default' : 'secondary'}
-                        className="text-[10px]"
+                        className="text-xs"
                       >
                         {s.active ? 'Ativo' : 'Inativo'}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-xs">
                         {s.origin === 'importado' ? 'Importado' : 'Manual'}
                       </Badge>
                       {isAllClasses && (
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-xs">
                           {classNameById[s.class_id] ?? '-'}
                         </Badge>
                       )}

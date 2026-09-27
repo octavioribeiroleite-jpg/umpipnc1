@@ -162,9 +162,9 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
 
   const getStatusBadge = (classId: string) => {
     const status = getClassChamadaStatus(classId);
-    if (status === 'aberta') return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-[10px]">Em andamento</Badge>;
-    if (status === 'finalizada') return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px]">Finalizada</Badge>;
-    return <Badge variant="outline" className="text-muted-foreground text-[10px]">Não iniciada</Badge>;
+    if (status === 'aberta') return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">Em andamento</Badge>;
+    if (status === 'finalizada') return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">Finalizada</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground text-xs">Não iniciada</Badge>;
   };
 
   const handleCloseDay = async () => {
@@ -335,7 +335,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             <div className="flex items-center gap-2">
               <UserPlus className="h-4 w-4 text-muted-foreground shrink-0" />
               <p className="text-sm font-medium flex-1">Visitantes nesta aula</p>
-              <Badge variant="secondary" className="text-[10px]">{visitorList.length}</Badge>
+              <Badge variant="secondary" className="text-xs">{visitorList.length}</Badge>
             </div>
 
             {visitorList.length > 0 && (
@@ -407,14 +407,14 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               )
             )}
             {isReadOnly && visitorList.length === 0 && (
-              <p className="text-[11px] text-muted-foreground italic">Nenhum visitante.</p>
+              <p className="text-xs text-muted-foreground italic">Nenhum visitante.</p>
             )}
           </div>
         </div>
 
         {/* Footer action */}
         {!dayIsClosed && (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-20">
+          <div className="ebd-call-actions">
             {status === 'aberta' && (
               <Button
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
@@ -530,7 +530,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               </span>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground -mt-1">
+          <p className="text-xs text-muted-foreground -mt-1">
             {onAddClassVisitor ? 'Adicione visitantes (com nome opcional) dentro de cada turma.' : 'Visitantes registrados neste encontro.'}
           </p>
 
@@ -574,7 +574,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                   <span className="font-medium text-sm">{cls.name}</span>
                   <div className="ml-auto shrink-0">
                     {dayIsClosed ? (
-                      <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-[10px]">Fechado</Badge>
+                      <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-xs">Fechado</Badge>
                     ) : (
                       getStatusBadge(cls.id)
                     )}
@@ -586,7 +586,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                 </div>
                 <Progress value={pct} className="h-1.5" />
                 {classVis > 0 && (
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <UserPlus className="h-3 w-3" /> {classVis} visitante{classVis > 1 ? 's' : ''}
                   </p>
                 )}
