@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
+import { decorativeSnapshotHtml } from '@/lib/decorative-snapshot';
 
 interface StableRefreshBoundaryProps {
   children: ReactNode;
@@ -90,7 +91,7 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
 
       const height = element.getBoundingClientRect().height;
       if (height > 0) {
-        lastStableHtmlRef.current = element.innerHTML;
+        lastStableHtmlRef.current = decorativeSnapshotHtml(element);
         lastStableHeightRef.current = height;
         setStableHeight(height);
       }
@@ -141,7 +142,7 @@ export function StableRefreshBoundary({ children, className }: StableRefreshBoun
       }}
     >
       {refreshing && snapshotHtml && (
-        <div className="absolute inset-x-0 top-0 z-10 pointer-events-none select-none" aria-hidden="true">
+        <div className="absolute inset-x-0 top-0 z-10 pointer-events-none select-none" aria-hidden="true" {...{ inert: '' }}>
           <div dangerouslySetInnerHTML={{ __html: snapshotHtml }} />
           <div className="absolute right-3 top-3 flex items-center gap-2 rounded-full border bg-background/95 px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-lg backdrop-blur">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

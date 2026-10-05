@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+import { createContext, useContext, useCallback, useEffect, useMemo, useState, useRef, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { createAuthQueryCacheBoundary } from '@/lib/auth-query-cache';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador' | 'pastor';
 
@@ -47,6 +49,8 @@ const PROFILE_RETRY_DELAYS = [0, 350, 900];
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
+  const syncQueryIdentity = useMemo(() => createAuthQueryCacheBoundary(queryClient), [queryClient]);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -71,7 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const resetAuthData = () => {
+  const resetAuthData = useCallback(() => {
+    syncQueryIdentity(null);
     setProfile(null);
     setRoles([]);
     setSociety(null);
@@ -79,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authenticatedUserIdRef.current = null;
     authReadyRef.current = false;
     setAuthError(false);
-  };
+  }, [syncQueryIdentity]);
 
   const hydrateProfileAndRoles = async (userId: string, options?: { silent?: boolean }) => {
     const hydrationId = ++hydrationRef.current;
@@ -220,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!isMounted) return;
+      syncQueryIdentity(newSession?.user.id ?? null);
 
       console.log('[Auth] onAuthStateChange:', event);
 
@@ -287,6 +293,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        syncQueryIdentity(currentSession?.user.id ?? null);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
@@ -322,7 +329,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [syncQueryIdentity, resetAuthData]);
 
   const signIn = async (username: string, password: string) => {
     try {

@@ -49,5 +49,5 @@ export function PastorMobileNav() {
     { key: 'sair', icon: LogOut, label: 'Sair', onClick: async () => { await signOut(); go('/auth'); } },
   ];
 
-  return <BottomNav mainItems={mainItems} moreItems={moreItems} moreTitle="Painel do Pastor" />;
+  return <BottomNav mainItems={mainItems} moreItems={moreItems} moreTitle="Painel do Pastor" desktopBreakpoint="lg" />;
 }

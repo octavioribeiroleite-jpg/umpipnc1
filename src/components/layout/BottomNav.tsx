@@ -16,9 +16,10 @@ interface BottomNavProps {
   mainItems: BottomNavItem[];
   moreItems: BottomNavItem[];
   moreTitle?: string;
+  desktopBreakpoint?: 'md' | 'lg';
 }
 
-export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções' }: BottomNavProps) {
+export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', desktopBreakpoint = 'md' }: BottomNavProps) {
   const [open, setOpen] = useState(false);
   const visibleItems = mainItems.slice(0, 4);
 
@@ -28,8 +29,12 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções' }:
   };
 
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-border/40 dark:bg-card/95 md:hidden">
-      <div className="mx-auto grid h-bottom-nav max-w-reading grid-cols-5 items-stretch gap-1 px-1">
+    <nav className={cn(
+      'safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-border/40 dark:bg-card/95',
+      desktopBreakpoint === 'lg' ? 'lg:hidden' : 'md:hidden',
+    )}>
+      {/* The pastoral sidebar begins at lg; the global spacing token becomes zero at md. */}
+      <div className="mx-auto grid h-14 max-w-reading grid-cols-5 items-stretch gap-1 px-1">
         {visibleItems.map((item) => (
           <button
             key={item.key}

@@ -740,9 +740,10 @@ export default function Auth() {
             {!pinLoading && (
               <div className="grid grid-cols-2 gap-3">
                 {societies.map((society) => (
-                  <Card
+                  <button
                     key={society.id}
-                    className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
+                    type="button"
+                    className="min-w-0 rounded-2xl border text-card-foreground text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
                     onClick={() => handleSelectDiretoriaSociety(society)}
                   >
                     <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
@@ -754,11 +755,12 @@ export default function Auth() {
                       </div>
                       <span className="font-semibold text-sm text-foreground">{society.name}</span>
                     </CardContent>
-                  </Card>
+                  </button>
                 ))}
                 {/* Pastor virtual card */}
-                <Card
-                  className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
+                <button
+                  type="button"
+                  className="min-w-0 rounded-2xl border text-card-foreground text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
                   onClick={() => handleSelectDiretoriaSociety({ id: 'pastor', name: 'Pastor', slug: 'pastor', color: '#1e3a5f' })}
                 >
                   <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
@@ -767,7 +769,7 @@ export default function Auth() {
                     </div>
                     <span className="font-semibold text-sm text-foreground">Pastor</span>
                   </CardContent>
-                </Card>
+                </button>
               </div>
             )}
           </div>
@@ -781,9 +783,10 @@ export default function Auth() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               {societies.map((society) => (
-                <Card
+                <button
                   key={society.id}
-                  className="cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
+                  type="button"
+                  className="min-w-0 rounded-2xl border text-card-foreground text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
                   onClick={() => handleSelectMembroSociety(society)}
                 >
                   <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
@@ -795,7 +798,7 @@ export default function Auth() {
                     </div>
                     <span className="font-semibold text-sm text-foreground">{society.name}</span>
                   </CardContent>
-                </Card>
+                </button>
               ))}
             </div>
           </div>
