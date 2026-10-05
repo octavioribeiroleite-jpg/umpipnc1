@@ -67,7 +67,8 @@ function enhanceSocietyScreen() {
     return text === 'Selecione a sociedade' || text === 'Escolha sua sociedade';
   });
 
-  if (!heading) return;
+  // Auth renders its own solid entry surfaces; keep the legacy enhancement elsewhere.
+  if (!heading || heading.closest('.auth-page')) return;
 
   const section = heading.closest<HTMLElement>('.animate-fade-up');
   const grid = section?.querySelector<HTMLElement>('.grid');

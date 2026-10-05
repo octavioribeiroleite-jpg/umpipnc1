@@ -29,6 +29,7 @@ function enhanceConfirmationCards() {
   );
 
   for (const heading of headings) {
+    if (heading.closest('.auth-page')) continue;
     const card = heading.closest<HTMLElement>('[class*="shadow-2xl"]');
     const wrapper = card?.parentElement;
     const content = card?.firstElementChild as HTMLElement | null;

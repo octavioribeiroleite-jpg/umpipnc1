@@ -14,7 +14,6 @@ import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight,
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
-import { BuildStamp } from '@/components/BuildStamp';
 import { InstallButton } from '@/components/layout/InstallButton';
 import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 import { TreasuryAccessDialog } from '@/components/treasury/TreasuryAccessDialog';
@@ -363,12 +362,13 @@ export default function Auth() {
 
   // ========== RENDER CONTENT (conditional by step) ==========
   const renderContent = () => {
-    const AccessCard = ({ title, description, icon: Icon, onClick }: {
-      title: string; description: string; icon: typeof Lock; onClick: () => void;
+    const AccessCard = ({ title, description, icon: Icon, tone, onClick }: {
+      title: string; description: string; icon: typeof Lock; tone: string; onClick: () => void;
     }) => (
-      <button type="button" onClick={onClick} className="auth-access-card">
+      <button type="button" onClick={onClick} className="auth-access-card" data-tone={tone}>
         <span className="auth-access-icon"><Icon aria-hidden="true" /></span>
         <span className="auth-access-copy"><strong>{title}</strong><span>{description}</span></span>
+        <ArrowRight className="auth-access-arrow" aria-hidden="true" />
       </button>
     );
 
@@ -401,7 +401,7 @@ export default function Auth() {
                 <p className="text-2xl font-bold" style={{ color: selectedMembroSociety?.color }}>{membroSavedName}?</p>
                 <p className="text-sm text-muted-foreground">{selectedMembroSociety?.name}</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="auth-identity-actions">
                 <Button variant="outline" onClick={handleDifferentMembro} disabled={memberLoginLoading}>
                   Não sou eu
                 </Button>
@@ -509,7 +509,7 @@ export default function Auth() {
                   <p className="text-sm text-muted-foreground">{operatorFunction} — {selectedDiretoriaSociety?.name}</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="auth-identity-actions">
                 <Button variant="outline" onClick={handleDifferentPerson}>
                   Não sou eu
                 </Button>
@@ -574,18 +574,20 @@ export default function Auth() {
 
     // Main screen (select / societies / pin / login)
     return (
-      <div className={`w-full ${step === 'login' ? 'max-w-[400px]' : 'max-w-[560px]'}`}>
-        <div className="auth-content-heading">
-          <h2>{step === 'select' ? 'Como deseja acessar?' : 'Acesso IPNC'}</h2>
-          {step === 'select' && <p>Escolha sua área.</p>}
-        </div>
+      <div className={`auth-content ${step === 'select' ? 'auth-content-select' : step === 'login' ? 'auth-content-form' : 'auth-content-flow'}`}>
+        {step === 'select' && (
+          <header className="auth-content-heading">
+            <p className="auth-eyebrow">Bem-vindo à IPNC</p>
+            <h1>Como deseja acessar?</h1>
+            <p className="auth-intro">Escolha sua área para continuar.</p>
+          </header>
+        )}
         {step === 'select' ? (
           <div className="auth-access-list">
-            <AccessCard title="Diretoria" description="Reuniões, tarefas e organização" icon={Users} onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }} />
-            <AccessCard title="Secretaria EBD" description="Turmas, chamada e histórico" icon={BookOpen} onClick={() => navigateWithTransition('/secretaria')} />
-            <AccessCard title="Finanças" description="Acesso privado por sociedade" icon={Wallet} onClick={() => setTreasuryOpen(true)} />
-            <AccessCard title="Portal da igreja" description="Programação e avisos" icon={Church} onClick={() => navigateWithTransition('/igreja')} />
-            <button type="button" onClick={() => setStep('login')} className="auth-admin-button"><ShieldCheck aria-hidden="true" />Acesso administrativo</button>
+            <AccessCard title="Diretoria" description="Reuniões, tarefas e organização" icon={Users} tone="green" onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }} />
+            <AccessCard title="Secretaria EBD" description="Turmas, chamada e histórico" icon={BookOpen} tone="blue" onClick={() => navigateWithTransition('/secretaria')} />
+            <AccessCard title="Finanças" description="Acesso privado por sociedade" icon={Wallet} tone="gold" onClick={() => setTreasuryOpen(true)} />
+            <AccessCard title="Portal da igreja" description="Programação e avisos" icon={Church} tone="violet" onClick={() => navigateWithTransition('/igreja')} />
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
           <PinPad
@@ -729,7 +731,11 @@ export default function Auth() {
           </div>
         )}
 
-        <p className="auth-copyright">© {new Date().getFullYear()} IPNC</p>
+        {step === 'select' && (
+          <div className="auth-access-footer">
+            <button type="button" className="auth-admin-button" onClick={() => setStep('login')}><ShieldCheck aria-hidden="true" />Acesso administrativo</button>
+          </div>
+        )}
       </div>
     );
   };
@@ -738,14 +744,33 @@ export default function Auth() {
     <div className="auth-page">
       <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
       <aside className="auth-brand-panel">
-        <div className="auth-brand"><img src={logoIpnc} alt="Renovo IPNC" /><span>IPNC<small>Nova Carapina</small></span></div>
-        <div className="auth-brand-heading"><h1>Igreja Presbiteriana<br />de Nova Carapina</h1></div>
-        <div className="auth-brand-install"><InstallButton variant="entry" /></div>
+        <div className="auth-brand-content">
+          <div className="auth-brand"><img src={logoIpnc} alt="IPNC" width="1280" height="1280" /></div>
+          <div className="auth-brand-heading">
+            <p>Igreja Presbiteriana<br />de Nova Carapina</p>
+            <span>Servindo. Cuidando. Avançando.</span>
+          </div>
+          <blockquote className="auth-brand-verse">
+            <p>“Mas tu, ó homem de Deus, avança…”</p>
+            <cite>1 Timóteo 6:11</cite>
+          </blockquote>
+        </div>
+        <div className="auth-brand-bottom">
+          <div className="auth-brand-install"><InstallButton variant="entry" /></div>
+          <p className="auth-brand-location">Nova Carapina · Serra/ES</p>
+        </div>
       </aside>
       <main className={`auth-main ${isExiting ? 'auth-exiting' : ''}`}>
         <div className="auth-update"><UpdateAvailableBanner /></div>
-        {renderContent()}
-        <BuildStamp className="auth-build" />
+        <div className="auth-main-inner">
+          {(step !== 'select' || isEnteringApp) && <h1 className="sr-only">{isEnteringApp ? 'Entrando no aplicativo IPNC' : step === 'login' ? 'Acesso administrativo' : step === 'diretoria' ? 'Acesso da diretoria' : 'Acesso IPNC'}</h1>}
+          {step === 'select' && !isEnteringApp && <p className="auth-values">Comunhão <span>·</span> Discipulado <span>·</span> Serviço <span>·</span> Missão</p>}
+          {renderContent()}
+          <footer className="auth-page-footer">
+            <p className="auth-copyright">© {new Date().getFullYear()} IPNC</p>
+            {step === 'select' && !isEnteringApp && <p className="auth-footer-motto">Tudo para a glória de Deus.</p>}
+          </footer>
+        </div>
       </main>
     </div>
   );
