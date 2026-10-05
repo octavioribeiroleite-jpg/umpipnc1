@@ -1,6 +1,6 @@
 import { loadStoredEbdSession } from '@/lib/ebd-session-storage';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDiretoriaSession } from '@/contexts/DiretoriaSessionContext';
 import { useMembroSession } from '@/contexts/MembroSessionContext';
@@ -48,9 +48,6 @@ export default function Auth() {
   const [isExiting, setIsExiting] = useState(false);
   const [isEnteringApp, setIsEnteringApp] = useState(false);
   const [entryMessage, setEntryMessage] = useState('');
-  const [videoReady, setVideoReady] = useState(false);
-  const [splashPhase, setSplashPhase] = useState<'loading' | 'zoom-out' | 'done'>('loading');
-  const [showCards, setShowCards] = useState(false);
 
   // Diretoria PIN flow state
   const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('pin');
@@ -72,17 +69,14 @@ export default function Auth() {
   const [membroSavedName, setMembroSavedName] = useState<string | null>(null);
   const [membroSavedId, setMembroSavedId] = useState<string | null>(null);
   const [memberLoginLoading, setMemberLoginLoading] = useState(false);
-  const splashStartRef = useRef(Date.now());
 
   const { signIn } = useAuth();
   const { setSession: setDiretoriaSession } = useDiretoriaSession();
   const { setSession: setMembroSession } = useMembroSession();
   const navigate = useNavigate();
-  const location = useLocation();
   useEffect(() => {
     if (loadStoredEbdSession()) navigate('/secretaria', { replace: true });
   }, [navigate]);
-  const skipSplash = Boolean((location.state as { skipSplash?: boolean } | null)?.skipSplash);
   const { toast } = useToast();
 
   // Exit transition helper
@@ -109,27 +103,6 @@ export default function Auth() {
     };
     fetchSocieties();
   }, []);
-
-  // Splash → video transition (minimum 2s splash)
-  useEffect(() => {
-    if (skipSplash) {
-      setSplashPhase('done');
-      setShowCards(true);
-      return;
-    }
-    if (!videoReady) return;
-    const elapsed = Date.now() - splashStartRef.current;
-    const remaining = Math.max(0, 2000 - elapsed);
-    // Wait at least 2s before starting zoom-out
-    const t0 = setTimeout(() => {
-      setSplashPhase('zoom-out');
-    }, remaining);
-    const t1 = setTimeout(() => {
-      setSplashPhase('done');
-      setShowCards(true);
-    }, remaining + 800);
-    return () => { clearTimeout(t0); clearTimeout(t1); };
-  }, [videoReady, skipSplash]);
 
   // ========== HANDLERS ==========
 
@@ -387,64 +360,13 @@ export default function Auth() {
 
   // ========== RENDER CONTENT (conditional by step) ==========
   const renderContent = () => {
-    const AccessCard = ({
-      label,
-      title,
-      description,
-      icon: Icon,
-      onClick,
-      delay,
-      variant = 'light',
-    }: {
-      label: string;
-      title: string;
-      description: string;
-      icon: typeof Lock;
-      onClick: () => void;
-      delay: string;
-      variant?: 'light' | 'glass';
+    const AccessCard = ({ title, description, icon: Icon, onClick }: {
+      title: string; description: string; icon: typeof Lock; onClick: () => void;
     }) => (
-      <div
-        className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-        style={{ transitionDelay: showCards ? delay : '0ms' }}
-      >
-        <p className="px-1 text-xs font-semibold uppercase tracking-wider text-white/90">
-          {label}
-        </p>
-        <button
-          onClick={onClick}
-          className={`auth-access-card group w-full rounded-2xl border p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.20)] backdrop-blur-xl transition-all duration-300 active:scale-[0.98] sm:p-5 ${
-            variant === 'glass'
-              ? 'border-white/20 bg-white/12 text-white hover:bg-white/18'
-              : 'border-white/45 bg-[#F7FAF6]/95 text-foreground hover:bg-white'
-          } hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(0,0,0,0.26)]`}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[18px] transition-transform duration-300 group-hover:scale-105 ${
-                variant === 'glass'
-                  ? 'bg-white/18 text-white'
-                  : 'bg-emerald-50 text-primary ring-1 ring-emerald-100'
-              }`}
-            >
-              <Icon className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className={`text-lg font-bold leading-tight ${variant === 'glass' ? 'text-white' : 'text-foreground'}`}>
-                {title}
-              </h3>
-              <p className={`mt-1 text-sm leading-snug ${variant === 'glass' ? 'text-white/70' : 'text-muted-foreground'}`}>
-                {description}
-              </p>
-            </div>
-            <ArrowRight
-              className={`h-5 w-5 flex-shrink-0 transition-transform duration-300 group-hover:translate-x-1 ${
-                variant === 'glass' ? 'text-white/75' : 'text-muted-foreground'
-              }`}
-            />
-          </div>
-        </button>
-      </div>
+      <button type="button" onClick={onClick} className="auth-access-card">
+        <span className="auth-access-icon"><Icon aria-hidden="true" /></span>
+        <span className="auth-access-copy"><strong>{title}</strong><span>{description}</span></span>
+      </button>
     );
 
     if (isEnteringApp) {
@@ -654,66 +576,17 @@ export default function Auth() {
     // Main screen (select / societies / pin / login)
     return (
       <div className="w-full max-w-[560px]">
-        {/* Logo */}
-        <div className={`text-center mb-8 transition-all duration-700 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          <div className="inline-block animate-logo-pulse mb-4">
-            <img
-              src={logoIpnc}
-              alt="Renovo IPNC"
-              className="h-36 w-36 sm:h-44 sm:w-44 mx-auto object-contain drop-shadow-[0_24px_45px_rgba(0,0,0,0.55)]"
-            />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.65)]">
-            Bem-vindo
-          </h1>
-          <p className="mt-2 text-base font-medium text-white/90 drop-shadow-[0_3px_14px_rgba(0,0,0,0.75)]">
-            Igreja Presbiteriana de Nova Carapina
-          </p>
-          <div className="mt-5"><InstallButton variant="entry" /></div>
+        <div className="auth-content-heading">
+          <h2>{step === 'select' ? 'Como deseja acessar?' : 'Acesso IPNC'}</h2>
+          {step === 'select' && <p>Escolha sua área.</p>}
         </div>
-
         {step === 'select' ? (
-          <div className="space-y-5">
-            {/* Diretoria */}
-            <AccessCard
-              label="Diretoria"
-              title="Entrar com PIN"
-              description="Pastor, presidente, tesoureiro e demais cargos"
-              icon={Lock}
-              onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }}
-              delay="400ms"
-            />
-
-            {/* Finanças */}
-            <AccessCard
-              label="Tesouraria"
-              title="Finanças"
-              description="Saldos, extratos e relatórios das sociedades"
-              icon={Wallet}
-              onClick={() => setTreasuryOpen(true)}
-              delay="500ms"
-            />
-
-            {/* Secretaria EBD */}
-            <AccessCard
-              label="Secretaria EBD"
-              title="Escola Dominical"
-              description="Chamada, frequência e acompanhamento da EBD"
-              icon={BookOpen}
-              onClick={() => navigateWithTransition('/secretaria')}
-              delay="650ms"
-            />
-
-            {/* Administrador */}
-            <div className={`transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
-              <button
-                onClick={() => setStep('login')}
-                className="auth-admin-button mx-auto flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-black/20 px-4 py-2 text-center text-xs font-medium text-white/55 backdrop-blur-md transition-colors hover:bg-white/10 hover:text-white/85"
-              >
-                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
-                Acesso Administrativo
-              </button>
-            </div>
+          <div className="auth-access-list">
+            <AccessCard title="Diretoria" description="Reuniões, tarefas e organização" icon={Users} onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }} />
+            <AccessCard title="Secretaria EBD" description="Turmas, chamada e histórico" icon={BookOpen} onClick={() => navigateWithTransition('/secretaria')} />
+            <AccessCard title="Finanças" description="Acesso privado por sociedade" icon={Wallet} onClick={() => setTreasuryOpen(true)} />
+            <AccessCard title="Portal da igreja" description="Programação e avisos" icon={Church} onClick={() => navigateWithTransition('/igreja')} />
+            <button type="button" onClick={() => setStep('login')} className="auth-admin-button"><ShieldCheck aria-hidden="true" />Acesso administrativo</button>
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
           <PinPad
@@ -858,68 +731,24 @@ export default function Auth() {
           </div>
         )}
 
-        <p className={`text-center text-xs font-medium text-white/70 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] mt-6 transition-all duration-500 ${showCards ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
-          © 2025 IPNC - Todos os direitos reservados
-        </p>
+        <p className="auth-copyright">© {new Date().getFullYear()} IPNC</p>
       </div>
     );
   };
 
-  // ========== SINGLE RETURN — video never remounts ==========
   return (
-    <div className="auth-page min-h-screen relative overflow-hidden bg-black">
+    <div className="auth-page">
       <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
-      <div className="absolute right-3 z-40 text-white/80" style={{ top: 'max(12px, env(safe-area-inset-top))' }}><UpdateAvailableBanner className="bg-black/15 backdrop-blur-sm hover:bg-white/10" /></div>
-      {/* Video background — always mounted, never re-created */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        onCanPlay={() => setVideoReady(true)}
-        className={`fixed inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${splashPhase === 'done' ? 'opacity-100' : 'opacity-0'}`}
-      >
-        <source src="/videos/bg-home.mp4" type="video/mp4" />
-      </video>
-
-      {/* Dark overlay */}
-      <div className={`fixed inset-0 z-10 bg-[radial-gradient(circle_at_50%_18%,rgba(47,191,122,0.18),transparent_34%),linear-gradient(180deg,rgba(7,25,17,0.55),rgba(3,12,8,0.78))] transition-opacity duration-1000 ${splashPhase === 'done' ? 'opacity-100' : 'opacity-0'}`} />
-
-      {/* Splash screen */}
-      {splashPhase !== 'done' && (
-        <div className={`fixed inset-0 z-30 flex flex-col items-center justify-start pt-[18vh] transition-all duration-700 ${splashPhase === 'zoom-out' ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
-          {/* Background image */}
-          <div className="absolute inset-0 bg-cover bg-center safe-top" style={{ backgroundImage: 'url(/images/bg-app.png)' }} />
-          <div className="absolute inset-0 bg-black/50" />
-          <div className={`relative text-center transition-all duration-700 ${splashPhase === 'zoom-out' ? 'scale-90 opacity-0' : 'scale-100 opacity-100'}`}>
-            <img
-              src={logoIpnc}
-              alt="Renovo IPNC"
-              className="h-56 w-56 mx-auto object-contain mb-6 animate-logo-pulse"
-            />
-            <h1 className="text-white text-2xl font-bold tracking-tight mb-1">
-              Igreja Presbiteriana
-            </h1>
-            <p className="text-white/60 text-base mb-8">
-              de Nova Carapina
-            </p>
-            <p className="text-white/50 text-sm animate-pulse">Carregando...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Content — transitions apply here only */}
-      <div className={`relative z-20 min-h-screen flex items-center justify-center p-4 pb-16 transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
-        {splashPhase === 'done' && renderContent()}
-      </div>
-
-      {/* Carimbo de build no rodapé, sem cobrir o conteúdo em telas menores. */}
-      {splashPhase === 'done' && (
-        <div className="absolute bottom-2 left-0 right-0 z-30 px-4 pointer-events-none safe-bottom">
-          <BuildStamp className="text-white/70" />
-        </div>
-      )}
+      <aside className="auth-brand-panel">
+        <div className="auth-brand"><img src={logoIpnc} alt="Renovo IPNC" /><span>IPNC<small>Nova Carapina</small></span></div>
+        <div className="auth-brand-heading"><h1>Igreja Presbiteriana<br />de Nova Carapina</h1></div>
+        <div className="auth-brand-install"><InstallButton variant="entry" /></div>
+      </aside>
+      <main className={`auth-main ${isExiting ? 'auth-exiting' : ''}`}>
+        <div className="auth-update"><UpdateAvailableBanner /></div>
+        {renderContent()}
+        <BuildStamp className="auth-build" />
+      </main>
     </div>
   );
 }

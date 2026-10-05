@@ -1,0 +1,53 @@
+@font-face { font-family: Inter; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/secretaria/inter-400.ttf') format('truetype'); }
+@font-face { font-family: Inter; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/secretaria/inter-600.ttf') format('truetype'); }
+@font-face { font-family: Inter; font-style: normal; font-weight: 700 900; font-display: swap; src: url('/fonts/secretaria/inter-700.ttf') format('truetype'); }
+
+body { font-family: Inter, system-ui, sans-serif; font-size: 1rem; line-height: 1.5; }
+.font-display { font-family: Inter, system-ui, sans-serif; }
+.ui-button { min-width: 0; max-width: 100%; flex-wrap: wrap; overflow-wrap: anywhere; min-height: 3rem; height: auto; border-radius: .75rem; font-size: .875rem; line-height: 1.4; }
+.ui-button[data-size='icon'] { min-width: 3rem; width: 3rem; flex-shrink: 0; }
+input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']), select, button[role='combobox'] { min-height: 3rem; }
+input:not([type='checkbox']):not([type='radio']), textarea, select, button[role='combobox'] { border-radius: .75rem; font-family: inherit; }
+label { font-size: .875rem; line-height: 1.5; }
+[role='dialog']:not([data-vaul-drawer]), [role='alertdialog'] { border-radius: 1.25rem; }
+.app-dialog-content { width: calc(100vw - 2rem); max-height: calc(100dvh - 2rem); }
+[role='menuitem'], [role='option'], [role='tab'] { min-height: 3rem; }
+:is(button, a, input, textarea, select, [role='button']):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+td, th { font-variant-numeric: tabular-nums; }
+@media (max-width: 699px) {
+  input:not([type='checkbox']):not([type='radio']), textarea, select, button[role='combobox'] { font-size: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-page *, .app-page * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+.ipnc-pastor-sidebar { width: 76px; }
+.ipnc-pastor-layout main h1 { font-size: var(--font-page-title); line-height: 1.2; }
+@media (min-width: 700px) and (max-width: 1099px) {
+ .ipnc-pastor-sidebar > div:first-child { padding: 16px 8px; }
+ .ipnc-pastor-sidebar > div:first-child .flex > div:last-child { display: none; }
+ .ipnc-pastor-sidebar nav { padding: 8px; }
+ .ipnc-pastor-sidebar nav button { justify-content: center; padding: 12px; min-height: 48px; }
+ .ipnc-pastor-sidebar .pastor-nav-label, .ipnc-pastor-sidebar nav p, .ipnc-pastor-sidebar > div:last-child p { display: none; }
+ .ipnc-pastor-sidebar > div:last-child { padding: 8px; }
+ .ipnc-pastor-sidebar > div:last-child button { font-size: 0; width: 100%; padding: 8px; }
+ .ipnc-pastor-sidebar > div:last-child button svg { margin: 0; }
+}
+@media (min-width: 1100px) { .ipnc-pastor-sidebar { width: 224px; } }
+
+@media (min-width: 700px) and (max-width: 1099px) {
+ .ipnc-pastor-sidebar > div:first-child .flex { gap: 0; }
+ .ipnc-pastor-sidebar > div:first-child img { width: 36px; height: 36px; }
+ .ipnc-pastor-sidebar > div:first-child .bg-white { padding: 4px; }
+ .ipnc-pastor-sidebar nav svg, .ipnc-pastor-sidebar > div:last-child svg { width: 20px; height: 20px; }
+}
+
+.ui-badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+
+.ipnc-page-header p, .task-card :is(p,h4,span) { overflow-wrap: anywhere; }
+@media (max-width: 699px) {
+ .diretoria-mobile-header > div { padding-inline: 16px; gap: 8px; }
+}
+
+.ipnc-page-header { container-type: inline-size; container-name: page-header; }
+@container page-header (max-width: 14rem) { .ipnc-page-icon { display: none; } }

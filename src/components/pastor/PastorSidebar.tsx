@@ -64,7 +64,7 @@ export function PastorSidebar() {
   };
 
   return (
-    <aside className="w-56 xl:w-60 sticky top-0 h-dvh flex-shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
+    <aside className="ipnc-pastor-sidebar sticky top-0 h-dvh flex-shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -90,16 +90,17 @@ export function PastorSidebar() {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
+            aria-label={item.label} title={item.label}
             aria-current={isActive(item.path) ? 'page' : undefined}
             className={cn(
-              'w-full flex items-center gap-3 min-h-11 px-3 py-2.5 rounded-lg text-sm transition-colors',
+              'w-full flex items-center gap-3 min-h-12 px-3 py-2.5 rounded-lg text-sm transition-colors',
               isActive(item.path)
                 ? 'bg-sidebar-accent text-sidebar-primary-foreground font-medium'
                 : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50'
             )}
           >
             <item.icon className="h-4 w-4 flex-shrink-0" />
-            {item.label}
+            <span className="pastor-nav-label">{item.label}</span>
           </button>
         ))}
 
@@ -112,16 +113,17 @@ export function PastorSidebar() {
             <button
               key={s.id}
               onClick={() => navigate(`/pastor/sociedade/${s.slug}`)}
+              aria-label={s.name} title={s.name}
               aria-current={location.pathname === `/pastor/sociedade/${s.slug}` ? 'page' : undefined}
               className={cn(
-                'w-full flex items-center gap-3 min-h-11 px-3 py-2.5 rounded-lg text-sm transition-colors',
+                'w-full flex items-center gap-3 min-h-12 px-3 py-2.5 rounded-lg text-sm transition-colors',
                 location.pathname === `/pastor/sociedade/${s.slug}`
                   ? 'bg-sidebar-accent text-sidebar-primary-foreground font-medium'
                   : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50'
               )}
             >
               <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-              {s.name}
+              <span className="pastor-nav-label">{s.name}</span>
             </button>
           ))}
         </div>

@@ -340,7 +340,7 @@ export default function ChamadaTab({ attendanceQueue: suppliedQueue, classes, st
                 } ${isReadOnly ? 'opacity-70 cursor-default' : 'hover:bg-muted/50 cursor-pointer'}`}
               >
                 <span aria-hidden="true" className="ebd-attendance-indicator">{isPresent ? '☑' : '☐'}</span>
-                <span className="min-w-0 flex-1 break-words font-medium text-sm">{student.name}{operationLabel && <span className="block text-xs font-normal text-muted-foreground">{operationLabel}</span>}</span>
+                <span className="min-w-0 flex-1 break-words font-medium text-base">{student.name}{operationLabel && <span className="block text-xs font-normal text-muted-foreground">{operationLabel}</span>}</span>
                 {isPresent ? (
                   <CheckCircle2 className="h-4 w-4 text-primary" />
                 ) : (
@@ -608,7 +608,7 @@ export default function ChamadaTab({ attendanceQueue: suppliedQueue, classes, st
                     <Trophy className="h-4 w-4 text-yellow-500 shrink-0" />
                   )}
                   <Users className="h-4 w-4 text-primary shrink-0" />
-                  <span className="min-w-0 flex-1 break-words font-medium text-sm">{cls.name}</span>
+                  <span className="min-w-0 flex-1 break-words font-medium text-base">{cls.name}</span>
                   <div className="ml-auto shrink-0">
                     {dayIsClosed ? (
                       <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-xs">Fechado</Badge>

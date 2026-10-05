@@ -325,7 +325,7 @@ export default function Index() {
     <AppLayout>
       <PastorLoginNotification />
 
-      <section className="diretoria-welcome relative mb-section-gap overflow-hidden rounded-hero bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-4 py-5 text-white shadow-card sm:px-5 lg:px-6 lg:py-6">
+      <section className="diretoria-welcome relative mb-section-gap overflow-hidden rounded-hero bg-sidebar px-4 py-5 text-white shadow-card sm:px-5 lg:px-6 lg:py-6">
         <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-white/10 lg:h-52 lg:w-52" />
         <div className="pointer-events-none absolute bottom-2 right-4 text-[58px] font-black leading-none text-white/[0.05] sm:text-[72px] lg:right-8 lg:text-[100px]">
           IPNC
@@ -337,7 +337,7 @@ export default function Index() {
               {capitalizedDate}
             </p>
             <h1 className="mt-1.5 break-words text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
-              {greeting}, {firstName || 'Diretoria'} 👋
+              {greeting}, {firstName || 'Diretoria'}
             </h1>
             <p className="mt-1 text-xs leading-snug text-emerald-50/90 sm:text-sm lg:text-base">
               UMP IPNC • {dashboardStats.activeMembers} membro{dashboardStats.activeMembers === 1 ? '' : 's'} ativo{dashboardStats.activeMembers === 1 ? '' : 's'}
@@ -422,7 +422,7 @@ export default function Index() {
         />
       </MetricGrid>
 
-      <div className="grid min-w-0 gap-section-gap xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+      <div className="grid min-w-0 gap-section-gap min-[1200px]:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <section className="min-w-0">
           <SectionHeader
             title="Próximos eventos"

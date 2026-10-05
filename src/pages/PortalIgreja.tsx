@@ -68,34 +68,34 @@ function WelcomeScreen({ visitor, onContinue }: { visitor: VisitorData; onContin
   const firstName = visitor.fullName.split(' ')[0];
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 p-4">
+    <div className="min-h-dvh flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 text-center space-y-5 sm:p-8">
         {/* Logo grande */}
-        <div className="animate-fade-in">
+        <div className="">
           <img
             src={logoIpnc}
             alt="IPNC"
-            className="h-24 w-24 mx-auto object-contain drop-shadow-xl"
+            className="h-24 w-24 mx-auto object-contain"
           />
         </div>
 
         {/* Coração animado */}
-        <div className="animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+        <div className="">
           <Heart className="h-8 w-8 mx-auto text-primary animate-pulse" />
         </div>
 
         {/* Título */}
         <h1
-          className="text-2xl sm:text-3xl font-bold text-foreground animate-fade-in"
-          style={{ animationDelay: '0.5s', animationFillMode: 'both' }}
+          className="text-2xl sm:text-3xl font-bold text-foreground"
+
         >
           Que alegria ter você aqui!
         </h1>
 
         {/* Mensagem acolhedora */}
         <p
-          className="text-muted-foreground leading-relaxed animate-fade-in"
-          style={{ animationDelay: '0.7s', animationFillMode: 'both' }}
+          className="text-muted-foreground leading-relaxed"
+
         >
           Seja muito bem-vindo à nossa igreja! É uma honra receber você.
           Que este momento seja especial e que você se sinta em casa entre nós.
@@ -104,20 +104,20 @@ function WelcomeScreen({ visitor, onContinue }: { visitor: VisitorData; onContin
 
         {/* Nome em destaque */}
         <p
-          className="text-lg text-foreground animate-fade-in"
-          style={{ animationDelay: '0.9s', animationFillMode: 'both' }}
+          className="text-lg text-foreground"
+
         >
           Obrigado pela sua visita, <span className="font-bold text-primary">{firstName}</span>!
         </p>
 
         {/* Botão de entrar */}
-        <div className="animate-fade-in" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
+        <div className="">
           <Button onClick={onContinue} size="lg" className="w-full max-w-xs text-base py-6">
             Entrar no Portal
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground animate-fade-in" style={{ animationDelay: '1.3s', animationFillMode: 'both' }}>
+        <p className="text-xs text-muted-foreground">
           Igreja Presbiteriana de Nova Carapina
         </p>
       </div>
@@ -152,29 +152,29 @@ function ReturnVisitorConfirm({
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+    <div className="min-h-dvh flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 text-center space-y-5 sm:p-8">
-        <div className="animate-fade-in">
-          <img src={logoIpnc} alt="IPNC" className="h-24 w-24 mx-auto object-contain drop-shadow-lg" />
+        <div className="">
+          <img src={logoIpnc} alt="IPNC" className="h-24 w-24 mx-auto object-contain" />
         </div>
 
         <h1
-          className="text-2xl font-bold text-foreground animate-fade-in"
-          style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
+          className="text-2xl font-bold text-foreground"
+
         >
           Bem-vindo de volta!
         </h1>
 
         <p
-          className="text-lg text-muted-foreground animate-fade-in"
-          style={{ animationDelay: '0.4s', animationFillMode: 'both' }}
+          className="text-lg text-muted-foreground"
+
         >
           Você é <span className="font-bold text-foreground">{visitor.fullName}</span>?
         </p>
 
         <div
-          className="flex flex-col gap-3 max-w-xs mx-auto animate-fade-in"
-          style={{ animationDelay: '0.6s', animationFillMode: 'both' }}
+          className="flex flex-col gap-3 max-w-xs mx-auto"
+
         >
           <Button onClick={handleConfirm} size="lg" className="w-full py-5" disabled={confirming}>
             {confirming ? (
@@ -324,21 +324,21 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+    <div className="min-h-dvh flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-block animate-logo-pulse mb-4">
-            <img src={logoIpnc} alt="IPNC" className="h-20 w-20 mx-auto object-contain drop-shadow-lg" />
+            <img src={logoIpnc} alt="IPNC" className="h-20 w-20 mx-auto object-contain" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-foreground animate-fade-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+          <h1 className="font-display text-2xl font-bold text-foreground">
             Bem-vindo à Igreja Presbiteriana
           </h1>
-          <p className="text-muted-foreground text-sm mt-1 animate-fade-up" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
+          <p className="text-muted-foreground text-sm mt-1">
             de Nova Carapina
           </p>
         </div>
 
-        <Card className="border-border/50 shadow-xl animate-fade-up" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
+        <Card className="border-border shadow-none">
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
@@ -426,8 +426,8 @@ function Portal({ visitor }: { visitor: VisitorData }) {
   return (
     <div className="min-h-dvh bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border px-4 py-2 safe-top">
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 max-w-6xl mx-auto">
+      <header className="sticky top-0 z-40 bg-card border-b border-border px-4 py-2 safe-top">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 max-w-[1120px] mx-auto">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Hamburger Menu */}
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -508,7 +508,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
       </header>
 
       {/* Content */}
-      <main className="min-w-0 flex-1 px-4 py-5 pb-[calc(6rem+env(safe-area-inset-bottom))] max-w-6xl mx-auto w-full sm:px-6 lg:py-7 lg:pb-28">
+      <main className="min-w-0 flex-1 px-4 py-5 pb-[calc(6rem+env(safe-area-inset-bottom))] max-w-[1120px] mx-auto w-full sm:px-6 lg:py-7 lg:pb-28">
         {activeTab !== 'inicio' && <PageHeader title={tabs.find(tab => tab.key === activeTab)?.label || 'Portal da igreja'} description="Igreja Presbiteriana de Nova Carapina" />}
         {activeTab === 'inicio' && <InicioTab visitor={visitor} onTabChange={setActiveTab} />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
@@ -526,7 +526,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
                 key={key}
                 onClick={() => setActiveTab(key)}
                 aria-current={active ? 'page' : undefined}
-                className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 py-2.5 px-1 text-xs transition-colors ${
+                className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 py-2.5 px-1 text-xs transition-colors ${
                   active ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
@@ -722,7 +722,7 @@ function DizimosPortalTab() {
     <div className="space-y-5">
       {readFailure}
       {/* Bloco motivacional */}
-      <div className="relative rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 overflow-hidden">
+      <div className="relative rounded-2xl bg-background p-6 overflow-hidden">
         <Heart className="absolute top-4 right-4 h-16 w-16 text-primary opacity-[0.08]" />
         <h2 className="text-xl font-bold text-foreground mb-1">Contribua com alegria</h2>
         <p className="text-sm italic text-muted-foreground leading-relaxed">

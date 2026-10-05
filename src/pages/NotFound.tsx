@@ -1,24 +1,15 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { FileQuestion } from 'lucide-react';
 
-const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Página não encontrada</p>
-        <a href="/" className="inline-flex min-h-11 items-center rounded-lg px-4 text-primary underline hover:text-primary/90">
-          Voltar ao início
-        </a>
-      </div>
-    </div>
-  );
-};
-
-export default NotFound;
+export default function NotFound() {
+  return <main className="flex min-h-dvh items-center justify-center bg-background p-4">
+    <section className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center">
+      <FileQuestion className="mx-auto mb-4 h-12 w-12 text-primary" aria-hidden="true" />
+      <p className="mb-2 text-sm font-semibold text-muted-foreground">404</p>
+      <h1 className="mb-3 text-2xl font-bold">Página não encontrada</h1>
+      <p className="mb-6 text-base text-muted-foreground">Confira o endereço ou volte ao início.</p>
+      <Button asChild><Link to="/">Voltar ao início</Link></Button>
+    </section>
+  </main>;
+}

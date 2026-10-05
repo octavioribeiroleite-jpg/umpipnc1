@@ -7,6 +7,7 @@ import "./responsive-foundation.css";
 import "./auth-readability.css";
 import "./society-selector.css";
 import "./identity-confirmation.css";
+import "./interface-system.css";
 import { registerServiceWorker } from "./lib/registerSW";
 
 createRoot(document.getElementById("root")!).render(

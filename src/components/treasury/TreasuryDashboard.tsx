@@ -74,11 +74,11 @@ export function TreasuryDashboard(props: Props) {
     <aside className="tr-sidebar" aria-label="Navegação da tesouraria">
       <a className="tr-brand" href="/tesouraria"><span className="tr-brand-icon"><Church size={25} /></span><span>IPNC<small>TESOURARIA</small></span></a>
       <p className="tr-sidebar-label">GESTÃO FINANCEIRA</p>
-      <button className={`tr-nav ${!selectedFundId ? 'active' : ''}`} onClick={() => props.onFund()}><LayoutDashboard size={18} />Visão geral</button>
+      <button className={`tr-nav ${!selectedFundId ? 'active' : ''}`} onClick={() => props.onFund()} aria-label="Visão geral" title="Visão geral"><LayoutDashboard size={18} /><span className="tr-nav-copy">Visão geral</span></button>
       <p className="tr-sidebar-label">SOCIEDADES</p>
-      {(funds.length ? funds : defaultFunds).map(fund => <button key={fund.id} disabled={!data} onClick={() => props.onFund(fund.id)} className={`tr-nav ${fund.id === selectedFundId ? 'active' : ''}`}><span className="tr-dot" style={{ backgroundColor: fund.color }} />{fund.abbreviation}<ArrowRight size={14} /></button>)}
-      {admin && <button className="tr-nav tr-add-fund" disabled={!data} onClick={props.onNewFund}><Plus size={17} />Nova sociedade</button>}
-      <div className="tr-sidebar-bottom"><div className="tr-sidebar-note"><Landmark size={20} /><strong>Uma conta. Cada caixa organizado.</strong><p>Acompanhe os valores de cada sociedade da nossa igreja.</p></div><a href="/" className="tr-return"><ArrowLeft size={15} />Voltar ao Aplicativo IPNC</a></div>
+      {(funds.length ? funds : defaultFunds).map(fund => <button key={fund.id} disabled={!data} onClick={() => props.onFund(fund.id)} className={`tr-nav tr-fund-nav ${fund.id === selectedFundId ? 'active' : ''}`} aria-label={`Caixa da ${fund.abbreviation}`} title={fund.name}><span className="tr-dot" style={{ backgroundColor: fund.color }} /><span>{fund.abbreviation}</span><ArrowRight size={14} /></button>)}
+      {admin && <button className="tr-nav tr-add-fund" disabled={!data} onClick={props.onNewFund} aria-label="Nova sociedade" title="Nova sociedade"><Plus size={17} /><span className="tr-nav-copy">Nova sociedade</span></button>}
+      <div className="tr-sidebar-bottom"><div className="tr-sidebar-note"><Landmark size={20} /><strong>Uma conta. Cada caixa organizado.</strong><p>Acompanhe os valores de cada sociedade da nossa igreja.</p></div><a href="/" className="tr-return" aria-label="Voltar ao Aplicativo IPNC" title="Voltar ao Aplicativo IPNC"><ArrowLeft size={15} /><span>Voltar ao Aplicativo IPNC</span></a></div>
     </aside>
 
     <div className="tr-main">

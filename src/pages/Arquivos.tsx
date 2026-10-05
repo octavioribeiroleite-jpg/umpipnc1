@@ -64,7 +64,7 @@ export default function Arquivos() {
   };
 
   return (
-    <AppLayout>
+    <AppLayout width="wide">
       <PageHeader
         title="Arquivos"
         description="Gerencie comprovantes e anexos"

@@ -1,60 +1,44 @@
-/* Explicit presentation hooks; authentication selectors and handlers stay intact. */
-.auth-page > .fixed.inset-0.z-10 {
-  background: linear-gradient(180deg, rgb(2 12 8 / 65%), rgb(1 6 4 / 90%));
+/* Solid entry surfaces, independent from video loading and background frames. */
+.auth-page { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr); background: hsl(var(--background)); }
+.auth-brand-panel { min-width: 0; background: hsl(var(--sidebar-background)); color: white; display: flex; flex-direction: column; gap: 24px; padding: 24px 20px; }
+.auth-brand { display: flex; align-items: center; gap: 16px; }
+.auth-brand img { width: 72px; height: 72px; object-fit: contain; background: white; border-radius: 16px; padding: 4px; }
+.auth-brand > span { font-size: 1.75rem; font-weight: 700; letter-spacing: -.025em; }
+.auth-brand small { display: block; font-size: 0.875rem; font-weight: 400; letter-spacing: .04em; color: #c2d6ca; }
+.auth-brand-heading h1 { font-size: 1.5rem; font-weight: 600; line-height: 1.3; letter-spacing: -.025em; }
+.auth-brand-install .ui-button { background: #265442; color: white; border-color: #7d9285; }
+.auth-main { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 32px 20px; min-width: 0; }
+.auth-exiting { opacity: .6; }
+.auth-content-heading { margin-bottom: 24px; }
+.auth-content-heading h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.3; letter-spacing: -.025em; }
+.auth-content-heading p { margin-top: 8px; color: hsl(var(--muted-foreground)); font-size: 0.875rem; }
+.auth-access-list { display: flex; flex-direction: column; gap: 12px; }
+.auth-page .auth-access-card { width: 100%; min-height: 88px; display: flex; align-items: center; gap: 16px; padding: 16px; border: 1px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card)); text-align: left; box-shadow: none; }
+.auth-page .auth-access-card:hover { background: hsl(var(--accent)); border-color: hsl(var(--input)); }
+.auth-access-icon { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; background: hsl(var(--primary) / .08); color: hsl(var(--primary)); border-radius: 12px; }
+.auth-access-icon svg { width: 24px; height: 24px; }
+.auth-access-copy { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.auth-access-copy strong { font-size: 1rem; font-weight: 600; }
+.auth-access-copy > span { font-size: 0.875rem; color: hsl(var(--muted-foreground)); overflow-wrap: anywhere; }
+.auth-page .auth-admin-button { display: flex; gap: 8px; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 8px; color: hsl(var(--primary)); font-size: 0.875rem; font-weight: 600; }
+.auth-admin-button svg { width: 18px; height: 18px; }
+.auth-copyright { text-align: center; font-size: 0.8125rem; color: hsl(var(--muted-foreground)); margin-top: 24px; }
+.auth-build { color: hsl(var(--muted-foreground)); }
+.auth-update { align-self: flex-end; }
+.auth-page .auth-pin-panel { background: hsl(var(--card)); color: hsl(var(--foreground)); border-color: hsl(var(--border)); border-radius: 20px; box-shadow: none; }
+.auth-page .pin-pad-utility { background: hsl(var(--secondary)); color: hsl(var(--foreground)); }
+.auth-page button:disabled { opacity: 1; color: #5e7067; background: #edf1ee; border-color: #c2cec6; box-shadow: none; }
+.auth-page [class*='shadow-2xl'] { background: hsl(var(--card)); border-color: hsl(var(--border)); box-shadow: none; backdrop-filter: none; }
+.auth-page .animate-fade-up h2 { color: hsl(var(--foreground)); }
+.auth-page .animate-fade-up > div:first-child > .ui-button { color: hsl(var(--primary)); }
+@media (min-width: 700px) {
+ .auth-main { padding: 40px; }
 }
-.auth-page .auth-access-card {
-  border-color: hsl(var(--border));
-  background: hsl(var(--card));
-  color: hsl(var(--card-foreground));
-  box-shadow: 0 6px 20px rgb(0 0 0 / 15%);
+@media (min-width: 1100px) {
+ .auth-page { grid-template-columns: minmax(320px, .8fr) minmax(0, 1fr); }
+ .auth-brand-panel { min-width: 0; padding: 48px; justify-content: space-between; min-height: 100dvh; }
+ .auth-brand-heading h1 { font-size: 2.25rem; }
+ .auth-main { padding: 40px 64px; }
 }
-.auth-page .auth-access-card h3 {
-  color: hsl(var(--card-foreground));
-}
-.auth-page .auth-access-card h3 + p {
-  color: hsl(var(--muted-foreground));
-}
-.auth-page .auth-admin-button {
-  min-height: 44px;
-  border-color: rgb(255 255 255 / 40%);
-  background: rgb(0 0 0 / 55%);
-  color: white;
-  font-size: 14px;
-}
-/* An opaque PIN surface keeps labels readable over every frame of the video. */
-.auth-page .auth-pin-panel {
-  --card: 0 0% 100%;
-  --card-foreground: 145 24% 10%;
-  --foreground: 145 24% 10%;
-  --muted-foreground: 145 13% 30%;
-  --primary: 151 61% 23%;
-  --primary-foreground: 0 0% 100%;
-  --border: 140 9% 52%;
-  --input: 140 9% 52%;
-  --ring: 151 61% 23%;
-  --ring-offset-background: 0 0% 100%;
-  --background: 0 0% 100%;
-  --destructive: 0 72% 39%;
-  background: #fff;
-  color: hsl(var(--card-foreground));
-  border-color: #d5e1d8;
-  box-shadow: 0 16px 44px rgb(0 0 0 / 24%);
-}
-.auth-page .auth-pin-panel .pin-pad-utility {
-  background: #edf3ee;
-  color: #294f3a;
-}
-.auth-page .auth-pin-panel .pin-pad-utility:hover:not(:disabled) {
-  background: #dce9de;
-  color: #173d28;
-}
-.auth-page .auth-pin-panel button:disabled {
-  opacity: 1;
-  color: #5a6a60;
-  background: #eef2ef;
-  border-color: #c6d2c9;
-  box-shadow: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth-page .animate-logo-pulse { animation: none; }
-}
+
+.auth-page :is(h1,h2,strong) { overflow-wrap: anywhere; }

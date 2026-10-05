@@ -97,7 +97,7 @@ export default function Usuarios() {
   const [membersError, setMembersError] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
-  
+
   const [mobileSocietyTab, setMobileSocietyTab] = useState<string>('');
   const [resettingPassword, setResettingPassword] = useState<string | null>(null);
 
@@ -105,7 +105,7 @@ export default function Usuarios() {
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [membersLoading, setMembersLoading] = useState(true);
   const [memberSocietyFilter, setMemberSocietyFilter] = useState<string>('all');
-  
+
   const [creatingLogin, setCreatingLogin] = useState<string | null>(null);
 
   // Reset password result dialog
@@ -176,7 +176,7 @@ export default function Usuarios() {
             user_id: profile.user_id,
             full_name: profile.full_name,
             username: profile.username || '',
-            
+
             active: profile.active,
             role: userRole?.role as AppRole | null,
             created_at: profile.created_at,
@@ -468,7 +468,7 @@ export default function Usuarios() {
       }
 
       const { data, error } = await supabase.functions.invoke('create-user', { body });
-      
+
       // Handle non-2xx: SDK puts error in `error` but real message is in `data`
       if (error) {
         const msg = data?.error || error.message || 'Erro ao criar usuário';
@@ -525,7 +525,7 @@ export default function Usuarios() {
 
   if (authLoading) {
     return (
-      <AppLayout>
+      <AppLayout width="wide">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -865,7 +865,7 @@ export default function Usuarios() {
   );
 
   return (
-    <AppLayout>
+    <AppLayout width="wide">
       <PageHeader
         title="Gestão de Usuários"
         description="Gerencie a diretoria e os membros do sistema"

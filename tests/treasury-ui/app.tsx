@@ -6,6 +6,7 @@ import { TreasuryDashboard } from '../../src/components/treasury/TreasuryDashboa
 import { TreasuryEntryDialog } from '../../src/components/treasury/TreasuryEntryDialog';
 import { TreasuryWorkflow } from '../../src/components/treasury/TreasuryWorkflow';
 import { Context, FUND, OTHER, seed } from './hooks';
+if(new URLSearchParams(location.search).get('font')==='200') document.documentElement.style.fontSize='32px';
 function App(){
  const [role,setRole]=useState('treasurer');const [entries,setEntries]=useState(seed);const [open,setOpen]=useState(false);const [editing,setEditing]=useState(null);const [selected,setSelected]=useState(FUND);const [filters,setFilters]=useState({search:'',kind:'',start:'',end:''});
  const [scenario,setScenario]=useState('normal');

@@ -7,7 +7,7 @@ import '@/finance-responsive.css';
 
 export default function Camisas() {
   return (
-    <AppLayout>
+    <AppLayout width="wide">
       <div className="finance-page shirts-page min-w-0">
         <PageHeader
           title="Camisas"

@@ -125,7 +125,7 @@ export default function EleicaoDetalhe() {
 
   if (!read.hasSnapshot || !election) {
     return (
-      <AppLayout>
+      <AppLayout width="wide">
         {read.error ? <QueryErrorState message="Não foi possível consultar a eleição e suas etapas." onRetry={fetchAll} retrying={read.loading} /> : <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>}
@@ -212,7 +212,7 @@ export default function EleicaoDetalhe() {
   };
 
   return (
-    <AppLayout>
+    <AppLayout width="wide">
       {read.error && <QueryErrorState message="Não foi possível atualizar a eleição e suas etapas." onRetry={fetchAll} retrying={read.loading} hasPreviousData />}
       {/* Header */}
       <div className="rounded-2xl bg-card border border-border shadow-sm p-4 mb-4">

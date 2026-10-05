@@ -45,23 +45,23 @@ export function PastorLayout({ children }: PastorLayoutProps) {
   }
 
   return (
-    <div className="min-h-dvh w-full bg-background text-foreground">
+    <div className="ipnc-pastor-layout min-h-dvh w-full bg-background text-foreground">
       <OfflineBanner />
       <a href="#pastor-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3 focus:text-primary focus:shadow-lg">
         Ir para o conteúdo
       </a>
       <div className="flex min-h-dvh">
-        <div className="hidden lg:block">
+        <div className="hidden min-[700px]:block">
           <PastorSidebar />
         </div>
-        <div className="lg:hidden">
+        <div className="min-[700px]:hidden">
           <PastorMobileHeader />
         </div>
         {/* One content tree preserves form state and subscriptions across breakpoints. */}
-        <main id="pastor-content" tabIndex={-1} className="min-w-0 flex-1 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-[calc(4.5rem+env(safe-area-inset-top))] sm:px-6 lg:py-7 lg:px-8">
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        <main id="pastor-content" tabIndex={-1} className="min-w-0 flex-1 px-4 pb-[calc(var(--bottom-nav-height,4rem)+1rem)] pt-[calc(var(--mobile-header-height,4rem)+1rem)] sm:px-6 min-[700px]:pt-6 min-[700px]:pb-6 min-[1100px]:px-8">
+          <div className="mx-auto w-full max-w-[1120px]">{children}</div>
         </main>
-        <div className="lg:hidden">
+        <div className="min-[700px]:hidden">
           <PastorMobileNav />
         </div>
       </div>

@@ -35,7 +35,7 @@ const categoryColors: Record<string, string> = {
 
 function getFileIcon(type: string | null) {
   if (!type) return <File className="h-6 w-6 text-muted-foreground" />;
-  
+
   if (type.includes('pdf')) {
     return <FileText className="h-6 w-6 text-destructive" />;
   }
@@ -62,22 +62,22 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
   const category = file.category || 'geral';
 
   return (
-    <Card 
+    <Card
       className="hover:shadow-md transition-shadow cursor-pointer group overflow-hidden"
       onClick={() => onView(file)}
     >
       {/* Image Preview */}
       {isImage && (
-        <div className="aspect-video bg-muted overflow-hidden">
-          <img 
-            src={file.url} 
+        <div className="aspect-[4/3] bg-muted overflow-hidden">
+          <img
+            src={file.url}
             alt={file.name}
             className="w-full h-full object-cover"
             loading="lazy"
           />
         </div>
       )}
-      
+
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {!isImage && (
@@ -85,12 +85,12 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
               {getFileIcon(file.type)}
             </div>
           )}
-          
+
           <div className="flex-1 min-w-0">
-            <button type="button" onClick={(event) => { event.stopPropagation(); onView(file); }} className="min-h-11 min-w-0 text-left text-sm font-medium [overflow-wrap:anywhere] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{file.name}</button>
+            <button type="button" onClick={(event) => { event.stopPropagation(); onView(file); }} className="min-h-12 min-w-0 text-left text-base font-medium [overflow-wrap:anywhere] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{file.name}</button>
             <div className="flex flex-wrap items-center gap-2 mt-1">
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className={`text-xs ${categoryColors[category] || categoryColors.geral}`}
               >
                 {categoryLabels[category] || category}
@@ -119,7 +119,7 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={(e) => { e.stopPropagation(); onDelete(file); }}
                 className="text-destructive"
               >

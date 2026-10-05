@@ -144,7 +144,7 @@ export default function Eleicoes() {
   const filtered = elections.filter(e => (e.type || 'cargo') === activeTab);
 
   return (
-    <AppLayout>
+    <AppLayout width="wide">
       <PageHeader
         title="Eleições"
         description="Organize eleições e acompanhe cada etapa da votação"

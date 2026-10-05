@@ -13,7 +13,7 @@ export default function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isValidSession, setIsValidSession] = useState(false);
-  
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -35,7 +35,7 @@ export default function ResetPassword() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password.length < 6) {
       toast({
         variant: 'destructive',
@@ -77,7 +77,7 @@ export default function ResetPassword() {
 
   if (!isValidSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md animate-fade-in">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
@@ -86,7 +86,7 @@ export default function ResetPassword() {
             <h1 className="font-display text-2xl font-bold text-foreground">IPNC</h1>
           </div>
 
-          <Card className="border-border/50 shadow-xl">
+          <Card className="border-border shadow-sm">
             <CardHeader className="text-center">
               <CardTitle>Link inválido</CardTitle>
               <CardDescription>
@@ -94,8 +94,8 @@ export default function ResetPassword() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={() => navigate('/auth')} 
+              <Button
+                onClick={() => navigate('/auth')}
                 className="w-full"
               >
                 Voltar para login
@@ -108,7 +108,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
@@ -120,7 +120,7 @@ export default function ResetPassword() {
           </p>
         </div>
 
-        <Card className="border-border/50 shadow-xl">
+        <Card className="border-border shadow-sm">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
               <KeyRound className="h-6 w-6 text-primary" />

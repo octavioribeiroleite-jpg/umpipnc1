@@ -271,7 +271,7 @@ export default function PainelPastor() {
                   onClick={() => navigate(action.path)}
                 >
                   <action.icon className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-medium text-muted-foreground">{action.label}</span>
+                  <span className="w-full text-center text-sm font-medium [overflow-wrap:anywhere] text-muted-foreground">{action.label}</span>
                 </AppCard>
               ))}
             </div>

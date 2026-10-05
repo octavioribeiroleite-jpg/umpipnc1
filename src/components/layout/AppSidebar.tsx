@@ -30,7 +30,7 @@ export function AppSidebar() {
     <aside
       className={cn(
         'sticky top-0 flex h-screen flex-shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-300',
-        collapsed ? 'w-16' : 'w-60 xl:w-64',
+        collapsed ? 'w-16' : 'w-56',
       )}
     >
       <div className="flex items-center justify-between border-b border-sidebar-border p-2">
@@ -40,7 +40,7 @@ export function AppSidebar() {
               <img src={logoIpnc} alt="Renovo IPNC" className="h-9 w-9 object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="font-display text-sm font-bold text-sidebar-primary">Renovo</span>
+              <span className="font-display text-sm font-bold text-sidebar-foreground">Renovo</span>
               <span className="text-xs text-sidebar-muted">IPNC</span>
             </div>
           </button>
@@ -80,10 +80,10 @@ export function AppSidebar() {
                     aria-current={active ? 'page' : undefined}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      'flex min-h-11 w-full items-center rounded-lg px-3 py-2.5 transition-all duration-200',
+                      'flex min-h-12 w-full items-center rounded-lg px-3 py-2.5 transition-all duration-200',
                       'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                       active
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
+                        ? 'bg-sidebar-accent text-sidebar-primary-foreground shadow-[inset_3px_0_0_#c2d6ca]'
                         : 'text-sidebar-foreground',
                     )}
                   >

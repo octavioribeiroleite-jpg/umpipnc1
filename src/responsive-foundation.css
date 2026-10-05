@@ -1,69 +1,30 @@
 :root {
-  --page-x: 0.75rem;
-  --section-gap: 1rem;
-  --card-gap: 0.625rem;
-  --card-padding: 0.875rem;
-  --content-max-width: 90rem;
-  --reading-max-width: 46rem;
-  --mobile-header-height: 3.5rem;
-  --bottom-nav-height: 3.5rem;
-  --touch-target: 2.75rem;
+  --page-x: 1rem;
+  --section-gap: 1.5rem;
+  --card-gap: .75rem;
+  --card-padding: 1rem;
+  --content-max-width: 70rem;
+  --reading-max-width: 48rem;
+  --mobile-header-height: 4rem;
+  --bottom-nav-height: 4rem;
+  --touch-target: 3rem;
   --card-radius: 1rem;
   --panel-radius: 1.25rem;
-  --hero-radius: 1.375rem;
-  --font-page-title: clamp(1.5rem, 1.25rem + 0.8vw, 1.875rem);
-  --font-section-title: clamp(1.125rem, 1rem + 0.55vw, 1.625rem);
-  --font-card-title: clamp(0.9375rem, 0.9rem + 0.2vw, 1.125rem);
-  --font-body-responsive: clamp(0.8125rem, 0.78rem + 0.18vw, 1rem);
-  --font-metric: clamp(1.15rem, 0.95rem + 1vw, 2.25rem);
-  --shadow-card: 0 8px 24px hsl(145 24% 10% / 0.07);
-  --shadow-panel: 0 14px 38px hsl(145 24% 10% / 0.1);
-  --shadow-floating: 0 18px 50px hsl(145 24% 10% / 0.16);
+  --hero-radius: 1rem;
+  --font-page-title: 1.5rem;
+  --font-section-title: 1.125rem;
+  --font-card-title: 1.125rem;
+  --font-body-responsive: 1rem;
+  --font-metric: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  --shadow-card: 0 2px 8px hsl(145 24% 10% / .035);
+  --shadow-panel: 0 4px 16px hsl(145 24% 10% / .05);
+  --shadow-floating: 0 12px 32px hsl(145 24% 10% / .14);
 }
-
-@media (min-width: 390px) {
-  :root {
-    --page-x: 1rem;
-    --card-gap: 0.75rem;
-    --card-padding: 1rem;
-  }
+@media (min-width: 700px) {
+  :root { --page-x: 1.5rem; --card-gap: 1rem; --card-padding: 1.25rem; --bottom-nav-height: 0rem; --font-page-title: 1.75rem; }
 }
-
-@media (min-width: 768px) {
-  :root {
-    --page-x: 1.25rem;
-    --section-gap: 1.5rem;
-    --card-gap: 1rem;
-    --card-padding: 1.25rem;
-    --mobile-header-height: 4rem;
-    --bottom-nav-height: 0rem;
-    --card-radius: 1.125rem;
-    --panel-radius: 1.375rem;
-    --hero-radius: 1.625rem;
-    --shadow-card: 0 10px 28px hsl(145 24% 10% / 0.075);
-    --shadow-panel: 0 18px 46px hsl(145 24% 10% / 0.11);
-  }
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --page-x: 1.75rem;
-    --section-gap: 1.75rem;
-    --card-gap: 1.125rem;
-    --card-padding: 1.375rem;
-    --card-radius: 1.25rem;
-    --panel-radius: 1.5rem;
-    --hero-radius: 1.875rem;
-  }
-}
-
-@media (min-width: 1440px) {
-  :root {
-    --page-x: 2rem;
-    --section-gap: 2rem;
-    --card-gap: 1.25rem;
-    --card-padding: 1.5rem;
-  }
+@media (min-width: 1100px) {
+  :root { --page-x: 2rem; --section-gap: 2rem; }
 }
 
 .dark {

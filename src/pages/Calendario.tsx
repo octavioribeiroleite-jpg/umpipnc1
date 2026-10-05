@@ -265,7 +265,7 @@ export default function Calendario() {
   const selectedDayEvents = selectedDay ? getEventsForDate(selectedDay.getDate()) : [];
 
   return (
-    <AppLayout>
+    <AppLayout width="wide">
       <PageHeader
         title="Calendário"
         eyebrow="Agenda da igreja"
@@ -282,7 +282,7 @@ export default function Calendario() {
       />
 
       <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <AppCard noPadding className="min-w-0">
+        <AppCard noPadding className="min-w-0 order-2 xl:order-1">
           <CardHeader className="pb-2 md:pb-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-lg">
@@ -331,7 +331,7 @@ export default function Calendario() {
         </AppCard>
 
         {/* Upcoming events use the same readable cards at every viewport. */}
-        <AppCard noPadding className="min-w-0">
+        <AppCard noPadding className="min-w-0 order-1 xl:order-2">
           <CardHeader>
             <CardTitle className="text-lg">Próximos Eventos</CardTitle>
           </CardHeader>

@@ -132,7 +132,7 @@ function TaskDetailPopup({
                 disabled={updateStatus.isPending}
               >
                 <Check className="h-4 w-4 mr-1" />
-                Concluir
+                <span className="min-w-0 [overflow-wrap:anywhere]">Concluir</span>
               </Button>
             )}
             {task.status === 'done' && (
@@ -143,7 +143,7 @@ function TaskDetailPopup({
                 disabled={updateStatus.isPending}
               >
                 <ArrowRight className="h-4 w-4 mr-1" />
-                Reabrir
+                <span className="min-w-0 [overflow-wrap:anywhere]">Reabrir</span>
               </Button>
             )}
             {task.status !== 'in_progress' && task.status !== 'done' && (
@@ -154,7 +154,7 @@ function TaskDetailPopup({
                 disabled={updateStatus.isPending}
               >
                 <ArrowRight className="h-4 w-4 mr-1" />
-                Em andamento
+                <span className="min-w-0 [overflow-wrap:anywhere]">Em andamento</span>
               </Button>
             )}
             {task.status === 'in_progress' && (
@@ -165,7 +165,7 @@ function TaskDetailPopup({
                 disabled={updateStatus.isPending}
               >
                 <ArrowRight className="h-4 w-4 mr-1" />
-                A fazer
+                <span className="min-w-0 [overflow-wrap:anywhere]">A fazer</span>
               </Button>
             )}
             <Button
@@ -174,7 +174,7 @@ function TaskDetailPopup({
               onClick={() => { onEdit(task); onOpenChange(false); }}
             >
               <Pencil className="h-4 w-4 mr-1" />
-              Editar
+              <span className="min-w-0 [overflow-wrap:anywhere]">Editar</span>
             </Button>
             <Button
               size="sm"
@@ -183,7 +183,7 @@ function TaskDetailPopup({
               onClick={() => { onDelete(task); onOpenChange(false); }}
             >
               <Trash2 className="h-4 w-4 mr-1" />
-              Excluir
+              <span className="min-w-0 [overflow-wrap:anywhere]">Excluir</span>
             </Button>
           </div>
         </div>
@@ -246,8 +246,9 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
               return <span className={cn('text-xs', className)}>{text}</span>;
             })()}
             {task.assignee && (
-              <span className="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                {initials}
+              <span className="ml-auto flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>
+                <span className="min-w-0 break-words">{task.assignee.full_name}</span>
               </span>
             )}
           </div>
@@ -267,20 +268,20 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
   return (
     <div
       className={cn(
-        'mb-3 rounded-xl border border-l-4 bg-card p-4 transition-all hover:shadow-md',
+        'task-card mb-3 rounded-xl border border-l-4 bg-card p-[16px] transition-all hover:shadow-md',
         priorityBorderColor[task.priority as TaskPriority],
         isOverdue && 'border-destructive/40',
         isDone && 'bg-muted/30'
       )}
     >
       {/* Header: checkbox + title */}
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-[12px]">
         <Checkbox
           checked={isDone}
           onCheckedChange={handleToggleDone}
           disabled={updateStatus.isPending}
           aria-label={`${isDone ? "Reabrir" : "Concluir"} tarefa ${task.title}`}
-          className="relative mt-2 h-5 w-5 shrink-0 after:absolute after:-inset-3"
+          className="relative mt-2 h-[20px] w-[20px] shrink-0 after:absolute after:-inset-[14px]"
         />
         <div className="flex-1 min-w-0">
           <h4 className={cn(
@@ -311,11 +312,11 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
               );
             })()}
             {task.assignee && (
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground ml-auto">
+              <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground ml-auto">
                 <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                   {initials}
                 </span>
-                <span className="break-words">{task.assignee.full_name}</span>
+                <span className="min-w-0 break-words">{task.assignee.full_name}</span>
               </span>
             )}
           </div>
@@ -333,7 +334,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
             disabled={updateStatus.isPending}
           >
             <Check className="h-3.5 w-3.5 mr-1" />
-            Concluir
+            <span className="min-w-0 [overflow-wrap:anywhere]">Concluir</span>
           </Button>
         )}
         {task.status === 'done' && (
@@ -345,7 +346,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
             disabled={updateStatus.isPending}
           >
             <ArrowRight className="h-3.5 w-3.5 mr-1" />
-            Reabrir
+            <span className="min-w-0 [overflow-wrap:anywhere]">Reabrir</span>
           </Button>
         )}
         {task.status === 'todo' && (
@@ -357,7 +358,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
             disabled={updateStatus.isPending}
           >
             <ArrowRight className="h-3.5 w-3.5 mr-1" />
-            Andamento
+            <span className="min-w-0 [overflow-wrap:anywhere]">Andamento</span>
           </Button>
         )}
         {task.status === 'in_progress' && (
@@ -369,7 +370,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
             disabled={updateStatus.isPending}
           >
             <ArrowRight className="h-3.5 w-3.5 mr-1" />
-            A fazer
+            <span className="min-w-0 [overflow-wrap:anywhere]">A fazer</span>
           </Button>
         )}
         <Button
@@ -379,7 +380,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
           onClick={() => onEdit(task)}
         >
           <Pencil className="h-3.5 w-3.5 mr-1" />
-          Editar
+          <span className="min-w-0 [overflow-wrap:anywhere]">Editar</span>
         </Button>
         <Button
           size="sm"
@@ -388,7 +389,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
           onClick={() => onDelete(task)}
         >
           <Trash2 className="h-3.5 w-3.5 mr-1" />
-          Excluir
+          <span className="min-w-0 [overflow-wrap:anywhere]">Excluir</span>
         </Button>
       </div>
     </div>

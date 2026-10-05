@@ -7,17 +7,17 @@
 @layer base {
   :root {
     /* Base clara para reduzir excesso de verde na área de trabalho */
-    --background: 100 18% 97%;
-    --foreground: 145 24% 10%;
+    --background: 150.000 11.111% 96.471%;
+    --foreground: 160.000 33.333% 14.118%;
 
     --card: 0 0% 100%;
-    --card-foreground: 145 24% 10%;
+    --card-foreground: 160.000 33.333% 14.118%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 145 24% 10%;
+    --popover-foreground: 160.000 33.333% 14.118%;
 
     /* Primary - Verde institucional */
-    --primary: 153 63% 33%;
+    --primary: 153.000 64.103% 30.588%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Verde muito claro */
@@ -25,43 +25,43 @@
     --secondary-foreground: 145 24% 15%;
 
     --muted: 140 16% 92%;
-    --muted-foreground: 145 8% 38%;
+    --muted-foreground: 150.000 8.738% 40.392%;
 
     /* Accent - apoio claro para hover e superfícies */
     --accent: 145 28% 91%;
     --accent-foreground: 145 28% 18%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 2.439 61.809% 39.020%;
     --destructive-foreground: 0 0% 100%;
 
     /* Warning - Amber */
-    --warning: 38 92% 50%;
+    --warning: 35.625 88.889% 28.235%;
     --warning-foreground: 0 0% 100%;
 
     /* Success - Green */
-    --success: 153 63% 33%;
+    --success: 147.188 49.231% 25.490%;
     --success-foreground: 0 0% 100%;
 
     /* Info - Blue */
-    --info: 217 91% 60%;
+    --info: 210.353 46.448% 35.882%;
     --info-foreground: 0 0% 100%;
 
-    --border: 140 18% 87%;
-    --input: 140 18% 87%;
-    --ring: 153 63% 33%;
+    --border: 135.000 13.333% 88.235%;
+    --input: 142.857 8.787% 53.137%;
+    --ring: 153.000 64.103% 30.588%;
 
     --radius: 0.75rem;
 
     /* Sidebar - Verde escuro concentrado só na navegação */
-    --sidebar-background: 152 53% 15%;
-    --sidebar-foreground: 142 24% 94%;
-    --sidebar-primary: 150 56% 46%;
+    --sidebar-background: 158.919 50.685% 14.314%;
+    --sidebar-foreground: 150.000 11.111% 96.471%;
+    --sidebar-primary: 156.522 37.705% 23.922%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 152 46% 22%;
+    --sidebar-accent: 156.522 37.705% 23.922%;
     --sidebar-accent-foreground: 142 24% 96%;
     --sidebar-border: 152 35% 22%;
     --sidebar-ring: 150 56% 46%;
-    --sidebar-muted: 145 14% 62%;
+    --sidebar-muted: 144.000 19.608% 80.000%;
   }
 
   .dark {

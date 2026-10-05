@@ -41,6 +41,7 @@ import './secretaria-theme.css';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { SecretariaNavigation } from '@/components/secretaria/SecretariaNavigation';
 import { SecretariaWorkspace } from '@/components/secretaria/SecretariaWorkspace';
 import { HeaderActions } from '@/components/layout/HeaderActions';
 import { PullToRefresh } from '@/components/layout/PullToRefresh';
@@ -131,7 +132,7 @@ export function SecretariaAniversariantes({ onSessionExpired }: { onSessionExpir
   const [formOpen, setFormOpen] = useState(false);
   const [editingBirthday, setEditingBirthday] = useState<Birthday | null>(null);
   const [deletingBirthday, setDeletingBirthday] = useState<Birthday | null>(null);
-  
+
 
   const currentMonth = new Date().getMonth() + 1;
 
@@ -723,11 +724,11 @@ export default function Secretaria() {
   // Home view with cards
   if (currentView === 'home') {
     return (
-      <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
+      <EbdNavigationContext.Provider value={navigation}><SecretariaNavigation admin={isAdmin} currentView={currentView} onView={setCurrentView} onExit={handleExitApp}><PullToRefresh>
       <div className="ebd-home ebd-app">
         {pageHeader}
 
-        <main className="ebd-content">
+        <main id="ebd-main" tabIndex={-1} className="ebd-content">
           <div className={`ebd-sync ${lastSynced && !syncError && !aiReauthOpen ? 'ebd-sync-ok' : ''}`}>{syncNotice}</div>
           <div className="ebd-overview">
           <section className="ebd-summary ebd-surface" aria-labelledby="ebd-summary-title" aria-busy={!lastSynced && syncing}>
@@ -796,13 +797,13 @@ export default function Secretaria() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-      </PullToRefresh></EbdNavigationContext.Provider>
+      </PullToRefresh></SecretariaNavigation></EbdNavigationContext.Provider>
     );
   }
 
 
   return (
-    <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
+    <EbdNavigationContext.Provider value={navigation}><SecretariaNavigation admin={isAdmin} currentView={currentView} onView={setCurrentView} onExit={handleExitApp}><PullToRefresh>
     <SecretariaWorkspace title={viewTitles[currentView]} profileLabel={profileLabel} onBack={navigation.back} onHome={handleBackToHome} onExit={handleExitApp} syncNotice={syncNotice}>
       {reauthDialog}
       <div className={`ebd-view ebd-view-${currentView}`}>
@@ -877,6 +878,6 @@ export default function Secretaria() {
         </AlertDialogContent>
       </AlertDialog>
     </SecretariaWorkspace>
-    </PullToRefresh></EbdNavigationContext.Provider>
+    </PullToRefresh></SecretariaNavigation></EbdNavigationContext.Provider>
   );
 }

@@ -4,7 +4,6 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, ListTodo, CircleDot, Clock, CheckCircle2 } from 'lucide-react';
 import { FAB } from '@/components/ui/fab';
@@ -50,7 +49,7 @@ function KanbanColumn({
 
   return (
     <div className="min-w-0">
-      <div className={`rounded-xl ${config.bg} p-3 md:p-4 min-h-[200px]`}>
+      <div className={`rounded-xl ${config.bg} p-[12px] md:p-[16px] min-h-[200px]`}>
         <div className="flex items-center gap-2 mb-4">
           <Icon className="h-4 w-4 text-muted-foreground" />
           <h3 className="font-semibold text-sm">{config.title}</h3>
@@ -73,31 +72,6 @@ function KanbanColumn({
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function MobileTaskList({
-  tasks,
-  title,
-  onEdit,
-  onDelete,
-  variant,
-}: {
-  tasks: TaskWithAssignee[];
-  title: string;
-  onEdit: (task: TaskWithAssignee) => void;
-  onDelete: (task: TaskWithAssignee) => void;
-  variant: 'full' | 'compact';
-}) {
-  if (tasks.length === 0) {
-    return <p className="text-center text-muted-foreground py-8">Nenhuma tarefa {title.toLowerCase()}.</p>;
-  }
-  return (
-    <div className="space-y-0">
-      {tasks.map((task) => (
-        <TaskCard key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} variant={variant} />
-      ))}
     </div>
   );
 }
@@ -144,6 +118,7 @@ export default function Tarefas() {
   const [selectedTask, setSelectedTask] = useState<TaskWithAssignee | null>(null);
 
   const [search, setSearch] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatus>('todo');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
 
   const filteredTasks = useMemo(() => {
@@ -180,7 +155,7 @@ export default function Tarefas() {
 
   if (isLoading) {
     return (
-      <AppLayout>
+      <AppLayout width="wide">
         <PageHeader title="Tarefas" description="Gerencie as tarefas da diretoria" eyebrow="Organização" icon={<ListTodo />} />
         <div className="hidden md:grid grid-cols-1 xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
@@ -197,7 +172,7 @@ export default function Tarefas() {
 
   if (tasks.length === 0) {
     return (
-      <AppLayout>
+      <AppLayout width="wide">
         <PageHeader title="Tarefas" description="Gerencie as tarefas da diretoria" eyebrow="Organização" icon={<ListTodo />} />
         {isError ? <QueryErrorState message="Não foi possível carregar as tarefas." onRetry={() => void refetch()} retrying={isFetching} /> : <EmptyState onCreateClick={handleCreateClick} />}
         <TaskDialog
@@ -212,7 +187,7 @@ export default function Tarefas() {
   }
 
   return (
-    <AppLayout>
+    <AppLayout width="wide">
       <PageHeader
         title="Tarefas"
         eyebrow="Organização"
@@ -232,31 +207,18 @@ export default function Tarefas() {
       <TaskStats tasks={tasks} />
       <TaskFilters search={search} onSearchChange={setSearch} priority={priorityFilter} onPriorityChange={setPriorityFilter} />
 
-      {/* Desktop: Kanban */}
-      <div className="hidden md:grid grid-cols-1 xl:grid-cols-3 gap-4 pb-4">
-        <KanbanColumn status="todo" tasks={todoTasks} onEdit={handleEdit} onDelete={handleDelete} />
-        <KanbanColumn status="in_progress" tasks={inProgressTasks} onEdit={handleEdit} onDelete={handleDelete} />
-        <KanbanColumn status="done" tasks={doneTasks} onEdit={handleEdit} onDelete={handleDelete} />
+      <div className="mb-4 min-[1200px]:hidden">
+        <label htmlFor="task-status" className="mb-2 block font-medium">Situação</label>
+        <select id="task-status" value={selectedStatus} onChange={event => setSelectedStatus(event.target.value as TaskStatus)} className="min-h-12 w-full rounded-xl border border-input bg-card px-3 text-base">
+          <option value="todo">A fazer ({todoTasks.length})</option>
+          <option value="in_progress">Em andamento ({inProgressTasks.length})</option>
+          <option value="done">Concluída ({doneTasks.length})</option>
+        </select>
       </div>
-
-      {/* Mobile: Tabs */}
-      <div className="md:hidden">
-        <Tabs defaultValue="todo">
-          <TabsList className="mb-4 flex h-auto w-full justify-start gap-1 overflow-x-auto p-1">
-            <TabsTrigger value="todo" className="min-h-11 flex-1 text-xs px-3">A fazer ({todoTasks.length})</TabsTrigger>
-            <TabsTrigger value="in_progress" className="min-h-11 flex-1 text-xs px-3">Andamento ({inProgressTasks.length})</TabsTrigger>
-            <TabsTrigger value="done" className="min-h-11 flex-1 text-xs px-3">Concluída ({doneTasks.length})</TabsTrigger>
-          </TabsList>
-          <TabsContent value="todo" className="mt-0">
-            <MobileTaskList tasks={todoTasks} title="A fazer" onEdit={handleEdit} onDelete={handleDelete} variant="full" />
-          </TabsContent>
-          <TabsContent value="in_progress" className="mt-0">
-            <MobileTaskList tasks={inProgressTasks} title="Em andamento" onEdit={handleEdit} onDelete={handleDelete} variant="compact" />
-          </TabsContent>
-          <TabsContent value="done" className="mt-0">
-            <MobileTaskList tasks={doneTasks} title="Concluída" onEdit={handleEdit} onDelete={handleDelete} variant="compact" />
-          </TabsContent>
-        </Tabs>
+      <div className="grid min-w-0 grid-cols-1 gap-5 pb-4 min-[1200px]:grid-cols-3">
+        {([{status: 'todo', tasks: todoTasks}, {status: 'in_progress', tasks: inProgressTasks}, {status: 'done', tasks: doneTasks}] as {status: TaskStatus; tasks: TaskWithAssignee[]}[]).map(({status, tasks: columnTasks}) => <div key={status} className={status === selectedStatus ? 'min-w-0' : 'hidden min-w-0 min-[1200px]:block'}>
+          <KanbanColumn status={status} tasks={columnTasks} onEdit={handleEdit} onDelete={handleDelete} />
+        </div>)}
       </div>
 
       {isManagement && <FAB aria-label="Nova tarefa" onClick={handleCreateClick} />}

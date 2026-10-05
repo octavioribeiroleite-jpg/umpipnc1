@@ -35,14 +35,14 @@ export function SocietyOverviewCard({ society, stats }: Props) {
       className="min-w-0"
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-[12px]">
           <div
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white"
+            className="flex h-[40px] w-[40px] flex-shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white"
             style={{ backgroundColor: society.color }}
           >
             {society.name.substring(0, 3)}
           </div>
-          <p className="min-w-0 whitespace-normal break-words text-sm font-semibold">{society.name}</p>
+          <p className="min-w-0 whitespace-normal [overflow-wrap:anywhere] text-sm font-semibold">{society.name}</p>
         </div>
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
       </div>

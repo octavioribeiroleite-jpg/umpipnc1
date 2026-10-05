@@ -50,8 +50,8 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
   return (
     <AppCard colorStripe={eventColor}>
       {/* Row 1: Title + Society badge */}
-      <div className="flex items-start justify-between gap-2 mb-1.5">
-        <h4 className="text-sm font-semibold text-foreground break-words leading-relaxed">
+      <div className="flex flex-wrap items-start justify-between gap-2 mb-1.5">
+        <h4 className="min-w-0 text-sm font-semibold text-foreground [overflow-wrap:anywhere] leading-relaxed">
           {event.title}
         </h4>
         <Badge

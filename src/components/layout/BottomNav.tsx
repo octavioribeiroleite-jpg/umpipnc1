@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LucideIcon, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -16,12 +16,25 @@ interface BottomNavProps {
   mainItems: BottomNavItem[];
   moreItems: BottomNavItem[];
   moreTitle?: string;
-  desktopBreakpoint?: 'md' | 'lg';
+  desktopBreakpoint?: 'md' | 'lg' | '700';
 }
 
 export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', desktopBreakpoint = 'md' }: BottomNavProps) {
   const [open, setOpen] = useState(false);
-  const visibleItems = mainItems.slice(0, 4);
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = navRef.current;
+    const shell = nav?.closest<HTMLElement>('.ebd-navigation-shell, .app-page, .ipnc-pastor-layout');
+    if (!nav || !shell) return;
+    const updateHeight = () => shell.style.setProperty('--bottom-nav-height', `${nav.getBoundingClientRect().height}px`);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(nav);
+    return () => { observer.disconnect(); shell.style.removeProperty('--bottom-nav-height'); };
+  }, []);
+  const visibleItems = mainItems.slice(0, 3);
+
+  const overflowItems = [...mainItems.slice(3), ...moreItems];
 
   const handleMoreClick = (item: BottomNavItem) => {
     item.onClick();
@@ -29,12 +42,11 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', d
   };
 
   return (
-    <nav className={cn(
+    <nav ref={navRef} aria-label="Navegação principal" className={cn(
       'safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-border/40 dark:bg-card/95',
-      desktopBreakpoint === 'lg' ? 'lg:hidden' : 'md:hidden',
+      desktopBreakpoint === 'lg' ? 'lg:hidden' : desktopBreakpoint === '700' ? 'min-[700px]:hidden' : 'md:hidden',
     )}>
-      {/* The pastoral sidebar begins at lg; the global spacing token becomes zero at md. */}
-      <div className="mx-auto grid h-14 max-w-reading grid-cols-5 items-stretch gap-1 px-1">
+      <div className="mx-auto grid min-h-16 max-w-reading items-stretch gap-1 px-1" style={{ gridTemplateColumns: `repeat(${visibleItems.length + 1}, minmax(0, 1fr))` }}>
         {visibleItems.map((item) => (
           <button
             key={item.key}
@@ -49,7 +61,7 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', d
             )}
           >
             <item.icon className="h-[18px] w-[18px] flex-shrink-0" fill={item.active ? 'currentColor' : 'none'} />
-            <span className="w-full text-center text-xs font-medium leading-tight">{item.label}</span>
+            <span className="w-full break-words text-center text-xs font-medium leading-tight">{item.label}</span>
           </button>
         ))}
 
@@ -61,7 +73,7 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', d
               className="flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-muted-foreground transition-colors hover:text-foreground"
             >
               <MoreHorizontal className="h-[18px] w-[18px] flex-shrink-0" />
-              <span className="w-full text-center text-xs font-medium leading-tight">Mais</span>
+              <span className="w-full break-words text-center text-xs font-medium leading-tight">Mais</span>
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="max-h-[78vh] overflow-y-auto rounded-t-2xl px-4 pb-5 pt-4">
@@ -69,7 +81,7 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', d
               <SheetTitle>{moreTitle}</SheetTitle>
             </SheetHeader>
             <div className="grid grid-cols-3 gap-2 py-3 sm:grid-cols-4">
-              {moreItems.map((item) => (
+              {overflowItems.map((item) => (
                 <button
                   key={item.key}
                   type="button"

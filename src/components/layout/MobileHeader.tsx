@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logoIpnc from '@/assets/logo-ipnc.png';
@@ -27,13 +28,26 @@ export function MobileHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   useSwipeBack();
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const header = headerRef.current;
+    const shell = header?.closest<HTMLElement>('.app-page');
+    if (!header || !shell) return;
+    const measure = () => shell.style.setProperty('--mobile-header-height', `${header.getBoundingClientRect().height}px`);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    return () => { observer.disconnect(); shell.style.removeProperty('--mobile-header-height'); };
+  }, []);
+
   const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
 
   const isHome = location.pathname === '/';
   const contextualSubtitle = routeSubtitles.find(([path]) => location.pathname.startsWith(path))?.[1];
   const subtitle = contextualSubtitle
     || (isAdmin ? 'Administração geral da igreja' : isPastor ? 'Visão pastoral' : 'Gestão da sociedade');
-  const title = profile?.full_name || society?.name || 'IPNC';
+  const fullTitle = profile?.full_name || society?.name || 'IPNC';
+  const title = profile?.full_name ? profile.full_name.trim().split(/\s+/).slice(0, 1).join(' ') : fullTitle;
 
   const handleSignOut = async () => {
     await signOut();
@@ -41,35 +55,29 @@ export function MobileHeader() {
   };
 
   return (
-    <header className="diretoria-mobile-header safe-top fixed inset-x-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-[linear-gradient(135deg,#064e43_0%,#064237_54%,#04332d_100%)] text-white shadow-[0_8px_24px_rgba(3,35,29,0.18)] md:hidden">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-14 -top-20 h-36 w-36 rounded-full border border-emerald-200/10" />
-        <div className="absolute right-16 top-0 h-16 w-32 rotate-[-18deg] rounded-[100%] bg-emerald-300/5" />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-200/30 to-transparent" />
-      </div>
-
-      <div className="relative flex h-mobile-header items-center justify-between gap-2 px-page-x">
+    <header ref={headerRef} className="diretoria-mobile-header safe-top fixed inset-x-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-sidebar text-white shadow-[0_8px_24px_rgba(3,35,29,0.18)] min-[700px]:hidden">
+      <div className="relative flex min-h-[64px] py-2 items-center justify-between gap-2 px-page-x">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           {!isHome && (
             <button
               type="button"
               onClick={() => navigate(-1)}
               aria-label="Voltar"
-              className="touch-target flex flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-sm backdrop-blur-md transition-colors hover:bg-white/20"
+              className="min-h-[48px] min-w-[48px] flex flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-sm backdrop-blur-md transition-colors hover:bg-white/20"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
           )}
 
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/10 shadow-[0_6px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
-            <img src={logoIpnc} alt="Renovo IPNC" className="h-7 w-7 object-contain" />
-          </div>
+          {isHome && (<div className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/10 shadow-[0_6px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+            <img src={logoIpnc} alt="Renovo IPNC" className="h-[28px] w-[28px] object-contain" />
+          </div> )}
 
           <div className="min-w-0">
-            <p title={title} className="truncate text-sm font-extrabold leading-tight tracking-tight text-white xs:text-base">
+            <p title={fullTitle} className="break-words text-sm font-extrabold leading-tight tracking-tight text-white xs:text-base">
               {title}
             </p>
-            <p className="mt-0.5 hidden truncate text-[10px] font-medium leading-none text-emerald-50/80 xs:block">
+            <p className="mt-0.5 hidden break-words text-[13px] font-medium leading-none text-emerald-50/80 xs:block">
               {subtitle}
             </p>
           </div>
@@ -78,7 +86,7 @@ export function MobileHeader() {
         <div className="flex flex-shrink-0 items-center gap-1">
           <UpdateAppButton
             variant="icon"
-            className="!h-11 !w-11 rounded-full border border-white/15 bg-white/10 !text-white backdrop-blur-md hover:!bg-white/20 hover:!text-white"
+            className="!h-[48px] !w-[48px] rounded-full border border-white/15 bg-white/10 !text-white backdrop-blur-md hover:!bg-white/20 hover:!text-white"
           />
 
           {profile && (
@@ -87,7 +95,7 @@ export function MobileHeader() {
               onClick={requestExit}
               aria-label="Sair"
               title="Sair"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
+              className="flex h-[48px] w-[48px] items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
             >
               <LogOut className="h-4 w-4" />
             </button>

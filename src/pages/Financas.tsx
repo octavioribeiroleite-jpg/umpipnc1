@@ -177,8 +177,7 @@ export default function Financas() {
     : isCentralScope
       ? 'Geral'
       : society?.name || 'Sociedade';
-  const firstName = profile?.full_name?.split(' ')[0] || 'Tesouraria';
-  const roleLabel = isCentralScope ? 'Tesouraria central das sociedades' : `Tesouraria ${selectedScopeLabel}`;
+  const roleLabel = isCentralScope ? 'Visão geral das sociedades' : `Gestão da ${selectedScopeLabel}`;
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
@@ -364,16 +363,16 @@ export default function Financas() {
   };
 
   const readFailure = readError ? <QueryErrorState message="Não foi possível atualizar os valores financeiros." onRetry={() => void fetchStats()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
-  if (!hasSnapshot) return <AppLayout><div className="finance-page min-w-0"><PageHeader title="Finanças" eyebrow="Gestão financeira" description={`Olá, ${firstName}. ${roleLabel}.`} icon={<Landmark />} />{societySelector()}{readFailure || <p role="status" className="py-8 text-muted-foreground">Consultando valores financeiros…</p>}</div></AppLayout>;
+  if (!hasSnapshot) return <AppLayout width="wide"><div className="finance-page min-w-0"><PageHeader title="Finanças da Diretoria" eyebrow="Gestão financeira" description={roleLabel} icon={<Landmark />} />{societySelector()}{readFailure || <p role="status" className="py-8 text-muted-foreground">Consultando valores financeiros…</p>}</div></AppLayout>;
 
   return (
-    <AppLayout>
+    <AppLayout width="wide">
       <div className="finance-page min-w-0">
         {readFailure}
         <PageHeader
-          title="Finanças"
+          title="Finanças da Diretoria"
           eyebrow="Gestão financeira"
-          description={`Olá, ${firstName}. ${roleLabel}.`}
+          description={roleLabel}
           icon={<Landmark />}
         />
         <div className="finance-toolbar mb-5 rounded-xl border bg-card p-3 sm:p-4">
@@ -421,6 +420,81 @@ export default function Financas() {
             tone={stats.pendencias > 0 ? 'warning' : 'success'}
           />
         </MetricGrid>
+
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="min-w-0">
+          <div className="mb-4 min-[700px]:hidden"><label htmlFor="finance-section" className="mb-2 block font-medium">Seção</label><Select value={activeTab} onValueChange={handleTabChange}><SelectTrigger id="finance-section"><SelectValue /></SelectTrigger><SelectContent>{mainTabs.map(tab => <SelectItem value={tab.value} key={tab.value}>{tab.label}</SelectItem>)}</SelectContent></Select></div>
+          <HorizontalScroller className="hidden min-[700px]:block finance-tabs-scroller sticky top-[calc(var(--mobile-header-height)+0.25rem)] z-20 -mx-1 mb-3 px-1 pb-1 md:static md:mx-0 md:mb-5 md:px-0">
+            <TabsList className="finance-main-tabs">
+              {mainTabs.map(({ value, label, icon: Icon }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="min-h-11 gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0 md:h-[18px] md:w-[18px]" />
+                  <span>{label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </HorizontalScroller>
+
+          <TabsContent value="cobrancas" className="finance-tab-panel finance-cobrancas mt-0 animate-in fade-in-50">
+            <CobrancasTab />
+          </TabsContent>
+
+          <TabsContent value="comprovantes" className="finance-tab-panel mt-0 animate-in fade-in-50">
+            <ComprovantesTab />
+          </TabsContent>
+
+          <TabsContent value="movimentacoes" className="finance-tab-panel mt-0 animate-in fade-in-50">
+            <div className="mb-4 rounded-xl border bg-card p-1">
+              <div className="grid grid-cols-2 gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={cn(
+                    'h-10 rounded-[14px] text-xs font-semibold sm:text-sm',
+                    movementView === 'receitas'
+                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-accent',
+                  )}
+                  onClick={() => handleMovementChange('receitas')}
+                >
+                  <TrendingUp className="mr-1.5 h-4 w-4" />
+                  Receitas
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={cn(
+                    'h-10 rounded-[14px] text-xs font-semibold sm:text-sm',
+                    movementView === 'gastos'
+                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-accent',
+                  )}
+                  onClick={() => handleMovementChange('gastos')}
+                >
+                  <TrendingDown className="mr-1.5 h-4 w-4" />
+                  Gastos
+                </Button>
+              </div>
+            </div>
+
+            {movementView === 'receitas' ? <MensalidadesTab /> : <GastosTab />}
+          </TabsContent>
+
+          <TabsContent value="camisas" className="finance-tab-panel mt-0 animate-in fade-in-50">
+            <CamisasTab />
+          </TabsContent>
+
+          <TabsContent value="relatorios" className="finance-tab-panel mt-0 animate-in fade-in-50">
+            <RelatoriosTab />
+          </TabsContent>
+
+          <TabsContent value="mais" className="finance-tab-panel mt-0 animate-in fade-in-50">
+            <ConfiguracoesTab />
+          </TabsContent>
+        </Tabs>
 
         <ExtratoDialog type={extratoType} onClose={() => setExtratoType(null)} />
 
@@ -600,79 +674,7 @@ export default function Financas() {
           </AppCard>
         </div>
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="min-w-0">
-          <HorizontalScroller className="finance-tabs-scroller sticky top-[calc(var(--mobile-header-height)+0.25rem)] z-20 -mx-1 mb-3 px-1 pb-1 md:static md:mx-0 md:mb-5 md:px-0">
-            <TabsList className="finance-main-tabs">
-              {mainTabs.map(({ value, label, icon: Icon }) => (
-                <TabsTrigger
-                  key={value}
-                  value={value}
-                  className="min-h-11 gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0 md:h-[18px] md:w-[18px]" />
-                  <span>{label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </HorizontalScroller>
 
-          <TabsContent value="cobrancas" className="finance-tab-panel finance-cobrancas mt-0 animate-in fade-in-50">
-            <CobrancasTab />
-          </TabsContent>
-
-          <TabsContent value="comprovantes" className="finance-tab-panel mt-0 animate-in fade-in-50">
-            <ComprovantesTab />
-          </TabsContent>
-
-          <TabsContent value="movimentacoes" className="finance-tab-panel mt-0 animate-in fade-in-50">
-            <div className="mb-4 rounded-xl border bg-card p-1">
-              <div className="grid grid-cols-2 gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className={cn(
-                    'h-10 rounded-[14px] text-xs font-semibold sm:text-sm',
-                    movementView === 'receitas'
-                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent',
-                  )}
-                  onClick={() => handleMovementChange('receitas')}
-                >
-                  <TrendingUp className="mr-1.5 h-4 w-4" />
-                  Receitas
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className={cn(
-                    'h-10 rounded-[14px] text-xs font-semibold sm:text-sm',
-                    movementView === 'gastos'
-                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent',
-                  )}
-                  onClick={() => handleMovementChange('gastos')}
-                >
-                  <TrendingDown className="mr-1.5 h-4 w-4" />
-                  Gastos
-                </Button>
-              </div>
-            </div>
-
-            {movementView === 'receitas' ? <MensalidadesTab /> : <GastosTab />}
-          </TabsContent>
-
-          <TabsContent value="camisas" className="finance-tab-panel mt-0 animate-in fade-in-50">
-            <CamisasTab />
-          </TabsContent>
-
-          <TabsContent value="relatorios" className="finance-tab-panel mt-0 animate-in fade-in-50">
-            <RelatoriosTab />
-          </TabsContent>
-
-          <TabsContent value="mais" className="finance-tab-panel mt-0 animate-in fade-in-50">
-            <ConfiguracoesTab />
-          </TabsContent>
-        </Tabs>
       </div>
     </AppLayout>
   );

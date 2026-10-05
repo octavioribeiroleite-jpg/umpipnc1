@@ -6,22 +6,22 @@
 .tr-review-item>div:last-child {align-items:flex-end;text-align:right;flex-shrink:0;max-width:48%}
 .tr-review-item p,.tr-review-item strong,.tr-manager-row span {overflow-wrap:anywhere}
 .tr-review-item small {color:#566b60}
-.tr-review-status {width:fit-content;font-size:12px;border-radius:6px;padding:4px 8px;background:#f4eacb;color:#725414}
+.tr-review-status {width:fit-content;font-size: 0.75rem;border-radius:6px;padding:4px 8px;background:#f4eacb;color:#725414}
 .tr-review-status.rejected {background:#f9e5e1;color:#923f34}
 .tr-review-status.confirmed {background:#dff0e5;color:#1e6741}
 .tr-report-controls,.tr-bank-form {display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;margin:18px 0}
-.tr-report-controls label,.tr-bank-form label,.tr-bank-search {display:grid;gap:6px;font-size:13px;flex:1 1 160px;min-width:0;color:#344d40}
-.tr-workflow input,.tr-workflow select {border:1px solid #c6d5cc;background:#fff;border-radius:8px;height:44px;width:100%;padding:0 12px;color:#173b29;font-size:16px;min-width:0}
+.tr-report-controls label,.tr-bank-form label,.tr-bank-search {display:grid;gap:6px;font-size: 0.8125rem;flex:1 1 160px;min-width:0;color:#344d40}
+.tr-workflow input,.tr-workflow select {border:1px solid hsl(var(--input));background:#fff;border-radius:12px;min-height:48px;width:100%;padding:0 12px;color:#173b29;font-size: 1rem;min-width:0}
 .tr-workflow input:focus-visible,.tr-workflow select:focus-visible,.tr-admin-section summary:focus-visible {outline:2px solid #168052;outline-offset:2px}
-.tr-admin-section>summary {font-weight:650;font-size:18px;cursor:pointer;min-height:44px;display:list-item;list-style-position:inside}
-.tr-admin-section>p {font-size:14px;color:#52665b;max-width:850px;line-height:1.6;margin:12px 0}
+.tr-admin-section>summary {font-weight:650;font-size: 1.125rem;cursor:pointer;min-height:48px;display:list-item;list-style-position:inside}
+.tr-admin-section>p {font-size: 0.875rem;color:#52665b;max-width:850px;line-height:1.6;margin:12px 0}
 .tr-manager-row {display:flex;justify-content:space-between;align-items:center;gap:16px;border-top:1px solid #dce5de;padding:12px 0}
 .tr-bank-search {max-width:400px}
-.tr-composition {border:1px solid #dce5de;border-radius:10px;padding:12px}
-.tr-composition summary {min-height:30px;cursor:pointer;font-weight:600;font-size:14px}
+.tr-composition {border:1px solid #dce5de;border-radius:12px;padding:12px}
+.tr-composition summary {min-height:30px;cursor:pointer;font-weight:600;font-size: 0.875rem}
 .tr-composition .treasury-form-row {margin-top:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
 .tr-attachments {display:grid;gap:12px;border-top:1px solid #dce5de;padding-top:20px;margin-top:16px}
 .tr-attachments h3 {font-weight:650}.tr-attachments .tr-button {overflow-wrap:anywhere;white-space:normal;text-align:left}
-.tr-reserve {display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;background:#f5efdf;border:1px solid #e9dcba;border-radius:10px;font-size:14px;margin:15px 0}
+.tr-reserve {display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;background:#f5efdf;border:1px solid #e9dcba;border-radius:12px;font-size: 0.875rem;margin:15px 0}
 .tr-reserve strong {color:#334f3c}
-@media(max-width:600px){.tr-workflow .tr-panel{padding:18px}.tr-review-item{flex-direction:column;gap:12px}.tr-review-item>div:last-child{flex-direction:row;max-width:100%;align-items:center;justify-content:space-between;text-align:left;flex-wrap:wrap}.tr-report-controls label,.tr-bank-form label{flex-basis:100%}.tr-report-controls>.tr-button,.tr-bank-form>.tr-button{width:100%;justify-content:center}.tr-composition .treasury-form-row{grid-template-columns:1fr}.tr-manager-row{align-items:flex-start}.tr-workflow .tr-pagination{gap:6px}.tr-workflow .tr-pagination button{padding:8px;font-size:12px}}
+@media(max-width:600px){.tr-workflow .tr-panel{padding:18px}.tr-review-item{flex-direction:column;gap:12px}.tr-review-item>div:last-child{flex-direction:row;max-width:100%;align-items:center;justify-content:space-between;text-align:left;flex-wrap:wrap}.tr-report-controls label,.tr-bank-form label{flex-basis:100%}.tr-report-controls>.tr-button,.tr-bank-form>.tr-button{width:100%;justify-content:center}.tr-composition .treasury-form-row{grid-template-columns:1fr}.tr-manager-row{align-items:flex-start}.tr-workflow .tr-pagination{gap:6px}.tr-workflow .tr-pagination button{padding:8px;font-size: 0.75rem}}

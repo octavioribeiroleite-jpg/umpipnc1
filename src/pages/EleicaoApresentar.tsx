@@ -88,10 +88,10 @@ export default function EleicaoApresentar() {
   const pct = totalPresent > 0 ? Math.min(100, (displayedCount / totalPresent) * 100) : 0;
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-background via-background to-muted/40 flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-4 lg:py-6 flex flex-wrap items-center justify-between gap-4">
+      <header className="border-b border-border bg-card">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-4 lg:py-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 lg:gap-4 min-w-0">
             <img src={logo} alt="Renovo IPNC" className="h-10 lg:h-14 w-auto shrink-0" />
             <div className="min-w-0">
@@ -140,8 +140,7 @@ export default function EleicaoApresentar() {
                   className="font-bold tracking-tight tabular-nums leading-none text-primary animate-fade-up"
                   style={{
                     fontSize: 'clamp(4rem, 16vw, 14rem)', overflowWrap: 'anywhere',
-                    textShadow:
-                      '0 0 40px hsl(var(--primary) / 0.3), 0 4px 12px hsl(var(--primary) / 0.2)',
+
                   }}
                 >
                   {displayedCount}

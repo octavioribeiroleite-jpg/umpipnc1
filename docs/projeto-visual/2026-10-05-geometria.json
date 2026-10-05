@@ -1,0 +1,819 @@
+{
+  "date": "2026-10-05",
+  "environment": "Chromium no Browser do Codex, viewports emulados; fixtures isoladas; dados fictícios",
+  "limits": "Mede geometria e fonte base CSS de 200%; não comprova Safari, dispositivo físico, teclado virtual ou zoom nativo. Não foram gravados dados reais.",
+  "desktop": [
+    {
+      "route": "/",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Boa tarde, Maria"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "reunioes",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Reuniões"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "reunioes/meeting",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Planejamento das atividades e encontro de famílias"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "tarefas",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Tarefas"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "calendario",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Calendário"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "financas",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Finanças da Diretoria"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "camisas",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Camisas"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "arquivos",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Arquivos"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "configuracoes",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Configurações"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "usuarios",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Gestão de Usuários"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "plenarias",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Plenárias"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "plenarias/plenary",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Plenária de planejamento — exemplo"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "comunicados",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Comunicados"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "eleicoes",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Eleições"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "eleicoes/election",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Eleição da diretoria — exemplo"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "dizimos",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Dízimos e ofertas"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "visitantes",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Visitantes"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "estudos",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Estudos"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "aniversariantes",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Aniversariantes"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "sugestoes",
+      "error": false,
+      "overflow": false,
+      "scroll": 1440,
+      "title": [
+        "Sugestões"
+      ],
+      "width": 1440
+    }
+  ],
+  "mobile": [
+    {
+      "route": "/",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Boa tarde, Maria"
+      ],
+      "width": 320
+    },
+    {
+      "route": "reunioes",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Reuniões"
+      ],
+      "width": 320
+    },
+    {
+      "route": "reunioes/meeting",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Planejamento das atividades e encontro de famílias"
+      ],
+      "width": 320
+    },
+    {
+      "route": "tarefas",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Tarefas"
+      ],
+      "width": 320
+    },
+    {
+      "route": "calendario",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Calendário"
+      ],
+      "width": 320
+    },
+    {
+      "route": "financas",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Finanças da Diretoria"
+      ],
+      "width": 320
+    },
+    {
+      "route": "camisas",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Camisas"
+      ],
+      "width": 320
+    },
+    {
+      "route": "arquivos",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Arquivos"
+      ],
+      "width": 320
+    },
+    {
+      "route": "configuracoes",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Configurações"
+      ],
+      "width": 320
+    },
+    {
+      "route": "usuarios",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Gestão de Usuários"
+      ],
+      "width": 320
+    },
+    {
+      "route": "plenarias",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "Plenárias"
+      ],
+      "width": 320
+    },
+    {
+      "route": "plenarias/plenary",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Plenária de planejamento — exemplo"
+      ],
+      "width": 320
+    },
+    {
+      "route": "comunicados",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "Comunicados"
+      ],
+      "width": 320
+    },
+    {
+      "route": "eleicoes",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "Eleições"
+      ],
+      "width": 320
+    },
+    {
+      "route": "eleicoes/election",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Eleição da diretoria — exemplo"
+      ],
+      "width": 320
+    },
+    {
+      "route": "dizimos",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Dízimos e ofertas"
+      ],
+      "width": 320
+    },
+    {
+      "route": "visitantes",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Visitantes"
+      ],
+      "width": 320
+    },
+    {
+      "route": "estudos",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "Estudos"
+      ],
+      "width": 320
+    },
+    {
+      "route": "aniversariantes",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Aniversariantes"
+      ],
+      "width": 320
+    },
+    {
+      "route": "sugestoes",
+      "headingSize": "24px",
+      "nav": [
+        65
+      ],
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "Sugestões"
+      ],
+      "width": 320
+    }
+  ],
+  "pastor": [
+    {
+      "route": "pastor",
+      "overflow": false,
+      "scroll": 305,
+      "sidebarWidth": 0,
+      "title": [
+        "Boa tarde, Maria"
+      ],
+      "width": 320
+    },
+    {
+      "route": "pastor/calendario",
+      "overflow": false,
+      "scroll": 305,
+      "sidebarWidth": 0,
+      "title": [
+        "Calendário unificado"
+      ],
+      "width": 320
+    },
+    {
+      "route": "pastor/sociedade/ump",
+      "overflow": false,
+      "scroll": 305,
+      "sidebarWidth": 0,
+      "title": [
+        "União de Jovens — Exemplo"
+      ],
+      "width": 320
+    },
+    {
+      "route": "pastor/comunicados",
+      "overflow": false,
+      "scroll": 320,
+      "sidebarWidth": 0,
+      "title": [
+        "Comunicados"
+      ],
+      "width": 320
+    },
+    {
+      "route": "pastor/sugestoes",
+      "overflow": false,
+      "scroll": 320,
+      "sidebarWidth": 0,
+      "title": [
+        "Sugestões"
+      ],
+      "width": 320
+    },
+    {
+      "route": "pastor",
+      "overflow": false,
+      "scroll": 685,
+      "sidebarWidth": 76,
+      "title": [
+        "Boa tarde, Maria"
+      ],
+      "width": 700
+    },
+    {
+      "route": "pastor/calendario",
+      "overflow": false,
+      "scroll": 685,
+      "sidebarWidth": 76,
+      "title": [
+        "Calendário unificado"
+      ],
+      "width": 700
+    },
+    {
+      "route": "pastor/sociedade/ump",
+      "overflow": false,
+      "scroll": 685,
+      "sidebarWidth": 76,
+      "title": [
+        "União de Jovens — Exemplo"
+      ],
+      "width": 700
+    },
+    {
+      "route": "pastor/comunicados",
+      "overflow": false,
+      "scroll": 700,
+      "sidebarWidth": 76,
+      "title": [
+        "Comunicados"
+      ],
+      "width": 700
+    },
+    {
+      "route": "pastor/sugestoes",
+      "overflow": false,
+      "scroll": 700,
+      "sidebarWidth": 76,
+      "title": [
+        "Sugestões"
+      ],
+      "width": 700
+    },
+    {
+      "route": "pastor",
+      "overflow": false,
+      "scroll": 1085,
+      "sidebarWidth": 224,
+      "title": [
+        "Boa tarde, Maria"
+      ],
+      "width": 1100
+    },
+    {
+      "route": "pastor/calendario",
+      "overflow": false,
+      "scroll": 1085,
+      "sidebarWidth": 224,
+      "title": [
+        "Calendário unificado"
+      ],
+      "width": 1100
+    },
+    {
+      "route": "pastor/sociedade/ump",
+      "overflow": false,
+      "scroll": 1085,
+      "sidebarWidth": 224,
+      "title": [
+        "União de Jovens — Exemplo"
+      ],
+      "width": 1100
+    },
+    {
+      "route": "pastor/comunicados",
+      "overflow": false,
+      "scroll": 1100,
+      "sidebarWidth": 224,
+      "title": [
+        "Comunicados"
+      ],
+      "width": 1100
+    },
+    {
+      "route": "pastor/sugestoes",
+      "overflow": false,
+      "scroll": 1100,
+      "sidebarWidth": 224,
+      "title": [
+        "Sugestões"
+      ],
+      "width": 1100
+    },
+    {
+      "route": "pastor",
+      "overflow": false,
+      "scroll": 1425,
+      "sidebarWidth": 224,
+      "title": [
+        "Boa tarde, Maria"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "pastor/calendario",
+      "overflow": false,
+      "scroll": 1425,
+      "sidebarWidth": 224,
+      "title": [
+        "Calendário unificado"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "pastor/sociedade/ump",
+      "overflow": false,
+      "scroll": 1425,
+      "sidebarWidth": 224,
+      "title": [
+        "União de Jovens — Exemplo"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "pastor/comunicados",
+      "overflow": false,
+      "scroll": 1440,
+      "sidebarWidth": 224,
+      "title": [
+        "Comunicados"
+      ],
+      "width": 1440
+    },
+    {
+      "route": "pastor/sugestoes",
+      "overflow": false,
+      "scroll": 1440,
+      "sidebarWidth": 224,
+      "title": [
+        "Sugestões"
+      ],
+      "width": 1440
+    }
+  ],
+  "largeText": [
+    {
+      "route": "auth",
+      "role": "anonymous",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "tarefas",
+      "role": "admin",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "calendario",
+      "role": "admin",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "financas",
+      "role": "admin",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "camisas",
+      "role": "admin",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "arquivos",
+      "role": "admin",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "usuarios",
+      "role": "admin",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "reunioes/meeting",
+      "role": "admin",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "eleicoes/election",
+      "role": "admin",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "pastor",
+      "role": "pastor",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "route": "pastor/sociedade/ump",
+      "role": "pastor",
+      "font": "32px",
+      "overflow": false,
+      "scroll": 305,
+      "width": 320
+    }
+  ],
+  "accessStates": [
+    {
+      "route": "igreja",
+      "role": "anonymous",
+      "font": "100",
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "Bem-vindo de volta!"
+      ],
+      "width": 320
+    },
+    {
+      "route": "auth",
+      "role": "anonymous",
+      "font": "100",
+      "overflow": false,
+      "scroll": 305,
+      "title": [
+        "Igreja Presbiterianade Nova Carapina",
+        "Como deseja acessar?"
+      ],
+      "width": 320
+    },
+    {
+      "route": "reset-password",
+      "role": "anonymous",
+      "font": "100",
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "IPNC"
+      ],
+      "width": 320
+    },
+    {
+      "route": "inexistente",
+      "role": "anonymous",
+      "font": "100",
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "Página não encontrada"
+      ],
+      "width": 320
+    },
+    {
+      "route": "membro",
+      "role": "anonymous",
+      "font": "100",
+      "overflow": false,
+      "scroll": 320,
+      "title": [
+        "Portal dos membros ainda não liberado"
+      ],
+      "width": 320
+    }
+  ]
+}

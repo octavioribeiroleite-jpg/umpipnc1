@@ -17,6 +17,7 @@ import '../../../src/camisas-separation.css';
 import '../../../src/auth-readability.css';
 import '../../../src/society-selector.css';
 import '../../../src/identity-confirmation.css';
+import '../../../src/interface-system.css';
 import SocietyScreenEnhancer from '@/components/auth/SocietyScreenEnhancer';
 import IdentityConfirmationEnhancer from '@/components/auth/IdentityConfirmationEnhancer';
 import {fixtureRole,fixtureState,fixtureParams} from './options';

@@ -39,7 +39,7 @@ export function SecretariaWorkspace({ title, profileLabel, onBack, onHome = onBa
           </DropdownMenu>
         </div>
       </header>
-      <main className="ebd-workspace-main">
+      <main id="ebd-main" tabIndex={-1} className="ebd-workspace-main">
         <div className="ebd-workspace-status">
           <div className="ebd-sync">{syncNotice}</div>
           <HeaderActions showVersion={false} />

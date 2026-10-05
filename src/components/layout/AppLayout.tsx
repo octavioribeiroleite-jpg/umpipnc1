@@ -21,9 +21,10 @@ import {
 
 interface AppLayoutProps {
   children: ReactNode;
+  width?: 'standard' | 'wide' | 'reading';
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({ children, width = 'standard' }: AppLayoutProps) {
   const { isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,19 +63,19 @@ export function AppLayout({ children }: AppLayoutProps) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3 focus:text-primary focus:shadow-lg">Pular para o conteúdo</a>
       <ExitConfirmDialog open={exitOpen} onOpenChange={setExitOpen} onConfirm={async () => { await signOut(); navigate('/auth'); }} />
       {/* Keep one content tree: CSS-hidden copies still mount effects and channels. */}
-      <div className="min-h-screen min-w-0 md:flex md:h-screen md:overflow-hidden">
-        <div className="md:hidden"><MobileHeader /></div>
-        <div className="hidden md:flex lg:hidden"><TabletNavigationRail /></div>
-        <div className="hidden lg:flex"><AppSidebar /></div>
-        <main id="main-content" tabIndex={-1} className="safe-bottom-content min-w-0 flex-1 bg-background px-page-x pt-mobile-header md:overflow-y-auto md:pb-0 md:pt-0">
+      <div className="min-h-screen min-w-0 min-[700px]:flex min-[700px]:h-screen min-[700px]:overflow-hidden">
+        <div className="min-[700px]:hidden"><MobileHeader /></div>
+        <div className="hidden min-[700px]:flex min-[1100px]:hidden"><TabletNavigationRail /></div>
+        <div className="hidden min-[1100px]:flex"><AppSidebar /></div>
+        <main id="main-content" tabIndex={-1} className="safe-bottom-content min-w-0 flex-1 bg-background px-page-x pt-mobile-header min-[700px]:overflow-y-auto min-[700px]:pb-0 min-[700px]:pt-0">
           <OfflineBanner />
           <PullToRefresh>
-            <div className="mx-auto w-full min-w-0 max-w-reading py-3 md:max-w-app md:py-5 lg:py-6">
+            <div className="mx-auto w-full min-w-0 py-4 min-[700px]:py-6" style={{ maxWidth: width === 'wide' ? '85rem' : width === 'reading' ? '48rem' : 'var(--content-max-width)' }}>
               {children}
             </div>
           </PullToRefresh>
         </main>
-        <div className="md:hidden"><BottomNav mainItems={mainItems} moreItems={moreItems} /></div>
+        <div className="min-[700px]:hidden"><BottomNav desktopBreakpoint="700" mainItems={mainItems} moreItems={moreItems} /></div>
       </div>
     </div>
   );
