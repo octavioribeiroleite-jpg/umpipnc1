@@ -1,0 +1,106 @@
+✔ day PDF blocks an active write before creating any file (2.178166ms)
+✖ day PDF refuses a stale snapshot read before the write, even after the queue empties (8.966666ms)
+✖ day PDF refuses a stale snapshot read during the write, even after the queue empties (1.503875ms)
+✔ day PDF read after confirmation keeps existing totals and produces PDF bytes in memory (1.259458ms)
+✔ period PDF blocks an active write before creating any file (0.387042ms)
+✖ period PDF refuses a stale snapshot read before the write, even after the queue empties (0.981792ms)
+✖ period PDF refuses a stale snapshot read during the write, even after the queue empties (0.817291ms)
+✔ period PDF read after confirmation keeps existing totals and produces PDF bytes in memory (0.9335ms)
+✔ quarter PDF blocks an active write before creating any file (0.433958ms)
+✖ quarter PDF refuses a stale snapshot read before the write, even after the queue empties (1.276542ms)
+✖ quarter PDF refuses a stale snapshot read during the write, even after the queue empties (0.908875ms)
+✔ quarter PDF read after confirmation keeps existing totals and produces PDF bytes in memory (0.834ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 6
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 427.748542
+
+✖ failing tests:
+
+test at tests/ebd-pdf-snapshot.test.mjs:49:41
+✖ day PDF refuses a stale snapshot read before the write, even after the queue empties (8.966666ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo%20IPNC/tests/ebd-pdf-snapshot.test.mjs:56:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /dados.*mudaram/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tests/ebd-pdf-snapshot.test.mjs:49:41
+✖ day PDF refuses a stale snapshot read during the write, even after the queue empties (1.503875ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo%20IPNC/tests/ebd-pdf-snapshot.test.mjs:56:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /dados.*mudaram/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tests/ebd-pdf-snapshot.test.mjs:49:41
+✖ period PDF refuses a stale snapshot read before the write, even after the queue empties (0.981792ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo%20IPNC/tests/ebd-pdf-snapshot.test.mjs:56:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /dados.*mudaram/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tests/ebd-pdf-snapshot.test.mjs:49:41
+✖ period PDF refuses a stale snapshot read during the write, even after the queue empties (0.817291ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo%20IPNC/tests/ebd-pdf-snapshot.test.mjs:56:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /dados.*mudaram/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tests/ebd-pdf-snapshot.test.mjs:49:41
+✖ quarter PDF refuses a stale snapshot read before the write, even after the queue empties (1.276542ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo%20IPNC/tests/ebd-pdf-snapshot.test.mjs:56:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /dados.*mudaram/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tests/ebd-pdf-snapshot.test.mjs:49:41
+✖ quarter PDF refuses a stale snapshot read during the write, even after the queue empties (0.908875ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo%20IPNC/tests/ebd-pdf-snapshot.test.mjs:56:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /dados.*mudaram/i,
+    operator: 'throws',
+    diff: 'simple'
+  }

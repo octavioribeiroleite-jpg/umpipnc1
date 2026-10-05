@@ -1,0 +1,60 @@
+The files belonging to this database system will be owned by user "octavioribeiroleite".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "C".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+creating directory /private/tmp/ipnc-pg-concurrency-oo6viwdt/cluster-8ME78H/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default "max_connections" ... 100
+selecting default "shared_buffers" ... 128MB
+selecting default time zone ... America/Sao_Paulo
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+Success. You can now start the database server using:
+
+    '/private/tmp/ipnc-pg-concurrency-oo6viwdt/node_modules/@embedded-postgres/darwin-arm64/native/bin/pg_ctl' -D /private/tmp/ipnc-pg-concurrency-oo6viwdt/cluster-8ME78H/data -l logfile start
+
+
+waiting for server to start.... done
+server started
+
+ok baseline/finalize-first/commit
+ok baseline/write-before-finalize/commit
+ok baseline/close-first/commit
+ok baseline/write-before-close/commit
+ok baseline/finalize-first/rollback
+ok baseline/write-before-finalize/rollback
+ok baseline/close-first/rollback
+ok baseline/write-before-close/rollback
+ok baseline/close-before-visitor
+ok baseline/visitor-before-close
+ok baseline/teacher-class-expiry-revocation-renewal
+ok baseline/distinct-dates-do-not-block
+ok proposal/finalize-first/commit
+ok proposal/write-before-finalize/commit
+ok proposal/close-first/commit
+ok proposal/write-before-close/commit
+ok proposal/finalize-first/rollback
+ok proposal/write-before-finalize/rollback
+ok proposal/close-first/rollback
+ok proposal/write-before-close/rollback
+ok proposal/close-before-visitor
+ok proposal/visitor-before-close
+ok proposal/teacher-class-expiry-revocation-renewal
+ok proposal/distinct-dates-do-not-block
+ok proposal/three-in-flight-finalization-first
+ok proposal/three-in-flight-writes-first
+ok proposal/application-timeout-no-cancel-socket-loss-read-desired-retry-unique
+ok proposal/day-reopen-keeps-class-finalized-explicit-class-reopen-restores-write
+ok rollback/exact-body-oid-owner-acl-security-search-path
+waiting for server to shut down.... done
+server stopped
+
+{"passed":true,"cases":29,"shutdown":{"stopped":true,"portClosed":true,"mode":"fast","completedAt":"2026-10-05T15:51:04.869Z"}}

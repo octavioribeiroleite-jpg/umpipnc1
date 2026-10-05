@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-10-05T15:34:48.036315+00:00",
+  "path_commands": {
+    "psql": null,
+    "postgres": null,
+    "initdb": null,
+    "pg_ctl": null,
+    "docker": null,
+    "podman": null
+  },
+  "searched_roots": {
+    "/opt/homebrew": false,
+    "/usr/local": true,
+    "/Library/PostgreSQL": false,
+    "/Applications/Postgres.app": false,
+    "/Applications/Docker.app": false,
+    "/Users/octavioribeiroleite/.cache/codex-runtimes/codex-primary-runtime/dependencies": true
+  },
+  "executables_found": [],
+  "installed_or_remote_used": false
+}

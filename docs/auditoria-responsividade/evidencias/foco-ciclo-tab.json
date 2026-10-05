@@ -1,0 +1,98 @@
+[
+  {
+    "id": "new-user-login",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "INPUT",
+    "text": ""
+  },
+  {
+    "id": "new-user-password",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "INPUT",
+    "text": ""
+  },
+  {
+    "id": "new-user-role",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "BUTTON",
+    "text": "Diretoria"
+  },
+  {
+    "id": "",
+    "inDialog": true,
+    "label": null,
+    "shadow": "none",
+    "tag": "BUTTON",
+    "text": "Cancelar"
+  },
+  {
+    "id": "",
+    "inDialog": true,
+    "label": null,
+    "shadow": "none",
+    "tag": "BUTTON",
+    "text": "Criar"
+  },
+  {
+    "id": "",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "BUTTON",
+    "text": "Fechar"
+  },
+  {
+    "id": "new-user-name",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "INPUT",
+    "text": ""
+  },
+  {
+    "id": "new-user-society",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "BUTTON",
+    "text": "Selecione a sociedade"
+  },
+  {
+    "id": "new-user-login",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "INPUT",
+    "text": ""
+  },
+  {
+    "id": "new-user-password",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "INPUT",
+    "text": ""
+  },
+  {
+    "id": "new-user-role",
+    "inDialog": true,
+    "label": null,
+    "shadow": "rgb(247, 249, 246) 0px 0px 0px 2px, rgb(31, 137, 89) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+    "tag": "BUTTON",
+    "text": "Diretoria"
+  },
+  {
+    "id": "",
+    "inDialog": true,
+    "label": null,
+    "shadow": "none",
+    "tag": "BUTTON",
+    "text": "Cancelar"
+  }
+]

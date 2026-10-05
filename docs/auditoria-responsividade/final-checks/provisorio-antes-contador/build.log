@@ -1,0 +1,39 @@
+
+> vite_react_shadcn_ts@0.0.0 build
+> vite build
+
+vite v8.0.13 building server environment for production...
+[2Ktransforming...✓ 4 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/server/.vite/manifest.json  0.15 kB │ gzip: 0.11 kB
+dist/server/wrangler.json        1.40 kB │ gzip: 0.70 kB
+dist/server/index.js             0.20 kB │ gzip: 0.16 kB
+
+✓ built in 36ms
+vite v8.0.13 building client environment for production...
+[2Ktransforming...Browserslist: browsers data (caniuse-lite) is 16 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 3817 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/client/.assetsignore                           0.02 kB
+dist/client/index.html                              1.75 kB │ gzip:   0.65 kB
+dist/client/assets/vote-confirm-iVONP3_N.mp3      168.22 kB
+dist/client/assets/logo-ipnc-D_n7CSNm.png       1,480.71 kB
+dist/client/assets/index-D3ni7E5Q.css             215.48 kB │ gzip:  37.47 kB
+dist/client/assets/purify.es-B3yOOZN_.js           20.90 kB │ gzip:   8.42 kB
+dist/client/assets/index.es-DbGfq8qH.js           151.15 kB │ gzip:  48.78 kB
+dist/client/assets/html2canvas-7Yol_3SM.js        199.56 kB │ gzip:  46.78 kB
+dist/client/assets/treasury-report-Bm57bqBz.js    516.90 kB │ gzip: 207.03 kB
+dist/client/assets/index-LxD40bBl.js            2,612.55 kB │ gzip: 710.10 kB
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0mnode_modules/sonner/dist/index.mjs is dynamically imported by src/contexts/AuthContext.tsx but also statically imported by src/components/ReceiptLink.tsx, src/components/UpdateAppButton.tsx, src/components/UpdateAvailableBanner.tsx, src/components/aniversariantes/BirthdayCard.tsx, src/components/aniversariantes/BirthdayFormDialog.tsx, ..., dynamic import will not move module into another chunk.
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.51s

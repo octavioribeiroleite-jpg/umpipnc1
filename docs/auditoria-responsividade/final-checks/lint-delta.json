@@ -1,0 +1,84 @@
+{
+  "baseline": {
+    "error": 316,
+    "warning": 63
+  },
+  "final": {
+    "error": 298,
+    "warning": 65
+  },
+  "changes": [
+    {
+      "file": "src/components/eleicoes/ResultPanel.tsx",
+      "rule": "@typescript-eslint/no-explicit-any",
+      "severity": "error",
+      "before": 3,
+      "after": 0,
+      "delta": -3
+    },
+    {
+      "file": "src/components/eleicoes/ResultPanel.tsx",
+      "rule": "react-hooks/exhaustive-deps",
+      "severity": "warning",
+      "before": 1,
+      "after": 0,
+      "delta": -1
+    },
+    {
+      "file": "src/hooks/useBufferedVoteCount.ts",
+      "rule": "@typescript-eslint/no-explicit-any",
+      "severity": "error",
+      "before": 1,
+      "after": 0,
+      "delta": -1
+    },
+    {
+      "file": "src/pages/EleicaoApresentar.tsx",
+      "rule": "@typescript-eslint/no-explicit-any",
+      "severity": "error",
+      "before": 9,
+      "after": 0,
+      "delta": -9
+    },
+    {
+      "file": "src/pages/Eleicoes.tsx",
+      "rule": "@typescript-eslint/no-explicit-any",
+      "severity": "error",
+      "before": 7,
+      "after": 3,
+      "delta": -4
+    },
+    {
+      "file": "src/pages/Eleicoes.tsx",
+      "rule": "react-hooks/exhaustive-deps",
+      "severity": "warning",
+      "before": 1,
+      "after": 0,
+      "delta": -1
+    },
+    {
+      "file": "src/pages/PortalIgreja.tsx",
+      "rule": "@typescript-eslint/no-explicit-any",
+      "severity": "error",
+      "before": 10,
+      "after": 9,
+      "delta": -1
+    },
+    {
+      "file": "tests/fixtures/diretoria/main.tsx",
+      "rule": "react-refresh/only-export-components",
+      "severity": "warning",
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "file": "tests/fixtures/ebd-latency.tsx",
+      "rule": "react-refresh/only-export-components",
+      "severity": "warning",
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    }
+  ]
+}

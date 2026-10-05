@@ -1,0 +1,29 @@
+{
+  "captured_at": "2026-10-05T15:19:25.448866+00:00",
+  "results": [
+    {
+      "name": "types",
+      "command": "npx tsc -p tsconfig.app.json --noEmit",
+      "exit_code": 0,
+      "log": "types.log"
+    },
+    {
+      "name": "pastor-render",
+      "command": "node --experimental-strip-types --test tests/pastor-layout-render.test.mjs",
+      "exit_code": 0,
+      "log": "pastor-render.log"
+    },
+    {
+      "name": "lint",
+      "command": "npx eslint src/components/layout/BottomNav.tsx src/components/pastor/PastorMobileNav.tsx src/pages/Arquivos.tsx",
+      "exit_code": 0,
+      "log": "lint.log"
+    },
+    {
+      "name": "diff-check",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "diff-check.log"
+    }
+  ]
+}

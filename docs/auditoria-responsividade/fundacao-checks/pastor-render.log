@@ -1,0 +1,12 @@
+✔ isPastor: responsive shell mounts the page once, with one form and field (2.162792ms)
+✔ isAdmin: responsive shell mounts the page once, with one form and field (0.22725ms)
+✔ guarded roles, guests and auth loading do not render pastoral page content (1.140584ms)
+✔ eight candidate photos retain all 44px targets in a wrapping, width-bounded group (0.615ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 406.853792

@@ -1,0 +1,22 @@
+{
+  "cloneEvidence": {
+    "clone": [
+      {
+        "focusable": 0,
+        "hidden": "true",
+        "ids": 0,
+        "names": 0
+      }
+    ],
+    "idCount": 1,
+    "snapshotText": "RascunhoBotão da superfícieAtualizando"
+  },
+  "cloneFocus": {
+    "inClone": false,
+    "text": "Fixture de atualização visualConcluir atualizaçãoRascunhoBotão da superfícieAtualizandoRascunhoBotão da superfícieConsultando\n"
+  },
+  "resumed": {
+    "inertCount": 0,
+    "value": "EXEMPLO PRESERVADO"
+  }
+}

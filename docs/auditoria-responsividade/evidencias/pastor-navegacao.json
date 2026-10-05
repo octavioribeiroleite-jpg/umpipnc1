@@ -1,0 +1,77 @@
+[
+  {
+    "width": 767,
+    "navs": [
+      {
+        "height": 0,
+        "text": "Visão GeralCalendárioComunicadosSugestõesEleiçõesDízimosVisitantesSoci",
+        "width": 0
+      },
+      {
+        "height": 57,
+        "text": "GeralCalendárioComunicadosSociedadesMais",
+        "width": 752
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "navs": [
+      {
+        "height": 0,
+        "text": "Visão GeralCalendárioComunicadosSugestõesEleiçõesDízimosVisitantesSoci",
+        "width": 0
+      },
+      {
+        "height": 57,
+        "text": "GeralCalendárioComunicadosSociedadesMais",
+        "width": 753
+      }
+    ]
+  },
+  {
+    "width": 820,
+    "navs": [
+      {
+        "height": 0,
+        "text": "Visão GeralCalendárioComunicadosSugestõesEleiçõesDízimosVisitantesSoci",
+        "width": 0
+      },
+      {
+        "height": 57,
+        "text": "GeralCalendárioComunicadosSociedadesMais",
+        "width": 805
+      }
+    ]
+  },
+  {
+    "width": 1023,
+    "navs": [
+      {
+        "height": 0,
+        "text": "Visão GeralCalendárioComunicadosSugestõesEleiçõesDízimosVisitantesSoci",
+        "width": 0
+      },
+      {
+        "height": 57,
+        "text": "GeralCalendárioComunicadosSociedadesMais",
+        "width": 1008
+      }
+    ]
+  },
+  {
+    "width": 1024,
+    "navs": [
+      {
+        "height": 665.5,
+        "text": "Visão GeralCalendárioComunicadosSugestõesEleiçõesDízimosVisitantesSoci",
+        "width": 223
+      },
+      {
+        "height": 0,
+        "text": "GeralCalendárioComunicadosSociedadesMais",
+        "width": 0
+      }
+    ]
+  }
+]

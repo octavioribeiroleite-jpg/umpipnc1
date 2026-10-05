@@ -1,0 +1,2749 @@
+{
+  "baseRevision": "1ca403eb1739d411a8de4e6d5b4d83219fc83f99",
+  "counts": {
+    "error": 298,
+    "warning": 65
+  },
+  "rules": {
+    "@typescript-eslint/no-explicit-any": 291,
+    "react-hooks/exhaustive-deps": 42,
+    "unused-eslint-disable": 1,
+    "react-refresh/only-export-components": 22,
+    "@typescript-eslint/no-unused-expressions": 1,
+    "@typescript-eslint/no-empty-object-type": 2,
+    "no-control-regex": 1,
+    "prefer-const": 2,
+    "@typescript-eslint/no-require-imports": 1
+  },
+  "files": {
+    "src/components/aniversariantes/WeekAnnouncementCard.tsx": [
+      {
+        "line": 63,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/eleicoes/AttendanceList.tsx": [
+      {
+        "line": 59,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 60,
+        "column": 30,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 79,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 83,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 89,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 103,
+        "column": 54,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 108,
+        "column": 18,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 124,
+        "column": 28,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 125,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/eleicoes/CandidateForm.tsx": [
+      {
+        "line": 57,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 61,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 67,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 83,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 83,
+        "column": 98,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 92,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 107,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 110,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 118,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 121,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 124,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 129,
+        "column": 24,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/eleicoes/DeviceRegistration.tsx": [
+      {
+        "line": 42,
+        "column": 35,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 48,
+        "column": 12,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 63,
+        "column": 35,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 85,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'onRefresh'. Either include it or remove the dependency array. If 'onRefresh' changes too often, find the parent component that defines it and wrap that definition in useCallback",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/eleicoes/EditElectionDialog.tsx": [
+      {
+        "line": 45,
+        "column": 3,
+        "severity": "warning",
+        "message": "Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')",
+        "rule": null
+      },
+      {
+        "line": 55,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has missing dependencies: 'election.majority_rule', 'election.max_choices_per_ballot', 'election.name', 'election.position', 'election.seats_count', and 'election.voting_mode'. Either include them or remove the dependency array. If 'setName' needs the current value of 'election.name', you can also switch to useReducer instead of useState and read 'election.name' in the reducer",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 65,
+        "column": 20,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 79,
+        "column": 28,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 80,
+        "column": 26,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/eleicoes/VotingPanel.tsx": [
+      {
+        "line": 64,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 93,
+        "column": 35,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 96,
+        "column": 30,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 107,
+        "column": 74,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 189,
+        "column": 72,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 256,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchVoteCount'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 263,
+        "column": 35,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 266,
+        "column": 29,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 293,
+        "column": 33,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 296,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 305,
+        "column": 33,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 309,
+        "column": 32,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 315,
+        "column": 75,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 352,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has missing dependencies: 'candidates', 'totalPresent', and 'voteCount'. Either include them or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 356,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 356,
+        "column": 77,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 361,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 361,
+        "column": 101,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 369,
+        "column": 45,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 378,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 378,
+        "column": 78,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 391,
+        "column": 26,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 398,
+        "column": 35,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 401,
+        "column": 34,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 442,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 442,
+        "column": 69,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 463,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 1070,
+        "column": 34,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 1071,
+        "column": 30,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/financas/BulkLoginDialog.tsx": [
+      {
+        "line": 126,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/financas/CamisasTab.tsx": [
+      {
+        "line": 116,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 146,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 245,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 328,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 398,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/financas/CampanhasCamisasTab.tsx": [
+      {
+        "line": 54,
+        "column": 14,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      },
+      {
+        "line": 117,
+        "column": 33,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 235,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 270,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/financas/CobrancasTab.tsx": [
+      {
+        "line": 94,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 106,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 262,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 301,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 322,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/financas/ComprovantesTab.tsx": [
+      {
+        "line": 54,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchSubmissions'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 97,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 126,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/financas/ConfiguracoesTab.tsx": [
+      {
+        "line": 47,
+        "column": 60,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 59,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 216,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 297,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 319,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/financas/EncomendasTab.tsx": [
+      {
+        "line": 80,
+        "column": 14,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      },
+      {
+        "line": 83,
+        "column": 17,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      },
+      {
+        "line": 90,
+        "column": 17,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      },
+      {
+        "line": 98,
+        "column": 17,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      },
+      {
+        "line": 185,
+        "column": 36,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 187,
+        "column": 34,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 205,
+        "column": 39,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 312,
+        "column": 52,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 317,
+        "column": 52,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 410,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useMemo has a missing dependency: 'campaignLots'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/financas/GastosTab.tsx": [
+      {
+        "line": 77,
+        "column": 37,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 157,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 175,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/financas/MembrosTab.tsx": [
+      {
+        "line": 108,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchMembers'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/financas/MensalidadesTab.tsx": [
+      {
+        "line": 150,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/financas/RelatoriosTab.tsx": [
+      {
+        "line": 58,
+        "column": 9,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 86,
+        "column": 51,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 117,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 136,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'getSignedUrl'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/financas/financialReportPdf.ts": [
+      {
+        "line": 342,
+        "column": 27,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/layout/ExitConfirmDialog.tsx": [
+      {
+        "line": 44,
+        "column": 17,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/components/membro/MembroComunicados.tsx": [
+      {
+        "line": 12,
+        "column": 54,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 26,
+        "column": 48,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/membro/MembroInicio.tsx": [
+      {
+        "line": 18,
+        "column": 66,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 43,
+        "column": 78,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 49,
+        "column": 56,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 64,
+        "column": 59,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/membro/MembroPagamentos.tsx": [
+      {
+        "line": 78,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 154,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/pastor/AISummaryDrawer.tsx": [
+      {
+        "line": 17,
+        "column": 18,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 40,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/pastor/SugestaoForm.tsx": [
+      {
+        "line": 34,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/plenarias/MembrosTab.tsx": [
+      {
+        "line": 55,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchMembers'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/reunioes/ComunicacaoTab.tsx": [
+      {
+        "line": 57,
+        "column": 45,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 88,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/reunioes/ContribuicoesSection.tsx": [
+      {
+        "line": 101,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchContributions'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/reunioes/IASection.tsx": [
+      {
+        "line": 67,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchSuggestions'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 77,
+        "column": 45,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 109,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 151,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/reunioes/RegistroReuniaoEditor.tsx": [
+      {
+        "line": 50,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'saveNotes'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 77,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useCallback has an unnecessary dependency: 'isProcessed'. Either exclude it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/secretaria/ConfiguracoesEbdTab.tsx": [
+      {
+        "line": 46,
+        "column": 27,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 47,
+        "column": 28,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 49,
+        "column": 41,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 50,
+        "column": 30,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 71,
+        "column": 7,
+        "severity": "error",
+        "message": "Expected an assignment or function call and instead saw an expression",
+        "rule": "@typescript-eslint/no-unused-expressions"
+      },
+      {
+        "line": 87,
+        "column": 54,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 89,
+        "column": 27,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 114,
+        "column": 43,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 131,
+        "column": 36,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 145,
+        "column": 36,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/secretaria/HistoricoTab.tsx": [
+      {
+        "line": 170,
+        "column": 45,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 183,
+        "column": 30,
+        "severity": "warning",
+        "message": "The ref value 'requestId.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'requestId.current' to a variable inside the effect, and use that variable in the cleanup function",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 184,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchHistory'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 207,
+        "column": 37,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 479,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useMemo has an unnecessary dependency: 'callActors'. Either exclude it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/components/secretaria/PlanilhaAlunosTab.tsx": [
+      {
+        "line": 238,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 494,
+        "column": 26,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/secretaria/TurmasTab.tsx": [
+      {
+        "line": 180,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 244,
+        "column": 51,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 272,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 309,
+        "column": 12,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/components/ui/badge.tsx": [
+      {
+        "line": 29,
+        "column": 17,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/components/ui/button.tsx": [
+      {
+        "line": 47,
+        "column": 18,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/components/ui/command.tsx": [
+      {
+        "line": 24,
+        "column": 11,
+        "severity": "error",
+        "message": "An interface declaring no members is equivalent to its supertype",
+        "rule": "@typescript-eslint/no-empty-object-type"
+      }
+    ],
+    "src/components/ui/form.tsx": [
+      {
+        "line": 129,
+        "column": 10,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/components/ui/navigation-menu.tsx": [
+      {
+        "line": 111,
+        "column": 3,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/components/ui/sidebar.tsx": [
+      {
+        "line": 636,
+        "column": 3,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/components/ui/sonner.tsx": [
+      {
+        "line": 27,
+        "column": 19,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/components/ui/textarea.tsx": [
+      {
+        "line": 5,
+        "column": 18,
+        "severity": "error",
+        "message": "An interface declaring no members is equivalent to its supertype",
+        "rule": "@typescript-eslint/no-empty-object-type"
+      }
+    ],
+    "src/components/ui/toggle.tsx": [
+      {
+        "line": 37,
+        "column": 18,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/contexts/AuthContext.tsx": [
+      {
+        "line": 332,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchProfileAndRoles'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 404,
+        "column": 17,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/contexts/DiretoriaSessionContext.tsx": [
+      {
+        "line": 55,
+        "column": 17,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/contexts/MembroSessionContext.tsx": [
+      {
+        "line": 55,
+        "column": 17,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "src/hooks/useBirthdayNotifications.ts": [
+      {
+        "line": 11,
+        "column": 12,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/hooks/useEbdSync.ts": [
+      {
+        "line": 21,
+        "column": 7,
+        "severity": "warning",
+        "message": "React Hook useMemo has unnecessary dependencies: 'enabled' and 'sessionKey'. Either exclude them or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/hooks/useMeetings.ts": [
+      {
+        "line": 116,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchMeetings'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/lib/receipt-path.ts": [
+      {
+        "line": 14,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected control character(s) in regular expression: \\x00, \\x1f",
+        "rule": "no-control-regex"
+      }
+    ],
+    "src/pages/Auth.tsx": [
+      {
+        "line": 296,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/DiretoriaComunicados.tsx": [
+      {
+        "line": 31,
+        "column": 54,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 44,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchAnnouncements'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/pages/EleicaoDetalhe.tsx": [
+      {
+        "line": 52,
+        "column": 36,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 53,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 53,
+        "column": 101,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 54,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 54,
+        "column": 110,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 55,
+        "column": 43,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 55,
+        "column": 104,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 62,
+        "column": 31,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 63,
+        "column": 34,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 64,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 64,
+        "column": 68,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 69,
+        "column": 32,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 73,
+        "column": 36,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchAll'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 92,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchAll'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 94,
+        "column": 35,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 96,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 203,
+        "column": 35,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 243,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 305,
+        "column": 39,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 307,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 309,
+        "column": 42,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 310,
+        "column": 54,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 320,
+        "column": 31,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 336,
+        "column": 35,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/Eleicoes.tsx": [
+      {
+        "line": 110,
+        "column": 58,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 119,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 134,
+        "column": 58,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/Estudos.tsx": [
+      {
+        "line": 89,
+        "column": 33,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 103,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 119,
+        "column": 28,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/Financas.tsx": [
+      {
+        "line": 243,
+        "column": 61,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 326,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/pages/Index.tsx": [
+      {
+        "line": 519,
+        "column": 89,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/NovaReuniao.tsx": [
+      {
+        "line": 65,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'profile.society_id'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/pages/PainelPastor.tsx": [
+      {
+        "line": 164,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/PastorCalendario.tsx": [
+      {
+        "line": 158,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useMemo has a missing dependency: 'getEventSociety'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 166,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useMemo has a missing dependency: 'getEventSociety'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/pages/PastorSociedade.tsx": [
+      {
+        "line": 39,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 50,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 51,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 52,
+        "column": 42,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 72,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/pages/PastorSugestoes.tsx": [
+      {
+        "line": 38,
+        "column": 60,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/PlenariaDetalhe.tsx": [
+      {
+        "line": 93,
+        "column": 31,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 100,
+        "column": 63,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 114,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 158,
+        "column": 19,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 168,
+        "column": 50,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/Plenarias.tsx": [
+      {
+        "line": 94,
+        "column": 42,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchPlenaries'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/pages/PortalIgreja.tsx": [
+      {
+        "line": 144,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 306,
+        "column": 69,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 547,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 548,
+        "column": 60,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 792,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 812,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 845,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 904,
+        "column": 54,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 943,
+        "column": 30,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/ReuniaoDetalhe.tsx": [
+      {
+        "line": 82,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'fetchMeeting'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      }
+    ],
+    "src/pages/Secretaria.tsx": [
+      {
+        "line": 371,
+        "column": 28,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 441,
+        "column": 97,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 453,
+        "column": 37,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 454,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 455,
+        "column": 42,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 462,
+        "column": 73,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 469,
+        "column": 28,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 469,
+        "column": 59,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 478,
+        "column": 43,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 508,
+        "column": 81,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 511,
+        "column": 20,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 527,
+        "column": 81,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 527,
+        "column": 138,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/Usuarios.tsx": [
+      {
+        "line": 145,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has a missing dependency: 'mobileSocietyTab'. Either include it or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 171,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 172,
+        "column": 24,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 213,
+        "column": 40,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 217,
+        "column": 65,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 300,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 322,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 368,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 487,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 518,
+        "column": 21,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 994,
+        "column": 61,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "src/pages/Visitantes.tsx": [
+      {
+        "line": 75,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 80,
+        "column": 61,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 149,
+        "column": 9,
+        "severity": "error",
+        "message": "'lastSunday' is never reassigned. Use 'const' instead",
+        "rule": "prefer-const"
+      }
+    ],
+    "src/pages/VotePublic.tsx": [
+      {
+        "line": 114,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 125,
+        "column": 71,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 193,
+        "column": 13,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 204,
+        "column": 68,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 299,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 349,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 350,
+        "column": 48,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 350,
+        "column": 120,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 352,
+        "column": 36,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 354,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 354,
+        "column": 68,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 363,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 377,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has missing dependencies: 'checkPreviousVote' and 'readVotes'. Either include them or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 385,
+        "column": 36,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 389,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has missing dependencies: 'election' and 'readVotes'. Either include them or remove the dependency array",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 405,
+        "column": 25,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 420,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 451,
+        "column": 6,
+        "severity": "warning",
+        "message": "React Hook useEffect has missing dependencies: 'candidates' and 'readVotes'. Either include them or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setElectedIds' needs the current value of 'candidates'",
+        "rule": "react-hooks/exhaustive-deps"
+      },
+      {
+        "line": 467,
+        "column": 54,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 529,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 589,
+        "column": 25,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/_shared/ai-actor.ts": [
+      {
+        "line": 4,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 10,
+        "column": 17,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/_shared/ebd-birthday-token.ts": [
+      {
+        "line": 24,
+        "column": 32,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/_shared/election-rounds.ts": [
+      {
+        "line": 4,
+        "column": 10,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 15,
+        "column": 71,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/_shared/openai-chat.ts": [
+      {
+        "line": 95,
+        "column": 17,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/ebd-class-login/index.ts": [
+      {
+        "line": 64,
+        "column": 31,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/election-vote/index.ts": [
+      {
+        "line": 35,
+        "column": 7,
+        "severity": "error",
+        "message": "'votes' is never reassigned. Use 'const' instead",
+        "rule": "prefer-const"
+      },
+      {
+        "line": 35,
+        "column": 14,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/generate-whatsapp-message/index.ts": [
+      {
+        "line": 50,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/manage-ebd-class-password/index.ts": [
+      {
+        "line": 48,
+        "column": 77,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/member-cancel-pending-submission/index.ts": [
+      {
+        "line": 8,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/member-get-charges/index.ts": [
+      {
+        "line": 8,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/member-get-payment-history/index.ts": [
+      {
+        "line": 8,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/member-get-submissions/index.ts": [
+      {
+        "line": 8,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/member-submit-payment-receipt/index.ts": [
+      {
+        "line": 8,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 49,
+        "column": 51,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/organize-meeting/index.ts": [
+      {
+        "line": 62,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 100,
+        "column": 45,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 113,
+        "column": 32,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 121,
+        "column": 64,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 123,
+        "column": 55,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 270,
+        "column": 34,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/organize-plenary/index.ts": [
+      {
+        "line": 68,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 68,
+        "column": 80,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 69,
+        "column": 52,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 69,
+        "column": 80,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/seed-calendar-events/index.ts": [
+      {
+        "line": 108,
+        "column": 32,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 119,
+        "column": 25,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/summarize-contributions/index.ts": [
+      {
+        "line": 51,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 84,
+        "column": 45,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 92,
+        "column": 32,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 100,
+        "column": 64,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 102,
+        "column": 55,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/summarize-for-pastor/index.ts": [
+      {
+        "line": 12,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 87,
+        "column": 18,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 115,
+        "column": 37,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 116,
+        "column": 17,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 127,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 127,
+        "column": 101,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 128,
+        "column": 47,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 128,
+        "column": 97,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 129,
+        "column": 60,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 132,
+        "column": 39,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 133,
+        "column": 33,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 134,
+        "column": 36,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 173,
+        "column": 41,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 189,
+        "column": 88,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 192,
+        "column": 62,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 195,
+        "column": 22,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 277,
+        "column": 18,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 303,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 305,
+        "column": 43,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 306,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 307,
+        "column": 39,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 308,
+        "column": 46,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 309,
+        "column": 45,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 311,
+        "column": 47,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 311,
+        "column": 99,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 312,
+        "column": 45,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 312,
+        "column": 95,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 313,
+        "column": 65,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 316,
+        "column": 44,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 317,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 318,
+        "column": 41,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 325,
+        "column": 70,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 326,
+        "column": 66,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 327,
+        "column": 69,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 328,
+        "column": 62,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 329,
+        "column": 70,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 330,
+        "column": 68,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 331,
+        "column": 74,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 361,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 363,
+        "column": 49,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 364,
+        "column": 39,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 370,
+        "column": 80,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 371,
+        "column": 53,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 386,
+        "column": 22,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 389,
+        "column": 25,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/summarize-yearly-studies/index.ts": [
+      {
+        "line": 55,
+        "column": 41,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "supabase/functions/update-user-password/index.ts": [
+      {
+        "line": 103,
+        "column": 38,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 104,
+        "column": 41,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      },
+      {
+        "line": 105,
+        "column": 42,
+        "severity": "error",
+        "message": "Unexpected any. Specify a different type",
+        "rule": "@typescript-eslint/no-explicit-any"
+      }
+    ],
+    "tailwind.config.ts": [
+      {
+        "line": 161,
+        "column": 13,
+        "severity": "error",
+        "message": "A `require()` style import is forbidden",
+        "rule": "@typescript-eslint/no-require-imports"
+      }
+    ],
+    "tests/fixtures/diretoria/auth.tsx": [
+      {
+        "line": 26,
+        "column": 14,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "tests/fixtures/diretoria/main.tsx": [
+      {
+        "line": 54,
+        "column": 10,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file",
+        "rule": "react-refresh/only-export-components"
+      },
+      {
+        "line": 55,
+        "column": 10,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "tests/fixtures/ebd-latency.tsx": [
+      {
+        "line": 39,
+        "column": 10,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file",
+        "rule": "react-refresh/only-export-components"
+      },
+      {
+        "line": 52,
+        "column": 10,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file",
+        "rule": "react-refresh/only-export-components"
+      }
+    ],
+    "tests/treasury-ui/app.tsx": [
+      {
+        "line": 9,
+        "column": 10,
+        "severity": "warning",
+        "message": "Fast refresh only works when a file has exports. Move your component(s) to a separate file",
+        "rule": "react-refresh/only-export-components"
+      }
+    ]
+  }
+}

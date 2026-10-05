@@ -1,0 +1,13 @@
+✔ EBD policies retain RLS, deny anonymous access and restrict teacher reads/writes to own class and current day (19.363042ms)
+✔ expired, mismatched, revoked, inactive and wrong-namespace sessions cannot save attendance (14.385ms)
+✔ repeated desired-state upsert is unique and guarded identity cannot move between pupil/date/class (7.383583ms)
+✔ closed day rejects delayed writes, preserves snapshot totals, and only matching admin reopen resumes writes (14.325167ms)
+✔ documents current backend limitation: finalized class alone does not reject a direct authorized attendance write (2.813709ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 641.307833

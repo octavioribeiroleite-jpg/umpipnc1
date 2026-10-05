@@ -1,0 +1,82 @@
+{
+  "note": "Medições novas do encerramento; não preenchem retroativamente metadados faltantes das rodadas anteriores. Capturas finais usam Page.captureScreenshot com clip CSS explícito scale1, pois captura sem clip pode recortar pixels da superfície.",
+  "capturedAt": "2026-10-05T16:40:00.533Z",
+  "views": [
+    {
+      "fixture": "Chamada latência8082",
+      "capturedAt": "2026-10-05T16:40:00.488Z",
+      "dom": {
+        "client": 375,
+        "dialogCount": 0,
+        "dpr": 1,
+        "font": "16px",
+        "height": 844,
+        "scroll": 375,
+        "title": "IPNC — chamada sintética",
+        "width": 390
+      }
+    },
+    {
+      "fixture": "EBD Secretária8084",
+      "capturedAt": "2026-10-05T16:40:00.511Z",
+      "dom": {
+        "client": 1425,
+        "dialogCount": 0,
+        "dpr": 1,
+        "font": "16px",
+        "height": 844,
+        "scroll": 1425,
+        "title": "Teste local — navegação",
+        "width": 1440
+      }
+    },
+    {
+      "fixture": "Módulos8083",
+      "capturedAt": "2026-10-05T16:40:00.519Z",
+      "dom": {
+        "client": 1425,
+        "dialogCount": 0,
+        "dpr": 1,
+        "font": "16px",
+        "height": 844,
+        "scroll": 1425,
+        "title": "IPNC — TESTE LOCAL com dados fictícios",
+        "width": 1440
+      }
+    },
+    {
+      "fixture": "Tesouraria8085",
+      "capturedAt": "2026-10-05T16:40:00.525Z",
+      "dom": {
+        "client": 390,
+        "dialogCount": 1,
+        "dpr": 1,
+        "font": "16px",
+        "height": 844,
+        "scroll": 390,
+        "title": "IPNC - teste isolado de tesouraria",
+        "width": 390
+      }
+    }
+  ],
+  "geometryRecords": 1296,
+  "snapshots": 205,
+  "evidenceCorrection": {
+    "source": "JSONs gravados em disco; arrays externos da sessão ficaram desatualizados após reatribuição. Não substituir dados recentes por aqueles arrays.",
+    "action": "Removido somente Arquivos busca revalidada, que era DOM vazio durante HMR; Autenticação revalidação final renomeado Autenticação carregamento final para descrever seu estado real. Metadados DOM finais preservados, sem aplicação retroativa.",
+    "files": {
+      "geometria.json": {
+        "before": 1301,
+        "after": 1296,
+        "removedBlankHmrRecords": 5,
+        "renamedLoadingRecords": 5
+      },
+      "superficies.json": {
+        "before": 206,
+        "after": 205,
+        "removedBlankHmrRecords": 1,
+        "renamedLoadingRecords": 1
+      }
+    }
+  }
+}

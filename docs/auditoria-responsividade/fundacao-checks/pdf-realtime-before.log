@@ -1,0 +1,43 @@
+✔ day PDF blocks an active write before creating any file (2.514041ms)
+✔ day PDF refuses a stale snapshot read before the write, even after the queue empties (0.510083ms)
+✔ day PDF refuses a stale snapshot read during the write, even after the queue empties (0.314375ms)
+✔ day PDF read after confirmation keeps existing totals and produces PDF bytes in memory (8.312584ms)
+✔ period PDF blocks an active write before creating any file (0.963625ms)
+✔ period PDF refuses a stale snapshot read before the write, even after the queue empties (0.385417ms)
+✔ period PDF refuses a stale snapshot read during the write, even after the queue empties (0.2365ms)
+✔ period PDF read after confirmation keeps existing totals and produces PDF bytes in memory (1.390708ms)
+✔ quarter PDF blocks an active write before creating any file (0.4355ms)
+✔ quarter PDF refuses a stale snapshot read before the write, even after the queue empties (0.282542ms)
+✔ quarter PDF refuses a stale snapshot read during the write, even after the queue empties (0.170917ms)
+✔ quarter PDF read after confirmation keeps existing totals and produces PDF bytes in memory (1.276292ms)
+✔ actual readEbdDay attaches the version from before its parallel reads and stale day PDF is rejected (7.661125ms)
+✔ actual handleDownloadPeriodPDF refuses old fetchHistory aggregates, refreshes and succeeds on current snapshot (48.539125ms)
+✔ actual handleDownloadQuarterlyPDF refuses old fetchHistory aggregates, refreshes and succeeds on current snapshot (34.33525ms)
+✔ actual quarterly handler rejects attendance changed while its visitor reads were pending (27.846875ms)
+✔ history fetch and asynchronous quarterly PDF cannot publish into a renewed or unmounted access scope (29.405ms)
+✖ an observed Realtime change invalidates PDF snapshots synchronously, before debounced refetch (2.463167ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 17
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 599.13325
+
+✖ failing tests:
+
+test at tests/ebd-pdf-snapshot.test.mjs:173:1
+✖ an observed Realtime change invalidates PDF snapshots synchronously, before debounced refetch (2.463167ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo%20IPNC/tests/ebd-pdf-snapshot.test.mjs:194:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /dados.*mudaram/i,
+    operator: 'throws',
+    diff: 'simple'
+  }

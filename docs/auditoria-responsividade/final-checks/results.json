@@ -1,0 +1,68 @@
+{
+  "capturedAt": "2026-10-05T16:40:35.703287+00:00",
+  "baseRevision": "1ca403eb1739d411a8de4e6d5b4d83219fc83f99",
+  "branch": "codex/auditoria-responsividade-ipnc",
+  "state": "frozen source validated before commit; documentation excluded from source hash",
+  "sourceTreeSha256": "9bb787a9794deb385860bb424504ed7e4f4928954e1b2bd1867163659be13f0a",
+  "sourceFiles": 379,
+  "sourceUnchangedAfterChecks": true,
+  "commands": {
+    "types": {
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.app.json --noEmit",
+      "exitCode": 0,
+      "log": "types.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "tests": {
+      "command": "node --experimental-strip-types --test tests/*.mjs tests/*.ts",
+      "exitCode": 0,
+      "log": "tests.log",
+      "logSha256": "beac47a9b2acef2b7b9bcef161fbcec18c9363d03a3376b8aa68f025e2922577"
+    },
+    "lint": {
+      "command": "npm run lint",
+      "exitCode": 1,
+      "log": "lint.log",
+      "logSha256": "cd62a5f51840cb6df39e91d157db609f9fac8b71f24ea2ebb1649a9218061f57"
+    },
+    "build": {
+      "command": "npm run build",
+      "exitCode": 0,
+      "log": "build.log",
+      "logSha256": "28985cafe9ef4c48dcf68aaa6811469596a309606db22af78441172f1a6c55cd"
+    },
+    "diff-check": {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "log": "diff-check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "tests": {
+    "tests": 193,
+    "passed": 193,
+    "failed": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "baseline": {
+      "error": 316,
+      "warning": 63
+    },
+    "final": {
+      "error": 298,
+      "warning": 65
+    },
+    "netErrors": -18,
+    "netWarnings": 2,
+    "newProductionWarningCount": 0,
+    "newFixtureWarnings": 4,
+    "removedWarnings": 2
+  },
+  "buildWarnings": [
+    "Ineffective dynamic import of sonner, also statically imported",
+    "Chunks exceed 500 kB minified"
+  ],
+  "productionChanged": false,
+  "sqlProposalApplied": false
+}

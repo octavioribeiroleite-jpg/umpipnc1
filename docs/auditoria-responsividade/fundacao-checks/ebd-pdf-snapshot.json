@@ -1,0 +1,55 @@
+{
+  "recordedAt": "2026-10-05T16:33:22.958702+00:00",
+  "suite": "tests/ebd-pdf-snapshot.test.mjs",
+  "result": {
+    "passed": 20,
+    "failed": 0
+  },
+  "combinedDirected": {
+    "passed": 54,
+    "failed": 0
+  },
+  "before": {
+    "pdfStale": {
+      "tests": 12,
+      "failed": 6,
+      "log": "pdf-stale-before.log"
+    },
+    "realtime": {
+      "tests": 18,
+      "failed": 1,
+      "log": "pdf-realtime-before.log"
+    },
+    "secretariaSnapshot": {
+      "tests": 20,
+      "failed": 2,
+      "log": "secretaria-stale-before.log"
+    }
+  },
+  "method": "Real jsPDF and generator source; save intercepted in memory, PDF header and captured text verified. Actual React callback/calculation bodies extracted using TypeScript AST; controlled SQL client promises and setter closures. useEbdSync callback uses hook/effect doubles. No production transport, React render or PDF download asserted.",
+  "proofs": [
+    "pending write blocks each PDF entry point",
+    "read before/during write rejected after queue drains",
+    "fresh 1/1 yields 100% and PDF bytes for day, period, quarter",
+    "actual readEbdDay ticket captured before parallel queries",
+    "actual fetchHistory/dayRecords/period and quarterly handler reject stale aggregates and refresh",
+    "quarterly visitor wait crossing attendance commit cannot save PDF",
+    "renewed/unmounted scope cannot publish history or PDF",
+    "observed Realtime/local event invalidates before 150ms debounce without recursive dispatch",
+    "old Secretaria snapshot cannot reopen finalized class or closed day"
+  ],
+  "limits": [
+    "Version is process-local plus observed events; not a transactional server snapshot for unobserved remote changes.",
+    "No browser PDF visual layout or download verification in these Node tests.",
+    "Existing aggregate formulas unchanged."
+  ],
+  "sourceSha256": {
+    "tests/ebd-pdf-snapshot.test.mjs": "bf5a8fe84c438abd17892eb476464a56f4c4eb0707900edb3b5190ba8bbe79f7",
+    "src/lib/ebd-attendance-queue.ts": "6310d7b51993707b3af7e9e5fdcba0bee0ade1ed00d62244a90d1b35000f8713",
+    "src/hooks/useEbdSync.ts": "3ac8dbad9a4cfdc079df800c1c3efd7329211ff6eaf4bb2e1b61d58189679937",
+    "src/pages/Secretaria.tsx": "78dc043bf4d8ce95003f7a9309e8168aa9a16d6096949c5595528b16de8a6682",
+    "src/utils/generateEbdPDF.ts": "40d5f79079d47f9f1dcb3ce05710a13e5fa377cee5730b472783da57a40a2411",
+    "src/components/secretaria/HistoricoTab.tsx": "c01d2c6473892d42af2d20671b3139e98f93dc5c21b93ec22a48f2ab71b83b86"
+  },
+  "finalSourceTreeSha256": "9bb787a9794deb385860bb424504ed7e4f4928954e1b2bd1867163659be13f0a"
+}

@@ -1,0 +1,24 @@
+✔ accepted mark/unmark exposes desired state synchronously before any save response (3.291709ms)
+✔ three independent saves run together and additional accepted pupils remain queued (0.533292ms)
+✔ repeated intent for the same pupil/date is refused until settlement; other dates/classes remain independent (0.346083ms)
+✔ confirmed rejection only rejects its own pupil and leaves another confirmation intact (0.319083ms)
+✔ lost response reconciles the authorized desired row without another write or temporary persisted id (0.717041ms)
+✔ unknown response with a differing read stays pending and blocks blind retry until a confirming read (0.388667ms)
+✔ read failure preserves unknown state and never reports saved (0.646584ms)
+✔ timeout leaves actual save running, refuses retry and does not read until that request settles (27.128209ms)
+✔ dispose discards unsent pupils and late results never call the departed screen (0.410791ms)
+✔ old reads before/during a write preserve its confirmed row; a later read admits another device edit (0.452083ms)
+✔ a newer read finishing first must not allow an older response to resurrect pre-write data (0.296042ms)
+✔ closure/report barrier tracks pending date and class, including a disposed in-flight request (0.407708ms)
+✔ remote closure discards unsent work in its class without cancelling other classes or in-flight writes (0.648041ms)
+✔ late stale response cannot undo a remote edit already accepted from a newer read (0.171291ms)
+✔ a delayed automatic verification cannot restart the save timeout after another verification confirms (37.923791ms)
+✔ a remounted or renewed scope refuses a duplicate pupil while the disposed scope still has an in-flight write (0.414458ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 144.397

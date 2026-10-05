@@ -1,0 +1,699 @@
+{
+  "startedAt": "2026-10-05T15:51:03.889Z",
+  "host": "darwin",
+  "architecture": "arm64",
+  "version": "postgres (PostgreSQL) 17.10",
+  "runtimePackage": "@embedded-postgres/darwin-arm64@17.10.0-beta.17",
+  "clientPackage": "pg@8.23.1",
+  "endpoint": {
+    "host": "127.0.0.1",
+    "port": 54407
+  },
+  "cluster": "/private/tmp/ipnc-pg-concurrency-oo6viwdt/cluster-8ME78H",
+  "cases": [
+    {
+      "name": "baseline/finalize-first/commit",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "baseline/write-before-finalize/commit",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "baseline/close-first/commit",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      },
+      "rejection": {
+        "code": "P0001",
+        "message": "Dia fechado. Reabra a chamada antes de alterar."
+      }
+    },
+    {
+      "name": "baseline/write-before-close/commit",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      },
+      "present": 1,
+      "total": 3
+    },
+    {
+      "name": "baseline/finalize-first/rollback",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "baseline/write-before-finalize/rollback",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "baseline/close-first/rollback",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "baseline/write-before-close/rollback",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      },
+      "present": 0,
+      "total": 3
+    },
+    {
+      "name": "baseline/close-before-visitor",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "baseline/visitor-before-close",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "baseline/teacher-class-expiry-revocation-renewal",
+      "passed": true
+    },
+    {
+      "name": "baseline/distinct-dates-do-not-block",
+      "passed": true
+    },
+    {
+      "name": "proposal/finalize-first/commit",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      },
+      "rejection": {
+        "code": "P0001",
+        "message": "Chamada finalizada. Reabra a turma antes de alterar."
+      }
+    },
+    {
+      "name": "proposal/write-before-finalize/commit",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "proposal/close-first/commit",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      },
+      "rejection": {
+        "code": "P0001",
+        "message": "Dia fechado. Reabra a chamada antes de alterar."
+      }
+    },
+    {
+      "name": "proposal/write-before-close/commit",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      },
+      "present": 1,
+      "total": 3
+    },
+    {
+      "name": "proposal/finalize-first/rollback",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "proposal/write-before-finalize/rollback",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "proposal/close-first/rollback",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "proposal/write-before-close/rollback",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      },
+      "present": 0,
+      "total": 3
+    },
+    {
+      "name": "proposal/close-before-visitor",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "proposal/visitor-before-close",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      }
+    },
+    {
+      "name": "proposal/teacher-class-expiry-revocation-renewal",
+      "passed": true
+    },
+    {
+      "name": "proposal/distinct-dates-do-not-block",
+      "passed": true
+    },
+    {
+      "name": "proposal/three-in-flight-finalization-first",
+      "passed": true,
+      "locks": [
+        {
+          "pid": 20801,
+          "locktype": "advisory",
+          "classid": "1869639283",
+          "objid": "9774",
+          "objsubid": 2,
+          "granted": false,
+          "wait_event_type": "Lock",
+          "wait_event": "advisory",
+          "blockers": [
+            20800
+          ]
+        },
+        {
+          "pid": 20802,
+          "locktype": "advisory",
+          "classid": "1869639283",
+          "objid": "9774",
+          "objsubid": 2,
+          "granted": false,
+          "wait_event_type": "Lock",
+          "wait_event": "advisory",
+          "blockers": [
+            20800,
+            20801
+          ]
+        },
+        {
+          "pid": 20803,
+          "locktype": "advisory",
+          "classid": "1869639283",
+          "objid": "9774",
+          "objsubid": 2,
+          "granted": false,
+          "wait_event_type": "Lock",
+          "wait_event": "advisory",
+          "blockers": [
+            20800,
+            20801,
+            20802
+          ]
+        }
+      ]
+    },
+    {
+      "name": "proposal/three-in-flight-writes-first",
+      "passed": true,
+      "locks": [
+        {
+          "pid": 20801,
+          "locktype": "advisory",
+          "classid": "1869639283",
+          "objid": "9774",
+          "objsubid": 2,
+          "granted": false,
+          "wait_event_type": "Lock",
+          "wait_event": "advisory",
+          "blockers": [
+            20800
+          ]
+        },
+        {
+          "pid": 20802,
+          "locktype": "advisory",
+          "classid": "1869639283",
+          "objid": "9774",
+          "objsubid": 2,
+          "granted": false,
+          "wait_event_type": "Lock",
+          "wait_event": "advisory",
+          "blockers": [
+            20800,
+            20801
+          ]
+        },
+        {
+          "pid": 20803,
+          "locktype": "advisory",
+          "classid": "1869639283",
+          "objid": "9774",
+          "objsubid": 2,
+          "granted": false,
+          "wait_event_type": "Lock",
+          "wait_event": "advisory",
+          "blockers": [
+            20800,
+            20801,
+            20802
+          ]
+        }
+      ]
+    },
+    {
+      "name": "proposal/application-timeout-no-cancel-socket-loss-read-desired-retry-unique",
+      "passed": true,
+      "lock": {
+        "pid": 20801,
+        "locktype": "advisory",
+        "classid": "1869639283",
+        "objid": "9774",
+        "objsubid": 2,
+        "granted": false,
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "blockers": [
+          20800
+        ]
+      },
+      "oneRow": true,
+      "sameId": true,
+      "simulation": "Application response discarded after server commit; socket then destroyed. Does not emulate PostgREST/TCP loss before COMMIT acknowledgement."
+    },
+    {
+      "name": "proposal/day-reopen-keeps-class-finalized-explicit-class-reopen-restores-write",
+      "passed": true
+    },
+    {
+      "name": "rollback/exact-body-oid-owner-acl-security-search-path",
+      "passed": true
+    }
+  ],
+  "shutdown": {
+    "stopped": true,
+    "portClosed": true,
+    "mode": "fast",
+    "completedAt": "2026-10-05T15:51:04.869Z"
+  },
+  "server": {
+    "version": "PostgreSQL 17.10 on x86_64-apple-darwin24.6.0, compiled by Apple clang version 17.0.0 (clang-1700.6.3.2), 64-bit",
+    "isolation": "read committed",
+    "listen": "127.0.0.1"
+  },
+  "baseline": {
+    "guard": [
+      {
+        "oid": 16573,
+        "proowner": 10,
+        "proacl": "{ipnc_fixture=X/ipnc_fixture}",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=\"\""
+        ]
+      }
+    ],
+    "functionBodies": [
+      {
+        "signature": "ebd_close_day(date)",
+        "body_md5": "efcdfb297593ded80689d51f29b012dc"
+      },
+      {
+        "signature": "ebd_reopen_day(date,uuid)",
+        "body_md5": "965467293ab4a75e2253947b759781be"
+      },
+      {
+        "signature": "ipnc_private.guard_ebd_day()",
+        "body_md5": "13c4f019011f3d0e3f6c0f8b0b0eac8a"
+      }
+    ],
+    "policies": [
+      {
+        "tablename": "ebd_attendance",
+        "policyname": "ipnc_ebd_admin",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "ebd_is_admin()",
+        "with_check": "ebd_is_admin()"
+      },
+      {
+        "tablename": "ebd_attendance",
+        "policyname": "ipnc_ebd_attendance_insert",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_attendance",
+        "policyname": "ipnc_ebd_attendance_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "ipnc_private.ebd_class_allowed(class_id)",
+        "with_check": null
+      },
+      {
+        "tablename": "ebd_attendance",
+        "policyname": "ipnc_ebd_attendance_update",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "UPDATE",
+        "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_call_status",
+        "policyname": "ebd_call_admin",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "ebd_is_admin()",
+        "with_check": "ebd_is_admin()"
+      },
+      {
+        "tablename": "ebd_call_status",
+        "policyname": "ebd_call_insert",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_call_status",
+        "policyname": "ebd_call_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "ipnc_private.ebd_class_allowed(class_id)",
+        "with_check": null
+      },
+      {
+        "tablename": "ebd_call_status",
+        "policyname": "ebd_call_update",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "UPDATE",
+        "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_class_visitor_entries",
+        "policyname": "ipnc_ebd_admin",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "ebd_is_admin()",
+        "with_check": "ebd_is_admin()"
+      },
+      {
+        "tablename": "ebd_class_visitor_entries",
+        "policyname": "ipnc_ebd_visitor_delete",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "DELETE",
+        "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+        "with_check": null
+      },
+      {
+        "tablename": "ebd_class_visitor_entries",
+        "policyname": "ipnc_ebd_visitor_insert",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_class_visitor_entries",
+        "policyname": "ipnc_ebd_visitor_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "ipnc_private.ebd_class_allowed(class_id)",
+        "with_check": null
+      },
+      {
+        "tablename": "ebd_day_closures",
+        "policyname": "ipnc_ebd_admin",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "ebd_is_admin()",
+        "with_check": "ebd_is_admin()"
+      }
+    ]
+  },
+  "passed": true
+}

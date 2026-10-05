@@ -1,0 +1,5 @@
+{
+  "snapshot": "- button \"Notificações\":\n- img \"Renovo IPNC\"\n- button \"Instalar aplicativo\":\n  - generic: Instalar aplicativo\n- button \"Voltar\":\n- heading \"Escolha sua sociedade\" [level=2]\n- paragraph: Selecione o grupo que deseja acessar\n- paragraph: © 2025 IPNC - Todos os direitos reservados\n- paragraph: Atualizado em 05/10/2026 às 00h00\n- region \"Notifications alt+T\"\n- region \"Notifications (F8)\":\n  - list",
+  "action": "Enter no botão nativo da sociedade UMP; abriu Identificação",
+  "capturedAt": "2026-10-05T16:33:43.378Z"
+}

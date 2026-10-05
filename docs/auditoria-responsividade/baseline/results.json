@@ -1,0 +1,44 @@
+{
+  "captured_at": "2026-10-05T15:15:26.425818+00:00",
+  "revision": "1ca403eb1739d411a8de4e6d5b4d83219fc83f99",
+  "branch": "codex/auditoria-responsividade-ipnc",
+  "node": "v24.19.0",
+  "npm": "11.6.2",
+  "results": [
+    {
+      "name": "types",
+      "command": "npx tsc -p tsconfig.app.json --noEmit",
+      "exit_code": 0,
+      "duration_seconds": 6.686,
+      "log": "types.log"
+    },
+    {
+      "name": "tests",
+      "command": "node --experimental-strip-types --test tests/*.mjs tests/*.ts",
+      "exit_code": 0,
+      "duration_seconds": 2.094,
+      "log": "tests.log"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "exit_code": 1,
+      "duration_seconds": 2.382,
+      "log": "lint.log"
+    },
+    {
+      "name": "build",
+      "command": "npm run build",
+      "exit_code": 0,
+      "duration_seconds": 2.223,
+      "log": "build.log"
+    },
+    {
+      "name": "diff-check",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "duration_seconds": 0.012,
+      "log": "diff-check.log"
+    }
+  ]
+}

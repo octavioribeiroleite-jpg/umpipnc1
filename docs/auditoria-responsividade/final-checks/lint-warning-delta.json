@@ -1,0 +1,57 @@
+{
+  "new": [
+    [
+      "src/components/financas/ConfiguracoesTab.tsx",
+      "react-hooks/exhaustive-deps",
+      "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array"
+    ],
+    [
+      "src/pages/Financas.tsx",
+      "react-hooks/exhaustive-deps",
+      "React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array"
+    ],
+    [
+      "tests/fixtures/diretoria/main.tsx",
+      "react-refresh/only-export-components",
+      "Fast refresh only works when a file has exports. Move your component(s) to a separate file"
+    ],
+    [
+      "tests/fixtures/diretoria/main.tsx",
+      "react-refresh/only-export-components",
+      "Fast refresh only works when a file has exports. Move your component(s) to a separate file"
+    ],
+    [
+      "tests/fixtures/ebd-latency.tsx",
+      "react-refresh/only-export-components",
+      "Fast refresh only works when a file has exports. Move your component(s) to a separate file"
+    ],
+    [
+      "tests/fixtures/ebd-latency.tsx",
+      "react-refresh/only-export-components",
+      "Fast refresh only works when a file has exports. Move your component(s) to a separate file"
+    ]
+  ],
+  "removed": [
+    [
+      "src/components/eleicoes/ResultPanel.tsx",
+      "react-hooks/exhaustive-deps",
+      "React Hook useEffect has a missing dependency: 'candidates'. Either include it or remove the dependency array"
+    ],
+    [
+      "src/components/financas/ConfiguracoesTab.tsx",
+      "react-hooks/exhaustive-deps",
+      "React Hook useEffect has missing dependencies: 'fetchActiveMembers', 'fetchLaunches', and 'fetchSettings'. Either include them or remove the dependency array"
+    ],
+    [
+      "src/pages/Eleicoes.tsx",
+      "react-hooks/exhaustive-deps",
+      "React Hook useEffect has a missing dependency: 'fetchElections'. Either include it or remove the dependency array"
+    ],
+    [
+      "src/pages/Financas.tsx",
+      "react-hooks/exhaustive-deps",
+      "React Hook useEffect has missing dependencies: 'selectedScopeLabel' and 'societies'. Either include them or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setSocietySummary' needs the current value of 'societies'"
+    ]
+  ],
+  "note": "Only trailing punctuation normalized; line changes ignored. Changed messages for the same existing file/rule are shown, not necessarily new warnings."
+}

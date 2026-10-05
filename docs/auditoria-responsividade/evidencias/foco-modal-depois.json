@@ -1,0 +1,15 @@
+{
+  "focusAfterTab": {
+    "id": "new-user-society",
+    "inDialog": true
+  },
+  "draftAfterResize": {
+    "dialogHeight": 286,
+    "dialogScroll": 657,
+    "length": 10
+  },
+  "afterClose": {
+    "label": "Novo usuário",
+    "tag": "BUTTON"
+  }
+}

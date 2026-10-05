@@ -1,0 +1,28 @@
+✔ day PDF blocks an active write before creating any file (4.3865ms)
+✔ day PDF refuses a stale snapshot read before the write, even after the queue empties (0.8955ms)
+✔ day PDF refuses a stale snapshot read during the write, even after the queue empties (0.968041ms)
+✔ day PDF read after confirmation keeps existing totals and produces PDF bytes in memory (9.415417ms)
+✔ period PDF blocks an active write before creating any file (0.543041ms)
+✔ period PDF refuses a stale snapshot read before the write, even after the queue empties (0.225334ms)
+✔ period PDF refuses a stale snapshot read during the write, even after the queue empties (0.276334ms)
+✔ period PDF read after confirmation keeps existing totals and produces PDF bytes in memory (1.509542ms)
+✔ quarter PDF blocks an active write before creating any file (0.456166ms)
+✔ quarter PDF refuses a stale snapshot read before the write, even after the queue empties (0.319583ms)
+✔ quarter PDF refuses a stale snapshot read during the write, even after the queue empties (0.224792ms)
+✔ quarter PDF read after confirmation keeps existing totals and produces PDF bytes in memory (1.492875ms)
+✔ actual readEbdDay attaches the version from before its parallel reads and stale day PDF is rejected (9.442333ms)
+✔ actual handleDownloadPeriodPDF refuses old fetchHistory aggregates, refreshes and succeeds on current snapshot (55.260791ms)
+✔ actual handleDownloadQuarterlyPDF refuses old fetchHistory aggregates, refreshes and succeeds on current snapshot (38.146583ms)
+✔ actual quarterly handler rejects attendance changed while its visitor reads were pending (30.355667ms)
+✔ history fetch and asynchronous quarterly PDF cannot publish into a renewed or unmounted access scope (32.708334ms)
+✔ an observed Realtime change invalidates PDF snapshots synchronously, before debounced refetch (5.245625ms)
+✔ actual Secretaria read cannot regress finalized class when its old snapshot arrives later (6.60825ms)
+✔ actual Secretaria read cannot regress closed day when its old snapshot arrives later (4.058208ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 551.747417

@@ -1,0 +1,3 @@
+# Preserve exact tool output and its SHA-256, including reporter whitespace.
+# Source, tests, SQL and Markdown retain normal whitespace checks.
+*.log -whitespace

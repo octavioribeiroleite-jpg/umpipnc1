@@ -1,0 +1,31 @@
+{
+  "capturedAt": "2026-10-05T16:35:32.599Z",
+  "action": "Click aluno008 após rolagem pelo locator; presença confirmada",
+  "button": [
+    {
+      "label": "Aluno 008 — nome fictício de demonstração: presente",
+      "rect": {
+        "bottom": 456.09375,
+        "height": 64,
+        "left": 12,
+        "right": 363,
+        "top": 392.09375,
+        "width": 351,
+        "x": 12,
+        "y": 392.09375
+      }
+    }
+  ],
+  "footer": [
+    {
+      "bottom": 832,
+      "height": 44,
+      "left": 16,
+      "right": 359,
+      "top": 788,
+      "width": 343,
+      "x": 16,
+      "y": 788
+    }
+  ]
+}

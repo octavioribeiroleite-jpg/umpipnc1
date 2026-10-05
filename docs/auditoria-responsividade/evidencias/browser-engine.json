@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-10-05T16:14:00.675Z",
+  "height": 844,
+  "deviceScaleFactor": 1,
+  "mobile": false,
+  "resizeStabilizationMs": 260,
+  "notes": "Viewport Chromium emulado via CDP suportado no Browser. Texto ampliado com html 200%=32px. Atalho nativo meta+plus não alterou viewport; zoom nativo200% não confirmado. Browser.getVersion e Input via CDP não disponíveis; ações de teclado usam cua.",
+  "engineText": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+}

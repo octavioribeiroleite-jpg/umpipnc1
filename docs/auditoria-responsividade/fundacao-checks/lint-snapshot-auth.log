@@ -1,0 +1,9 @@
+
+/Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo IPNC/src/hooks/useEbdSync.ts
+  21:7  warning  React Hook useMemo has unnecessary dependencies: 'enabled' and 'sessionKey'. Either exclude them or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo IPNC/src/pages/Auth.tsx
+  296:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 2 problems (1 error, 1 warning)
+
