@@ -1,7 +1,9 @@
+import { markEbdDataChanged } from '@/lib/ebd-attendance-queue';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { toast } from 'sonner';
 
 export function notifyEbdChange() {
+  markEbdDataChanged();
   window.dispatchEvent(new Event('ebd-data-changed'));
 }
 

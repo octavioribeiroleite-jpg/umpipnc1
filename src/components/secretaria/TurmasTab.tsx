@@ -340,7 +340,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
           <CardContent data-ebd-content className="space-y-3 pt-4">
             <p className="text-sm text-muted-foreground">Selecione a turma de destino:</p>
             <Select value={transferTargetClass} onValueChange={setTransferTargetClass}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Turma de destino">
                 <SelectValue placeholder="Escolha a turma" />
               </SelectTrigger>
               <SelectContent>

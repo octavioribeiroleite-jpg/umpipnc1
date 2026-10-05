@@ -1,3 +1,4 @@
+import { assertAttendanceConfirmed, assertEbdSnapshotCurrent } from '@/lib/ebd-attendance-queue';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -23,6 +24,7 @@ interface AttendanceRecord {
 }
 
 interface GenerateEbdPDFParams {
+  snapshotVersion: number;
   classes: EbdClass[];
   students: EbdStudent[];
   attendance: AttendanceRecord[];
@@ -71,6 +73,8 @@ function getClassStats(cls: EbdClass, students: EbdStudent[], attendance: Attend
 }
 
 export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
+  assertAttendanceConfirmed(params.date);
+  assertEbdSnapshotCurrent(params.snapshotVersion);
   const { classes, students, attendance, date, formattedDate, professorName } = params;
 
   const doc = new jsPDF();
@@ -399,12 +403,15 @@ interface PeriodClass {
 }
 
 interface GenerateEbdPeriodPDFParams {
+  snapshotVersion: number;
   periodLabel: string;
   days: PeriodDay[];
   classes: PeriodClass[];
 }
 
 export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
+  for (const day of params.days) assertAttendanceConfirmed(day.date);
+  assertEbdSnapshotCurrent(params.snapshotVersion);
   const { periodLabel, days, classes } = params;
 
   const doc = new jsPDF();
@@ -633,12 +640,15 @@ interface QuarterlyClass {
 }
 
 interface GenerateEbdQuarterlyPDFParams {
+  snapshotVersion: number;
   periodLabel: string;
   days: QuarterlyDay[];
   classesDetail: QuarterlyClass[];
 }
 
 export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
+  for (const day of params.days) assertAttendanceConfirmed(day.date);
+  assertEbdSnapshotCurrent(params.snapshotVersion);
   const { periodLabel, days, classesDetail } = params;
 
   const doc = new jsPDF();

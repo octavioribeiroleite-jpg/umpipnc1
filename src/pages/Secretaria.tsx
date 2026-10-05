@@ -1,3 +1,5 @@
+import { useEbdAttendanceQueue } from '@/hooks/useEbdAttendanceQueue';
+import { assertEbdSnapshotCurrent, captureEbdSnapshot } from '@/lib/ebd-attendance-queue';
 import { EbdNavigationContext, useSecretariaNavigation } from '@/hooks/useEbdNavigation';
 import { loadStoredEbdSession, saveStoredEbdSession, clearStoredEbdSession } from '@/lib/ebd-session-storage';
 import { closeEbdDay, reopenEbdDay, setEbdCallStatus } from '@/lib/ebd-day';
@@ -309,6 +311,7 @@ export default function Secretaria() {
   const dataScope = `${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}-${sundayDate}`;
   const dataScopeRef = useRef(dataScope);
   dataScopeRef.current = dataScope;
+  const { queue: attendanceQueue } = useEbdAttendanceQueue(dataScope, setAttendance);
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   const handleProfileSelect = (profile: 'admin' | 'professor') => {
@@ -432,7 +435,9 @@ export default function Secretaria() {
   };
 
   const readData = useCallback(async () => {
+    const snapshotVersion = captureEbdSnapshot();
     const scope = dataScopeRef.current;
+    const attendanceVersion = attendanceQueue.readVersion();
     const { data: authorized, error: sessionError } = await supabase.rpc('ebd_session_valid' as any);
     if (scope !== dataScopeRef.current) throw new Error('Acesso alterado durante a atualização.');
     if (sessionError) throw sessionError;
@@ -453,12 +458,13 @@ export default function Secretaria() {
     if (scope !== dataScopeRef.current) throw new Error('Acesso alterado durante a atualização.');
     const readError = [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes].find(result => result.error)?.error;
     if (readError) throw readError;
+    assertEbdSnapshotCurrent(snapshotVersion);
     setCallStatuses(Object.fromEntries((statusRes.data || []).map((row: any) => [row.class_id, row.status])));
 
     if (classesRes.data) setClasses(classesRes.data);
     if (activeStudentsRes.data) setActiveStudents(activeStudentsRes.data);
     if (allStudentsRes.data) setAllStudents(allStudentsRes.data);
-    if (attendanceRes.data) setAttendance(attendanceRes.data);
+    if (attendanceRes.data) setAttendance(attendanceQueue.reconcile(attendanceRes.data, attendanceVersion));
     const cvMap: Record<string, VisitorEntry[]> = {};
     ((visitorEntriesRes as any).data || []).forEach((row: any) => {
       if (!cvMap[row.class_id]) cvMap[row.class_id] = [];
@@ -476,7 +482,7 @@ export default function Secretaria() {
       setVisitorCount(totalV);
     }
     return { classes: classesRes.data || [], activeStudents: activeStudentsRes.data || [], attendance: attendanceRes.data || [], classVisitors: cvMap };
-  }, [sundayDate]);
+  }, [sundayDate, attendanceQueue]);
 
   const { refresh: fetchData, lastSynced, syncError, syncing } = useEbdSync(
     !!accessLevel && !aiReauthOpen,
@@ -805,6 +811,7 @@ export default function Secretaria() {
             classes={visibleClasses}
             students={visibleActiveStudents}
             attendance={attendance}
+            attendanceQueue={attendanceQueue}
             setAttendance={setAttendance}
             callStatuses={callStatuses}
             onCallStatusChange={handleCallStatusChange}
@@ -822,7 +829,7 @@ export default function Secretaria() {
         )}
 
         {currentView === 'historico' && isAdmin && (
-          <HistoricoTab classes={visibleClasses} students={visibleActiveStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} refreshedAt={lastSynced?.getTime()} />
+          <HistoricoTab sessionScope={dataScope} classes={visibleClasses} students={visibleActiveStudents} accessLevel={accessLevel!} onRefreshParent={fetchData} refreshedAt={lastSynced?.getTime()} />
         )}
 
         {currentView === 'turmas' && isAdmin && (

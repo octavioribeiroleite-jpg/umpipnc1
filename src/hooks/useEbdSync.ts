@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { createRefreshQueue } from '@/lib/refresh-queue';
+import { markEbdDataChanged } from '@/lib/ebd-attendance-queue';
 
 export function useEbdSync(enabled: boolean, sessionKey: string, read: () => Promise<unknown>) {
   const latest = useRef(read);
@@ -24,7 +25,11 @@ export function useEbdSync(enabled: boolean, sessionKey: string, read: () => Pro
     queue.resume();
     const refresh = () => { if (document.visibilityState === 'visible') void queue.request(); };
     let debounce: ReturnType<typeof setTimeout>;
-    const changed = () => { clearTimeout(debounce); debounce = setTimeout(refresh, 150); };
+    const changed = () => {
+      // An observed remote change invalidates reports before the deferred read.
+      markEbdDataChanged();
+      clearTimeout(debounce); debounce = setTimeout(refresh, 150);
+    };
     const channel = supabase.channel(`ebd-sync-${crypto.randomUUID()}`);
     for (const table of ['ebd_students', 'ebd_classes', 'ebd_attendance', 'ebd_class_visitor_entries', 'ebd_day_closures', 'ebd_call_status']) {
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, changed);

@@ -1,3 +1,4 @@
+import { captureEbdSnapshot, assertEbdSnapshotCurrent, EbdSnapshotChangedError } from '@/lib/ebd-attendance-queue';
 import { useEbdNavigation } from '@/hooks/useEbdNavigation';
 import HistoricalChamada from './HistoricalChamada';
 import { closeEbdDay, reopenEbdDay, readEbdDay } from '@/lib/ebd-day';
@@ -69,6 +70,7 @@ interface StudentStats {
 type PeriodFilter = '4weeks' | '3months' | 'all';
 
 interface HistoricoTabProps {
+  sessionScope?: string;
   classes: EbdClass[];
   students: EbdStudent[];
   accessLevel: 'admin' | 'professor';
@@ -76,7 +78,7 @@ interface HistoricoTabProps {
   refreshedAt?: number;
 }
 
-export default function HistoricoTab({ classes, students, accessLevel, onRefreshParent, refreshedAt }: HistoricoTabProps) {
+export default function HistoricoTab({ sessionScope = 'historical', classes, students, accessLevel, onRefreshParent, refreshedAt }: HistoricoTabProps) {
   const navigation = useEbdNavigation();
   const [localEditingDate, setLocalEditingDate] = useState<string | null>(null);
   const editingDate = navigation ? (navigation.screen.editing ? navigation.screen.day || null : null) : localEditingDate;
@@ -106,12 +108,23 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   const [openDialog, setOpenDialog] = useState<'perfect' | 'lowFreq' | 'absent' | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [generatingQuarterly, setGeneratingQuarterly] = useState(false);
+  const reportScope = useRef({ sessionScope, active: true });
+  reportScope.current.sessionScope = sessionScope;
+  useEffect(() => {
+    const scope = reportScope.current;
+    scope.active = true;
+    return () => { scope.active = false; };
+  }, []);
+  const isReportScopeCurrent = (scope: string) => reportScope.current.active && reportScope.current.sessionScope === scope;
   const requestId = useRef(0);
+  const [historySnapshotVersion, setHistorySnapshotVersion] = useState<number | null>(null);
   const [historyError, setHistoryError] = useState(false);
   const [callActors, setCallActors] = useState<{date: string; changed_by: string}[]>([]);
 
   const fetchHistory = async () => {
+    const scope = sessionScope;
     const request = ++requestId.current;
+    const snapshotVersion = captureEbdSnapshot();
     try {
     let attendanceQuery = supabase.from('ebd_attendance').select('student_id, class_id, date, present, marked_by');
     let closureQuery = supabase.from('ebd_day_closures').select('*').order('date', { ascending: false });
@@ -145,7 +158,8 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       readPages((from, to) => supabase.from('ebd_class_visitor_entries' as never).select('date,class_id,name').gte('date', cutoff).order('date').order('id').range(from, to)),
     ]);
 
-    if (request !== requestId.current) return;
+    if (request !== requestId.current || !isReportScopeCurrent(scope)) return;
+    setHistorySnapshotVersion(snapshotVersion);
     setHistoryStudents(pupils);
     setHistoryClasses(groups);
     setOtherDates((calls as { date: string }[]).map(row => row.date));
@@ -158,16 +172,16 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
       class_summary: (c.class_summary || []) as ClassSummaryItem[],
     })));
     } catch {
-      if (request === requestId.current) setHistoryError(true);
+      if (request === requestId.current && isReportScopeCurrent(scope)) setHistoryError(true);
     } finally {
-      if (request === requestId.current) setLoading(false);
+      if (request === requestId.current && isReportScopeCurrent(scope)) setLoading(false);
     }
   };
 
   useEffect(() => {
     void fetchHistory();
     return () => { requestId.current++; };
-  }, [period, refreshedAt]);
+  }, [period, refreshedAt, sessionScope]);
 
   const totalMembers = students.length;
 
@@ -217,20 +231,25 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   };
 
   const handleDownloadPDF = async (record: DayRecord) => {
+    const scope = sessionScope;
     try {
       const day = await readEbdDay(record.date);
-      generateEbdAttendancePDF({ classes: day.classes, students: day.students, attendance: day.attendance, date: record.date, formattedDate: format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) });
-    } catch (error) { await reportEbdWriteError(error, 'Não foi possível gerar o PDF.'); }
+      if (!isReportScopeCurrent(scope)) return;
+      generateEbdAttendancePDF({ snapshotVersion: day.snapshotVersion, classes: day.classes, students: day.students, attendance: day.attendance, date: record.date, formattedDate: format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) });
+    } catch (error) { if (isReportScopeCurrent(scope)) await reportEbdWriteError(error, 'Não foi possível gerar o PDF.'); }
   };
 
   const periodLabel = period === '4weeks' ? 'Últimas 4 semanas' : period === '3months' ? 'Últimos 3 meses' : 'Todo o período';
 
   const handleDownloadPeriodPDF = async () => {
+    const scope = sessionScope;
     if (dayRecords.length === 0) {
       toast.error('Nenhuma chamada registrada neste período.');
       return;
     }
     try {
+      const snapshotVersion = historySnapshotVersion;
+      assertEbdSnapshotCurrent(snapshotVersion);
       const days = dayRecords.map(r => ({
         date: r.date,
         present: r.presentStudents,
@@ -253,9 +272,11 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         totalPresent: c.totalPresent,
         avgPercentage: c.count > 0 ? Math.round(c.pctSum / c.count) : 0,
       }));
-      generateEbdPeriodPDF({ periodLabel, days, classes: classes2 });
+      generateEbdPeriodPDF({ snapshotVersion, periodLabel, days, classes: classes2 });
       toast.success('Relatório gerado com sucesso!');
     } catch (e) {
+      if (!isReportScopeCurrent(scope)) return;
+      if (e instanceof EbdSnapshotChangedError) { await fetchHistory(); if (!isReportScopeCurrent(scope)) return; toast.error('Os dados mudaram. Confira a atualização e tente gerar o relatório novamente.'); return; }
       const errorId = await reportClientError('EBD:relatorio-periodo', e, {
         period,
         periodLabel,
@@ -269,21 +290,28 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
   };
 
   const handleDownloadQuarterlyPDF = async () => {
+    const scope = sessionScope;
     if (dayRecords.length === 0) {
       toast.error('Nenhuma chamada registrada neste período.');
       return;
     }
     setGeneratingQuarterly(true);
     try {
+      const snapshotVersion = historySnapshotVersion;
+      assertEbdSnapshotCurrent(snapshotVersion);
       const sundayDates = dayRecords.map(r => r.date);
 
       // Fetch visitor data for the period
       const minDate = [...sundayDates].sort()[0];
-      const [{ data: visitorEntries }, { data: visitorCounts }] = await Promise.all([
+      const [entriesResult, countsResult] = await Promise.all([
         supabase.from('ebd_class_visitor_entries').select('class_id, date, name').gte('date', minDate),
         supabase.from('ebd_class_visitors').select('class_id, date, visitor_count').gte('date', minDate),
       ]);
 
+      if (!isReportScopeCurrent(scope)) return;
+      if (entriesResult.error) throw entriesResult.error;
+      if (countsResult.error) throw countsResult.error;
+      const visitorEntries = entriesResult.data, visitorCounts = countsResult.data;
       const entriesInPeriod = (visitorEntries || []).filter(v => sundayDates.includes(v.date));
       const countsInPeriod = (visitorCounts || []).filter(v => sundayDates.includes(v.date));
 
@@ -353,9 +381,11 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         };
       }).filter(c => c.days.length > 0 || c.students.length > 0);
 
-      generateEbdQuarterlyPDF({ periodLabel, days, classesDetail });
+      generateEbdQuarterlyPDF({ snapshotVersion, periodLabel, days, classesDetail });
       toast.success('Relatório trimestral gerado com sucesso!');
     } catch (e) {
+      if (!isReportScopeCurrent(scope)) return;
+      if (e instanceof EbdSnapshotChangedError) { await fetchHistory(); if (!isReportScopeCurrent(scope)) return; toast.error('Os dados mudaram. Confira a atualização e tente gerar o relatório novamente.'); return; }
       const errorId = await reportClientError('EBD:relatorio-trimestral', e, {
         period,
         periodLabel,
@@ -366,7 +396,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
         duration: 8000,
       });
     } finally {
-      setGeneratingQuarterly(false);
+      if (reportScope.current.active) setGeneratingQuarterly(false);
     }
   };
 
@@ -484,7 +514,7 @@ export default function HistoricoTab({ classes, students, accessLevel, onRefresh
     return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando histórico...</div>;
   }
 
-  if (editingDate && accessLevel === 'admin') return <HistoricalChamada key={editingDate} date={editingDate} onBack={() => { setEditingDate(null); void fetchHistory(); void onRefreshParent?.(); }} />;
+  if (editingDate && accessLevel === 'admin') return <HistoricalChamada key={`${sessionScope}:${editingDate}`} sessionScope={sessionScope} date={editingDate} onBack={() => { setEditingDate(null); void fetchHistory(); void onRefreshParent?.(); }} />;
 
   // ─── DETAIL VIEW (full-screen) ───
   if (selectedDay) {
