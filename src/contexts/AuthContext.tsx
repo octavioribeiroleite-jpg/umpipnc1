@@ -3,6 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { createAuthQueryCacheBoundary } from '@/lib/auth-query-cache';
+import { MainAccountAccessBoundary } from '@/components/MainAccountAccessBoundary';
+import { withAuthReadDeadline } from '@/lib/auth-read-deadline';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador' | 'pastor';
 
@@ -105,19 +107,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (delay) await wait(delay);
       if (hydrationId !== hydrationRef.current) return;
 
-      const [profileResult, rolesResult] = await Promise.all([
+      const [profileResult, rolesResult] = await withAuthReadDeadline(signal => Promise.all([
         supabase
           .from('profiles')
           .select('*')
           .eq('user_id', userId)
-          .abortSignal(AbortSignal.timeout(5000))
+          .abortSignal(signal)
           .maybeSingle(),
         supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', userId)
-          .abortSignal(AbortSignal.timeout(5000)),
-      ]);
+          .abortSignal(signal),
+      ]));
 
       lastProfileError = profileResult.error;
       lastRolesError = rolesResult.error;
@@ -153,12 +155,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles(fetchedRoles);
 
     if (profileData?.society_id) {
-      const { data: societyData, error: societyError } = await supabase
+      const { data: societyData, error: societyError } = await withAuthReadDeadline(signal => supabase
         .from('societies')
         .select('*')
         .eq('id', profileData.society_id)
-        .abortSignal(AbortSignal.timeout(5000))
-        .maybeSingle();
+        .abortSignal(signal)
+        .maybeSingle());
 
       if (hydrationId !== hydrationRef.current) return;
       if (societyError) throw new Error('Society unavailable');
@@ -387,16 +389,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         effectiveSocietyId,
       }}
     >
-      {authError ? (
-        <main className="min-h-screen flex items-center justify-center p-6">
-          <section role="alert" className="max-w-md space-y-4 text-center">
-            <h1 className="text-xl font-semibold">Não foi possível confirmar seu acesso</h1>
-            <p>Confira sua conexão e tente novamente. Nenhum dado foi alterado.</p>
-            <button className="rounded-lg bg-primary px-5 py-3 text-primary-foreground" onClick={() => window.location.reload()}>Tentar novamente</button>
-            <button className="block w-full underline" onClick={() => void signOut()}>Voltar ao login</button>
-          </section>
-        </main>
-      ) : children}
+      <MainAccountAccessBoundary failed={authError} onSignOut={signOut}>
+        {children}
+      </MainAccountAccessBoundary>
     </AuthContext.Provider>
   );
 }

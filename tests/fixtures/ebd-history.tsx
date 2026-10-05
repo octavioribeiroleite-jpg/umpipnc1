@@ -31,6 +31,7 @@ function closeDay(d: string) {
   closures=closures.filter(c=>c.date!==d).concat(row); return row;
 }
 const nativeFetch=window.fetch.bind(window);
+const expiredEbdFixture = new URLSearchParams(location.search).get('ebd') === 'expired';
 window.fetch=async (input,init) => {
   const url=new URL(typeof input==='string'?input:input instanceof URL?input.href:input.url,location.origin);
   if (url.pathname.endsWith('/functions/v1/manage-ebd-class-password')) return new Response(JSON.stringify({class_ids:['old'],passwords:{old:'123456'}}),{headers:{'Content-Type':'application/json'}});
@@ -43,7 +44,7 @@ window.fetch=async (input,init) => {
   const endpoint=url.pathname.split('/').at(-1);
   const respond=(data:unknown,status=200)=>Promise.resolve(new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}}));
   if(endpoint==='list_birthdays')return respond([{id:'birthday-test',nome:'Mariana de Oliveira — exemplo',dia:27,mes:9,ano_nascimento:1998,departamento:'EBD',observacao:null,ativo:true,pendente_revisao:false,created_at:'2026-01-01',updated_at:'2026-01-01'}]);
-  if(endpoint==='ebd_session_valid')return respond(true);
+  if(endpoint==='ebd_session_valid')return respond(!expiredEbdFixture);
   if(endpoint==='ebd_closure')return respond(closures.find(c=>c.date===body.p_date)||null);
   if(endpoint==='ebd_attendance' && ['POST','PATCH'].includes(method) && !/^[0-9a-f-]{36}$/i.test(body.marked_by || ''))return respond({message:'invalid input syntax for type uuid'},400);
   if(endpoint==='ebd_attendance' && method==='PATCH' && failNext){failNext=false;return respond({message:'Falha simulada. Tente novamente.'},400);}
@@ -68,10 +69,23 @@ supabase.removeChannel=async()=> 'ok';
 supabase.auth.getSession=(async()=>({data:{session:{user:{id:'00000000-0000-0000-0000-000000000099'}}},error:null})) as typeof supabase.auth.getSession;
 const {default:HistoricoTab}=await import('../../src/components/secretaria/HistoricoTab');
 const role=new URLSearchParams(location.search).get('role')==='professor'?'professor':'admin';
-if (location.pathname.includes('ebd-back')) {
+if (location.pathname.includes('ebd-back') || location.pathname === '/secretaria') {
   const { BrowserRouter, Routes, Route } = await import('react-router-dom');
   const { QueryClientProvider, QueryClient } = await import('@tanstack/react-query');
   const { default: Secretaria } = await import('../../src/pages/Secretaria');
+  // Reproduce the real provider failure with a fictitious principal identity.
+  // EBD's existing isolated transport and own session remain unchanged.
+  const principalFailure = new URLSearchParams(location.search).get('principal') === 'failed';
+  if (principalFailure) history.replaceState(null, '', `${new URLSearchParams(location.search).get('principalRoute') === 'protected' ? '/' : '/secretaria'}${location.search}`);
+  let AccessProvider = React.Fragment;
+  if (principalFailure) {
+    const { supabase: principal } = await import('../../src/integrations/supabase/client');
+    principal.auth.getSession = (async () => ({data:{session:{user:{id:'fixture-principal-failed'}}},error:null})) as typeof principal.auth.getSession;
+    principal.auth.onAuthStateChange = (() => ({data:{subscription:{unsubscribe(){}}}})) as typeof principal.auth.onAuthStateChange;
+    principal.from = (() => { throw new Error('Fixture: principal-account lookup unavailable'); }) as typeof principal.from;
+    const { AuthProvider } = await import('../../src/contexts/AuthContext');
+    AccessProvider = AuthProvider as typeof React.Fragment;
+  }
   const { saveStoredEbdSession } = await import('../../src/lib/ebd-session-storage');
   const fixtureEntry = new URLSearchParams(location.search).get('entry') === '1';
   if (fixtureEntry) { const {clearStoredEbdSession}=await import('../../src/lib/ebd-session-storage'); clearStoredEbdSession(); }
@@ -79,11 +93,11 @@ if (location.pathname.includes('ebd-back')) {
     saveStoredEbdSession({ accessLevel:role, professorNome:role==='professor'?'Professor fictício':undefined, professorClassId:role==='professor'?'new':undefined, birthdayAiToken:'synthetic', birthdayAiExpiresAt:new Date(Date.now()+3600000).toISOString() });
     localStorage.setItem('ebd-test-initialized-design-v1','yes');
   }
-  createRoot(document.getElementById('root')!).render(<QueryClientProvider client={new QueryClient()}><BrowserRouter>
-    <Routes><Route path="/auth" element={<h1>Login do teste — saída confirmada</h1>}/><Route path="*" element={<Secretaria/>}/></Routes>
+  createRoot(document.getElementById('root')!).render(<QueryClientProvider client={new QueryClient()}><BrowserRouter><AccessProvider>
+    <Routes><Route path="/auth" element={<h1>Login do teste — saída confirmada</h1>}/><Route path="/" element={<h1>Área principal protegida — nunca deve montar após falha</h1>}/><Route path="*" element={<Secretaria/>}/></Routes>
     <aside className="bg-white border p-2 flex flex-wrap gap-2"><button onClick={()=>window.dispatchEvent(new Event("ebd-session-expired"))}>Simular confirmação de acesso</button><button onClick={()=>history.back()}>Voltar nativo (teste)</button><button onClick={()=>location.reload()}>Recarregar (teste)</button></aside>
     <Toaster/>
-  </BrowserRouter></QueryClientProvider>);
+  </AccessProvider></BrowserRouter></QueryClientProvider>);
 } else createRoot(document.getElementById('root')!).render(<>
   <header className="fixed inset-x-0 top-0 z-30 border-b bg-background px-4 py-3"><strong>Histórico</strong><p className="text-xs text-muted-foreground">Ambiente de teste · {role==='admin'?'Administrador':'Professor'}</p></header>
   <main className="mx-auto max-w-3xl px-4 pb-8 pt-20"><HistoricoTab classes={classes} students={students.filter(s=>s.active)} accessLevel={role}/></main>
