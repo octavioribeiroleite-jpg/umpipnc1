@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,7 @@ interface AttendanceListProps {
 }
 
 export function AttendanceList({ electionId, societyId, attendance, onRefresh, disabled }: AttendanceListProps) {
+  const nameId = useId();
   const [newName, setNewName] = useState('');
   const [importing, setImporting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -131,19 +133,20 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
-        <Input
+      <Label htmlFor={nameId}>Nome do membro</Label>
+      <div className="flex flex-wrap gap-2">
+        <Input id={nameId}
           aria-label="Nome do membro" placeholder="Nome do membro"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           disabled={disabled}
-          className="h-11 min-w-0"
+          className="min-h-[48px] min-w-0 flex-1 basis-[180px] text-base"
         />
-        <Button size="icon" className="h-11 w-11 shrink-0" aria-label="Adicionar membro à presença" onClick={handleAdd} disabled={disabled}>
+        <Button size="icon" className="min-h-[48px] min-w-[48px] shrink-0" aria-label="Adicionar membro à presença" onClick={handleAdd} disabled={disabled}>
           <Plus className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" className="h-11 shrink-0" aria-label="Importar membros" onClick={handleImportMembers} disabled={importing || disabled}>
+        <Button variant="outline" size="sm" className="min-h-[48px] shrink-0" aria-label="Importar membros" onClick={handleImportMembers} disabled={importing || disabled}>
           {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
         </Button>
       </div>
@@ -154,7 +157,7 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
             ? optimisticOverrides[item.id]
             : item.present;
           return (
-            <div key={item.id} className="flex min-h-11 items-center gap-3 py-1 px-1.5 rounded hover:bg-muted/50">
+            <div key={item.id} className="flex min-h-[48px] items-center gap-3 py-1 px-1.5 rounded hover:bg-muted/50">
               <Checkbox
                 id={`attendance-${item.id}`}
                 aria-label={`Presença de ${item.name}`}
@@ -162,9 +165,9 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
                 onCheckedChange={(checked) => handleToggle(item.id, !!checked)}
                 disabled={disabled}
               />
-              <label htmlFor={`attendance-${item.id}`} className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center break-words text-sm">{item.name}</label>
+              <label htmlFor={`attendance-${item.id}`} className="flex min-h-[48px] min-w-0 flex-1 cursor-pointer items-center [overflow-wrap:anywhere] text-base">{item.name}</label>
               {!disabled && (
-                <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive shrink-0" aria-label={`Remover ${item.name} da lista`} onClick={() => handleRemove(item.id)}>
+                <Button variant="ghost" size="icon" className="min-h-[48px] min-w-[48px] text-destructive shrink-0" aria-label={`Remover ${item.name} da lista`} onClick={() => handleRemove(item.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               )}

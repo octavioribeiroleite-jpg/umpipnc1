@@ -1,12 +1,12 @@
 import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -68,6 +68,13 @@ const roleColors: Record<string, string> = {
 
 export default function Configuracoes() {
   const { isAdmin, isPastor, user } = useAuth();
+  const [section, setSection] = useState('geral');
+  const [showPins, setShowPins] = useState(false);
+  const sections = [{id: 'geral', label: 'Geral'}, {id: 'financeiro', label: 'Financeiro'}, {id: 'integracoes', label: 'Integrações'}, ...(isAdmin ? [{id: 'usuarios', label: 'Usuários'}, {id: 'ebd', label: 'Secretaria EBD'}, {id: 'diretoria', label: 'PINs da Diretoria'}] : [])];
+  const goToSection = (id: string) => {
+    setSection(id);
+    document.getElementById(`settings-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersError, setUsersError] = useState(false);
@@ -319,84 +326,47 @@ export default function Configuracoes() {
     <AppLayout>
       <PageHeader title="Configurações" description="Gerencie as configurações do sistema" />
 
-      <div className="space-y-4 md:space-y-6">
+      <div className="grid min-w-0 gap-5 min-[1100px]:grid-cols-[240px_minmax(0,1fr)]">
+        <nav aria-label="Seções de configurações" className="min-w-0 min-[1100px]:sticky min-[1100px]:top-4 min-[1100px]:self-start">
+          <div className="min-[1100px]:hidden space-y-2"><Label htmlFor="settings-section">Seção</Label><select id="settings-section" value={section} onChange={event => goToSection(event.target.value)} className="w-full rounded-xl border border-input bg-card px-3 py-3 text-base">{sections.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></div>
+          <div className="hidden min-[1100px]:flex flex-col gap-2">{sections.map(item => <Button key={item.id} variant={section === item.id ? 'secondary' : 'ghost'} className="justify-start whitespace-normal text-left" aria-current={section === item.id ? 'location' : undefined} onClick={() => goToSection(item.id)}>{item.label}</Button>)}</div>
+        </nav>
+        <div className="min-w-0 space-y-5 max-w-[720px]">
         {/* General Settings */}
-        <Card>
+        <Card id="settings-geral" className="scroll-mt-4">
           <CardHeader>
             <CardTitle className="text-lg flex flex-wrap items-center gap-2">
               <Settings className="h-5 w-5" />
               Geral
             </CardTitle>
-            <CardDescription>Configurações gerais do sistema</CardDescription>
+            <CardDescription>Identificação atual do aplicativo.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="org-name">Nome da organização</Label>
-                <Input id="org-name" defaultValue="IPNC - Diretoria de Jovens" />
+                <Input id="org-name" value="IPNC - Diretoria de Jovens" readOnly />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="church-name">Nome da igreja</Label>
-                <Input id="church-name" defaultValue="Igreja Presbiteriana de Nova Carapina" />
+                <Input id="church-name" value="Igreja Presbiteriana de Nova Carapina" readOnly />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Financial Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex flex-wrap items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Financeiro
-            </CardTitle>
-            <CardDescription>Configurações de finanças e contribuições</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="membership-value">Valor padrão da contribuição</Label>
-                <Input id="membership-value" type="number" inputMode="decimal" defaultValue="50.00" />
-              </div>
-            </div>
-            <Separator />
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="min-w-0 flex-1 basis-52 space-y-1">
-                <Label htmlFor="require-receipt">Comprovante obrigatório para saídas</Label>
-                <p className="text-sm text-muted-foreground">
-                  Exige upload de comprovante para registrar despesas
-                </p>
-              </div>
-              <Switch id="require-receipt" defaultChecked />
-            </div>
-          </CardContent>
+        <Card id="settings-financeiro" className="scroll-mt-4">
+          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><DollarSign className="h-5 w-5" />Financeiro</CardTitle></CardHeader>
+          <CardContent className="space-y-4"><p className="text-base">Consulte e ajuste as contribuições nas configurações do módulo financeiro.</p><Button asChild variant="outline"><Link to="/financas?tab=mais">Abrir configurações financeiras</Link></Button></CardContent>
         </Card>
-
-        {/* Google Calendar Integration */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex flex-wrap items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Integração Google Calendar
-            </CardTitle>
-            <CardDescription>Sincronize eventos com seu Google Agenda</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="min-w-0 flex-1 basis-52 space-y-1">
-                <Label>Conectar Google Calendar</Label>
-                <p className="text-sm text-muted-foreground">
-                  Sincronize eventos automaticamente
-                </p>
-              </div>
-              <Button variant="outline">Conectar</Button>
-            </div>
-          </CardContent>
+        <Card id="settings-integracoes" className="scroll-mt-4">
+          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Calendar className="h-5 w-5" />Google Calendar</CardTitle></CardHeader>
+          <CardContent className="space-y-4"><p className="text-base">A conexão automática com o Google Calendar ainda não está disponível.</p><Button variant="outline" disabled>Conexão indisponível</Button></CardContent>
         </Card>
 
         {/* User Management (Admin only) */}
         {isAdmin && (
-          <Card>
+          <Card id="settings-usuarios" className="scroll-mt-4">
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -647,7 +617,7 @@ export default function Configuracoes() {
 
         {/* Secretaria EBD PINs (Admin only) */}
         {isAdmin && (
-          <Card>
+          <Card id="settings-ebd" className="scroll-mt-4">
             <CardHeader>
               <CardTitle className="text-lg flex flex-wrap items-center gap-2">
                 <BookOpen className="h-5 w-5" />
@@ -662,6 +632,7 @@ export default function Configuracoes() {
                 </div>
               ) : (
                 <>
+                  <Button variant="outline" onClick={() => setShowPins(value => !value)}>{showPins ? 'Ocultar PINs' : 'Mostrar PINs'}</Button>
                   {/* Admin profile */}
                   <div className="space-y-3">
                     <h3 className="font-medium text-sm flex flex-wrap items-center gap-2">
@@ -677,6 +648,8 @@ export default function Configuracoes() {
                           const v = e.target.value.replace(/\D/g, '').slice(0, 6);
                           setSecAdminPin(v);
                         }}
+                        type={showPins ? 'text' : 'password'}
+                        autoComplete="off"
                         inputMode="numeric"
                         maxLength={6}
                         placeholder="000000"
@@ -702,6 +675,8 @@ export default function Configuracoes() {
                           const v = e.target.value.replace(/\D/g, '').slice(0, 6);
                           setSecProfPin(v);
                         }}
+                        type={showPins ? 'text' : 'password'}
+                        autoComplete="off"
                         inputMode="numeric"
                         maxLength={6}
                         placeholder="000000"
@@ -725,7 +700,7 @@ export default function Configuracoes() {
 
         {/* Diretoria PINs (Admin only) */}
         {isAdmin && (
-          <Card>
+          <Card id="settings-diretoria" className="scroll-mt-4">
             <CardHeader>
               <CardTitle className="text-lg flex flex-wrap items-center gap-2">
                 <KeyRound className="h-5 w-5" />
@@ -740,6 +715,7 @@ export default function Configuracoes() {
                 </div>
               ) : (
                 <>
+                  <Button variant="outline" onClick={() => setShowPins(value => !value)}>{showPins ? 'Ocultar PINs' : 'Mostrar PINs'}</Button>
                   {/* PIN Geral */}
                   <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[40px_minmax(0,1fr)_180px]">
                     <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold shrink-0">
@@ -753,6 +729,8 @@ export default function Configuracoes() {
                         const v = e.target.value.replace(/\D/g, '').slice(0, 6);
                         setDirPins(prev => ({ ...prev, geral: v }));
                       }}
+                      type={showPins ? 'text' : 'password'}
+                      autoComplete="off"
                       inputMode="numeric"
                       maxLength={6}
                       placeholder="000000"
@@ -773,6 +751,8 @@ export default function Configuracoes() {
                         const v = e.target.value.replace(/\D/g, '').slice(0, 6);
                         setDirPins(prev => ({ ...prev, pastor: v }));
                       }}
+                      type={showPins ? 'text' : 'password'}
+                      autoComplete="off"
                       inputMode="numeric"
                       maxLength={6}
                       placeholder="000000"
@@ -796,6 +776,8 @@ export default function Configuracoes() {
                           const v = e.target.value.replace(/\D/g, '').slice(0, 6);
                           setDirPins(prev => ({ ...prev, [society.slug]: v }));
                         }}
+                        type={showPins ? 'text' : 'password'}
+                        autoComplete="off"
                         inputMode="numeric"
                         maxLength={6}
                         placeholder="000000"
@@ -816,6 +798,7 @@ export default function Configuracoes() {
           </Card>
         )}
 
+        </div>
       </div>
     </AppLayout>
   );

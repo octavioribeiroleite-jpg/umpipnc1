@@ -185,6 +185,8 @@ export function useEvents(month?: number, year?: number, societyId?: string) {
   return {
     events: eventsQuery.data || [],
     upcomingEvents: upcomingEventsQuery.data || [],
+    hasEventsSnapshot: eventsQuery.data !== undefined,
+    hasUpcomingSnapshot: upcomingEventsQuery.data !== undefined,
     isLoading: eventsQuery.isLoading,
     isError: eventsQuery.isError,
     isFetching: eventsQuery.isFetching,

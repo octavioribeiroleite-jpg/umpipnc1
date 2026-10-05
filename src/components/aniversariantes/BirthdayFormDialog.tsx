@@ -77,7 +77,7 @@ export function BirthdayFormDialog({ open, onOpenChange, birthday, onSave, onDel
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto">
+      <DialogContent size="form" className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{birthday ? 'Editar aniversariante' : 'Novo aniversariante'}</DialogTitle>
           <DialogDescription>Informe o nome e a data do aniversário. O ano de nascimento é opcional.</DialogDescription>

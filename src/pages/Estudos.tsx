@@ -198,7 +198,7 @@ export default function Estudos() {
   if (selectedStudy) {
     return (
       <AppLayout>
-        <div className="min-w-0 space-y-4 max-w-3xl mx-auto">
+        <div className="min-w-0 space-y-4 max-w-[760px] mx-auto">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" aria-label="Voltar à lista de estudos" onClick={handleBack}>
               <ArrowLeft className="h-5 w-5" />
@@ -252,7 +252,7 @@ export default function Estudos() {
                 </div>
               </CardHeader>
               <CardContent>
-                <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] text-sm font-sans leading-relaxed">
+                <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] text-base font-sans leading-[1.625]">
                   {selectedStudy.ai_summary}
                 </pre>
               </CardContent>
@@ -266,7 +266,7 @@ export default function Estudos() {
   // Studies list view
   return (
     <AppLayout>
-      <div className="min-w-0 space-y-4 max-w-3xl mx-auto">
+      <div className="min-w-0 space-y-4 max-w-[760px] mx-auto">
         <PageHeader
           title="Estudos"
           description="Anotações dos estudos bíblicos de sexta-feira"
@@ -360,7 +360,7 @@ export default function Estudos() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] text-sm font-sans leading-relaxed">
+                      <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] text-base font-sans leading-[1.625]">
                         {report}
                       </pre>
                     </CardContent>

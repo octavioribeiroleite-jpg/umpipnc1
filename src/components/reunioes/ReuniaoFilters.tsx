@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Search, SlidersHorizontal } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Label } from '@/components/ui/label';
+import { Search } from 'lucide-react';
 
 interface ReuniaoFiltersProps {
   onStatusChange: (status: string) => void;
@@ -17,8 +14,6 @@ export function ReuniaoFilters({ onStatusChange, onMonthChange, onSearchChange }
   const [search, setSearch] = useState('');
   const [statusValue, setStatusValue] = useState('all');
   const [monthValue, setMonthValue] = useState('all');
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const isMobile = useIsMobile();
 
   const currentYear = new Date().getFullYear();
   const months = [
@@ -52,84 +47,29 @@ export function ReuniaoFilters({ onStatusChange, onMonthChange, onSearchChange }
     onMonthChange(value);
   };
 
-  const activeFiltersCount = (statusValue !== 'all' ? 1 : 0) + (monthValue !== 'all' ? 1 : 0);
-
-  const filterSelects = (
-    <>
-      <Select onValueChange={handleStatusChange} value={statusValue}>
-        <SelectTrigger aria-label="Filtrar por status" className="w-full sm:w-[150px]">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas</SelectItem>
-          <SelectItem value="aberta">Abertas</SelectItem>
-          <SelectItem value="fechada">Fechadas</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select onValueChange={handleMonthChange} value={monthValue}>
-        <SelectTrigger aria-label="Filtrar por mês" className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Mês" />
-        </SelectTrigger>
-        <SelectContent>
-          {months.map((month) => (
-            <SelectItem key={month.value} value={month.value}>
-              {month.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </>
-  );
-
-  if (isMobile) {
-    return (
-      <div className="flex flex-col gap-2 mb-4">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              aria-label="Buscar reuniões por título" placeholder="Buscar por título..."
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" size="icon" className="relative shrink-0" aria-label="Filtros de reuniões">
-                <SlidersHorizontal className="h-4 w-4" />
-                {activeFiltersCount > 0 && (
-                  <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                    {activeFiltersCount}
-                  </Badge>
-                )}
-              </Button>
-            </CollapsibleTrigger>
-          </Collapsible>
-        </div>
-        <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <CollapsibleContent>
-            <div className="flex flex-col gap-2 pt-1">
-              {filterSelects}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mb-6">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          aria-label="Buscar reuniões por título" placeholder="Buscar por título..."
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="pl-9"
-        />
+    <div className="mb-6 grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)_minmax(0,200px)]">
+      <div className="space-y-2">
+        <Label htmlFor="meeting-search">Buscar reuniões</Label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input id="meeting-search" placeholder="Buscar por título…" value={search} onChange={event => handleSearchChange(event.target.value)} className="pl-9" />
+        </div>
       </div>
-      {filterSelects}
+      <div className="space-y-2">
+        <Label htmlFor="meeting-status">Situação</Label>
+        <Select onValueChange={handleStatusChange} value={statusValue}>
+          <SelectTrigger id="meeting-status"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="all">Todas</SelectItem><SelectItem value="aberta">Abertas</SelectItem><SelectItem value="fechada">Fechadas</SelectItem></SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="meeting-month">Mês</Label>
+        <Select onValueChange={handleMonthChange} value={monthValue}>
+          <SelectTrigger id="meeting-month"><SelectValue /></SelectTrigger>
+          <SelectContent>{months.map(month => <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

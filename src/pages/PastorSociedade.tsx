@@ -1,6 +1,9 @@
 import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -13,6 +16,7 @@ import {
   Users,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,12 +35,13 @@ interface Society {
 
 export default function PastorSociedade() {
   const { slug } = useParams<{ slug: string }>();
+  const { user } = useAuth();
   const [society, setSociety] = useState<Society | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
-  const [lookupError, setLookupError] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [summaryData, setSummaryData] = useState<any>(null);
+  const read = useSnapshotRead(`pastor-society:${user?.id ?? ''}:${slug ?? ''}`);
+  const summaryRead = useSnapshotRead(`pastor-society-summary:${user?.id ?? ''}:${slug ?? ''}`);
+  const { run } = read;
+  const { run: runSummary } = summaryRead;
+  const [summaryData, setSummaryData] = useState<{ summaries?: { geral?: string } } | null>(null);
   const [stats, setStats] = useState({
     saldo: 0,
     entradas: 0,
@@ -47,57 +52,44 @@ export default function PastorSociedade() {
     tasksDone: 0,
     meetingsTotal: 0,
   });
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [meetings, setMeetings] = useState<Pick<Tables<'meetings'>, 'id' | 'title' | 'date' | 'status'>[]>([]);
+  const [tasks, setTasks] = useState<Pick<Tables<'tasks'>, 'id' | 'title' | 'status' | 'priority' | 'due_date'>[]>([]);
+  const [members, setMembers] = useState<Pick<Tables<'members'>, 'id' | 'name' | 'active' | 'phone' | 'email'>[]>([]);
 
-  const loadSociety = useCallback(() => {
-    if (!slug) return;
-    setLoading(true);
-    setLookupError(false);
-    supabase
-      .from('societies')
-      .select('*')
-      .eq('slug', slug)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error || !data) { setLookupError(true); setLoading(false); return; }
-        setSociety(data as Society);
-      });
-  }, [slug]);
-  useEffect(() => { loadSociety(); }, [loadSociety]);
+  const fetchSummary = useCallback(async (societyId: string, force = false) => {
+    await runSummary(async () => {
+      const { data, error } = await supabase.functions.invoke('summarize-for-pastor', { body: { society_id: societyId, ...(force ? { force: true } : {}) } });
+      if (error || data?.error) throw error || new Error(data.error);
+      return () => setSummaryData(data ?? null);
+    });
+  }, [runSummary]);
 
-  useEffect(() => {
-    if (society) void fetchData();
-  }, [society]);
-
-  const fetchData = async (force = false) => {
-    if (!society) return;
-    if (force) setRefreshing(true);
-    else setLoading(true);
-
-    try {
-      const [meetingsRes, tasksRes, membersRes, transRes, aiRes] = await Promise.all([
+  const fetchData = useCallback(async (force = false) => {
+    if (!slug || !user) return;
+    await run(async () => {
+      const { data: societyData, error: societyError } = await supabase.from('societies').select('*').eq('slug', slug).maybeSingle();
+      if (societyError) throw societyError;
+      if (!societyData) return () => setSociety(null);
+      const currentSociety = societyData as Society;
+      void fetchSummary(currentSociety.id, force);
+      const [meetingsRes, tasksRes, membersRes, transRes] = await Promise.all([
         supabase
           .from('meetings')
           .select('id, title, date, status')
-          .eq('society_id', society.id)
+          .eq('society_id', currentSociety.id)
           .order('date', { ascending: false })
           .limit(5),
         supabase
           .from('tasks')
           .select('id, title, status, priority, due_date')
-          .eq('society_id', society.id),
+          .eq('society_id', currentSociety.id),
         supabase
           .from('members')
           .select('id, name, active, phone, email')
-          .eq('society_id', society.id)
+          .eq('society_id', currentSociety.id)
           .eq('active', true)
           .order('name'),
-        supabase.from('transactions').select('amount, type').eq('society_id', society.id),
-        supabase.functions.invoke('summarize-for-pastor', {
-          body: { society_id: society.id, ...(force ? { force: true } : {}) },
-        }),
+        supabase.from('transactions').select('amount, type').eq('society_id', currentSociety.id),
       ]);
 
       const failed = [meetingsRes, tasksRes, membersRes, transRes].find(result => result.error);
@@ -117,10 +109,7 @@ export default function PastorSociedade() {
       }
 
       const allMeetings = meetingsRes.data || [];
-      setMeetings(allMeetings);
       const allTasks = tasksRes.data || [];
-      setTasks(allTasks.filter((task) => task.status !== 'done').slice(0, 5));
-      setMembers(allMembers);
 
       const transactions = transRes.data || [];
       const entradas = transactions
@@ -130,7 +119,7 @@ export default function PastorSociedade() {
         .filter((transaction) => transaction.type === 'saida')
         .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 
-      setStats({
+      const nextStats = {
         saldo: mensalidades + entradas - saidas,
         entradas,
         saidas,
@@ -139,22 +128,19 @@ export default function PastorSociedade() {
         tasksPending: allTasks.filter((task) => task.status !== 'done').length,
         tasksDone: allTasks.filter((task) => task.status === 'done').length,
         meetingsTotal: allMeetings.length,
-      });
+      };
+      return () => {
+        setSociety(currentSociety); setMeetings(allMeetings);
+        setTasks(allTasks.filter(task => task.status !== 'done').slice(0, 5));
+        setMembers(allMembers); setStats(nextStats);
+      };
+    });
+  }, [slug, user, run, fetchSummary]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
 
-      if (aiRes.data?.summaries) setSummaryData(aiRes.data);
-      setLoadError(false);
-    } catch (error) {
-      setLoadError(true);
-      console.error(error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  if (!read.hasSnapshot && read.error) return <PastorLayout><Button asChild variant="outline" className="mb-4"><Link to="/pastor">Voltar ao painel</Link></Button><QueryErrorState message="Não foi possível consultar os dados da sociedade." onRetry={() => void fetchData()} retrying={read.loading} /></PastorLayout>;
 
-  if (lookupError || loadError) return <PastorLayout><QueryErrorState message="Não foi possível consultar os dados da sociedade." onRetry={() => { if (lookupError) loadSociety(); else void fetchData(); }} retrying={loading || refreshing} /></PastorLayout>;
-
-  if (!society || loading) {
+  if (!read.hasSnapshot) {
     return (
       <PastorLayout>
         <div className="flex flex-col items-center justify-center gap-4 py-16">
@@ -165,13 +151,15 @@ export default function PastorSociedade() {
       </PastorLayout>
     );
   }
+  if (!society) return <PastorLayout><Card><CardContent className="p-6 space-y-4"><h1 className="text-2xl font-bold">Sociedade não encontrada</h1><p className="text-base text-muted-foreground">Esta sociedade não está disponível para consulta.</p><Button asChild><Link to="/pastor">Voltar ao painel</Link></Button></CardContent></Card></PastorLayout>;
 
-  const balanceNumber = Math.abs(stats.saldo).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  const formattedBalance = `R$ ${stats.saldo < 0 ? '-' : ''}${balanceNumber}`;
+  const formattedBalance = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.saldo);
 
   return (
     <PastorLayout>
       <div className="space-y-5 md:space-y-6">
+        <Button asChild variant="outline"><Link to="/pastor">Voltar ao painel</Link></Button>
+        {read.error && <QueryErrorState message="Não foi possível atualizar os dados da sociedade." onRetry={() => void fetchData()} retrying={read.loading} hasPreviousData={read.hasSnapshot} />}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div
@@ -182,17 +170,69 @@ export default function PastorSociedade() {
             </div>
             <div className="min-w-0">
               <h1 className="min-w-0 whitespace-normal break-words text-2xl font-bold">{society.name}</h1>
-              <p className="text-xs text-muted-foreground sm:text-sm">Dados da sociedade</p>
+              <p className="text-sm text-muted-foreground">Visão atual da sociedade · últimas 5 reuniões</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => fetchData(true)} disabled={refreshing}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <Button variant="outline" onClick={() => void fetchData(true)} disabled={read.loading || summaryRead.loading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${read.loading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
         </div>
 
-        {summaryData?.summaries?.geral && (
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Reuniões Recentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {meetings.length > 0 ? (
+              <div className="space-y-2">
+                {meetings.map((meeting) => (
+                  <div key={meeting.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-base last:border-0">
+                    <span className="font-medium">{meeting.title}</span>
+                    <Badge variant="outline">
+                      {format(new Date(meeting.date), 'dd/MM/yy', { locale: ptBR })}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-base text-muted-foreground">Nenhuma reunião registrada.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Tarefas Pendentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {tasks.length > 0 ? (
+              <div className="space-y-2">
+                {tasks.map((task) => (
+                  <div key={task.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-base last:border-0">
+                    <div>
+                      <span className="font-medium">{task.title}</span>
+                      {task.due_date && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          até {format(new Date(task.due_date), 'dd/MM', { locale: ptBR })}
+                        </span>
+                      )}
+                    </div>
+                    <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'} className="text-xs">
+                      {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-base text-muted-foreground">Nenhuma tarefa pendente.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {summaryRead.error && <QueryErrorState message="Não foi possível consultar o resumo desta sociedade." onRetry={() => void fetchSummary(society.id)} retrying={summaryRead.loading} hasPreviousData={summaryRead.hasSnapshot} />}
+        {summaryRead.hasSnapshot && summaryData?.summaries?.geral && (
+          <Card className="border-primary/20 bg-primary/5">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -200,7 +240,7 @@ export default function PastorSociedade() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm leading-relaxed text-muted-foreground">{summaryData.summaries.geral}</p>
+              <p className="text-base leading-6 text-muted-foreground">{summaryData.summaries.geral}</p>
             </CardContent>
           </Card>
         )}
@@ -239,9 +279,9 @@ export default function PastorSociedade() {
             density="compact"
           />
           <SummaryCard
-            label="Reuniões"
+            label="Reuniões consultadas"
             value={stats.meetingsTotal}
-            meta="registradas"
+            meta="últimos 5 registros"
             icon={Calendar}
             tone="neutral"
             density="compact"
@@ -251,63 +291,12 @@ export default function PastorSociedade() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Reuniões Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {meetings.length > 0 ? (
-              <div className="space-y-2">
-                {meetings.map((meeting) => (
-                  <div key={meeting.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm last:border-0">
-                    <span className="font-medium">{meeting.title}</span>
-                    <Badge variant="outline">
-                      {format(new Date(meeting.date), 'dd/MM/yy', { locale: ptBR })}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm italic text-muted-foreground">Nenhuma reunião registrada.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Tarefas Pendentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {tasks.length > 0 ? (
-              <div className="space-y-2">
-                {tasks.map((task) => (
-                  <div key={task.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm last:border-0">
-                    <div>
-                      <span className="font-medium">{task.title}</span>
-                      {task.due_date && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          até {format(new Date(task.due_date), 'dd/MM', { locale: ptBR })}
-                        </span>
-                      )}
-                    </div>
-                    <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'} className="text-xs">
-                      {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm italic text-muted-foreground">Nenhuma tarefa pendente.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
             <CardTitle className="text-base">Membros Ativos ({members.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {members.map((member) => (
-                <div key={member.id} className="py-1 text-sm">
+                <div key={member.id} className="py-2 text-base">
                   <p className="font-medium">{member.name}</p>
                 </div>
               ))}

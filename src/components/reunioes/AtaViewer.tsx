@@ -68,7 +68,7 @@ function formatMinutesDisplay(text: string) {
         
         // Regular content
         return (
-          <p key={index} className="text-sm leading-relaxed">
+          <p key={index} className="text-base leading-6">
             {trimmedLine}
           </p>
         );
@@ -102,7 +102,7 @@ interface AtaViewerProps {
   editable?: boolean;
   canManage?: boolean;
   onClose?: (finalMinutes: string) => void;
-  onUpdateMinutes?: (newMinutes: string) => void;
+  onUpdateMinutes?: (newMinutes: string) => void | Promise<void>;
 }
 
 interface AISuggestion {
@@ -130,6 +130,8 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
   const [finalMinutes, setFinalMinutes] = useState(meeting.final_minutes || '');
   const [generating, setGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [editedMinutes, setEditedMinutes] = useState('');
 
   useEffect(() => {
@@ -183,7 +185,7 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
     };
 
     fetchData();
-  }, [meeting]);
+  }, [meeting.id, meeting.moderator_id, meeting.contributions_revealed, meeting.ai_organized]);
 
   const generateMinutes = () => {
     const lines: string[] = [];
@@ -281,15 +283,17 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
   // Show minutes if they exist (regardless of meeting status)
   if (meeting.final_minutes) {
     const handleStartEdit = () => {
+      setSaveError('');
       setEditedMinutes(meeting.final_minutes || '');
       setIsEditing(true);
     };
 
-    const handleSaveEdit = () => {
-      if (onUpdateMinutes && editedMinutes.trim()) {
-        onUpdateMinutes(editedMinutes);
-        setIsEditing(false);
-      }
+    const handleSaveEdit = async () => {
+      if (!onUpdateMinutes || !editedMinutes.trim() || savingEdit) return;
+      setSavingEdit(true); setSaveError('');
+      try { await onUpdateMinutes(editedMinutes); setIsEditing(false); }
+      catch { setSaveError('Não foi possível salvar a ata. Seu texto foi preservado.'); }
+      finally { setSavingEdit(false); }
     };
 
     const handleCancelEdit = () => {
@@ -324,29 +328,32 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
               {participantNames.length} participantes
             </span>
           </div>
+          <p className="text-sm text-muted-foreground">{meeting.status === 'fechada' ? 'Ata da reunião finalizada.' : 'Rascunho da ata. Revise o texto antes de finalizar e compartilhar.'}</p>
           <Separator className="my-4" />
+          {saveError && <p role="alert" className="mb-4 text-destructive">{saveError}</p>}
           
           {isEditing ? (
             <div className="space-y-4">
               <Textarea aria-label="Texto da ata"
+                disabled={savingEdit}
                 value={editedMinutes}
                 onChange={(e) => setEditedMinutes(e.target.value)}
                 rows={20}
-                className="text-sm leading-relaxed"
+                className="text-base leading-6"
               />
               <div className="flex flex-wrap justify-end gap-2">
-                <Button variant="outline" onClick={handleCancelEdit}>
+                <Button variant="outline" onClick={handleCancelEdit} disabled={savingEdit}>
                   <X className="h-4 w-4 mr-2" />
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveEdit}>
+                <Button onClick={handleSaveEdit} disabled={savingEdit || !editedMinutes.trim()}>
                   <Save className="h-4 w-4 mr-2" />
                   Salvar Alterações
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="prose prose-sm break-words max-w-none dark:prose-invert">
+            <div className="prose prose-base break-words max-w-none dark:prose-invert">
               {formatMinutesDisplay(meeting.final_minutes || '')}
             </div>
           )}
@@ -378,7 +385,7 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
           onChange={(e) => setFinalMinutes(e.target.value)}
           placeholder="Cole ou edite a ata da reunião aqui..."
           rows={20}
-          className="text-sm leading-relaxed"
+          className="text-base leading-6"
         />
 
         <div className="flex flex-wrap justify-end gap-2">

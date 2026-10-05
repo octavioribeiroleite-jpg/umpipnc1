@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, CheckCircle2, XCircle, Trophy, PlayCircle, StopCircle, Download, Lock, LockOpen, UserPlus, Plus, X, Pencil } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle2, XCircle, PlayCircle, StopCircle, Download, Lock, LockOpen, UserPlus, Plus, X, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { generateEbdAttendancePDF } from '@/utils/generateEbdPDF';
 import { useEbdAttendanceQueue } from '@/hooks/useEbdAttendanceQueue';
@@ -165,18 +165,6 @@ export default function ChamadaTab({ attendanceQueue: suppliedQueue, classes, st
     const pctB = statsB.total > 0 ? statsB.present / statsB.total : 0;
     return pctB - pctA;
   });
-
-  const getColorClass = (pct: number) => {
-    if (pct > 70) return 'border-green-500/30 bg-green-500/5';
-    if (pct >= 40) return 'border-yellow-500/30 bg-yellow-500/5';
-    return 'border-red-500/30 bg-red-500/5';
-  };
-
-  const getPercentColor = (pct: number) => {
-    if (pct > 70) return 'text-green-600';
-    if (pct >= 40) return 'text-yellow-600';
-    return 'text-red-600';
-  };
 
   const getStatusBadge = (classId: string) => {
     const status = getClassChamadaStatus(classId);
@@ -367,14 +355,14 @@ export default function ChamadaTab({ attendanceQueue: suppliedQueue, classes, st
                 {visitorList.map(v => (
                   <div key={v.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-background border border-border/60">
                     <UserPlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className={`flex-1 text-sm min-w-0 whitespace-normal break-words ${v.name ? '' : 'text-muted-foreground italic'}`}>
+                    <span className={`flex-1 text-base min-w-0 whitespace-normal break-words ${v.name ? '' : 'text-muted-foreground italic'}`}>
                       {v.name || 'Visitante sem nome'}
                     </span>
                     {!isReadOnly && onRemoveClassVisitor && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        className="h-12 w-12 text-muted-foreground hover:text-destructive"
                         aria-label={`Remover visitante ${v.name || "sem nome"}`}
                         onClick={() => onRemoveClassVisitor?.(selectedClass.id, v.id)}
                       >
@@ -587,7 +575,7 @@ export default function ChamadaTab({ attendanceQueue: suppliedQueue, classes, st
       {unknownCount > 0 && <Button variant="outline" onClick={() => void verifyPending()}>Conferir marcações sem confirmação</Button>}
       {/* Classes grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {sortedClasses.map((cls, index) => {
+        {sortedClasses.map((cls) => {
           const stats = getClassStats(cls.id);
           const pct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
           const classVis = (classVisitors[cls.id] || []).length;
@@ -595,7 +583,7 @@ export default function ChamadaTab({ attendanceQueue: suppliedQueue, classes, st
           return (
             <Card data-ebd-card
               key={cls.id}
-              className={`cursor-pointer hover:shadow-md transition-all ${getColorClass(pct)}`}
+              className="min-h-36 cursor-pointer bg-card border-border hover:bg-accent/50 transition-colors"
               role="button"
               tabIndex={0}
               aria-label={`Abrir chamada de ${cls.name}`}
@@ -604,9 +592,6 @@ export default function ChamadaTab({ attendanceQueue: suppliedQueue, classes, st
             >
               <CardContent data-ebd-content className="pt-4 pb-4 space-y-2">
                 <div className="flex items-center gap-2">
-                  {index === 0 && stats.present > 0 && (
-                    <Trophy className="h-4 w-4 text-yellow-500 shrink-0" />
-                  )}
                   <Users className="h-4 w-4 text-primary shrink-0" />
                   <span className="min-w-0 flex-1 break-words font-medium text-base">{cls.name}</span>
                   <div className="ml-auto shrink-0">
@@ -619,7 +604,7 @@ export default function ChamadaTab({ attendanceQueue: suppliedQueue, classes, st
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-xs text-muted-foreground">{stats.present}/{stats.total} presentes</span>
-                  <span className={`text-xs font-semibold ${getPercentColor(pct)}`}>{pct}%</span>
+                  <span className="text-[.8125rem] font-semibold tabular-nums text-muted-foreground">{pct}%</span>
                 </div>
                 <Progress value={pct} className="h-1.5" />
                 {classVis > 0 && (

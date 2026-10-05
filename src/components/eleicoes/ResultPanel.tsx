@@ -11,6 +11,7 @@ interface ResultPanelProps {
   totalPresent: number;
   candidates: { id: string; name: string; photo_url: string | null; photo_urls?: string[] | null; birth_date?: string | null }[];
   election?: { seats_count?: number; current_round?: number; majority_rule?: string };
+  presentation?: boolean;
 }
 
 function getCandidatePhoto(candidate: { photo_url: string | null; photo_urls?: string[] | null }): string | null {
@@ -18,7 +19,7 @@ function getCandidatePhoto(candidate: { photo_url: string | null; photo_urls?: s
   return candidate.photo_url || null;
 }
 
-export function ResultPanel({ electionId, totalPresent, candidates, election }: ResultPanelProps) {
+export function ResultPanel({ electionId, totalPresent, candidates, election, presentation = false }: ResultPanelProps) {
   const [roundResults, setRoundResults] = useState<ElectionRoundResult[]>([]);
 
   const { seats_count, current_round, majority_rule } = election || {};
@@ -47,13 +48,13 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
   if (!hasSnapshot) return readFailure || <p role="status" className="py-8 text-center text-muted-foreground">Consultando resultado…</p>;
 
   return (
-    <div className="space-y-4">
+    <div className={presentation ? 'min-w-0 space-y-6 text-lg' : 'min-w-0 space-y-4'}>
       {readFailure}
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <Trophy className="h-5 w-5 text-warning" />
-          <h3 className="font-semibold text-foreground">Resultado da Eleição</h3>
+          <h3 className={presentation ? 'text-2xl font-semibold text-foreground' : 'font-semibold text-foreground'}>Resultado da Eleição</h3>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">
@@ -108,7 +109,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
 
                   <div className={`h-24 w-24 overflow-hidden rounded-full border-4 ${pos.border} shadow-lg ring-4 ${pos.ring}`}>
                     {photo ? (
-                      <img src={photo} alt={c?.name} className="h-full w-full object-cover" />
+                      <img src={photo} alt={c?.name} className="h-full w-full object-contain" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-muted">
                         <CheckCircle className="h-10 w-10 text-success" />
@@ -117,7 +118,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                   </div>
 
                   <div className="text-center">
-                    <p className="break-words text-base font-extrabold text-foreground leading-tight">
+                    <p className={`${presentation ? 'text-[2rem]' : 'text-base'} [overflow-wrap:anywhere] font-extrabold text-foreground leading-tight`}>
                       {c?.name || 'Desconhecido'}
                     </p>
                     <p className="text-xs font-semibold text-muted-foreground mt-0.5">{pos.label}</p>
@@ -150,7 +151,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
           return (
             <div
               key={roundResult.round}
-              className="space-y-3 rounded-xl border border-border/60 bg-background p-4"
+              className={`space-y-3 rounded-2xl border border-border/60 bg-card ${presentation ? 'p-[24px] min-[700px]:p-[32px]' : 'p-[16px]'}`}
             >
               {/* Header do escrutínio */}
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -164,7 +165,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className={`flex flex-wrap items-center gap-3 text-muted-foreground ${presentation ? 'text-base' : 'text-sm'}`}>
                   <span className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
                     {roundResult.totalBallots} cédulas
@@ -191,7 +192,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                   return (
                     <div key={r.candidate_id} className="space-y-1">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 min-w-0">
                           {elected ? (
                             <CheckCircle className="h-4 w-4 text-success shrink-0" />
                           ) : isLeading ? (
@@ -202,7 +203,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                             </span>
                           )}
                           <span
-                            className={`min-w-0 break-words text-sm ${
+                            className={`min-w-0 [overflow-wrap:anywhere] ${presentation ? 'text-2xl' : 'text-base'} ${
                               elected || isLeading ? 'font-semibold text-foreground' : 'text-muted-foreground'
                             }`}
                           >
@@ -214,7 +215,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-xs shrink-0">
+                        <div className={`flex flex-wrap items-center gap-2 ${presentation ? 'text-xl' : 'text-sm'}`}>
                           <span className="font-semibold text-foreground tabular-nums">
                             {r.count} votos
                           </span>

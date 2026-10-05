@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,8 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
   const [items, setItems] = useState<AgendaItem[]>(agendaItems);
   const [newItem, setNewItem] = useState({ title: '', description: '' });
   const [saving, setSaving] = useState(false);
+  const [editDraft, setEditDraft] = useState({ title: '', description: '' });
+  useEffect(() => { setItems(agendaItems); }, [agendaItems]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const handleAddItem = async () => {
@@ -56,7 +58,7 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
 
       if (error) throw error;
 
-      setItems([...items, data]);
+      setItems(previous => [...previous, data]);
       setNewItem({ title: '', description: '' });
       onUpdate();
       
@@ -77,18 +79,20 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
   };
 
   const handleUpdateItem = async (item: AgendaItem) => {
+    if (!editDraft.title.trim() || saving) return;
     setSaving(true);
     try {
       const { error } = await supabase
         .from('agenda_items')
         .update({
-          title: item.title,
-          description: item.description,
+          title: editDraft.title.trim(),
+          description: editDraft.description || null,
         })
         .eq('id', item.id);
 
       if (error) throw error;
 
+      setItems(previous => previous.map(current => current.id === item.id ? { ...current, title: editDraft.title.trim(), description: editDraft.description || null } : current));
       setEditingId(null);
       onUpdate();
       
@@ -136,12 +140,6 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
     }
   };
 
-  const handleItemChange = (itemId: string, field: 'title' | 'description', value: string) => {
-    setItems(items.map(item => 
-      item.id === itemId ? { ...item, [field]: value } : item
-    ));
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -167,24 +165,24 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
                   {editingId === item.id && canManage && !disabled ? (
                     <>
                       <Label htmlFor={`agenda-title-${item.id}`}>Título do item</Label>
-                      <Input id={`agenda-title-${item.id}`}
-                        value={item.title}
-                        onChange={(e) => handleItemChange(item.id, 'title', e.target.value)}
+                      <Input disabled={saving} id={`agenda-title-${item.id}`}
+                        value={editDraft.title}
+                        onChange={(e) => setEditDraft(previous => ({ ...previous, title: e.target.value }))}
                         placeholder="Título do item"
                       />
                       <Label htmlFor={`agenda-description-${item.id}`}>Descrição</Label>
-                      <Textarea id={`agenda-description-${item.id}`}
-                        value={item.description || ''}
-                        onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                      <Textarea disabled={saving} id={`agenda-description-${item.id}`}
+                        value={editDraft.description}
+                        onChange={(e) => setEditDraft(previous => ({ ...previous, description: e.target.value }))}
                         placeholder="Descrição (opcional)"
-                        rows={2}
+                        rows={4}
                       />
                       <div className="flex gap-2">
                         <Button size="sm" onClick={() => handleUpdateItem(item)} disabled={saving}>
                           {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                           <span className="ml-1">Salvar</span>
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                        <Button size="sm" variant="outline" disabled={saving} onClick={() => setEditingId(null)}>
                           Cancelar
                         </Button>
                       </div>
@@ -193,7 +191,7 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
                     <>
                       <p className="break-words font-medium">{item.title}</p>
                       {item.description && (
-                        <p className="break-words text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+                        <p className="break-words text-base leading-6 text-muted-foreground">{item.description}</p>
                       )}
                     </>
                   )}
@@ -203,7 +201,8 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setEditingId(item.id)}
+                      disabled={saving || editingId !== null}
+                      onClick={() => { setEditDraft({ title: item.title, description: item.description || '' }); setEditingId(item.id); }}
                     >
                       Editar
                     </Button>
@@ -227,17 +226,17 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
           <div className="border-t pt-4 space-y-3">
             <h4 className="font-medium text-sm">Adicionar Item</h4>
             <Label htmlFor="new-agenda-title">Título</Label>
-            <Input id="new-agenda-title"
+            <Input disabled={saving} id="new-agenda-title"
               value={newItem.title}
               onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
               placeholder="Título do item de pauta"
             />
             <Label htmlFor="new-agenda-description">Descrição (opcional)</Label>
-            <Textarea id="new-agenda-description"
+            <Textarea disabled={saving} id="new-agenda-description"
               value={newItem.description}
               onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
               placeholder="Descrição (opcional)"
-              rows={2}
+              rows={4}
             />
             <Button onClick={handleAddItem} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}

@@ -1,3 +1,4 @@
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useId, useState, useEffect, useCallback } from 'react';
@@ -79,7 +80,6 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [lotDialogCampaign, setLotDialogCampaign] = useState<ShirtCampaign | null>(null);
   const [historyCampaign, setHistoryCampaign] = useState<ShirtCampaign | null>(null);
   const [editCampaign, setEditCampaign] = useState<ShirtCampaign | null>(null);
@@ -334,11 +334,12 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 min-[800px]:grid-cols-2 min-[1280px]:grid-cols-3">
           {campaigns.map((campaign) => {
             const ordered = orderedByCampaign[campaign.id] || 0;
             const purchased = Number(campaign.purchased_quantity || 0);
             const available = Math.max(0, purchased - ordered);
+            const shortage = Math.max(0, ordered - purchased);
             const selected = selectedCampaignId === campaign.id;
             const soldOut = available === 0 && purchased > 0;
             const progress = purchased > 0 ? Math.min(100, (ordered / purchased) * 100) : 0;
@@ -351,8 +352,8 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="min-w-0 whitespace-normal break-words text-base font-semibold">{campaign.name}</h4>
-                        <Badge variant="secondary" className="font-medium">{soldOut ? 'Esgotada' : 'Ativa'}</Badge>
+                        <h4 className="min-w-0 whitespace-normal break-words text-lg font-semibold">{campaign.name}</h4>
+                        <Badge variant="secondary" className="font-medium">{shortage ? 'Estoque insuficiente' : soldOut ? 'Esgotada' : 'Ativa'}</Badge>
                         <Badge variant="outline" className="font-medium">
                           <Layers3 className="mr-1 h-3 w-3" />{lots.length || 1} lote{(lots.length || 1) !== 1 ? 's' : ''}
                         </Badge>
@@ -370,61 +371,17 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                       </div>
                     </div>
 
-                    <div className="relative shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-11 w-11"
-                        aria-label={`Opções da campanha ${campaign.name}`}
-                        aria-expanded={menuOpenId === campaign.id}
-                        onClick={() => setMenuOpenId(menuOpenId === campaign.id ? null : campaign.id)}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                      {menuOpenId === campaign.id && (
-                        <div className="absolute right-0 top-12 z-20 w-48 rounded-md border bg-popover p-1 shadow-lg">
-                          <button
-                            className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-muted"
-                            onClick={() => {
-                              setMenuOpenId(null);
-                              openEditCampaign(campaign);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />Editar campanha
-                          </button>
-                          <button
-                            className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-muted"
-                            onClick={() => {
-                              setMenuOpenId(null);
-                              resetLotForm(campaign);
-                              setLotDialogCampaign(campaign);
-                            }}
-                          >
-                            <PackagePlus className="h-4 w-4" />Adicionar novo lote
-                          </button>
-                          <button
-                            className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-muted"
-                            onClick={() => {
-                              setMenuOpenId(null);
-                              setHistoryCampaign(campaign);
-                            }}
-                          >
-                            <History className="h-4 w-4" />Ver histórico de lotes
-                          </button>
-                          <button
-                            className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm text-destructive hover:bg-muted"
-                            onClick={() => {
-                              setMenuOpenId(null);
-                              requestDelete(campaign);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />Excluir campanha
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label={`Opções da campanha ${campaign.name}`}><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem className="min-h-12" onSelect={() => openEditCampaign(campaign)}><Pencil className="mr-2 h-4 w-4" />Editar campanha</DropdownMenuItem>
+                        <DropdownMenuItem className="min-h-12" onSelect={() => { resetLotForm(campaign); setLotDialogCampaign(campaign); }}><PackagePlus className="mr-2 h-4 w-4" />Adicionar novo lote</DropdownMenuItem>
+                        <DropdownMenuItem className="min-h-12" onSelect={() => setHistoryCampaign(campaign)}><History className="mr-2 h-4 w-4" />Ver histórico de lotes</DropdownMenuItem>
+                        <DropdownMenuItem className="min-h-12 text-destructive" onSelect={() => requestDelete(campaign)}><Trash2 className="mr-2 h-4 w-4" />Excluir campanha</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
 
+                  {shortage > 0 && <p role="status" className="mt-4 text-base text-destructive">Faltam {shortage} camisas para atender às encomendas.</p>}
                   <div className="shirt-campaign-metrics">
                     <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Compradas</p><p className="mt-0.5 text-lg font-semibold">{purchased}</p></div>
                     <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Encomendadas</p><p className="mt-0.5 text-lg font-semibold">{ordered}</p></div>
@@ -474,7 +431,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       )}
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-        <DialogContent className="finance-dialog max-h-[90vh] max-w-md overflow-y-auto">
+        <DialogContent size="form" className="finance-dialog max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nova campanha de camisas</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2"><Label htmlFor={`${formId}-create-name`}>Nome da campanha</Label><Input id={`${formId}-create-name`} placeholder="Ex.: Camisas UMP 2026" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
@@ -494,7 +451,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       </Dialog>
 
       <Dialog open={Boolean(editCampaign)} onOpenChange={(open) => { if (!open) setEditCampaign(null); }}>
-        <DialogContent className="finance-dialog max-h-[90vh] max-w-md overflow-y-auto">
+        <DialogContent size="form" className="finance-dialog max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Editar campanha</DialogTitle></DialogHeader>
           {editCampaign && (
             <div className="space-y-4">
@@ -566,7 +523,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       </Dialog>
 
       <Dialog open={Boolean(lotDialogCampaign)} onOpenChange={(open) => { if (!open) { setLotDialogCampaign(null); resetLotForm(); } }}>
-        <DialogContent className="finance-dialog max-w-md">
+        <DialogContent size="form" className="finance-dialog">
           <DialogHeader><DialogTitle>Adicionar novo lote</DialogTitle></DialogHeader>
           {lotDialogCampaign && (
             <div className="space-y-4">

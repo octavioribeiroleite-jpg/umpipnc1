@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ResponsiveSectionNavigation } from '@/components/layout/ResponsiveSectionNavigation';
 import { MembrosTab } from '@/components/plenarias/MembrosTab';
 
 interface Plenary {
@@ -37,7 +38,9 @@ interface Plenary {
 
 export default function Plenarias() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'plenarias';
+  const activeTab = searchParams.get('tab') === 'membros' ? 'membros' : 'plenarias';
+  const [search, setSearch] = useState('');
+  const [membersVisited, setMembersVisited] = useState(activeTab === 'membros');
   const [plenaries, setPlenaries] = useState<Plenary[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -92,8 +95,10 @@ export default function Plenarias() {
   };
 
   useEffect(() => { fetchPlenaries(); }, []);
+  useEffect(() => { if (activeTab === 'membros') setMembersVisited(true); }, [activeTab]);
 
   const handleCreate = async () => {
+    if (creating || !user || !date) return;
     if (!title.trim()) {
       toast({ title: 'Informe o título', variant: 'destructive' });
       return;
@@ -129,30 +134,24 @@ export default function Plenarias() {
   };
 
   const handleTabChange = (tab: string) => {
+    if (tab === 'membros') setMembersVisited(true);
     setSearchParams({ tab });
   };
 
   return (
     <AppLayout>
+      <div className="mx-auto max-w-[1120px]">
       <PageHeader
         title="Plenárias"
         description="Chamada de presença e gestão de membros"
       />
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="plenarias" className="flex items-center gap-2">
-            <ClipboardCheck className="h-4 w-4" />
-            Plenárias
-          </TabsTrigger>
-          <TabsTrigger value="membros" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Membros
-          </TabsTrigger>
-        </TabsList>
+        <ResponsiveSectionNavigation label="Seção de plenárias" value={activeTab} onChange={handleTabChange} options={[{ value: 'plenarias', label: 'Plenárias' }, { value: 'membros', label: 'Membros' }]} />
 
-        <TabsContent value="plenarias" className="space-y-4">
-          <div className="flex justify-end">
+        <TabsContent forceMount value="plenarias" className="space-y-4 data-[state=inactive]:hidden">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="w-full space-y-2 sm:max-w-[320px]"><Label htmlFor="plenary-search">Buscar plenária</Label><Input id="plenary-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Título da plenária" /></div>
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" /> Nova Plenária
             </Button>
@@ -170,19 +169,20 @@ export default function Plenarias() {
               title="Nenhuma plenária registrada"
               description="Crie uma nova plenária para iniciar a chamada."
             />
+          ) : !plenaries.some(plenary => plenary.title.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR'))) ? (
+            <EmptyState icon={<ClipboardCheck className="h-12 w-12" />} title="Nenhuma plenária encontrada" description="Tente outro título ou limpe a busca." />
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {plenaries.map((p) => {
+            <div className="space-y-3">
+              {plenaries.filter(plenary => plenary.title.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR'))).map((p) => {
                 const pct = p.total_count ? Math.round((p.present_count! / p.total_count) * 100) : 0;
                 return (
                   <AppCard
                     key={p.id}
-                    variant="interactive"
-                    onClick={() => navigate(`/plenarias/${p.id}`)}
+                    className="min-h-20"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold min-w-0 whitespace-normal break-words">{p.title}</h3>
+                        <h3 className="font-semibold min-w-0 whitespace-normal break-words"><button className="min-h-12 text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded" onClick={() => navigate(`/plenarias/${p.id}`)}>{p.title}</button></h3>
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
@@ -212,9 +212,9 @@ export default function Plenarias() {
           )}
         </TabsContent>
 
-        <TabsContent value="membros">
+        {(membersVisited || activeTab === 'membros') && <TabsContent forceMount value="membros" className="data-[state=inactive]:hidden">
           <MembrosTab />
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -233,7 +233,7 @@ export default function Plenarias() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleCreate} disabled={creating}>
+            <Button onClick={handleCreate} disabled={creating || !title.trim() || !date}>
               {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Criar
             </Button>
@@ -253,6 +253,7 @@ export default function Plenarias() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </AppLayout>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, Globe, Heart, LayoutDashboard, LogOut, Megaphone, MessageSquare, Users, Vote } from 'lucide-react';
 import { BottomNav, type BottomNavItem } from '@/components/layout/BottomNav';
@@ -15,13 +15,17 @@ interface Society {
 export function PastorMobileNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
-  const [societies, setSocieties] = useState<Society[]>([]);
-
-  useEffect(() => {
-    supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
-      .then(({ data }) => { if (data) setSocieties(data); });
-  }, []);
+  const { signOut, user } = useAuth();
+  const societiesRead = useQuery({
+    queryKey: ['pastor-navigation-societies', user?.id],
+    enabled: Boolean(user),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name');
+      if (error) throw error;
+      return (data ?? []) as Society[];
+    },
+  });
+  const societies = societiesRead.data ?? [];
 
   const isActive = (path: string) => (path === '/pastor' ? location.pathname === '/pastor' : location.pathname.startsWith(path));
   const go = (path: string) => navigate(path);
@@ -34,6 +38,7 @@ export function PastorMobileNav() {
   ];
 
   const moreItems: BottomNavItem[] = [
+    ...(societiesRead.isError ? [{ key: 'retry-societies', icon: Users, label: 'Sociedades indisponíveis · tentar novamente', onClick: () => { void societiesRead.refetch(); } }] : []),
     ...societies.map((s) => ({
       key: `society-${s.id}`,
       icon: Users,

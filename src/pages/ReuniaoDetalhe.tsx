@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { ResponsiveSectionNavigation } from '@/components/layout/ResponsiveSectionNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowLeft, Loader2, Lock, RotateCcw, Trash2, Pencil,
-  FileText, Bot, ScrollText, MessageCircle, ListChecks, Settings, Check
+  FileText, ListChecks
 } from 'lucide-react';
 import { PautaEditor } from '@/components/reunioes/PautaEditor';
 import { RegistroReuniaoEditor } from '@/components/reunioes/RegistroReuniaoEditor';
@@ -40,10 +42,14 @@ interface AgendaItem {
   order_index: number;
 }
 
-type SheetType = 'registro' | 'resumo' | 'ata' | 'whatsapp' | 'pauta' | 'acoes' | null;
+type SheetType = 'registro' | 'resumo' | 'ata' | 'whatsapp' | 'pauta' | 'acoes';
 
 export default function ReuniaoDetalhe() {
   const { id } = useParams<{ id: string }>();
+  return <MeetingWorkspace key={id} id={id} />;
+}
+
+function MeetingWorkspace({ id }: { id?: string }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isManagement, loading: authLoading } = useAuth();
@@ -52,9 +58,16 @@ export default function ReuniaoDetalhe() {
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [processedRevision, setProcessedRevision] = useState(0);
   const [processingStep, setProcessingStep] = useState('');
   const [isModerator, setIsModerator] = useState(false);
-  const [openSheet, setOpenSheet] = useState<SheetType>(null);
+  const [openSheet, setOpenSheet] = useState<SheetType>('registro');
+  const [visited, setVisited] = useState<Set<SheetType>>(() => new Set(['registro']));
+  const selectSection = (value: string) => {
+    const section = value as SheetType;
+    setVisited(previous => new Set([...previous, section]));
+    setOpenSheet(section);
+  };
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const fetchMeeting = async () => {
@@ -90,23 +103,12 @@ export default function ReuniaoDetalhe() {
     setProcessing(true);
     setProcessingStep('saving');
     try {
-      setProcessingStep('analyzing');
       const { error: meetingError } = await supabase.from('meetings').update({ contributions_revealed: true }).eq('id', id);
       if (meetingError) throw meetingError;
       setProcessingStep('generating');
       const { data: processData, error: processError } = await supabase.functions.invoke('auto-process-meeting', { body: { meetingId: id } });
-      if (processError) {
-        toast({ title: 'Erro', description: 'Houve um erro no processamento automático.', variant: 'destructive' });
-        setProcessing(false);
-        setProcessingStep('');
-        return;
-      }
-      setProcessingStep('whatsapp');
-      await new Promise(r => setTimeout(r, 500));
-      setProcessingStep('calendar');
-      await new Promise(r => setTimeout(r, 500));
+      if (processError || processData?.error) throw processError || new Error(processData.error);
       setProcessingStep('done');
-      await new Promise(r => setTimeout(r, 1000));
       const eventsCreated = processData?.eventsCreated || 0;
       const tasksCreated = processData?.tasksCreated || 0;
       let description = 'Ata gerada e mensagem WhatsApp criada';
@@ -118,7 +120,8 @@ export default function ReuniaoDetalhe() {
       }
       toast({ title: 'Reunião Processada!', description: description + '. Revise o conteúdo e finalize quando estiver pronto.' });
       await fetchMeeting();
-      setOpenSheet('resumo');
+      setProcessedRevision(value => value + 1);
+      selectSection('resumo');
     } catch (err) {
       console.error('Error processing meeting:', err);
       toast({ title: 'Erro', description: 'Erro ao processar reunião.', variant: 'destructive' });
@@ -135,7 +138,7 @@ export default function ReuniaoDetalhe() {
     try {
       const { error } = await supabase.from('meetings').update({ status: 'fechada' }).eq('id', id);
       if (error) throw error;
-      setMeeting({ ...meeting, status: 'fechada' });
+      setMeeting(previous => previous ? { ...previous, status: 'fechada' } : previous);
       toast({ title: 'Reunião Finalizada!', description: 'A reunião foi encerrada com sucesso.' });
     } catch (err) {
       toast({ title: 'Erro', description: 'Erro ao finalizar reunião.', variant: 'destructive' });
@@ -149,8 +152,8 @@ export default function ReuniaoDetalhe() {
     try {
       const { error } = await supabase.from('meetings').update({ status: 'aberta' }).eq('id', id);
       if (error) throw error;
-      setMeeting({ ...meeting, status: 'aberta' });
-      setOpenSheet(null);
+      setMeeting(previous => previous ? { ...previous, status: 'aberta' } : previous);
+      selectSection('registro');
       toast({ title: 'Sucesso', description: 'Reunião reaberta com sucesso!' });
     } catch (err) {
       toast({ title: 'Erro', description: 'Erro ao reabrir reunião.', variant: 'destructive' });
@@ -162,10 +165,11 @@ export default function ReuniaoDetalhe() {
     try {
       const { error } = await supabase.from('meetings').update({ title: updates.title, date: updates.date }).eq('id', id);
       if (error) throw error;
-      setMeeting({ ...meeting, ...updates });
+      setMeeting(previous => previous ? { ...previous, ...updates } : previous);
       toast({ title: 'Sucesso', description: 'Reunião atualizada com sucesso!' });
     } catch (err) {
       toast({ title: 'Erro', description: 'Erro ao atualizar reunião.', variant: 'destructive' });
+      throw err;
     }
   };
 
@@ -174,10 +178,11 @@ export default function ReuniaoDetalhe() {
     try {
       const { error } = await supabase.from('meetings').update({ final_minutes: newMinutes }).eq('id', id);
       if (error) throw error;
-      setMeeting({ ...meeting, final_minutes: newMinutes });
+      setMeeting(previous => previous ? { ...previous, final_minutes: newMinutes } : previous);
       toast({ title: 'Sucesso', description: 'Ata atualizada com sucesso!' });
     } catch (err) {
       toast({ title: 'Erro', description: 'Erro ao atualizar ata.', variant: 'destructive' });
+      throw err;
     }
   };
 
@@ -191,11 +196,11 @@ export default function ReuniaoDetalhe() {
         contributions_revealed: false, ai_organized: false,
       }).eq('id', id);
       if (error) throw error;
-      setMeeting({
-        ...meeting, final_minutes: null, whatsapp_message: null,
+      setMeeting(previous => previous ? {
+        ...previous, final_minutes: null, whatsapp_message: null,
         status: 'aberta', contributions_revealed: false, ai_organized: false,
-      });
-      setOpenSheet(null);
+      } : previous);
+      selectSection('registro');
       toast({ title: 'Sucesso', description: 'Ata excluída. Reunião reaberta para edição.' });
     } catch (err) {
       toast({ title: 'Erro', description: 'Erro ao excluir ata.', variant: 'destructive' });
@@ -203,7 +208,7 @@ export default function ReuniaoDetalhe() {
   };
 
   const handleNotesChange = (notes: string) => {
-    if (meeting) setMeeting({ ...meeting, meeting_notes: notes });
+    setMeeting(previous => previous ? { ...previous, meeting_notes: notes } : previous);
   };
 
   if (loading || authLoading) {
@@ -232,224 +237,69 @@ export default function ReuniaoDetalhe() {
   const hasContent = !!meeting.final_minutes;
   const canManage = isModerator || isManagement;
 
-  const toolCards: { key: SheetType; icon: React.ReactNode; title: string; desc: string; ready?: boolean; hidden?: boolean }[] = [
-    { key: 'registro', icon: <FileText className="h-5 w-5" />, title: 'Registro', desc: 'Anotações da reunião', ready: !!meeting.meeting_notes },
-    { key: 'resumo', icon: <Bot className="h-5 w-5" />, title: 'Resumo IA', desc: 'Análise automática', ready: isProcessed },
-    { key: 'ata', icon: <ScrollText className="h-5 w-5" />, title: 'Ata', desc: 'Documento final', ready: hasContent },
-    { key: 'whatsapp', icon: <MessageCircle className="h-5 w-5" />, title: 'WhatsApp', desc: 'Mensagem de divulgação', ready: !!meeting.whatsapp_message },
-    { key: 'pauta', icon: <ListChecks className="h-5 w-5" />, title: 'Pauta', desc: `${agendaItems.length} itens`, ready: agendaItems.length > 0 },
-    { key: 'acoes', icon: <Settings className="h-5 w-5" />, title: 'Ações', desc: 'Gerenciar reunião', hidden: !canManage },
+  const sections: { value: SheetType; label: string }[] = [
+    { value: 'registro', label: 'Registro' }, { value: 'pauta', label: 'Pauta' },
+    { value: 'resumo', label: 'Resumo IA' }, { value: 'ata', label: 'Ata' },
+    { value: 'whatsapp', label: 'WhatsApp' },
+    ...(canManage ? [{ value: 'acoes' as const, label: 'Ações' }] : []),
   ];
+  const emptyGenerated = <div className="rounded-xl border border-dashed bg-muted/30 p-6 space-y-3">
+    <p>Este conteúdo ainda não foi gerado. Registre a reunião e processe o texto para preparar a revisão.</p>
+    <Button variant="outline" onClick={() => selectSection('registro')}>Ir ao registro</Button>
+  </div>;
 
-  const sheetTitles: Record<string, string> = {
-    registro: 'Registro da Reunião',
-    resumo: 'Resumo IA',
-    ata: 'Ata da Reunião',
-    whatsapp: 'Mensagem WhatsApp',
-    pauta: 'Pauta da Reunião',
-    acoes: 'Ações da Reunião',
-  };
-
-  // When a tool is open, render it inline (full-screen style)
-  if (openSheet) {
-    return (
-      <AppLayout>
-        {/* Back header */}
-        <div className="flex items-center gap-2 mb-4">
-          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Voltar ao resumo da reunião" onClick={() => setOpenSheet(null)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-semibold min-w-0 whitespace-normal break-words">{sheetTitles[openSheet]}</h1>
-        </div>
-
-        {/* Full-width content */}
-        <div className="w-full min-w-0">
-          {openSheet === 'registro' && (
-            <RegistroReuniaoEditor
-              meetingId={meeting.id}
-              meetingNotes={meeting.meeting_notes}
-              isProcessed={isProcessed}
-              canManage={canManage}
-              isProcessing={processing}
-              processingStep={processingStep}
-              onProcess={handleProcessMeeting}
-              onFinalize={handleFinalizeMeeting}
-              onNotesChange={handleNotesChange}
-              embedded
-            />
-          )}
-
-          {openSheet === 'resumo' && (
-            <ResumoIATab meetingId={meeting.id} isProcessed={isProcessed} />
-          )}
-
-          {openSheet === 'ata' && (
-            hasContent ? (
-              <AtaViewer
-                meeting={meeting}
-                agendaItems={agendaItems}
-                canManage={canManage}
-                onUpdateMinutes={handleUpdateMinutes}
-              />
-            ) : (
-              <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                <p className="text-muted-foreground">
-                  Ainda não processado. Escreva o registro e clique em "Processar Reunião".
-                </p>
-              </div>
-            )
-          )}
-
-          {openSheet === 'whatsapp' && (
-            hasContent ? (
-              <ComunicacaoTab
-                meetingId={meeting.id}
-                canManage={canManage}
-                whatsappMessage={meeting.whatsapp_message}
-                hasFinalMinutes={!!meeting.final_minutes}
-                onMessageUpdated={(msg) => setMeeting(prev => prev ? { ...prev, whatsapp_message: msg } : null)}
-              />
-            ) : (
-              <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                <p className="text-muted-foreground">
-                  Ainda não processado. Escreva o registro e clique em "Processar Reunião".
-                </p>
-              </div>
-            )
-          )}
-
-          {openSheet === 'pauta' && (
-            <PautaEditor
-              meetingId={meeting.id}
-              agendaItems={agendaItems}
-              onUpdate={fetchMeeting}
-              disabled={isClosed}
-              canManage={canManage}
-            />
-          )}
-
-          {openSheet === 'acoes' && canManage && (
-            <div className="space-y-3">
-              {!isClosed && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-2"
-                  onClick={() => { setOpenSheet(null); setEditDialogOpen(true); }}
-                >
-                  <Pencil className="h-4 w-4" />
-                  Editar título e data
-                </Button>
-              )}
-              {isClosed && (
-                <Button variant="outline" className="w-full justify-start gap-2" onClick={handleReopenMeeting}>
-                  <RotateCcw className="h-4 w-4" />
-                  Reabrir reunião
-                </Button>
-              )}
-              {meeting.final_minutes && (
-                <Button variant="outline" className="w-full justify-start gap-2 text-destructive hover:text-destructive" onClick={handleDeleteMinutes}>
-                  <Trash2 className="h-4 w-4" />
-                  Excluir ata e reprocessar
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {meeting && (
-          <EditMeetingDialog
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
-            meeting={meeting}
-            onUpdate={handleUpdateMeeting}
-          />
-        )}
-      </AppLayout>
-    );
-  }
-
-  // Default: show grid of tool cards
-  return (
-    <AppLayout>
-      {/* Compact header */}
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-5 rounded-2xl border border-border bg-card p-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Voltar às reuniões" onClick={() => navigate('/reunioes')}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-semibold min-w-0 whitespace-normal break-words">{meeting.title}</h1>
+  return <AppLayout>
+    <div className="mx-auto w-full max-w-[1120px] space-y-6">
+      <header className="space-y-3">
+        <Button variant="ghost" onClick={() => navigate('/reunioes')}><ArrowLeft className="mr-2 h-4 w-4" />Reuniões</Button>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-semibold break-words">{meeting.title}</h1>
+            <p className="text-sm text-muted-foreground">{new Date(meeting.date).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</p>
           </div>
-          <p className="text-sm text-muted-foreground ml-[3.25rem]">
-            {new Date(meeting.date).toLocaleDateString('pt-BR', {
-              weekday: 'short', day: '2-digit', month: 'short', year: 'numeric',
-              hour: '2-digit', minute: '2-digit',
-            })}
-          </p>
+          <Badge variant={isClosed ? 'secondary' : 'outline'}>{isClosed ? 'Finalizada' : 'Aberta'}</Badge>
         </div>
-        <Badge
-          variant={isClosed ? 'secondary' : 'default'}
-          className={`shrink-0 mt-1 ${isClosed ? '' : isProcessed ? 'bg-blue-500 hover:bg-blue-600' : 'bg-success'}`}
-        >
-          {isClosed ? '⚪ Fechada' : isProcessed ? '🔵 Processada' : '🟢 Aberta'}
-        </Badge>
-      </div>
-
-      {/* Closed alert - compact */}
-      {isClosed && (
-        <Alert className="mb-4 border-muted py-2">
-          <Lock className="h-4 w-4" />
-          <AlertDescription className="text-xs">
-            Reunião encerrada — somente consulta.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Tool cards grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {toolCards.filter(c => !c.hidden).map((card) => (
-          <Card
-            key={card.key}
-            role="button"
-            tabIndex={0}
-            aria-label={card.title}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                setOpenSheet(card.key);
-              }
-            }}
-            className="cursor-pointer transition-all hover:shadow-md active:scale-[0.98] relative"
-            onClick={() => setOpenSheet(card.key)}
-          >
-            <CardContent className="p-4 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  {card.icon}
-                </div>
-                {card.ready && (
-                  <div className="h-5 w-5 rounded-full bg-green-500/15 flex items-center justify-center">
-                    <Check className="h-3 w-3 text-green-600" />
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="font-medium text-sm">{card.title}</p>
-                <p className="text-xs text-muted-foreground">{card.desc}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {meeting && (
-        <EditMeetingDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          meeting={meeting}
-          onUpdate={handleUpdateMeeting}
-        />
-      )}
-    </AppLayout>
-  );
+      </header>
+      {isClosed && <Alert><Lock className="h-4 w-4" /><AlertDescription>Reunião finalizada. O registro e a pauta estão em modo de leitura.</AlertDescription></Alert>}
+      <Tabs value={openSheet} onValueChange={selectSection} className="space-y-6">
+        <ResponsiveSectionNavigation label="Seção da reunião" value={openSheet} onChange={selectSection} options={sections} />
+        <TabsContent forceMount value="registro" className="data-[state=inactive]:hidden">
+          <div className="grid items-start gap-6 min-[1100px]:grid-cols-[minmax(0,760px)_280px]">
+            <Card className="min-w-0"><CardContent className="p-4 sm:p-6">
+              <h2 className="mb-3 flex items-center gap-2 text-xl font-semibold"><FileText className="h-5 w-5" />Registro da reunião</h2>
+              <RegistroReuniaoEditor meetingId={meeting.id} meetingNotes={meeting.meeting_notes}
+                isProcessed={isProcessed} canManage={canManage} readOnly={isClosed} isProcessing={processing}
+                processingStep={processingStep} onProcess={handleProcessMeeting} onFinalize={handleFinalizeMeeting}
+                onNotesChange={handleNotesChange} embedded />
+            </CardContent></Card>
+            <aside className="rounded-2xl border bg-card p-4 space-y-4">
+              <h2 className="flex items-center gap-2 text-lg font-semibold"><ListChecks className="h-5 w-5" />Pauta</h2>
+              {agendaItems.length ? <ol className="list-decimal space-y-3 pl-5">{agendaItems.map(item => <li key={item.id} className="break-words">{item.title}</li>)}</ol> : <p className="text-muted-foreground">Nenhum item de pauta.</p>}
+              <Button variant="outline" className="w-full" onClick={() => selectSection('pauta')}>Ver pauta</Button>
+            </aside>
+          </div>
+        </TabsContent>
+        {/* Visited editors stay mounted when navigation or viewport changes. */}
+        {visited.has('pauta') && <TabsContent forceMount value="pauta" className="max-w-[760px] data-[state=inactive]:hidden">
+          <PautaEditor meetingId={meeting.id} agendaItems={agendaItems} onUpdate={fetchMeeting} disabled={isClosed} canManage={canManage} />
+        </TabsContent>}
+        {visited.has('resumo') && <TabsContent forceMount value="resumo" className="max-w-[760px] data-[state=inactive]:hidden"><ResumoIATab meetingId={meeting.id} isProcessed={isProcessed} revision={processedRevision} /></TabsContent>}
+        {visited.has('ata') && <TabsContent forceMount value="ata" className="max-w-[760px] data-[state=inactive]:hidden">
+          {hasContent ? <AtaViewer meeting={meeting} agendaItems={agendaItems} canManage={canManage} onUpdateMinutes={handleUpdateMinutes} /> : emptyGenerated}
+        </TabsContent>}
+        {visited.has('whatsapp') && <TabsContent forceMount value="whatsapp" className="max-w-[760px] data-[state=inactive]:hidden">
+          {hasContent ? <ComunicacaoTab meetingId={meeting.id} canManage={canManage} whatsappMessage={meeting.whatsapp_message} hasFinalMinutes={hasContent} onMessageUpdated={message => setMeeting(previous => previous ? { ...previous, whatsapp_message: message } : previous)} /> : emptyGenerated}
+        </TabsContent>}
+        {canManage && visited.has('acoes') && <TabsContent forceMount value="acoes" className="max-w-[760px] data-[state=inactive]:hidden">
+          <Card><CardContent className="p-4 sm:p-6 space-y-4">
+            <h2 className="text-xl font-semibold">Gerenciar reunião</h2>
+            {!isClosed && <Button variant="outline" className="w-full justify-start" onClick={() => setEditDialogOpen(true)}><Pencil className="mr-2 h-4 w-4" />Editar título e data</Button>}
+            {isClosed && <Button variant="outline" className="w-full justify-start" onClick={handleReopenMeeting}><RotateCcw className="mr-2 h-4 w-4" />Reabrir reunião</Button>}
+            {hasContent && <Button variant="outline" className="w-full justify-start text-destructive" onClick={handleDeleteMinutes}><Trash2 className="mr-2 h-4 w-4" />Excluir ata e reprocessar</Button>}
+          </CardContent></Card>
+        </TabsContent>}
+      </Tabs>
+      <EditMeetingDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} meeting={meeting} onUpdate={handleUpdateMeeting} />
+    </div>
+  </AppLayout>;
 }

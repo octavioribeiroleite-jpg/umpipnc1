@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { treasuryClient } from '@/integrations/supabase/treasury-client';
 import type { TreasuryFund } from '@/lib/treasury';
 import { useTreasuryIdentity } from '@/hooks/useTreasuryIdentity';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ConfirmActionButton } from '@/components/ui/confirm-action-button';
 
 interface PinStatus { fund_id: string; configured: boolean; active: boolean; updated_at: string | null }
 export function TreasuryPins({ funds }: { funds: TreasuryFund[] }) {
@@ -17,23 +19,49 @@ export function TreasuryPins({ funds }: { funds: TreasuryFund[] }) {
   const [confirmation, setConfirmation] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const selected = funds.find(item => item.id === fund);
+  const clear = () => {setFund('');setPin('');setConfirmation('');setError('');};
   const save = async (fundId: string, enabled: boolean) => {
-    if (busy) return; setError('');
-    if (enabled && (!/^\d{6}$/.test(pin) || pin !== confirmation)) { setError('Informe 6 números e repita o mesmo PIN na confirmação.'); return; }
+    if (busy) return false;
+    setError('');
+    if (enabled && (!/^\d{6}$/.test(pin) || pin !== confirmation)) {setError('Informe 6 números e repita o mesmo PIN na confirmação.');return false;}
     setBusy(true);
     try {
-      const result = await treasuryClient.rpc('treasury_set_pin', { p_fund_id: fundId, p_pin: enabled ? pin : null, p_enabled: enabled });
-      if (result.error) throw new Error(result.error.message);
-      setPin(''); setConfirmation('');
-      await cache.invalidateQueries({ queryKey: ['treasury', 'pins'] });
+      const result = await treasuryClient.rpc('treasury_set_pin', {p_fund_id:fundId,p_pin:enabled ? pin : null,p_enabled:enabled});
+      if (result.error) throw new Error('Não foi possível alterar o PIN. Confira o acesso e tente novamente.');
+      await cache.invalidateQueries({queryKey:['treasury','pins']});
       toast.success(enabled ? 'PIN salvo. Compartilhe-o com o tesoureiro dessa sociedade.' : 'Acesso por PIN desativado.');
-    } catch (cause) { setError((cause as Error).message); } finally { setBusy(false); }
+      clear();return true;
+    } catch (cause) {setError((cause as Error).message);return false;}
+    finally {setBusy(false);}
   };
-  const submit = (event: FormEvent) => { event.preventDefault(); void save(fund, true); };
-  return <details className="tr-panel tr-admin-section" open><summary>PINs das sociedades</summary><p>Defina um PIN de 6 números para cada sociedade. Trocar ou desativar o PIN encerra a autorização das sessões anteriores. Cada sociedade acessa somente seu próprio caixa.</p>
-    <form onSubmit={submit}><fieldset disabled={busy || status.isPending || Boolean(status.error)} className="tr-report-controls"><legend className="sr-only">Configurar PIN da sociedade</legend><label>Sociedade<select required value={fund} onChange={e => { setFund(e.target.value); setPin(''); setConfirmation(''); }}><option value="">Selecione a sociedade</option>{funds.map(f => <option key={f.id} value={f.id}>{f.abbreviation} — {f.name}</option>)}</select></label><label>Novo PIN<input type="password" inputMode="numeric" autoComplete="new-password" pattern="[0-9]{6}" maxLength={6} required value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ''))} /></label><label>Confirmar PIN<input type="password" inputMode="numeric" autoComplete="new-password" pattern="[0-9]{6}" maxLength={6} required value={confirmation} onChange={e => setConfirmation(e.target.value.replace(/\D/g, ''))} /></label><button className="tr-button tr-primary" type="submit">{busy ? 'Salvando…' : 'Salvar PIN'}</button></fieldset></form>
-    <div className="tr-review-list">{funds.map(f => { const item = status.data?.find(s => s.fund_id === f.id); return <div className="tr-manager-row" key={f.id}><span><strong>{f.abbreviation}</strong> · {status.isPending ? 'Consultando…' : status.error ? 'Indisponível' : !item?.configured ? 'PIN não definido' : item.active ? 'Acesso ativo' : 'Acesso desativado'}</span>{item?.active && <button className="tr-button" disabled={busy} onClick={() => void save(f.id, false)}>Desativar PIN da {f.abbreviation}</button>}</div>; })}</div>
-    <p className="treasury-field-help">O PIN existente não fica visível. Para recuperar o acesso de uma sociedade, defina um novo PIN.</p>
-    {(error || status.error) && <p className="treasury-form-error" role="alert">{error || status.error?.message}</p>}
+  const submit = (event: FormEvent) => {event.preventDefault();void save(fund,true);};
+  return <details id="treasury-pins" className="tr-panel tr-admin-section" open>
+    <summary>PINs das sociedades</summary>
+    <p className="treasury-field-help">Trocar ou desativar o PIN invalida as sessões anteriores. Cada sociedade acessa somente seu caixa.</p>
+    <div className="tr-review-list">{funds.map(item => {
+      const state = status.data?.find(row => row.fund_id === item.id);
+      return <div className="tr-manager-row" key={item.id}>
+        <span><strong>{item.abbreviation}</strong> · {status.isPending ? 'Consultando…' : status.error ? 'Indisponível' : !state?.configured ? 'PIN não definido' : state.active ? 'Acesso ativo' : 'Acesso desativado'}</span>
+        <div className="flex min-w-0 flex-wrap gap-2">
+          <button className="tr-button" disabled={busy || status.isPending || Boolean(status.error)} onClick={() => {clear();setFund(item.id);}}>{state?.configured ? 'Trocar PIN' : 'Definir PIN'}</button>
+          {state?.active && <ConfirmActionButton label={`Desativar ${item.abbreviation}`} title={`Desativar o PIN da ${item.abbreviation}?`} description="O acesso por PIN será bloqueado e as sessões anteriores perderão a autorização. Será preciso definir um novo PIN para voltar a entrar." onConfirm={() => save(item.id,false)} variant="outline" />}
+        </div>
+      </div>;
+    })}</div>
+    {(error || status.error) && !selected && <p className="treasury-form-error" role="alert">{error || status.error?.message}</p>}
+    {status.error && <button className="tr-button" disabled={status.isFetching} onClick={() => void status.refetch()}>Consultar novamente</button>}
+    <Dialog open={Boolean(selected)} onOpenChange={open => {if(!open && !busy) clear();}}>
+      <DialogContent size="standard">
+        <DialogHeader><DialogTitle>PIN da {selected?.abbreviation}</DialogTitle><DialogDescription>Informe o novo PIN. As sessões anteriores serão invalidadas.</DialogDescription></DialogHeader>
+        <form onSubmit={submit}><fieldset disabled={busy} className="tr-report-controls">
+          <legend className="sr-only">Configurar PIN da sociedade</legend>
+          <label>Novo PIN<input type="password" inputMode="numeric" autoComplete="new-password" pattern="[0-9]{6}" maxLength={6} required value={pin} onChange={event => setPin(event.target.value.replace(/\D/g,''))} /></label>
+          <label>Confirmar PIN<input type="password" inputMode="numeric" autoComplete="new-password" pattern="[0-9]{6}" maxLength={6} required value={confirmation} onChange={event => setConfirmation(event.target.value.replace(/\D/g,''))} /></label>
+          {error && <p className="treasury-form-error" role="alert">{error}</p>}
+          <button className="tr-button tr-primary" type="submit">{busy ? 'Salvando…' : 'Salvar PIN'}</button>
+        </fieldset></form>
+      </DialogContent>
+    </Dialog>
   </details>;
 }

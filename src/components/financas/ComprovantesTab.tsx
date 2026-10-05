@@ -40,7 +40,15 @@ export function ComprovantesTab() {
   const [rejectDialog, setRejectDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const [rejectReason, setRejectReason] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewSubmission, setPreviewSubmission] = useState<Submission | null>(null);
   const previewRequest = useRef(0);
+
+  useEffect(() => {
+    previewRequest.current += 1;
+    setPreviewUrl(null);
+    setPreviewSubmission(null);
+    return () => { previewRequest.current += 1; };
+  }, [societyId]);
 
   useEffect(() => {
     fetchSubmissions();
@@ -161,11 +169,12 @@ export function ComprovantesTab() {
             <CardContent className="p-4">
               <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
                 <div>
-                  <p className="font-medium text-sm">{sub.member_name}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-medium text-base break-words">{sub.member_name}</p>
+                  <p className="text-[13px] text-muted-foreground">
                     {sub.type === 'mensalidade' ? 'Mensalidade' : 'Per Capita'} • {sub.competence}
                   </p>
-                  {sub.notes && <p className="text-xs text-muted-foreground mt-1">Obs: {sub.notes}</p>}
+                  {sub.notes && <p className="text-base break-words mt-2">{sub.notes}</p>}
+                  {sub.status === 'rejeitado' && sub.rejection_reason && <p className="mt-2 text-base break-words"><strong>Motivo da rejeição:</strong> {sub.rejection_reason}</p>}
                 </div>
                 <Badge variant="outline" className={`text-xs ${
                   sub.status === 'pendente' ? 'bg-warning/10 text-warning border-warning/20' :
@@ -184,7 +193,7 @@ export function ComprovantesTab() {
                     const request = ++previewRequest.current;
                     try {
                       const url = await signedReceiptUrl(sub.receipt_url);
-                      if (request === previewRequest.current) setPreviewUrl(url);
+                      if (request === previewRequest.current) { setPreviewSubmission(sub); setPreviewUrl(url); }
                     } catch {
                       if (request === previewRequest.current) toast({ variant: 'destructive', title: 'Não foi possível abrir o comprovante' });
                     }
@@ -249,14 +258,29 @@ export function ComprovantesTab() {
       <Dialog open={!!previewUrl} onOpenChange={() => {
         previewRequest.current += 1;
         setPreviewUrl(null);
+        setPreviewSubmission(null);
       }}>
-        <DialogContent className="finance-dialog max-w-lg">
+        <DialogContent size="wide" className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Comprovante</DialogTitle>
           </DialogHeader>
-          {previewUrl && (
-            <div className="max-h-[70vh] overflow-auto">
-              <img src={previewUrl} alt="Comprovante" className="w-full rounded-lg" />
+          {previewUrl && previewSubmission && (
+            <div className="grid min-w-0 gap-5 min-[700px]:grid-cols-[minmax(0,1fr)_240px]">
+              <div className="aspect-[4/3] min-w-0 overflow-hidden rounded-xl border bg-muted">
+                {/\.pdf(?:$|[?#])/i.test(previewSubmission.receipt_url)
+                  ? <iframe src={previewUrl} title={`Comprovante de ${previewSubmission.member_name}`} className="h-full w-full" />
+                  : <img src={previewUrl} alt={`Comprovante de ${previewSubmission.member_name}`} className="h-full w-full object-contain" />}
+              </div>
+              <div className="min-w-0 space-y-4 break-words">
+                <dl className="space-y-3 text-base">
+                  <div><dt className="text-[13px] text-muted-foreground">Pessoa</dt><dd>{previewSubmission.member_name}</dd></div>
+                  <div><dt className="text-[13px] text-muted-foreground">Competência</dt><dd>{previewSubmission.competence}</dd></div>
+                  <div><dt className="text-[13px] text-muted-foreground">Situação</dt><dd>{previewSubmission.status === 'aprovado' ? 'Aprovado' : previewSubmission.status === 'rejeitado' ? 'Rejeitado' : 'Pendente'}</dd></div>
+                  {previewSubmission.notes && <div><dt className="text-[13px] text-muted-foreground">Observação</dt><dd>{previewSubmission.notes}</dd></div>}
+                  {previewSubmission.rejection_reason && <div><dt className="text-[13px] text-muted-foreground">Motivo da rejeição</dt><dd>{previewSubmission.rejection_reason}</dd></div>}
+                </dl>
+                <Button asChild variant="outline"><a href={previewUrl} target="_blank" rel="noopener noreferrer">Abrir documento</a></Button>
+              </div>
             </div>
           )}
         </DialogContent>

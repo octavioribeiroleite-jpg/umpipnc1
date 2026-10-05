@@ -25,3 +25,12 @@
 .tr-reserve {display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;background:#f5efdf;border:1px solid #e9dcba;border-radius:12px;font-size: 0.875rem;margin:15px 0}
 .tr-reserve strong {color:#334f3c}
 @media(max-width:600px){.tr-workflow .tr-panel{padding:18px}.tr-review-item{flex-direction:column;gap:12px}.tr-review-item>div:last-child{flex-direction:row;max-width:100%;align-items:center;justify-content:space-between;text-align:left;flex-wrap:wrap}.tr-report-controls label,.tr-bank-form label{flex-basis:100%}.tr-report-controls>.tr-button,.tr-bank-form>.tr-button{width:100%;justify-content:center}.tr-composition .treasury-form-row{grid-template-columns:1fr}.tr-manager-row{align-items:flex-start}.tr-workflow .tr-pagination{gap:6px}.tr-workflow .tr-pagination button{padding:8px;font-size: 0.75rem}}
+
+.tr-bank-values { display:grid; gap:8px; font-variant-numeric:tabular-nums; }
+.tr-bank-values div { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; }
+.tr-bank-values dt { font-size:.8125rem; color:#566b60; }
+.tr-bank-values dd { font-weight:600; overflow-wrap:anywhere; }
+
+.tr-admin-navigation { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; }
+.tr-admin-navigation a { display:flex; align-items:center; min-height:48px; padding:10px 14px; border:1px solid var(--tr-border, hsl(var(--border))); border-radius:12px; background:hsl(var(--card)); color:hsl(var(--foreground)); font-size:14px; }
+.tr-admin-navigation a:focus-visible { outline:2px solid hsl(var(--ring)); outline-offset:2px; }

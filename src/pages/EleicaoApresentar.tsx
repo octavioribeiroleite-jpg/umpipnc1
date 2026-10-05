@@ -91,12 +91,12 @@ export default function EleicaoApresentar() {
     <div className="min-h-dvh bg-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-4 lg:py-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="max-w-[1600px] mx-auto px-[16px] min-[700px]:px-[32px] py-[24px] flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 lg:gap-4 min-w-0">
             <img src={logo} alt="Renovo IPNC" className="h-10 lg:h-14 w-auto shrink-0" />
             <div className="min-w-0">
-              <h1 className="text-2xl lg:text-3xl font-bold min-w-0 whitespace-normal break-words">{election.name}</h1>
-              <p className="text-sm lg:text-base text-muted-foreground min-w-0 whitespace-normal break-words">
+              <h1 className="text-[clamp(2.5rem,4vw,3.5rem)] leading-tight font-bold min-w-0 whitespace-normal [overflow-wrap:anywhere]">{election.name}</h1>
+              <p className="text-lg text-muted-foreground min-w-0 whitespace-normal [overflow-wrap:anywhere]">
                 {election.position}
               </p>
             </div>
@@ -108,24 +108,25 @@ export default function EleicaoApresentar() {
       {readFailure && <div className="mx-auto w-full max-w-6xl px-4 pt-4">{readFailure}</div>}
 
       {/* Main */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12">
+      <main className="mx-auto w-full max-w-[1600px] flex-1 flex items-center justify-center p-[16px] min-[700px]:p-[32px]">
         {showResult ? (
-          <div className="w-full max-w-5xl lg:[&_.text-xs]:text-base lg:[&_.text-sm]:text-lg lg:[&_.text-base]:text-xl lg:[&_h3]:text-2xl lg:[&_.h-24]:h-40 lg:[&_.w-24]:w-40">
+          <div className="w-full min-w-0">
             <ResultPanel
               electionId={election.id}
               totalPresent={election.total_present}
               candidates={candidates}
               election={election}
+              presentation
             />
           </div>
         ) : (
           /* PROGRESS VIEW (anonymous) */
-          <div className="w-full max-w-5xl">
-            <div className="rounded-2xl bg-card border border-border shadow-sm px-4 py-8 sm:px-12 sm:py-14 lg:px-20 lg:py-20 text-center space-y-8 sm:space-y-12 lg:space-y-16">
+          <div className="w-full min-w-0">
+            <div className="rounded-2xl bg-sidebar text-sidebar-foreground border border-sidebar-border p-[24px] min-[700px]:p-[32px] min-h-[420px] flex flex-col justify-center text-center gap-8">
               {countError && <QueryErrorState message="Não foi possível atualizar a contagem de votos." onRetry={retryCount} retrying={countLoading} hasPreviousData={hasCountSnapshot} />}
-              {!hasCountSnapshot ? <p role="status" className="text-lg text-muted-foreground">{countError ? 'Contagem indisponível' : 'Consultando contagem…'}</p> : <>
+              {!hasCountSnapshot ? <p role="status" className="text-lg text-sidebar-foreground/80">{countError ? 'Contagem indisponível' : 'Consultando contagem…'}</p> : <>
               {/* Status amigável */}
-              <p className="text-base sm:text-xl lg:text-2xl font-medium text-muted-foreground tracking-wide uppercase">
+              <p className="text-lg min-[700px]:text-2xl font-medium text-sidebar-foreground tracking-wide">
                 {finished
                   ? 'Votação encerrada'
                   : displayedCount === 0
@@ -137,37 +138,37 @@ export default function EleicaoApresentar() {
               <div className="space-y-3">
                 <p
                   key={displayedCount}
-                  className="font-bold tracking-tight tabular-nums leading-none text-primary animate-fade-up"
+                  className="font-bold tracking-tight tabular-nums leading-none text-sidebar-foreground animate-fade-up"
                   style={{
-                    fontSize: 'clamp(4rem, 16vw, 14rem)', overflowWrap: 'anywhere',
+                    fontSize: 'clamp(4.5rem, 10vw, 6rem)', overflowWrap: 'anywhere',
 
                   }}
                 >
                   {displayedCount}
                 </p>
-                <p className="text-2xl sm:text-4xl lg:text-5xl font-semibold text-muted-foreground/80 tabular-nums">
+                <p className="text-xl min-[700px]:text-3xl font-semibold text-sidebar-foreground/80 tabular-nums">
                   de {totalPresent}
                 </p>
               </div>
 
               {/* Barra de progresso */}
               <div className="space-y-4">
-                <div className="w-full h-5 sm:h-7 lg:h-8 rounded-full bg-muted/60 overflow-hidden border border-border/60 shadow-inner">
+                <div className="w-full h-[12px] rounded-full bg-white/20 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-primary via-accent to-primary rounded-full transition-all duration-700 ease-out shadow-[0_0_20px_hsl(var(--primary)/0.5)]"
+                    className="h-full bg-emerald-200 rounded-full transition-all duration-700 ease-out"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
 
                 {/* Infos amigáveis */}
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-base sm:text-lg lg:text-2xl">
-                  <span className="font-semibold text-foreground tabular-nums">
+                  <span className="font-semibold text-sidebar-foreground tabular-nums">
                     {Math.round(pct)}% concluído
                   </span>
                   {!finished && totalPresent - displayedCount > 0 && (
                     <>
-                      <span className="text-muted-foreground/40">•</span>
-                      <span className="text-muted-foreground tabular-nums">
+                      <span className="text-sidebar-foreground/60">•</span>
+                      <span className="text-sidebar-foreground/80 tabular-nums">
                         {totalPresent - displayedCount}{' '}
                         {totalPresent - displayedCount === 1
                           ? 'voto restante'
@@ -177,6 +178,7 @@ export default function EleicaoApresentar() {
                   )}
                 </div>
               </div>
+              <p className="text-base text-sidebar-foreground/80">Os resultados aparecem após a liberação autorizada.</p>
               </>}
             </div>
           </div>

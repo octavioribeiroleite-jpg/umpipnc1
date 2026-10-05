@@ -10,7 +10,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   imageSrc: string | null;
   aspect?: number;
-  onCropped: (file: File) => void | Promise<void>;
+  onCropped: (file: File) => void | boolean | Promise<void | boolean>;
 }
 
 async function getCroppedBlob(imageSrc: string, area: Area, rotation: number): Promise<Blob> {
@@ -51,28 +51,33 @@ export function ImageCropDialog({ open, onOpenChange, imageSrc, aspect = 1, onCr
   const [rotation, setRotation] = useState(0);
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const onCropComplete = useCallback((_: Area, areaPx: Area) => setCroppedArea(areaPx), []);
 
   const handleSave = async () => {
     if (!imageSrc || !croppedArea) return;
     setSaving(true);
+    setSaveError('');
     try {
       const blob = await getCroppedBlob(imageSrc, croppedArea, rotation);
       const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
-      await onCropped(file);
+      const saved = await onCropped(file);
+      if (saved === false) { setSaveError('Não foi possível salvar a foto. Tente novamente.'); return; }
       onOpenChange(false);
       // reset
       setCrop({ x: 0, y: 0 });
       setZoom(1);
       setRotation(0);
+    } catch {
+      setSaveError('Não foi possível preparar a imagem. Tente novamente.');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={next => { if (!saving) onOpenChange(next); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Ajustar imagem</DialogTitle>
@@ -96,14 +101,15 @@ export function ImageCropDialog({ open, onOpenChange, imageSrc, aspect = 1, onCr
         <div className="space-y-3 pt-2">
           <div className="flex items-center gap-3">
             <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Slider value={[zoom]} min={1} max={3} step={0.05} onValueChange={(v) => setZoom(v[0])} />
+            <Slider aria-label="Zoom da imagem" aria-valuetext={`${zoom.toFixed(2)} vezes`} value={[zoom]} min={1} max={3} step={0.05} onValueChange={(v) => setZoom(v[0])} />
           </div>
           <div className="flex items-center gap-3">
             <RotateCw className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Slider value={[rotation]} min={0} max={360} step={1} onValueChange={(v) => setRotation(v[0])} />
+            <Slider aria-label="Rotação da imagem" aria-valuetext={`${rotation} graus`} value={[rotation]} min={0} max={360} step={1} onValueChange={(v) => setRotation(v[0])} />
           </div>
         </div>
 
+        {saveError && <p role="alert" className="text-base text-destructive">{saveError}</p>}
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancelar

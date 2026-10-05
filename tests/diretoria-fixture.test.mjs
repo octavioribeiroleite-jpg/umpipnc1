@@ -43,7 +43,7 @@ test('fixture blocks foreign/API transports before mounting the application', as
   assert.deepEqual(calls.map(item => item[0]), ['fetch', 'xhr', 'socket']);
 });
 
-function loadFixtureBackend() {
+function loadFixtureBackend(params = '') {
   const source = readFileSync(new URL('./fixtures/diretoria/backend.ts', import.meta.url), 'utf8');
   const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
   const exports = {};
@@ -51,7 +51,7 @@ function loadFixtureBackend() {
     exports, URLSearchParams, crypto, location: { pathname: '/__diretoria/financas' },
     require(name) {
       assert.equal(name, './options');
-      return { fixtureParams: new URLSearchParams(), fixtureRole: 'admin', fixtureState: 'normal', fixturePause: async () => {} };
+      return { fixtureParams: new URLSearchParams(params), fixtureRole: 'admin', fixtureState: 'normal', fixturePause: async () => {} };
     },
   });
   return exports;
@@ -82,4 +82,44 @@ test('fixture file search honors case-insensitive ilike and simple OR without a 
   assert.equal(missing.data.length, 0);
   const named = await supabase.from('files').select('*').ilike('name', '%RELATÓRIO%');
   assert.equal(named.data.length, 1);
+});
+
+test('isolated vote failures preserve one ballot on retries and never report the first rejection as success', async () => {
+  for (const scenario of ['returned', 'network', 'throw']) {
+    const { supabase } = loadFixtureBackend(`vote_error=${scenario}`);
+    const body = { action: 'cast', election_id: 'election', ballot_id: 'ballot-test-only', round_number: 1, choices: ['candidate-1'], blanks: 0 };
+    if (scenario === 'throw') await assert.rejects(supabase.functions.invoke('election-vote', { body }), /FICTÍCIA/);
+    else {
+      const first = await supabase.functions.invoke('election-vote', { body });
+      assert.notEqual(first.data?.success, true);
+      if (scenario === 'network') assert.ok(first.error);
+    }
+    const retried = await supabase.functions.invoke('election-vote', { body });
+    assert.equal(retried.data.success, true);
+    await supabase.functions.invoke('election-vote', { body });
+    const history = await supabase.functions.invoke('election-vote', { body: { action: 'history' } });
+    assert.equal(history.data.votes.length, 1, 'A same-UUID retry only creates one in-memory ballot');
+  }
+});
+
+test('isolated history, previous-vote and device read errors remain explicit and can recover', async () => {
+  for (const action of ['history', 'already', 'device']) {
+    const { supabase } = loadFixtureBackend(`read_error=${action}`);
+    const body = { action, election_id: 'election', token: 'fixture-urna', device_id: 'device-test-only' };
+    const first = await supabase.functions.invoke('election-vote', { body });
+    assert.ok(first.error);
+    assert.equal(first.data, null);
+    const recovered = await supabase.functions.invoke('election-vote', { body });
+    assert.equal(recovered.error, null);
+    assert.ok(recovered.data);
+  }
+});
+
+test('isolated rejected candidate writes keep the seeded candidates intact', async () => {
+  const { supabase } = loadFixtureBackend('candidate_error=1');
+  const before = await supabase.from('election_candidates').select('*');
+  const rejected = await supabase.from('election_candidates').insert({ election_id: 'election', name: 'Nome fictício mantido' });
+  assert.ok(rejected.error);
+  const after = await supabase.from('election_candidates').select('*');
+  assert.deepEqual(after.data, before.data);
 });

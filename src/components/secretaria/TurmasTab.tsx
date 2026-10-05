@@ -1,3 +1,5 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ConfirmActionButton } from '@/components/ui/confirm-action-button';
 import { useEbdNavigation } from '@/hooks/useEbdNavigation';
 import { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
@@ -105,6 +107,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
   const [newClassName, setNewClassName] = useState('');
   const [newClassMinAge, setNewClassMinAge] = useState('');
   const [newClassMaxAge, setNewClassMaxAge] = useState('');
+  const [classDialogOpen, setClassDialogOpen] = useState(false);
   const [creatingClass, setCreatingClass] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   const [editClassName, setEditClassName] = useState('');
@@ -198,9 +201,11 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
 
     if (error || !data) {
       await reportEbdWriteError(error, 'Erro ao atualizar aluno');
+      return false;
     } else {
       toast.success(student.active ? 'Aluno desativado' : 'Aluno reativado');
       onRefresh();
+      return true;
     }
   };
 
@@ -278,12 +283,14 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
       setNewClassName('');
       setNewClassMinAge('');
       setNewClassMaxAge('');
+      setClassDialogOpen(false);
       onRefresh();
     }
     setCreatingClass(false);
   };
 
   const startClassEdit = (cls: EbdClass) => {
+    setClassDialogOpen(true);
     setEditingClassId(cls.id);
     setEditClassName(cls.name);
     setEditClassMinAge(cls.min_age == null ? '' : String(cls.min_age));
@@ -314,6 +321,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     } else {
       toast.success('Turma atualizada');
       setEditingClassId(null);
+      setClassDialogOpen(false);
       onRefresh();
     }
   };
@@ -503,9 +511,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                     <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Transferir ${student.name}`} onClick={() => startTransfer(student)}>
                       <ArrowRightLeft className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" aria-label={`${student.active ? "Inativar" : "Reativar"} ${student.name}`} onClick={() => handleToggleActive(student)}>
-                      <UserMinus className="h-3.5 w-3.5" />
-                    </Button>
+                    <ConfirmActionButton label={student.active ? 'Inativar' : 'Reativar'} title={`${student.active ? 'Inativar' : 'Reativar'} ${student.name}?`} description={student.active ? 'O aluno deixará de aparecer nas próximas chamadas. O histórico será preservado.' : 'O aluno voltará a aparecer nas chamadas da turma.'} onConfirm={() => handleToggleActive(student)} />
                   </div>
 
                   {editingBirthDateId === student.id && (
@@ -548,9 +554,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
               {inactive.map((student) => (
                 <div key={student.id} className="flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 p-2.5">
                   <span className="min-w-0 flex-1 break-words text-sm text-muted-foreground">{student.name}</span>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" aria-label={`${student.active ? "Inativar" : "Reativar"} ${student.name}`} onClick={() => handleToggleActive(student)}>
-                    <UserCheck className="h-3.5 w-3.5" />
-                  </Button>
+                  <ConfirmActionButton label={student.active ? 'Inativar' : 'Reativar'} title={`${student.active ? 'Inativar' : 'Reativar'} ${student.name}?`} description={student.active ? 'O aluno deixará de aparecer nas próximas chamadas. O histórico será preservado.' : 'O aluno voltará a aparecer nas chamadas da turma.'} onConfirm={() => handleToggleActive(student)} />
                 </div>
               ))}
             </div>
@@ -579,39 +583,21 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
         </Card>
       )}
 
-      <Card data-ebd-card>
-        <CardContent data-ebd-content className="pt-4">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleCreateClass();
-            }}
-            className="ebd-form-grid"
-          >
-            <label className="ebd-field">Nome da turma<Input
-              placeholder="Nova turma..."
-              value={newClassName}
-              onChange={(event) => setNewClassName(event.target.value)}
-              className="flex-1"
-            /></label>
-            <label className="ebd-field">Idade mínima<Input
-              inputMode="numeric"
-              placeholder="Idade mín."
-              value={newClassMinAge}
-              onChange={(event) => setNewClassMinAge(event.target.value)}
-            /></label>
-            <label className="ebd-field">Idade máxima<Input
-              inputMode="numeric"
-              placeholder="Idade máx."
-              value={newClassMaxAge}
-              onChange={(event) => setNewClassMaxAge(event.target.value)}
-            /></label>
-            <Button size="sm" disabled={creatingClass || !newClassName.trim()}>
-              <Plus className="h-4 w-4" /> Criar turma
-            </Button>
+      <div className="flex justify-end"><Button onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }}><Plus className="h-4 w-4" />Nova turma</Button></div>
+      <Dialog open={classDialogOpen} onOpenChange={value => { if (!creatingClass) { setClassDialogOpen(value); if (!value) setEditingClassId(null); } }}>
+        <DialogContent size="form"><DialogHeader><DialogTitle>{editingClassId ? 'Editar turma' : 'Nova turma'}</DialogTitle></DialogHeader>
+          <form className="space-y-4" onSubmit={event => { event.preventDefault(); if (editingClassId) void handleSaveClass(editingClassId); else void handleCreateClass(); }}>
+            <label className="ebd-field">Nome da turma<Input value={editingClassId ? editClassName : newClassName} onChange={event => editingClassId ? setEditClassName(event.target.value) : setNewClassName(event.target.value)} autoFocus /></label>
+            {editingClassId && <label className="ebd-field">Acompanhamento de faixa etária<Select value={editAgeTracking} onValueChange={value => setEditAgeTracking(value as 'enabled' | 'disabled')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="enabled">Com faixa etária</SelectItem><SelectItem value="disabled">Sem faixa etária</SelectItem></SelectContent></Select></label>}
+            <div className="grid gap-4 min-[480px]:grid-cols-2">
+              <label className="ebd-field">Idade mínima<Input inputMode="numeric" disabled={!!editingClassId && editAgeTracking === 'disabled'} value={editingClassId ? editClassMinAge : newClassMinAge} onChange={event => editingClassId ? setEditClassMinAge(event.target.value) : setNewClassMinAge(event.target.value)} /></label>
+              <label className="ebd-field">Idade máxima<Input inputMode="numeric" disabled={!!editingClassId && editAgeTracking === 'disabled'} value={editingClassId ? editClassMaxAge : newClassMaxAge} onChange={event => editingClassId ? setEditClassMaxAge(event.target.value) : setNewClassMaxAge(event.target.value)} /></label>
+            </div>
+            {editingClassId && <label className="ebd-field">Próxima turma<Select value={editNextClassId} onValueChange={setEditNextClassId} disabled={editAgeTracking === 'disabled'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">Sem próxima turma</SelectItem>{classes.filter(item => item.id !== editingClassId).map(item => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></label>}
+            <div className="flex flex-wrap justify-end gap-3"><Button type="button" variant="outline" disabled={creatingClass} onClick={() => {setClassDialogOpen(false);setEditingClassId(null);}}>Cancelar</Button><Button disabled={creatingClass || !(editingClassId ? editClassName : newClassName).trim()}>{creatingClass ? 'Salvando…' : 'Salvar turma'}</Button></div>
           </form>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-2">
         {classes.map((cls) => {
@@ -619,7 +605,6 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
           const activeStudents = classStudents.filter((student) => student.active);
           const activeCount = activeStudents.length;
           const inactiveCount = classStudents.filter((student) => !student.active).length;
-          const isEditing = editingClassId === cls.id;
           const reviewCount = activeStudents.filter((student) => {
             const status = getAgeStatus(student, cls);
             return status === 'limit' || status === 'exceeded' || status === 'below';
@@ -627,68 +612,14 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
           const missingCount = activeStudents.filter((student) => getAgeStatus(student, cls) === 'missing').length;
 
           return (
-            <Card data-ebd-card key={cls.id} className="cursor-pointer transition-shadow hover:shadow-md">
+            <Card data-ebd-card key={cls.id} className="min-h-[132px]">
               <CardContent data-ebd-content className="pb-4 pt-4">
                 <div className="ebd-class-row">
-                  {!isEditing && <Users className="h-4 w-4 shrink-0 text-primary" />}
-                  {isEditing ? (
-                    <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
-                      <Input
-                        aria-label="Nome da turma"
-                        value={editClassName}
-                        onChange={(event) => setEditClassName(event.target.value)}
-                        className="h-9 text-sm"
-                        autoFocus
-                      />
-                      <Select value={editAgeTracking} onValueChange={(value) => setEditAgeTracking(value as 'enabled' | 'disabled')}>
-                        <SelectTrigger aria-label="Acompanhamento de faixa etária" className="h-9 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="enabled">Com faixa</SelectItem>
-                          <SelectItem value="disabled">Sem faixa</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        inputMode="numeric"
-                        aria-label="Idade mínima"
-                        value={editClassMinAge}
-                        onChange={(event) => setEditClassMinAge(event.target.value)}
-                        placeholder="Mín."
-                        className="h-9 text-sm"
-                        disabled={editAgeTracking === 'disabled'}
-                      />
-                      <Input
-                        inputMode="numeric"
-                        aria-label="Idade máxima"
-                        value={editClassMaxAge}
-                        onChange={(event) => setEditClassMaxAge(event.target.value)}
-                        placeholder="Máx."
-                        className="h-9 text-sm"
-                        disabled={editAgeTracking === 'disabled'}
-                      />
-                      <Select value={editNextClassId} onValueChange={setEditNextClassId} disabled={editAgeTracking === 'disabled'}>
-                        <SelectTrigger aria-label="Próxima turma" className="h-9 text-xs">
-                          <SelectValue placeholder="Próxima turma" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">Sem próxima turma</SelectItem>
-                          {classes.filter((item) => item.id !== cls.id).map((item) => (
-                            <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Salvar turma" onClick={() => handleSaveClass(cls.id)}>
-                        <Check className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Cancelar edição da turma" onClick={() => setEditingClassId(null)}>
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
+                  <Users className="h-5 w-5 shrink-0 text-primary" />
+                  <>
+
                       <button type="button" className="ebd-class-link" onClick={() => setSelectedClass(cls)} aria-label={`Abrir turma ${cls.name}`}>
-                        <p className="min-w-0 whitespace-normal break-words text-sm font-medium">{cls.name}</p>
+                        <p className="min-w-0 whitespace-normal break-words text-lg font-semibold">{cls.name}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">{formatAgeRange(cls)}</p>
                       </button>
                       <Badge variant="secondary" className="text-xs">{activeCount}</Badge>
@@ -715,8 +646,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                    </>
-                  )}
+                  </>
                 </div>
               </CardContent>
             </Card>

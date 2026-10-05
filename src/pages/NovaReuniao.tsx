@@ -24,7 +24,12 @@ export default function NovaReuniao() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useAuth();
+  const userId = user?.id;
+  const societyId = profile?.society_id;
   const [loading, setLoading] = useState(false);
+  const [profilesLoading, setProfilesLoading] = useState(true);
+  const [profilesError, setProfilesError] = useState(false);
+  const [profileAttempt, setProfileAttempt] = useState(0);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   
@@ -35,7 +40,11 @@ export default function NovaReuniao() {
   });
 
   useEffect(() => {
+    let cancelled = false;
     const fetchProfiles = async () => {
+      if (!userId) return;
+      setProfilesLoading(true);
+      setProfilesError(false);
       let query = supabase
         .from('profiles')
         .select('*')
@@ -43,26 +52,30 @@ export default function NovaReuniao() {
         .order('full_name');
 
       // Filter participants by same society
-      if (profile?.society_id) {
-        query = query.eq('society_id', profile.society_id);
+      if (societyId) {
+        query = query.eq('society_id', societyId);
       }
 
       const { data, error } = await query;
 
+      if (cancelled) return;
+      setProfilesLoading(false);
+      setProfilesError(Boolean(error));
       if (!error && data) {
         setProfiles(data);
         // Auto-select current user
-        if (user) {
-          const currentProfile = data.find(p => p.user_id === user.id);
+        if (userId) {
+          const currentProfile = data.find(p => p.user_id === userId);
           if (currentProfile) {
-            setSelectedParticipants([currentProfile.user_id]);
+            setSelectedParticipants(previous => previous.length ? previous : [currentProfile.user_id]);
           }
         }
       }
     };
 
     fetchProfiles();
-  }, [user]);
+    return () => { cancelled = true; };
+  }, [userId, societyId, profileAttempt]);
 
   const handleParticipantToggle = (userId: string) => {
     setSelectedParticipants(prev =>
@@ -74,6 +87,7 @@ export default function NovaReuniao() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     
     if (!user) {
       toast({
@@ -165,11 +179,11 @@ export default function NovaReuniao() {
         }
       />
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid gap-6 md:grid-cols-2">
+      <form onSubmit={handleSubmit} className="mx-auto w-full max-w-[720px]">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Informações da Reunião</CardTitle>
+              <CardTitle>Identidade</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -182,6 +196,11 @@ export default function NovaReuniao() {
                   required
                 />
               </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Agenda</CardTitle></CardHeader>
+            <CardContent>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="date">Data *</Label>
@@ -212,9 +231,11 @@ export default function NovaReuniao() {
               <CardTitle>Participantes</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+              <div className="space-y-3">
+                {profilesLoading && <p role="status" className="text-muted-foreground">Carregando participantes…</p>}
+                {profilesError && <div role="alert" className="space-y-2"><p>Não foi possível carregar os participantes.</p><Button type="button" variant="outline" onClick={() => setProfileAttempt(value => value + 1)}>Tentar novamente</Button></div>}
                 {profiles.map((profile) => (
-                  <div key={profile.id} className="flex min-h-11 items-center space-x-3 rounded-lg border border-border px-3">
+                  <div key={profile.id} className="flex min-h-14 items-center space-x-3 rounded-lg border border-border px-3">
                     <Checkbox
                       id={profile.user_id}
                       checked={selectedParticipants.includes(profile.user_id)}
@@ -222,7 +243,7 @@ export default function NovaReuniao() {
                     />
                     <label
                       htmlFor={profile.user_id}
-                      className="flex min-h-11 min-w-0 flex-1 flex-wrap items-center break-words text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      className="flex min-h-14 min-w-0 flex-1 flex-wrap items-center break-words text-base font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                     >
                       {profile.full_name}
                       {profile.user_id === user?.id && (
@@ -231,7 +252,7 @@ export default function NovaReuniao() {
                     </label>
                   </div>
                 ))}
-                {profiles.length === 0 && (
+                {!profilesLoading && !profilesError && profiles.length === 0 && (
                   <p className="text-sm text-muted-foreground">
                     Nenhum perfil ativo encontrado.
                   </p>
@@ -242,7 +263,7 @@ export default function NovaReuniao() {
         </div>
 
         <div className="mt-6 flex justify-end [&_button]:w-full sm:[&_button]:w-auto">
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading || profilesLoading || profilesError}>
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Criar Reunião
           </Button>

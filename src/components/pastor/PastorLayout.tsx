@@ -9,9 +9,10 @@ import { OfflineBanner } from '@/components/OfflineBanner';
 
 interface PastorLayoutProps {
   children: React.ReactNode;
+  wide?: boolean;
 }
 
-export function PastorLayout({ children }: PastorLayoutProps) {
+export function PastorLayout({ children, wide = false }: PastorLayoutProps) {
   const { user, loading, isAdmin, isPastor } = useAuth();
   const navigate = useNavigate();
 
@@ -59,7 +60,7 @@ export function PastorLayout({ children }: PastorLayoutProps) {
         </div>
         {/* One content tree preserves form state and subscriptions across breakpoints. */}
         <main id="pastor-content" tabIndex={-1} className="min-w-0 flex-1 px-4 pb-[calc(var(--bottom-nav-height,4rem)+1rem)] pt-[calc(var(--mobile-header-height,4rem)+1rem)] sm:px-6 min-[700px]:pt-6 min-[700px]:pb-6 min-[1100px]:px-8">
-          <div className="mx-auto w-full max-w-[1120px]">{children}</div>
+          <div className={`mx-auto w-full ${wide ? 'max-w-[1360px]' : 'max-w-[1120px]'}`}>{children}</div>
         </main>
         <div className="min-[700px]:hidden">
           <PastorMobileNav />

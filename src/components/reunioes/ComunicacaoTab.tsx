@@ -71,10 +71,11 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
       const newMessage = response.data.message;
 
       // Update in database
-      await supabase
+      const { error: saveError } = await supabase
         .from('meetings')
         .update({ whatsapp_message: newMessage })
         .eq('id', meetingId);
+      if (saveError) throw saveError;
 
       // Update local state immediately (no page reload)
       setLocalMessage(newMessage);
@@ -137,7 +138,7 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
       <Alert className="border-primary/50 bg-primary/5">
         <MessageSquare className="h-4 w-4" />
         <AlertDescription>
-          Mensagem gerada automaticamente com base na ata. Clique em "Copiar" e cole no WhatsApp.
+          Rascunho gerado com base na ata. Revise nomes, decisões e prazos antes de copiar e compartilhar no WhatsApp.
         </AlertDescription>
       </Alert>
 
@@ -166,12 +167,12 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
             </div>
           </CardTitle>
           <CardDescription>
-            Pronta para copiar e enviar
+            Prévia para revisão
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="bg-muted/50 rounded-lg p-4 border">
-            <p className="break-words text-sm leading-relaxed whitespace-pre-wrap">{localMessage}</p>
+          <div className="bg-muted/50 rounded-lg p-6 border">
+            <p className="break-words text-base leading-6 whitespace-pre-wrap">{localMessage}</p>
           </div>
         </CardContent>
       </Card>

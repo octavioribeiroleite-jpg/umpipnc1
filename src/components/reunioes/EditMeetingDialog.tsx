@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,15 +31,19 @@ export function EditMeetingDialog({
   const [title, setTitle] = useState(meeting.title);
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+  const [error, setError] = useState('');
+  const previousOpen = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (open) {
+    if (open && !previousOpen.current) {
+      setError('');
       setTitle(meeting.title);
       const meetingDate = new Date(meeting.date);
-      setDate(meetingDate.toISOString().split('T')[0]);
+      setDate(`${meetingDate.getFullYear()}-${String(meetingDate.getMonth() + 1).padStart(2, '0')}-${String(meetingDate.getDate()).padStart(2, '0')}`);
       setTime(meetingDate.toTimeString().slice(0, 5));
     }
+    previousOpen.current = open;
   }, [open, meeting]);
 
   const handleSave = async () => {
@@ -53,14 +57,16 @@ export function EditMeetingDialog({
         date: dateTime.toISOString(),
       });
       onOpenChange(false);
+    } catch {
+      setError('Não foi possível salvar. Confira os dados e tente novamente.');
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="sm:max-w-md">
+    <ResponsiveDialog open={open} onOpenChange={value => { if (!isSaving) onOpenChange(value); }}>
+      <ResponsiveDialogContent size="form">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Editar Reunião</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
@@ -68,11 +74,12 @@ export function EditMeetingDialog({
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
+        {error && <p role="alert" className="text-destructive">{error}</p>}
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="title">Título *</Label>
             <Input
-              id="title"
+              disabled={isSaving} id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Nome da reunião"
@@ -84,7 +91,7 @@ export function EditMeetingDialog({
               <Label htmlFor="date">Data *</Label>
               <Input
                 id="date"
-                type="date"
+                disabled={isSaving} type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
@@ -93,7 +100,7 @@ export function EditMeetingDialog({
               <Label htmlFor="time">Horário *</Label>
               <Input
                 id="time"
-                type="time"
+                disabled={isSaving} type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
               />

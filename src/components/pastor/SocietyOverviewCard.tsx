@@ -24,7 +24,7 @@ interface Props {
 export function SocietyOverviewCard({ society, stats }: Props) {
   const navigate = useNavigate();
   const formattedBalance = stats
-    ? `R$ ${stats.saldo < 0 ? '-' : ''}${Math.abs(stats.saldo).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`
+    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.saldo)
     : '';
 
   return (
@@ -32,6 +32,9 @@ export function SocietyOverviewCard({ society, stats }: Props) {
       variant="interactive"
       colorStripe={society.color}
       onClick={() => navigate(`/pastor/sociedade/${society.slug}`)}
+      role="link"
+      tabIndex={0}
+      onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate(`/pastor/sociedade/${society.slug}`); } }}
       className="min-w-0"
     >
       <div className="flex items-center justify-between gap-3">
@@ -42,7 +45,7 @@ export function SocietyOverviewCard({ society, stats }: Props) {
           >
             {society.name.substring(0, 3)}
           </div>
-          <p className="min-w-0 whitespace-normal [overflow-wrap:anywhere] text-sm font-semibold">{society.name}</p>
+          <p className="min-w-0 whitespace-normal [overflow-wrap:anywhere] text-lg font-semibold">{society.name}</p>
         </div>
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
       </div>

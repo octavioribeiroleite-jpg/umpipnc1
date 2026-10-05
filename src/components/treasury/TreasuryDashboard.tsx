@@ -85,6 +85,12 @@ export function TreasuryDashboard(props: Props) {
       <header className="tr-topbar"><a href="/tesouraria" className="tr-mobile-brand"><Church size={23} />IPNC <span>Tesouraria</span></a><span className="tr-church-name">Igreja Presbiteriana de Nova Carapina</span><div className="tr-top-actions"><span className="tr-access"><span />{admin ? 'Acesso administrativo' : props.treasurer ? 'Acesso do tesoureiro' : 'Acesso necessário'}</span>{admin || props.treasurer ? <button className="tr-icon-button" onClick={props.onLogout} aria-label={admin ? "Sair do acesso administrativo" : "Sair da tesouraria"}><LogOut size={18} /></button> : <button className="tr-button tr-button-small" onClick={props.onLogin}><LockKeyhole size={15} /><span>Acesso do tesoureiro</span></button>}</div></header>
       <main id="treasury-content" className="tr-content">
         <div className="tr-title-row"><div>{selected ? <button className="tr-back" onClick={() => props.onFund()}><ArrowLeft size={14} />Visão geral</button> : <p className="tr-eyebrow">TRANSPARÊNCIA & CUIDADO</p>}<h1>{selected ? `Caixa da ${selected.abbreviation}` : 'Dashboard financeiro'}</h1><p>{selected ? selected.name : 'Os recursos de cada sociedade, em um só lugar.'}</p></div><div className="tr-heading-actions"><button className="tr-button" onClick={props.onShare}><Share2 size={16} />Compartilhar</button>{(admin || props.treasurer) && <button className="tr-button tr-primary" onClick={props.onNewEntry} disabled={!data}><Plus size={18} />{admin ? 'Novo lançamento' : 'Registrar recebimento'}</button>}</div></div>
+        {admin && <nav className="tr-admin-navigation" aria-label="Ferramentas administrativas da tesouraria">{[
+          ['treasury-content', 'Consolidado'], ['treasury-pending', 'Pendências'], ['treasury-bank', 'Conferência'], ['treasury-reports', 'Relatórios'], ['treasury-pins', 'PINs'],
+        ].map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => {
+          const target = document.getElementById(id);
+          if (target instanceof HTMLDetailsElement) target.open = true;
+        }}>{label}</a>)}</nav>}
 
         {loading && <div className="tr-status" role="status"><RefreshCw className="tr-spin" size={18} />Consultando os caixas das sociedades…</div>}
         {error && <div className="tr-error" role="alert"><strong>Os valores estão indisponíveis neste momento.</strong><p>{error}</p><button className="tr-button" disabled={props.refreshing} onClick={props.onRefresh}>Tentar novamente</button></div>}

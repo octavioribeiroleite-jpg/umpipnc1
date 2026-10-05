@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { AlertTriangle, ShoppingCart, Package, TrendingUp, Plus, Loader2, Shirt, Trash2, Gift, Clock, Wallet } from 'lucide-react';
 import { EncomendasTab, type ShirtOrder, type OrderItem } from './EncomendasTab';
 import { CampanhasCamisasTab, type ShirtCampaign } from './CampanhasCamisasTab';
+import { ResponsiveSectionNavigation } from '@/components/layout/ResponsiveSectionNavigation';
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
 const ORDER_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Inf2', 'Inf3', 'Inf4'];
@@ -459,14 +460,10 @@ export function CamisasTab() {
     <div className="shirts-workspace space-y-6">
       {readFailure}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="finance-subtabs" aria-label="Controle de camisas">
-          <TabsTrigger value="resumo">Resumo</TabsTrigger>
-          <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
-          <TabsTrigger value="encomendas">Encomendas</TabsTrigger>
-          <TabsTrigger value="compras">Compras</TabsTrigger>
-          <TabsTrigger value="vendas">Vendas</TabsTrigger>
-          <TabsTrigger value="estoque">Estoque</TabsTrigger>
-        </TabsList>
+        <ResponsiveSectionNavigation label="Controle de camisas" value={activeTab} onChange={setActiveTab} options={[
+          {value:'resumo',label:'Resumo'}, {value:'campanhas',label:'Campanhas'}, {value:'encomendas',label:'Encomendas'},
+          {value:'compras',label:'Compras'}, {value:'vendas',label:'Vendas'}, {value:'estoque',label:'Estoque'},
+        ]} />
 
         <TabsContent value="campanhas" className="space-y-4 animate-in fade-in-50">
           <CampanhasCamisasTab

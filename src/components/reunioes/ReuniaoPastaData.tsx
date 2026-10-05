@@ -21,7 +21,7 @@ export function ReuniaoPastaData({ date, count, children, defaultOpen = true }: 
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger className="w-full">
         <div className={cn(
-          "flex min-h-11 flex-wrap items-center gap-2 p-3 rounded-xl text-left transition-colors",
+          "flex min-h-12 flex-wrap items-center gap-2 p-3 rounded-xl text-left transition-colors",
           "bg-muted/50 hover:bg-muted cursor-pointer",
           "border border-border/50"
         )}>

@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,14 +20,12 @@ interface Alert {
 
 export function AlertsSection() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const read = useSnapshotRead(`pastor-alerts:${user?.id ?? ''}`);
+  const { run } = read;
 
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
-
-  const fetchAlerts = async () => {
-    try {
+  const fetchAlerts = useCallback(async () => {
+    await run(async () => {
       const now = new Date();
 
       const [tasksRes, meetingsRes, societiesRes] = await Promise.all([
@@ -31,6 +33,9 @@ export function AlertsSection() {
         supabase.from('meetings').select('id, title, date, final_minutes, status, society_id').eq('status', 'fechada').is('final_minutes', null),
         supabase.from('societies').select('id, name').eq('active', true),
       ]);
+
+      const failed = [tasksRes, meetingsRes, societiesRes].find(result => result.error);
+      if (failed?.error) throw failed.error;
 
       const societyMap = new Map((societiesRes.data || []).map(s => [s.id, s.name]));
       const newAlerts: Alert[] = [];
@@ -55,15 +60,13 @@ export function AlertsSection() {
         });
       });
 
-      setAlerts(newAlerts);
-    } catch (err) {
-      console.error('Error fetching alerts:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return () => setAlerts(newAlerts);
+    });
+  }, [run]);
+  useEffect(() => { if (user) void fetchAlerts(); }, [user, fetchAlerts]);
 
-  if (loading || alerts.length === 0) return null;
+  if (!read.hasSnapshot && !read.error) return <Skeleton aria-label="Consultando pendências" className="h-24 rounded-card" />;
+  if (read.hasSnapshot && alerts.length === 0 && !read.error) return null;
 
   const iconMap = {
     overdue_task: Clock,
@@ -74,7 +77,9 @@ export function AlertsSection() {
   const mediumAlerts = alerts.filter(a => a.severity === 'medium');
 
   return (
-    <Card className="border-warning/30">
+    <section className="space-y-3">
+    {read.error && <QueryErrorState message="Não foi possível consultar os alertas e pendências." onRetry={() => void fetchAlerts()} retrying={read.loading} hasPreviousData={read.hasSnapshot} />}
+    {read.hasSnapshot && alerts.length > 0 && <Card className="border-warning/30">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex flex-wrap items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-warning" />
@@ -88,7 +93,7 @@ export function AlertsSection() {
         {[...highAlerts, ...mediumAlerts].slice(0, 8).map((alert, i) => {
           const Icon = iconMap[alert.type];
           return (
-            <div key={i} className="flex items-start gap-3 text-sm py-1.5 border-b last:border-0">
+            <div key={i} className="flex min-h-[72px] items-start gap-3 text-base py-3 border-b last:border-0">
               <Icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${alert.severity === 'high' ? 'text-destructive' : 'text-warning'}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -97,12 +102,13 @@ export function AlertsSection() {
                     <Badge variant="outline" className="text-xs px-1.5 py-0 flex-shrink-0">{alert.societyName}</Badge>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">{alert.detail}</p>
+                <p className="text-sm text-muted-foreground">{alert.detail}</p>
               </div>
             </div>
           );
         })}
       </CardContent>
-    </Card>
+    </Card>}
+    </section>
   );
 }

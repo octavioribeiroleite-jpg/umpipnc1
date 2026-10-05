@@ -1,6 +1,6 @@
 import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { QueryErrorState } from '@/components/ui/query-error-state';
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -141,14 +141,15 @@ function ReturnVisitorConfirm({
   const handleConfirm = async () => {
     setConfirming(true);
     try {
-      await supabase.rpc('register_portal_visit' as any, {
+      const { error } = await supabase.rpc('register_portal_visit' as any, {
         p_name: visitor.fullName, p_society: visitor.societyId,
         p_visitor: visitor.isVisitor, p_device: visitor.deviceId,
       });
-    } catch (e) {
-      console.warn('Erro ao registrar visita:', e);
-    }
-    onConfirm();
+      if (error) throw error;
+      onConfirm();
+    } catch {
+      toast.error('Não foi possível registrar sua visita. Tente novamente.');
+    } finally { setConfirming(false); }
   };
 
   return (
@@ -299,28 +300,20 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
     }
 
     setSubmitting(true);
-    const deviceId = getOrCreateDeviceId();
-    const isVisitor = societyChoice === 'visitante';
-    const societyId = isVisitor ? null : societyChoice;
-
-    const { error } = await supabase.rpc('register_portal_visit' as any, {
-      p_name: trimmedName.slice(0, 100), p_society: societyId,
-      p_visitor: isVisitor, p_device: deviceId,
-    });
-
-    if (error) {
-      console.warn('Erro ao registrar visitante:', error.message);
-    }
-
-    const visitorData: VisitorData = {
-      fullName: trimmedName,
-      societyId,
-      isVisitor,
-      deviceId,
-    };
-
-    onComplete(visitorData);
-    toast.success('Bem-vindo!');
+    try {
+      const deviceId = getOrCreateDeviceId();
+      const isVisitor = societyChoice === 'visitante';
+      const societyId = isVisitor ? null : societyChoice;
+      const { error } = await supabase.rpc('register_portal_visit' as any, {
+        p_name: trimmedName.slice(0, 100), p_society: societyId,
+        p_visitor: isVisitor, p_device: deviceId,
+      });
+      if (error) throw error;
+      onComplete({ fullName: trimmedName, societyId, isVisitor, deviceId });
+      toast.success('Bem-vindo!');
+    } catch {
+      toast.error('Não foi possível registrar sua visita. Seus dados foram mantidos para tentar novamente.');
+    } finally { setSubmitting(false); }
   };
 
   return (
@@ -365,7 +358,7 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
                 ) : null) : (
                   <RadioGroup aria-label="Sociedade ou visitante" value={societyChoice} onValueChange={setSocietyChoice} className="space-y-2">
                     {societies.map((s) => (
-                      <div key={s.id} className="flex min-h-11 items-center space-x-3 rounded-lg border border-border p-3">
+                      <div key={s.id} className="flex min-h-[48px] items-center space-x-3 rounded-lg border border-border p-3">
                         <RadioGroupItem value={s.id} id={`soc-${s.id}`} />
                         <Label htmlFor={`soc-${s.id}`} className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer font-normal leading-relaxed">
                           <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
@@ -373,7 +366,7 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
                         </Label>
                       </div>
                     ))}
-                    <div className="flex min-h-11 items-center space-x-3 rounded-lg border border-border p-3">
+                    <div className="flex min-h-[48px] items-center space-x-3 rounded-lg border border-border p-3">
                       <RadioGroupItem value="visitante" id="soc-visitante" />
                       <Label htmlFor="soc-visitante" className="min-w-0 flex-1 cursor-pointer font-normal leading-relaxed">
                         Visitante
@@ -407,138 +400,83 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
 function Portal({ visitor }: { visitor: VisitorData }) {
   const [activeTab, setActiveTab] = useState<PortalTab>('inicio');
   const [menuOpen, setMenuOpen] = useState(false);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
-
   const tabs: { key: PortalTab; label: string; icon: typeof Calendar }[] = [
     { key: 'inicio', label: 'Início', icon: Home },
     { key: 'programacoes', label: 'Programações', icon: Calendar },
     { key: 'avisos', label: 'Avisos', icon: Bell },
     { key: 'dizimos', label: 'Dízimos', icon: Heart },
   ];
+  useEffect(() => {
+    const nav = mobileNavRef.current;
+    const shell = shellRef.current;
+    if (!nav || !shell) return;
+    const measure = () => shell.style.setProperty('--portal-nav-height', `${nav.getBoundingClientRect().height}px`);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, []);
+  const handleTabChange = (tab: PortalTab) => { setActiveTab(tab); setMenuOpen(false); };
+  const renderMenu = (rail = false) => <nav aria-label="Seções do portal" className="min-h-0 flex-1 overflow-y-auto space-y-2">
+    {tabs.map(item => <button key={item.key} type="button" onClick={() => handleTabChange(item.key)} aria-current={activeTab === item.key ? 'page' : undefined} aria-label={item.label} title={item.label}
+      className={`flex min-h-[48px] w-full min-w-0 items-center gap-3 rounded-xl px-3 py-3 text-left ${rail ? (activeTab === item.key ? 'bg-sidebar-accent text-sidebar-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent') : (activeTab === item.key ? 'bg-primary/10 text-primary' : 'hover:bg-muted')}`}>
+      <item.icon className="h-[20px] w-[20px] shrink-0" />
+      <span className={`min-w-0 [overflow-wrap:anywhere] text-base ${rail ? 'hidden min-[1100px]:block' : ''}`}>{item.label}</span>
+    </button>)}
+  </nav>;
 
-  const handleTabChange = (tab: PortalTab) => {
-    setActiveTab(tab);
-    setMenuOpen(false);
-  };
-
-  const firstName = visitor.fullName.split(' ')[0];
-
-  return (
-    <div className="min-h-dvh bg-background flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-card border-b border-border px-4 py-2 safe-top">
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 max-w-[1120px] mx-auto">
+  return <div ref={shellRef} className="ipnc-portal min-h-dvh min-w-0 bg-background min-[700px]:flex">
+    <aside aria-label="Portal da igreja" className="sticky top-0 hidden h-dvh w-[76px] shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar text-sidebar-foreground p-[8px] min-[700px]:flex min-[1100px]:w-[224px] min-[1100px]:p-[16px]">
+      <div className="flex min-h-[64px] items-center gap-3 min-[1100px]:px-2">
+        <img src={logoIpnc} alt="IPNC" className="h-[44px] w-[44px] shrink-0 rounded-xl bg-white p-1 object-contain" />
+        <span className="hidden min-w-0 text-base font-semibold min-[1100px]:block">Portal da igreja</span>
+      </div>
+      {renderMenu(true)}
+      <div className="border-t border-border pt-4">
+        <p className="hidden [overflow-wrap:anywhere] text-base min-[1100px]:block">{visitor.fullName}</p>
+        <Button variant="ghost" className="mt-2 w-full min-w-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground min-[1100px]:justify-start" onClick={() => navigate('/auth')} aria-label="Acessar como responsável" title="Acessar como responsável">
+          <LogIn className="h-[20px] w-[20px] shrink-0" /><span className="hidden min-[1100px]:inline">Acesso responsável</span>
+        </Button>
+      </div>
+    </aside>
+    <div className="flex min-w-0 flex-1 flex-col">
+      <a href="#portal-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-card focus:p-3">Ir para o conteúdo</a>
+      <header className="sticky top-0 z-40 border-b border-border bg-card px-[16px] py-3 safe-top min-[700px]:px-[24px]">
+        <div className="mx-auto flex max-w-[1120px] min-w-0 flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            {/* Hamburger Menu */}
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 -ml-2" aria-label="Abrir navegação da igreja">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-72 max-w-[85vw] bg-card text-foreground p-0">
-                <SheetTitle className="sr-only">Navegação do portal da igreja</SheetTitle>
-                <div className="flex flex-col h-full">
-                  {/* Sidebar header */}
-                  <div className="flex items-center gap-2 p-4 border-b border-border">
-                    <img src={logoIpnc} alt="IPNC" className="h-10 w-10 object-contain" />
-                    <div className="flex flex-col">
-                      <span className="font-display font-bold text-sm text-primary">Portal da Igreja</span>
-                      <span className="text-xs text-muted-foreground">IPNC</span>
-                    </div>
-                  </div>
-
-                  {/* Nav items */}
-                  <nav className="flex-1 py-4 overflow-y-auto">
-                    <ul className="space-y-1 px-2">
-                      {tabs.map((item) => {
-                        const isActive = activeTab === item.key;
-                        return (
-                          <li key={item.key}>
-                            <button
-                              onClick={() => handleTabChange(item.key)}
-                              className={`flex min-h-11 items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-muted ${
-                                isActive
-                                  ? 'bg-primary/10 text-primary shadow-sm'
-                                  : 'text-foreground'
-                              }`}
-                            >
-                              <item.icon className="h-5 w-5 mr-3" />
-                              <span className="font-medium">{item.label}</span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </nav>
-
-                  {/* Visitor + Login section */}
-                  <div className="p-4 border-t border-border">
-                    <div className="mb-3 px-2">
-                      <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{visitor.fullName}</p>
-                      <p className="text-xs text-muted-foreground">{visitor.isVisitor ? 'Visitante' : 'Membro'}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      onClick={() => { setMenuOpen(false); navigate('/auth'); }}
-                      className="w-full justify-start text-foreground hover:bg-muted"
-                    >
-                      <LogIn className="h-5 w-5 mr-3" />
-                      <span>Fazer Login</span>
-                    </Button>
-                  </div>
-                </div>
+              <SheetTrigger asChild><Button variant="ghost" size="icon" className="shrink-0 min-[700px]:hidden" aria-label="Abrir navegação da igreja"><Menu className="h-5 w-5" /></Button></SheetTrigger>
+              <SheetContent side="left" className="flex w-[280px] max-w-[85vw] flex-col gap-5 bg-card p-[16px]">
+                <SheetTitle>Portal da igreja</SheetTitle>{renderMenu()}
+                <div className="border-t border-border pt-4"><p className="[overflow-wrap:anywhere] text-base font-medium">{visitor.fullName}</p><p className="text-sm text-muted-foreground">{visitor.isVisitor ? 'Visitante' : 'Membro'}</p></div>
+                <Button variant="outline" onClick={() => { setMenuOpen(false); navigate('/auth'); }}><LogIn className="mr-2 h-4 w-4" />Acesso responsável</Button>
               </SheetContent>
             </Sheet>
-
-            <img src={logoIpnc} alt="IPNC" className="h-10 w-10 shrink-0 object-contain" />
-            <div className="min-w-0">
-              <p className="break-words text-sm sm:text-base font-semibold leading-tight">Portal da Igreja</p>
-              <p className="break-words text-xs text-muted-foreground">Olá, {firstName}!</p>
-            </div>
+            <div className="min-w-0"><p className="[overflow-wrap:anywhere] text-base font-semibold">Portal da igreja</p><p title={visitor.fullName} className="[overflow-wrap:anywhere] text-sm text-muted-foreground">Olá, {visitor.fullName.split(' ')[0]}!</p></div>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <HeaderActions showInstall={false} showVersion={false} />
-            <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
-              <LogIn className="h-4 w-4 mr-1.5" />
-              Login
-            </Button>
-          </div>
+          <HeaderActions showInstall={false} showVersion={false} />
         </div>
       </header>
-
-      {/* Content */}
-      <main className="min-w-0 flex-1 px-4 py-5 pb-[calc(6rem+env(safe-area-inset-bottom))] max-w-[1120px] mx-auto w-full sm:px-6 lg:py-7 lg:pb-28">
+      <main id="portal-content" tabIndex={-1} className="mx-auto w-full max-w-[1120px] min-w-0 flex-1 px-[16px] py-[20px] pb-[calc(var(--portal-nav-height,64px)+20px)] min-[700px]:px-[24px] min-[700px]:pb-[24px]">
         {activeTab !== 'inicio' && <PageHeader title={tabs.find(tab => tab.key === activeTab)?.label || 'Portal da igreja'} description="Igreja Presbiteriana de Nova Carapina" />}
-        {activeTab === 'inicio' && <InicioTab visitor={visitor} onTabChange={setActiveTab} />}
+        {activeTab === 'inicio' && <InicioTab visitor={visitor} onTabChange={handleTabChange} />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
         {activeTab === 'avisos' && <AvisosTab />}
         {activeTab === 'dizimos' && <DizimosPortalTab />}
       </main>
-
-      {/* Bottom Nav */}
-      <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border safe-bottom">
-        <div className="grid grid-cols-4 max-w-2xl mx-auto">
-          {tabs.map(({ key, label, icon: Icon }) => {
-            const active = activeTab === key;
-            return (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                aria-current={active ? 'page' : undefined}
-                className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 py-2.5 px-1 text-xs transition-colors ${
-                  active ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                <Icon className={`h-5 w-5 ${active ? 'text-primary' : ''}`} />
-                <span className={active ? 'font-semibold' : ''}>{label}</span>
-              </button>
-            );
-          })}
+      <nav ref={mobileNavRef} aria-label="Navegação principal do portal" className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-card safe-bottom min-[700px]:hidden">
+        <div className="mx-auto grid max-w-[760px] grid-cols-4">
+          {tabs.map(({ key, label, icon: Icon }) => <button key={key} type="button" onClick={() => handleTabChange(key)} aria-current={activeTab === key ? 'page' : undefined}
+            className={`flex min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 px-1 py-2 text-xs ${activeTab === key ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+            <Icon className="h-[20px] w-[20px] shrink-0" /><span className="w-full [overflow-wrap:anywhere] text-center">{label}</span>
+          </button>)}
         </div>
       </nav>
     </div>
-  );
+  </div>;
 }
 
 // ---------- Início Tab ----------
@@ -570,7 +508,12 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
   return (
     <div className="space-y-4">
       {/* Saudação bonita */}
-      <PageHeader title={`Olá, ${firstName}!`} description="Bem-vindo à Igreja Presbiteriana de Nova Carapina" />
+      <section className="rounded-2xl bg-sidebar p-[20px] text-sidebar-foreground min-[700px]:p-[24px]">
+        <p className="mb-2 text-sm font-medium text-sidebar-foreground/80">Igreja Presbiteriana de Nova Carapina</p>
+        <h1 className="[overflow-wrap:anywhere] text-[1.625rem] font-bold leading-tight min-[700px]:text-[2rem]">Bem-vindo à nossa comunidade, {firstName}!</h1>
+        <p className="mt-3 text-base leading-relaxed text-sidebar-foreground/90">Programações e avisos da igreja em um só lugar.</p>
+        <Button variant="secondary" className="mt-4 min-h-[48px]" onClick={() => onTabChange('programacoes')}>Ver programações <ChevronRight className="ml-2 h-4 w-4" /></Button>
+      </section>
       {readFailure}
 
       {/* Próximo Evento */}
@@ -586,7 +529,7 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Próximo Evento</p>
-                <h3 className="font-semibold text-sm">{nextEvent.title}</h3>
+                <h3 className="[overflow-wrap:anywhere] font-semibold text-base">{nextEvent.title}</h3>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
                   <span>{format(new Date(nextEvent.start_date), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
                   {!nextEvent.all_day && (
@@ -606,7 +549,7 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
             </div>
             <button
               onClick={() => onTabChange('programacoes')}
-              className="flex min-h-11 items-center gap-1 text-sm text-primary font-medium mt-3 ml-auto hover:underline"
+              className="flex min-h-[48px] items-center gap-1 text-sm text-primary font-medium mt-3 ml-auto hover:underline"
             >
               Ver todos <ChevronRight className="h-3.5 w-3.5" />
             </button>
@@ -631,8 +574,8 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
                     <Badge variant="destructive" className="text-xs py-0">Urgente</Badge>
                   )}
                 </div>
-                <h3 className="font-semibold text-sm">{lastAnnouncement.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{lastAnnouncement.message}</p>
+                <h3 className="[overflow-wrap:anywhere] font-semibold text-base">{lastAnnouncement.title}</h3>
+                <p className="text-base leading-relaxed text-muted-foreground mt-1 whitespace-pre-line [overflow-wrap:anywhere]">{lastAnnouncement.message}</p>
                 <p className="text-xs text-muted-foreground mt-1.5">
                   {formatDistanceToNow(new Date(lastAnnouncement.created_at), { addSuffix: true, locale: ptBR })}
                 </p>
@@ -640,7 +583,7 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
             </div>
             <button
               onClick={() => onTabChange('avisos')}
-              className="flex min-h-11 items-center gap-1 text-sm text-primary font-medium mt-3 ml-auto hover:underline"
+              className="flex min-h-[48px] items-center gap-1 text-sm text-primary font-medium mt-3 ml-auto hover:underline"
             >
               Ver todos <ChevronRight className="h-3.5 w-3.5" />
             </button>
@@ -712,7 +655,7 @@ function DizimosPortalTab() {
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
         {readFailure}
         <Heart className="h-12 w-12 mb-3 opacity-40" />
-        <p className="text-sm font-medium">Chave PIX não configurada</p>
+        <p className="[overflow-wrap:anywhere] text-base font-medium">Chave PIX não configurada</p>
         <p className="text-xs mt-1">Em breve as informações estarão disponíveis.</p>
       </div>
     );
@@ -742,7 +685,7 @@ function DizimosPortalTab() {
           <div>
             <p className="text-sm text-muted-foreground mb-2">Chave PIX:</p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-muted rounded-lg border p-3">
-              <code className="flex-1 text-sm font-mono break-all font-semibold">{pixKey}</code>
+              <code className="flex-1 text-base font-mono break-all font-semibold">{pixKey}</code>
               <Button onClick={handleCopy} variant={copied ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto shrink-0">
                 {copied ? <><Check className="h-4 w-4 mr-1" />Copiado!</> : <><Copy className="h-4 w-4 mr-1" />Copiar</>}
               </Button>
@@ -753,7 +696,7 @@ function DizimosPortalTab() {
           {pixKeyType && (
             <div>
               <p className="text-xs text-muted-foreground">Tipo da chave</p>
-              <p className="text-sm font-medium">{PIX_TYPE_LABELS[pixKeyType] || pixKeyType}</p>
+              <p className="[overflow-wrap:anywhere] text-base font-medium">{PIX_TYPE_LABELS[pixKeyType] || pixKeyType}</p>
             </div>
           )}
 
@@ -761,14 +704,14 @@ function DizimosPortalTab() {
           {pixBeneficiary && (
             <div>
               <p className="text-xs text-muted-foreground">Beneficiário</p>
-              <p className="text-sm font-medium">{pixBeneficiary}</p>
+              <p className="[overflow-wrap:anywhere] text-base font-medium">{pixBeneficiary}</p>
             </div>
           )}
 
           {/* Instruções */}
           {pixInstructions && (
             <div className="rounded-lg bg-primary/5 p-4 border-l-4 border-primary">
-              <p className="text-sm italic text-foreground">{pixInstructions}</p>
+              <p className="text-base leading-relaxed [overflow-wrap:anywhere] text-foreground">{pixInstructions}</p>
             </div>
           )}
         </CardContent>
@@ -852,7 +795,7 @@ function ProgramacoesTab() {
                   <div className="h-1" style={{ backgroundColor: event.color || 'hsl(var(--primary))' }} />
                   <CardContent className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                      <h3 className="min-w-0 break-words font-medium text-sm">{event.title}</h3>
+                      <h3 className="min-w-0 [overflow-wrap:anywhere] font-semibold text-base">{event.title}</h3>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {soc && (
                           <Badge variant="outline" className="text-xs" style={{ borderColor: soc.color, color: soc.color }}>
@@ -885,7 +828,7 @@ function ProgramacoesTab() {
                       </div>
                     )}
                     {event.description && (
-                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{event.description}</p>
+                      <p className="text-base leading-relaxed text-muted-foreground mt-2 whitespace-pre-line [overflow-wrap:anywhere]">{event.description}</p>
                     )}
                   </CardContent>
                 </Card>
@@ -930,7 +873,7 @@ function AvisosTab() {
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
         {readFailure}
         <Bell className="h-12 w-12 mb-3 opacity-40" />
-        <p className="text-sm font-medium">Nenhum aviso</p>
+        <p className="[overflow-wrap:anywhere] text-base font-medium">Nenhum aviso</p>
         <p className="text-xs mt-1">Quando houver novidades, elas aparecerão aqui.</p>
       </div>
     );
@@ -944,10 +887,10 @@ function AvisosTab() {
         <Card key={a.id} className={a.priority === 'urgente' ? 'border-destructive/50' : ''}>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-sm font-semibold">{a.title}</h3>
+              <h3 className="[overflow-wrap:anywhere] text-base font-semibold">{a.title}</h3>
               {a.priority === 'urgente' && <Badge variant="destructive" className="text-xs">Urgente</Badge>}
             </div>
-            <p className="break-words text-sm text-muted-foreground mt-2 whitespace-pre-line">{a.message}</p>
+            <p className="[overflow-wrap:anywhere] text-base leading-relaxed text-muted-foreground mt-2 whitespace-pre-line">{a.message}</p>
             <p className="text-xs text-muted-foreground mt-2">
               {format(new Date(a.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>

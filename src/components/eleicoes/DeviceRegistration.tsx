@@ -95,7 +95,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              className="h-11 min-w-0 text-sm"
+              className="min-h-[48px] min-w-0 text-base"
             />
             <Button
               onClick={handleAdd}
@@ -123,7 +123,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
             <div key={d.id} className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-2">
               <div className="flex items-center gap-2">
                 <Monitor className="h-4 w-4 text-primary shrink-0" />
-                <span className="min-w-0 break-words text-sm font-semibold text-foreground flex-1">{d.label}</span>
+                <span className="min-w-0 [overflow-wrap:anywhere] text-base font-semibold text-foreground flex-1">{d.label}</span>
                 {d.activated ? (
                   <span className="flex items-center gap-1 text-xs font-medium text-success bg-success/15 px-2 py-0.5 rounded-full">
                     <CheckCircle className="w-3 h-3" /> Online
@@ -135,14 +135,14 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="h-11 text-sm" onClick={() => setSelectedDevice(d)}>
+                <Button variant="outline" size="sm" className="min-h-[48px] text-base" onClick={() => setSelectedDevice(d)}>
                   <QrCode className="h-3.5 w-3.5 mr-1" /> Mostrar QR Code
                 </Button>
-                <Button variant="outline" size="sm" className="h-11 text-sm" onClick={() => copyDeviceLink(d)}>
+                <Button variant="outline" size="sm" className="min-h-[48px] text-base" onClick={() => copyDeviceLink(d)}>
                   <Copy className="h-3.5 w-3.5 mr-1" /> Copiar link
                 </Button>
                 {!disabled && (
-                  <Button variant="ghost" size="sm" className="h-11 text-sm text-destructive hover:text-destructive" onClick={() => handleRemove(d.id)}>
+                  <Button variant="ghost" size="sm" className="min-h-[48px] text-base text-destructive hover:text-destructive" onClick={() => handleRemove(d.id)}>
                     <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover
                   </Button>
                 )}
@@ -153,7 +153,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
         </div>
       )}
       <Dialog open={!!selectedDevice} onOpenChange={(open) => !open && setSelectedDevice(null)}>
-        <DialogContent className="sm:max-w-md bg-background">
+        <DialogContent className="sm:max-w-md bg-background pt-[56px]">
           <DialogHeader>
             <DialogTitle>{selectedDevice?.label || 'Urna'}</DialogTitle>
           </DialogHeader>

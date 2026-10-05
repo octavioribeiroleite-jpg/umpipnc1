@@ -6,174 +6,68 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Church, KeyRound } from 'lucide-react';
+import { Loader2, KeyRound } from 'lucide-react';
+import logo from '@/assets/logo-ipnc.png';
 
 export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isValidSession, setIsValidSession] = useState(false);
-
+  const [sessionState, setSessionState] = useState<'checking' | 'valid' | 'invalid' | 'error'>('checking');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have a valid recovery session
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setIsValidSession(true);
-      }
+    let mounted = true;
+    let recoveryReceived = false;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        recoveryReceived = true;
+        setSessionState('valid');
+      } else if (event === 'SIGNED_OUT') setSessionState('invalid');
     });
-
-    // Also check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsValidSession(true);
-      }
-    });
+    void supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (mounted && !recoveryReceived) setSessionState(error ? 'error' : session ? 'valid' : 'invalid');
+    }).catch(() => { if (mounted && !recoveryReceived) setSessionState('error'); });
+    return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (password.length < 6) {
-      toast({
-        variant: 'destructive',
-        title: 'Senha muito curta',
-        description: 'A senha deve ter pelo menos 6 caracteres.',
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        variant: 'destructive',
-        title: 'Senhas não conferem',
-        description: 'As senhas digitadas são diferentes.',
-      });
-      return;
-    }
-
+  const handleResetPassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setErrorMessage('');
+    if (password.length < 6) { setErrorMessage('A senha deve ter pelo menos 6 caracteres.'); return; }
+    if (password !== confirmPassword) { setErrorMessage('As senhas digitadas são diferentes.'); return; }
     setIsLoading(true);
-
-    const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao redefinir senha',
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: 'Senha redefinida!',
-        description: 'Sua senha foi alterada com sucesso.',
-      });
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) { setErrorMessage('Não foi possível salvar a nova senha. Confira sua conexão ou solicite outro link de redefinição.'); return; }
+      toast({ title: 'Senha redefinida!', description: 'Sua senha foi alterada com sucesso.' });
       navigate('/');
-    }
-
-    setIsLoading(false);
+    } catch { setErrorMessage('Não foi possível confirmar a alteração. Confira sua conexão e tente novamente.'); }
+    finally { setIsLoading(false); }
   };
 
-  if (!isValidSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="w-full max-w-md animate-fade-in">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
-              <Church className="h-8 w-8" />
-            </div>
-            <h1 className="font-display text-2xl font-bold text-foreground">IPNC</h1>
-          </div>
-
-          <Card className="border-border shadow-sm">
-            <CardHeader className="text-center">
-              <CardTitle>Link inválido</CardTitle>
-              <CardDescription>
-                Este link de redefinição de senha expirou ou é inválido.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={() => navigate('/auth')}
-                className="w-full"
-              >
-                Voltar para login
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md animate-fade-in">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
-            <Church className="h-8 w-8" />
-          </div>
-          <h1 className="font-display text-2xl font-bold text-foreground">IPNC</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Igreja Presbiteriana de Nova Carapina
-          </p>
-        </div>
-
-        <Card className="border-border shadow-sm">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-              <KeyRound className="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle>Redefinir senha</CardTitle>
-            <CardDescription>
-              Digite sua nova senha abaixo
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">Nova senha</Label>
-                <Input
-                  id="password"
-                  type="password" autoComplete="new-password"
-                  placeholder="Mínimo 6 caracteres"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirmar senha</Label>
-                <Input
-                  id="confirm-password"
-                  type="password" autoComplete="new-password"
-                  placeholder="Digite novamente"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  'Salvar nova senha'
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          © 2024 IPNC - Todos os direitos reservados
-        </p>
-      </div>
+  return <main className="min-h-dvh flex items-center justify-center bg-background p-4">
+    <div className="w-full max-w-[400px] space-y-6">
+      <img src={logo} alt="Renovo IPNC" className="mx-auto h-24 w-24 object-contain" />
+      <Card>
+        <CardHeader>
+          <KeyRound className="h-10 w-10 text-primary" aria-hidden="true" />
+          <CardTitle>{sessionState === 'checking' ? 'Verificando link' : sessionState === 'valid' ? 'Redefinir senha' : sessionState === 'error' ? 'Não foi possível verificar o link' : 'Link inválido'}</CardTitle>
+          <CardDescription>{sessionState === 'checking' ? 'Aguarde a confirmação do seu acesso.' : sessionState === 'valid' ? 'Digite e confirme sua nova senha.' : sessionState === 'error' ? 'Confira sua conexão e tente novamente.' : 'O link expirou ou é inválido. Solicite um novo link na entrada administrativa.'}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {sessionState === 'checking' ? <p role="status" className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Verificando…</p> : sessionState === 'valid' ?
+            <form onSubmit={handleResetPassword} className="space-y-5">
+              <div className="space-y-2"><Label htmlFor="password">Nova senha</Label><Input id="password" type="password" autoComplete="new-password" placeholder="Mínimo 6 caracteres" value={password} onChange={event => {setPassword(event.target.value);setErrorMessage('');}} required disabled={isLoading} aria-describedby="reset-error" /></div>
+              <div className="space-y-2"><Label htmlFor="confirm-password">Confirmar senha</Label><Input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={event => {setConfirmPassword(event.target.value);setErrorMessage('');}} required disabled={isLoading} aria-describedby="reset-error" /></div>
+              <p id="reset-error" role={errorMessage ? 'alert' : undefined} className="min-h-6 text-sm text-destructive">{errorMessage}</p>
+              <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? 'Salvando…' : 'Salvar nova senha'}</Button>
+            </form> : <div className="space-y-3">{sessionState === 'error' && <Button className="w-full" onClick={() => window.location.reload()}>Tentar novamente</Button>}<Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>Voltar à entrada</Button></div>}
+        </CardContent>
+      </Card>
     </div>
-  );
+  </main>;
 }

@@ -1,3 +1,4 @@
+import { MemberAccessUnavailable } from '@/components/MemberAccessUnavailable';
 import React, { useState } from 'react';
 import { emitFixtureRealtime, setFixtureReadFailure } from './backend';
 import { StableRefreshBoundary } from '@/components/ui/stable-refresh-boundary';
@@ -96,6 +97,6 @@ createRoot(document.getElementById('root')!).render(<PageErrorBoundary><QueryCli
 <Route path="/pastor-sugestoes" element={<PastorSugestoes/>}/>
 <Route path="/igreja" element={<PortalIgreja/>}/>
 <Route path="/vote/:electionId" element={<VotePublic/>}/>
-<Route path="/membro" element={<main className="min-h-screen flex items-center justify-center p-6"><section className="max-w-md space-y-4 text-center"><h1 className="text-xl font-semibold">Portal dos membros ainda não liberado</h1><p>Por enquanto, o acesso está disponível apenas para a diretoria e os responsáveis autorizados.</p><a href="/__diretoria/auth" className="underline">Acessar como responsável</a></section></main>}/>
+<Route path="/membro" element={<MemberAccessUnavailable/>}/>
 <Route path="/secretaria" element={unavailable}/><Route path="/tesouraria" element={unavailable}/>
 <Route path="*" element={<NotFound/>}/></Routes><Toaster/><Toasts/><FixtureControls/><SocietyScreenEnhancer/><IdentityConfirmationEnhancer/></MembroSessionProvider></DiretoriaSessionProvider></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></PageErrorBoundary>);

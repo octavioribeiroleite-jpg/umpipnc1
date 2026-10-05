@@ -48,10 +48,10 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
   const isResolved = event.status === 'concluido' || event.status === 'nao_realizado' || event.status === 'cancelado';
 
   return (
-    <AppCard colorStripe={eventColor}>
+    <AppCard colorStripe={eventColor} className="min-h-[72px]">
       {/* Row 1: Title + Society badge */}
       <div className="flex flex-wrap items-start justify-between gap-2 mb-1.5">
-        <h4 className="min-w-0 text-sm font-semibold text-foreground [overflow-wrap:anywhere] leading-relaxed">
+        <h4 className="min-w-0 text-base font-semibold text-foreground [overflow-wrap:anywhere] leading-relaxed">
           {event.title}
         </h4>
         <Badge
@@ -68,7 +68,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
       </div>
 
       {/* Row 2: Time + Location */}
-      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-2">
+      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
         <span className="flex items-center gap-1">
           <Clock className="h-3 w-3" />
           {timeStr}
@@ -87,7 +87,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
           <Button
             variant="outline"
             size="sm"
-            className="h-11 text-sm gap-1"
+            className="h-12 text-sm gap-1"
             disabled={isUpdating}
             onClick={() => onUpdateStatus(event.id, 'concluido')}
           >
@@ -96,7 +96,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Mais opções do evento" disabled={isUpdating}>
+              <Button variant="ghost" size="icon" className="h-12 w-12" aria-label="Mais opções do evento" disabled={isUpdating}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

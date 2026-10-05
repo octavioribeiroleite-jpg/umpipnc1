@@ -1,42 +1,80 @@
-# Projeto visual IPNC — primeira etapa, 05/10/2026
+# Projeto visual IPNC — implementação completa do escopo documental
 
-Referência: `IPNC_Projeto_Visual_Completo.pdf`, enviado pelo proprietário, com 78 páginas, 61 pranchas e 36 entradas de rotas. O documento usa uma revisão anterior à auditoria já publicada; a implementação parte da revisão `f631756` e preserva seus controles de acesso e regras de negócio.
+Referência: `IPNC_Projeto_Visual_Completo.pdf`, enviado pelo proprietário em 05/10/2026: 78 páginas, 61 pranchas e 36 declarações de rota no aplicativo, incluindo aliases e a rota curinga. As pranchas agrupam telas, abas e estados; não correspondem a 61 rotas independentes.
 
-Esta entrega inicia a aplicação do projeto por sua base compartilhada. Não constitui uma reprodução individual de todas as 61 pranchas.
+A implementação foi integrada ao worktree e validada por tipos, testes e build. A [matriz das 61 pranchas](matriz-61-pranchas.md) relaciona cada proposta ao código responsável e à evidência disponível. Este documento substitui o acompanhamento da primeira etapa: a entrega inclui a base compartilhada e os ajustes específicos das áreas descritas na matriz. Cobertura documental e código implementado não equivalem a uma captura individual de cada prancha nem a certificação em todos os dispositivos.
 
-## Implementação
+## Estado da entrega
 
-- Entrada com logo oficial, fundo sólido e quatro acessos: Diretoria, Secretaria EBD, Tesouraria e Portal da Igreja. PIN, acesso administrativo, recuperação de senha e sessões mantêm seus fluxos existentes.
-- Inter local, paleta, contraste, títulos, campos, botões, bordas, espaçamento e diálogos compartilhados. A apresentação de eleições e o portal também receberam a base visual sólida.
-- Navegação da Diretoria, Pastor e EBD: inferior abaixo de 700 px, trilho de 76 px entre 700 e 1099 px e lateral de 224 px a partir de 1100 px. Conteúdo principal único, sem duplicar formulários por tamanho de tela. O shell de membros conserva seu breakpoint anterior; seu acesso continua fechado.
-- EBD com destinos filtrados por perfil. O rodapé da chamada respeita a altura real da navegação inferior, incluindo fonte ampliada.
-- Finanças da Diretoria com as seis seções existentes antes do conteúdo e seletor no celular; Tarefas com seletor de situação no celular e uma única instância de cada tarefa; próximos eventos antes do calendário no celular; ajustes nos cards de arquivos, tarefas e sociedades.
-- Tesouraria preserva o desktop aprovado e o layout móvel de entradas e saídas. Cards de sociedades em duas colunas, sigla e proporção quadrada com fonte normal; com valores longos ou fonte ampliada, crescem sem cortar o conteúdo. Formulário da sociedade continua com valor, data, pessoa, descrição e Pix/Dinheiro. Conferência, divisão e vínculo bancário continuam restritos ao formulário administrativo existente.
+| Entrega | Estado confirmado |
+| --- | --- |
+| Base visual inicial | Publicada anteriormente, revisão `a25509f`. |
+| Correção urgente do acesso à Secretaria | Publicada separadamente, revisão `690f888`, versão `v29`. [Diagnóstico, preservação dos acessos e reprodução](incidente-secretaria-2026-10-05.md). |
+| Implementação das demais pranchas | Integrada e validada no worktree. |
+| Nova publicação do projeto visual completo | **Pendente da raiz da tarefa.** Commit, sincronização dos repositórios, revisão e versão do Site devem ser registrados somente depois de confirmados. |
 
-Não há mudança de esquema, migração, regra financeira, voto ou gravação de chamada nesta etapa.
+O deploy urgente da Secretaria não comprova a publicação das alterações visuais posteriores. Prévia local, build e sincronização do código também não substituem a confirmação de deploy do Site existente.
 
-## Validação
+## Base e aplicação às áreas
 
-- Node.js 24; `npx tsc -p tsconfig.app.json --noEmit`: passou.
-- `node --experimental-strip-types --test tests/*.mjs tests/*.ts`: 195 testes passaram, sem falhas. Inclui dois novos testes da navegação da EBD para professor e administrador e montagem única do conteúdo.
-- `npm run build`: passou. Persistem os avisos de tamanho de bundle e de importação dinâmica já existentes.
-- `git diff --check`: passou.
-- ESLint: 298 erros e 65 avisos no projeto, sem novos diagnósticos em relação à base. A dívida anterior de lint não está resolvida por esta entrega.
-- Browser do Codex, Chromium: 20 rotas da Diretoria em 320 e 1440 px; cinco rotas do Pastor em 320, 700, 1100 e 1440 px; 11 telas representativas com nomes longos e fonte base CSS de 200%; estados de entrada, recuperação, portal, rota inexistente e acesso de membros. Sem transbordamento horizontal nas medições finais. Evidência em [2026-10-05-geometria.json](2026-10-05-geometria.json).
-- EBD: navegação permitida ao professor, oito destinos administrativos, lista fictícia da chamada e separação entre ações e navegação inferior; fonte ampliada e trilho de tablet conferidos.
-- Tesouraria: formulário simples, ferramentas administrativas, saldos zerados e valores altos/negativos, celular e desktop. Em 320 px com fonte normal, cards mediram 130,5 × 130,5 px. Com fonte de 200%, as duas primeiras linhas cresceram para 449 e 314 px, com altura igual dentro de cada linha e sem corte de conteúdo. Desktop em 1440 px conserva lateral de 232 px e cards alinhados.
+A base usa Inter local, marca oficial, superfícies sólidas, cores semânticas e hierarquia de títulos, leitura, tabelas e apoio. Campos e ações usam o alvo de conforto de 48 CSS px; nomes e valores longos recebem quebra de linha ou rolagem localizada da tabela. As larguras são variantes por função, não um limite único para todos os módulos.
 
-Testes de interface usaram fixtures locais com transporte isolado e dados fictícios. Não foram realizadas movimentações financeiras, votos, mensagens ou gravações de presença reais. Emulação e fonte CSS ampliada não comprovam Safari, aparelho físico, teclado virtual ou zoom nativo.
+Diretoria, Pastor e Secretaria compartilham a lógica visual de navegação inferior abaixo de 700 px, trilho de 76 px entre 700 e 1099 px e lateral de 224 px a partir de 1100 px, mantendo destinos e autorização próprios. A Tesouraria preserva sua exceção aprovada. Urna, apresentação eleitoral e portal conservam a navegação adequada à sua função.
 
-## Verificação manual
+Diálogos compartilham o mesmo componente em todas as larguras, com variantes de acesso, padrão, formulário e leitura ampla. A mudança de largura não troca um formulário por uma nova instância. Fechamento, retorno de foco, rótulos e mensagens de falha foram tratados nos componentes comuns. Seções internas usam abas legíveis e seletor no celular conforme a área.
 
-1. Abrir `/auth` em sessão anônima, conferir os quatro acessos e abrir/cancelar o seletor da Tesouraria. Entrar com o perfil autorizado e conferir o destino correto.
-2. Redimensionar para 320, 700, 1100 e 1440 px; conferir a troca de navegação, títulos legíveis e ausência de rolagem horizontal.
-3. Na Diretoria, alternar as seis seções de Finanças e as situações de Tarefas; abrir e cancelar um formulário para conferir que o rascunho não foi duplicado ao redimensionar.
-4. Na fixture isolada da EBD, comparar professor e administrador e conferir que a barra de ações da chamada fica acima da navegação inferior. Não usar presença real como teste de publicação.
-5. Na fixture isolada da Tesouraria, comparar tesoureiro e administrador, abrir/cancelar os formulários e alternar cenários zerados, negativos e indisponíveis; ampliar a fonte para conferir que valores e paginação cabem.
+- **Entrada e acesso:** quatro acessos principais, PIN/identificação em etapas, administração secundária, erros junto aos campos e estados explícitos de recuperação, indisponibilidade e rota inexistente.
+- **Secretaria EBD:** chamada como ação principal, turmas com status sem competição visual, feedback por aluno, visitantes identificados, ações separadas da navegação, planilha completa, confirmações administrativas e estados honestos de consulta. Histórico filtra período e turma usando registros históricos e totais de fechamento.
+- **Tesouraria, finanças e camisas:** contexto financeiro identificado, navegação por seção, pendências separadas de valores confirmados, prévias de comprovantes, controles de relatório visíveis e PINs em diálogo próprio. Os livros continuam separados.
+- **Reuniões e plenárias:** registro principal e pauta de apoio, editores preservados entre seções, autosave serializado, distinção entre rascunho e texto confirmado, cancelamento sem publicação indevida e presença com situação textual. [Detalhamento e testes de rascunhos/histórico](reunioes-historico-implementacao-2026-10-05.md).
+- **Tarefas, calendário, conteúdo e administração:** organização responsiva, textos completos, leitura de atas/estudos, upload com falha recuperável e navegação de configurações. A integração não implementada aparece indisponível.
+- **Pastor, portal, visitantes e eleições:** prioridades de leitura, filtros, compositor pastoral, sugestões com ações distintas, conteúdo público sem dados administrativos, tabela de visitantes, etapas eleitorais reais e confirmação explícita de voto.
 
-Comandos de prévia isolada:
+Os arquivos comuns estão em [interface-system.css](../../src/interface-system.css), [responsive-foundation.css](../../src/responsive-foundation.css), [AppLayout](../../src/components/layout/AppLayout.tsx), [ResponsiveSectionNavigation](../../src/components/layout/ResponsiveSectionNavigation.tsx), [Dialog](../../src/components/ui/dialog.tsx) e [ResponsiveDialog](../../src/components/ui/responsive-dialog.tsx). A matriz aponta os arquivos próprios de cada tela.
+
+## Exceções e limites funcionais preservados
+
+1. **Tesouraria desktop:** conservar a apresentação aprovada, incluindo a lateral de **232 px**, em vez de impor a lateral geral de 224 px.
+2. **Tesouraria no celular:** conservar o desenho aprovado de entradas/saídas. Os quatro cards de sociedades continuam compactos, em duas colunas, com **sigla sem o nome por extenso**. Valores longos ou fonte ampliada podem aumentar a altura para não cortar conteúdo.
+3. **Recebimento da sociedade:** exatamente **valor, data, pessoa relacionada, descrição e Pix/Dinheiro**. O caixa vem da sessão. Composição, reserva, conferência, vínculo bancário, saída, anexos e concessão de acesso permanecem restritos ao fluxo administrativo já autorizado. Recebimento enviado é pendente, não saldo confirmado. O [workflow atual da Tesouraria](../treasury/WORKFLOW.md) prevalece sobre inventários antigos.
+4. **Portal de membros:** `/membro` permanece fechado. A tela explica a indisponibilidade e oferece retorno; não cria cadastro, coleta adicional ou acesso a funções não liberadas.
+5. **Google Calendar:** a conexão automática ainda não está implementada. Configurações informa **Conexão indisponível**, sem botão que simule êxito.
+6. **Marca e fotografias:** o símbolo oficial e os arquivos reais existentes foram preservados. Não foram inventados retratos de pessoas, fotos de candidatos, estampa ou dados reais. A imagem eleitoral sintética pertence exclusivamente à fixture local identificada como teste.
+7. **Permissões e dados:** a padronização não reúne sessões nem amplia autorização de professor, diretoria, pastor, sociedade ou público. Esta implementação visual não criou migração, voto, presença, mensagem, lançamento financeiro ou credencial real para testar a entrega. As mudanças de banco anteriores documentadas no workflow da Tesouraria não são parte desta publicação visual.
+8. **Histórico EBD:** a turma da presença gravada e os totais do fechamento continuam sendo a fonte histórica. Para aluno sem marcação não foi criada uma história de matrícula inexistente; permanece a elegibilidade já definida por `buildDayRoster`.
+
+## Validação da integração
+
+Resultados informados pela execução final da raiz em 05/10/2026, antes da nova publicação:
+
+| Verificação | Resultado |
+| --- | --- |
+| `npx tsc -p tsconfig.app.json --noEmit` | Aprovado, saída 0. |
+| `node --experimental-strip-types --test tests/*.mjs tests/*.ts` | **223 testes aprovados; 0 falhas.** |
+| `npm run build` | Aprovado, saída 0. |
+| ESLint | Base auditada: 308 erros / 66 avisos. Integração: 278 erros / 55 avisos. Nenhum diagnóstico novo pela comparação de arquivo, regra, severidade e mensagem, sem depender do número da linha. **O lint do projeto ainda não está zerado.** |
+
+Os testes usam dados sintéticos, mocks e, quando aplicável, PostgreSQL isolado via PGlite. Há cobertura de snapshots/PDFs, fila e autorização da EBD, regras e relatórios da Tesouraria, limites de sessão, rascunhos concorrentes, resposta de voto, formulários e acessibilidade de controles. Teste de código ou mock não comprova o comportamento de RLS, rede e dispositivos em produção.
+
+Inspeção representativa no navegador da integração, com **55 registros de medição** em [2026-10-05-geometria-final.json](2026-10-05-geometria-final.json). O arquivo conserva dois registros do calendário pastoral antes da correção, identificados como superados e ligados ao reteste final sem overflow; não devem ser contados como falhas atuais nem apagados da evidência:
+
+- Reunião em 768 e 1024 px, sem overflow horizontal nas medições; sequência de digitar A, salvar, digitar B e alternar para Pauta observada. Os testes do hook verificam ordenação, falha/retry, refresh e desmontagem.
+- Finanças em 390, 700 e 1100 px, sem overflow horizontal nas medições.
+- Calendário pastoral em 320 px, conteúdo longo e fonte CSS de 200%: largura de conteúdo e rolagem medidas em 305 px, sem transbordamento horizontal.
+- Calendário pastoral em 1440 px, sem overflow horizontal na medição.
+- PIN administrativo da Tesouraria na fixture: confirmação divergente rejeitada; salvamento fictício exibiu **Acesso ativo** e ações **Trocar/Desativar**. Diálogo padrão com 358 px em viewport de 390 px.
+- Histórico EBD em 390 px com turma histórica selecionada; plenária em 390 px e criação de reunião em 320 px com nomes longos/fonte CSS de 200%.
+- Urna em 320 px/fonte CSS de 200%: erro simulado manteve seleção e confirmação; nova tentativa simulada concluiu. Portal em 320 px com identificação fictícia e em 1440 px com lateral de 224 px. Recuperação válida/inválida, retorno público da página não encontrada e mensagem de membros fechados também foram observados.
+- Tesouraria: lateral desktop de 232 px preservada, conferência bancária com total/vinculado/disponível, recebimento simples de cinco campos e pendências fora dos saldos. Desativação de PIN foi aberta e cancelada na fixture.
+- Secretaria em 320 px: sessão própria válida do professor continuou acessível com falha da conta principal; sessão EBD expirada exigiu novamente o PIN. A correção urgente da Secretaria tem cenários próprios de falha da conta principal, professor autorizado e renovação de PIN no [registro do incidente](incidente-secretaria-2026-10-05.md).
+
+O arquivo [2026-10-05-geometria.json](2026-10-05-geometria.json) conserva medições da **primeira etapa**, incluindo rotas da Diretoria, Pastor, entrada, fonte ampliada e estados especiais. Ele é referência da base publicada, não uma nova varredura de todas as telas após os ajustes finais. A coluna de evidência da matriz distingue essa referência das inspeções atuais.
+
+Não houve captura individual de todas as 61 pranchas. Emulação de viewport em Chromium e ampliação da fonte por CSS não comprovam aparelho físico, Safari, teclado virtual real, zoom nativo nem todos os recursos assistivos. Também não se declara uma certificação integral de acessibilidade.
+
+## Reprodução local e publicação
+
+Usar Node.js 22 ou superior e as dependências de `package-lock.json`. As prévias abaixo são isoladas e não são pontos de entrada de produção:
 
 ```sh
 npx vite --config tests/vite.diretoria.config.ts --port 8083
@@ -44,8 +82,6 @@ npx vite --config tests/vite.ebd.config.ts --port 8092 --host 127.0.0.1 --strict
 IPNC_TREASURY_PREVIEW_DIR=/tmp/ipnc-visual-treasury-ui IPNC_TREASURY_PREVIEW_PORT=8091 node scripts/treasury-ui-preview.mjs --serve
 ```
 
-Na Diretoria, usar `/__diretoria/<rota>?role=admin&controls=0`; na EBD, `/tests/fixtures/ebd-back.html?role=professor`; na Tesouraria, `/`. As fixtures de Diretoria e EBD aceitam `state=long` e/ou `font=200` conforme o cenário; a Tesouraria aceita `font=200`.
+Diretoria: `/__diretoria/<rota>?role=admin&controls=0`. EBD: `/tests/fixtures/ebd-back.html?role=professor`; histórico: `/tests/fixtures/ebd-history.html`. Tesouraria: `/`. Os cenários disponíveis e as restrições da fixture principal estão em [tests/fixtures/diretoria/README.md](../../tests/fixtures/diretoria/README.md).
 
-## Continuidade do projeto
-
-A próxima camada é a comparação individual das pranchas e os refinamentos próprios de cada tela. Esta entrega aplica a entrada, a base visual, os shells e os ajustes descritos acima; não declara concluídos todos os detalhes do PDF nem a validação em dispositivos físicos.
+A raiz conclui a entrega conforme `AGENTS.md`: integrar alterações existentes, publicar exatamente o código validado, sincronizar `main` nos dois repositórios e confirmar o estado do deploy no Site existente. Após essa confirmação, registrar aqui ou no relatório final a revisão, a versão e a URL realmente publicadas. Até lá, o estado desta nova publicação permanece pendente.

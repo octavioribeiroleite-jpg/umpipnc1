@@ -8,6 +8,8 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { AppCard } from '@/components/ui/app-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -53,6 +55,7 @@ export default function Visitantes() {
   const [societies, setSocieties] = useState<Record<string, SocietyInfo>>({});
   const [dataLoading, setDataLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [visitorSearch, setVisitorSearch] = useState('');
 
   const canAccess = isAdmin || isPastor;
 
@@ -101,6 +104,11 @@ export default function Visitantes() {
     });
     return Array.from(seen.values());
   }, [visitors, selectedDate]);
+
+  const visibleDayVisitors = useMemo(() => {
+    const query = visitorSearch.trim().toLocaleLowerCase('pt-BR');
+    return dayVisitors.filter(visitor => visitor.full_name.toLocaleLowerCase('pt-BR').includes(query));
+  }, [dayVisitors, visitorSearch]);
 
   // Device first-seen map (across all data)
   const deviceFirstSeen = useMemo(() => {
@@ -189,6 +197,58 @@ export default function Visitantes() {
         }
       />
 
+      {/* Date filter */}
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="space-y-2"><Label htmlFor="visitor-date">Dia de acesso</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button id="visitor-date" variant="outline" className="min-h-[48px] justify-start text-left font-normal">
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(d) => d && setSelectedDate(d)}
+              initialFocus
+              className="p-3 pointer-events-auto"
+              locale={ptBR}
+            />
+          </PopoverContent>
+        </Popover>
+        </div>
+        <div className="min-w-0 flex-1 basis-[240px] space-y-2"><Label htmlFor="visitor-search">Buscar pessoa</Label><Input id="visitor-search" value={visitorSearch} onChange={event => setVisitorSearch(event.target.value)} placeholder="Nome da pessoa" className="min-h-[48px] text-base" /></div>
+        {!isSameDay(selectedDate, new Date()) && (
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(new Date())}>
+            Hoje
+          </Button>
+        )}
+      </div>
+
+      {dataLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Day summary cards */}
+          <div className="grid grid-cols-1 gap-4 min-[700px]:grid-cols-3">
+            <AppCard variant="stat">
+                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.total}</p>
+                <p className="text-xs text-muted-foreground text-center">Total de pessoas</p>
+            </AppCard>
+            <AppCard variant="stat">
+                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.members}</p>
+                <p className="text-xs text-muted-foreground text-center">Membros</p>
+            </AppCard>
+            <AppCard variant="stat">
+                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.visitors}</p>
+                <p className="text-xs text-muted-foreground text-center">Visitantes</p>
+            </AppCard>
+          </div>
+
       {/* Sunday summary */}
       {!dataLoading && sundayStats.length > 0 && (
         <AppCard className="mb-4">
@@ -219,67 +279,18 @@ export default function Visitantes() {
         </AppCard>
       )}
 
-      {/* Date filter */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="justify-start text-left font-normal">
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(d) => d && setSelectedDate(d)}
-              initialFocus
-              className="p-3 pointer-events-auto"
-              locale={ptBR}
-            />
-          </PopoverContent>
-        </Popover>
-        {!isSameDay(selectedDate, new Date()) && (
-          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(new Date())}>
-            Hoje
-          </Button>
-        )}
-      </div>
-
-      {dataLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Day summary cards */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <AppCard variant="stat">
-                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.total}</p>
-                <p className="text-xs text-muted-foreground text-center">Total de pessoas</p>
-            </AppCard>
-            <AppCard variant="stat">
-                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.members}</p>
-                <p className="text-xs text-muted-foreground text-center">Membros</p>
-            </AppCard>
-            <AppCard variant="stat">
-                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.visitors}</p>
-                <p className="text-xs text-muted-foreground text-center">Visitantes</p>
-            </AppCard>
-          </div>
-
           {/* Day access table */}
           <AppCard>
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
                 <Eye className="h-4 w-4 text-muted-foreground" />
-                Pessoas do dia ({dayVisitors.length})
+                Pessoas do dia ({visibleDayVisitors.length}{visitorSearch.trim() ? ` de ${dayVisitors.length}` : ''})
               </h3>
-              {dayVisitors.length === 0 ? (
-                <p className="text-center text-muted-foreground py-6 text-sm">Nenhuma pessoa neste dia.</p>
+              {visibleDayVisitors.length === 0 ? (
+                <p className="text-center text-muted-foreground py-6 text-sm">{visitorSearch.trim() ? 'Nenhuma pessoa com esse nome neste dia.' : 'Nenhuma pessoa neste dia.'}</p>
               ) : (
                 <div className="w-full overflow-x-auto rounded-xl border border-border" role="region" aria-label="Pessoas do dia — deslize para ver todas as colunas" tabIndex={0}>
-                  <div className="min-w-[500px]">
-                    <Table>
+                  <div className="min-w-[680px]">
+                    <Table className="text-base">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Nome</TableHead>
@@ -289,11 +300,11 @@ export default function Visitantes() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {dayVisitors.map(v => {
+                        {visibleDayVisitors.map(v => {
                           const isFirstAccess = deviceFirstSeen.get(v.device_id) === v.id;
                           return (
-                            <TableRow key={v.id}>
-                              <TableCell className="font-medium">{v.full_name}</TableCell>
+                            <TableRow key={v.id} className="h-[64px]">
+                              <TableCell className="max-w-[400px] whitespace-normal [overflow-wrap:anywhere] text-base font-medium">{v.full_name}</TableCell>
                               <TableCell>
                                 {v.is_visitor ? (
                                   <Badge variant="outline" className="text-xs">Visitante</Badge>
@@ -335,7 +346,7 @@ export default function Visitantes() {
                 {recurringVisitors.slice(0, 20).map((rv, i) => (
                   <div key={i} className="rounded-lg border p-3 space-y-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{rv.fullName}</span>
+                      <span className="font-medium text-base min-w-0 whitespace-normal [overflow-wrap:anywhere]">{rv.fullName}</span>
                       <Badge variant="secondary" className="text-xs shrink-0">{rv.visitCount} dias</Badge>
                     </div>
                     <div className="flex items-center gap-2">
@@ -361,5 +372,6 @@ export default function Visitantes() {
     </>
   );
 
-  return <Layout>{content}</Layout>;
+  const wideContent = <div className="mx-auto w-full min-w-0 max-w-[1360px]">{content}</div>;
+  return isPastor && !isAdmin ? <PastorLayout>{wideContent}</PastorLayout> : <AppLayout width="wide">{wideContent}</AppLayout>;
 }

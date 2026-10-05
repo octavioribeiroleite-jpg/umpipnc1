@@ -8,7 +8,7 @@ type FilterKey = 'all' | 'aguardando' | 'concluidas' | 'canceladas';
 interface Props {
   selectedDate: Date;
   events: CalendarEvent[];
-  onUpdateStatus: (id: string, status: EventStatus) => void;
+  onUpdateStatus?: (id: string, status: EventStatus) => void;
   isUpdating: boolean;
 }
 
@@ -76,7 +76,7 @@ export function PastorDayEventList({ selectedDate, events, onUpdateStatus, isUpd
               aria-pressed={active}
               onClick={() => setFilter(f.key)}
               className={[
-                'min-h-11 px-3 py-2 rounded-xl text-xs font-medium transition-all border',
+                'min-h-12 px-3 py-2 rounded-xl text-sm font-medium transition-all border',
                 active
                   ? 'bg-foreground text-background border-foreground'
                   : 'bg-card text-muted-foreground border-border/60 hover:bg-muted',

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { generateCalendarPDF } from '@/utils/generateCalendarPDF';
 import { toast } from 'sonner';
+import { QueryErrorState } from '@/components/ui/query-error-state';
 
 const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const months = [
@@ -94,10 +95,10 @@ export default function PastorCalendario() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const { events, upcomingEvents, isLoading, createEvent, updateEvent, deleteEvent } = useEvents(month, year);
+  const { events, upcomingEvents, hasEventsSnapshot, hasUpcomingSnapshot, isError, isFetching, isUpcomingError, isUpcomingFetching, refetch, refetchUpcoming, createEvent, updateEvent, deleteEvent } = useEvents(month, year);
 
   // Fetch societies for color mapping
-  const { data: societies = [] } = useQuery({
+  const societiesQuery = useQuery({
     queryKey: ['societies'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -108,13 +109,14 @@ export default function PastorCalendario() {
       return data as Society[];
     },
   });
+  const societies = useMemo(() => societiesQuery.data ?? [], [societiesQuery.data]);
 
   // Fetch meeting -> society mapping for events linked via reuniao_id
   const meetingIds = useMemo(() => {
-    return events.filter(e => e.reuniao_id).map(e => e.reuniao_id!);
-  }, [events]);
+    return [...new Set([...events, ...upcomingEvents].filter(e => e.reuniao_id).map(e => e.reuniao_id!))].sort();
+  }, [events, upcomingEvents]);
 
-  const { data: meetingSocieties = {} } = useQuery({
+  const meetingSocietiesQuery = useQuery({
     queryKey: ['meeting-societies', meetingIds],
     queryFn: async () => {
       if (meetingIds.length === 0) return {};
@@ -129,6 +131,14 @@ export default function PastorCalendario() {
     },
     enabled: meetingIds.length > 0,
   });
+  const meetingSocieties = useMemo(() => meetingSocietiesQuery.data ?? {}, [meetingSocietiesQuery.data]);
+  const hasMappingSnapshot = societiesQuery.data !== undefined && (meetingIds.length === 0 || meetingSocietiesQuery.data !== undefined);
+  const mappingError = societiesQuery.isError || (meetingIds.length > 0 && meetingSocietiesQuery.isError);
+  const filterReady = societyFilter === 'all' || hasMappingSnapshot;
+  const monthReady = hasEventsSnapshot && filterReady;
+  const upcomingReady = hasUpcomingSnapshot && filterReady;
+  const canExport = hasEventsSnapshot && hasMappingSnapshot && !isError && !mappingError;
+  const retryMappings = () => { void societiesQuery.refetch(); if (meetingIds.length > 0) void meetingSocietiesQuery.refetch(); };
 
   const societyMap = useMemo(() => {
     const map: Record<string, Society> = {};
@@ -136,12 +146,13 @@ export default function PastorCalendario() {
     return map;
   }, [societies]);
 
-  const getEventSociety = (event: CalendarEvent): Society | null => {
+  const getEventSociety = useCallback((event: CalendarEvent): Society | null => {
+    if (event.society_id) return societyMap[event.society_id] || null;
     if (event.reuniao_id && meetingSocieties[event.reuniao_id]) {
       return societyMap[meetingSocieties[event.reuniao_id]] || null;
     }
     return null;
-  };
+  }, [societyMap, meetingSocieties]);
 
   const getEventColor = (event: CalendarEvent): string => {
     const society = getEventSociety(event);
@@ -155,7 +166,7 @@ export default function PastorCalendario() {
       const society = getEventSociety(e);
       return society?.id === societyFilter;
     });
-  }, [events, societyFilter, meetingSocieties, societyMap]);
+  }, [events, societyFilter, getEventSociety]);
 
   const filteredUpcoming = useMemo(() => {
     if (societyFilter === 'all') return upcomingEvents;
@@ -163,7 +174,7 @@ export default function PastorCalendario() {
       const society = getEventSociety(e);
       return society?.id === societyFilter;
     });
-  }, [upcomingEvents, societyFilter, meetingSocieties, societyMap]);
+  }, [upcomingEvents, societyFilter, getEventSociety]);
 
   // Group events by day for monthly program list
   const eventsByDay = useMemo(() => {
@@ -185,6 +196,7 @@ export default function PastorCalendario() {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   const handleDownloadPDF = () => {
+    if (!canExport) return;
     if (filteredEvents.length === 0) {
       toast.info('Nenhum evento para exportar neste mês.');
       return;
@@ -298,11 +310,13 @@ export default function PastorCalendario() {
         year === new Date().getFullYear();
 
       days.push(
-        <div
+        <button
           key={day}
+          type="button"
+          aria-label={`${day} de ${months[month]} de ${year}, ${dayEvents.length} programações`}
           onClick={() => handleDayClick(day)}
           className={cn(
-            'p-1 md:p-2 min-h-[48px] md:min-h-[80px] border border-border/50 rounded-lg cursor-pointer transition-colors',
+            'p-1 md:p-2 min-h-[48px] md:min-h-[88px] min-w-0 text-left border border-border/50 rounded-lg transition-colors',
             isToday ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/50'
           )}
         >
@@ -343,19 +357,19 @@ export default function PastorCalendario() {
               <span className="text-xs text-muted-foreground pl-1">+{dayEvents.length - 2}</span>
             )}
           </div>
-        </div>
+        </button>
       );
     }
 
     return days;
   };
 
-  const selectedDayEvents = selectedDay ? getEventsForDate(selectedDay.getDate()) : [];
+  const selectedDayEvents = selectedDay ? filteredEvents.filter(event => toLocalDateString(new Date(event.start_date)) === toLocalDateString(selectedDay)) : [];
   const selectedSociety = selectedEvent ? getEventSociety(selectedEvent) : null;
   const displayedUpcoming = showAllUpcoming ? filteredUpcoming : filteredUpcoming.slice(0, 5);
 
   return (
-    <PastorLayout>
+    <PastorLayout wide>
       <div className="space-y-4 md:space-y-6">
         <PageHeader title="Calendário unificado" description="Programações da igreja e das sociedades" action={
           <Button onClick={() => handleNewEvent()}>
@@ -430,19 +444,19 @@ export default function PastorCalendario() {
             <CardHeader className="pb-3 md:pb-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" aria-label="Mês anterior" onClick={prevMonth}>
+                  <Button variant="outline" size="icon" className="h-12 w-12 shrink-0" aria-label="Mês anterior" onClick={prevMonth}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <CardTitle className="min-w-0 flex-1 text-base md:text-lg text-center">
                     {months[month]} {year}
                   </CardTitle>
-                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" aria-label="Próximo mês" onClick={nextMonth}>
+                  <Button variant="outline" size="icon" className="h-12 w-12 shrink-0" aria-label="Próximo mês" onClick={nextMonth}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Select value={societyFilter} onValueChange={setSocietyFilter}>
-                    <SelectTrigger aria-label="Filtrar por sociedade" className="w-full sm:w-[180px] h-11 text-sm">
+                  <Select value={societyFilter} onValueChange={setSocietyFilter} disabled={societiesQuery.data === undefined}>
+                    <SelectTrigger aria-label="Filtrar por sociedade" className="w-full sm:w-[200px] min-h-12 text-sm">
                       <SelectValue placeholder="Todas as Sociedades" />
                     </SelectTrigger>
                     <SelectContent>
@@ -457,7 +471,7 @@ export default function PastorCalendario() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon" className="h-11 w-11 flex-shrink-0" onClick={handleDownloadPDF} aria-label="Gerar PDF do calendário">
+                  <Button variant="outline" size="icon" className="h-12 w-12 flex-shrink-0" onClick={handleDownloadPDF} disabled={!canExport} aria-label="Gerar PDF do calendário">
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
@@ -478,12 +492,15 @@ export default function PastorCalendario() {
                 </div>
               )}
             </CardHeader>
-            <CardContent className="px-2 md:px-6">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
+            <CardContent className="space-y-3 px-2 md:px-6">
+              {isError && <QueryErrorState message="Não foi possível consultar a agenda deste mês." onRetry={() => void refetch()} retrying={isFetching} hasPreviousData={hasEventsSnapshot} />}
+              {mappingError && <QueryErrorState message="Não foi possível consultar as sociedades da agenda." onRetry={retryMappings} retrying={societiesQuery.isFetching || meetingSocietiesQuery.isFetching} hasPreviousData={hasMappingSnapshot} />}
+              {!monthReady && !isError && !mappingError ? (
+                <div role="status" className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  Consultando agenda…
                 </div>
-              ) : (
+              ) : !monthReady ? null : (
                 <>
                   <div className="grid grid-cols-7 gap-0.5 md:gap-1 mb-1 md:mb-2">
                     {daysOfWeek.map(day => (
@@ -504,11 +521,13 @@ export default function PastorCalendario() {
               <CardTitle className="text-base">Próximos Eventos</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
+              {isUpcomingError && <QueryErrorState message="Não foi possível consultar os próximos eventos." onRetry={() => void refetchUpcoming()} retrying={isUpcomingFetching} hasPreviousData={hasUpcomingSnapshot} />}
+              {!upcomingReady && !isUpcomingError && !mappingError ? (
+                <div role="status" className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  Consultando próximos eventos…
                 </div>
-              ) : filteredUpcoming.length === 0 ? (
+              ) : !upcomingReady ? null : filteredUpcoming.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8 italic">
                   Nenhum evento próximo
                 </p>
@@ -520,12 +539,15 @@ export default function PastorCalendario() {
                     return (
                       <div
                         key={event.id}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={keyEvent => { if (keyEvent.key === 'Enter' || keyEvent.key === ' ') { keyEvent.preventDefault(); handleEventClick(event); } }}
                         onClick={() => handleEventClick(event)}
-                        className="flex items-start gap-2.5 p-2 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
+                        className="flex min-h-[72px] items-start gap-2.5 p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
                       >
                         <div className="w-1 min-h-[36px] rounded-full flex-shrink-0 mt-0.5" style={{ backgroundColor: color }} />
                         <div className="flex-1 min-w-0 space-y-0.5">
-                          <p className={cn('font-medium text-sm truncate', event.status === 'cancelado' && 'line-through opacity-60')}>
+                          <p className={cn('min-w-0 max-w-full font-medium text-base [overflow-wrap:anywhere]', event.status === 'cancelado' && 'line-through opacity-60')}>
                             {event.title}
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -566,7 +588,7 @@ export default function PastorCalendario() {
         </div>
 
         {/* Monthly Program List */}
-        {!isLoading && eventsByDay.length > 0 && (
+        {monthReady && eventsByDay.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base md:text-lg">
@@ -588,16 +610,19 @@ export default function PastorCalendario() {
                         return (
                           <div
                             key={event.id}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={keyEvent => { if (keyEvent.key === 'Enter' || keyEvent.key === ' ') { keyEvent.preventDefault(); handleEventClick(event); } }}
                             onClick={() => handleEventClick(event)}
-                            className="flex gap-3 p-2.5 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
+                            className="flex min-h-[72px] gap-3 p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
                             style={{ borderLeftWidth: '3px', borderLeftColor: color }}
                           >
                             <div className="flex flex-col items-center pt-0.5">
                               <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
                             </div>
                             <div className="flex-1 min-w-0 space-y-0.5">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className={cn('font-medium text-sm truncate', event.status === 'cancelado' && 'line-through opacity-60')}>
+                              <div className="flex min-w-0 items-center gap-2 flex-wrap">
+                                <span className={cn('min-w-0 max-w-full font-medium text-base [overflow-wrap:anywhere]', event.status === 'cancelado' && 'line-through opacity-60')}>
                                   {event.title}
                                 </span>
                                 {society && (
@@ -619,14 +644,14 @@ export default function PastorCalendario() {
                                   </span>
                                 )}
                                 {event.location && (
-                                  <span className="flex items-center gap-1 truncate">
+                                  <span className="flex min-w-0 items-center gap-1 break-words">
                                     <MapPin className="h-3 w-3 flex-shrink-0" />
                                     {event.location}
                                   </span>
                                 )}
                               </div>
                               {event.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 pt-0.5">{event.description}</p>
+                                <p className="text-base leading-6 text-muted-foreground break-words pt-1">{event.description}</p>
                               )}
                             </div>
                           </div>
@@ -641,7 +666,7 @@ export default function PastorCalendario() {
         )}
       </div>
 
-      <DayDetailDrawer
+      {monthReady && <DayDetailDrawer
         date={selectedDay}
         events={selectedDayEvents}
         open={dayDrawerOpen}
@@ -651,7 +676,7 @@ export default function PastorCalendario() {
           handleEventClick(event);
         }}
         onNewEvent={(date) => handleNewEvent(date)}
-      />
+      />}
 
       <EventDialog
         open={dialogOpen}

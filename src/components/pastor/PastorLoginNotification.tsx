@@ -24,19 +24,22 @@ export function PastorLoginNotification() {
 
     const sessionKey = `pastor_notif_shown_${user.id}`;
     if (sessionStorage.getItem(sessionKey)) return;
+    let active = true;
 
     const check = async () => {
-      const { count: c } = await supabase
+      const { count: c, error } = await supabase
         .from('pastor_feedback')
         .select('*', { count: 'exact', head: true })
         .eq('read', false);
+      if (!active || error) return;
       if (c && c > 0) {
         setCount(c);
         setOpen(true);
         sessionStorage.setItem(sessionKey, 'true');
       }
     };
-    check();
+    void check().catch(() => { /* The persistent banner exposes read failures and retry. */ });
+    return () => { active = false; };
   }, [isManagement, user]);
 
   if (!isManagement) return null;

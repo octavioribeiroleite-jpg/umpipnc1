@@ -158,9 +158,9 @@ export default function Eleicoes() {
       <FAB disabled={!hasSnapshot || readError} aria-label="Nova eleição" onClick={() => setDialogOpen(true)} />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'cargo' | 'camisa')} className="mb-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="cargo"><Vote className="h-4 w-4 mr-1.5" /> Cargos</TabsTrigger>
-          <TabsTrigger value="camisa"><Shirt className="h-4 w-4 mr-1.5" /> Camisas</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-2">
+          <TabsTrigger className="min-h-[48px] whitespace-normal" value="cargo"><Vote className="h-4 w-4 mr-1.5" /> Cargos</TabsTrigger>
+          <TabsTrigger className="min-h-[48px] whitespace-normal" value="camisa"><Shirt className="h-4 w-4 mr-1.5" /> Camisas</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -177,7 +177,7 @@ export default function Eleicoes() {
           description={activeTab === 'camisa' ? 'Crie uma votação para escolher o modelo da camisa.' : 'Crie uma nova eleição para começar.'}
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 min-[900px]:grid-cols-2">
           {filtered.map((e) => (
             <ElectionCard key={e.id} election={e} onClick={() => navigate(`/eleicoes/${e.id}`)} onDelete={(id) => setDeleteId(id)} />
           ))}

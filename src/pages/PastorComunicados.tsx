@@ -1,5 +1,6 @@
 import { QueryErrorState } from '@/components/ui/query-error-state';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -52,11 +53,19 @@ export default function PastorComunicados() {
   const { user } = useAuth();
   const [societies, setSocieties] = useState<Society[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const read = useSnapshotRead(`pastor-announcements:${user?.id ?? ''}`);
+  const { run } = read;
   const [sending, setSending] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [preview, setPreview] = useState(false);
+  const [sendError, setSendError] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const drawerBodyRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (drawerRef.current) drawerRef.current.scrollTop = 0;
+    if (drawerBodyRef.current) drawerBodyRef.current.scrollTop = 0;
+  }, [preview, drawerOpen]);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -65,20 +74,17 @@ export default function PastorComunicados() {
   const [recipientType, setRecipientType] = useState<RecipientType>('church');
   const [selectedSociety, setSelectedSociety] = useState('');
 
-  const loadAnnouncements = async () => {
-    setLoading(true);
-    await Promise.all([
+  const loadAnnouncements = useCallback(async () => {
+    await run(async () => {
+      const [socRes, annRes] = await Promise.all([
       supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name'),
       supabase.from('pastor_announcements').select('*').order('created_at', { ascending: false }),
-    ]).then(([socRes, annRes]) => {
-      setLoadError(Boolean(socRes.error || annRes.error));
-      if (socRes.error || annRes.error) { setLoading(false); return; }
-      if (socRes.data) setSocieties(socRes.data);
-      if (annRes.data) setAnnouncements(annRes.data as Announcement[]);
-      setLoading(false);
+      ]);
+      if (socRes.error || annRes.error) throw socRes.error || annRes.error;
+      return () => { setSocieties(socRes.data ?? []); setAnnouncements((annRes.data ?? []) as Announcement[]); };
     });
-  };
-  useEffect(() => { void loadAnnouncements(); }, []);
+  }, [run]);
+  useEffect(() => { if (user) void loadAnnouncements(); }, [user, loadAnnouncements]);
 
   const resetForm = () => {
     setTitle('');
@@ -86,6 +92,8 @@ export default function PastorComunicados() {
     setPriority('normal');
     setRecipientType('church');
     setSelectedSociety('');
+    setPreview(false);
+    setSendError(false);
   };
 
   const handleSend = async () => {
@@ -96,6 +104,7 @@ export default function PastorComunicados() {
     }
 
     setSending(true);
+    setSendError(false);
     try {
       const scope = recipientType === 'church' ? 'church' : 'societies';
       const target_societies =
@@ -117,11 +126,11 @@ export default function PastorComunicados() {
       resetForm();
       setDrawerOpen(false);
 
-      const { data } = await supabase.from('pastor_announcements').select('*').order('created_at', { ascending: false });
-      if (data) setAnnouncements(data as Announcement[]);
+      void loadAnnouncements();
     } catch (err) {
       console.error(err);
       toast.error('Erro ao enviar comunicado');
+      setSendError(true);
     } finally {
       setSending(false);
     }
@@ -140,37 +149,28 @@ export default function PastorComunicados() {
 
   return (
     <PastorLayout>
-      <div className="space-y-4">
-        <PageHeader title="Comunicados" description={loadError ? "Consulta indisponível" : `Avisos e orientações · ${announcements.length} comunicados`} action={
-          <Button onClick={() => setDrawerOpen(true)}><Plus className="h-4 w-4 mr-2" />Novo comunicado</Button>
+      <div className="mx-auto max-w-[880px] space-y-6">
+        <PageHeader title="Comunicados" description={read.error ? 'Consulta indisponível' : !read.hasSnapshot ? 'Consultando comunicados…' : `Avisos e orientações · ${announcements.length} comunicados`} action={
+          <Button onClick={() => { setPreview(false); setDrawerOpen(true); }}><Plus className="h-4 w-4 mr-2" />Novo comunicado</Button>
         } />
 
         {/* Drawer */}
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerContent className="max-h-[90dvh]">
-            <DrawerHeader>
+          <DrawerContent ref={drawerRef} className="max-h-[90dvh] overflow-hidden">
+            <DrawerHeader className="mx-auto w-full max-w-[640px]">
               <DrawerTitle className="flex items-center gap-2">
                 <Megaphone className="h-5 w-5 text-primary" />
-                Novo Comunicado
+                {preview ? 'Revisar comunicado' : 'Novo comunicado'}
               </DrawerTitle>
             </DrawerHeader>
-            <div className="mx-auto w-full max-w-2xl min-h-0 flex-1 px-4 space-y-4 overflow-y-auto">
-              <Label htmlFor="pastor-announcement-title">Título</Label>
-              <Input id="pastor-announcement-title" placeholder="Título do comunicado" value={title} onChange={e => setTitle(e.target.value)} />
-              <Label htmlFor="pastor-announcement-message">Mensagem</Label>
-              <Textarea id="pastor-announcement-message" placeholder="Mensagem..." value={message} onChange={e => setMessage(e.target.value)} rows={4} />
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Prioridade</p>
-                <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger aria-label="Prioridade" className="w-36"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="urgente">Urgente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
+            <div ref={drawerBodyRef} className="mx-auto w-full max-w-[640px] min-h-0 flex-1 px-4 space-y-4 overflow-y-auto">
+              {sendError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">Não foi possível confirmar o envio. O texto foi mantido para tentar novamente.</p>}
+              {preview ? <div className="space-y-4 rounded-card border p-4">
+                <p className="text-sm text-muted-foreground">Destinatários: {recipientType === 'church' ? 'Toda a igreja' : recipientType === 'all_societies' ? 'Todas as sociedades (diretorias)' : societies.find(society => society.id === selectedSociety)?.name || 'Sociedade selecionada'}</p>
+                <h2 className="break-words text-xl font-semibold">{title}</h2>
+                <p className="whitespace-pre-wrap break-words text-base leading-6">{message}</p>
+                <Badge variant={priority === 'urgente' ? 'destructive' : 'outline'}>{priority === 'urgente' ? 'Urgente' : 'Normal'}</Badge>
+              </div> : <>
               <div className="space-y-3">
                 <p className="text-sm font-medium">Destinatários</p>
                 <RadioGroup aria-label="Destinatários" value={recipientType} onValueChange={(v) => setRecipientType(v as RecipientType)} className="space-y-2">
@@ -188,7 +188,7 @@ export default function PastorComunicados() {
                   </div>
                 </RadioGroup>
                 {recipientType === 'specific' && (
-                  <Select value={selectedSociety} onValueChange={setSelectedSociety}>
+                  <Select value={selectedSociety} onValueChange={setSelectedSociety} disabled={!read.hasSnapshot || read.error}>
                     <SelectTrigger aria-label="Sociedade destinatária"><SelectValue placeholder="Selecione a sociedade" /></SelectTrigger>
                     <SelectContent>
                       {societies.map(s => (
@@ -203,12 +203,31 @@ export default function PastorComunicados() {
                   </Select>
                 )}
               </div>
+
+              <Label htmlFor="pastor-announcement-title">Título</Label>
+              <Input id="pastor-announcement-title" placeholder="Título do comunicado" value={title} onChange={e => setTitle(e.target.value)} />
+              <Label htmlFor="pastor-announcement-message">Mensagem</Label>
+              <Textarea id="pastor-announcement-message" placeholder="Mensagem..." value={message} onChange={e => setMessage(e.target.value)} rows={6} className="min-h-[160px] text-base leading-6" />
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Prioridade</p>
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger aria-label="Prioridade" className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="urgente">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              </>}
             </div>
-            <DrawerFooter className="mx-auto w-full max-w-2xl">
-              <Button onClick={handleSend} disabled={sending || !title.trim() || !message.trim()}>
+            <DrawerFooter className="mx-auto w-full max-w-[640px]">
+              <Button onClick={preview ? handleSend : () => setPreview(true)} disabled={sending || !title.trim() || !message.trim() || (recipientType === 'specific' && (!selectedSociety || !read.hasSnapshot || read.error))}>
                 {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                Enviar Comunicado
+                {preview ? 'Confirmar e enviar comunicado' : 'Revisar comunicado'}
               </Button>
+              {preview && <Button variant="outline" onClick={() => setPreview(false)} disabled={sending}>Editar comunicado</Button>}
               <DrawerClose asChild>
                 <Button variant="outline">Cancelar</Button>
               </DrawerClose>
@@ -217,12 +236,12 @@ export default function PastorComunicados() {
         </Drawer>
 
         {/* History */}
-        {loadError && <QueryErrorState message="Não foi possível carregar os comunicados." onRetry={loadAnnouncements} retrying={loading} hasPreviousData={announcements.length > 0} />}
-        {loading && announcements.length === 0 ? (
+        {read.error && <QueryErrorState message="Não foi possível carregar os comunicados." onRetry={() => void loadAnnouncements()} retrying={read.loading} hasPreviousData={read.hasSnapshot} />}
+        {!read.hasSnapshot && !read.error ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-        ) : loadError && announcements.length === 0 ? null : announcements.length === 0 ? (
+        ) : !read.hasSnapshot ? null : announcements.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center space-y-3">
               <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50" />
@@ -245,18 +264,18 @@ export default function PastorComunicados() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="break-words font-semibold text-sm">{a.title}</p>
+                          <p className="break-words font-semibold text-lg">{a.title}</p>
                           {a.priority === 'urgente' && (
                             <Badge variant="destructive" className="text-xs">Urgente</Badge>
                           )}
                         </div>
-                        <p className={`break-words text-sm leading-relaxed text-muted-foreground ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                        <p className={`whitespace-pre-wrap break-words text-base leading-6 text-muted-foreground ${!isExpanded ? 'line-clamp-2' : ''}`}>
                           {a.message}
                         </p>
                         {a.message.length > 120 && (
                           <button
                             onClick={() => setExpandedId(isExpanded ? null : a.id)}
-                            className="min-h-11 text-sm text-primary mt-1 flex items-center gap-1"
+                            className="min-h-12 text-sm text-primary mt-1 flex items-center gap-1"
                           >
                             {isExpanded ? <>Menos <ChevronUp className="h-3 w-3" /></> : <>Ver mais <ChevronDown className="h-3 w-3" /></>}
                           </button>

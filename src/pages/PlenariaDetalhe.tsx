@@ -1,5 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { usePersistedTextDraft } from '@/components/reunioes/usePersistedTextDraft';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { ResponsiveSectionNavigation } from '@/components/layout/ResponsiveSectionNavigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,6 +55,10 @@ interface AttendanceRecord {
 
 export default function PlenariaDetalhe() {
   const { id } = useParams<{ id: string }>();
+  return <PlenaryWorkspace key={id} id={id} />;
+}
+
+function PlenaryWorkspace({ id }: { id?: string }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isManagement } = useAuth();
@@ -61,21 +69,31 @@ export default function PlenariaDetalhe() {
   const [starting, setStarting] = useState(false);
   const [search, setSearch] = useState('');
   const [toggling, setToggling] = useState<string | null>(null);
-  const [notes, setNotes] = useState('');
-  const [savingNotes, setSavingNotes] = useState(false);
+  const [activeSection, setActiveSection] = useState('chamada');
+  const [attendanceError, setAttendanceError] = useState(false);
   const [attendanceCollapsed, setAttendanceCollapsed] = useState(false);
   const [finalMinutes, setFinalMinutes] = useState('');
+  const [draftFinalMinutes, setDraftFinalMinutes] = useState('');
+  const [finalError, setFinalError] = useState('');
   const [organizingAI, setOrganizingAI] = useState(false);
   const [editingFinal, setEditingFinal] = useState(false);
   const [savingFinal, setSavingFinal] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
-  const notesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canManage = isManagement;
+  const { value: notes, setValue: handleNotesChange, saving: savingNotes, dirty: notesDirty,
+    savedValue: savedNotes, error: notesError, save: saveNotes } = usePersistedTextDraft({
+    initialValue: plenary?.notes || '', enabled: canManage,
+    persist: async (content) => {
+      const { error } = await supabase.from('plenaries').update({ notes: content }).eq('id', id!);
+      if (error) throw error;
+    },
+    onSaved: content => setPlenary(previous => previous ? { ...previous, notes: content } : previous),
+  });
 
   const fetchData = async () => {
-    setLoading(true);
+    if (!plenary) setLoading(true);
 
     const { data: pData, error: pErr } = await supabase
       .from('plenaries')
@@ -89,14 +107,15 @@ export default function PlenariaDetalhe() {
       return;
     }
     setPlenary(pData as Plenary);
-    setNotes(pData.notes || '');
     setFinalMinutes((pData as any).final_minutes || '');
 
-    const { data: aData } = await supabase
+    const { data: aData, error: aError } = await supabase
       .from('plenary_attendance')
       .select('id, member_id, present, members(name)')
       .eq('plenary_id', id!);
 
+    setAttendanceError(Boolean(aError));
+    if (aError) { setLoading(false); return; }
     const records: AttendanceRecord[] = (aData || []).map((a: any) => ({
       id: a.id,
       member_id: a.member_id,
@@ -113,35 +132,12 @@ export default function PlenariaDetalhe() {
     if (id) fetchData();
   }, [id]);
 
-  // Auto-save notes with debounce
-  const handleNotesChange = (value: string) => {
-    setNotes(value);
-    if (notesTimeoutRef.current) clearTimeout(notesTimeoutRef.current);
-    notesTimeoutRef.current = setTimeout(() => {
-      saveNotes(value);
-    }, 1500);
-  };
-
-  const saveNotes = async (content: string) => {
-    setSavingNotes(true);
-    const { error } = await supabase
-      .from('plenaries')
-      .update({ notes: content })
-      .eq('id', id!);
-
-    if (error) {
-      toast({ title: 'Erro ao salvar anotações', variant: 'destructive' });
-    }
-    setSavingNotes(false);
-  };
-
   const handleManualSave = async () => {
-    if (notesTimeoutRef.current) clearTimeout(notesTimeoutRef.current);
-    await saveNotes(notes);
-    toast({ title: 'Anotações salvas!' });
+    if (await saveNotes()) toast({ title: 'Anotações salvas!' });
   };
 
   const handleOrganizeAI = async () => {
+    if (!canManage || editingFinal || organizingAI || !(await saveNotes())) return;
     setOrganizingAI(true);
     try {
       const { data, error } = await supabase.functions.invoke('organize-plenary', {
@@ -153,6 +149,7 @@ export default function PlenariaDetalhe() {
       } else {
         setFinalMinutes(data.final_minutes);
         setEditingFinal(false);
+        setActiveSection('ata');
         toast({ title: 'Ata organizada com sucesso!' });
       }
     } catch (err: any) {
@@ -162,18 +159,19 @@ export default function PlenariaDetalhe() {
   };
 
   const handleSaveFinalMinutes = async () => {
+    if (!canManage || savingFinal || !draftFinalMinutes.trim()) return;
     setSavingFinal(true);
-    const { error } = await supabase
-      .from('plenaries')
-      .update({ final_minutes: finalMinutes } as any)
-      .eq('id', id!);
-    if (error) {
-      toast({ title: 'Erro ao salvar ata', variant: 'destructive' });
-    } else {
+    setFinalError('');
+    try {
+      const { error } = await supabase.from('plenaries').update({ final_minutes: draftFinalMinutes } as any).eq('id', id!);
+      if (error) throw error;
+      setFinalMinutes(draftFinalMinutes);
       setEditingFinal(false);
       toast({ title: 'Ata salva!' });
-    }
-    setSavingFinal(false);
+    } catch {
+      setFinalError('Não foi possível salvar a ata. Seu texto foi preservado.');
+      toast({ title: 'Erro ao salvar ata', variant: 'destructive' });
+    } finally { setSavingFinal(false); }
   };
 
   const handleStartAttendance = async () => {
@@ -255,6 +253,7 @@ export default function PlenariaDetalhe() {
   };
 
   const handleRemoveMember = async (record: AttendanceRecord) => {
+    if (!canManage || !window.confirm(`Remover ${record.member_name} desta chamada? O cadastro do membro será preservado.`)) return;
     setRemoving(record.id);
     const { error } = await supabase
       .from('plenary_attendance')
@@ -271,7 +270,7 @@ export default function PlenariaDetalhe() {
   };
 
   const handleToggle = async (record: AttendanceRecord) => {
-    if (!canManage) return;
+    if (!canManage || toggling) return;
     setToggling(record.id);
     const newPresent = !record.present;
 
@@ -427,7 +426,7 @@ export default function PlenariaDetalhe() {
     y += 44;
 
     // === NOTES/ATA SECTION (use finalMinutes if available, otherwise raw notes) ===
-    const ataContent = finalMinutes.trim() || notes.trim();
+    const ataContent = finalMinutes.trim() || savedNotes.trim();
     if (ataContent) {
       checkPage(30);
       doc.setFillColor(30, 58, 95);
@@ -529,6 +528,7 @@ export default function PlenariaDetalhe() {
 
   return (
     <AppLayout>
+      <div className="mx-auto max-w-[1120px] space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 mb-5 rounded-2xl border border-border bg-card p-4">
         <Button variant="ghost" size="icon" aria-label="Voltar às plenárias" onClick={() => navigate('/plenarias')}>
@@ -541,12 +541,17 @@ export default function PlenariaDetalhe() {
           </p>
         </div>
         {attendance.length > 0 && (
-          <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={notesDirty || savingNotes || editingFinal || savingFinal}>
             <Download className="h-4 w-4 mr-2" /> PDF
           </Button>
         )}
       </div>
 
+      {(notesDirty || editingFinal) && <p role="status" className="text-sm text-muted-foreground">Salve as alterações de texto antes de baixar o PDF.</p>}
+      <Tabs value={activeSection} onValueChange={setActiveSection} className="space-y-6">
+        <ResponsiveSectionNavigation label="Seção da plenária" value={activeSection} onChange={setActiveSection}
+          options={[{ value: 'chamada', label: 'Chamada' }, { value: 'notas', label: 'Anotações' }, { value: 'ata', label: 'Ata' }]} />
+      <TabsContent forceMount value="chamada" className="max-w-[760px] data-[state=inactive]:hidden">
       {/* ===== SEÇÃO 1: CHAMADA ===== */}
       <Card className="mb-4">
         <CardHeader className="pb-3">
@@ -588,6 +593,7 @@ export default function PlenariaDetalhe() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {attendanceError && <QueryErrorState message="Não foi possível carregar a chamada." onRetry={fetchData} retrying={loading} hasPreviousData={attendance.length > 0} />}
           {/* Quorum summary - always visible */}
           {totalMembers > 0 && (
             <div className="space-y-2">
@@ -607,12 +613,12 @@ export default function PlenariaDetalhe() {
                 </Badge>
               </div>
               <Progress value={percentage} className="h-2.5" />
-              <p className="text-center text-sm font-medium text-muted-foreground">{percentage}%</p>
+              <p className="text-sm text-muted-foreground">{percentage}% presentes. Critério atual: maioria dos {totalMembers} membros da chamada, com pelo menos {quorumNeeded} presentes.</p>
             </div>
           )}
 
           {/* Start button */}
-          {attendance.length === 0 && canManage && (
+          {!attendanceError && attendance.length === 0 && canManage && (
             <Button onClick={handleStartAttendance} disabled={starting} className="w-full">
               {starting ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -623,7 +629,7 @@ export default function PlenariaDetalhe() {
             </Button>
           )}
 
-          {attendance.length === 0 && !canManage && (
+          {!attendanceError && attendance.length === 0 && !canManage && (
             <div className="text-center py-6 text-muted-foreground text-sm">
               <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
               Chamada não iniciada
@@ -643,15 +649,16 @@ export default function PlenariaDetalhe() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              {filteredAttendance.length === 0 && <p className="py-4 text-muted-foreground">Nenhum membro encontrado para esta busca.</p>}
+              <div className="space-y-3">
                 {filteredAttendance.map((record) => (
                   <div key={record.id} className="flex items-stretch gap-2">
                     <button
                       aria-pressed={record.present}
-                      disabled={!canManage || toggling === record.id}
+                      disabled={!canManage || Boolean(toggling)}
                       onClick={() => handleToggle(record)}
                       className={cn(
-                        'min-w-0 flex-1 flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
+                        'min-w-0 min-h-16 flex-1 flex items-center gap-3 rounded-xl border p-3 text-left transition-all',
                         'hover:shadow-md disabled:opacity-60',
                         record.present
                           ? 'bg-primary/15 border-primary/40 text-primary'
@@ -659,14 +666,15 @@ export default function PlenariaDetalhe() {
                       )}
                     >
                       {toggling === record.id ? (
-                        <Loader2 className="h-5 w-5 animate-spin mb-1" />
+                        <Loader2 className="h-6 w-6 shrink-0 animate-spin" />
                       ) : record.present ? (
-                        <CheckCircle2 className="h-5 w-5 mb-1" />
+                        <CheckCircle2 className="h-6 w-6 shrink-0" />
                       ) : (
-                        <XCircle className="h-5 w-5 mb-1" />
+                        <XCircle className="h-6 w-6 shrink-0" />
                       )}
-                      <span className="text-xs font-medium leading-tight min-w-0 whitespace-normal break-words w-full">
+                      <span className="flex-1 text-base font-medium leading-6 min-w-0 whitespace-normal break-words">
                         {record.member_name}
+                        <span className="block text-sm font-normal">{record.present ? 'Presente' : 'Ausente'}</span>
                       </span>
                     </button>
                     {canManage && (
@@ -676,7 +684,7 @@ export default function PlenariaDetalhe() {
                           handleRemoveMember(record);
                         }}
                         disabled={removing === record.id}
-                        aria-label={`Remover ${record.member_name} da chamada`} className="h-11 w-11 shrink-0 rounded-xl border border-border text-destructive flex items-center justify-center hover:bg-destructive/10"
+                        aria-label={`Remover ${record.member_name} da chamada`} className="h-12 w-12 shrink-0 rounded-xl border border-border text-destructive flex items-center justify-center hover:bg-destructive/10"
                         title="Remover da chamada"
                       >
                         {removing === record.id ? (
@@ -694,13 +702,15 @@ export default function PlenariaDetalhe() {
         </CardContent>
       </Card>
 
+      </TabsContent>
+      <TabsContent forceMount value="notas" className="max-w-[760px] data-[state=inactive]:hidden">
       {/* ===== SEÇÃO 2: ANOTAÇÕES / ATA ===== */}
       <Card className="mb-4">
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-5 w-5" />
-              Anotações / Ata
+              Anotações da plenária
             </CardTitle>
             <div className="flex items-center gap-2">
               {savingNotes && (
@@ -708,19 +718,21 @@ export default function PlenariaDetalhe() {
                   <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
                 </span>
               )}
-              <Button variant="outline" size="sm" onClick={handleManualSave} disabled={savingNotes}>
+              <Button variant="outline" size="sm" onClick={handleManualSave} disabled={!canManage || !notesDirty || savingNotes}>
                 <Save className="h-4 w-4 mr-1" /> Salvar
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
+          <p role="status" aria-live="polite" className="mb-3 text-sm text-muted-foreground">{savingNotes ? 'Salvando anotações…' : notesDirty ? 'Alterações não salvas' : 'Anotações salvas'}</p>
+          {notesError && <p role="alert" className="mb-3 text-destructive">{notesError}</p>}
           <Textarea aria-label="Registro da plenária"
             placeholder="Registre aqui as pautas, decisões, informes e tudo que for discutido durante a plenária. Essas anotações serão incluídas no relatório final em PDF."
             value={notes}
             onChange={(e) => handleNotesChange(e.target.value)}
-            className="min-h-[200px] resize-y"
-            disabled={!canManage}
+            className="min-h-[300px] text-base leading-6 resize-y"
+            readOnly={!canManage || organizingAI}
           />
           <p className="text-xs text-muted-foreground mt-2">
             As anotações são salvas automaticamente. Elas serão combinadas com a chamada no relatório final.
@@ -728,7 +740,7 @@ export default function PlenariaDetalhe() {
           {canManage && notes.trim() && (
             <Button
               onClick={handleOrganizeAI}
-              disabled={organizingAI}
+              disabled={organizingAI || savingNotes || editingFinal}
               className="mt-3 w-full"
               variant="outline"
             >
@@ -743,6 +755,9 @@ export default function PlenariaDetalhe() {
         </CardContent>
       </Card>
 
+      </TabsContent>
+      <TabsContent forceMount value="ata" className="max-w-[760px] data-[state=inactive]:hidden">
+      {!finalMinutes && <div className="rounded-xl border border-dashed p-6 space-y-3"><p>A ata organizada ainda não foi gerada. Escreva as anotações e revise o texto preparado pela IA.</p><Button variant="outline" onClick={() => setActiveSection('notas')}>Ir às anotações</Button></div>}
       {/* ===== SEÇÃO 3: ATA ORGANIZADA ===== */}
       {finalMinutes && (
         <Card>
@@ -754,16 +769,16 @@ export default function PlenariaDetalhe() {
               </CardTitle>
               <div className="flex items-center gap-2">
                 {canManage && !editingFinal && (
-                  <Button variant="ghost" size="sm" onClick={() => setEditingFinal(true)}>
+                  <Button variant="ghost" size="sm" onClick={() => { setDraftFinalMinutes(finalMinutes); setFinalError(''); setEditingFinal(true); }}>
                     <Edit3 className="h-4 w-4 mr-1" /> Editar
                   </Button>
                 )}
                 {editingFinal && (
                   <>
-                    <Button variant="ghost" size="sm" onClick={() => setEditingFinal(false)}>
+                    <Button variant="ghost" size="sm" disabled={savingFinal} onClick={() => { setEditingFinal(false); setDraftFinalMinutes(''); setFinalError(''); }}>
                       Cancelar
                     </Button>
-                    <Button size="sm" onClick={handleSaveFinalMinutes} disabled={savingFinal}>
+                    <Button size="sm" onClick={handleSaveFinalMinutes} disabled={savingFinal || !draftFinalMinutes.trim()}>
                       {savingFinal ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
                       Salvar
                     </Button>
@@ -773,23 +788,28 @@ export default function PlenariaDetalhe() {
             </div>
           </CardHeader>
           <CardContent>
+            {finalError && <p role="alert" className="mb-3 text-destructive">{finalError}</p>}
             {editingFinal ? (
               <Textarea aria-label="Ata organizada da plenária"
-                value={finalMinutes}
-                onChange={(e) => setFinalMinutes(e.target.value)}
-                className="min-h-[300px] resize-y"
+                disabled={savingFinal}
+                value={draftFinalMinutes}
+                onChange={(e) => setDraftFinalMinutes(e.target.value)}
+                className="min-h-[300px] text-base leading-6 resize-y"
               />
             ) : (
-              <div className="break-words whitespace-pre-wrap text-sm leading-relaxed text-foreground bg-muted/30 rounded-xl p-4 border">
+              <div className="break-words whitespace-pre-wrap text-base leading-6 text-foreground bg-muted/30 rounded-xl p-4 border">
                 {finalMinutes}
               </div>
             )}
             <p className="text-xs text-muted-foreground mt-2">
-              Esta ata organizada será usada no relatório PDF final.
+              Revise o conteúdo organizado pela IA. A versão salva será usada no relatório PDF.
             </p>
           </CardContent>
         </Card>
       )}
+      </TabsContent>
+      </Tabs>
+      </div>
     </AppLayout>
   );
 }

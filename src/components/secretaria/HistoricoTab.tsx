@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, Award, AlertTriangle, Lock, Download, Users, ArrowLeft, CircleDot, ChevronRight, User, Pencil, LockOpen } from 'lucide-react';
@@ -67,6 +68,33 @@ interface StudentStats {
   percentage: number;
 }
 
+// Closure summaries own historical totals; a class filter only selects that saved slice.
+function filterHistoryDays(records: DayRecord[], classId: string): DayRecord[] {
+  if (classId === 'all') return records;
+  return records.flatMap(record => {
+    const summary = record.classSummary.find(item => item.classId === classId);
+    return summary ? [{ ...record, classSummary: [summary], totalStudents: summary.total,
+      presentStudents: summary.present, visitorCount: summary.visitor_count ?? 0 }] : [];
+  });
+}
+
+function historyStudentStats(pupils: DayStudent[], attendance: { student_id: string; class_id: string; date: string; present: boolean }[], records: DayRecord[], classId: string): StudentStats[] {
+  const stats = new Map<string, StudentStats>();
+  for (const day of records) {
+    if (new Date(day.date + 'T12:00:00').getDay() !== 0) continue;
+    const rows = attendance.filter(row => row.date === day.date);
+    const roster = buildDayRoster(pupils, rows, day.date).filter(pupil => classId === 'all' || pupil.class_id === classId);
+    for (const pupil of roster) {
+      const item = stats.get(pupil.id) || { id: pupil.id, name: pupil.name, present: 0, total: 0, percentage: 0 };
+      item.total++;
+      if (rows.some(row => row.student_id === pupil.id && row.class_id === pupil.class_id && row.present)) item.present++;
+      item.percentage = Math.round(item.present / item.total * 100);
+      stats.set(pupil.id, item);
+    }
+  }
+  return [...stats.values()].sort((a, b) => a.percentage - b.percentage || a.name.localeCompare(b.name, 'pt-BR'));
+}
+
 type PeriodFilter = '4weeks' | '3months' | 'all';
 
 interface HistoricoTabProps {
@@ -93,6 +121,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
   const [historyClasses, setHistoryClasses] = useState<DayClass[]>(classes);
   const [otherDates, setOtherDates] = useState<string[]>([]);
   const [historyVisitors, setHistoryVisitors] = useState<{ date: string; class_id: string; name: string | null }[]>([]);
+  const [classFilterId, setClassFilterId] = useState('all');
   const [period, setPeriod] = useState<PeriodFilter>(navigation?.screen.day ? 'all' : '4weeks');
   const [allAttendance, setAllAttendance] = useState<{ student_id: string; class_id: string; date: string; present: boolean; marked_by: string | null }[]>([]);
   const [closures, setClosures] = useState<{ id: string; date: string; closed_by: string; total_students: number; present_students: number; class_summary: ClassSummaryItem[] }[]>([]);
@@ -183,7 +212,6 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
     return () => { requestId.current++; };
   }, [period, refreshedAt, sessionScope]);
 
-  const totalMembers = students.length;
 
   const dayRecords = useMemo<DayRecord[]>(() => {
     const closureMap = new Map(closures.map(c => [c.date, c]));
@@ -222,7 +250,17 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
     });
   }, [callActors, allAttendance, closures, historyClasses, historyStudents, otherDates, historyVisitors]);
 
-  const selectedDay = dayRecords.find(day => day.date === selectedDate) || null;
+  const filteredDayRecords = useMemo(() => filterHistoryDays(dayRecords, classFilterId), [dayRecords, classFilterId]);
+  const classOptions = useMemo(() => {
+    const options = new Map(historyClasses.map(group => [group.id, group.name]));
+    // Newest saved names take priority, including inactive historical classes.
+    [...dayRecords].reverse().forEach(day => day.classSummary.forEach(group => options.set(group.classId, group.className)));
+    return [...options].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  }, [historyClasses, dayRecords]);
+  const filterClassName = classFilterId === 'all' ? 'Todas as turmas' : classOptions.find(group => group.id === classFilterId)?.name || 'Turma selecionada';
+  const selectedDay = filteredDayRecords.find(day => day.date === selectedDate) || null;
+  const historyStats = useMemo(() => historyStudentStats(historyStudents, allAttendance, filteredDayRecords, classFilterId), [historyStudents, allAttendance, filteredDayRecords, classFilterId]);
+  const totalMembers = historyStats.length;
 
   const getPercentColor = (pct: number) => {
     if (pct > 70) return 'text-green-600';
@@ -235,22 +273,22 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
     try {
       const day = await readEbdDay(record.date);
       if (!isReportScopeCurrent(scope)) return;
-      generateEbdAttendancePDF({ snapshotVersion: day.snapshotVersion, classes: day.classes, students: day.students, attendance: day.attendance, date: record.date, formattedDate: format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) });
+      generateEbdAttendancePDF({ snapshotVersion: day.snapshotVersion, classes: day.classes.filter(group => classFilterId === 'all' || group.id === classFilterId), students: day.students.filter(pupil => classFilterId === 'all' || pupil.class_id === classFilterId), attendance: day.attendance.filter(row => classFilterId === 'all' || row.class_id === classFilterId), date: record.date, formattedDate: format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) });
     } catch (error) { if (isReportScopeCurrent(scope)) await reportEbdWriteError(error, 'Não foi possível gerar o PDF.'); }
   };
 
-  const periodLabel = period === '4weeks' ? 'Últimas 4 semanas' : period === '3months' ? 'Últimos 3 meses' : 'Todo o período';
+  const periodLabel = `${period === '4weeks' ? 'Últimas 4 semanas' : period === '3months' ? 'Últimos 3 meses' : 'Todo o período'} · ${filterClassName}`;
 
   const handleDownloadPeriodPDF = async () => {
     const scope = sessionScope;
-    if (dayRecords.length === 0) {
+    if (filteredDayRecords.length === 0) {
       toast.error('Nenhuma chamada registrada neste período.');
       return;
     }
     try {
       const snapshotVersion = historySnapshotVersion;
       assertEbdSnapshotCurrent(snapshotVersion);
-      const days = dayRecords.map(r => ({
+      const days = filteredDayRecords.map(r => ({
         date: r.date,
         present: r.presentStudents,
         total: r.totalStudents,
@@ -258,7 +296,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
         visitorCount: r.visitorCount,
       }));
       const classAgg = new Map<string, { name: string; totalPresent: number; pctSum: number; count: number }>();
-      dayRecords.forEach(r => {
+      filteredDayRecords.forEach(r => {
         r.classSummary.forEach(cs => {
           const cur = classAgg.get(cs.classId) || { name: cs.className, totalPresent: 0, pctSum: 0, count: 0 };
           cur.totalPresent += cs.present;
@@ -280,7 +318,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
       const errorId = await reportClientError('EBD:relatorio-periodo', e, {
         period,
         periodLabel,
-        diasNoPeriodo: dayRecords.length,
+        diasNoPeriodo: filteredDayRecords.length,
       });
       toast.error('Não foi possível gerar o relatório.', {
         description: `Tente novamente. Se o erro persistir, informe o código ${errorId}.`,
@@ -291,7 +329,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
 
   const handleDownloadQuarterlyPDF = async () => {
     const scope = sessionScope;
-    if (dayRecords.length === 0) {
+    if (filteredDayRecords.length === 0) {
       toast.error('Nenhuma chamada registrada neste período.');
       return;
     }
@@ -299,7 +337,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
     try {
       const snapshotVersion = historySnapshotVersion;
       assertEbdSnapshotCurrent(snapshotVersion);
-      const sundayDates = dayRecords.map(r => r.date);
+      const sundayDates = filteredDayRecords.map(r => r.date);
 
       // Fetch visitor data for the period
       const minDate = [...sundayDates].sort()[0];
@@ -315,15 +353,8 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
       const entriesInPeriod = (visitorEntries || []).filter(v => sundayDates.includes(v.date));
       const countsInPeriod = (visitorCounts || []).filter(v => sundayDates.includes(v.date));
 
-      const studentsByClass = new Map<string, EbdStudent[]>();
-      students.forEach(s => {
-        const arr = studentsByClass.get(s.class_id) || [];
-        arr.push(s);
-        studentsByClass.set(s.class_id, arr);
-      });
-
       // General per-Sunday rows
-      const days = dayRecords.map(r => ({
+      const days = filteredDayRecords.map(r => ({
         date: r.date,
         present: r.presentStudents,
         total: r.totalStudents,
@@ -331,55 +362,28 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
         visitorCount: r.visitorCount,
       }));
 
-      const classesDetail = classes.map(cls => {
-        const classStudents = studentsByClass.get(cls.id) || [];
-        const classTotal = classStudents.length;
-
-        const classDays = sundayDates.map(date => {
-          const dayAtt = allAttendance.filter(a => a.class_id === cls.id && a.date === date);
-          const present = dayAtt.filter(a => a.present).length;
-          const names = entriesInPeriod
-            .filter(v => v.class_id === cls.id && v.date === date && v.name)
-            .map(v => v.name as string);
-          const countRow = countsInPeriod.find(v => v.class_id === cls.id && v.date === date);
-          const visitorCount = Math.max(countRow?.visitor_count ?? 0, names.length);
-          return {
-            date,
-            present,
-            total: classTotal,
-            percentage: classTotal > 0 ? Math.round((present / classTotal) * 100) : 0,
-            visitorCount,
-            visitorNames: names,
-          };
-        }).filter(d => d.total > 0 || d.present > 0 || d.visitorCount > 0);
-
-        const totalPresent = classDays.reduce((s, d) => s + d.present, 0);
-        const avgPercentage = classDays.length > 0
-          ? Math.round(classDays.reduce((s, d) => s + d.percentage, 0) / classDays.length)
-          : 0;
-        const totalVisitors = classDays.reduce((s, d) => s + d.visitorCount, 0);
-
-        const studentStatsList = classStudents.map(st => {
-          const att = allAttendance.filter(a => a.student_id === st.id && sundayDates.includes(a.date));
-          const present = att.filter(a => a.present).length;
-          const total = sundayDates.length;
-          return {
-            name: st.name,
-            present,
-            total,
-            percentage: total > 0 ? Math.round((present / total) * 100) : 0,
-          };
+      const reportClasses = new Map<string, string>();
+      filteredDayRecords.forEach(day => day.classSummary.forEach(group => reportClasses.set(group.classId, group.className)));
+      const classesDetail = [...reportClasses].map(([classId, className]) => {
+        const classDays = filteredDayRecords.flatMap(record => {
+          const summary = record.classSummary.find(group => group.classId === classId);
+          if (!summary) return [];
+          const names = record.isClosed ? (summary.visitors || []).flatMap(visitor => visitor.name ? [visitor.name] : [])
+            : entriesInPeriod.filter(visitor => visitor.class_id === classId && visitor.date === record.date && visitor.name).map(visitor => visitor.name as string);
+          const countRow = countsInPeriod.find(visitor => visitor.class_id === classId && visitor.date === record.date);
+          const visitorCount = record.isClosed ? summary.visitor_count ?? 0 : Math.max(summary.visitor_count ?? 0, countRow?.visitor_count ?? 0, names.length);
+          return [{ date: record.date, present: summary.present, total: summary.total,
+            percentage: summary.percentage, visitorCount, visitorNames: names }];
         });
-
         return {
-          name: cls.name,
-          totalPresent,
-          avgPercentage,
-          totalVisitors,
+          name: className,
+          totalPresent: classDays.reduce((sum, day) => sum + day.present, 0),
+          avgPercentage: classDays.length ? Math.round(classDays.reduce((sum, day) => sum + day.percentage, 0) / classDays.length) : 0,
+          totalVisitors: classDays.reduce((sum, day) => sum + day.visitorCount, 0),
           days: classDays,
-          students: studentStatsList,
+          students: historyStudentStats(historyStudents, allAttendance, filteredDayRecords, classId),
         };
-      }).filter(c => c.days.length > 0 || c.students.length > 0);
+      });
 
       generateEbdQuarterlyPDF({ snapshotVersion, periodLabel, days, classesDetail });
       toast.success('Relatório trimestral gerado com sucesso!');
@@ -389,7 +393,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
       const errorId = await reportClientError('EBD:relatorio-trimestral', e, {
         period,
         periodLabel,
-        diasNoPeriodo: dayRecords.length,
+        diasNoPeriodo: filteredDayRecords.length,
       });
       toast.error('Não foi possível gerar o relatório trimestral.', {
         description: `Tente novamente. Se o erro persistir, informe o código ${errorId}.`,
@@ -420,119 +424,73 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
   };
 
   const { barData, metrics, perfectStudents, absentStudents, lowFreqStudents } = useMemo(() => {
-    const sundayDates = [...new Set(allAttendance.map(a => a.date))]
-      .filter(date => new Date(date + 'T12:00:00').getDay() === 0)
-      .sort();
-
-    const barData = historyClasses.map(cls => {
-      const summaries = dayRecords.flatMap(day => day.classSummary.filter(item => item.classId === cls.id));
-      const avgPct = summaries.length ? Math.round(summaries.reduce((sum, item) => sum + item.percentage, 0) / summaries.length) : 0;
-      return { classId: cls.id, name: cls.name, media: avgPct };
-    }).sort((a, b) => b.media - a.media);
-
-    const bestClass = barData.length > 0 ? barData[0] : null;
-
-    const studentMap = new Map<string, { present: number; total: number }>();
-    allAttendance.filter(a => new Date(a.date + 'T12:00:00').getDay() === 0).forEach(a => {
-      if (!studentMap.has(a.student_id)) studentMap.set(a.student_id, { present: 0, total: 0 });
-      const s = studentMap.get(a.student_id)!;
-      s.total++;
-      if (a.present) s.present++;
-    });
-
-    const totalSundays = sundayDates.length;
-    const perfectStudents = students.filter(s => { const r = studentMap.get(s.id); return r && r.present === totalSundays && totalSundays > 0; });
-    const absentStudents = students.filter(s => { const r = studentMap.get(s.id); return !r || r.present === 0; });
-    
-    // New: Low frequency students (<30% excluding never attended)
-    const lowFreqStudents = students.filter(s => {
-      const r = studentMap.get(s.id);
-      if (!r || r.present === 0) return false; // exclude never attended
-      const freq = r.total > 0 ? (r.present / r.total) : 0;
-      return freq < 0.30;
-    });
-
-    const presencesPerDay = dayRecords.map(day => ({ date: day.date, presenca: day.totalStudents ? Math.round(day.presentStudents / day.totalStudents * 100) : 0 }));
-    const avgAll = presencesPerDay.length ? Math.round(presencesPerDay.reduce((sum, day) => sum + day.presenca, 0) / presencesPerDay.length) : 0;
-
-    const best = presencesPerDay.length > 0 
-      ? presencesPerDay.reduce((a, b) => a.presenca > b.presenca ? a : b)
-      : null;
-    
-    const worst = presencesPerDay.length > 0 
-      ? presencesPerDay.reduce((a, b) => a.presenca < b.presenca ? a : b)
-      : null;
-
-    return { 
-      barData, 
-      metrics: { 
-        best: best ? { date: format(new Date(best.date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: best.presenca } : null, 
-        worst: worst ? { date: format(new Date(worst.date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: worst.presenca } : null, 
-        bestClass, 
-        totalSundays, 
-        avgAll 
-      }, 
-      perfectStudents, 
-      absentStudents,
-      lowFreqStudents
+    const summaries = new Map<string, { classId: string; name: string; total: number; count: number }>();
+    filteredDayRecords.forEach(day => day.classSummary.forEach(group => {
+      const current = summaries.get(group.classId) || { classId: group.classId, name: group.className, total: 0, count: 0 };
+      current.total += group.percentage; current.count++;
+      summaries.set(group.classId, current);
+    }));
+    const barData = [...summaries.values()].map(group => ({ classId: group.classId, name: group.name, media: Math.round(group.total / group.count) })).sort((a, b) => b.media - a.media);
+    const presencesPerDay = filteredDayRecords.map(day => ({ date: day.date, presenca: day.totalStudents ? Math.round(day.presentStudents / day.totalStudents * 100) : 0 }));
+    const best = presencesPerDay.length ? presencesPerDay.reduce((a, b) => a.presenca > b.presenca ? a : b) : null;
+    const worst = presencesPerDay.length ? presencesPerDay.reduce((a, b) => a.presenca < b.presenca ? a : b) : null;
+    return {
+      barData,
+      metrics: {
+        best: best ? { date: format(new Date(best.date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: best.presenca } : null,
+        worst: worst ? { date: format(new Date(worst.date + 'T12:00:00'), 'dd/MM', { locale: ptBR }), presenca: worst.presenca } : null,
+        bestClass: barData[0] || null,
+        totalSundays: filteredDayRecords.filter(day => new Date(day.date + 'T12:00:00').getDay() === 0).length,
+        avgAll: presencesPerDay.length ? Math.round(presencesPerDay.reduce((sum, day) => sum + day.presenca, 0) / presencesPerDay.length) : 0,
+      },
+      perfectStudents: historyStats.filter(student => student.present === student.total && student.total > 0),
+      absentStudents: historyStats.filter(student => student.present === 0),
+      lowFreqStudents: historyStats.filter(student => student.present > 0 && student.present / student.total < 0.3),
     };
-  }, [callActors, allAttendance, historyClasses, students, dayRecords]);
+  }, [filteredDayRecords, historyStats]);
 
-  // Student stats for selected class
-  const studentStats = useMemo<StudentStats[]>(() => {
-    if (!selectedClassId) return [];
-    
-    const sundayDates = [...new Set(allAttendance.map(a => a.date))]
-      .filter(date => new Date(date + 'T12:00:00').getDay() === 0)
-      .sort();
-    
-    const classStudents = students.filter(s => s.class_id === selectedClassId);
-    
-    return classStudents.map(student => {
-      const studentAttendance = allAttendance.filter(a => 
-        a.student_id === student.id && 
-        sundayDates.includes(a.date)
-      );
-      
-      const present = studentAttendance.filter(a => a.present).length;
-      const total = sundayDates.length;
-      const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
-      
-      return {
-        id: student.id,
-        name: student.name,
-        present,
-        total,
-        percentage
-      };
-    }).sort((a, b) => a.percentage - b.percentage); // Sort by lowest frequency first
-  }, [selectedClassId, allAttendance, students]);
-  
-  const selectedClass = classes.find(c => c.id === selectedClassId);
+  const studentStats = useMemo(() => selectedClassId ? historyStudentStats(historyStudents, allAttendance, filteredDayRecords, selectedClassId) : [], [selectedClassId, historyStudents, allAttendance, filteredDayRecords]);
+  const selectedClass = classOptions.find(group => group.id === selectedClassId);
+
+  const filterControls = <div className="grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-2">
+    <div className="space-y-2"><Label htmlFor="history-period">Período</Label>
+      <select id="history-period" value={period} disabled={Boolean(selectedDate)} onChange={event => { setLoading(true); setPeriod(event.target.value as PeriodFilter); }} className="min-h-12 w-full rounded-xl border border-input bg-background px-3 text-base">
+        <option value="4weeks">Últimas 4 semanas</option><option value="3months">Últimos 3 meses</option><option value="all">Todo o período</option>
+      </select>
+    </div>
+    <div className="space-y-2"><Label htmlFor="history-class">Turma</Label>
+      <select id="history-class" value={classFilterId} disabled={Boolean(selectedDate)} onChange={event => setClassFilterId(event.target.value)} className="min-h-12 w-full rounded-xl border border-input bg-background px-3 text-base">
+        <option value="all">Todas as turmas</option>{classOptions.map(group => <option key={group.id} value={group.id}>{group.name}</option>)}
+      </select>
+    </div>
+    <p className="text-sm text-muted-foreground sm:col-span-2">{selectedDate ? 'Filtros desta consulta. Volte ao histórico para alterá-los.' : 'Os indicadores e relatórios seguem o período e a turma selecionados.'}</p>
+  </div>;
 
   if (loading) {
-    return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando histórico...</div>;
+    return <div className="space-y-4">{filterControls}<p role="status" className="py-12 text-center text-muted-foreground">Carregando histórico…</p></div>;
   }
 
-  if (editingDate && accessLevel === 'admin') return <HistoricalChamada key={`${sessionScope}:${editingDate}`} sessionScope={sessionScope} date={editingDate} onBack={() => { setEditingDate(null); void fetchHistory(); void onRefreshParent?.(); }} />;
+  if (editingDate && accessLevel === 'admin') return <div className="space-y-4"><div className="rounded-xl border border-warning/40 bg-warning/10 p-4"><p className="font-semibold">Edição administrativa · {format(new Date(editingDate + 'T12:00:00'), 'dd/MM/yyyy')}</p><p className="text-sm">Você está corrigindo a chamada desta data. Confira o dia antes de registrar alterações.</p></div><HistoricalChamada key={`${sessionScope}:${editingDate}`} sessionScope={sessionScope} date={editingDate} onBack={() => { setEditingDate(null); void fetchHistory(); void onRefreshParent?.(); }} /></div>;
 
   // ─── DETAIL VIEW (full-screen) ───
   if (selectedDay) {
     const pct = selectedDay.totalStudents > 0 ? Math.round((selectedDay.presentStudents / selectedDay.totalStudents) * 100) : 0;
     const dateFormatted = format(new Date(selectedDay.date + 'T12:00:00'), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     // Refresh from latest dayRecords
-    const freshRecord = dayRecords.find(d => d.date === selectedDay.date) || selectedDay;
+    const freshRecord = filteredDayRecords.find(d => d.date === selectedDay.date) || selectedDay;
 
     return (
-      <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-200">
-        {historyError && <p role="status" className="text-sm text-destructive">Não foi possível atualizar o histórico. Tentaremos novamente.</p>}
+      <div className="mx-auto max-w-[1120px] space-y-4 animate-in fade-in slide-in-from-right-4 duration-200">
+        {historyError && <div role="alert" className="rounded-xl border border-destructive/40 p-4 space-y-2"><p className="text-sm text-destructive">Não foi possível atualizar o histórico. Os dados exibidos podem estar desatualizados.</p><Button variant="outline" onClick={() => void fetchHistory()}>Tentar novamente</Button></div>}
         {/* Back button */}
         <Button variant="ghost" size="sm" onClick={() => setSelectedDay(null)} className="text-xs -ml-2 scroll-mt-24">
           <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar ao histórico
         </Button>
 
+        {filterControls}
         {/* Date header */}
         <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">Consulta do histórico · {filterClassName}</p>
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold first-letter:uppercase">{dateFormatted}</h2>
           </div>
@@ -549,10 +507,6 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
           </div>
         </div>
 
-        {accessLevel === 'admin' && <Button className="w-full min-h-11" disabled={closingDay || historyError} onClick={() => freshRecord.isClosed ? setConfirmAction('reopen') : setEditingDate(freshRecord.date)}>
-          {freshRecord.isClosed ? <LockOpen className="h-4 w-4 mr-2" /> : <Pencil className="h-4 w-4 mr-2" />}
-          {freshRecord.isClosed ? 'Reabrir para corrigir' : 'Editar chamadas'}
-        </Button>}
         <AlertDialog open={!!confirmAction} onOpenChange={open => { if (!open && !closingDay) setConfirmAction(null); }}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -567,7 +521,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
           <CardContent data-ebd-content className="pt-5 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm text-muted-foreground">Presença geral</p>
+                <p className="text-sm text-muted-foreground">Presença · {filterClassName}</p>
                 <p className="text-2xl font-bold">
                   {freshRecord.presentStudents}
                   <span className="text-lg font-normal text-muted-foreground">/{freshRecord.totalStudents}</span>
@@ -644,65 +598,54 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
           </Card>
         )}
 
+        <section className="space-y-3 rounded-xl border p-4">
+          <h3 className="font-semibold">Exportar consulta</h3>
+          <p className="text-sm text-muted-foreground">PDF da chamada confirmada de {format(new Date(freshRecord.date + 'T12:00:00'), 'dd/MM/yyyy')} · {filterClassName}</p>
         {/* Actions */}
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => handleDownloadPDF(freshRecord)}>
+          <Button variant="outline" className="flex-1" disabled={historyError} onClick={() => handleDownloadPDF(freshRecord)}>
             <Download className="h-4 w-4 mr-2" /> Baixar PDF
           </Button>
-          {accessLevel === 'admin' && !freshRecord.isClosed && (
+        </div>
+        </section>
+        {accessLevel === 'admin' && <section className="rounded-xl border p-4 space-y-3"><h3 className="font-semibold">Edição administrativa</h3><p className="text-sm text-muted-foreground">As ações abaixo se aplicam ao dia inteiro, incluindo todas as turmas.</p>
+        {accessLevel === 'admin' && <Button className="w-full min-h-11" disabled={closingDay || historyError} onClick={() => freshRecord.isClosed ? setConfirmAction('reopen') : setEditingDate(freshRecord.date)}>
+          {freshRecord.isClosed ? <LockOpen className="h-4 w-4 mr-2" /> : <Pencil className="h-4 w-4 mr-2" />}
+          {freshRecord.isClosed ? 'Reabrir para corrigir' : 'Editar chamadas'}
+        </Button>}
+          {!freshRecord.isClosed && (
             <Button
               className="flex-1"
-              disabled={closingDay}
+              disabled={closingDay || historyError}
               onClick={() => setConfirmAction('close')}
             >
               <Lock className="h-4 w-4 mr-2" /> {closingDay ? 'Fechando...' : 'Fechar dia'}
             </Button>
           )}
-        </div>
+        </section>}
       </div>
     );
   }
 
   // ─── LIST VIEW ───
   return (
-    <div className="space-y-4">
-      {historyError && <p role="status" className="text-sm text-destructive">Não foi possível atualizar o histórico. Tentaremos novamente.</p>}
-      {/* Period selector */}
-      <div className="ebd-history-toolbar">
-        <div className="ebd-periods" role="group" aria-label="Período do histórico">
-        {([
-          { key: '4weeks' as PeriodFilter, label: '4 semanas' },
-          { key: '3months' as PeriodFilter, label: '3 meses' },
-          { key: 'all' as PeriodFilter, label: 'Todo período' },
-        ]).map(p => (
-          <Button key={p.key} variant={period === p.key ? 'default' : 'outline'} size="sm" aria-pressed={period === p.key} onClick={() => setPeriod(p.key)}>
-            {p.label}
-          </Button>
-        ))}
+    <div className="mx-auto max-w-[1120px] space-y-4">
+      {selectedDate && <Button variant="outline" onClick={() => setSelectedDay(null)}><ArrowLeft className="mr-2 h-4 w-4" />Voltar ao histórico</Button>}
+      {historyError && <div role="alert" className="rounded-xl border border-destructive/40 p-4 space-y-2"><p className="text-sm text-destructive">Não foi possível atualizar o histórico. Os dados exibidos podem estar desatualizados.</p><Button variant="outline" onClick={() => void fetchHistory()}>Tentar novamente</Button></div>}
+      {filterControls}
+      <section className="space-y-3 rounded-2xl border bg-card p-4">
+        <h2 className="text-lg font-semibold">Exportar relatórios</h2>
+        <p className="text-sm text-muted-foreground">{periodLabel}</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <Button variant="outline" onClick={handleDownloadPeriodPDF} disabled={historyError || filteredDayRecords.length === 0}><Download className="mr-2 h-4 w-4" />Resumo do período</Button>
+          <Button variant="outline" onClick={handleDownloadQuarterlyPDF} disabled={historyError || filteredDayRecords.length === 0 || generatingQuarterly}><Download className="mr-2 h-4 w-4" />{generatingQuarterly ? 'Gerando…' : 'Relatório completo'}</Button>
         </div>
-        <div className="ebd-report-actions">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleDownloadPeriodPDF}
-          disabled={dayRecords.length === 0}
-        >
-          <Download className="h-4 w-4 mr-2" /> Baixar relatório
-        </Button>
-        <Button
-          size="sm"
-          onClick={handleDownloadQuarterlyPDF}
-          disabled={dayRecords.length === 0 || generatingQuarterly}
-        >
-          <Download className="h-4 w-4 mr-2" /> {generatingQuarterly ? 'Gerando...' : 'Relatório completo'}
-        </Button>
-        </div>
-      </div>
-
+      </section>
+      <h2 className="text-lg font-semibold">Consultar encontros</h2>
       {/* Compact day cards */}
-      {dayRecords.length > 0 && (
+      {filteredDayRecords.length > 0 && (
         <div className="space-y-2">
-          {dayRecords.map(record => {
+          {filteredDayRecords.map(record => {
             const pct = record.totalStudents > 0 ? Math.round((record.presentStudents / record.totalStudents) * 100) : 0;
             const dateObj = new Date(record.date + 'T12:00:00');
             const dayName = format(dateObj, 'EEEE', { locale: ptBR });
@@ -719,7 +662,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
                 onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedDay(record); } }}
                 onClick={() => setSelectedDay(record)}
               >
-                <CardContent data-ebd-content className="py-3 px-4 flex items-center gap-3">
+                <CardContent data-ebd-content className="min-h-16 py-3 px-4 flex items-center gap-3">
                   {/* Date block */}
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex flex-col items-center justify-center shrink-0">
                     <span className="text-lg font-bold text-primary leading-none">{dayNum}</span>
@@ -728,7 +671,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium capitalize min-w-0 whitespace-normal break-words">{dayName}</p>
+                    <p className="text-sm font-medium capitalize min-w-0 whitespace-normal break-words">{dayName} · {format(dateObj, 'dd/MM/yyyy')}</p>
                     <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                       {record.isClosed ? (
                         <Badge variant="outline" className="text-xs px-2 py-1 border-green-500/40 text-green-700 bg-green-500/10">
@@ -760,7 +703,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
       <Card data-ebd-card className="border-primary/20 bg-primary/5">
         <CardHeader data-ebd-card-header className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" /> Resumo geral
+            <TrendingUp className="h-4 w-4 text-primary" /> Resumo do período
           </CardTitle>
         </CardHeader>
         <CardContent data-ebd-content className="space-y-4">
@@ -771,7 +714,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
             </div>
             <div>
               <p className="text-2xl font-bold text-primary">{totalMembers}</p>
-              <p className="text-xs text-muted-foreground leading-tight">Alunos cadastrados</p>
+              <p className="text-xs text-muted-foreground leading-tight">Alunos no histórico</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-primary">{metrics.avgAll}%</p>
@@ -851,17 +794,17 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
         >
           <AlertTriangle className="h-5 w-5 text-red-500 mb-1.5" />
           <p className="text-2xl font-bold text-red-600">{absentStudents.length}</p>
-          <p className="text-xs text-muted-foreground leading-tight mt-0.5">Nunca vieram</p>
+          <p className="text-xs text-muted-foreground leading-tight mt-0.5">Sem presença no período</p>
         </button>
       </div>
 
       <ResponsiveDialog open={openDialog !== null} onOpenChange={(open) => !open && setOpenDialog(null)}>
-        <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogContent size="standard">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>
               {openDialog === 'perfect' && 'Alunos com 100% de presença'}
               {openDialog === 'lowFreq' && 'Alunos com frequência baixa (<30%)'}
-              {openDialog === 'absent' && 'Alunos que nunca compareceram'}
+              {openDialog === 'absent' && 'Alunos sem presença no período'}
             </ResponsiveDialogTitle>
           </ResponsiveDialogHeader>
 
@@ -883,7 +826,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
       
       {/* Class Students Dialog */}
       <ResponsiveDialog open={selectedClassId !== null} onOpenChange={(open) => !open && setSelectedClassId(null)}>
-        <ResponsiveDialogContent className="sm:max-w-lg">
+        <ResponsiveDialogContent size="form">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -951,7 +894,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
 
 
 
-      {allAttendance.length === 0 && (
+      {!historyError && filteredDayRecords.length === 0 && (
         <p className="text-center text-muted-foreground py-8">Nenhum registro de presença encontrado para este período.</p>
       )}
     </div>

@@ -21,7 +21,7 @@ const data:Record<string,any[]>={
  election_attendance:[{id:'election-att',election_id:'election',name:'Maria de Oliveira — exemplo',present:true}],
  transactions:[{...base,id:'transaction',description:'Contribuição para encontro — exemplo',amount:12345.67,type:'entrada',date:'2026-09-27',category:'Doação',payment_method:'pix',status:'paid',member_id:'member',members:member}],
  financial_settings:[{...base,id:'financial-setting',competence:'geral',monthly_fee:25,per_capita:10,due_day:10}],
- member_payment_submissions:[{...base,id:'submission',member_id:'member',user_id:uid,competence:'2026',type:'annual_contribution',receipt_url:'fixture/receipt.pdf',status:'pendente',notes:'Pagamento de exemplo'}],
+ member_payment_submissions:[{...base,id:'submission',member_id:'member',user_id:uid,competence:'2026',type:'annual_contribution',receipt_url:'storage://receipts/fixture/receipt.svg',status:'pendente',notes:'Pagamento de exemplo'}],
  shirt_campaigns:[{...base,id:'campaign',name:'Camisas do encontro — exemplo',purchased_quantity:50,unit_cost:25,total_purchase_cost:1250,default_sale_price:45,supplier:'Fornecedor fictício',purchase_date:'2026-09-01',transaction_id:null}],
  shirt_campaign_lots:[{...base,id:'lot',campaign_id:'campaign',quantity:50,unit_cost:25,total_cost:1250,purchase_date:'2026-09-01',supplier:'Fornecedor fictício'}],
  shirt_orders:[{...base,id:'order',buyer_name:member.name,size:'M',quantity:2,unit_price:45,unit_cost:25,total_price:90,payment_type:'pix',amount_paid:45,delivery_status:'pending',delivered_at:null,notes:'Exemplo',date:'2026-09-27',items:[{color:'off',size:'M',qty:2}],campaign_id:'campaign',lot_id:'lot'}],
@@ -82,7 +82,7 @@ function query(table:string){
   if(mode==='loading')return new Promise(()=>{});
   await fixturePause();
   if(operation==='select' && readsFail)return failure();
-  if(operation!=='select' && mode==='error')return failure();
+  if(operation!=='select' && (mode==='error'||(table==='election_candidates'&&(fixtureParams.get('candidate_error')==='1'||fixtureParams.get('photo_error')==='update'))))return failure();
   let rows=(mode==='empty'&&!keepWhenEmpty.has(table)?[]:data[table]||[]).filter(r=>filters.every(f=>f(r)));
   const count=rows.length;
   rows=rows.slice(offset,offset+limit);
@@ -102,15 +102,25 @@ function query(table:string){
 }
 const fakeSession={user:{id:uid,email:'revisao@example.test'},access_token:'fixture-only',refresh_token:'fixture-only'};
 const ballots=new Set<string>();
+const fixtureVoteCalls:Array<{ballot_id:string,round_number:number,choices:string[]}> = [];
+// Exposed only by the isolated fixture so browser assertions can compare retries.
+if (typeof window !== 'undefined') (window as any).__ipncFixtureVoteCalls = fixtureVoteCalls;
+const failedVoteReads = new Set<string>();
 async function invoke(name:string,options:{body?:Record<string,any>}={}){
  await fixturePause();
  if(mode==='error'||fixtureParams.get('auth')==='deny')return failure();
  const body=options.body||{};
  if(name==='election-vote'){
+  if(fixtureParams.get('read_error')===body.action && !failedVoteReads.has(body.action)){failedVoteReads.add(body.action);return failure();}
   if(body.action==='history')return {data:{votes:data.election_votes},error:null};
   if(body.action==='already')return {data:{count:fixtureParams.get('voted')==='1'?1:ballots.size},error:null};
   if(body.action==='device')return {data:{device:body.token==='fixture-urna'?{id:'device',label:'Urna FICTÍCIA'}:null},error:null};
   if(body.action==='cast'){
+   fixtureVoteCalls.push({ballot_id:body.ballot_id,round_number:body.round_number,choices:[...(body.choices||[])]});
+   const simulatedError = fixtureParams.get('vote_error');
+   if(fixtureVoteCalls.length===1 && simulatedError==='returned')return {data:{success:false,error:'Rejeição FICTÍCIA da cédula'},error:null};
+   if(fixtureVoteCalls.length===1 && simulatedError==='network')return failure();
+   if(fixtureVoteCalls.length===1 && simulatedError==='throw')throw new Error('Conexão FICTÍCIA interrompida');
    // Memory only, enough for the success screen. Does not emulate database rules.
    if(!ballots.has(body.ballot_id)){ballots.add(body.ballot_id);for(const candidate_id of body.choices||[])data.election_votes.push({id:crypto.randomUUID(),election_id:body.election_id,candidate_id,round_number:body.round_number});}
    return {data:{success:true},error:null};
@@ -148,7 +158,7 @@ export const supabase:any={from:query,channel:createChannel,removeChannel:async(
   signOut:async()=>({error:null}),
  },
  functions:{invoke},
- storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:portrait},error:null}),getPublicUrl:()=>({data:{publicUrl:portrait}}),list:async()=>({data:[],error:null}),upload:async()=>({data:{path:'fixture-only'},error:null}),remove:async()=>({data:[],error:null})})}
+ storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:portrait},error:null}),getPublicUrl:()=>({data:{publicUrl:portrait}}),list:async()=>({data:[],error:null}),upload:async()=>fixtureParams.get('photo_error')==='upload'?failure():({data:{path:'fixture-only'},error:null}),remove:async()=>({data:[],error:null})})}
 };
 // Access-dialog rendering only. Full treasury workflow keeps its separate fixture.
 export const treasuryClient=supabase;

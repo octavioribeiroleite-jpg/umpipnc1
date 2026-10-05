@@ -158,7 +158,7 @@ export function MembrosTab() {
 
       {/* Search */}
       {members.length > 0 && (
-        <div className="relative">
+        <div className="relative w-full sm:max-w-[320px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             aria-label="Buscar membro" placeholder="Buscar membro..."
@@ -181,7 +181,7 @@ export function MembrosTab() {
           {filtered.map((member) => (
             <div
               key={member.id}
-              className="flex flex-col items-start justify-between gap-3 p-4 rounded-xl sm:flex-row sm:items-center border bg-card hover:bg-muted/50 transition-colors"
+              className="flex flex-col items-start justify-between gap-3 min-h-20 p-4 rounded-xl sm:flex-row sm:items-center border bg-card hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
@@ -191,6 +191,7 @@ export function MembrosTab() {
                 />
                 <span className={`break-words font-medium ${!member.active ? 'text-muted-foreground line-through' : ''}`}>
                   {member.name}
+                  <span className="block text-sm font-normal text-muted-foreground">{member.active ? 'Ativo' : 'Inativo'}</span>
                 </span>
               </div>
               {isManagement && (

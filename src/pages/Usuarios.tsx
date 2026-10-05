@@ -571,7 +571,7 @@ export default function Usuarios() {
     <div key={user.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
       <div className="flex flex-col gap-3">
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{user.full_name}</p>
+          <p className="font-medium text-base min-w-0 whitespace-normal break-words">{user.full_name}</p>
           <p className="break-words text-sm text-muted-foreground">@{user.username}</p>
         </div>
         <div className="flex flex-wrap items-center gap-1 border-t border-border pt-2">
@@ -688,7 +688,7 @@ export default function Usuarios() {
     <div key={member.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
       <div className="flex flex-col gap-3">
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{member.name}</p>
+          <p className="font-medium text-base min-w-0 whitespace-normal break-words">{member.name}</p>
           <div className="flex min-w-0 items-center gap-1.5 mt-1">
             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getSocietyColor(member.society_id) }} />
             <span className="min-w-0 break-words text-sm text-muted-foreground">{getSocietyName(member.society_id)}</span>

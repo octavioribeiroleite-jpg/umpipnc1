@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight, Circle } from 'lucide-react';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import voteConfirmSound from '@/assets/vote-confirm.mp3';
+import { isBallotConfirmed } from '@/components/eleicoes/ballot-response';
 
 interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; round2_candidate_ids?: string[] | null; }
 interface Candidate { id: string; name: string; photo_url: string | null; photo_urls?: string[]; display_order: number; birth_date?: string | null; }
@@ -29,7 +30,7 @@ function getPhotoUrls(c: Candidate): string[] {
 
 function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name: string; size?: 'md' | 'lg' }) {
   const [current, setCurrent] = useState(0);
-  const sizeClass = size === 'lg' ? 'w-40 h-40 md:w-48 md:h-48' : 'w-24 h-24 md:w-32 md:h-32';
+  const sizeClass = size === 'lg' ? 'w-[192px] h-[192px] max-w-full' : 'w-[144px] h-[144px] max-w-full';
 
   if (photos.length === 0) {
     return (
@@ -42,7 +43,7 @@ function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name
   if (photos.length === 1) {
     return (
       <div className={`${sizeClass} rounded-xl overflow-hidden bg-muted`}>
-        <img src={photos[0]} alt={name} className="w-full h-full object-cover" />
+        <img src={photos[0]} alt={name} className="w-full h-full object-contain" />
       </div>
     );
   }
@@ -50,16 +51,16 @@ function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name
   return (
     <div className="flex w-full min-w-0 flex-col items-center gap-2">
       <div className={`relative ${sizeClass} rounded-xl overflow-hidden bg-muted`}>
-        <img src={photos[current]} alt={name} className="w-full h-full object-cover" />
+        <img src={photos[current]} alt={name} className="w-full h-full object-contain" />
         <button
           onClick={(e) => { e.stopPropagation(); setCurrent(p => p > 0 ? p - 1 : photos.length - 1); }}
-          aria-label="Foto anterior" className="absolute left-0 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center bg-black/40 rounded-full"
+          type="button" aria-label={`Foto anterior de ${name}`} className="absolute left-0 top-1/2 -translate-y-1/2 flex h-[48px] w-[48px] items-center justify-center bg-black/60 rounded-full"
         >
           <ChevronLeft className="h-4 w-4 text-white" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); setCurrent(p => p < photos.length - 1 ? p + 1 : 0); }}
-          aria-label="Próxima foto" className="absolute right-0 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center bg-black/40 rounded-full"
+          type="button" aria-label={`Próxima foto de ${name}`} className="absolute right-0 top-1/2 -translate-y-1/2 flex h-[48px] w-[48px] items-center justify-center bg-black/60 rounded-full"
         >
           <ChevronRight className="h-4 w-4 text-white" />
         </button>
@@ -69,8 +70,8 @@ function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name
           <button
             key={i}
             onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
-            aria-label={`Ver foto ${i + 1}`} aria-pressed={i === current}
-            className={`h-11 w-11 rounded-full border-[17px] border-background transition-colors ${i === current ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+            type="button" aria-label={`Ver foto ${i + 1} de ${name}`} aria-pressed={i === current}
+            className={`h-[48px] w-[48px] rounded-full border-[18px] border-background transition-colors ${i === current ? 'bg-primary' : 'bg-muted-foreground/30'}`}
           />
         ))}
       </div>
@@ -262,6 +263,10 @@ export default function VotePublic() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
+  const [voteError, setVoteError] = useState('');
+  const [readError, setReadError] = useState('');
+  const [readRevision, setReadRevision] = useState(0);
+  const voteInFlightRef = useRef(false);
   const [confirmCandidate, setConfirmCandidate] = useState<Candidate | null>(null);
   const [selectedCandidates, setSelectedCandidates] = useState<Candidate[]>([]);
   const [confirmSelection, setConfirmSelection] = useState(false);
@@ -284,14 +289,14 @@ export default function VotePublic() {
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
   const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
   const ballotRequestRef = useRef<string | null>(null);
-  const readVotes = async () => {
+  const readVotes = useCallback(async () => {
     const { data, error } = await supabase.functions.invoke('election-vote', { body: { action: 'history', election_id: electionId } });
-    return { data: data?.votes ?? [], error };
-  };
-  const checkPreviousVote = async (deviceId: string) => {
+    return { data: data?.votes, error: error || (!Array.isArray(data?.votes) ? new Error('Histórico indisponível') : null) };
+  }, [electionId]);
+  const checkPreviousVote = useCallback(async (deviceId: string) => {
     const { data, error } = await supabase.functions.invoke('election-vote', { body: { action: 'already', election_id: electionId, device_id: deviceId } });
-    return { count: data?.count ?? 0, error };
-  };
+    return { count: data?.count, error: error || (!Number.isInteger(data?.count) || data.count < 0 ? new Error('Conferência indisponível') : null) };
+  }, [electionId]);
   const isCamisa = election?.type === 'camisa';
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
@@ -333,64 +338,61 @@ export default function VotePublic() {
   //  assim que o token do QR Code é validado abaixo.)
 
   useEffect(() => {
+    let active = true;
     const fetchData = async () => {
-      if (!electionId) return;
-
-      if (isUrnaMode) {
-        if (!urnaToken) { setInvalidToken(true); setLoading(false); return; }
-        const { data: result, error: deviceError } = await supabase.functions.invoke('election-vote', { body: { action: 'device', election_id: electionId, token: urnaToken } });
-        const deviceData = result?.device;
-        if (deviceError || !deviceData) { setInvalidToken(true); setLoading(false); return; }
-        setDeviceLabel(deviceData.label || '');
-        setUrnaAuthenticated(true);
-      }
-
-      const [elRes, caRes] = await Promise.all([
-        supabase.from('elections' as any).select('*').eq('id', electionId).single(),
-        supabase.from('election_candidates' as any).select('*').eq('election_id', electionId).order('display_order' as any),
-      ]);
-      const elData = elRes.data as any;
-      setElection(elData);
-      const candidatesData = ((caRes.data as any[]) || []).map((c: any) => ({
-        ...c,
-        photo_urls: Array.isArray(c.photo_urls) ? c.photo_urls : [],
-      })) as Candidate[];
-      setCandidates(candidatesData);
-
-      const round = elData?.current_round || 1;
-      const seats = elData?.seats_count || 1;
-      const { data: voteRows } = await readVotes();
-      const votesData = (voteRows as any[]) || [];
-      setAllVotes(votesData);
-      setElectedIds(computeElectedIds(votesData, seats, round, elData?.majority_rule || 'simple', candidatesData));
-
-      if (!isUrnaMode) {
-        const deviceId = getDeviceId();
-        const { count } = await checkPreviousVote(deviceId);
-        if (count && count > 0) {
-          setAlreadyVoted(true);
+      if (!electionId) { setReadError('A eleição está indisponível.'); setLoading(false); return; }
+      setLoading(true);
+      setReadError('');
+      try {
+        if (isUrnaMode) {
+          if (!urnaToken) { if (active) setInvalidToken(true); return; }
+          const { data: result, error: deviceError } = await supabase.functions.invoke('election-vote', { body: { action: 'device', election_id: electionId, token: urnaToken } });
+          if (deviceError) {
+            if (deviceError.context?.status === 403) { if (active) setInvalidToken(true); return; }
+            throw deviceError;
+          }
+          if (!result || !('device' in result)) throw new Error('Dispositivo indisponível');
+          if (!result.device) { if (active) setInvalidToken(true); return; }
+          if (!active) return;
+          setInvalidToken(false);
+          setDeviceLabel(result.device.label || '');
+          setUrnaAuthenticated(true);
         }
+        const [elRes, caRes] = await Promise.all([
+          supabase.from('elections' as any).select('*').eq('id', electionId).single(),
+          supabase.from('election_candidates' as any).select('*').eq('election_id', electionId).order('display_order' as any),
+        ]);
+        if (elRes.error || caRes.error || !elRes.data || !Array.isArray(caRes.data)) throw elRes.error || caRes.error || new Error('Eleição indisponível');
+        const elData = elRes.data as any;
+        const candidatesData = caRes.data.map((candidate: any) => ({...candidate, photo_urls: Array.isArray(candidate.photo_urls) ? candidate.photo_urls : []})) as Candidate[];
+        const { data: voteRows, error: historyError } = await readVotes();
+        if (historyError) throw historyError;
+        let hasPreviousVote = false;
+        if (!isUrnaMode) {
+          const { count, error: previousVoteError } = await checkPreviousVote(getDeviceId());
+          if (previousVoteError) throw previousVoteError;
+          hasPreviousVote = count > 0;
+        }
+        if (!active) return;
+        setElection(elData);
+        setCandidates(candidatesData);
+        setAllVotes(voteRows);
+        setElectedIds(computeElectedIds(voteRows, elData.seats_count || 1, elData.current_round || 1, elData.majority_rule || 'simple', candidatesData));
+        setAlreadyVoted(hasPreviousVote);
+      } catch {
+        if (active) setReadError('Não foi possível consultar a votação. Confira sua conexão e tente novamente.');
+      } finally {
+        if (active) setLoading(false);
       }
-      setLoading(false);
     };
-    fetchData();
-  }, [electionId, isUrnaMode, urnaToken]);
-
-  useEffect(() => {
-    if (!electionId || !election) return;
-    const round = election.current_round || 1;
-    const seats = election.seats_count || 1;
-    readVotes()
-      .then(({ data }) => {
-        const votesData = (data as any[]) || [];
-        setAllVotes(votesData);
-        setElectedIds(computeElectedIds(votesData, seats, round, election.majority_rule || 'simple', candidates));
-      });
-  }, [electionId, election?.current_round, candidates]);
+    void fetchData();
+    return () => { active = false; };
+  }, [electionId, isUrnaMode, urnaToken, readRevision, readVotes, checkPreviousVote]);
 
   // Realtime: sincroniza urna com ações do admin (avanço de escrutínio / encerramento)
   useEffect(() => {
     if (!electionId) return;
+    let active = true;
 
     const channel = supabase
       .channel(`vote-public-election-${electionId}`)
@@ -405,6 +407,7 @@ export default function VotePublic() {
         async (payload: any) => {
           const updated = payload.new;
           const previous = payload.old;
+          if (!active || !updated || updated.id !== electionId) return;
 
           // Eleição encerrada → mostra tela de encerramento
           if (updated.status === 'finished' && previous.status !== 'finished') {
@@ -416,8 +419,19 @@ export default function VotePublic() {
           if (updated.current_round !== previous.current_round) {
             setElection(updated);
 
-            const { data: voteRows } = await readVotes();
-            const votesData = (voteRows as any[]) || [];
+            setLoading(true);
+            let votesData: any[];
+            try {
+              const { data: voteRows, error: historyError } = await readVotes();
+              if (historyError) throw historyError;
+              if (!active) return;
+              votesData = voteRows;
+              setReadError('');
+            } catch {
+              if (active) setReadError('Não foi possível consultar o novo escrutínio. Tente novamente antes de votar.');
+              return;
+            } finally { if (active) setLoading(false); }
+            if (!active) return;
             setAllVotes(votesData);
             setElectedIds(
               computeElectedIds(
@@ -437,6 +451,8 @@ export default function VotePublic() {
             setConfirmSelection(false);
             setShowNullWarning(false);
             setAlreadyVoted(false);
+            setVoteError('');
+            ballotRequestRef.current = null;
             return;
           }
 
@@ -446,9 +462,10 @@ export default function VotePublic() {
       .subscribe();
 
     return () => {
+      active = false;
       supabase.removeChannel(channel);
     };
-  }, [electionId]);
+  }, [electionId, candidates, readVotes]);
 
   // (handleUrnaAuth removido — urna agora é ativada automaticamente pelo QR Code.)
 
@@ -582,41 +599,48 @@ export default function VotePublic() {
   const handleVote = async () => {
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
     const blanksToRecord = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? autoBlankSlots : 0);
-    if ((!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
+    if (voteInFlightRef.current || (!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
+    voteInFlightRef.current = true;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
+    setVoteError('');
     const ballotId = ballotRequestRef.current ??= crypto.randomUUID();
-    const baseVoteData: any = { election_id: electionId, ballot_id: ballotId, round_number: currentRound };
-    if (isIndividual) {
-      const deviceId = getDeviceId();
-      const { count } = await checkPreviousVote(deviceId);
-      if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); setVoting(false); return; }
-      baseVoteData.device_id = deviceId;
-    }
-    const { error } = await supabase.functions.invoke('election-vote', { body: {
-      action: 'cast', election_id: electionId, token: isUrnaMode ? urnaToken : null,
-      device_id: isIndividual ? getDeviceId() : null, ballot_id: ballotId, round_number: currentRound,
-      choices: choices.map(c => c.id), blanks: blanksToRecord,
-    } });
-    if (error) { setVoting(false); return; }
-    if (isIndividual) localStorage.setItem(`voted_${electionId}_${currentRound}`, 'true');
-    await audioWarmup;
-    await playUrnaSound();
-    setConfirmCandidate(null);
-    setSelectedCandidates([]);
-    setConfirmBlank(false);
-    setConfirmSelection(false);
-    setShowNullWarning(false);
-    ballotRequestRef.current = null;
-    setVoteSuccess(true);
-    setVoting(false);
-    if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
-      if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
-      resetTimeoutRef.current = window.setTimeout(() => {
-        setVoteSuccess(false);
-        setReadyToVote(false);
-        setConfirmCandidate(null);
-      }, 1500);
+    try {
+      if (isIndividual) {
+        const deviceId = getDeviceId();
+        const { count, error } = await checkPreviousVote(deviceId);
+        if (error) throw error;
+        if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); return; }
+      }
+      const response = await supabase.functions.invoke('election-vote', { body: {
+        action: 'cast', election_id: electionId, token: isUrnaMode ? urnaToken : null,
+        device_id: isIndividual ? getDeviceId() : null, ballot_id: ballotId, round_number: currentRound,
+        choices: choices.map(c => c.id), blanks: blanksToRecord,
+      } });
+      if (!isBallotConfirmed(response)) throw new Error('Voto não confirmado');
+      if (isIndividual) localStorage.setItem(`voted_${electionId}_${currentRound}`, 'true');
+      await audioWarmup;
+      await playUrnaSound();
+      setConfirmCandidate(null);
+      setSelectedCandidates([]);
+      setConfirmBlank(false);
+      setConfirmSelection(false);
+      setShowNullWarning(false);
+      ballotRequestRef.current = null;
+      setVoteSuccess(true);
+      if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
+        if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = window.setTimeout(() => {
+          setVoteSuccess(false);
+          setReadyToVote(false);
+          setConfirmCandidate(null);
+        }, 1500);
+      }
+    } catch {
+      setVoteError('Não foi possível confirmar o voto. Tente novamente. Sua seleção foi mantida.');
+    } finally {
+      voteInFlightRef.current = false;
+      setVoting(false);
     }
   };
 
@@ -626,6 +650,16 @@ export default function VotePublic() {
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (readError && election?.status !== 'finished') {
+    return <main className="min-h-dvh flex items-center justify-center bg-background p-[16px]">
+      <section className="w-full max-w-[760px] rounded-2xl border border-border bg-card p-[24px] text-center space-y-4">
+        <h1 className="text-2xl font-bold">Não foi possível consultar a votação</h1>
+        <p role="alert" className="text-base leading-relaxed text-muted-foreground">{readError}</p>
+        <Button className="min-h-[48px]" onClick={() => setReadRevision(revision => revision + 1)}>Tentar novamente</Button>
+      </section>
+    </main>;
   }
 
   if (invalidToken) {
@@ -760,7 +794,7 @@ export default function VotePublic() {
     const confirmationBlankSlots = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? autoBlankSlots : 0);
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center bg-background p-6">
-        <div className="max-w-sm w-full text-center space-y-6">
+        <div className="max-w-[760px] w-full text-center space-y-6">
           <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto Branco / Nulo?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
           {confirmBlank ? (
             <div className="rounded-2xl border-2 border-border bg-muted/40 p-8">
@@ -772,7 +806,7 @@ export default function VotePublic() {
               {choices.map((choice, index) => (
                 <div key={choice.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{index + 1}</span>
-                  <span className="font-semibold text-foreground">{choice.name}</span>
+                  <span className="min-w-0 [overflow-wrap:anywhere] text-[1.125rem] font-semibold text-foreground">{choice.name}</span>
                 </div>
               ))}
               {Array.from({ length: confirmationBlankSlots }).map((_, index) => (
@@ -785,14 +819,15 @@ export default function VotePublic() {
           ) : confirmCandidate && (
             <div className="flex flex-col items-center gap-4">
               <CandidatePhotos photos={confirmPhotos} name={confirmCandidate.name} size="lg" />
-              <p className="text-2xl font-bold">{confirmCandidate.name}</p>
+              <p className="[overflow-wrap:anywhere] text-2xl font-bold">{confirmCandidate.name}</p>
             </div>
           )}
-          <div className="flex gap-3">
-            <button onClick={() => { setConfirmCandidate(null); setConfirmBlank(false); setConfirmSelection(false); }} className="flex-1 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors">
+          {voteError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-base text-destructive">{voteError}</p>}
+          <div className="flex flex-col gap-3 min-[700px]:flex-row">
+            <button disabled={voting} onClick={() => { setConfirmCandidate(null); setConfirmBlank(false); setConfirmSelection(false); setVoteError(''); }} className="min-h-[52px] min-w-0 flex-1 px-4 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors disabled:opacity-50">
               Cancelar
             </button>
-            <button onClick={() => { void primeAudio(); void handleVote(); }} disabled={voting} className="flex-1 py-4 rounded-xl bg-primary text-primary-foreground text-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
+            <button onClick={() => { void primeAudio(); void handleVote(); }} disabled={voting} className="min-h-[52px] min-w-0 flex-1 px-4 py-4 rounded-xl bg-primary text-primary-foreground text-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
               {voting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'CONFIRMAR'}
             </button>
           </div>
@@ -838,7 +873,7 @@ export default function VotePublic() {
   // Main voting screen
   return (
     <div className="min-h-dvh bg-background p-3 sm:p-4 md:p-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-[960px] mx-auto">
         <div className="text-center mb-8">
           <h1 className="break-words text-2xl md:text-3xl font-bold">{election.name}</h1>
           <p className="text-lg text-muted-foreground mt-1">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
@@ -847,24 +882,15 @@ export default function VotePublic() {
           </p>
         </div>
 
-        <div className={`grid ${isCamisa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 md:grid-cols-3'} gap-3 sm:gap-4 md:gap-6`}>
+        <div className="grid grid-cols-1 gap-4 min-[700px]:grid-cols-2 min-[1100px]:grid-cols-3">
           {eligibleCandidates.map((c) => {
             const photos = getPhotoUrls(c);
             const selectedIndex = selectedCandidates.findIndex((candidate) => candidate.id === c.id);
             const selected = selectedIndex >= 0;
             return (
-              <div
+              <article
                 key={c.id}
-                onClick={() => {
-                  void primeAudio();
-                  if (!isMultiSeat) { setConfirmCandidate(c); return; }
-                  setSelectedCandidates((current) => {
-                    if (current.some((candidate) => candidate.id === c.id)) return current.filter((candidate) => candidate.id !== c.id);
-                    if (current.length >= maxChoices) return current;
-                    return [...current, c];
-                  });
-                }}
-                className={`touch-manipulation relative flex min-w-0 min-h-48 cursor-pointer flex-col items-center justify-between gap-3 rounded-2xl border-2 bg-card/95 p-3 shadow-sm transition-all hover:border-primary hover:bg-primary/5 active:scale-[0.98] sm:p-4 md:p-6 ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
+                className={`relative flex min-w-0 min-h-[240px] flex-col items-center justify-between gap-4 rounded-2xl border-2 bg-card p-[16px] shadow-sm min-[700px]:p-[20px] ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
               >
                 {isMultiSeat && selected && (
                   <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-sm">
@@ -872,11 +898,17 @@ export default function VotePublic() {
                   </span>
                 )}
                 <CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} />
-                <span className="break-words text-sm md:text-base font-semibold text-center">{c.name}</span>
-                <button type="button" aria-label={`${isMultiSeat ? (selected ? 'Desmarcar' : 'Selecionar') : 'Votar em'} ${c.name}`} className="min-h-11 w-full rounded-xl bg-primary px-3 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">
+                <h2 className="w-full [overflow-wrap:anywhere] text-[1.125rem] leading-snug font-semibold text-center">{c.name}</h2>
+                <button type="button" aria-pressed={isMultiSeat ? selected : undefined} disabled={isMultiSeat && !selected && selectedCandidates.length >= maxChoices} onClick={() => {
+                  void primeAudio(); setVoteError('');
+                  if (!isMultiSeat) { setConfirmCandidate(c); return; }
+                  setSelectedCandidates(current => current.some(candidate => candidate.id === c.id)
+                    ? current.filter(candidate => candidate.id !== c.id)
+                    : current.length >= maxChoices ? current : [...current, c]);
+                }} aria-label={`${isMultiSeat ? (selected ? 'Desmarcar' : 'Selecionar') : 'Votar em'} ${c.name}`} className="min-h-[52px] w-full rounded-xl bg-primary px-3 py-3 text-base font-bold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50">
                   {isMultiSeat ? (selected ? 'SELECIONADO' : 'SELECIONAR') : 'VOTAR'}
                 </button>
-              </div>
+              </article>
             );
           })}
         </div>

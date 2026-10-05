@@ -74,8 +74,8 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
       className={cn(
         "w-full mx-auto space-y-5 outline-none",
         embedded
-          ? "auth-pin-panel max-w-sm rounded-2xl border border-border bg-card p-4 sm:p-5"
-          : "max-w-sm rounded-2xl border border-border bg-card p-5 sm:p-6"
+          ? "auth-pin-panel max-w-[400px] rounded-2xl border border-border bg-card p-4 sm:p-5"
+          : "max-w-[400px] rounded-2xl border border-border bg-card p-5 sm:p-6"
       )}
     >
       {/* Header */}

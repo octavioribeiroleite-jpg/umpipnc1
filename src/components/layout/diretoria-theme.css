@@ -19,8 +19,8 @@
 .diretoria-theme .diretoria-mobile-header button { color: hsl(var(--primary)) !important; background: transparent; box-shadow: none; border-color: transparent; min-width: 48px; min-height: 48px; }
 .diretoria-theme .diretoria-welcome { padding: 16px; box-shadow: none; }
 .diretoria-theme .ui-card, .diretoria-theme .ui-app-card, .diretoria-theme .summary-card { border: 1px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card)); box-shadow: none; backdrop-filter: none; }
-.diretoria-theme .ui-card-header { padding: 14px; }
-.diretoria-theme .ui-card-content { padding: 14px; }
+.diretoria-theme .ui-card-header { padding: 16px; }
+.diretoria-theme .ui-card-content { padding: 16px; }
 .diretoria-theme .ui-card-header + .ui-card-content { padding-top: 0; }
 .diretoria-theme .ui-card-content.p-0 { padding: 0; }
 .diretoria-theme .summary-card { padding: 16px; min-height: 0; gap: 8px; }
@@ -46,6 +46,9 @@
   .diretoria-theme :is(input:not([type='checkbox']):not([type='radio']), textarea, [role='combobox']) { font-size: 16px; }
 }
 @media (min-width: 768px) {
+  .diretoria-theme .ui-card-header, .diretoria-theme .ui-card-content { padding: 20px; }
+  .diretoria-theme .ui-card-header + .ui-card-content { padding-top: 0; }
+  .diretoria-theme .ui-card-content.p-0 { padding: 0; }
   .diretoria-theme .metric-grid { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
 }
 /* Keep every shirt section discoverable without a hidden horizontal menu. */
@@ -66,3 +69,5 @@
 .diretoria-theme .user-card-actions button { min-width: 48px; min-height: 48px; }
 
 @media (min-width: 700px) { .diretoria-theme { --font-page-title: 1.75rem; } }
+
+.diretoria-theme [role="alertdialog"] { max-width:min(480px,calc(100vw - 32px)); }

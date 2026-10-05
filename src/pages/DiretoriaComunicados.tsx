@@ -150,11 +150,11 @@ export default function DiretoriaComunicados() {
               return (
                 <AppCard key={a.id}>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <p className="font-semibold text-sm">{a.title}</p>
+                      <p className="font-semibold text-lg">{a.title}</p>
                       {a.priority === 'urgente' && <Badge variant="destructive" className="text-xs">Urgente</Badge>}
                       {a.created_by_role === 'pastor' && <Badge variant="outline" className="text-xs">Pastor</Badge>}
                     </div>
-                    <p className={`text-sm text-muted-foreground ${!isExpanded ? 'line-clamp-2' : ''}`}>{a.message}</p>
+                    <p className={`text-base leading-6 ${!isExpanded ? 'line-clamp-2' : ''}`}>{a.message}</p>
                     {a.message.length > 120 && (
                       <button onClick={() => setExpandedId(isExpanded ? null : a.id)} aria-expanded={isExpanded} className="min-h-11 text-sm text-primary mt-1 flex items-center gap-1">
                         {isExpanded ? <>Menos <ChevronUp className="h-3 w-3" /></> : <>Ver mais <ChevronDown className="h-3 w-3" /></>}

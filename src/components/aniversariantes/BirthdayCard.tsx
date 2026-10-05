@@ -42,7 +42,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
 
       <div className="min-w-0 basis-[10rem] flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{birthday.nome}</span>
+          <span className="font-medium text-base min-w-0 whitespace-normal break-words">{birthday.nome}</span>
           {birthday.pendente_revisao && (
             <Badge variant="outline" className="text-xs px-1.5 py-0 border-amber-300 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
               <AlertTriangle className="h-3 w-3 mr-0.5" />

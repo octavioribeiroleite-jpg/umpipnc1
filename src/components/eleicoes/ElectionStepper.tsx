@@ -30,14 +30,14 @@ export function ElectionStepper({ steps, currentIndex, completed, onStepClick }:
               onClick={clickable ? () => onStepClick?.(idx) : undefined}
               disabled={!clickable}
               className={cn(
-                'relative z-10 flex min-h-11 min-w-0 w-full flex-col items-center gap-2 transition-all',
+                'relative z-10 flex min-h-[48px] min-w-0 w-full flex-col items-center gap-2 transition-all',
                 clickable && 'cursor-pointer',
                 !clickable && 'cursor-default',
               )}
             >
               <div
                 className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all',
+                  'w-[32px] h-[32px] rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all',
                   isDone && 'bg-success border-success text-success-foreground',
                   isCurrent && 'bg-primary border-primary text-primary-foreground ring-4 ring-primary/20',
                   isPending && 'bg-muted border-border text-muted-foreground',
@@ -47,7 +47,7 @@ export function ElectionStepper({ steps, currentIndex, completed, onStepClick }:
               </div>
               <span
                 className={cn(
-                  'w-full break-words text-xs font-medium leading-snug text-center',
+                  'w-full [overflow-wrap:anywhere] text-sm font-medium leading-snug text-center',
                   isCurrent && 'text-primary',
                   isDone && 'text-success',
                   isPending && 'text-muted-foreground',

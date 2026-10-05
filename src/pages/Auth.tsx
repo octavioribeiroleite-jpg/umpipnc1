@@ -44,6 +44,7 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [societies, setSocieties] = useState<Society[]>([]);
   const [isExiting, setIsExiting] = useState(false);
   const [isEnteringApp, setIsEnteringApp] = useState(false);
@@ -340,11 +341,13 @@ export default function Auth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError('');
     setIsLoading(true);
 
     const { error } = await signIn(username, password);
 
     if (error) {
+      setLoginError('Usuário ou senha incorretos. Confira os dados e tente novamente.');
       toast({ variant: 'destructive', title: 'Erro ao entrar', description: 'Usuário ou senha incorretos' });
     } else {
       toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
@@ -386,7 +389,7 @@ export default function Auth() {
     // Membro name-confirm
     if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
       return (
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[400px]">
           <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-3">
@@ -419,7 +422,7 @@ export default function Auth() {
     // Membro name-select
     if (step === 'membro' && membroStep === 'name-select') {
       return (
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[400px]">
           <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="pt-6 space-y-4">
               <div className="text-center space-y-2">
@@ -492,7 +495,8 @@ export default function Auth() {
     // Diretoria name-confirm
     if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
       return (
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[400px]">
+          <Button variant="ghost" onClick={handleBack} className="mb-3"><ArrowLeft className="h-4 w-4" />Voltar</Button>
           <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-3">
@@ -513,9 +517,6 @@ export default function Auth() {
                   Sim, sou eu!
                 </Button>
               </div>
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -525,7 +526,8 @@ export default function Auth() {
     // Diretoria name-input
     if (step === 'diretoria' && diretoriaStep === 'name-input') {
       return (
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[400px]">
+          <Button variant="ghost" onClick={handleBack} className="mb-3"><ArrowLeft className="h-4 w-4" />Voltar</Button>
           <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center space-y-2">
@@ -564,9 +566,6 @@ export default function Auth() {
               <Button className="w-full" disabled={!operatorName.trim() || !operatorFunction} onClick={handleSaveName}>
                 Continuar
               </Button>
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -575,7 +574,7 @@ export default function Auth() {
 
     // Main screen (select / societies / pin / login)
     return (
-      <div className="w-full max-w-[560px]">
+      <div className={`w-full ${step === 'login' ? 'max-w-[400px]' : 'max-w-[560px]'}`}>
         <div className="auth-content-heading">
           <h2>{step === 'select' ? 'Como deseja acessar?' : 'Acesso IPNC'}</h2>
           {step === 'select' && <p>Escolha sua área.</p>}
@@ -677,13 +676,11 @@ export default function Auth() {
           </div>
         ) : (
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
+            <Button variant="ghost" onClick={handleBack} className="mb-3"><ArrowLeft className="h-4 w-4" />Voltar</Button>
             <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" aria-label="Voltar" className="h-11 w-11" onClick={handleBack}>
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <h2 className="text-lg font-semibold text-foreground">Entrar</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Acesso administrativo</h2>
                 </div>
               </CardHeader>
               <CardContent>
@@ -695,7 +692,7 @@ export default function Auth() {
                       type="text"
                       placeholder="Seu usuário"
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={(e) => {setUsername(e.target.value);setLoginError('');}}
                       required
                       disabled={isLoading}
                       autoComplete="username" autoCapitalize="none"
@@ -710,11 +707,12 @@ export default function Auth() {
                       type="password"
                       placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {setPassword(e.target.value);setLoginError('');}}
                       required
                       disabled={isLoading}
                     />
                   </div>
+                  <p role={loginError ? 'alert' : undefined} className="min-h-6 text-sm text-destructive">{loginError}</p>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? (
                       <>

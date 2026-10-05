@@ -215,14 +215,14 @@ export default function EleicaoDetalhe() {
     <AppLayout width="wide">
       {read.error && <QueryErrorState message="Não foi possível atualizar a eleição e suas etapas." onRetry={fetchAll} retrying={read.loading} hasPreviousData />}
       {/* Header */}
-      <div className="rounded-2xl bg-card border border-border shadow-sm p-4 mb-4">
+      <div className="rounded-2xl bg-card border border-border shadow-sm p-[16px] min-[700px]:p-[20px] mb-4">
         <div className="flex items-center gap-2 mb-2">
-          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Voltar às eleições" onClick={() => navigate('/eleicoes')}>
+          <Button variant="ghost" size="icon" className="min-h-[48px] min-w-[48px] shrink-0" aria-label="Voltar às eleições" onClick={() => navigate('/eleicoes')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-semibold min-w-0 whitespace-normal break-words">{election.name}</h1>
+              <h1 className="text-page-title font-semibold min-w-0 whitespace-normal break-words">{election.name}</h1>
               <Badge
                 variant={election.status === 'open' ? 'default' : 'secondary'}
                 className="shrink-0 gap-1"
@@ -231,7 +231,7 @@ export default function EleicaoDetalhe() {
                 {statusLabel[election.status]}
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">{election.position}</p>
+            <p className="text-base text-muted-foreground [overflow-wrap:anywhere]">{election.position}</p>
           </div>
         </div>
 

@@ -13,6 +13,8 @@ interface Props {
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onToday: () => void;
+  hasSnapshot?: boolean;
+  readError?: boolean;
 }
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -37,6 +39,7 @@ export function PastorCalendarWidget({
   events, selectedDate, onDaySelect,
   currentMonth, currentYear,
   onPrevMonth, onNextMonth, onToday,
+  hasSnapshot = true, readError = false,
 }: Props) {
   const today = new Date();
 
@@ -68,21 +71,22 @@ export function PastorCalendarWidget({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div className="flex min-w-0 flex-1 items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Mês anterior" onClick={onPrevMonth}>
+          <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0" aria-label="Mês anterior" onClick={onPrevMonth}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h3 className="min-w-0 flex-1 text-sm font-semibold text-center">
+          <h3 className="min-w-0 flex-1 text-lg font-semibold text-center">
             {MONTH_NAMES[currentMonth]} {currentYear}
           </h3>
-          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Próximo mês" onClick={onNextMonth}>
+          <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0" aria-label="Próximo mês" onClick={onNextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="outline" size="sm" className="h-11 text-xs" onClick={onToday}>
+        <Button variant="outline" size="sm" className="h-12 text-xs" onClick={onToday}>
           Hoje
         </Button>
       </div>
 
+      {!hasSnapshot ? <div role="status" className="flex min-h-48 items-center justify-center p-4 text-center text-base text-muted-foreground">{readError ? 'Agenda indisponível. Tente a consulta novamente.' : 'Consultando agenda…'}</div> : <>
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-1">
         {WEEKDAYS.map(wd => (
@@ -95,7 +99,7 @@ export function PastorCalendarWidget({
       {/* Day grid */}
       <div className="grid grid-cols-7">
         {cells.map((day, i) => {
-          if (day === null) return <div key={`empty-${i}`} className="h-11" />;
+          if (day === null) return <div key={`empty-${i}`} className="h-12 md:h-[88px]" />;
 
           const date = new Date(currentYear, currentMonth, day);
           const isToday = isSameDay(date, today);
@@ -114,7 +118,7 @@ export function PastorCalendarWidget({
               aria-label={`${day} de ${MONTH_NAMES[currentMonth]} de ${currentYear}${colors.length ? `, ${colors.length} programações` : ''}`}
               onClick={() => onDaySelect(date)}
               className={[
-                'flex flex-col items-center justify-center h-11 rounded-xl transition-all relative',
+                'flex flex-col items-center justify-center h-12 md:h-[88px] rounded-xl transition-all relative',
                 isSelected
                   ? 'bg-primary text-primary-foreground font-bold'
                   : isToday
@@ -143,6 +147,7 @@ export function PastorCalendarWidget({
           );
         })}
       </div>
+      </>}
       </div>
     </AppCard>
   );

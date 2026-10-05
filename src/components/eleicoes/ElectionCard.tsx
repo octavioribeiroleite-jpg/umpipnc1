@@ -1,7 +1,8 @@
 import { AppCard } from '@/components/ui/app-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Vote, Users, Shirt } from 'lucide-react';
+import { Trash2, Vote, Users, Shirt, MoreHorizontal, ArrowRight } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface ElectionCardProps {
   election: {
@@ -29,15 +30,15 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
   const isCamisa = election.type === 'camisa';
 
   return (
-    <AppCard variant="interactive" noPadding onClick={onClick}>
-      <div className="flex items-start justify-between gap-2 p-4">
+    <AppCard noPadding className="flex min-h-[160px] flex-col">
+      <div className="flex flex-1 items-start justify-between gap-3 p-[16px] min-[700px]:p-[20px]">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-2">
             {isCamisa && <Shirt className="h-4 w-4 text-primary shrink-0" />}
-            <h3 className="font-semibold text-foreground min-w-0 whitespace-normal break-words">{election.name}</h3>
+            <h3 className="text-[1.125rem] leading-snug font-semibold text-foreground min-w-0 whitespace-normal [overflow-wrap:anywhere]">{election.name}</h3>
             <Badge variant={status.variant}>{status.label}</Badge>
           </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-base text-muted-foreground">
             <span>{isCamisa ? election.position : `Cargo: ${election.position}`}</span>
             {election.total_present > 0 && (
               <span className="flex items-center gap-1">
@@ -53,13 +54,22 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
             )}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-11 w-11 text-destructive shrink-0" aria-label={`Excluir ${election.name}`}
-          onClick={(e) => { e.stopPropagation(); onDelete(election.id); }}
-        >
-          <Trash2 className="h-4 w-4" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="min-h-[48px] min-w-[48px] shrink-0" aria-label={`Opções de ${election.name}`}>
+              <MoreHorizontal className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem className="min-h-[48px] text-destructive" onSelect={() => onDelete(election.id)}>
+              <Trash2 className="mr-2 h-4 w-4" /> Excluir eleição
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="border-t border-border p-[16px] pt-3 min-[700px]:px-[20px]">
+        <Button variant="outline" className="min-h-[48px] w-full justify-between" onClick={onClick} aria-label={`Abrir ${election.name}`}>
+          Abrir processo <ArrowRight className="h-4 w-4 shrink-0" />
         </Button>
       </div>
     </AppCard>

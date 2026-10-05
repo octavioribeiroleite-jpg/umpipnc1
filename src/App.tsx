@@ -1,3 +1,4 @@
+import { MemberAccessUnavailable } from '@/components/MemberAccessUnavailable';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -114,7 +115,7 @@ const App = () => (
                 <Route path="/pastor-sugestoes" element={<PastorSugestoes />} />
                 <Route path="/sugestoes" element={<PastorSugestoes />} />
                 <Route path="/comunicados" element={<DiretoriaComunicados />} />
-                <Route path="/membro" element={<main className="min-h-screen flex items-center justify-center p-6"><section className="max-w-md space-y-4 text-center"><h1 className="text-xl font-semibold">Portal dos membros ainda não liberado</h1><p>Por enquanto, o acesso está disponível apenas para a diretoria e os responsáveis autorizados.</p><a href="/auth" className="underline">Acessar como responsável</a></section></main>} />
+                <Route path="/membro" element={<MemberAccessUnavailable />} />
                 <Route path="/eleicoes" element={<Eleicoes />} />
                 <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />
                 <Route path="/vote/:electionId" element={<VotePublic />} />

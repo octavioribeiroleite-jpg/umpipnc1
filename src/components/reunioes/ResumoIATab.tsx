@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +28,7 @@ interface AISuggestion {
 interface ResumoIATabProps {
   meetingId: string;
   isProcessed: boolean;
+  revision?: number;
 }
 
 const categoryConfig: Record<string, { title: string; icon: React.ReactNode; color: string }> = {
@@ -67,8 +69,10 @@ const categoryConfig: Record<string, { title: string; icon: React.ReactNode; col
   },
 };
 
-export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
+export function ResumoIATab({ meetingId, isProcessed, revision = 0 }: ResumoIATabProps) {
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
+  const [loadError, setLoadError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -78,6 +82,8 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
         return;
       }
 
+      setLoading(true);
+      setLoadError(false);
       try {
         const { data, error } = await supabase
           .from('ai_suggestions')
@@ -87,6 +93,7 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
         if (error) throw error;
         setSuggestions(data || []);
       } catch (err) {
+        setLoadError(true);
         console.error('Error fetching AI suggestions:', err);
       } finally {
         setLoading(false);
@@ -94,7 +101,7 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
     };
 
     fetchSuggestions();
-  }, [meetingId, isProcessed]);
+  }, [meetingId, isProcessed, revision, attempt]);
 
   if (!isProcessed) {
     return (
@@ -117,6 +124,8 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
       </div>
     );
   }
+
+  if (loadError) return <div role="alert" className="rounded-xl border p-6 space-y-3"><p>Não foi possível carregar o resumo da IA.</p><Button variant="outline" onClick={() => setAttempt(value => value + 1)}>Tentar novamente</Button></div>;
 
   if (suggestions.length === 0) {
     return (
@@ -151,7 +160,7 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
       <Alert className="border-primary/50 bg-primary/5">
         <CheckCircle2 className="h-4 w-4" />
         <AlertDescription>
-          A IA analisou o registro e organizou o conteúdo nas categorias abaixo. Revise os itens antes de finalizar a ata.
+          Rascunho da IA: o registro foi organizado o conteúdo nas categorias abaixo. Revise os itens antes de finalizar a ata.
         </AlertDescription>
       </Alert>
 
@@ -180,7 +189,7 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
               <CardContent className="pt-0">
                 <ul className="space-y-2">
                   {items.map((item, index) => (
-                    <li key={item.id} className="flex min-w-0 gap-2 break-words text-sm leading-relaxed">
+                    <li key={item.id} className="flex min-w-0 gap-2 break-words text-base leading-6">
                       <span className="text-muted-foreground font-mono">{index + 1}.</span>
                       <span>{item.edited_content || item.original_content}</span>
                     </li>

@@ -4,9 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppCard } from '@/components/ui/app-card';
 import { SectionTitle } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import {
-  Calendar, ChevronRight, Megaphone, Heart, Vote,
+  Calendar, Megaphone, Heart, Vote,
   CalendarDays, CalendarClock, AlertCircle,
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
@@ -20,7 +22,6 @@ import { AISummaryDrawer } from '@/components/pastor/AISummaryDrawer';
 import { PastorCalendarWidget } from '@/components/pastor/PastorCalendarWidget';
 import { PastorDayEventList } from '@/components/pastor/PastorDayEventList';
 import { useEvents, type EventStatus } from '@/hooks/useEvents';
-import logoIpnc from '@/assets/logo-ipnc.png';
 
 interface Society {
   id: string;
@@ -64,15 +65,15 @@ export default function PainelPastor() {
 
   const [societies, setSocieties] = useState<Society[]>([]);
   const [societyStats, setSocietyStats] = useState<Record<string, SocietyStats>>({});
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const statsRead = useSnapshotRead(`pastor-dashboard:${user?.id ?? ''}:${isPastor}:${isAdmin}`);
+  const { run: runStats } = statsRead;
 
   const now = new Date();
   const [selectedDate, setSelectedDate] = useState(now);
   const [currentMonth, setCurrentMonth] = useState(now.getMonth());
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
 
-  const { events: allEvents, updateEvent, isLoading: isEventsLoading } = useEvents();
+  const { events: allEvents, updateEvent, hasEventsSnapshot, isError: eventsError, isFetching: eventsFetching, refetch: refetchEvents } = useEvents();
 
   const summaryChips = useMemo(() => {
     const today = new Date();
@@ -115,8 +116,7 @@ export default function PainelPastor() {
 
   // Fetch society stats (same logic as before)
   const fetchDirectStats = useCallback(async () => {
-    setStatsLoading(true);
-    try {
+    await runStats(async () => {
       const [societiesRes, membersRes, tasksRes, transRes, paymentsRes, meetingsRes] = await Promise.all([
         supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name'),
         supabase.from('members').select('id, active, society_id'),
@@ -129,7 +129,6 @@ export default function PainelPastor() {
       const failed = [societiesRes, membersRes, tasksRes, transRes, paymentsRes, meetingsRes].find(result => result.error);
       if (failed?.error) throw failed.error;
       const socs = societiesRes.data || [];
-      setSocieties(socs);
 
       const members = membersRes.data || [];
       const tasks = tasksRes.data || [];
@@ -159,15 +158,9 @@ export default function PainelPastor() {
           lastMeetingDate: lastMeeting?.date,
         };
       }
-      setSocietyStats(stats);
-      setError(null);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Erro ao carregar dados');
-    } finally {
-      setStatsLoading(false);
-    }
-  }, []);
+      return () => { setSocieties(socs); setSocietyStats(stats); };
+    });
+  }, [runStats]);
 
   useEffect(() => {
     if (!user || (!isPastor && !isAdmin)) return;
@@ -178,21 +171,7 @@ export default function PainelPastor() {
 
   return (
     <PastorLayout>
-      {statsLoading ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <img src={logoIpnc} alt="Renovo IPNC" className="h-20 w-20 animate-logo-pulse" />
-          <p className="text-sm text-muted-foreground animate-fade-up">Carregando dados...</p>
-          <Progress value={undefined} className="w-48 h-1" />
-        </div>
-      ) : error ? (
-        <AppCard className="border-destructive/30 bg-destructive/5">
-          <p className="text-destructive text-sm">{error}</p>
-          <Button variant="outline" size="sm" className="mt-2" onClick={() => fetchDirectStats()}>
-            Tentar novamente
-          </Button>
-        </AppCard>
-      ) : (
-        <div className="space-y-5">
+      <div className="space-y-6">
           {/* 1. Greeting + AI */}
           <PageHeader
             title={`${getGreeting()}, ${pastorName}`}
@@ -201,14 +180,16 @@ export default function PainelPastor() {
             action={<AISummaryDrawer />}
           />
 
+          {eventsError && <QueryErrorState message="Não foi possível consultar a agenda." onRetry={() => void refetchEvents()} retrying={eventsFetching} hasPreviousData={hasEventsSnapshot} />}
+
           {/* 2. Summary chips */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <AppCard variant="stat">
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary shrink-0" />
                 <div>
-                  <p className="text-lg font-bold leading-none">{summaryChips.todayCount}</p>
-                  <p className="text-xs text-muted-foreground">Hoje</p>
+                  <p className="text-2xl font-bold leading-none">{hasEventsSnapshot ? summaryChips.todayCount : '—'}</p>
+                  <p className="text-sm text-muted-foreground">Hoje</p>
                 </div>
               </div>
             </AppCard>
@@ -216,8 +197,8 @@ export default function PainelPastor() {
               <div className="flex items-center gap-2">
                 <CalendarClock className="h-4 w-4 text-primary shrink-0" />
                 <div>
-                  <p className="text-lg font-bold leading-none">{summaryChips.weekCount}</p>
-                  <p className="text-xs text-muted-foreground">Semana</p>
+                  <p className="text-2xl font-bold leading-none">{hasEventsSnapshot ? summaryChips.weekCount : '—'}</p>
+                  <p className="text-sm text-muted-foreground">Semana</p>
                 </div>
               </div>
             </AppCard>
@@ -225,8 +206,8 @@ export default function PainelPastor() {
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
                 <div>
-                  <p className="text-lg font-bold leading-none">{summaryChips.awaitingCount}</p>
-                  <p className="text-xs text-muted-foreground">Aguardando</p>
+                  <p className="text-2xl font-bold leading-none">{hasEventsSnapshot ? summaryChips.awaitingCount : '—'}</p>
+                  <p className="text-sm text-muted-foreground">Aguardando</p>
                 </div>
               </div>
             </AppCard>
@@ -242,19 +223,25 @@ export default function PainelPastor() {
             onPrevMonth={handlePrevMonth}
             onNextMonth={handleNextMonth}
             onToday={handleToday}
+            hasSnapshot={hasEventsSnapshot}
+            readError={eventsError}
           />
 
           {/* 4. Day event list */}
-          <PastorDayEventList
+          {hasEventsSnapshot && <PastorDayEventList
             selectedDate={selectedDate}
             events={allEvents}
             onUpdateStatus={handleUpdateStatus}
             isUpdating={updateEvent.isPending}
-          />
+          />}
+
+          <AlertsSection />
 
           {/* 5. Society Cards */}
+          {statsRead.error && <QueryErrorState message="Não foi possível consultar os indicadores das sociedades." onRetry={() => void fetchDirectStats()} retrying={statsRead.loading} hasPreviousData={statsRead.hasSnapshot} />}
+          {!statsRead.hasSnapshot && !statsRead.error && <div className="grid gap-4 xl:grid-cols-2"><Skeleton className="h-40 rounded-card" /><Skeleton className="h-40 rounded-card" /></div>}
           <div className="grid gap-4 xl:grid-cols-2">
-            {societies.map(s => (
+            {statsRead.hasSnapshot && societies.map(s => (
               <SocietyOverviewCard key={s.id} society={s} stats={societyStats[s.id]} />
             ))}
           </div>
@@ -268,6 +255,9 @@ export default function PainelPastor() {
                   key={action.path}
                   variant="interactive"
                   className="flex flex-col items-center gap-1.5"
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate(action.path); } }}
                   onClick={() => navigate(action.path)}
                 >
                   <action.icon className="h-5 w-5 text-primary" />
@@ -277,10 +267,7 @@ export default function PainelPastor() {
             </div>
           </div>
 
-          {/* 7. Alerts */}
-          <AlertsSection />
-        </div>
-      )}
+      </div>
     </PastorLayout>
   );
 }

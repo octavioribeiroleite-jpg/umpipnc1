@@ -554,8 +554,8 @@ export default function Financas() {
                   <TableRow>
                     <TableHead>Sociedade</TableHead>
                     <TableHead>Saldo</TableHead>
-                    <TableHead className="hidden md:table-cell">Entradas</TableHead>
-                    <TableHead className="hidden md:table-cell">Saídas</TableHead>
+                    <TableHead className="">Entradas</TableHead>
+                    <TableHead className="">Saídas</TableHead>
                     <TableHead>Pend.</TableHead>
                     <TableHead>Fechamento</TableHead>
                   </TableRow>
@@ -565,8 +565,8 @@ export default function Financas() {
                     <TableRow key={item.id}>
                       <TableCell className="font-semibold">{item.name}</TableCell>
                       <TableCell className={item.saldo >= 0 ? 'font-medium text-foreground' : 'font-medium text-destructive'}>{formatCurrency(item.saldo)}</TableCell>
-                      <TableCell className="hidden md:table-cell text-success">{formatCurrency(item.entradasMes)}</TableCell>
-                      <TableCell className="hidden md:table-cell text-destructive">{formatCurrency(item.saidasMes)}</TableCell>
+                      <TableCell className=" text-success">{formatCurrency(item.entradasMes)}</TableCell>
+                      <TableCell className=" text-destructive">{formatCurrency(item.saidasMes)}</TableCell>
                       <TableCell>{item.pendencias}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={statusBadgeClass(item.fechamento)}>{item.fechamento}</Badge>

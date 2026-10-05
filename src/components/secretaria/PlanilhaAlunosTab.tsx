@@ -1,3 +1,5 @@
+import { Label } from '@/components/ui/label';
+import { ConfirmActionButton } from '@/components/ui/confirm-action-button';
 import { useState, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { reportEbdWriteError } from '@/lib/ebd-mutations';
@@ -271,15 +273,16 @@ export default function PlanilhaAlunosTab({
       .from('ebd_students')
       .update({ active: !student.active })
       .eq('id', student.id).select('id').single();
-    if (error || !data) await reportEbdWriteError(error, 'Erro ao atualizar status');
+    if (error || !data) { await reportEbdWriteError(error, 'Erro ao atualizar status'); return false; }
     else {
       toast.success(student.active ? 'Aluno desativado' : 'Aluno reativado');
       onRefresh();
+      return true;
     }
   };
 
   const handleBulkToggle = async (activate: boolean) => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0) return false;
     const ids = Array.from(selectedIds);
     const { data, error } = await supabase
       .from('ebd_students')
@@ -288,6 +291,7 @@ export default function PlanilhaAlunosTab({
     if (error || data?.length !== ids.length) {
       await reportEbdWriteError(error, 'Nem todos os alunos foram atualizados. Confira a lista.');
       onRefresh();
+      return false;
     }
     else {
       toast.success(
@@ -295,6 +299,7 @@ export default function PlanilhaAlunosTab({
       );
       setSelectedIds(new Set());
       onRefresh();
+      return true;
     }
   };
 
@@ -576,20 +581,20 @@ export default function PlanilhaAlunosTab({
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
+            <div className="flex-1 space-y-2"><Label htmlFor="students-search">Buscar aluno</Label><div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                aria-label="Buscar aluno" placeholder="Buscar aluno..."
+                id="students-search" placeholder="Nome do aluno"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
               />
-            </div>
-            <Select
+            </div></div>
+            <div className="space-y-2"><Label htmlFor="students-status">Situação</Label><Select
               value={filterStatus}
               onValueChange={(v) => setFilterStatus(v as FilterStatus)}
             >
-              <SelectTrigger aria-label="Filtrar por status" className="sm:w-40">
+              <SelectTrigger id="students-status" aria-label="Filtrar por status" className="sm:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -597,7 +602,7 @@ export default function PlanilhaAlunosTab({
                 <SelectItem value="ativos">Ativos</SelectItem>
                 <SelectItem value="inativos">Inativos</SelectItem>
               </SelectContent>
-            </Select>
+            </Select></div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
@@ -660,20 +665,8 @@ export default function PlanilhaAlunosTab({
               {selectedIds.size} selecionado(s)
             </span>
             <div className="ml-auto flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleBulkToggle(true)}
-              >
-                <Power className="h-4 w-4" /> Ativar
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleBulkToggle(false)}
-              >
-                <PowerOff className="h-4 w-4" /> Desativar
-              </Button>
+              <ConfirmActionButton variant="outline" label="Ativar selecionados" title={`Ativar ${selectedIds.size} alunos?`} description="Os alunos selecionados voltarão a aparecer nas chamadas das respectivas turmas." onConfirm={() => handleBulkToggle(true)} />
+              <ConfirmActionButton variant="outline" label="Inativar selecionados" title={`Inativar ${selectedIds.size} alunos?`} description="Os alunos selecionados deixarão de aparecer nas próximas chamadas. O histórico será preservado." onConfirm={() => handleBulkToggle(false)} />
               <Button
                 size="sm"
                 variant="ghost"
@@ -724,7 +717,7 @@ export default function PlanilhaAlunosTab({
                     {isAllClasses && <TableHead className="w-40">Turma</TableHead>}
                     <TableHead className="w-24">Status</TableHead>
                     <TableHead className="w-28">Origem</TableHead>
-                    <TableHead className="w-28 hidden md:table-cell">
+                    <TableHead className="w-28">
                       Cadastro
                     </TableHead>
                     <TableHead className="w-24 text-right">Ações</TableHead>
@@ -801,7 +794,7 @@ export default function PlanilhaAlunosTab({
                           {s.origin === 'importado' ? 'Importado' : 'Manual'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                      <TableCell className="text-sm text-muted-foreground">
                         {s.created_at
                           ? new Date(s.created_at).toLocaleDateString('pt-BR')
                           : '-'}
@@ -820,19 +813,7 @@ export default function PlanilhaAlunosTab({
                           >
                             <ArrowLeftRight className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => handleToggleActive(s)}
-                            title={s.active ? 'Desativar' : 'Reativar'}
-                          >
-                            {s.active ? (
-                              <PowerOff className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <Power className="h-4 w-4 text-emerald-600" />
-                            )}
-                          </Button>
+                          <ConfirmActionButton label={s.active ? 'Inativar' : 'Reativar'} title={`${s.active ? 'Inativar' : 'Reativar'} ${s.name}?`} description={s.active ? 'O aluno deixará de aparecer nas próximas chamadas. O histórico será preservado.' : 'O aluno voltará a aparecer nas chamadas da turma.'} onConfirm={() => handleToggleActive(s)} />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -906,6 +887,7 @@ export default function PlanilhaAlunosTab({
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </div>
+                  <p className="text-[.8125rem] text-muted-foreground">Cadastro: {s.created_at ? new Date(s.created_at).toLocaleDateString('pt-BR') : 'Não informado'}</p>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                       <Badge
@@ -936,19 +918,7 @@ export default function PlanilhaAlunosTab({
                       >
                         <ArrowLeftRight className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={() => handleToggleActive(s)}
-                        title={s.active ? 'Desativar' : 'Reativar'}
-                      >
-                        {s.active ? (
-                          <PowerOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Power className="h-4 w-4 text-emerald-600" />
-                        )}
-                      </Button>
+                      <ConfirmActionButton label={s.active ? 'Inativar' : 'Reativar'} title={`${s.active ? 'Inativar' : 'Reativar'} ${s.name}?`} description={s.active ? 'O aluno deixará de aparecer nas próximas chamadas. O histórico será preservado.' : 'O aluno voltará a aparecer nas chamadas da turma.'} onConfirm={() => handleToggleActive(s)} />
                     </div>
                   </div>
                 </CardContent>

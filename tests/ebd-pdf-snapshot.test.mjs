@@ -79,6 +79,16 @@ function historyFunction(name,scope,memo=false) {
  const text=ts.transpileModule('return ('+initializer.getText(source)+');',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  return new Function(...Object.keys(scope),text)(...Object.values(scope));
 }
+function historyHelper(name) {
+ const source=ts.createSourceFile('HistoricoTab.tsx',sourceHistory,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+ const declaration=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name);
+ assert.ok(declaration, `Actual ${name} must exist`);
+ const compiled=ts.transpileModule(declaration.getText(source)+'\nreturn '+name+';', {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ return new Function('buildDayRoster',compiled)(buildDayRoster);
+}
+const filterHistoryDays=historyHelper('filterHistoryDays');
+const historyStudentStats=historyHelper('historyStudentStats');
+
 function deferred() {let resolve;const promise=new Promise(done=>{resolve=done;});return {promise,resolve};}
 function readBackend() {
  const state={attendance:[row(false)],heldTable:null,hold:null};
@@ -105,7 +115,7 @@ function historyHarness(backend) {
  const days=()=>historyFunction('dayRecords',{...model,buildDayRoster,buildDayClasses},true)();
  const messages=[];
  const handler=name=>historyFunction(name,{
-  ...model,sessionScope:'synthetic-admin',reportScope,isReportScopeCurrent,dayRecords:days(),students:backend.pupils,classes:backend.groups,supabase:backend.supabase,
+  ...model,sessionScope:'synthetic-admin',reportScope,isReportScopeCurrent,dayRecords:days(),filteredDayRecords:days(),historyStudentStats,students:backend.pupils,classes:backend.groups,supabase:backend.supabase,
   period:'all',periodLabel:'Período sintético',fetchHistory,assertEbdSnapshotCurrent:queueDomain.assertEbdSnapshotCurrent,
   EbdSnapshotChangedError:queueDomain.EbdSnapshotChangedError,generateEbdPeriodPDF:pdf.generateEbdPeriodPDF,generateEbdQuarterlyPDF:pdf.generateEbdQuarterlyPDF,
   setGeneratingQuarterly:()=>{},toast:{error:value=>messages.push(value),success:value=>messages.push(value)},reportClientError:async()=>{throw new Error('Unexpected error telemetry');},
@@ -223,4 +233,24 @@ for (const change of ['finalized class','closed day']) test(`actual Secretaria r
  let failure;try{await pending;}catch(error){failure=error;}
  if(change==='finalized class')assert.equal(model.callStatuses['class-a'],'finalizada');else assert.equal(model.dayIsClosed,true);
  assert.ok(failure instanceof queueDomain.EbdSnapshotChangedError,'A discarded snapshot must not be reported as a successful refresh');
+});
+
+
+test('history class filter preserves closed snapshots instead of recalculating their totals from current enrollment', () => {
+ const day={date,isClosed:true,totalStudents:50,presentStudents:31,visitorCount:7,classSummary:[
+  {classId:'class-a',className:'Turma histórica',total:20,present:12,percentage:60,visitor_count:3},
+  {classId:'class-b',className:'Outra turma',total:30,present:19,percentage:63,visitor_count:4},
+ ]};
+ const filtered=filterHistoryDays([day],'class-a');
+ assert.equal(filtered[0].totalStudents,20);assert.equal(filtered[0].presentStudents,12);assert.equal(filtered[0].visitorCount,3);
+ assert.equal(filtered[0].classSummary[0].className,'Turma histórica');assert.equal(day.totalStudents,50);
+ assert.deepEqual(filterHistoryDays([day],'missing'),[]);assert.equal(filterHistoryDays([day],'all')[0],day);
+});
+
+test('history student statistics keep a transferred inactive pupil in the class saved on the historical attendance', () => {
+ const pupil={id:'transferred',name:'Aluno histórico',class_id:'class-b',active:false,created_at:'2025-01-01T12:00:00Z'};
+ const attendance=[{student_id:pupil.id,class_id:'class-a',date,present:true}];
+ const stats=historyStudentStats([pupil],attendance,[{date}],'class-a');
+ assert.deepEqual(stats,[{id:pupil.id,name:pupil.name,present:1,total:1,percentage:100}]);
+ assert.deepEqual(historyStudentStats([pupil],attendance,[{date}],'class-b'),[]);
 });

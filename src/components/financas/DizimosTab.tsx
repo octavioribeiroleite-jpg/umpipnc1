@@ -161,7 +161,7 @@ export function DizimosTab() {
       </Card>
 
       {/* Preview */}
-      <Card className="border-primary/30 bg-primary/5">
+      <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle className="text-lg">Prévia para os membros</CardTitle>
           <CardDescription>
@@ -179,7 +179,7 @@ export function DizimosTab() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Chave PIX:</p>
                 <div className="flex items-center gap-2 bg-background rounded-lg border p-3">
-                  <code className="flex-1 text-sm font-mono break-all">{pixKey}</code>
+                  <code className="min-w-0 flex-1 text-base font-mono break-all">{pixKey}</code>
                   <Button variant="outline" size="sm" aria-label={copied ? "Chave PIX copiada" : "Copiar chave PIX"} onClick={handleCopyPreview}>
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
@@ -202,7 +202,7 @@ export function DizimosTab() {
 
               {pixInstructions && (
                 <div className="rounded-lg bg-muted p-3 border-l-4 border-primary">
-                  <p className="text-sm italic">{pixInstructions}</p>
+                  <p className="text-base leading-6">{pixInstructions}</p>
                 </div>
               )}
             </div>

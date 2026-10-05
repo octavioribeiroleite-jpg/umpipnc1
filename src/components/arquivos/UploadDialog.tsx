@@ -8,12 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,7 +15,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useUploadFile } from '@/hooks/useFiles';
 
 interface UploadDialogProps {
@@ -38,7 +31,7 @@ const categories = [
 ];
 
 export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
-  const isMobile = useIsMobile();
+  const [error, setError] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [category, setCategory] = useState('geral');
   const [isDragging, setIsDragging] = useState(false);
@@ -57,30 +50,33 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    if (uploadMutation.isPending) return;
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) {
-      setFile(droppedFile);
+      setError(''); setFile(droppedFile);
     }
-  }, []);
+  }, [uploadMutation.isPending]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (uploadMutation.isPending) return;
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
+      setError(''); setFile(selectedFile);
     }
-  }, []);
+  }, [uploadMutation.isPending]);
 
   const handleUpload = async () => {
-    if (!file) return;
-
-    await uploadMutation.mutateAsync({ file, category });
-    setFile(null);
-    setCategory('geral');
-    onOpenChange(false);
+    if (!file || uploadMutation.isPending) return;
+    setError('');
+    try {
+      await uploadMutation.mutateAsync({ file, category });
+      setFile(null); setCategory('geral'); onOpenChange(false);
+    } catch { setError('O envio não foi confirmado. O arquivo continua selecionado para você conferir e tentar novamente.'); }
   };
 
   const handleClose = () => {
-    setFile(null);
+    if (uploadMutation.isPending) return;
+    setError(''); setFile(null);
     setCategory('geral');
     onOpenChange(false);
   };
@@ -110,6 +106,7 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
             <Button
               variant="ghost"
               size="icon" aria-label="Remover arquivo selecionado"
+              disabled={uploadMutation.isPending}
               onClick={() => setFile(null)}
             >
               <X className="h-4 w-4" />
@@ -140,7 +137,7 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
       {/* Category Select */}
       <div className="space-y-2">
         <Label htmlFor="category">Categoria</Label>
-        <Select value={category} onValueChange={setCategory}>
+        <Select value={category} onValueChange={setCategory} disabled={uploadMutation.isPending}>
           <SelectTrigger id="category">
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
@@ -154,9 +151,10 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
         </Select>
       </div>
 
+      <p role={error ? "alert" : undefined} className="min-h-6 text-base text-destructive">{error}</p>
       {/* Actions */}
       <div className="flex flex-wrap gap-3 justify-end">
-        <Button variant="outline" onClick={handleClose}>
+        <Button variant="outline" disabled={uploadMutation.isPending} onClick={handleClose}>
           Cancelar
         </Button>
         <Button 
@@ -169,24 +167,9 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
     </div>
   );
 
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Enviar arquivo</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 pb-8">
-            {content}
-          </div>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={value => { if (!uploadMutation.isPending) { if (!value) handleClose(); else onOpenChange(value); } }}>
+      <DialogContent size="form">
         <DialogHeader>
           <DialogTitle>Enviar arquivo</DialogTitle>
         </DialogHeader>

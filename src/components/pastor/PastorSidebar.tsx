@@ -16,7 +16,9 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { supabase } from '@/integrations/supabase/client';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { BuildStamp } from '@/components/BuildStamp';
@@ -30,11 +32,20 @@ interface Society {
 }
 
 export function PastorSidebar() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
-  const [societies, setSocieties] = useState<Society[]>([]);
+  const societiesRead = useQuery({
+    queryKey: ['pastor-navigation-societies', user?.id],
+    enabled: Boolean(user),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name');
+      if (error) throw error;
+      return (data ?? []) as Society[];
+    },
+  });
+  const societies = societiesRead.data ?? [];
   const navRef = useRef<HTMLElement>(null);
   const { canScrollUp, canScrollDown, scrollUp, scrollDown } = useScrollIndicators(navRef);
 
@@ -43,10 +54,6 @@ export function PastorSidebar() {
     navigate('/auth');
   };
 
-  useEffect(() => {
-    supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name')
-      .then(({ data }) => { if (data) setSocieties(data); });
-  }, []);
 
   const mainItems = [
     { path: '/pastor', label: 'Visão Geral', icon: LayoutDashboard },
@@ -109,6 +116,11 @@ export function PastorSidebar() {
           <p className="px-3 text-xs uppercase tracking-wider text-sidebar-muted font-semibold mb-2">
             Sociedades
           </p>
+          {societiesRead.isError && <>
+            <div className="hidden min-[1100px]:block"><QueryErrorState message="Não foi possível consultar as sociedades." onRetry={() => void societiesRead.refetch()} retrying={societiesRead.isFetching} hasPreviousData={societiesRead.data !== undefined} /></div>
+            <Button variant="ghost" size="icon" className="min-[1100px]:hidden" aria-label="Não foi possível consultar sociedades. Tentar novamente" title="Consultar sociedades novamente" onClick={() => void societiesRead.refetch()} disabled={societiesRead.isFetching}><Users className="h-5 w-5" /></Button>
+          </>}
+          {societiesRead.data === undefined && !societiesRead.isError && <p role="status" className="pastor-nav-label px-3 text-sm text-sidebar-muted">Consultando…</p>}
           {societies.map(s => (
             <button
               key={s.id}

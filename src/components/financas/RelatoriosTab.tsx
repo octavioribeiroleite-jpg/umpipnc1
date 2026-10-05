@@ -444,7 +444,7 @@ export function RelatoriosTab() {
             <SectionHeader title="Movimento mensal" description="Comparação entre receitas e gastos por mês." />
           </CardHeader>
           <CardContent>
-            <div className="h-[260px]">
+            <div className="h-[320px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -508,7 +508,7 @@ export function RelatoriosTab() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                <div className="h-[220px]">
+                <div className="h-[320px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={78} paddingAngle={2} dataKey="value">
@@ -537,7 +537,7 @@ export function RelatoriosTab() {
             {categoryData.length === 0 ? (
               <EmptyBlock icon={PieChartIcon} text="Nenhum gasto registrado para este ano" />
             ) : (
-              <div className="h-[260px]">
+              <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={categoryData} cx="50%" cy="50%" outerRadius={88} paddingAngle={2} dataKey="value">

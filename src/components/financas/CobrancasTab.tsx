@@ -638,7 +638,7 @@ export function CobrancasTab() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="finance-dialog max-w-md">
+        <DialogContent size="form" className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Dar baixa - {selectedMember?.name}</DialogTitle>
           </DialogHeader>
@@ -707,7 +707,7 @@ export function CobrancasTab() {
       </Dialog>
 
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="finance-dialog max-w-md">
+        <DialogContent size="form" className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Detalhes - {viewingMember?.name}</DialogTitle>
           </DialogHeader>

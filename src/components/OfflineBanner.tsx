@@ -20,7 +20,7 @@ export function OfflineBanner() {
   if (!isOffline) return null;
 
   return (
-    <div className="bg-destructive text-destructive-foreground px-4 py-2 text-center text-sm flex items-center justify-center gap-2 animate-in slide-in-from-top-2 duration-300">
+    <div role="status" className="bg-destructive text-destructive-foreground px-4 py-2 text-center text-sm flex items-center justify-center gap-2 animate-in slide-in-from-top-2 duration-300">
       <WifiOff className="h-4 w-4 shrink-0" />
       <span>Sem conexão. Os dados exibidos podem estar desatualizados.</span>
     </div>

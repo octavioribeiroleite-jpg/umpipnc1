@@ -1,0 +1,563 @@
+{
+  "date": "2026-10-05",
+  "environment": "Navegador emulado, fixtures isoladas fictícias, sem escrita em produção",
+  "measurements": [
+    {
+      "path": "/financas?tab=comprovantes",
+      "requestedWidth": 320,
+      "client": 305,
+      "headings": [
+        "Finanças da Diretoria"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/configuracoes",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Configurações"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/camisas",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Camisas"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/arquivos",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 320,
+      "headings": [
+        "Arquivos"
+      ],
+      "scroll": 320
+    },
+    {
+      "path": "/estudos",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 320,
+      "headings": [
+        "Estudos"
+      ],
+      "scroll": 320
+    },
+    {
+      "path": "/financas",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Finanças da Diretoria"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/reunioes",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 320,
+      "headings": [
+        "Reuniões"
+      ],
+      "scroll": 320
+    },
+    {
+      "path": "/tarefas",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Tarefas"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/calendario",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Calendário"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/usuarios",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Gestão de Usuários"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/comunicados",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 320,
+      "headings": [
+        "Comunicados"
+      ],
+      "scroll": 320
+    },
+    {
+      "path": "/aniversariantes",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Aniversariantes"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/plenarias",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 320,
+      "headings": [
+        "Plenárias"
+      ],
+      "scroll": 320
+    },
+    {
+      "path": "/dizimos",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Dízimos e ofertas"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/visitantes",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 305,
+      "headings": [
+        "Visitantes"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/eleicoes",
+      "requestedWidth": 320,
+      "extra": "",
+      "client": 320,
+      "headings": [
+        "Eleições"
+      ],
+      "scroll": 320
+    },
+    {
+      "path": "/reunioes/meeting",
+      "requestedWidth": 390,
+      "extra": "&processed=1&delay=1200",
+      "client": 375,
+      "headings": [
+        "Planejamento das atividades e encontro de famílias"
+      ],
+      "scroll": 375
+    },
+    {
+      "path": "/reunioes/meeting?draft-preserved=1",
+      "requestedWidth": 1440,
+      "client": 1440,
+      "headings": [
+        "Planejamento das atividades e encontro de famílias"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/configuracoes",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Configurações"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/camisas",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Camisas"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/arquivos",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Arquivos"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/estudos",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Estudos"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/financas",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Finanças da Diretoria"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/tarefas",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Tarefas"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/calendario",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Calendário"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/reunioes",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Reuniões"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/usuarios",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Gestão de Usuários"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/comunicados",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Comunicados"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/aniversariantes",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Aniversariantes"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/plenarias",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Plenárias"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/dizimos",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Dízimos e ofertas"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/visitantes",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Visitantes"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/eleicoes",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1440,
+      "headings": [
+        "Eleições"
+      ],
+      "scroll": 1440
+    },
+    {
+      "path": "/plenarias/plenary",
+      "requestedWidth": 390,
+      "extra": "",
+      "client": 390,
+      "headings": [
+        "Plenária de planejamento — exemplo"
+      ],
+      "scroll": 390
+    },
+    {
+      "path": "/reunioes/nova",
+      "requestedWidth": 320,
+      "extra": "&state=long&font=200",
+      "client": 305,
+      "headings": [
+        "Nova Reunião"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/eleicoes/election",
+      "requestedWidth": 320,
+      "extra": "&state=long&font=200",
+      "client": 305,
+      "headings": [
+        "Eleição da diretoria — exemplo"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/pastor/calendario",
+      "requestedWidth": 320,
+      "extra": "&state=long&font=200",
+      "client": 305,
+      "headings": [
+        "Calendário unificado"
+      ],
+      "scroll": 343,
+      "status": "before fix; superseded by final retest",
+      "supersededBy": {
+        "path": "/pastor/calendario",
+        "requestedWidth": 320,
+        "extra": "&state=long&font=200",
+        "client": 305,
+        "headings": [
+          "Calendário unificado"
+        ],
+        "scroll": 305
+      }
+    },
+    {
+      "path": "/pastor/comunicados",
+      "requestedWidth": 320,
+      "extra": "&state=long&font=200",
+      "client": 305,
+      "headings": [
+        "Comunicados"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/pastor/sugestoes",
+      "requestedWidth": 320,
+      "extra": "&state=long&font=200",
+      "client": 305,
+      "headings": [
+        "Sugestões"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/pastor/calendario",
+      "requestedWidth": 320,
+      "extra": "&state=long&font=200",
+      "client": 305,
+      "headings": [
+        "Calendário unificado"
+      ],
+      "scroll": 343,
+      "status": "before fix; superseded by final retest",
+      "supersededBy": {
+        "path": "/pastor/calendario",
+        "requestedWidth": 320,
+        "extra": "&state=long&font=200",
+        "client": 305,
+        "headings": [
+          "Calendário unificado"
+        ],
+        "scroll": 305
+      }
+    },
+    {
+      "path": "/financas?tab=comprovantes",
+      "requestedWidth": 320,
+      "extra": "&state=long",
+      "client": 305,
+      "headings": [
+        "Finanças da Diretoria"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/secretaria?view=historico&class=old",
+      "requestedWidth": 390,
+      "client": 375,
+      "headings": [
+        "Histórico"
+      ],
+      "scroll": 375
+    },
+    {
+      "path": "/pastor/calendario",
+      "requestedWidth": 320,
+      "extra": "&font=200",
+      "client": 305,
+      "headings": [
+        "Calendário unificado"
+      ],
+      "scroll": 305
+    },
+    {
+      "path": "/reunioes/meeting",
+      "requestedWidth": 768,
+      "extra": "&processed=1",
+      "client": 768,
+      "headings": [
+        "Planejamento das atividades e encontro de famílias"
+      ],
+      "scroll": 768
+    },
+    {
+      "path": "/reunioes/meeting",
+      "requestedWidth": 1024,
+      "extra": "&processed=1",
+      "client": 1024,
+      "headings": [
+        "Planejamento das atividades e encontro de famílias"
+      ],
+      "scroll": 1024
+    },
+    {
+      "path": "/financas",
+      "requestedWidth": 390,
+      "extra": "",
+      "client": 375,
+      "headings": [
+        "Finanças da Diretoria"
+      ],
+      "scroll": 375
+    },
+    {
+      "path": "/financas",
+      "requestedWidth": 700,
+      "extra": "",
+      "client": 700,
+      "headings": [
+        "Finanças da Diretoria"
+      ],
+      "scroll": 700
+    },
+    {
+      "path": "/financas",
+      "requestedWidth": 1100,
+      "extra": "",
+      "client": 1100,
+      "headings": [
+        "Finanças da Diretoria"
+      ],
+      "scroll": 1100
+    },
+    {
+      "path": "/pastor/calendario",
+      "requestedWidth": 1440,
+      "extra": "",
+      "client": 1425,
+      "headings": [
+        "Calendário unificado"
+      ],
+      "scroll": 1425
+    },
+    {
+      "path": "/tesouraria",
+      "requestedWidth": 1440,
+      "profile": "admin",
+      "client": 1425,
+      "scroll": 1425,
+      "sidebarWidth": 232
+    },
+    {
+      "path": "/vote/election",
+      "requestedWidth": 320,
+      "font": 200,
+      "client": 305,
+      "scroll": 305,
+      "scenario": "fake returned error retains confirmation"
+    },
+    {
+      "path": "/igreja",
+      "requestedWidth": 320,
+      "profile": "anonymous",
+      "client": 305,
+      "scroll": 305
+    },
+    {
+      "path": "/reset-password",
+      "requestedWidth": 320,
+      "scenario": "fake valid session",
+      "client": 320,
+      "scroll": 320
+    },
+    {
+      "path": "/secretaria",
+      "requestedWidth": 320,
+      "profile": "professor",
+      "scenario": "main lookup failed; own valid EBD session",
+      "client": 305,
+      "scroll": 305
+    },
+    {
+      "path": "/pastor/calendario",
+      "requestedWidth": 320,
+      "extra": "&state=long&font=200",
+      "client": 305,
+      "headings": [
+        "Calendário unificado"
+      ],
+      "scroll": 305
+    }
+  ]
+}

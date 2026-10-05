@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { usePersistedTextDraft } from './usePersistedTextDraft';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Save, Wand2, Check, FileText, Lock } from 'lucide-react';
 
@@ -18,6 +16,7 @@ interface RegistroReuniaoEditorProps {
   onFinalize: () => void;
   onNotesChange: (notes: string) => void;
   embedded?: boolean;
+  readOnly?: boolean;
 }
 
 export function RegistroReuniaoEditor({
@@ -31,74 +30,24 @@ export function RegistroReuniaoEditor({
   onFinalize,
   onNotesChange,
   embedded = false,
+  readOnly = false,
 }: RegistroReuniaoEditorProps) {
-  const { toast } = useToast();
-  const [notes, setNotes] = useState(meetingNotes || '');
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  // Auto-save every 5 seconds when there are unsaved changes
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-
-    const timer = setTimeout(() => {
-      saveNotes();
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [notes, hasUnsavedChanges, isProcessed]);
-
-  const saveNotes = useCallback(async () => {
-    if (isSaving) return;
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('meetings')
-        .update({ meeting_notes: notes })
-        .eq('id', meetingId);
-
+  const { value: notes, setValue: handleChange, saving: isSaving, lastSaved,
+    dirty: hasUnsavedChanges, error, save: saveNotes } = usePersistedTextDraft({
+    initialValue: meetingNotes || '', enabled: !readOnly && !isProcessing, delay: 5000,
+    persist: async (content) => {
+      const { error } = await supabase.from('meetings').update({ meeting_notes: content }).eq('id', meetingId);
       if (error) throw error;
-
-      setLastSaved(new Date());
-      setHasUnsavedChanges(false);
-      onNotesChange(notes);
-    } catch (err) {
-      console.error('Error saving notes:', err);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível salvar o registro.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [notes, meetingId, isSaving, isProcessed, onNotesChange, toast]);
-
-  const handleChange = (value: string) => {
-    setNotes(value);
-    setHasUnsavedChanges(true);
-  };
-
-  const handleManualSave = () => {
-    saveNotes();
-  };
-
-  const handleProcess = async () => {
-    // Save before processing
-    if (hasUnsavedChanges) {
-      await saveNotes();
-    }
-    onProcess();
-  };
+    },
+    onSaved: onNotesChange,
+  });
+  const handleManualSave = () => { void saveNotes(); };
+  const handleProcess = async () => { if (await saveNotes()) onProcess(); };
+  const handleFinalize = async () => { if (await saveNotes()) onFinalize(); };
 
   const processingSteps = [
-    { id: 'saving', label: 'Salvando registro...' },
-    { id: 'analyzing', label: 'Analisando conteúdo...' },
-    { id: 'generating', label: 'Gerando ata...' },
-    { id: 'whatsapp', label: 'Criando mensagem WhatsApp...' },
-    { id: 'calendar', label: 'Sincronizando calendário...' },
+    { id: 'saving', label: 'Preparando registro...' },
+    { id: 'generating', label: 'Organizando registro e preparando os documentos...' },
     { id: 'done', label: 'Processamento concluído!' },
   ];
 
@@ -117,7 +66,7 @@ export function RegistroReuniaoEditor({
               Escreva livremente o que foi discutido. Use títulos para organizar as seções.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div role="status" aria-live="polite" className="flex items-center gap-2">
             {isSaving ? (
               <Badge variant="secondary" className="gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -142,7 +91,7 @@ export function RegistroReuniaoEditor({
           <p className="text-sm text-muted-foreground">
             Escreva livremente o que foi discutido. Use títulos para organizar as seções.
           </p>
-          <div className="flex items-center gap-2">
+          <div role="status" aria-live="polite" className="flex items-center gap-2">
             {isSaving ? (
               <Badge variant="secondary" className="gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -163,6 +112,8 @@ export function RegistroReuniaoEditor({
       )}
 
       <div className="space-y-4">
+        {error && <p role="alert" className="text-destructive">{error}</p>}
+        {readOnly && <p className="text-sm text-muted-foreground">Registro em modo de leitura. Reabra a reunião para editar.</p>}
         {isProcessing ? (
           <div className="space-y-4 py-8">
             <p className="text-center text-muted-foreground mb-6">
@@ -210,7 +161,8 @@ OBSERVAÇÕES
 - Próxima reunião será dia 20/01 às 19h"
               value={notes}
               onChange={(e) => handleChange(e.target.value)}
-              className="min-h-[250px] text-sm leading-relaxed resize-y w-full"
+              readOnly={readOnly}
+              className="min-h-[320px] text-base leading-6 resize-y w-full"
             />
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
@@ -218,19 +170,19 @@ OBSERVAÇÕES
                 variant="outline"
                 size="sm"
                 onClick={handleManualSave}
-                disabled={!hasUnsavedChanges || isSaving}
+                disabled={readOnly || !hasUnsavedChanges || isSaving}
               >
                 <Save className="h-4 w-4 mr-2" />
                 Salvar
               </Button>
 
-              {canManage && (
+              {canManage && !readOnly && (
                 <div className="flex flex-wrap gap-2">
                   {isProcessed && (
                     <Button
                       variant="outline"
                       onClick={handleProcess}
-                      disabled={!notes.trim() || isProcessing}
+                      disabled={!notes.trim() || isProcessing || isSaving}
                       className="gap-2"
                     >
                       <Wand2 className="h-4 w-4" />
@@ -240,7 +192,8 @@ OBSERVAÇÕES
 
                   {isProcessed ? (
                     <Button
-                      onClick={onFinalize}
+                      onClick={handleFinalize}
+                      disabled={isSaving}
                       className="gap-2"
                     >
                       <Lock className="h-4 w-4" />
@@ -249,7 +202,7 @@ OBSERVAÇÕES
                   ) : (
                     <Button
                       onClick={handleProcess}
-                      disabled={!notes.trim() || isProcessing}
+                      disabled={!notes.trim() || isProcessing || isSaving}
                       className="gap-2"
                     >
                       <Wand2 className="h-4 w-4" />

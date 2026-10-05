@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -25,6 +25,8 @@ import { MetricGrid } from '@/components/layout/ResponsivePrimitives';
 import { AppCard } from '@/components/ui/app-card';
 import { MetricCard } from '@/components/ui/metric-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { HomeBirthdayCard } from '@/components/aniversariantes/HomeBirthdayCard';
 import { PastorNotificationBanner } from '@/components/pastor/PastorNotificationBanner';
 import { PastorLoginNotification } from '@/components/pastor/PastorLoginNotification';
@@ -87,11 +89,11 @@ export default function Index() {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
-  const { events, isLoading: eventsLoading, updateEvent } = useEvents(
-    currentMonth,
-    currentYear,
-    societyId || undefined,
-  );
+  const summaryEventsRead = useEvents(undefined, undefined, societyId || undefined);
+  const { events, hasEventsSnapshot, isError: eventsError, isFetching: eventsFetching, refetch: refetchEvents, updateEvent } = summaryEventsRead;
+  const summaryEvents = summaryEventsRead.events;
+  const dashboardRead = useSnapshotRead(`home:${user?.id ?? ''}:${societyId ?? 'all'}:${roles.join(',')}`);
+  const { run: runDashboard } = dashboardRead;
 
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
@@ -120,17 +122,15 @@ export default function Index() {
     }
   }, [user, loading, rolesLoaded, navigate, isPastor, isAdmin, isManagement, roles]);
 
-  useEffect(() => {
+  const fetchDashboardData = useCallback(async () => {
     if (!user) return;
-
-    const fetchDashboardData = async () => {
+    await runDashboard(async () => {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
       const todayIso = now.toISOString().split('T')[0];
       const currentYearText = String(now.getFullYear());
 
-      try {
         let submissionsQuery = supabase
           .from('member_payment_submissions')
           .select('id', { count: 'exact', head: true })
@@ -197,9 +197,12 @@ export default function Index() {
           announcementsQuery,
         ]);
 
+        const failed = [submissionsRes, membersRes, openTasksRes, overdueTasksRes, transactionsRes, pendingChargesRes, announcementsRes].find(result => result.error);
+        if (failed?.error) throw failed.error;
         const monthlyRevenue = (transactionsRes.data || [])
           .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
 
+        return () => {
         setPendingSubmissions(submissionsRes.count || 0);
         setDashboardStats({
           activeMembers: membersRes.count || 0,
@@ -209,11 +212,12 @@ export default function Index() {
           pendingCharges: pendingChargesRes.count || 0,
           announcements: announcementsRes.count || 0,
         });
-      } catch (err) {
-        console.error('Erro ao carregar dados do dashboard:', err);
-      }
-    };
+        };
+    });
+  }, [user, societyId, runDashboard]);
 
+  useEffect(() => {
+    if (!user) return;
     void fetchDashboardData();
 
     const channel = supabase
@@ -229,37 +233,37 @@ export default function Index() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, societyId]);
+  }, [user, fetchDashboardData]);
 
   const todayCount = useMemo(() => {
     const currentDate = new Date();
-    return events.filter((event) => {
+    return summaryEvents.filter((event) => {
       const startDate = new Date(event.start_date);
       return startDate.getFullYear() === currentDate.getFullYear()
         && startDate.getMonth() === currentDate.getMonth()
         && startDate.getDate() === currentDate.getDate();
     }).length;
-  }, [events]);
+  }, [summaryEvents]);
 
   const weekCount = useMemo(() => {
     const now = new Date();
     const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfWeek = new Date(startToday);
     endOfWeek.setDate(startToday.getDate() + 7);
-    return events.filter((event) => {
+    return summaryEvents.filter((event) => {
       const startDate = new Date(event.start_date);
       return startDate >= startToday && startDate <= endOfWeek;
     }).length;
-  }, [events]);
+  }, [summaryEvents]);
 
   const upcomingEvents = useMemo(() => {
     const now = new Date();
     const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return [...events]
+    return [...summaryEvents]
       .filter((event) => new Date(event.start_date) >= startToday)
       .sort((first, second) => new Date(first.start_date).getTime() - new Date(second.start_date).getTime())
       .slice(0, 3);
-  }, [events]);
+  }, [summaryEvents]);
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -340,18 +344,18 @@ export default function Index() {
               {greeting}, {firstName || 'Diretoria'}
             </h1>
             <p className="mt-1 text-xs leading-snug text-emerald-50/90 sm:text-sm lg:text-base">
-              UMP IPNC • {dashboardStats.activeMembers} membro{dashboardStats.activeMembers === 1 ? '' : 's'} ativo{dashboardStats.activeMembers === 1 ? '' : 's'}
+              {dashboardRead.hasSnapshot ? `UMP IPNC • ${dashboardStats.activeMembers} membro${dashboardStats.activeMembers === 1 ? '' : 's'} ativo${dashboardStats.activeMembers === 1 ? '' : 's'}` : 'UMP IPNC • Diretoria'}
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => navigate('/comunicados')}
-            className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/25 sm:h-11 sm:w-11"
+            className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/25 sm:h-11 sm:w-11"
             aria-label="Abrir comunicados"
           >
             <Bell className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
-            {(pendingSubmissions > 0 || dashboardStats.announcements > 0) && (
+            {dashboardRead.hasSnapshot && (pendingSubmissions > 0 || dashboardStats.announcements > 0) && (
               <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-emerald-900" />
             )}
           </button>
@@ -359,26 +363,31 @@ export default function Index() {
       </section>
 
       <PastorNotificationBanner />
+      {dashboardRead.error && <div className="mb-section-gap"><QueryErrorState message="Não foi possível consultar os indicadores da diretoria." onRetry={() => void fetchDashboardData()} retrying={dashboardRead.loading} hasPreviousData={dashboardRead.hasSnapshot} /></div>}
+      {eventsError && <div className="mb-section-gap"><QueryErrorState message="Não foi possível consultar a agenda." onRetry={() => void refetchEvents()} retrying={eventsFetching} hasPreviousData={hasEventsSnapshot} /></div>}
 
       <AppCard
         variant="interactive"
         className="mb-section-gap flex min-h-[74px] items-center justify-between gap-3 rounded-card p-3 sm:min-h-[82px] sm:p-4"
-        onClick={() => pendingSubmissions > 0
+        role="link"
+        tabIndex={0}
+        onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate(dashboardRead.hasSnapshot && pendingSubmissions > 0 ? '/financas?tab=comprovantes' : '/comunicados'); } }}
+        onClick={() => dashboardRead.hasSnapshot && pendingSubmissions > 0
           ? navigate('/financas?tab=comprovantes')
           : navigate('/comunicados')}
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[14px] bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 sm:h-11 sm:w-11">
-            {pendingSubmissions > 0
+            {dashboardRead.hasSnapshot && pendingSubmissions > 0
               ? <Receipt className="h-5 w-5" />
               : <Megaphone className="h-5 w-5" />}
           </div>
           <div className="min-w-0">
             <p className="min-w-0 whitespace-normal break-words text-sm font-semibold text-foreground sm:text-base">
-              {pendingSubmissions > 0 ? 'Comprovantes pendentes' : 'Central da diretoria'}
+              {dashboardRead.hasSnapshot && pendingSubmissions > 0 ? 'Comprovantes pendentes' : 'Central da diretoria'}
             </p>
             <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-muted-foreground sm:text-sm">
-              {pendingSubmissions > 0
+              {!dashboardRead.hasSnapshot ? (dashboardRead.error ? 'Consulta indisponível' : 'Consultando comunicados e comprovantes…') : pendingSubmissions > 0
                 ? `${pendingSubmissions} comprovante${pendingSubmissions > 1 ? 's' : ''} aguardando aprovação`
                 : `${dashboardStats.announcements} comunicado${dashboardStats.announcements === 1 ? '' : 's'} disponível${dashboardStats.announcements === 1 ? '' : 'is'} para acompanhamento`}
             </p>
@@ -390,15 +399,15 @@ export default function Index() {
       <MetricGrid className="mb-section-gap">
         <MetricCard
           title="Eventos"
-          value={weekCount}
-          description={`${todayCount} hoje • próximos 7 dias`}
+          value={summaryEventsRead.hasEventsSnapshot ? weekCount : '—'}
+          description={summaryEventsRead.hasEventsSnapshot ? `${todayCount} hoje • próximos 7 dias` : 'Consultando agenda'}
           icon={Calendar}
           tone="success"
           onClick={() => navigate('/calendario')}
         />
         <MetricCard
           title="Membros"
-          value={dashboardStats.activeMembers}
+          value={dashboardRead.hasSnapshot ? dashboardStats.activeMembers : '—'}
           description="ativos na sociedade"
           icon={Users}
           tone="info"
@@ -406,16 +415,16 @@ export default function Index() {
         />
         <MetricCard
           title="Tarefas"
-          value={dashboardStats.openTasks}
-          description={`${dashboardStats.overdueTasks} vencida${dashboardStats.overdueTasks === 1 ? '' : 's'}`}
+          value={dashboardRead.hasSnapshot ? dashboardStats.openTasks : '—'}
+          description={dashboardRead.hasSnapshot ? `${dashboardStats.overdueTasks} vencida${dashboardStats.overdueTasks === 1 ? '' : 's'}` : 'Consultando tarefas'}
           icon={CheckSquare}
           tone={dashboardStats.overdueTasks > 0 ? 'warning' : 'default'}
           onClick={() => navigate('/tarefas')}
         />
         <MetricCard
           title="Finanças"
-          value={currency(dashboardStats.monthlyRevenue)}
-          description={`${dashboardStats.pendingCharges} cobrança${dashboardStats.pendingCharges === 1 ? '' : 's'} pendente${dashboardStats.pendingCharges === 1 ? '' : 's'}`}
+          value={dashboardRead.hasSnapshot ? currency(dashboardStats.monthlyRevenue) : '—'}
+          description={dashboardRead.hasSnapshot ? `${dashboardStats.pendingCharges} cobrança${dashboardStats.pendingCharges === 1 ? '' : 's'} pendente${dashboardStats.pendingCharges === 1 ? '' : 's'}` : 'Consultando finanças'}
           icon={DollarSign}
           tone="warning"
           onClick={() => navigate('/financas')}
@@ -431,7 +440,7 @@ export default function Index() {
               <button
                 type="button"
                 onClick={() => navigate('/calendario')}
-                className="min-h-11 px-2 text-sm font-semibold text-primary hover:underline"
+                className="min-h-12 px-2 text-sm font-semibold text-primary hover:underline"
               >
                 Ver calendário
               </button>
@@ -440,13 +449,13 @@ export default function Index() {
           />
 
           <AppCard className="divide-y divide-border/60 overflow-hidden rounded-panel p-0">
-            {eventsLoading ? (
+            {!summaryEventsRead.hasEventsSnapshot && !summaryEventsRead.isError ? (
               <div className="space-y-2.5 p-3 sm:p-4">
                 <Skeleton className="h-11 w-full" />
                 <Skeleton className="h-11 w-full" />
                 <Skeleton className="h-11 w-full" />
               </div>
-            ) : upcomingEvents.length > 0 ? (
+            ) : !summaryEventsRead.hasEventsSnapshot ? null : upcomingEvents.length > 0 ? (
               upcomingEvents.map((event) => {
                 const eventDate = new Date(event.start_date);
                 return (
@@ -456,7 +465,7 @@ export default function Index() {
                     onClick={() => navigate('/calendario')}
                     className="flex w-full min-w-0 items-center gap-3 px-3 py-3 text-left transition hover:bg-muted/40 sm:px-4 sm:py-3.5"
                   >
-                    <div className="flex h-11 w-11 flex-shrink-0 flex-col items-center justify-center rounded-[14px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 sm:h-12 sm:w-12">
+                    <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-[14px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 sm:h-12 sm:w-12">
                       <span className="text-base font-bold leading-none sm:text-lg">{format(eventDate, 'dd')}</span>
                       <span className="text-[9px] font-bold uppercase sm:text-[10px]">
                         {format(eventDate, 'MMM', { locale: ptBR })}
@@ -509,16 +518,18 @@ export default function Index() {
             onPrevMonth={handlePrevMonth}
             onNextMonth={handleNextMonth}
             onToday={handleToday}
+            hasSnapshot={hasEventsSnapshot}
+            readError={eventsError}
           />
         </section>
 
         <section className="min-w-0">
-          <PastorDayEventList
+          {hasEventsSnapshot && <PastorDayEventList
             selectedDate={selectedDate}
             events={events}
-            onUpdateStatus={isManagement || isAdmin ? handleUpdateStatus : undefined as any}
+            onUpdateStatus={isManagement || isAdmin ? handleUpdateStatus : undefined}
             isUpdating={updateEvent.isPending}
-          />
+          />}
         </section>
       </div>
 

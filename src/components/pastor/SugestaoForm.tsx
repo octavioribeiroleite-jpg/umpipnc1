@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Loader2, CheckCircle } from 'lucide-react';
@@ -16,10 +17,13 @@ export function SugestaoForm({ section, sectionLabel }: SugestaoFormProps) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState(false);
+  const fieldId = useId();
 
   const handleSend = async () => {
     if (!message.trim() || !user) return;
     setSending(true);
+    setSendError(false);
     try {
       const { error } = await supabase.from('pastor_feedback').insert({
         section,
@@ -31,9 +35,10 @@ export function SugestaoForm({ section, sectionLabel }: SugestaoFormProps) {
       setMessage('');
       setSent(true);
       setTimeout(() => setSent(false), 3000);
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast.error('Erro ao enviar sugestão');
+      setSendError(true);
     } finally {
       setSending(false);
     }
@@ -41,15 +46,16 @@ export function SugestaoForm({ section, sectionLabel }: SugestaoFormProps) {
 
   return (
     <div className="mt-4 space-y-2 border-t pt-4">
-      <p className="text-sm font-medium text-muted-foreground">
+      <Label htmlFor={fieldId} className="text-sm font-medium">
         Deixe sua sugestão sobre {sectionLabel}
-      </p>
-      <Textarea aria-label={`Sugestão sobre ${sectionLabel}`}
+      </Label>
+      <Textarea id={fieldId} className="min-h-[160px] text-base leading-6"
         placeholder={`Escreva aqui sua opinião, sugestão ou observação sobre ${sectionLabel}...`}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         rows={3}
       />
+      {sendError && <p role="alert" className="text-sm text-destructive">Não foi possível confirmar o envio. Sua sugestão foi mantida para tentar novamente.</p>}
       <div className="flex justify-end">
         {sent ? (
           <Button variant="ghost" disabled className="text-success">
