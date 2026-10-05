@@ -1,7 +1,7 @@
 import { refreshSite } from './refresh-site';
 
-const SW_SCRIPT_URL = "/sw.js?v=2026-09-20-v8";
-const CURRENT_CACHE = "ump-cache-v8";
+const SW_SCRIPT_URL = "/sw.js?v=2026-09-26-v9";
+const CURRENT_CACHE = "ump-cache-v9";
 let manualRefresh: Promise<void> | null = null;
 const PREVIEW_RELOAD_KEY = "__preview_sw_cleanup_reloaded__";
 const ROUTE_RESTORE_KEY = "__sw_restore_path__";
@@ -90,13 +90,14 @@ async function unregisterAndClear() {
   return hadArtifacts;
 }
 
-function emitUpdateAvailable() {
-  window.dispatchEvent(new CustomEvent("sw-update-available"));
+function emitUpdateAvailable(worker: ServiceWorker) {
+  if (manualRefresh) return;
+  window.dispatchEvent(new CustomEvent("sw-update-available", { detail: { version: worker.scriptURL } }));
 }
 
 function trackWaiting(registration: ServiceWorkerRegistration) {
   if (registration.waiting) {
-    emitUpdateAvailable();
+    emitUpdateAvailable(registration.waiting);
   }
 
   registration.addEventListener("updatefound", () => {
@@ -105,7 +106,7 @@ function trackWaiting(registration: ServiceWorkerRegistration) {
 
     installing.addEventListener("statechange", () => {
       if (installing.state === "installed" && navigator.serviceWorker.controller) {
-        emitUpdateAvailable();
+        emitUpdateAvailable(installing);
       }
     });
   });
@@ -130,7 +131,7 @@ export function registerServiceWorker() {
     return;
   }
 
-  window.addEventListener("load", () => {
+  const startRegistration = () => {
     void purgeOldCaches();
 
     navigator.serviceWorker
@@ -159,11 +160,14 @@ export function registerServiceWorker() {
       rememberCurrentRoute();
       window.location.reload();
     });
-  });
+  };
+  if (document.readyState === "complete") startRegistration();
+  else window.addEventListener("load", startRegistration, { once: true });
 }
 
 export function applyUpdateNow() {
   if (!manualRefresh) {
+    window.dispatchEvent(new Event("app-update-start"));
     rememberCurrentRoute();
     manualRefresh = refreshSite(window, navigator).catch(error => {
       manualRefresh = null;

@@ -1,3 +1,4 @@
+import { useEbdNavigation } from '@/hooks/useEbdNavigation';
 import { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { reportEbdWriteError } from '@/lib/ebd-mutations';
@@ -90,7 +91,13 @@ function parseAgeInput(value: string): number | null {
 }
 
 export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTabProps) {
-  const [selectedClassChoice, setSelectedClass] = useState<EbdClass | null>(null);
+  const navigation = useEbdNavigation();
+  const [localClass, setLocalClass] = useState<EbdClass | null>(null);
+  const selectedClassChoice = navigation ? classes.find(cls => cls.id === navigation.screen.managedClassId) || null : localClass;
+  const setSelectedClass = (cls: EbdClass | null) => {
+    if (navigation) { if (cls) navigation.open({ ...navigation.screen, managedClassId: cls.id }); else navigation.back(); }
+    else setLocalClass(cls);
+  };
   const selectedClass = classes.find(cls => cls.id === selectedClassChoice?.id) || null;
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentBirthDate, setNewStudentBirthDate] = useState('');
@@ -318,7 +325,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setTransferStudent(null)}>
+          <Button variant="ghost" size="icon" aria-label="Cancelar transferência" onClick={() => setTransferStudent(null)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -368,7 +375,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setSelectedClass(null)}>
+          <Button variant="ghost" size="icon" aria-label="Voltar às turmas" onClick={() => setSelectedClass(null)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0">
@@ -496,7 +503,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                     <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Transferir ${student.name}`} onClick={() => startTransfer(student)}>
                       <ArrowRightLeft className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" aria-label={`${student.active ? "Inativar" : "Ativar"} ${student.name}`} onClick={() => handleToggleActive(student)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" aria-label={`${student.active ? "Inativar" : "Reativar"} ${student.name}`} onClick={() => handleToggleActive(student)}>
                       <UserMinus className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -541,7 +548,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
               {inactive.map((student) => (
                 <div key={student.id} className="flex items-center gap-2 rounded-lg border border-border/50 bg-muted/30 p-2.5">
                   <span className="min-w-0 flex-1 break-words text-sm text-muted-foreground">{student.name}</span>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" aria-label={`${student.active ? "Inativar" : "Ativar"} ${student.name}`} onClick={() => handleToggleActive(student)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" aria-label={`${student.active ? "Inativar" : "Reativar"} ${student.name}`} onClick={() => handleToggleActive(student)}>
                     <UserCheck className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -623,7 +630,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
             <Card data-ebd-card key={cls.id} className="cursor-pointer transition-shadow hover:shadow-md">
               <CardContent data-ebd-content className="pb-4 pt-4">
                 <div className="ebd-class-row">
-                  <Users className="h-4 w-4 shrink-0 text-primary" />
+                  {!isEditing && <Users className="h-4 w-4 shrink-0 text-primary" />}
                   {isEditing ? (
                     <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
                       <Input

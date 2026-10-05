@@ -1,6 +1,6 @@
 # Tesouraria: recebimento, confirmação e prestação de contas
 
-Implementação de 05/10/2026. O código e a migration estão preparados no repositório. **Esta versão ainda não foi aplicada ao Supabase nem publicada.** A configuração descrita no README de 28/09 é a versão anterior, com lançamentos diretos de administrador.
+Implementação de 05/10/2026. As migrations de confirmação/conferência e leitura pública foram aplicadas no Supabase em 05/10. A interface integra a entrega na `main`; a publicação só está concluída quando o Sites confirma `succeeded` para a revisão enviada. A configuração descrita no README de 28/09 é histórica, com lançamentos diretos de administrador.
 
 ## Regras implementadas
 
@@ -38,7 +38,7 @@ O modelo visual segue `Relatorio_Financeiro_2026.pdf` do repositório: capa verd
 
 ## Ativação
 
-1. Revisar e aplicar **somente** `supabase/migrations/20261005131159_treasury_approval_reconciliation.sql` no projeto IPNC `xhhfgnkpgtnzlvpvqjpl`, pelo processo de migrations do projeto. Requer a migration pública de 28/09 e os helpers administrativos existentes. Não reaplicar o histórico inteiro em banco vazio.
+1. No projeto IPNC `xhhfgnkpgtnzlvpvqjpl`, já foram aplicadas `20261005140755_treasury_approval_reconciliation.sql` e `20261005140907_treasury_public_read_policy.sql`. Os nomes locais correspondem ao histórico remoto. Requerem a migration pública de 28/09 e os helpers administrativos existentes. Não reaplicar migrations nem o histórico inteiro em banco vazio.
 2. A migration preserva registros anteriores como confirmados. Novos registros passam a pendentes por padrão. Não cria credenciais, tesoureiros, lançamentos de exemplo ou vínculos presumidos. O bucket é novo e privado; buckets existentes não mudam.
 3. Publicar a interface atualizada pelo fluxo existente, entrar com administrador e vincular as contas reais em **Acesso dos tesoureiros**.
 4. Executar os roteiros abaixo em ambiente de homologação antes de usar lançamentos reais. A versão antiga do teste SQL de 28/09 é histórica e não representa o fluxo novo.
@@ -83,8 +83,9 @@ Abrir `http://127.0.0.1:8081/`. O aviso amarelo identifica os **dados fictícios
 
 ## Validação desta entrega
 
-- Tipos, lint do módulo e build aprovados; **78 testes automatizados passaram**. O build ainda informa os avisos de tamanho de bundles e da importação de `sonner` no aplicativo; não são falhas de compilação. O gerador de PDF da tesouraria é carregado sob demanda.
+- Após integrar as atualizações de EBD e PWA já existentes no Sites, **110 testes automatizados passaram** e os tipos foram aprovados. O gerador de PDF da tesouraria é carregado sob demanda. O processo de publicação executa novamente o build da revisão final.
 - PDFs de teste renderizados e páginas principais inspecionadas.
 - Conferidas as policies reais dos buckets existentes: limitadas a `receipts`/`election-photos`; não dão acesso ao novo bucket.
-- **Inspeção visual/interativa no navegador e integração com sessão real pendentes:** o navegador da ferramenta não estava disponível nesta sessão. A prévia foi preparada e sua abertura solicitada no Codex; não se declara aprovação visual por testes estáticos.
-- **Migration nova e publicação não executadas.** O trabalho preservou as mudanças existentes no diretório, sem commit amplo nem envio remoto.
+- A entrada pública e o acesso Finanças foram conferidos no navegador local. Os roteiros de escrita com contas reais e concorrência entre sessões continuam sendo validação de homologação; não foram criadas credenciais ou movimentações fictícias em produção.
+- As duas migrations foram aplicadas. A consulta pública de saldo/extrato foi validada sob o papel `anon`, com o helper administrativo permanecendo restrito. Banco sem lançamentos, quatro sociedades, bucket privado e relatório vedado ao anônimo. O teste isolado reproduz também os grants restritos do helper real.
+- O verificador de segurança não apontou novos achados na primeira migration. Existem avisos anteriores sobre funções públicas e proteção contra senhas vazadas desabilitada; eles não foram introduzidos por este módulo. Consulte o [verificador de segurança](https://supabase.com/docs/guides/database/database-linter) e a [proteção de senhas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).

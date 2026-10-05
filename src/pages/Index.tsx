@@ -325,7 +325,7 @@ export default function Index() {
     <AppLayout>
       <PastorLoginNotification />
 
-      <section className="relative mb-section-gap overflow-hidden rounded-hero bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-4 py-5 text-white shadow-card sm:px-5 lg:px-6 lg:py-6">
+      <section className="diretoria-welcome relative mb-section-gap overflow-hidden rounded-hero bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-4 py-5 text-white shadow-card sm:px-5 lg:px-6 lg:py-6">
         <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-white/10 lg:h-52 lg:w-52" />
         <div className="pointer-events-none absolute bottom-2 right-4 text-[58px] font-black leading-none text-white/[0.05] sm:text-[72px] lg:right-8 lg:text-[100px]">
           IPNC

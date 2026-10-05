@@ -49,18 +49,18 @@ test('disposing while reading prevents a pending follow-up read', async () => {
   assert.equal(reads, 1);
 });
 
-test('manual update verifies network, clears workers/caches and preserves route and login storage', async t => {
+test('manual update verifies network and preserves workers, caches, route and login storage', async t => {
   const actions = [];
   const page = {
     location: { href: 'https://example.test/secretaria?view=chamada#turma', replace: url => actions.push(['navigate', url]) },
-    caches: { keys: async () => ['ump-cache-v7', 'ump-cache-v8'], delete: async key => { actions.push(['delete', key]); return true; } },
+    caches: { keys: () => assert.fail('must preserve offline caches'), delete: () => assert.fail('must preserve offline caches') },
     get localStorage() { throw Error('must preserve login'); },
     get sessionStorage() { throw Error('must preserve login'); },
   };
-  const device = { onLine: true, serviceWorker: { getRegistrations: async () => [{ unregister: async () => { actions.push(['unregister']); return true; } }] } };
+  const device = { onLine: true, serviceWorker: { getRegistration: async () => null, getRegistrations: () => assert.fail('must not unregister workers') } };
   t.mock.method(globalThis, 'fetch', async (url, options) => { actions.push(['fetch', url, options.cache]); return { ok: true }; });
   await refreshSite(page, device);
-  assert.deepEqual(actions.map(action => action[0]), ['fetch', 'unregister', 'delete', 'delete', 'navigate']);
+  assert.deepEqual(actions.map(action => action[0]), ['fetch', 'navigate']);
   assert.equal(actions[0][2], 'no-store');
   const target = new URL(actions.at(-1)[1]);
   assert.equal(target.pathname, '/secretaria');

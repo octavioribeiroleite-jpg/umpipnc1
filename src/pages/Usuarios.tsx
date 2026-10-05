@@ -784,7 +784,7 @@ export default function Usuarios() {
   };
 
   const renderCopyAllButton = (societyId: string | null) => (
-    <Button variant="outline" size="sm" onClick={() => copyAllCredentials(societyId)} className="gap-1.5">
+    <Button variant="outline" size="sm" aria-label="Copiar todas as credenciais" onClick={() => copyAllCredentials(societyId)} className="gap-1.5">
       <ClipboardList className="h-4 w-4" />
       <span>Copiar todos</span>
     </Button>

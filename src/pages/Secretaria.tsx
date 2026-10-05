@@ -1,7 +1,11 @@
+import { EbdNavigationContext, useSecretariaNavigation } from '@/hooks/useEbdNavigation';
+import { loadStoredEbdSession, saveStoredEbdSession, clearStoredEbdSession } from '@/lib/ebd-session-storage';
+import { closeEbdDay, reopenEbdDay, setEbdCallStatus } from '@/lib/ebd-day';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import {
+  Download,
   ArrowLeft,
   ArrowRight,
   UserRound,
@@ -18,7 +22,6 @@ import {
   UserCheck,
   Users,
 } from 'lucide-react';
-import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -32,11 +35,14 @@ import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import './secretaria-home.css';
+import './secretaria-theme.css';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { SecretariaWorkspace } from '@/components/secretaria/SecretariaWorkspace';
+import { HeaderActions } from '@/components/layout/HeaderActions';
 import { PullToRefresh } from '@/components/layout/PullToRefresh';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useEbdSync } from '@/hooks/useEbdSync';
 import { ensureEbdSession, notifyEbdChange, reportEbdWriteError } from '@/lib/ebd-mutations';
 import { isBirthdaySessionExpiredError, useBirthdays } from '@/hooks/useBirthdays';
@@ -109,26 +115,6 @@ function SecretariaMenuCard({ title, description, icon: Icon, onClick }: {
       <span className="ebd-menu-copy"><strong>{title}</strong><span>{description}</span></span>
     </button>
   );
-}
-
-const EBD_SESSION_KEY = 'ebd_session';
-
-interface StoredEbdSession {
-  accessLevel: AccessLevel;
-  adminPin?: string;
-  professorNome?: string;
-  professorClassId?: string | null;
-  birthdayAiToken?: string;
-  birthdayAiExpiresAt?: string;
-}
-
-function loadStoredEbdSession(): StoredEbdSession | null {
-  try {
-    const raw = sessionStorage.getItem(EBD_SESSION_KEY);
-    return raw ? (JSON.parse(raw) as StoredEbdSession) : null;
-  } catch {
-    return null;
-  }
 }
 
 // Embedded birthdays component
@@ -276,8 +262,13 @@ export function SecretariaAniversariantes({ onSessionExpired }: { onSessionExpir
 
 export default function Secretaria() {
   const navigate = useNavigate();
-  useSwipeBack();
-  const storedSession = loadStoredEbdSession();
+  const { isInstalled, open: openInstall } = usePWAInstall();
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    document.body.classList.add('ebd-theme');
+    return () => document.body.classList.remove('ebd-theme');
+  }, []);
+  const [storedSession] = useState(loadStoredEbdSession);
   const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(storedSession?.accessLevel ?? null);
   const [loginStep, setLoginStep] = useState<LoginStep>('profile');
   const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(storedSession?.accessLevel ?? null);
@@ -285,7 +276,7 @@ export default function Secretaria() {
   const [pinError, setPinError] = useState(false);
   const [pendingPin, setPendingPin] = useState('');
   const [nameInput, setNameInput] = useState('');
-  const [adminPin, setAdminPin] = useState(storedSession?.adminPin ?? '');
+  const [adminPin, setAdminPin] = useState('');
   const [birthdayAiToken, setBirthdayAiToken] = useState(storedSession?.birthdayAiToken ?? '');
   const [birthdayAiExpiresAt, setBirthdayAiExpiresAt] = useState(storedSession?.birthdayAiExpiresAt ?? '');
   const [aiReauthOpen, setAiReauthOpen] = useState(false);
@@ -300,8 +291,14 @@ export default function Secretaria() {
   const [closureId, setClosureId] = useState<string | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
   const [classVisitors, setClassVisitors] = useState<Record<string, VisitorEntry[]>>({});
-  const [currentView, setCurrentView] = useState<CurrentView>('home');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const navigation = useSecretariaNavigation(accessLevel ? `${accessLevel}:${professorClassId || ''}` : null,
+    () => setShowExitConfirm(true),
+    () => { if (showExitConfirm) { if (!signingOut) setShowExitConfirm(false); return true; } if (aiReauthOpen) return true; return false; });
+  const currentView = navigation.screen.view;
+  useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); }, [navigation.screen]);
+  const setCurrentView = (view: CurrentView) => navigation.open({ view });
   const { weekBirthdays, todayBirthdays, isLoading: birthdaysLoading } = useBirthdays(supabase, `ebd-${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}`);
   const allWeekAnnouncements = [
     ...todayBirthdays.map(b => ({ ...b, daysUntil: 0 })),
@@ -335,10 +332,10 @@ export default function Secretaria() {
         setBirthdayAiToken(data.birthday_ai_token);
         setBirthdayAiExpiresAt(data.birthday_ai_expires_at);
         try {
-          sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+          saveStoredEbdSession({
             accessLevel: 'admin',
             birthdayAiToken: data.birthday_ai_token, birthdayAiExpiresAt: data.birthday_ai_expires_at,
-          }));
+          });
         } catch { /* ignore */ }
       } else {
         setPinError(true);
@@ -382,13 +379,13 @@ export default function Secretaria() {
     setPendingPin('');
     setAccessLevel('professor');
     try {
-      sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+      saveStoredEbdSession({
         accessLevel: 'professor',
         professorNome: data.teacher.name,
         professorClassId: data.teacher.class_id,
         birthdayAiToken: data.birthday_ai_token,
         birthdayAiExpiresAt: data.birthday_ai_expires_at,
-      }));
+      });
     } catch { /* ignore */ }
   };
 
@@ -410,11 +407,11 @@ export default function Secretaria() {
       setBirthdayAiToken(data.birthday_ai_token);
       setBirthdayAiExpiresAt(data.birthday_ai_expires_at);
       try {
-        sessionStorage.setItem(EBD_SESSION_KEY, JSON.stringify({
+        saveStoredEbdSession({
           accessLevel,
           professorNome, professorClassId,
           birthdayAiToken: data.birthday_ai_token, birthdayAiExpiresAt: data.birthday_ai_expires_at,
-        }));
+        });
       } catch { /* session remains in memory */ }
       if (accessLevel === 'admin') setAdminPin(pin);
       setAiReauthOpen(false);
@@ -536,83 +533,25 @@ export default function Secretaria() {
   }, []);
 
   const handleCloseDay = async () => {
-    let snapshot: Awaited<ReturnType<typeof readData>>;
-    try { snapshot = await readData(); }
-    catch (error) { await reportEbdWriteError(error, 'Atualize os dados antes de fechar o dia.'); return; }
-    const { classes, activeStudents, attendance, classVisitors } = snapshot;
-    const classSummary = classes.map(cls => {
-      const classStudents = activeStudents.filter(s => s.class_id === cls.id);
-      const classAttendance = attendance.filter(a => a.class_id === cls.id && a.date === sundayDate);
-      const present = classAttendance.filter(a => a.present).length;
-      const total = classStudents.length;
-      const visitorEntries = classVisitors[cls.id] || [];
-      return {
-        classId: cls.id,
-        className: cls.name,
-        total,
-        present,
-        percentage: total > 0 ? Math.round((present / total) * 100) : 0,
-        visitor_count: visitorEntries.length,
-        visitors: visitorEntries.map(v => ({ name: v.name })),
-      };
-    });
-
-    const totalStudents = activeStudents.length;
-    const presentStudents = attendance.filter(a => a.present && a.date === sundayDate).length;
-    const totalVisitors = Object.values(classVisitors).reduce((s, l) => s + l.length, 0);
-
-    const { error } = await supabase
-      .from('ebd_day_closures')
-      .insert({
-        date: sundayDate,
-        closed_by: professorNome || 'Administrador',
-        total_students: totalStudents,
-        present_students: presentStudents,
-        class_summary: classSummary,
-        visitor_count: totalVisitors,
-      } as any);
-
-    if (error) {
-      await reportEbdWriteError(error, 'Erro ao fechar o dia');
-      return;
-    }
-
-    toast.success('Dia fechado com sucesso!');
+    await closeEbdDay(sundayDate);
     await fetchData();
+    toast.success('Dia fechado com sucesso!');
   };
 
   const handleCallStatusChange = async (classId: string, status: 'aberta' | 'finalizada') => {
-    try {
-      await ensureEbdSession();
-      const { data, error } = await supabase.from('ebd_call_status' as any)
-        .upsert({ class_id: classId, date: sundayDate, status, changed_by: professorNome || 'Administrador' }, { onConflict: 'class_id,date' })
-        .select('class_id, status').single();
-      if (error || !data) throw error || new Error('O status da chamada não foi salvo.');
-      setCallStatuses(previous => ({ ...previous, [classId]: status }));
-      notifyEbdChange();
-    } catch (error) { await reportEbdWriteError(error, 'Não foi possível alterar o status da chamada.'); }
+    await setEbdCallStatus(sundayDate, classId, status, professorNome || 'Administrador');
+    setCallStatuses(previous => ({ ...previous, [classId]: status }));
   };
 
   const handleReopenDay = async () => {
     if (!closureId) return;
-
-    const { data, error } = await supabase
-      .from('ebd_day_closures')
-      .delete()
-      .eq('id', closureId).select('id').single();
-
-    if (error || !data) {
-      await reportEbdWriteError(error, 'Erro ao reabrir o dia');
-      return;
-    }
-
-    toast.success('Dia reaberto!');
+    await reopenEbdDay(sundayDate, closureId);
     await fetchData();
+    toast.success('Dia reaberto!');
   };
-
   const reauthDialog = (
 <Dialog open={aiReauthOpen} onOpenChange={setAiReauthOpen}>
-            <DialogContent className="max-h-[90dvh] overflow-y-auto">
+            <DialogContent className="ebd-reauth">
               <DialogHeader>
                 <DialogTitle>Confirmar acesso</DialogTitle>
                 <DialogDescription>Digite novamente o PIN do seu acesso. Seus dados preenchidos continuam na tela.</DialogDescription>
@@ -708,13 +647,15 @@ export default function Secretaria() {
     setShowExitConfirm(true);
   };
 
-  const confirmExit = () => {
-    void supabase.auth.signOut({ scope: 'local' });
+  const confirmExit = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try { await supabase.auth.signOut({ scope: 'local' }); }
+    catch { /* Explicit logout still clears this device when offline. */ }
+    finally { clearStoredEbdSession(); navigation.clear(); }
+    setSigningOut(false);
     setClasses([]); setActiveStudents([]); setAllStudents([]); setAttendance([]); setClassVisitors({}); setCallStatuses({});
     setShowExitConfirm(false);
-    try {
-      sessionStorage.removeItem(EBD_SESSION_KEY);
-    } catch { /* ignore */ }
     setAccessLevel(null);
     setLoginStep('profile');
     setSelectedProfile(null);
@@ -722,7 +663,6 @@ export default function Secretaria() {
     setBirthdayAiToken('');
     setBirthdayAiExpiresAt('');
     setAiReauthOpen(false);
-    setCurrentView('home');
     setProfessorClassId(null);
     setProfessorNome('');
     navigate('/auth', { replace: true, state: { skipSplash: true } });
@@ -736,32 +676,50 @@ export default function Secretaria() {
   const presentCount = attendance.filter(a => a.present && a.date === sundayDate).length;
   const totalCount = visibleActiveStudents.length;
 
-  // Home view with cards
-  if (currentView === 'home') {
-    return (
-      <PullToRefresh>
-      <div className="ebd-home">
+  const viewTitles: Record<CurrentView, string> = {
+    home: 'Secretaria EBD',
+    chamada: 'Chamada',
+    historico: 'Histórico',
+    turmas: 'Turmas',
+    aniversariantes: 'Aniversariantes',
+    planilha: 'Planilha de Alunos',
+    configuracoes: 'Configurações',
+    acessos: 'Acessos',
+  };
+
+  const pageHeader = (
         <header className="ebd-header safe-top">
           <div className="ebd-header-inner">
-            <button type="button" onClick={() => navigate('/auth', { replace: true, state: { skipSplash: true } })} aria-label="Voltar" className="ebd-back">
+            <button type="button" onClick={navigation.back} aria-label="Voltar" className="ebd-back">
               <ArrowLeft aria-hidden="true" />
             </button>
             <div className="ebd-heading">
-              <h1>Secretaria EBD</h1>
-              <p>Escola Bíblica Dominical</p>
+              <h1>{viewTitles[currentView]}</h1>
+              <p>{profileLabel} · EBD</p>
             </div>
+            <HeaderActions showInstall={false} showVersion={false} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button type="button" aria-label="Menu do usuário" className="ebd-profile"><UserRound aria-hidden="true" /></button>
+                <button type="button" ref={profileButtonRef} aria-label="Menu do usuário" className="ebd-profile"><UserRound aria-hidden="true" /></button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-52">
                 <DropdownMenuLabel>{profileLabel}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleBackToHome} className="min-h-11 gap-2"><Home className="h-4 w-4" />Menu da Secretaria</DropdownMenuItem>
+                {!isInstalled && <DropdownMenuItem onSelect={() => openInstall(profileButtonRef.current ?? undefined)} className="min-h-11 gap-2"><Download className="h-4 w-4" />Instalar aplicativo</DropdownMenuItem>}
                 <DropdownMenuItem onSelect={handleExitApp} className="min-h-11 gap-2"><LogOut className="h-4 w-4" />Sair da Secretaria</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
+  );
+
+  // Home view with cards
+  if (currentView === 'home') {
+    return (
+      <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
+      <div className="ebd-home ebd-app">
+        {pageHeader}
 
         <main className="ebd-content">
           <div className={`ebd-sync ${lastSynced && !syncError && !aiReauthOpen ? 'ebd-sync-ok' : ''}`}>{syncNotice}</div>
@@ -817,7 +775,7 @@ export default function Secretaria() {
           )}
         </main>
 
-        <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+        <AlertDialog open={showExitConfirm} onOpenChange={open => { if (!signingOut) setShowExitConfirm(open); }}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Sair da Secretaria?</AlertDialogTitle>
@@ -826,31 +784,20 @@ export default function Secretaria() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmExit}>Sair</AlertDialogAction>
+              <AlertDialogCancel disabled={signingOut}>Continuar na Secretaria</AlertDialogCancel>
+              <AlertDialogAction disabled={signingOut} onClick={event => { event.preventDefault(); void confirmExit(); }}>{signingOut ? 'Saindo…' : 'Sair e voltar ao login'}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
-      </PullToRefresh>
+      </PullToRefresh></EbdNavigationContext.Provider>
     );
   }
 
-  // Sub-views with back button
-  const viewTitles: Record<CurrentView, string> = {
-    home: 'Secretaria EBD',
-    chamada: 'Chamada',
-    historico: 'Histórico',
-    turmas: 'Turmas',
-    aniversariantes: 'Aniversariantes',
-    planilha: 'Planilha de Alunos',
-    configuracoes: 'Configurações',
-    acessos: 'Acessos',
-  };
 
   return (
-    <PullToRefresh>
-    <SecretariaWorkspace title={viewTitles[currentView]} profileLabel={profileLabel} onBack={handleBackToHome} onExit={handleExitApp} syncNotice={syncNotice}>
+    <EbdNavigationContext.Provider value={navigation}><PullToRefresh>
+    <SecretariaWorkspace title={viewTitles[currentView]} profileLabel={profileLabel} onBack={navigation.back} onHome={handleBackToHome} onExit={handleExitApp} syncNotice={syncNotice}>
       {reauthDialog}
       <div className={`ebd-view ebd-view-${currentView}`}>
         {currentView === 'chamada' && (
@@ -908,7 +855,7 @@ export default function Secretaria() {
         )}
       </div>
 
-      <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+      <AlertDialog open={showExitConfirm} onOpenChange={open => { if (!signingOut) setShowExitConfirm(open); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Sair da Secretaria?</AlertDialogTitle>
@@ -917,12 +864,12 @@ export default function Secretaria() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmExit}>Sair</AlertDialogAction>
+            <AlertDialogCancel disabled={signingOut}>Continuar na Secretaria</AlertDialogCancel>
+            <AlertDialogAction disabled={signingOut} onClick={event => { event.preventDefault(); void confirmExit(); }}>{signingOut ? 'Saindo…' : 'Sair e voltar ao login'}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </SecretariaWorkspace>
-    </PullToRefresh>
+    </PullToRefresh></EbdNavigationContext.Provider>
   );
 }

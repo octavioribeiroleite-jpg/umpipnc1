@@ -14,6 +14,8 @@ create table public.user_roles(user_id uuid,role public.app_role);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 create function ipnc_private.actor_active() returns boolean language sql stable security definer set search_path='' as $$ select exists(select 1 from public.profiles where user_id=auth.uid() and active) $$;
 create function ipnc_private.actor_has_role(wanted public.app_role) returns boolean language sql stable security definer set search_path='' as $$ select ipnc_private.actor_active() and exists(select 1 from public.user_roles where user_id=auth.uid() and role=wanted) $$;
+revoke all on function ipnc_private.actor_active(), ipnc_private.actor_has_role(public.app_role) from public, anon;
+grant execute on function ipnc_private.actor_active(), ipnc_private.actor_has_role(public.app_role) to authenticated;
 grant usage on schema public,auth,ipnc_private,storage to anon,authenticated;
 create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
 create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);
@@ -22,7 +24,8 @@ grant select,insert on storage.objects to authenticated;
 grant select on public.profiles to authenticated;
 `);
 await db.exec(readFileSync(new URL('../supabase/migrations/20260928151725_public_treasury.sql', import.meta.url),'utf8'));
-await db.exec(readFileSync(new URL('../supabase/migrations/20261005131159_treasury_approval_reconciliation.sql', import.meta.url),'utf8'));
+await db.exec(readFileSync(new URL('../supabase/migrations/20261005140755_treasury_approval_reconciliation.sql', import.meta.url),'utf8'));
+await db.exec(readFileSync(new URL('../supabase/migrations/20261005140907_treasury_public_read_policy.sql', import.meta.url),'utf8'));
 const ids = Object.fromEntries(['admin','treasurer','outsider','inactive','fund','other','bank','income','expense','pending'].map(k=>[k,crypto.randomUUID()]));
 await db.query(`insert into auth.users select unnest($1::uuid[])`,[[ids.admin,ids.treasurer,ids.outsider,ids.inactive]]);
 await db.query(`insert into profiles select id,'Test','test',id<>$1 from auth.users`,[ids.inactive]);
@@ -34,6 +37,7 @@ const insert = (id,fund,amount=10000,extra={}) => db.query(`insert into treasury
 const denied = fn => assert.rejects(fn,e=>e.code==='42501');
 
 test('treasurer submits only own pending income; public cannot see pending, forge status or write', async()=>{
+ await denied(()=>as(null,()=>db.query("select ipnc_private.actor_has_role('admin')")));
  await as(ids.treasurer,()=>insert(ids.income,ids.fund,10000,{shirt_cents:6000,monthly_fee_cents:3000,per_capita_cents:1000}));
  const forbiddenUpdate = await as(ids.treasurer,()=>db.query("update treasury_entries set status='confirmed',revision=2 where id=$1 returning id",[ids.income]));
  assert.equal(forbiddenUpdate.rows.length,0);

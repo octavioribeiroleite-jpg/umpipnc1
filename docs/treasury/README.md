@@ -1,6 +1,6 @@
 # Tesouraria da Igreja Presbiteriana de Nova Carapina
 
-> **Atualização de 05/10/2026:** o fluxo de tesoureiros por sociedade, confirmação administrativa, conferência bancária, reserva de per capita e PDFs está implementado no repositório. Consulte [WORKFLOW.md](WORKFLOW.md) para regras, testes e ativação. A nova migration ainda não foi aplicada. O texto abaixo documenta a versão anterior de 28/09/2026.
+> **Atualização de 05/10/2026:** o fluxo de tesoureiros por sociedade, confirmação administrativa, conferência bancária, reserva de per capita e PDFs está implementado. As migrations foram aplicadas no Supabase em 05/10; consulte [WORKFLOW.md](WORKFLOW.md) para regras, testes e configuração de acesso. O texto abaixo documenta o estado histórico de 28/09/2026.
 
 ## Entrega e estado da ativação
 

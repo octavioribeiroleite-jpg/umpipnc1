@@ -1,3 +1,4 @@
+import { loadStoredEbdSession } from '@/lib/ebd-session-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +15,8 @@ import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import { BuildStamp } from '@/components/BuildStamp';
+import { InstallButton } from '@/components/layout/InstallButton';
+import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 
 interface Society {
   id: string;
@@ -74,6 +77,9 @@ export default function Auth() {
   const { setSession: setMembroSession } = useMembroSession();
   const navigate = useNavigate();
   const location = useLocation();
+  useEffect(() => {
+    if (loadStoredEbdSession()) navigate('/secretaria', { replace: true });
+  }, [navigate]);
   const skipSplash = Boolean((location.state as { skipSplash?: boolean } | null)?.skipSplash);
   const { toast } = useToast();
 
@@ -661,6 +667,7 @@ export default function Auth() {
           <p className="mt-2 text-base font-medium text-white/90 drop-shadow-[0_3px_14px_rgba(0,0,0,0.75)]">
             Igreja Presbiteriana de Nova Carapina
           </p>
+          <div className="mt-5"><InstallButton variant="entry" /></div>
         </div>
 
         {step === 'select' ? (
@@ -856,6 +863,7 @@ export default function Auth() {
   // ========== SINGLE RETURN — video never remounts ==========
   return (
     <div className="auth-page min-h-screen relative overflow-hidden bg-black">
+      <div className="absolute right-3 z-40 text-white/80" style={{ top: 'max(12px, env(safe-area-inset-top))' }}><UpdateAvailableBanner className="bg-black/15 backdrop-blur-sm hover:bg-white/10" /></div>
       {/* Video background — always mounted, never re-created */}
       <video
         autoPlay

@@ -157,6 +157,7 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
             <div key={item.id} className="flex min-h-11 items-center gap-3 py-1 px-1.5 rounded hover:bg-muted/50">
               <Checkbox
                 id={`attendance-${item.id}`}
+                aria-label={`Presença de ${item.name}`}
                 checked={isPresent}
                 onCheckedChange={(checked) => handleToggle(item.id, !!checked)}
                 disabled={disabled}

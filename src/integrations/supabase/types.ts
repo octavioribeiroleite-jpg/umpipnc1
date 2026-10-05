@@ -2271,6 +2271,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ebd_close_day: { Args: { p_date: string }; Returns: Json }
+      ebd_reopen_day: { Args: { p_date: string; p_closure_id: string }; Returns: boolean }
       add_shirt_campaign_lot: {
         Args: {
           p_campaign_id: string

@@ -64,7 +64,7 @@ export default function Reunioes() {
         }
       />
 
-      <FAB onClick={() => navigate('/reunioes/nova')} />
+      <FAB aria-label="Nova reunião" onClick={() => navigate('/reunioes/nova')} />
 
       <ReuniaoFilters
         onStatusChange={setStatusFilter}

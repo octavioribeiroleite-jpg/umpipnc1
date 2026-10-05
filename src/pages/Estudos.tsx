@@ -383,6 +383,9 @@ export default function Estudos() {
             {studies.map((study) => (
               <AppCard
                 key={study.id}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedStudy(study); notesRef.current = study.notes; } }}
                 variant="interactive"
                 onClick={() => { setSelectedStudy(study); notesRef.current = study.notes; }}
               >

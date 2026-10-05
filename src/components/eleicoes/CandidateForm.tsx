@@ -190,9 +190,11 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
               
               {!disabled && (
                 <div className="flex gap-1">
-                  <label className="cursor-pointer">
+                  <label className="cursor-pointer rounded-lg" role="button" aria-label={`Enviar foto de ${c.name}`} tabIndex={uploading === c.id ? -1 : 0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click(); } }}>
                     <input
                       type="file"
+                      disabled={uploading === c.id}
+                      aria-label={`Enviar foto de ${c.name}`}
                       accept="image/*"
                       className="hidden"
                       onChange={(e) => {
