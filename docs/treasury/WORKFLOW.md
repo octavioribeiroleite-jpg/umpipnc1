@@ -72,6 +72,8 @@ node scripts/treasury-ui-preview.mjs --serve
 
 Abrir `http://127.0.0.1:8081/`. O aviso amarelo identifica os **dados fictícios**. A prévia monta os componentes reais com hooks de teste e permite alternar Tesoureiro/Administrador/Visitante. Não conecta ao Supabase, não salva finanças e não substitui o teste de integração autenticada. A geração de PDFs dessa prévia fica desabilitada; ela é exercitada nos testes automatizados.
 
+Para conferir o layout, voltar à **Visão geral** e alternar **Cenário visual** entre saldos zerados, valores altos/negativos e consulta indisponível. Em 320, 375, 390 e 430 px, as quatro sociedades ficam em duas colunas, com cards quadrados, sigla, saldo e extrato. Nomes completos e explicações repetidas ficam ocultos somente até 639 px; valores extensos podem aumentar a altura para preservar a leitura. Entradas/saídas mantêm o layout anterior, e erros/pendências continuam visíveis. Em 1440 px, os textos e o layout completo permanecem iguais.
+
 ## Verificação manual em homologação
 
 1. Na tela inicial, clicar em Finanças: popup com as sociedades e acesso administrativo, sem saldos. Abrir `/tesouraria` sem sessão também exige autenticação. PIN errado ou desativado mantém o usuário fora do painel. Consultas anônimas diretas a saldo/extrato/lançamentos são recusadas.

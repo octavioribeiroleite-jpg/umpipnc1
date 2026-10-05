@@ -197,16 +197,28 @@
   .tr-mobile-brand > span { display: none; }
   .tr-content { padding: 24px 16px; }
   .tr-title-row h1 { font-size: 24px; }
+  .tr-eyebrow, .tr-title-row > div > p:last-child { display: none; }
+  .tr-title-row { gap: 12px; margin-bottom: 20px; }
   .tr-heading-actions { width: 100%; }
   .tr-heading-actions .tr-primary { flex: 1; }
   .tr-stats { grid-template-columns: 1fr; gap: 12px; }
   .tr-total, .tr-stat { padding: 20px; }
+  .tr-total > p, .tr-total-count, .tr-context-note { display: none; }
+  .tr-total .tr-big-value { margin: 12px 0 0; }
   .tr-stat { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 4px 12px; }
   .tr-stat-icon { grid-row: 1 / 4; margin: 0; }
   .tr-stat strong { margin: 0; font-size: 24px; }
   .tr-stat p { grid-column: 2; }
   .tr-section-heading { flex-wrap: wrap; gap: 12px; }
-  .tr-fund-grid { gap: 12px; }
+  .tr-societies .tr-section-heading p, .tr-statement > .tr-section-heading p { display: none; }
+  .tr-fund-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .tr-fund-card { aspect-ratio: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px; }
+  .tr-fund-title { margin-bottom: 0; }
+  .tr-fund-badge { min-height: 26px; padding: 3px 8px; font-size: 13px; }
+  .tr-fund-card h3, .tr-fund-count { display: none; }
+  .tr-fund-label { font-size: 11px; }
+  .tr-fund-card > strong { margin: 0; font-size: clamp(18px, 5vw, 22px); line-height: 1.25; }
+  .tr-fund-footer { margin-top: auto; padding: 8px 0 0; gap: 4px; font-size: 11px; }
   .tr-panel { padding: 20px 16px; }
   .tr-month-chart { gap: 8px; padding: 0; }
   .tr-filters :is(input,select) { font-size: 16px; min-height: 46px; padding-inline: 8px; }
