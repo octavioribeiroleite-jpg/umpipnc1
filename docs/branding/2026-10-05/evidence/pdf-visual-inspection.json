@@ -1,0 +1,28 @@
+{
+  "inspectedAt": "2026-10-05",
+  "generationTimestamp": "2026-10-05T20:31:42.854Z",
+  "masterSha256": "569a6b3d502689ef244592e2a376c77840e6692d8e54f1ff3b3dd6389d4ddd1b",
+  "reviewMethod": "Poppler at 150 DPI; all 8 page renders viewed at native page proportions",
+  "pageRendersInspected": 8,
+  "brandingResult": "passed",
+  "brandingObservations": [
+    "All 4 first pages show the approved institutional image with the square white background of the source artwork.",
+    "EBD uses a 20 mm square; calendar uses a 22 mm square. No crop, stretching, header collision, or pixel substitution was observed.",
+    "Continuation pages preserve the existing generator behavior: content and footer, without a repeated institutional header."
+  ],
+  "existingNonBrandingIssues": [
+    {
+      "source": "src/utils/generateEbdPDF.ts:252",
+      "render": "chamada-ebd-20261004-1.png",
+      "issue": "The trophy emoji is rendered as unsupported glyphs in the first row of the class ranking.",
+      "suggestedFix": "Remove the trophy from the PDF or replace it with a drawn shape or a compatible embedded font. Preserve class order, calculations, and names.",
+      "productionChangedByThisQa": false
+    }
+  ],
+  "scopeLimits": [
+    "This certifies the institutional image in the 4 generators with fictitious data; it is not a certification of every possible input or report layout.",
+    "The PDF image is checked in RGB pixel space. The test does not certify print-shop color management or ICC interpretation in external PDF viewers.",
+    "The calendar fixture uses short titles. Its existing first-line-only title rendering is not altered or certified for arbitrary long text.",
+    "Each document is approximately 4.9 MB because the existing jsPDF image pipeline embeds the 1280 RGB raster without compression."
+  ]
+}

@@ -1,0 +1,305 @@
+{
+  "colors": {
+    "cream_padding_hex": "#fef9f3",
+    "cream_padding_rgb": [
+      254,
+      249,
+      243
+    ],
+    "cream_sample_box": [
+      180,
+      160,
+      240,
+      240
+    ],
+    "cream_sampling_method": "Per-channel median of JPEG patch",
+    "gold_vein_sample": {
+      "rgb": [
+        181,
+        130,
+        77
+      ],
+      "xy": [
+        830,
+        346
+      ]
+    },
+    "leaf_dark_green_sample": {
+      "rgb": [
+        3,
+        62,
+        34
+      ],
+      "xy": [
+        645,
+        220
+      ]
+    }
+  },
+  "favicon": {
+    "aspect_ratio_preserved": true,
+    "authorized_exception": "Only leaves/book emblem, without IPNC wordmark or lower decorative band",
+    "base_size": [
+      256,
+      256
+    ],
+    "contains_ipnc_letters": false,
+    "detected_color_foreground_bbox": [
+      268,
+      79,
+      1031,
+      636
+    ],
+    "ico_frame_sizes": [
+      16,
+      32,
+      48,
+      64,
+      128,
+      256
+    ],
+    "png_frame_size": 32,
+    "source_crop_box_with_10px_padding": [
+      258,
+      69,
+      1041,
+      646
+    ],
+    "source_crop_size": [
+      783,
+      577
+    ],
+    "source_roi": [
+      220,
+      50,
+      1080,
+      651
+    ],
+    "symbol_fitted_size": [
+      240,
+      177
+    ],
+    "symbol_placement": [
+      8,
+      39
+    ]
+  },
+  "files": [
+    {
+      "alpha_channel": false,
+      "bytes": 74101,
+      "filename": "source-approved-original.jpg",
+      "format": "JPEG",
+      "mode": "RGB",
+      "resolution": [
+        1280,
+        1280
+      ],
+      "sha256": "458eecf06c3e2e50c34eadfbd67c9bf841b3404e9b81b67172c320fdcde3c309"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 555210,
+      "filename": "logo-ipnc.png",
+      "format": "PNG",
+      "mode": "RGB",
+      "resolution": [
+        1280,
+        1280
+      ],
+      "sha256": "569a6b3d502689ef244592e2a376c77840e6692d8e54f1ff3b3dd6389d4ddd1b"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 39761,
+      "filename": "icon-192x192-v2.png",
+      "format": "PNG",
+      "mode": "RGB",
+      "resolution": [
+        192,
+        192
+      ],
+      "sha256": "337c1cb44ee8f6ee776ef185d6835c71348a5c118ee2420bed4d1f590008e5c2"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 153858,
+      "filename": "icon-512x512-v2.png",
+      "format": "PNG",
+      "mode": "RGB",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "3429fbed1842526aaad5c7c124f68ac47a3380ec16ee947b5ca590b7f13f9545"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 36579,
+      "filename": "apple-touch-icon-v2.png",
+      "format": "PNG",
+      "mode": "RGB",
+      "resolution": [
+        180,
+        180
+      ],
+      "sha256": "66418d35cc289f46898e0aabb32eecb73efb0af1e4632af0ed0ed9fa03dca210"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 544644,
+      "filename": "ipnc-social-v2.png",
+      "format": "PNG",
+      "mode": "RGB",
+      "resolution": [
+        1200,
+        1200
+      ],
+      "sha256": "fdd67424acb58dac4d91575e3c93ea67692e82cb32ac861bfbb965b83790445e"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 73468,
+      "filename": "icon-maskable-512x512-v2.png",
+      "format": "PNG",
+      "mode": "RGB",
+      "resolution": [
+        512,
+        512
+      ],
+      "sha256": "f4ebfee77a5ac13b339157430ffeca1b83d8e5a4b0fe4041392825f09bc7dd12"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 75480,
+      "filename": "favicon-v2.ico",
+      "format": "ICO",
+      "frames": [
+        [
+          16,
+          16
+        ],
+        [
+          32,
+          32
+        ],
+        [
+          48,
+          48
+        ],
+        [
+          64,
+          64
+        ],
+        [
+          128,
+          128
+        ],
+        [
+          256,
+          256
+        ]
+      ],
+      "mode": "RGB",
+      "resolution": [
+        256,
+        256
+      ],
+      "sha256": "58f41ba9f58d70d8ba0cdcc9ecbf746709b8f66882396777eb0651beea31f8f4"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 2068,
+      "filename": "favicon-32x32-v2.png",
+      "format": "PNG",
+      "mode": "RGB",
+      "resolution": [
+        32,
+        32
+      ],
+      "sha256": "3513888b1b8356954388ec7031eb10c8e812f7f6b127f1aba8d2d3a1fa450d94"
+    },
+    {
+      "alpha_channel": false,
+      "bytes": 406283,
+      "filename": "qa-contact-sheet.png",
+      "format": "PNG",
+      "mode": "RGB",
+      "resolution": [
+        1280,
+        1250
+      ],
+      "sha256": "86039fe4dbbba4e2affc000ef0f4667ade89d52062106150279d5a5bf6835d6c"
+    }
+  ],
+  "maskable": {
+    "complete_art_box": [
+      112,
+      112,
+      400,
+      400
+    ],
+    "complete_art_inside_safe_circle": true,
+    "complete_art_pixels_preserved_after_resampling": true,
+    "crop_applied": false,
+    "maximum_complete_art_corner_radius": 203.6467529817257,
+    "mode": "RGB (opaque)",
+    "safe_circle_center": [
+      256,
+      256
+    ],
+    "safe_circle_diameter_fraction": 0.8,
+    "safe_circle_radius": 204.8,
+    "safe_radius_margin_at_art_corners": 1.1532470182742998,
+    "size": [
+      512,
+      512
+    ],
+    "whole_source_art_placement": [
+      112,
+      112
+    ],
+    "whole_source_art_scaled_to": [
+      288,
+      288
+    ]
+  },
+  "master_pixel_verification": {
+    "alpha_added": false,
+    "background_removed": false,
+    "color_transform_applied": false,
+    "crop_applied": false,
+    "decoded_jpeg_rgb_sha256": "aa74c27f572c323a7d5389a6c9c50c13ba7f3a60a5a5e4b3b9c4bef53b52413f",
+    "equal_every_decoded_pixel": true,
+    "equal_mode": true,
+    "equal_resolution": true,
+    "original_icc_profile_preserved": true,
+    "pixel_difference_bbox": null,
+    "png_rgb_sha256": "aa74c27f572c323a7d5389a6c9c50c13ba7f3a60a5a5e4b3b9c4bef53b52413f"
+  },
+  "pillow_version": "11.3.0",
+  "pipeline": "generate_assets.py",
+  "processing": {
+    "art_redrawn_or_generated": false,
+    "automatic_exif_transpose": false,
+    "normal_icons_social_resampling": "LANCZOS from full master",
+    "pixel_color_changes": "Only resampling and cream padding in derived maskable/favicon; master unchanged",
+    "png_compression": 9
+  },
+  "qa_contact_sheet": "qa-contact-sheet.png",
+  "source": {
+    "bytes": 74101,
+    "exif_orientation": null,
+    "format": "JPEG",
+    "icc_profile_bytes": 456,
+    "icc_profile_sha256": "12afb4d9953adee0607d347daee5b78b18d6b3cab2d572b88970703f5edb37bc",
+    "mode": "RGB",
+    "preserved_original": "source-approved-original.jpg",
+    "sha256": "458eecf06c3e2e50c34eadfbd67c9bf841b3404e9b81b67172c320fdcde3c309",
+    "size": [
+      1280,
+      1280
+    ],
+    "supplied_path": "/tmp/codex-remote-attachments/01a0e87c-6168-7b63-9e62-7328661eda8a/1beda720-545d-41e4-95fe-acea5fd2be07/1-Design-sem-nome_20261005_162433_0000.jpg"
+  }
+}

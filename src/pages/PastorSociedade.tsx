@@ -144,7 +144,7 @@ export default function PastorSociedade() {
     return (
       <PastorLayout>
         <div className="flex flex-col items-center justify-center gap-4 py-16">
-          <img src={logoIpnc} alt="IPNC" className="h-16 w-16 animate-logo-pulse" />
+          <img src={logoIpnc} alt="IPNC" className="h-16 w-16 object-contain animate-logo-pulse" />
           <p className="text-sm text-muted-foreground">Carregando...</p>
           <Progress value={undefined} className="h-1 w-48" />
         </div>

@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-10-05T20:31:42.854Z",
+  "fixtureOnly": true,
+  "networkAccess": "disabled",
+  "repo": "/Users/octavioribeiroleite/.codex/worktrees/ipnc-visual-completo/Aplicativo IPNC",
+  "logo": {
+    "path": "/Users/octavioribeiroleite/.codex/worktrees/ipnc-visual-completo/Aplicativo IPNC/src/assets/logo-ipnc.png",
+    "sha256": "569a6b3d502689ef244592e2a376c77840e6692d8e54f1ff3b3dd6389d4ddd1b",
+    "width": 1280,
+    "height": 1280
+  },
+  "sources": [
+    {
+      "file": "src/utils/generateCalendarPDF.ts",
+      "sha256": "f9de9745338d242b10754926fe5142e51ce308b1898623b79fd587ff8720c087"
+    },
+    {
+      "file": "src/utils/generateEbdPDF.ts",
+      "sha256": "40d5f79079d47f9f1dcb3ce05710a13e5fa377cee5730b472783da57a40a2411"
+    },
+    {
+      "file": "src/lib/ebd-attendance-queue.ts",
+      "sha256": "6310d7b51993707b3af7e9e5fdcba0bee0ade1ed00d62244a90d1b35000f8713"
+    }
+  ],
+  "guards": [
+    {
+      "generator": "generateEbdAttendancePDF",
+      "staleSnapshotBlocked": true
+    },
+    {
+      "generator": "generateEbdPeriodPDF",
+      "staleSnapshotBlocked": true
+    },
+    {
+      "generator": "generateEbdQuarterlyPDF",
+      "staleSnapshotBlocked": true
+    }
+  ],
+  "documents": [
+    {
+      "filename": "chamada-ebd-20261004.pdf",
+      "pages": 1,
+      "bytes": 4943236
+    },
+    {
+      "filename": "relatorio-chamadas-ebd.pdf",
+      "pages": 1,
+      "bytes": 4933299
+    },
+    {
+      "filename": "relatorio-trimestral-ebd.pdf",
+      "pages": 3,
+      "bytes": 4958129
+    },
+    {
+      "filename": "cronograma-ipnc---dados-ficticios-outubro-2026.pdf",
+      "pages": 3,
+      "bytes": 4973717
+    }
+  ]
+}

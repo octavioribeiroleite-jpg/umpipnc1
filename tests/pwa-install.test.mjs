@@ -96,10 +96,26 @@ test('all subscribers receive installation state; teardown removes listeners', (
 test('manifest preserves identity and declares actual PNG dimensions', () => {
   const manifest = JSON.parse(readFileSync(new URL('../public/manifest.json', import.meta.url)));
   assert.equal(manifest.id, '/'); assert.equal(manifest.start_url, '/'); assert.equal(manifest.display, 'standalone');
+  assert.equal(manifest.scope, '/'); assert.equal(manifest.orientation, 'portrait-primary');
   for (const icon of manifest.icons) {
     const buffer = readFileSync(new URL(`../public${icon.src}`, import.meta.url));
     assert.equal(`${buffer.readUInt32BE(16)}x${buffer.readUInt32BE(20)}`, icon.sizes);
   }
+});
+
+test('installation precaches the versioned identity and uses a distinct maskable composition', async () => {
+  const manifest = JSON.parse(readFileSync(new URL('../public/manifest.json', import.meta.url)));
+  const handlers = {}; let cachedPaths; let install;
+  vm.runInNewContext(readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8'), {
+    self: { addEventListener: (name, fn) => { handlers[name] = fn; } },
+    caches: { open: async () => ({ addAll: async paths => { cachedPaths = Array.from(paths); } }) },
+  });
+  handlers.install({ waitUntil: promise => { install = promise; } }); await install;
+  assert.deepEqual(cachedPaths, manifest.icons.map(icon => icon.src));
+  assert.ok(manifest.icons.every(icon => icon.src.endsWith('-v2.png')));
+  const regular = manifest.icons.find(icon => icon.sizes === '512x512' && icon.purpose === 'any');
+  const maskable = manifest.icons.find(icon => icon.purpose === 'maskable');
+  assert.notDeepEqual(readFileSync(new URL(`../public${regular.src}`, import.meta.url)), readFileSync(new URL(`../public${maskable.src}`, import.meta.url)));
 });
 
 test('service worker only removes old app caches and never intercepts login, APIs or navigation', async () => {
@@ -108,11 +124,11 @@ test('service worker only removes old app caches and never intercepts login, API
   vm.runInNewContext(worker, {
     URL,
     self: { location: { origin: 'https://renovo.test' }, addEventListener: (name, fn) => { handlers[name] = fn; }, clients: { claim: async () => { claimed = true; } }, skipWaiting: () => { skipped = true; } },
-    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'another-app'], delete: async key => { deleted.push(key); } },
+    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'another-app'], delete: async key => { deleted.push(key); } },
   });
   let activated;
   handlers.activate({ waitUntil: promise => { activated = promise; } }); await activated;
-  assert.deepEqual(deleted, ['ump-cache-v8']); assert.equal(claimed, true);
+  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9']); assert.equal(claimed, true);
   handlers.message({ data: { type: 'SKIP_WAITING' } }); assert.equal(skipped, true);
   for (const [url, mode, method] of [
     ['https://renovo.test/auth','navigate','GET'],

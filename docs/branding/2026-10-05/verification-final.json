@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-05",
+  "master": "src/assets/logo-ipnc.png",
+  "master_sha256": "569a6b3d502689ef244592e2a376c77840e6692d8e54f1ff3b3dd6389d4ddd1b",
+  "master_size": [
+    1280,
+    1280
+  ],
+  "logo_import_consumers": [
+    "src/components/PWAInstallPrompt.tsx",
+    "src/components/layout/AppSidebar.tsx",
+    "src/components/layout/MobileHeader.tsx",
+    "src/components/layout/TabletNavigationRail.tsx",
+    "src/components/membro/MembroLayout.tsx",
+    "src/components/pastor/PastorLayout.tsx",
+    "src/components/pastor/PastorMobileHeader.tsx",
+    "src/components/pastor/PastorSidebar.tsx",
+    "src/components/secretaria/SecretariaNavigation.tsx",
+    "src/components/treasury/TreasuryDashboard.tsx",
+    "src/pages/Auth.tsx",
+    "src/pages/EleicaoApresentar.tsx",
+    "src/pages/PastorSociedade.tsx",
+    "src/pages/PortalIgreja.tsx",
+    "src/pages/ResetPassword.tsx",
+    "src/utils/generateCalendarPDF.ts",
+    "src/utils/generateEbdPDF.ts"
+  ],
+  "runtime_images_scanned": 23,
+  "old_asset_hashes_found": [],
+  "viewport_checks": 55,
+  "viewport_overflows": 0,
+  "failed_images": 0,
+  "scoped_lint_errors": 0,
+  "scoped_lint_warnings": 2,
+  "lint_warnings_preexisting": true,
+  "legacy_icon_urls": "updated copies of v2 art; manifest and precache reference only versioned URLs",
+  "manual_scope": "isolated fictional data, no production data writes"
+}

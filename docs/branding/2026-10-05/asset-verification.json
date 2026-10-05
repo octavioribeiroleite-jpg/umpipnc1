@@ -1,0 +1,24 @@
+{
+  "all_8_requested_outputs_present": true,
+  "all_declared_resolutions_checked": true,
+  "contact_sheet_observation": "All normal icons preserve IPNC and whole approved composition; circle/rounded/squircle masks retain complete 288-square; favicon has full leaves/book and no wordmark. Fine detail naturally reduces at16px.",
+  "contacts_sheet_visually_inspected": true,
+  "determinism_two_consecutive_runs_all_11_artifact_sha256_equal": true,
+  "ico32_equals_png32_pixels": true,
+  "ico_frame_sizes_checked": [
+    16,
+    32,
+    48,
+    64,
+    128,
+    256
+  ],
+  "maskable_complete_art_288_pixels_equal_full_source_resized_without_crop": true,
+  "maskable_opaque_rgb": true,
+  "maskable_whole_square_within_80pct_safe_circle": true,
+  "master_original_srgb_icc_preserved": true,
+  "master_png_equals_jpeg_every_decoded_rgb_pixel": true,
+  "no_checkout_or_sites_edits": true,
+  "no_repainting_or_generation": true,
+  "source_jpeg_original_bytes_preserved": true
+}

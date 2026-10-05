@@ -32,7 +32,7 @@ export async function getTreasuryRenderer() {
           resolveDir: root, sourcefile: 'treasury-static-render.tsx', loader: 'tsx',
         },
         bundle: true, write: false, format: 'esm', platform: 'node', jsx: 'automatic', mainFields: ['module', 'main'],
-        alias: { '@': path.join(root, 'src') }, loader: { '.css': 'empty' },
+        alias: { '@': path.join(root, 'src') }, loader: { '.css': 'empty', '.png': 'dataurl' },
         plugins: [{
           name: 'reuse-installed-react',
           setup(build) {

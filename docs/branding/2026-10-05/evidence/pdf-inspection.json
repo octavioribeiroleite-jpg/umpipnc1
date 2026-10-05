@@ -1,0 +1,109 @@
+{
+  "logo": {
+    "path": "/Users/octavioribeiroleite/.codex/worktrees/ipnc-visual-completo/Aplicativo IPNC/src/assets/logo-ipnc.png",
+    "sha256": "569a6b3d502689ef244592e2a376c77840e6692d8e54f1ff3b3dd6389d4ddd1b",
+    "width": 1280,
+    "height": 1280
+  },
+  "fixtureOnly": true,
+  "documents": [
+    {
+      "filename": "chamada-ebd-20261004.pdf",
+      "pages": 1,
+      "first_page_image_count": 1,
+      "embedded_master_size": [
+        1280,
+        1280
+      ],
+      "embedded_rgb_pixels_match": true,
+      "logo_size_mm": [
+        20,
+        20
+      ],
+      "placed_image_counts_by_page": [
+        1
+      ],
+      "page_numbers_confirmed": true,
+      "rendered_pages": [
+        "/tmp/ipnc-brand-pdf-qa/chamada-ebd-20261004-1.png"
+      ],
+      "text": "Relatório de Chamada — EBD\n04/10/2026 - dados fictícios de QA\nResponsável: Responsável Fictício de QA\nIgreja Presbiteriana de Nova Carapina\nResumo Geral\nTotal de Alunos Presentes Ausentes Frequência\n12 8 4 67%\nRANKING DE TURMAS\n# Turma Presentes Total %\nØ<ßÆ1º Adultos - turma fictícia A 4 6 67%\n2º Jovens - turma fictícia B 4 6 67%\nAdultos - turma fictícia A 4/6 presentes (67%)\nPRESENTES (4)\nAluno Fictício 1-2\nAluno Fictício 1-3\nAluno Fictício 1-5\nAluno Fictício 1-6\nAUSENTES (2)\nAluno Fictício 1-1\nAluno Fictício 1-4\nJovens - turma fictícia B 4/6 presentes (67%)\nPRESENTES (4)\nAluno Fictício 2-2\nAluno Fictício 2-3\nAluno Fictício 2-5\nAluno Fictício 2-6\nAUSENTES (2)\nAluno Fictício 2-1\nAluno Fictício 2-4\nGerado em 05/10/2026 às 17:31 Página 1 de 1"
+    },
+    {
+      "filename": "relatorio-chamadas-ebd.pdf",
+      "pages": 1,
+      "first_page_image_count": 1,
+      "embedded_master_size": [
+        1280,
+        1280
+      ],
+      "embedded_rgb_pixels_match": true,
+      "logo_size_mm": [
+        20,
+        20
+      ],
+      "placed_image_counts_by_page": [
+        1
+      ],
+      "page_numbers_confirmed": true,
+      "rendered_pages": [
+        "/tmp/ipnc-brand-pdf-qa/relatorio-chamadas-ebd-1.png"
+      ],
+      "text": "Relatório de Chamadas — EBD\n1º trimestre de 2026 - dados fictícios de QA\nIgreja Presbiteriana de Nova Carapina\nResumo do Período\nDomingos Média presentes Visitantes Frequência média\n13 9 4 74%\nFREQUÊNCIA POR DOMINGO\nData Presentes Total Visit. %\n04/01/2026 8 12 1 67%\n11/01/2026 9 12 0 75%\n18/01/2026 10 12 0 83%\n25/01/2026 8 12 0 67%\n01/02/2026 9 12 1 75%\n08/02/2026 10 12 0 83%\n15/02/2026 8 12 0 67%\n22/02/2026 9 12 0 75%\n01/03/2026 10 12 1 83%\n08/03/2026 8 12 0 67%\n15/03/2026 9 12 0 75%\n22/03/2026 10 12 0 83%\n29/03/2026 8 12 1 67%\nMÉDIA POR TURMA\nTurma Presenças (total) Freq. média\nJovens - turma fictícia B 65 84%\nAdultos - turma fictícia A 52 67%\nGerado em 05/10/2026 às 17:31 Página 1 de 1"
+    },
+    {
+      "filename": "relatorio-trimestral-ebd.pdf",
+      "pages": 3,
+      "first_page_image_count": 1,
+      "embedded_master_size": [
+        1280,
+        1280
+      ],
+      "embedded_rgb_pixels_match": true,
+      "logo_size_mm": [
+        20,
+        20
+      ],
+      "placed_image_counts_by_page": [
+        1,
+        0,
+        0
+      ],
+      "page_numbers_confirmed": true,
+      "rendered_pages": [
+        "/tmp/ipnc-brand-pdf-qa/relatorio-trimestral-ebd-1.png",
+        "/tmp/ipnc-brand-pdf-qa/relatorio-trimestral-ebd-2.png",
+        "/tmp/ipnc-brand-pdf-qa/relatorio-trimestral-ebd-3.png"
+      ],
+      "text": "Relatório Trimestral — EBD\n1º trimestre de 2026 - dados fictícios de QA\nIgreja Presbiteriana de Nova Carapina\nResumo do Período\nDomingos Média presentes Visitantes Frequência média\n13 9 4 74%\nFREQUÊNCIA POR DOMINGO (GERAL)\nData Presentes Total Visit. %\n04/01/2026 8 12 1 67%\n11/01/2026 9 12 0 75%\n18/01/2026 10 12 0 83%\n25/01/2026 8 12 0 67%\n01/02/2026 9 12 1 75%\n08/02/2026 10 12 0 83%\n15/02/2026 8 12 0 67%\n22/02/2026 9 12 0 75%\n01/03/2026 10 12 1 83%\n08/03/2026 8 12 0 67%\n15/03/2026 9 12 0 75%\n22/03/2026 10 12 0 83%\n29/03/2026 8 12 1 67%\nJovens - turma fictícia B Média 84%  ·  65 presenças  ·  4 visit.\nFrequência domingo a domingo\nData Pres./Total Visit. %\n04/01/2026 4/6 1 67%\n11/01/2026 5/6 0 83%\n18/01/2026 4/6 0 67%\n25/01/2026 5/6 0 83%\n01/02/2026 4/6 1 67%\nGerado em 05/10/2026 às 17:31 Página 1 de 3\n08/02/2026 5/6 0 83%\n15/02/2026 4/6 0 67%\n22/02/2026 5/6 0 83%\n01/03/2026 4/6 1 67%\n08/03/2026 5/6 0 83%\n15/03/2026 4/6 0 67%\n22/03/2026 5/6 0 83%\n29/03/2026 4/6 1 67%\nALUNOS (6)\nAluno Presenças %\nAluno Fictício 2-1 8/13 62%\nAluno Fictício 2-4 8/13 62%\nAluno Fictício 2-2 9/13 69%\nAluno Fictício 2-5 9/13 69%\nAluno Fictício 2-3 10/13 77%\nAluno Fictício 2-6 10/13 77%\nVISITANTES (4)\n04/01/2026 (1): Visitante Fictício 2-1\n01/02/2026 (1): Visitante Fictício 2-5\n01/03/2026 (1): Visitante Fictício 2-9\n29/03/2026 (1): Visitante Fictício 2-13\nAdultos - turma fictícia A Média 67%  ·  52 presenças  ·  4 visit.\nFrequência domingo a domingo\nData Pres./Total Visit. %\n04/01/2026 4/6 1 67%\n11/01/2026 5/6 0 83%\n18/01/2026 4/6 0 67%\n25/01/2026 5/6 0 83%\n01/02/2026 4/6 1 67%\n08/02/2026 5/6 0 83%\n15/02/2026 4/6 0 67%\n22/02/2026 5/6 0 83%\nGerado em 05/10/2026 às 17:31 Página 2 de 3\n01/03/2026 4/6 1 67%\n08/03/2026 5/6 0 83%\n15/03/2026 4/6 0 67%\n22/03/2026 5/6 0 83%\n29/03/2026 4/6 1 67%\nALUNOS (6)\nAluno Presenças %\nAluno Fictício 1-1 8/13 62%\nAluno Fictício 1-4 8/13 62%\nAluno Fictício 1-2 9/13 69%\nAluno Fictício 1-5 9/13 69%\nAluno Fictício 1-3 10/13 77%\nAluno Fictício 1-6 10/13 77%\nVISITANTES (4)\n04/01/2026 (1): Visitante Fictício 1-1\n01/02/2026 (1): Visitante Fictício 1-5\n01/03/2026 (1): Visitante Fictício 1-9\n29/03/2026 (1): Visitante Fictício 1-13\nGerado em 05/10/2026 às 17:31 Página 3 de 3"
+    },
+    {
+      "filename": "cronograma-ipnc---dados-ficticios-outubro-2026.pdf",
+      "pages": 3,
+      "first_page_image_count": 1,
+      "embedded_master_size": [
+        1280,
+        1280
+      ],
+      "embedded_rgb_pixels_match": true,
+      "logo_size_mm": [
+        22,
+        22
+      ],
+      "placed_image_counts_by_page": [
+        1,
+        0,
+        0
+      ],
+      "page_numbers_confirmed": true,
+      "rendered_pages": [
+        "/tmp/ipnc-brand-pdf-qa/cronograma-ipnc---dados-ficticios-outubro-2026-1.png",
+        "/tmp/ipnc-brand-pdf-qa/cronograma-ipnc---dados-ficticios-outubro-2026-2.png",
+        "/tmp/ipnc-brand-pdf-qa/cronograma-ipnc---dados-ficticios-outubro-2026-3.png"
+      ],
+      "text": "Cronograma IPNC - dados fictícios\nOutubro 2026\nIgreja Presbiteriana de Nova Carapina\nTema 2026: RENOVO — Isaías 40.31\n\"Os que esperam no Senhor renovam as suas forças.\"\nÊnfase: Da gratidão\nQUI  01/10\nEncontro fictício 01 Dia inteiro Turma QA\nSEX  02/10\nEncontro fictício 02 18:00 Turma QA\nSÁB  03/10\nEncontro fictício 03 18:00 Turma QA\nDOM  04/10\nEncontro fictício 04 18:00 Turma QA\nSEG  05/10\nEncontro fictício 05 18:00 Turma QA\nTER  06/10\nEncontro fictício 06 Dia inteiro Turma QA\nQUA  07/10\nEncontro fictício 07 18:00 Turma QA\nQUI  08/10\nEncontro fictício 08 18:00 Turma QA\nSEX  09/10\nEncontro fictício 09 18:00 Turma QA\nGerado em 05/10/2026 às 17:31 Página 1 de 3\nSÁB  10/10\nEncontro fictício 10 18:00 Turma QA\nDOM  11/10\nEncontro fictício 11 Dia inteiro Turma QA\nSEG  12/10\nEncontro fictício 12 18:00 Turma QA\nTER  13/10\nEncontro fictício 13 18:00 Turma QA\nQUA  14/10\nEncontro fictício 14 18:00 Turma QA\nQUI  15/10\nEncontro fictício 15 18:00 Turma QA\nSEX  16/10\nEncontro fictício 16 Dia inteiro Turma QA\nSÁB  17/10\nEncontro fictício 17 18:00 Turma QA\nDOM  18/10\nEncontro fictício 18 18:00 Turma QA\nSEG  19/10\nEncontro fictício 19 18:00 Turma QA\nTER  20/10\nEncontro fictício 20 18:00 Turma QA\nQUA  21/10\nEncontro fictício 21 Dia inteiro Turma QA\nGerado em 05/10/2026 às 17:31 Página 2 de 3\nQUI  22/10\nEncontro fictício 22 18:00 Turma QA\nSEX  23/10\nEncontro fictício 23 18:00 Turma QA\nSÁB  24/10\nEncontro fictício 24 18:00 Turma QA\nDOM  25/10\nEncontro fictício 25 18:00 Turma QA\nSEG  26/10\nEncontro fictício 26 Dia inteiro Turma QA\nTER  27/10\nEncontro fictício 27 18:00 Turma QA\nLEGENDA\nTurma QA IPNC\nGerado em 05/10/2026 às 17:31 Página 3 de 3"
+    }
+  ],
+  "automatedResult": "passed",
+  "visualInspectionRecord": "visual-inspection.json"
+}

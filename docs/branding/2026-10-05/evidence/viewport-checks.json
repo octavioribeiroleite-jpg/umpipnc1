@@ -1,0 +1,1287 @@
+[
+  {
+    "surface": "auth",
+    "width": 320,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          20,
+          24,
+          72,
+          72
+        ],
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          1280,
+          1280
+        ]
+      }
+    ],
+    "scroll": 305,
+    "viewport": 320
+  },
+  {
+    "surface": "auth",
+    "width": 390,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          20,
+          24,
+          72,
+          72
+        ],
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          1280,
+          1280
+        ]
+      }
+    ],
+    "scroll": 375,
+    "viewport": 390
+  },
+  {
+    "surface": "auth",
+    "width": 768,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          20,
+          24,
+          72,
+          72
+        ],
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          1280,
+          1280
+        ]
+      }
+    ],
+    "scroll": 753,
+    "viewport": 768
+  },
+  {
+    "surface": "auth",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          20,
+          24,
+          72,
+          72
+        ],
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          1280,
+          1280
+        ]
+      }
+    ],
+    "scroll": 1009,
+    "viewport": 1024
+  },
+  {
+    "surface": "auth",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          48,
+          48,
+          72,
+          72
+        ],
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          1280,
+          1280
+        ]
+      }
+    ],
+    "scroll": 1440,
+    "viewport": 1440
+  },
+  {
+    "surface": "diretoria",
+    "width": 320,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          20,
+          18,
+          28,
+          28
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 305,
+    "viewport": 320
+  },
+  {
+    "surface": "diretoria",
+    "width": 390,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          20,
+          18,
+          28,
+          28
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 375,
+    "viewport": 390
+  },
+  {
+    "surface": "diretoria",
+    "width": 768,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          19.5,
+          18,
+          36,
+          36
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 768,
+    "viewport": 768
+  },
+  {
+    "surface": "diretoria",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          19.5,
+          18,
+          36,
+          36
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1024,
+    "viewport": 1024
+  },
+  {
+    "surface": "diretoria",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          12,
+          14,
+          36,
+          36
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1440,
+    "viewport": 1440
+  },
+  {
+    "surface": "secretaria",
+    "width": 320,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "fill",
+        "loaded": true
+      }
+    ],
+    "scroll": 305,
+    "viewport": 320
+  },
+  {
+    "surface": "secretaria",
+    "width": 390,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "fill",
+        "loaded": true
+      }
+    ],
+    "scroll": 375,
+    "viewport": 390
+  },
+  {
+    "surface": "secretaria",
+    "width": 768,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          16,
+          18,
+          44,
+          44
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 753,
+    "viewport": 768
+  },
+  {
+    "surface": "secretaria",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          16,
+          18,
+          44,
+          44
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1009,
+    "viewport": 1024
+  },
+  {
+    "surface": "secretaria",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          16,
+          29.75,
+          44,
+          44
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1425,
+    "viewport": 1440
+  },
+  {
+    "surface": "tesouraria",
+    "width": 320,
+    "images": [
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          16,
+          225,
+          32,
+          32
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 305,
+    "viewport": 320
+  },
+  {
+    "surface": "tesouraria",
+    "width": 390,
+    "images": [
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          16,
+          225,
+          32,
+          32
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 375,
+    "viewport": 390
+  },
+  {
+    "surface": "tesouraria",
+    "width": 768,
+    "images": [
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          18,
+          115,
+          40,
+          40
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 753,
+    "viewport": 768
+  },
+  {
+    "surface": "tesouraria",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          18,
+          115,
+          40,
+          40
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1009,
+    "viewport": 1024
+  },
+  {
+    "surface": "tesouraria",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          30,
+          128.296875,
+          40,
+          40
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "Logo IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1425,
+    "viewport": 1440
+  },
+  {
+    "surface": "portal-retorno",
+    "width": 320,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          112,
+          201.40625,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 320,
+    "viewport": 320
+  },
+  {
+    "surface": "portal-retorno",
+    "width": 390,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          147,
+          215.40625,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 390,
+    "viewport": 390
+  },
+  {
+    "surface": "portal-retorno",
+    "width": 768,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          336,
+          215.40625,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 768,
+    "viewport": 768
+  },
+  {
+    "surface": "portal-retorno",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          464,
+          215.40625,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1024,
+    "viewport": 1024
+  },
+  {
+    "surface": "portal-retorno",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          672,
+          215.40625,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1440,
+    "viewport": 1440
+  },
+  {
+    "surface": "portal",
+    "width": 320,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 305,
+    "viewport": 320
+  },
+  {
+    "surface": "portal",
+    "width": 390,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 375,
+    "viewport": 390
+  },
+  {
+    "surface": "portal",
+    "width": 768,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          8,
+          18,
+          44,
+          44
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 768,
+    "viewport": 768
+  },
+  {
+    "surface": "portal",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          8,
+          18,
+          44,
+          44
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1024,
+    "viewport": 1024
+  },
+  {
+    "surface": "portal",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          24,
+          26,
+          44,
+          44
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1440,
+    "viewport": 1440
+  },
+  {
+    "surface": "pastor-loading",
+    "width": 320,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          94.14839935302734,
+          150.06246948242188,
+          131.70318603515625,
+          131.70318603515625
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 320,
+    "viewport": 320
+  },
+  {
+    "surface": "pastor-loading",
+    "width": 390,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          129.14840698242188,
+          150.06246948242188,
+          131.70318603515625,
+          131.70318603515625
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 390,
+    "viewport": 390
+  },
+  {
+    "surface": "pastor-loading",
+    "width": 768,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          269.7196044921875,
+          149.6336669921875,
+          228.560791015625,
+          228.560791015625
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 768,
+    "viewport": 768
+  },
+  {
+    "surface": "pastor-loading",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          397.823974609375,
+          149.738037109375,
+          228.35205078125,
+          228.35205078125
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1024,
+    "viewport": 1024
+  },
+  {
+    "surface": "pastor-loading",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          605.8347778320312,
+          149.74884033203125,
+          228.3304443359375,
+          228.3304443359375
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1440,
+    "viewport": 1440
+  },
+  {
+    "surface": "eleicao-apresentar",
+    "width": 320,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          16,
+          93,
+          40,
+          40
+        ],
+        "fit": "fill",
+        "loaded": true
+      }
+    ],
+    "scroll": 320,
+    "viewport": 320
+  },
+  {
+    "surface": "eleicao-apresentar",
+    "width": 390,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          16,
+          93,
+          40,
+          40
+        ],
+        "fit": "fill",
+        "loaded": true
+      }
+    ],
+    "scroll": 390,
+    "viewport": 390
+  },
+  {
+    "surface": "eleicao-apresentar",
+    "width": 768,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          32,
+          43,
+          40,
+          40
+        ],
+        "fit": "fill",
+        "loaded": true
+      }
+    ],
+    "scroll": 768,
+    "viewport": 768
+  },
+  {
+    "surface": "eleicao-apresentar",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          32,
+          35.59375,
+          56,
+          56
+        ],
+        "fit": "fill",
+        "loaded": true
+      }
+    ],
+    "scroll": 1024,
+    "viewport": 1024
+  },
+  {
+    "surface": "eleicao-apresentar",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          32,
+          45,
+          56,
+          56
+        ],
+        "fit": "fill",
+        "loaded": true
+      }
+    ],
+    "scroll": 1440,
+    "viewport": 1440
+  },
+  {
+    "surface": "reset-password",
+    "width": 320,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          112,
+          248,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 320,
+    "viewport": 320
+  },
+  {
+    "surface": "reset-password",
+    "width": 390,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          147,
+          258,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 390,
+    "viewport": 390
+  },
+  {
+    "surface": "reset-password",
+    "width": 768,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          336,
+          247,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 768,
+    "viewport": 768
+  },
+  {
+    "surface": "reset-password",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          464,
+          247,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1024,
+    "viewport": 1024
+  },
+  {
+    "surface": "reset-password",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          672,
+          247,
+          96,
+          96
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1440,
+    "viewport": 1440
+  },
+  {
+    "surface": "pastor",
+    "width": 320,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "IPNC",
+        "box": [
+          12,
+          14,
+          36,
+          36
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 305,
+    "viewport": 320
+  },
+  {
+    "surface": "pastor",
+    "width": 390,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "IPNC",
+        "box": [
+          12,
+          14,
+          36,
+          36
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 375,
+    "viewport": 390
+  },
+  {
+    "surface": "pastor",
+    "width": 768,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          12,
+          20,
+          36,
+          36
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 753,
+    "viewport": 768
+  },
+  {
+    "surface": "pastor",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          12,
+          20,
+          36,
+          36
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1009,
+    "viewport": 1024
+  },
+  {
+    "surface": "pastor",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "IPNC",
+        "box": [
+          20,
+          24,
+          36,
+          36
+        ],
+        "fit": "contain",
+        "loaded": true
+      },
+      {
+        "alt": "IPNC",
+        "box": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1425,
+    "viewport": 1440
+  },
+  {
+    "surface": "instalacao",
+    "width": 320,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          -31,
+          134.40625,
+          64,
+          64
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 320,
+    "viewport": 320
+  },
+  {
+    "surface": "instalacao",
+    "width": 390,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          9.40234375,
+          133.984375,
+          64,
+          64
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 390,
+    "viewport": 390
+  },
+  {
+    "surface": "instalacao",
+    "width": 768,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          238,
+          79.40625,
+          64,
+          64
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 768,
+    "viewport": 768
+  },
+  {
+    "surface": "instalacao",
+    "width": 1024,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          366,
+          79.40625,
+          64,
+          64
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1024,
+    "viewport": 1024
+  },
+  {
+    "surface": "instalacao",
+    "width": 1440,
+    "images": [
+      {
+        "alt": "Renovo IPNC",
+        "box": [
+          574,
+          79.83984375,
+          64,
+          64
+        ],
+        "fit": "contain",
+        "loaded": true
+      }
+    ],
+    "scroll": 1440,
+    "viewport": 1440
+  }
+]

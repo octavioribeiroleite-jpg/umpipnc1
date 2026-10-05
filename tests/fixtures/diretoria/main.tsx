@@ -11,6 +11,7 @@ import {MembroSessionProvider} from '@/contexts/MembroSessionContext';
 import {DiretoriaSessionProvider} from '@/contexts/DiretoriaSessionContext';
 import {Toaster} from '@/components/ui/sonner';
 import {Toaster as Toasts} from '@/components/ui/toaster';
+import {PWAInstallPrompt} from '@/components/PWAInstallPrompt';
 import {PageErrorBoundary} from '@/components/PageErrorBoundary';
 import '../../../src/index.css';
 import '../../../src/responsive-foundation.css';
@@ -99,4 +100,4 @@ createRoot(document.getElementById('root')!).render(<PageErrorBoundary><QueryCli
 <Route path="/vote/:electionId" element={<VotePublic/>}/>
 <Route path="/membro" element={<MemberAccessUnavailable/>}/>
 <Route path="/secretaria" element={unavailable}/><Route path="/tesouraria" element={unavailable}/>
-<Route path="*" element={<NotFound/>}/></Routes><Toaster/><Toasts/><FixtureControls/><SocietyScreenEnhancer/><IdentityConfirmationEnhancer/></MembroSessionProvider></DiretoriaSessionProvider></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></PageErrorBoundary>);
+<Route path="*" element={<NotFound/>}/></Routes><Toaster/><Toasts/><PWAInstallPrompt/><FixtureControls/><SocietyScreenEnhancer/><IdentityConfirmationEnhancer/></MembroSessionProvider></DiretoriaSessionProvider></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></PageErrorBoundary>);
