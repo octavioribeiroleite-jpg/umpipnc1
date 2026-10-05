@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
+import { createSocietyReceipt } from '../src/lib/treasury-receipt.ts';
 
 const db = new PGlite();
 await db.exec(`
@@ -185,7 +186,13 @@ test('society PIN login is narrow, rotated/revoked server-side, and cannot reach
  const dashboard=(await pinAs(()=>db.query('select treasury_dashboard() data'))).rows[0].data;
  assert.deepEqual(dashboard.funds.map(f=>f.id),[ids.fund]);
  assert.equal((await pinAs(()=>db.query('select treasury_statement($1) data',[ids.other]))).rows[0].data.total_count,0);
- await pinAs(()=>insert(crypto.randomUUID(),ids.fund,50));
+ for (const payment_method of ['pix', 'cash']) {
+  const payload=createSocietyReceipt({fund_id:ids.fund,amount:'0,50',occurred_on:'2025-02-10',person_name:'Fixture only',description:'Simple receipt fixture',payment_method},access.fund_ids);
+  const result=await pinAs(()=>db.query(`insert into treasury_entries(fund_id,kind,amount_cents,occurred_on,person_name,description,status,payment_method,shirt_cents,monthly_fee_cents,per_capita_cents,bank_transaction_id,review_note) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning *`,[payload.fund_id,payload.kind,payload.amount_cents,payload.occurred_on,payload.person_name,payload.description,payload.status,payload.payment_method,payload.shirt_cents,payload.monthly_fee_cents,payload.per_capita_cents,payload.bank_transaction_id,payload.review_note]));
+  assert.equal(result.rows[0].status,'pending');assert.equal(result.rows[0].payment_method,payment_method);assert.equal(result.rows[0].bank_transaction_id,null);assert.equal(result.rows[0].review_note,'');
+ }
+ const afterReceipts=(await pinAs(()=>db.query('select treasury_dashboard() data'))).rows[0].data;
+ assert.deepEqual(afterReceipts.totals,dashboard.totals);
  await denied(()=>pinAs(()=>insert(crypto.randomUUID(),ids.other,50)));
  await denied(()=>pinAs(()=>insert(crypto.randomUUID(),ids.fund,50,{status:'confirmed'})));
  await denied(()=>pinAs(()=>insert(crypto.randomUUID(),ids.fund,50,{kind:'expense'})));
