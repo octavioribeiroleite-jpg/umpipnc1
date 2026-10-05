@@ -125,7 +125,7 @@ export default function Arquivos() {
 
       {/* FAB for mobile */}
       {isManagement && isMobile && (
-        <FAB onClick={() => setUploadOpen(true)} icon={<Upload className="h-5 w-5" />} />
+        <FAB aria-label="Enviar arquivo" onClick={() => setUploadOpen(true)} icon={<Upload className="h-5 w-5" />} />
       )}
 
       {/* Upload Dialog */}

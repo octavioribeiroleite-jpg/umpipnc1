@@ -158,7 +158,7 @@ export default function Eleicoes() {
     <AppLayout>
       <PageHeader
         title="Eleições"
-        description="Votações digitais — modelo papel digital"
+        description="Organize eleições e acompanhe cada etapa da votação"
         action={
           <Button onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
             <Plus className="h-4 w-4 mr-2" /> Nova Eleição
@@ -187,7 +187,7 @@ export default function Eleicoes() {
           description={activeTab === 'camisa' ? 'Crie uma votação para escolher o modelo da camisa.' : 'Crie uma nova eleição para começar.'}
         />
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-4 lg:grid-cols-2">
           {filtered.map((e) => (
             <ElectionCard key={e.id} election={e} onClick={() => navigate(`/eleicoes/${e.id}`)} onDelete={(id) => setDeleteId(id)} />
           ))}
@@ -219,7 +219,7 @@ export default function Eleicoes() {
               <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
             </div>
             {electionType === 'cargo' && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Quantidade de vagas</Label>
                   <Input

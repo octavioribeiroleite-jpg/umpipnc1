@@ -32,7 +32,7 @@ export function DayDetailDrawer({ date, events, open, onOpenChange, onEventClick
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent>
+      <ResponsiveDialogContent className="max-h-[90dvh] overflow-y-auto">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>{title}</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>

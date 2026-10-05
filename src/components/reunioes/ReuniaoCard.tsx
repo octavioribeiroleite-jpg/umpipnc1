@@ -121,12 +121,12 @@ export function ReuniaoCard({
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-3 md:p-4">
+      <CardContent className="p-4">
         <div className="flex flex-col gap-3 md:gap-4">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 md:gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-semibold">{title}</h3>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <h3 className="break-words text-base font-semibold">{title}</h3>
                 <Badge
                   variant={status === 'aberta' ? 'default' : 'secondary'}
                   className={status === 'aberta' ? 'bg-success hover:bg-success/90' : ''}
@@ -152,7 +152,7 @@ export function ReuniaoCard({
                 <span>Moderador: {moderatorName}</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -188,7 +188,7 @@ export function ReuniaoCard({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label={`Excluir reunião ${title}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

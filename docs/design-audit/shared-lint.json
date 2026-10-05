@@ -1,0 +1,218 @@
+[
+  {
+    "file": "src/components/ui/summary-card.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/button.tsx",
+    "baseline": 1,
+    "current": 1,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/card.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/app-card.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/dialog.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/alert-dialog.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/sheet.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/drawer.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/input.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/select.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/tabs.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/textarea.tsx",
+    "baseline": 1,
+    "current": 1,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/table.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/fab.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/app-button.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/layout/PageHeader.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/layout/AppLayout.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/layout/AppSidebar.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/layout/MobileHeader.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/layout/BottomNav.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/layout/SectionHeader.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/arquivos/FileCard.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/arquivos/FileFilters.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/arquivos/UploadDialog.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/UpdateAvailableBanner.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/PWAInstallPrompt.tsx",
+    "baseline": 1,
+    "current": 1,
+    "newIssues": []
+  },
+  {
+    "file": "src/pages/Auth.tsx",
+    "baseline": 1,
+    "current": 1,
+    "newIssues": []
+  },
+  {
+    "file": "src/pages/Index.tsx",
+    "baseline": 1,
+    "current": 1,
+    "newIssues": []
+  },
+  {
+    "file": "src/pages/Estudos.tsx",
+    "baseline": 3,
+    "current": 3,
+    "newIssues": []
+  },
+  {
+    "file": "src/pages/DiretoriaComunicados.tsx",
+    "baseline": 2,
+    "current": 2,
+    "newIssues": []
+  },
+  {
+    "file": "src/pages/Arquivos.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/pages/NotFound.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/pages/ResetPassword.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/calendar.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/popover.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  },
+  {
+    "file": "src/components/ui/dropdown-menu.tsx",
+    "baseline": 0,
+    "current": 0,
+    "newIssues": []
+  }
+]

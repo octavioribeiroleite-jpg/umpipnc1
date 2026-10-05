@@ -194,7 +194,7 @@ export function RegistroReuniaoEditor({
           </div>
         ) : (
           <>
-            <Textarea
+            <Textarea aria-label="Registro da reunião"
               placeholder="Escreva aqui tudo o que foi discutido na reunião...
 
 Exemplo:
@@ -210,7 +210,7 @@ OBSERVAÇÕES
 - Próxima reunião será dia 20/01 às 19h"
               value={notes}
               onChange={(e) => handleChange(e.target.value)}
-              className="min-h-[250px] font-mono text-sm leading-relaxed resize-y w-full"
+              className="min-h-[250px] text-sm leading-relaxed resize-y w-full"
             />
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2">

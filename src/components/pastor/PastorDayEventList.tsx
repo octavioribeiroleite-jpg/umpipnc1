@@ -73,9 +73,10 @@ export function PastorDayEventList({ selectedDate, events, onUpdateStatus, isUpd
             <button
               key={f.key}
               type="button"
+              aria-pressed={active}
               onClick={() => setFilter(f.key)}
               className={[
-                'px-2.5 py-1 rounded-full text-xs font-medium transition-all border',
+                'min-h-11 px-3 py-2 rounded-xl text-xs font-medium transition-all border',
                 active
                   ? 'bg-foreground text-background border-foreground'
                   : 'bg-card text-muted-foreground border-border/60 hover:bg-muted',

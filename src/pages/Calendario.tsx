@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppCard } from '@/components/ui/app-card';
-import { Plus, ChevronLeft, ChevronRight, Loader2, MapPin, Clock } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Loader2, MapPin, Clock, CalendarDays } from 'lucide-react';
 import { useEvents, CalendarEvent, CreateEventInput, UpdateEventInput } from '@/hooks/useEvents';
 import { EventDialog } from '@/components/calendario/EventDialog';
 import { EventCard } from '@/components/calendario/EventCard';
@@ -216,13 +216,19 @@ export default function Calendario() {
       days.push(
         <div
           key={day}
-          onClick={() => handleDayClick(day)}
-          className={`p-1 md:p-2 min-h-[48px] md:min-h-[80px] border border-border/50 rounded-lg cursor-pointer ${
+          className={`relative min-w-0 p-1 xl:p-2 min-h-[56px] xl:min-h-[100px] border border-border/50 rounded-lg ${
             isToday ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/50'
           } transition-colors`}
         >
+          <button
+            type="button"
+            onClick={() => handleDayClick(day)}
+            className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={`${day} de ${months[month]} de ${year}, ${dayEvents.length} evento${dayEvents.length === 1 ? '' : 's'}`}
+            aria-current={isToday ? 'date' : undefined}
+          />
           <span
-            className={`text-sm font-semibold ${
+            className={`relative pointer-events-none text-sm font-semibold ${
               isToday ? 'bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs' : ''
             }`}
           >
@@ -230,17 +236,17 @@ export default function Calendario() {
           </span>
 
           {/* Mobile: colored dots */}
-          <div className="flex gap-0.5 mt-1 flex-wrap md:hidden">
+          <div className="relative pointer-events-none flex gap-0.5 mt-1 flex-wrap xl:hidden">
             {dayEvents.slice(0, 3).map((event) => (
               <div key={event.id} className={`w-2 h-2 rounded-full ${getEventDotClass(event.color)}`} />
             ))}
             {dayEvents.length > 3 && (
-              <span className="text-[10px] text-muted-foreground leading-none">+{dayEvents.length - 3}</span>
+              <span className="text-xs text-muted-foreground leading-none">+{dayEvents.length - 3}</span>
             )}
           </div>
 
           {/* Desktop: compact event cards */}
-          <div className="hidden md:block mt-1 space-y-1">
+          <div className="relative hidden xl:block mt-1 space-y-1">
             {dayEvents.slice(0, 2).map((event) => (
               <EventCard key={event.id} event={event} compact onClick={() => handleEventClick(event)} />
             ))}
@@ -261,6 +267,8 @@ export default function Calendario() {
     <AppLayout>
       <PageHeader
         title="Calendário"
+        eyebrow="Agenda da igreja"
+        icon={<CalendarDays />}
         description="Visualize e gerencie os eventos"
         action={
           isManagement && (
@@ -272,18 +280,18 @@ export default function Calendario() {
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
-        <AppCard noPadding className="lg:col-span-3">
+      <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <AppCard noPadding className="min-w-0">
           <CardHeader className="pb-2 md:pb-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-lg">
                 {months[month]} {year}
               </CardTitle>
               <div className="flex gap-1">
-                <Button variant="outline" size="icon" onClick={prevMonth}>
+                <Button variant="outline" size="icon" aria-label="Mês anterior" onClick={prevMonth}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={nextMonth}>
+                <Button variant="outline" size="icon" aria-label="Próximo mês" onClick={nextMonth}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -320,8 +328,8 @@ export default function Calendario() {
           </CardContent>
         </AppCard>
 
-        {/* Upcoming Events - hidden on mobile */}
-        <AppCard noPadding className="hidden md:block">
+        {/* Upcoming events use the same readable cards at every viewport. */}
+        <AppCard noPadding className="min-w-0">
           <CardHeader>
             <CardTitle className="text-lg">Próximos Eventos</CardTitle>
           </CardHeader>
@@ -364,10 +372,11 @@ export default function Calendario() {
                       const societyName = getSocietyNameByColor(event.color);
                       const dotClass = getEventDotClass(event.color);
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={event.id}
                           onClick={() => handleEventClick(event)}
-                          className="flex gap-3 p-2.5 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
+                          className="flex w-full gap-3 p-3 text-left rounded-xl border border-border/50 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           style={{ borderLeftWidth: '3px', borderLeftColor: event.color || '#6b7280' }}
                         >
                           <div className="flex flex-col items-center pt-0.5">
@@ -376,11 +385,11 @@ export default function Calendario() {
                           <div className="flex-1 min-w-0 space-y-0.5">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{event.title}</span>
-                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${event.color || '#6b7280'}15`, color: event.color || '#6b7280' }}>
+                              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${event.color || '#6b7280'}15`, color: event.color || '#6b7280' }}>
                                 {societyName}
                               </span>
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                               {event.all_day ? (
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
@@ -403,7 +412,7 @@ export default function Calendario() {
                               <p className="text-xs text-muted-foreground line-clamp-2 pt-0.5">{event.description}</p>
                             )}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

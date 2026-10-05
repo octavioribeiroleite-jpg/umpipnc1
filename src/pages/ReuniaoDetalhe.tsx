@@ -256,14 +256,14 @@ export default function ReuniaoDetalhe() {
       <AppLayout>
         {/* Back header */}
         <div className="flex items-center gap-2 mb-4">
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setOpenSheet(null)}>
+          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Voltar ao resumo da reunião" onClick={() => setOpenSheet(null)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-lg font-semibold min-w-0 whitespace-normal break-words">{sheetTitles[openSheet]}</h1>
+          <h1 className="text-2xl font-semibold min-w-0 whitespace-normal break-words">{sheetTitles[openSheet]}</h1>
         </div>
 
         {/* Full-width content */}
-        <div className="w-full overflow-hidden">
+        <div className="w-full min-w-0">
           {openSheet === 'registro' && (
             <RegistroReuniaoEditor
               meetingId={meeting.id}
@@ -372,15 +372,15 @@ export default function ReuniaoDetalhe() {
   return (
     <AppLayout>
       {/* Compact header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-5 rounded-2xl border border-border bg-card p-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/reunioes')}>
+            <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Voltar às reuniões" onClick={() => navigate('/reunioes')}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-lg font-semibold min-w-0 whitespace-normal break-words">{meeting.title}</h1>
+            <h1 className="text-2xl font-semibold min-w-0 whitespace-normal break-words">{meeting.title}</h1>
           </div>
-          <p className="text-sm text-muted-foreground ml-10">
+          <p className="text-sm text-muted-foreground ml-[3.25rem]">
             {new Date(meeting.date).toLocaleDateString('pt-BR', {
               weekday: 'short', day: '2-digit', month: 'short', year: 'numeric',
               hour: '2-digit', minute: '2-digit',
@@ -406,11 +406,13 @@ export default function ReuniaoDetalhe() {
       )}
 
       {/* Tool cards grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {toolCards.filter(c => !c.hidden).map((card) => (
           <Card
             key={card.key}
             className="cursor-pointer transition-all hover:shadow-md active:scale-[0.98] relative"
+            role="button" tabIndex={0} aria-label={`Abrir ${card.title}`}
+            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setOpenSheet(card.key); } }}
             onClick={() => setOpenSheet(card.key)}
           >
             <CardContent className="p-4 flex flex-col gap-2">

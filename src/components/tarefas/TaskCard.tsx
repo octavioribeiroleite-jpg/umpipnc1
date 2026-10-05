@@ -83,7 +83,7 @@ function TaskDetailPopup({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {task.title}
@@ -94,7 +94,7 @@ function TaskDetailPopup({
         <div className="space-y-4 pt-2">
           {/* Description */}
           {task.description && (
-            <p className="text-sm text-muted-foreground">{task.description}</p>
+            <p className="text-sm whitespace-pre-wrap break-words text-muted-foreground">{task.description}</p>
           )}
 
           {/* Meta info */}
@@ -217,12 +217,14 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
   if (variant === 'compact') {
     return (
       <>
-        <div
+        <button
+          type="button"
+          aria-label={`Ver detalhes da tarefa ${task.title}`}
           onClick={() => setPopupOpen(true)}
           className={cn(
-            'mb-2 rounded-lg border border-l-4 bg-card px-3 py-2 cursor-pointer transition-all hover:shadow-md',
+            'mb-3 w-full rounded-xl border border-l-4 bg-card p-4 text-left transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             priorityBorderColor[task.priority as TaskPriority],
-            isDone && 'opacity-60'
+            isDone && 'bg-muted/30'
           )}
         >
           <div className="flex items-center gap-2">
@@ -235,21 +237,21 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
             {isOverdue && <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />}
             <Eye className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0', priorityBadgeColors[task.priority as TaskPriority])}>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <Badge variant="outline" className={cn('text-xs px-1.5 py-0', priorityBadgeColors[task.priority as TaskPriority])}>
               {priorityLabels[task.priority as TaskPriority]}
             </Badge>
             {task.due_date && (() => {
               const { text, className } = smartDate(task.due_date, isDone);
-              return <span className={cn('text-[10px]', className)}>{text}</span>;
+              return <span className={cn('text-xs', className)}>{text}</span>;
             })()}
             {task.assignee && (
-              <span className="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-[9px] font-semibold">
+              <span className="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                 {initials}
               </span>
             )}
           </div>
-        </div>
+        </button>
         <TaskDetailPopup
           task={task}
           open={popupOpen}
@@ -268,7 +270,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
         'mb-3 rounded-xl border border-l-4 bg-card p-4 transition-all hover:shadow-md',
         priorityBorderColor[task.priority as TaskPriority],
         isOverdue && 'border-destructive/40',
-        isDone && 'opacity-60'
+        isDone && 'bg-muted/30'
       )}
     >
       {/* Header: checkbox + title */}
@@ -277,11 +279,12 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
           checked={isDone}
           onCheckedChange={handleToggleDone}
           disabled={updateStatus.isPending}
-          className="mt-0.5 h-5 w-5 shrink-0"
+          aria-label={`${isDone ? "Reabrir" : "Concluir"} tarefa ${task.title}`}
+          className="relative mt-2 h-5 w-5 shrink-0 after:absolute after:-inset-3"
         />
         <div className="flex-1 min-w-0">
           <h4 className={cn(
-            'font-medium text-sm leading-snug',
+            'font-medium text-sm leading-relaxed break-words',
             isDone && 'line-through text-muted-foreground'
           )}>
             {task.title}
@@ -295,7 +298,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
 
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0', priorityBadgeColors[task.priority as TaskPriority])}>
+            <Badge variant="outline" className={cn('text-xs px-1.5 py-0', priorityBadgeColors[task.priority as TaskPriority])}>
               {priorityLabels[task.priority as TaskPriority]}
             </Badge>
             {task.due_date && (() => {
@@ -309,10 +312,10 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
             })()}
             {task.assignee && (
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground ml-auto">
-                <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">
+                <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                   {initials}
                 </span>
-                <span className="hidden sm:inline">{task.assignee.full_name}</span>
+                <span className="break-words">{task.assignee.full_name}</span>
               </span>
             )}
           </div>
@@ -320,12 +323,12 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
       </div>
 
       {/* Action buttons - below content */}
-      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/50 pl-8">
+      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/50">
         {task.status !== 'done' && (
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs px-2"
+            className="min-h-11 text-sm px-3"
             onClick={() => handleStatusChange('done')}
             disabled={updateStatus.isPending}
           >
@@ -337,7 +340,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs px-2"
+            className="min-h-11 text-sm px-3"
             onClick={() => handleStatusChange('todo')}
             disabled={updateStatus.isPending}
           >
@@ -349,7 +352,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs px-2"
+            className="min-h-11 text-sm px-3"
             onClick={() => handleStatusChange('in_progress')}
             disabled={updateStatus.isPending}
           >
@@ -361,7 +364,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs px-2"
+            className="min-h-11 text-sm px-3"
             onClick={() => handleStatusChange('todo')}
             disabled={updateStatus.isPending}
           >
@@ -372,7 +375,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 text-xs px-2"
+          className="min-h-11 text-sm px-3"
           onClick={() => onEdit(task)}
         >
           <Pencil className="h-3.5 w-3.5 mr-1" />
@@ -381,7 +384,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 text-xs px-2 text-destructive hover:text-destructive"
+          className="min-h-11 text-sm px-3 text-destructive hover:text-destructive"
           onClick={() => onDelete(task)}
         >
           <Trash2 className="h-3.5 w-3.5 mr-1" />

@@ -167,7 +167,7 @@ export default function PastorSociedade() {
               {society.name.substring(0, 3)}
             </div>
             <div className="min-w-0">
-              <h1 className="min-w-0 whitespace-normal break-words text-lg font-bold sm:text-xl">{society.name}</h1>
+              <h1 className="min-w-0 whitespace-normal break-words text-2xl font-bold">{society.name}</h1>
               <p className="text-xs text-muted-foreground sm:text-sm">Dados da sociedade</p>
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function PastorSociedade() {
           </Card>
         )}
 
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <SummaryCard
             label="Saldo"
             value={formattedBalance}
@@ -231,7 +231,7 @@ export default function PastorSociedade() {
             icon={Calendar}
             tone="neutral"
             density="compact"
-            className="col-span-2 md:col-span-1"
+            className="sm:col-span-2 xl:col-span-1"
           />
         </div>
 
@@ -243,7 +243,7 @@ export default function PastorSociedade() {
             {meetings.length > 0 ? (
               <div className="space-y-2">
                 {meetings.map((meeting) => (
-                  <div key={meeting.id} className="flex items-center justify-between border-b pb-2 text-sm last:border-0">
+                  <div key={meeting.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm last:border-0">
                     <span className="font-medium">{meeting.title}</span>
                     <Badge variant="outline">
                       {format(new Date(meeting.date), 'dd/MM/yy', { locale: ptBR })}
@@ -265,7 +265,7 @@ export default function PastorSociedade() {
             {tasks.length > 0 ? (
               <div className="space-y-2">
                 {tasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between border-b pb-2 text-sm last:border-0">
+                  <div key={task.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm last:border-0">
                     <div>
                       <span className="font-medium">{task.title}</span>
                       {task.due_date && (
@@ -291,7 +291,7 @@ export default function PastorSociedade() {
             <CardTitle className="text-base">Membros Ativos ({members.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {members.map((member) => (
                 <div key={member.id} className="py-1 text-sm">
                   <p className="font-medium">{member.name}</p>

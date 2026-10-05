@@ -313,7 +313,7 @@ export default function Configuracoes() {
         {/* General Settings */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex flex-wrap items-center gap-2">
               <Settings className="h-5 w-5" />
               Geral
             </CardTitle>
@@ -336,7 +336,7 @@ export default function Configuracoes() {
         {/* Financial Settings */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex flex-wrap items-center gap-2">
               <DollarSign className="h-5 w-5" />
               Financeiro
             </CardTitle>
@@ -346,18 +346,18 @@ export default function Configuracoes() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="membership-value">Valor padrão da contribuição</Label>
-                <Input id="membership-value" type="number" defaultValue="50.00" />
+                <Input id="membership-value" type="number" inputMode="decimal" defaultValue="50.00" />
               </div>
             </div>
             <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Comprovante obrigatório para saídas</Label>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="min-w-0 flex-1 basis-52 space-y-1">
+                <Label htmlFor="require-receipt">Comprovante obrigatório para saídas</Label>
                 <p className="text-sm text-muted-foreground">
                   Exige upload de comprovante para registrar despesas
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch id="require-receipt" defaultChecked />
             </div>
           </CardContent>
         </Card>
@@ -365,15 +365,15 @@ export default function Configuracoes() {
         {/* Google Calendar Integration */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex flex-wrap items-center gap-2">
               <Calendar className="h-5 w-5" />
               Integração Google Calendar
             </CardTitle>
             <CardDescription>Sincronize eventos com seu Google Agenda</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="min-w-0 flex-1 basis-52 space-y-1">
                 <Label>Conectar Google Calendar</Label>
                 <p className="text-sm text-muted-foreground">
                   Sincronize eventos automaticamente
@@ -388,13 +388,13 @@ export default function Configuracoes() {
         {isAdmin && (
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-lg flex items-center gap-2">
+                  <CardTitle className="text-lg flex flex-wrap items-center gap-2">
                     <Shield className="h-5 w-5" />
                     Gestão de Usuários
                     {users.filter(u => u.role === null).length > 0 && (
-                      <Badge variant="destructive" className="animate-pulse ml-2">
+                      <Badge variant="destructive" className="ml-2">
                         {users.filter(u => u.role === null).length} pendente{users.filter(u => u.role === null).length > 1 ? 's' : ''}
                       </Badge>
                     )}
@@ -416,15 +416,16 @@ export default function Configuracoes() {
                 <>
                   {/* Pending Users Section */}
                   {users.filter(u => u.role === null).length > 0 ? (
-                    <div className="rounded-lg border-2 border-amber-500/50 bg-amber-500/5 p-4">
+                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4">
                       <div className="flex items-center gap-2 mb-4">
                         <AlertTriangle className="h-5 w-5 text-amber-500" />
-                        <h3 className="font-semibold text-amber-500">
+                        <h3 className="font-semibold text-amber-700 dark:text-amber-400">
                           Aguardando Aprovação ({users.filter(u => u.role === null).length})
                         </h3>
                       </div>
-                      <div className="overflow-x-auto">
-                      <Table>
+                      <p className="mb-2 text-xs text-muted-foreground">Deslize a tabela para consultar todas as colunas e ações.</p>
+                      <div role="region" aria-label="Cadastros aguardando aprovação" tabIndex={0} className="overflow-x-auto rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&>div]:overflow-visible">
+                      <Table className="min-w-[720px]">
                         <TableHeader>
                           <TableRow>
                             <TableHead>Nome</TableHead>
@@ -435,15 +436,15 @@ export default function Configuracoes() {
                         <TableBody>
                           {users.filter(u => u.role === null).map((userItem) => (
                             <TableRow key={userItem.id}>
-                              <TableCell className="font-medium">{userItem.full_name}</TableCell>
-                              <TableCell className="text-muted-foreground">{userItem.email}</TableCell>
+                              <TableCell className="min-w-[10rem] max-w-[18rem] whitespace-normal break-words font-medium">{userItem.full_name}</TableCell>
+                              <TableCell className="min-w-[12rem] max-w-[20rem] break-words text-muted-foreground">{userItem.email}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
                                   <Select 
                                     onValueChange={(value) => handleRoleChange(userItem.user_id, value)}
                                     disabled={updatingUser === userItem.user_id}
                                   >
-                                    <SelectTrigger className="w-[160px] border-green-500/50 bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                                    <SelectTrigger aria-label={`Aprovar ${userItem.full_name} com cargo`} className="min-h-11 w-[180px] border-green-500/50 bg-green-500/10 text-green-600 hover:bg-green-500/20">
                                       {updatingUser === userItem.user_id ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                       ) : (
@@ -525,8 +526,9 @@ export default function Configuracoes() {
                           Usuários Ativos ({users.filter(u => u.role !== null).length})
                         </h3>
                       </div>
-                      <div className="overflow-x-auto">
-                      <Table>
+                      <p className="mb-2 text-xs text-muted-foreground">Deslize a tabela para consultar todas as colunas e ações.</p>
+                      <div role="region" aria-label="Usuários aprovados" tabIndex={0} className="overflow-x-auto rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&>div]:overflow-visible">
+                      <Table className="min-w-[720px]">
                         <TableHeader>
                           <TableRow>
                             <TableHead>Nome</TableHead>
@@ -538,7 +540,7 @@ export default function Configuracoes() {
                         <TableBody>
                           {users.filter(u => u.role !== null).map((userItem) => (
                             <TableRow key={userItem.id}>
-                              <TableCell className="font-medium">
+                              <TableCell className="min-w-[10rem] max-w-[18rem] whitespace-normal break-words font-medium">
                                 {userItem.full_name}
                                 {userItem.user_id === user?.id && (
                                   <Badge variant="outline" className="ml-2 text-xs">
@@ -546,7 +548,7 @@ export default function Configuracoes() {
                                   </Badge>
                                 )}
                               </TableCell>
-                              <TableCell className="text-muted-foreground">{userItem.email}</TableCell>
+                              <TableCell className="min-w-[12rem] max-w-[20rem] break-words text-muted-foreground">{userItem.email}</TableCell>
                               <TableCell>
                                 <Badge className={roleColors[userItem.role || 'pending']}>
                                   {roleLabels[userItem.role || 'pending']}
@@ -559,7 +561,7 @@ export default function Configuracoes() {
                                     onValueChange={(value) => handleRoleChange(userItem.user_id, value)}
                                     disabled={updatingUser === userItem.user_id}
                                   >
-                                    <SelectTrigger className="w-[140px]">
+                                    <SelectTrigger aria-label={`Cargo de ${userItem.full_name}`} className="min-h-11 w-[180px]">
                                       {updatingUser === userItem.user_id ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                       ) : (
@@ -579,6 +581,7 @@ export default function Configuracoes() {
                                       <Button 
                                         variant="ghost" 
                                         size="icon"
+                                        aria-label={`Excluir ${userItem.full_name}`}
                                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                         disabled={userItem.user_id === user?.id || deletingUser === userItem.user_id}
                                       >
@@ -635,7 +638,7 @@ export default function Configuracoes() {
         {isAdmin && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex flex-wrap items-center gap-2">
                 <BookOpen className="h-5 w-5" />
                 Secretaria EBD
               </CardTitle>
@@ -650,7 +653,7 @@ export default function Configuracoes() {
                 <>
                   {/* Admin profile */}
                   <div className="space-y-3">
-                    <h3 className="font-medium text-sm flex items-center gap-2">
+                    <h3 className="font-medium text-sm flex flex-wrap items-center gap-2">
                       <Badge>Administrador</Badge>
                       Acesso completo
                     </h3>
@@ -666,7 +669,7 @@ export default function Configuracoes() {
                         inputMode="numeric"
                         maxLength={6}
                         placeholder="000000"
-                        className="max-w-[200px] tracking-widest text-center font-mono"
+                        className="w-full sm:max-w-[240px] tracking-widest text-center font-mono"
                       />
                     </div>
                   </div>
@@ -675,7 +678,7 @@ export default function Configuracoes() {
 
                   {/* Professor profile */}
                   <div className="space-y-3">
-                    <h3 className="font-medium text-sm flex items-center gap-2">
+                    <h3 className="font-medium text-sm flex flex-wrap items-center gap-2">
                       <Badge variant="secondary">Professor</Badge>
                       Apenas chamada e histórico
                     </h3>
@@ -691,7 +694,7 @@ export default function Configuracoes() {
                         inputMode="numeric"
                         maxLength={6}
                         placeholder="000000"
-                        className="max-w-[200px] tracking-widest text-center font-mono"
+                        className="w-full sm:max-w-[240px] tracking-widest text-center font-mono"
                       />
                     </div>
                   </div>
@@ -713,7 +716,7 @@ export default function Configuracoes() {
         {isAdmin && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex flex-wrap items-center gap-2">
                 <KeyRound className="h-5 w-5" />
                 PINs da Diretoria
               </CardTitle>
@@ -727,12 +730,13 @@ export default function Configuracoes() {
               ) : (
                 <>
                   {/* PIN Geral */}
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                  <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[40px_minmax(0,1fr)_180px]">
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold shrink-0">
                       🔑
                     </div>
-                    <span className="text-sm font-medium min-w-[60px]">PIN Geral</span>
+                    <Label htmlFor="dir-pin-geral" className="min-w-0 break-words">PIN geral</Label>
                     <Input
+                      id="dir-pin-geral"
                       value={dirPins['geral'] || ''}
                       onChange={(e) => {
                         const v = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -741,17 +745,18 @@ export default function Configuracoes() {
                       inputMode="numeric"
                       maxLength={6}
                       placeholder="000000"
-                      className="max-w-[140px] tracking-widest text-center font-mono"
+                      className="col-span-2 w-full tracking-widest text-center font-mono sm:col-span-1"
                     />
                   </div>
                   <hr className="my-2 border-border" />
                   {/* Pastor */}
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ backgroundColor: '#1e3a5f' }}>
+                  <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[40px_minmax(0,1fr)_180px]">
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ backgroundColor: '#1e3a5f' }}>
                       ⛪
                     </div>
-                    <span className="text-sm font-medium min-w-[60px]">Pastor</span>
+                    <Label htmlFor="dir-pin-pastor" className="min-w-0 break-words">Pastor</Label>
                     <Input
+                      id="dir-pin-pastor"
                       value={dirPins['pastor'] || ''}
                       onChange={(e) => {
                         const v = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -760,20 +765,21 @@ export default function Configuracoes() {
                       inputMode="numeric"
                       maxLength={6}
                       placeholder="000000"
-                      className="max-w-[140px] tracking-widest text-center font-mono"
+                      className="col-span-2 w-full tracking-widest text-center font-mono sm:col-span-1"
                     />
                   </div>
                   {/* Sociedades */}
                   {dirSocieties.map((society) => (
-                    <div key={society.slug} className="flex items-center gap-3">
+                    <div key={society.slug} className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[40px_minmax(0,1fr)_180px]">
                       <div
-                        className="h-8 w-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
+                        className="h-10 w-10 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0"
                         style={{ backgroundColor: society.color }}
                       >
                         {society.slug.toUpperCase().slice(0, 3)}
                       </div>
-                      <span className="text-sm font-medium min-w-[60px]">{society.name}</span>
+                      <Label htmlFor={`dir-pin-${society.slug}`} className="min-w-0 break-words">{society.name}</Label>
                       <Input
+                        id={`dir-pin-${society.slug}`}
                         value={dirPins[society.slug] || ''}
                         onChange={(e) => {
                           const v = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -782,7 +788,7 @@ export default function Configuracoes() {
                         inputMode="numeric"
                         maxLength={6}
                         placeholder="000000"
-                        className="max-w-[140px] tracking-widest text-center font-mono"
+                        className="col-span-2 w-full tracking-widest text-center font-mono sm:col-span-1"
                       />
                     </div>
                   ))}

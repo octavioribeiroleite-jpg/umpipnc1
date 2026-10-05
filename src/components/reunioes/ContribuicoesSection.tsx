@@ -216,7 +216,7 @@ export function ContribuicoesSection({
         <CardContent className="space-y-4">
           {/* My contribution */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm font-medium">Minha contribuição</span>
               {myContrib && (
                 <Badge variant={isFinalized ? 'secondary' : 'outline'}>
@@ -231,7 +231,7 @@ export function ContribuicoesSection({
                 </Badge>
               )}
             </div>
-            <Textarea
+            <Textarea aria-label={`Minha contribuição em ${title}`}
               value={drafts[key] || ''}
               onChange={(e) => setDrafts({ ...drafts, [key]: e.target.value })}
               placeholder="Escreva sua contribuição aqui..."
@@ -239,7 +239,7 @@ export function ContribuicoesSection({
               rows={3}
             />
             {!isFinalized && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -269,7 +269,7 @@ export function ContribuicoesSection({
               <span className="text-sm font-medium">Outras contribuições</span>
               {otherContribs.map((contrib) => (
                 <div key={contrib.id} className="p-3 bg-muted rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <span className="text-sm font-medium">{contrib.userName}</span>
                     <Badge variant="outline" className="text-xs">
                       {contrib.status === 'revealed' ? 'Revelada' : 
@@ -277,7 +277,7 @@ export function ContribuicoesSection({
                     </Badge>
                   </div>
                   {contributionsRevealed || contrib.status === 'revealed' ? (
-                    <p className="text-sm">{contrib.content}</p>
+                    <p className="break-words whitespace-pre-wrap text-sm leading-relaxed">{contrib.content}</p>
                   ) : (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <EyeOff className="h-4 w-4" />
@@ -309,11 +309,11 @@ export function ContribuicoesSection({
       {isModerator && !contributionsRevealed && (
         <Alert>
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>
               {totalFinal} contribuição(ões) finalizada(s) de {totalContributions} total.
             </span>
-            <Button size="sm" onClick={onReveal} className="ml-4" disabled={isProcessing}>
+            <Button size="sm" onClick={onReveal} className="w-full sm:ml-4 sm:w-auto" disabled={isProcessing}>
               {isProcessing ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (

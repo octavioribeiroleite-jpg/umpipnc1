@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -308,7 +309,7 @@ export default function PastorCalendario() {
           <span
             className={cn(
               'text-xs md:text-sm font-medium',
-              isToday && 'bg-primary text-primary-foreground rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-[10px] md:text-sm'
+              isToday && 'bg-primary text-primary-foreground rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-xs md:text-sm'
             )}
           >
             {day}
@@ -320,7 +321,7 @@ export default function PastorCalendario() {
               <div key={event.id} className={`w-2 h-2 rounded-full`} style={{ backgroundColor: getEventColor(event) }} />
             ))}
             {dayEvents.length > 3 && (
-              <span className="text-[10px] text-muted-foreground leading-none">+{dayEvents.length - 3}</span>
+              <span className="text-xs text-muted-foreground leading-none">+{dayEvents.length - 3}</span>
             )}
           </div>
 
@@ -356,13 +357,11 @@ export default function PastorCalendario() {
   return (
     <PastorLayout>
       <div className="space-y-4 md:space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg md:text-xl font-bold">Calendário Unificado</h1>
-          <Button onClick={() => handleNewEvent()} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Evento
+        <PageHeader title="Calendário unificado" description="Programações da igreja e das sociedades" action={
+          <Button onClick={() => handleNewEvent()}>
+            <Plus className="h-4 w-4 mr-2" />Novo evento
           </Button>
-        </div>
+        } />
 
         {/* Theme & Guidelines Card - collapsed by default */}
         <Collapsible defaultOpen={false}>
@@ -431,19 +430,19 @@ export default function PastorCalendario() {
             <CardHeader className="pb-3 md:pb-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={prevMonth}>
+                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" aria-label="Mês anterior" onClick={prevMonth}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <CardTitle className="text-base md:text-lg min-w-[160px] text-center">
+                  <CardTitle className="min-w-0 flex-1 text-base md:text-lg text-center">
                     {months[month]} {year}
                   </CardTitle>
-                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={nextMonth}>
+                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" aria-label="Próximo mês" onClick={nextMonth}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
                 <div className="flex items-center gap-2">
                   <Select value={societyFilter} onValueChange={setSocietyFilter}>
-                    <SelectTrigger className="w-full sm:w-[180px] h-8 text-xs md:text-sm">
+                    <SelectTrigger className="w-full sm:w-[180px] h-11 text-sm">
                       <SelectValue placeholder="Todas as Sociedades" />
                     </SelectTrigger>
                     <SelectContent>
@@ -458,7 +457,7 @@ export default function PastorCalendario() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleDownloadPDF} title="Gerar PDF">
+                  <Button variant="outline" size="icon" className="h-11 w-11 flex-shrink-0" onClick={handleDownloadPDF} aria-label="Gerar PDF do calendário">
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
@@ -488,7 +487,7 @@ export default function PastorCalendario() {
                 <>
                   <div className="grid grid-cols-7 gap-0.5 md:gap-1 mb-1 md:mb-2">
                     {daysOfWeek.map(day => (
-                      <div key={day} className="text-center text-[10px] md:text-sm font-medium text-muted-foreground p-1 md:p-2">
+                      <div key={day} className="text-center text-xs md:text-sm font-medium text-muted-foreground p-1 md:p-2">
                         {isMobile ? day.charAt(0) : day}
                       </div>
                     ))}
@@ -542,7 +541,7 @@ export default function PastorCalendario() {
                             )}
                           </div>
                           {society && (
-                            <span className="text-[10px] font-medium" style={{ color: society.color }}>
+                            <span className="text-xs font-medium" style={{ color: society.color }}>
                               {society.name}
                             </span>
                           )}
@@ -602,12 +601,12 @@ export default function PastorCalendario() {
                                   {event.title}
                                 </span>
                                 {society && (
-                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${color}15`, color }}>
+                                  <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${color}15`, color }}>
                                     {society.name}
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                 {event.all_day ? (
                                   <span className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" />

@@ -62,12 +62,12 @@ export default function AcessosEbdTab({ classes, date, formattedDate }: AcessosE
       {classes.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">Nenhuma turma cadastrada.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 lg:grid-cols-2">
           {classes.map(c => {
             const entries = logins.filter(l => l.class_id === c.id);
             return (
-              <Card key={c.id}>
-                <CardContent className="pt-4 pb-4 space-y-2">
+              <Card data-ebd-card key={c.id}>
+                <CardContent data-ebd-content className="pt-4 pb-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <DoorOpen className="h-4 w-4 text-primary" />
                     <p className="font-medium text-sm">{c.name}</p>
@@ -77,8 +77,8 @@ export default function AcessosEbdTab({ classes, date, formattedDate }: AcessosE
                   ) : (
                     <div className="space-y-1.5 pl-6">
                       {entries.map(e => (
-                        <div key={e.id} className="flex items-center justify-between gap-2">
-                          <span className="flex items-center gap-1.5 text-sm">
+                        <div key={e.id} className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="flex min-w-0 items-center gap-1.5 break-words text-sm">
                             <UserCheck className="h-3.5 w-3.5 text-emerald-500" />
                             {e.teacher_name}
                           </span>

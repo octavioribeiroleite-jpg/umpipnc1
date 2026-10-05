@@ -8,7 +8,7 @@ interface ProfileSelectProps {
 
 export default function ProfileSelect({ onSelect, onBack }: ProfileSelectProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-6 safe-top safe-bottom">
       <div className="w-full max-w-[440px] space-y-6">
         {onBack && (
           <Button variant="ghost" size="sm" onClick={onBack} className="gap-1 -ml-2 rounded-xl">
@@ -17,12 +17,12 @@ export default function ProfileSelect({ onSelect, onBack }: ProfileSelectProps) 
         )}
 
         <div className="text-center space-y-3">
-          <div className="mx-auto h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center ring-1 ring-emerald-100">
+          <div className="mx-auto h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/10">
             <Lock className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-primary">Acesso restrito</p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">Secretaria EBD</h1>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Acesso restrito</p>
+            <h1 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Secretaria EBD</h1>
             <p className="mt-2 text-sm font-medium text-muted-foreground">
               Escolha seu perfil para continuar com segurança.
             </p>
@@ -31,15 +31,16 @@ export default function ProfileSelect({ onSelect, onBack }: ProfileSelectProps) 
 
         <div className="space-y-3">
           <button
-            className="group w-full rounded-[24px] border border-border bg-card p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg active:scale-[0.98]"
+            type="button"
+            className="group w-full rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={() => onSelect('admin')}
           >
             <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0 ring-1 ring-emerald-100">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/10">
                 <Shield className="h-6 w-6 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-lg font-bold text-foreground">Administrador</h3>
+                <h3 className="text-base font-semibold text-foreground">Administrador</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Acesso completo à chamada, histórico, turmas e configurações.
                 </p>
@@ -49,15 +50,16 @@ export default function ProfileSelect({ onSelect, onBack }: ProfileSelectProps) 
           </button>
 
           <button
-            className="group w-full rounded-[24px] border border-border bg-card p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg active:scale-[0.98]"
+            type="button"
+            className="group w-full rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={() => onSelect('professor')}
           >
             <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0 ring-1 ring-blue-100">
-                <GraduationCap className="h-6 w-6 text-blue-600" />
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/10">
+                <GraduationCap className="h-6 w-6 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-lg font-bold text-foreground">Professor</h3>
+                <h3 className="text-base font-semibold text-foreground">Professor</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Acesso rápido para registrar chamada e acompanhar sua turma.
                 </p>

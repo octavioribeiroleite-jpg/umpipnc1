@@ -15,13 +15,13 @@ const variantClasses = {
 
 const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(
   ({ className, variant = 'default', noPadding, colorStripe, children, ...props }, ref) => {
-    const padding = noPadding ? '' : variant === 'stat' ? 'p-2.5 sm:p-3' : 'p-3 sm:p-4';
+    const padding = noPadding ? '' : variant === 'stat' ? 'p-4' : 'p-4 md:p-5';
 
     return (
       <div
         ref={ref}
         className={cn(
-          'rounded-xl sm:rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm overflow-hidden',
+          'min-w-0 rounded-2xl border border-border bg-card text-card-foreground shadow-sm',
           variantClasses[variant],
           !noPadding && !colorStripe && padding,
           className,

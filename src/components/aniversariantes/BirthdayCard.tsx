@@ -23,7 +23,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
   };
 
   return (
-    <div className={`flex flex-wrap items-center gap-3 p-3 rounded-xl border transition-colors ${
+    <div data-ebd-birthday className={`flex flex-wrap items-center gap-3 p-4 rounded-2xl border transition-colors ${
       highlight === 'today' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' :
       highlight === 'week' ? 'bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-800' :
       'bg-card border-border'
@@ -44,13 +44,13 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{birthday.nome}</span>
           {birthday.pendente_revisao && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
+            <Badge variant="outline" className="text-xs px-1.5 py-0 border-amber-300 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
               <AlertTriangle className="h-3 w-3 mr-0.5" />
               Revisar
             </Badge>
           )}
           {!birthday.ativo && (
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Inativo</Badge>
+            <Badge variant="secondary" className="text-xs px-1.5 py-0">Inativo</Badge>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
@@ -61,21 +61,21 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
         </div>
       </div>
 
-      <div className="ml-auto flex items-center gap-1 shrink-0">
+      <div className="ebd-row-actions ml-auto flex flex-wrap items-center gap-1">
         {highlight === 'today' && (
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopy} title="Copiar mensagem">
+          <Button variant="ghost" size="icon" className="h-11 w-11" onClick={handleCopy} title="Copiar mensagem" aria-label={`Copiar mensagem para ${birthday.nome}`}>
             <Copy className="h-4 w-4" />
           </Button>
         )}
         {showActions && (
           <>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit?.(birthday)}>
+            <Button variant="ghost" size="icon" className="h-11 w-11" aria-label={`Editar ${birthday.nome}`} onClick={() => onEdit?.(birthday)}>
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onToggleActive?.(birthday)}>
+            <Button variant="ghost" size="icon" className="h-11 w-11" aria-label={`${birthday.ativo ? "Inativar" : "Ativar"} ${birthday.nome}`} onClick={() => onToggleActive?.(birthday)}>
               {birthday.ativo ? <ToggleRight className="h-4 w-4 text-emerald-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete?.(birthday)}>
+            <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive" aria-label={`Excluir ${birthday.nome}`} onClick={() => onDelete?.(birthday)}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </>

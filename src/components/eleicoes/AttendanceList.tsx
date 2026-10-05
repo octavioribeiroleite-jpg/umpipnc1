@@ -133,36 +133,37 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
     <div className="space-y-3">
       <div className="flex gap-2">
         <Input
-          placeholder="Nome do membro"
+          aria-label="Nome do membro" placeholder="Nome do membro"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           disabled={disabled}
-          className="h-9"
+          className="h-11 min-w-0"
         />
-        <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleAdd} disabled={disabled}>
+        <Button size="icon" className="h-11 w-11 shrink-0" aria-label="Adicionar membro à presença" onClick={handleAdd} disabled={disabled}>
           <Plus className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" className="h-9 shrink-0" onClick={handleImportMembers} disabled={importing || disabled}>
+        <Button variant="outline" size="sm" className="h-11 shrink-0" aria-label="Importar membros" onClick={handleImportMembers} disabled={importing || disabled}>
           {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
         </Button>
       </div>
 
-      <div className="space-y-0.5 max-h-60 overflow-y-auto">
+      <div className="space-y-1 max-h-[50dvh] overflow-y-auto rounded-xl border border-border p-2">
         {attendance.map((item) => {
           const isPresent = optimisticOverrides[item.id] !== undefined
             ? optimisticOverrides[item.id]
             : item.present;
           return (
-            <div key={item.id} className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-muted/50">
+            <div key={item.id} className="flex min-h-11 items-center gap-3 py-1 px-1.5 rounded hover:bg-muted/50">
               <Checkbox
+                id={`attendance-${item.id}`}
                 checked={isPresent}
                 onCheckedChange={(checked) => handleToggle(item.id, !!checked)}
                 disabled={disabled}
               />
-              <span className="flex-1 text-sm truncate">{item.name}</span>
+              <label htmlFor={`attendance-${item.id}`} className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center break-words text-sm">{item.name}</label>
               {!disabled && (
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive shrink-0" onClick={() => handleRemove(item.id)}>
+                <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive shrink-0" aria-label={`Remover ${item.name} da lista`} onClick={() => handleRemove(item.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               )}
@@ -173,11 +174,11 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
 
       {attendance.length > 0 && (
         <div className="space-y-2 pt-2 border-t">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-medium">
               Presentes: <strong className="text-primary">{presentCount}</strong>/{attendance.length}
             </span>
-            <Badge variant={presentCount > attendance.length / 2 ? 'default' : 'destructive'} className="text-[10px]">
+            <Badge variant={presentCount > attendance.length / 2 ? 'default' : 'destructive'} className="text-xs">
               {presentCount > attendance.length / 2 ? 'Quórum atingido' : 'Sem quórum'}
             </Badge>
           </div>

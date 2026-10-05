@@ -109,9 +109,9 @@ export function DizimosTab() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Tipo da Chave PIX</Label>
+            <Label htmlFor="tithe-pix-type">Tipo da chave PIX</Label>
             <Select value={pixKeyType} onValueChange={setPixKeyType}>
-              <SelectTrigger>
+              <SelectTrigger id="tithe-pix-type">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -123,8 +123,9 @@ export function DizimosTab() {
           </div>
 
           <div className="space-y-2">
-            <Label>Chave PIX</Label>
+            <Label htmlFor="tithe-pix-key">Chave PIX</Label>
             <Input
+              id="tithe-pix-key"
               value={pixKey}
               onChange={e => setPixKey(e.target.value)}
               placeholder="Ex: 12.345.678/0001-90"
@@ -132,17 +133,19 @@ export function DizimosTab() {
           </div>
 
           <div className="space-y-2">
-            <Label>Nome do Beneficiário</Label>
+            <Label htmlFor="tithe-beneficiary">Nome do Beneficiário</Label>
             <Input
+              id="tithe-beneficiary"
               value={pixBeneficiary}
               onChange={e => setPixBeneficiary(e.target.value)}
-              placeholder="Ex: Igreja Presbiteriana Nova Cidade"
+              placeholder="Ex.: Igreja Presbiteriana de Nova Carapina"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Instruções para os membros</Label>
+            <Label htmlFor="tithe-instructions">Instruções para os membros</Label>
             <Textarea
+              id="tithe-instructions"
               value={pixInstructions}
               onChange={e => setPixInstructions(e.target.value)}
               placeholder="Ex: Coloque seu nome completo na descrição do PIX"
@@ -160,7 +163,7 @@ export function DizimosTab() {
       {/* Preview */}
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader>
-          <CardTitle className="text-lg">Preview (visão do membro)</CardTitle>
+          <CardTitle className="text-lg">Prévia para os membros</CardTitle>
           <CardDescription>
             Assim os membros verão as informações de dízimo.
           </CardDescription>
@@ -177,7 +180,7 @@ export function DizimosTab() {
                 <p className="text-sm text-muted-foreground mb-1">Chave PIX:</p>
                 <div className="flex items-center gap-2 bg-background rounded-lg border p-3">
                   <code className="flex-1 text-sm font-mono break-all">{pixKey}</code>
-                  <Button variant="outline" size="sm" onClick={handleCopyPreview}>
+                  <Button variant="outline" size="sm" aria-label={copied ? "Chave PIX copiada" : "Copiar chave PIX"} onClick={handleCopyPreview}>
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
@@ -205,7 +208,7 @@ export function DizimosTab() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Preencha os campos ao lado para ver o preview.
+              Preencha os campos de configuração para ver a prévia.
             </p>
           )}
         </CardContent>

@@ -93,7 +93,7 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center transition-colors
+          border-2 border-dashed rounded-xl p-4 sm:p-6 text-center transition-colors
           ${isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
           ${file ? 'bg-muted/50' : ''}
         `}
@@ -101,15 +101,15 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
         {file ? (
           <div className="flex items-center justify-center gap-3">
             <FileIcon className="h-8 w-8 text-muted-foreground" />
-            <div className="text-left">
-              <p className="font-medium truncate max-w-[200px]">{file.name}</p>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="font-medium [overflow-wrap:anywhere]">{file.name}</p>
               <p className="text-sm text-muted-foreground">
                 {(file.size / 1024).toFixed(1)} KB
               </p>
             </div>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon" aria-label="Remover arquivo selecionado"
               onClick={() => setFile(null)}
             >
               <X className="h-4 w-4" />
@@ -124,12 +124,12 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
             <input
               type="file"
               id="file-upload"
-              className="hidden"
+              className="peer sr-only"
               onChange={handleFileSelect}
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
             />
             <Button variant="outline" asChild>
-              <label htmlFor="file-upload" className="cursor-pointer">
+              <label htmlFor="file-upload" className="cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2">
                 Selecionar arquivo
               </label>
             </Button>
@@ -155,7 +155,7 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 justify-end">
+      <div className="flex flex-wrap gap-3 justify-end">
         <Button variant="outline" onClick={handleClose}>
           Cancelar
         </Button>

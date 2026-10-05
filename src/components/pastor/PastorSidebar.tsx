@@ -64,16 +64,16 @@ export function PastorSidebar() {
   };
 
   return (
-    <aside className="w-56 xl:w-60 sticky top-0 h-screen flex-shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
+    <aside className="w-56 xl:w-60 sticky top-0 h-dvh flex-shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="bg-white rounded-lg p-1 flex items-center justify-center">
             <img src={logoIpnc} alt="IPNC" className="h-9 w-9 object-contain" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h2 className="font-bold text-sm">Painel do Pastor</h2>
-            <p className="text-xs text-sidebar-muted">{profile?.full_name || 'Pastor'}</p>
+            <p className="break-words text-xs text-sidebar-muted">{profile?.full_name || 'Pastor'}</p>
           </div>
         </div>
       </div>
@@ -90,8 +90,9 @@ export function PastorSidebar() {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
+            aria-current={isActive(item.path) ? 'page' : undefined}
             className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+              'w-full flex items-center gap-3 min-h-11 px-3 py-2.5 rounded-lg text-sm transition-colors',
               isActive(item.path)
                 ? 'bg-sidebar-accent text-sidebar-primary-foreground font-medium'
                 : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50'
@@ -104,15 +105,16 @@ export function PastorSidebar() {
 
         {/* Societies */}
         <div className="pt-4">
-          <p className="px-3 text-[10px] uppercase tracking-wider text-sidebar-muted font-semibold mb-2">
+          <p className="px-3 text-xs uppercase tracking-wider text-sidebar-muted font-semibold mb-2">
             Sociedades
           </p>
           {societies.map(s => (
             <button
               key={s.id}
               onClick={() => navigate(`/pastor/sociedade/${s.slug}`)}
+              aria-current={location.pathname === `/pastor/sociedade/${s.slug}` ? 'page' : undefined}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+                'w-full flex items-center gap-3 min-h-11 px-3 py-2.5 rounded-lg text-sm transition-colors',
                 location.pathname === `/pastor/sociedade/${s.slug}`
                   ? 'bg-sidebar-accent text-sidebar-primary-foreground font-medium'
                   : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50'

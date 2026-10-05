@@ -66,9 +66,9 @@ export function MobileHeader() {
           </div>
 
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-extrabold leading-tight tracking-tight text-white xs:text-base">
+            <p title={title} className="truncate text-sm font-extrabold leading-tight tracking-tight text-white xs:text-base">
               {title}
-            </h1>
+            </p>
             <p className="mt-0.5 hidden truncate text-[10px] font-medium leading-none text-emerald-50/80 xs:block">
               {subtitle}
             </p>
@@ -78,7 +78,7 @@ export function MobileHeader() {
         <div className="flex flex-shrink-0 items-center gap-1">
           <UpdateAppButton
             variant="icon"
-            className="!h-9 !w-9 rounded-full border border-white/15 bg-white/10 !text-white backdrop-blur-md hover:!bg-white/20 hover:!text-white"
+            className="!h-11 !w-11 rounded-full border border-white/15 bg-white/10 !text-white backdrop-blur-md hover:!bg-white/20 hover:!text-white"
           />
 
           {profile && (
@@ -87,7 +87,7 @@ export function MobileHeader() {
               onClick={requestExit}
               aria-label="Sair"
               title="Sair"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
             >
               <LogOut className="h-4 w-4" />
             </button>

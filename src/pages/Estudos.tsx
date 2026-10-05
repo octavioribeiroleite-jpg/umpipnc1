@@ -194,9 +194,9 @@ export default function Estudos() {
   if (selectedStudy) {
     return (
       <AppLayout>
-        <div className="p-4 md:p-6 space-y-4 max-w-3xl mx-auto">
+        <div className="min-w-0 space-y-4 max-w-3xl mx-auto">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={handleBack}>
+            <Button variant="ghost" size="icon" aria-label="Voltar à lista de estudos" onClick={handleBack}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
@@ -220,7 +220,7 @@ export default function Estudos() {
                 placeholder="Anote aqui os pontos do estudo bíblico..."
                 value={selectedStudy.notes}
                 onChange={(e) => handleNotesChange(e.target.value)}
-                className="min-h-[250px] text-sm"
+                aria-label="Anotações do estudo" className="min-h-[250px]"
               />
             </CardContent>
           </Card>
@@ -236,7 +236,7 @@ export default function Estudos() {
           {selectedStudy.ai_summary && (
             <Card className="border-primary/20 bg-primary/5">
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
                     Resumo para WhatsApp
@@ -248,7 +248,7 @@ export default function Estudos() {
                 </div>
               </CardHeader>
               <CardContent>
-                <pre className="whitespace-pre-wrap text-sm font-sans leading-relaxed">
+                <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] text-sm font-sans leading-relaxed">
                   {selectedStudy.ai_summary}
                 </pre>
               </CardContent>
@@ -262,7 +262,7 @@ export default function Estudos() {
   // Studies list view
   return (
     <AppLayout>
-      <div className="p-4 md:p-6 space-y-4 max-w-3xl mx-auto">
+      <div className="min-w-0 space-y-4 max-w-3xl mx-auto">
         <PageHeader
           title="Estudos"
           description="Anotações dos estudos bíblicos de sexta-feira"
@@ -281,17 +281,17 @@ export default function Estudos() {
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Tema</label>
+                  <label htmlFor="study-title" className="text-sm font-medium mb-1 block">Tema</label>
                   <Input
-                    placeholder="Ex: O Sermão do Monte"
+                    id="study-title" placeholder="Ex: O Sermão do Monte"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Data</label>
+                  <label htmlFor="study-date" className="text-sm font-medium mb-1 block">Data</label>
                   <Input
-                    type="date"
+                    id="study-date" type="date"
                     value={newDate}
                     onChange={(e) => setNewDate(e.target.value)}
                   />
@@ -318,11 +318,11 @@ export default function Estudos() {
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
-                <div className="flex gap-2 items-end">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium mb-1 block">Ano</label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="w-full min-w-0 sm:flex-1">
+                    <label htmlFor="study-report-year" className="text-sm font-medium mb-1 block">Ano</label>
                     <Select value={reportYear} onValueChange={setReportYear}>
-                      <SelectTrigger>
+                      <SelectTrigger id="study-report-year">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -344,7 +344,7 @@ export default function Estudos() {
                 {report && (
                   <Card className="border-primary/20 bg-primary/5">
                     <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
                         <CardTitle className="text-base flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-primary" />
                           Relatório {reportYear}
@@ -356,7 +356,7 @@ export default function Estudos() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <pre className="whitespace-pre-wrap text-sm font-sans leading-relaxed">
+                      <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] text-sm font-sans leading-relaxed">
                         {report}
                       </pre>
                     </CardContent>

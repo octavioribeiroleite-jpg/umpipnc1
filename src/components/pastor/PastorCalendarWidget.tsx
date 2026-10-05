@@ -66,19 +66,19 @@ export function PastorCalendarWidget({
     <AppCard noPadding>
       <div className="p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onPrevMonth}>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div className="flex min-w-0 flex-1 items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Mês anterior" onClick={onPrevMonth}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h3 className="text-sm font-semibold min-w-[140px] text-center">
+          <h3 className="min-w-0 flex-1 text-sm font-semibold text-center">
             {MONTH_NAMES[currentMonth]} {currentYear}
           </h3>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onNextMonth}>
+          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Próximo mês" onClick={onNextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={onToday}>
+        <Button variant="outline" size="sm" className="h-11 text-xs" onClick={onToday}>
           Hoje
         </Button>
       </div>
@@ -86,7 +86,7 @@ export function PastorCalendarWidget({
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-1">
         {WEEKDAYS.map(wd => (
-          <div key={wd} className="text-center text-[11px] font-medium text-muted-foreground py-1">
+          <div key={wd} className="text-center text-xs font-medium text-muted-foreground py-1">
             {wd}
           </div>
         ))}
@@ -110,6 +110,8 @@ export function PastorCalendarWidget({
             <button
               key={day}
               type="button"
+              aria-pressed={isSelected}
+              aria-label={`${day} de ${MONTH_NAMES[currentMonth]} de ${currentYear}${colors.length ? `, ${colors.length} programações` : ''}`}
               onClick={() => onDaySelect(date)}
               className={[
                 'flex flex-col items-center justify-center h-11 rounded-xl transition-all relative',

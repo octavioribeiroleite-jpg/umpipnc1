@@ -15,7 +15,7 @@ interface Props {
 
 export function ElectionStepper({ steps, currentIndex, completed, onStepClick }: Props) {
   return (
-    <div className="flex items-center w-full px-1 py-2">
+    <div className="flex items-start w-full gap-1 py-2">
       {steps.map((step, idx) => {
         const isDone = completed[step.key];
         const isCurrent = idx === currentIndex;
@@ -23,13 +23,14 @@ export function ElectionStepper({ steps, currentIndex, completed, onStepClick }:
         const clickable = !!onStepClick && (isDone || idx <= currentIndex);
 
         return (
-          <div key={step.key} className="flex items-center flex-1 last:flex-none">
+          <div key={step.key} className="relative flex min-w-0 flex-1 items-center justify-center">
             <button
               type="button"
+              aria-current={isCurrent ? 'step' : undefined}
               onClick={clickable ? () => onStepClick?.(idx) : undefined}
               disabled={!clickable}
               className={cn(
-                'flex flex-col items-center gap-1 shrink-0 transition-all',
+                'relative z-10 flex min-h-11 min-w-0 w-full flex-col items-center gap-2 transition-all',
                 clickable && 'cursor-pointer',
                 !clickable && 'cursor-default',
               )}
@@ -46,7 +47,7 @@ export function ElectionStepper({ steps, currentIndex, completed, onStepClick }:
               </div>
               <span
                 className={cn(
-                  'text-[10px] font-medium leading-tight text-center max-w-[70px]',
+                  'w-full break-words text-xs font-medium leading-snug text-center',
                   isCurrent && 'text-primary',
                   isDone && 'text-success',
                   isPending && 'text-muted-foreground',
@@ -58,7 +59,7 @@ export function ElectionStepper({ steps, currentIndex, completed, onStepClick }:
             {idx < steps.length - 1 && (
               <div
                 className={cn(
-                  'flex-1 h-0.5 mx-1 -mt-4 transition-all',
+                  'absolute top-4 left-1/2 w-full h-0.5 transition-all',
                   completed[step.key] ? 'bg-success' : 'bg-border',
                 )}
               />

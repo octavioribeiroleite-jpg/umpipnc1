@@ -44,7 +44,7 @@ export function SugestaoForm({ section, sectionLabel }: SugestaoFormProps) {
       <p className="text-sm font-medium text-muted-foreground">
         Deixe sua sugestão sobre {sectionLabel}
       </p>
-      <Textarea
+      <Textarea aria-label={`Sugestão sobre ${sectionLabel}`}
         placeholder={`Escreva aqui sua opinião, sugestão ou observação sobre ${sectionLabel}...`}
         value={message}
         onChange={(e) => setMessage(e.target.value)}

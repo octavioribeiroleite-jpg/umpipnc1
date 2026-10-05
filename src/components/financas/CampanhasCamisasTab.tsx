@@ -333,7 +333,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
             const lots = lotsByCampaign[campaign.id] || [];
 
             return (
-              <Card key={campaign.id} className={`overflow-hidden ${selected ? 'border-primary/70 ring-1 ring-primary/20' : ''}`}>
+              <Card key={campaign.id} className={`shirt-campaign ${selected ? 'border-primary/70 ring-1 ring-primary/20' : ''}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -361,13 +361,15 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-11 w-11"
+                        aria-label={`Opções da campanha ${campaign.name}`}
+                        aria-expanded={menuOpenId === campaign.id}
                         onClick={() => setMenuOpenId(menuOpenId === campaign.id ? null : campaign.id)}
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                       {menuOpenId === campaign.id && (
-                        <div className="absolute right-0 top-9 z-20 w-48 rounded-md border bg-popover p-1 shadow-lg">
+                        <div className="absolute right-0 top-12 z-20 w-48 rounded-md border bg-popover p-1 shadow-lg">
                           <button
                             className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-muted"
                             onClick={() => {
@@ -410,11 +412,11 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-                    <div><p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Compradas</p><p className="mt-0.5 text-lg font-semibold">{purchased}</p></div>
-                    <div><p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Encomendadas</p><p className="mt-0.5 text-lg font-semibold">{ordered}</p></div>
-                    <div><p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Disponíveis</p><p className="mt-0.5 text-lg font-semibold">{available}</p></div>
-                    <div><p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Preço</p><p className="mt-0.5 text-lg font-semibold">{brl(campaign.default_sale_price)}</p></div>
+                  <div className="shirt-campaign-metrics">
+                    <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Compradas</p><p className="mt-0.5 text-lg font-semibold">{purchased}</p></div>
+                    <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Encomendadas</p><p className="mt-0.5 text-lg font-semibold">{ordered}</p></div>
+                    <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Disponíveis</p><p className="mt-0.5 text-lg font-semibold">{available}</p></div>
+                    <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Preço</p><p className="mt-0.5 text-lg font-semibold">{brl(campaign.default_sale_price)}</p></div>
                   </div>
 
                   <div className="mt-4">
@@ -427,13 +429,13 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 gap-2 border-t pt-3 text-sm sm:grid-cols-3">
+                  <div className="shirt-campaign-costs">
                     <div className="flex items-center justify-between gap-2 sm:block"><span className="text-muted-foreground">Custo médio</span><p className="font-medium">{brl(campaign.unit_cost)}</p></div>
                     <div className="flex items-center justify-between gap-2 sm:block"><span className="text-muted-foreground">Custo total</span><p className="font-medium">{brl(campaign.total_purchase_cost)}</p></div>
                     <div className="flex items-center justify-between gap-2 sm:block"><span className="text-muted-foreground">Lucro previsto</span><p className={`font-medium ${projectedProfit >= 0 ? 'text-success' : 'text-destructive'}`}>{brl(projectedProfit)}</p></div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap justify-end gap-2">
+                  <div className="shirt-campaign-actions">
                     <Button size="sm" variant="ghost" onClick={() => openEditCampaign(campaign)}>
                       <Pencil className="mr-2 h-4 w-4" />Editar
                     </Button>
@@ -459,15 +461,15 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       )}
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+        <DialogContent className="finance-dialog max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader><DialogTitle>Nova campanha de camisas</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2"><Label>Nome da campanha</Label><Input placeholder="Ex.: Camisas UMP 2026" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2"><Label>Qtd. comprada</Label><Input type="number" min="1" placeholder="44" value={form.purchasedQuantity} onChange={(event) => setForm({ ...form, purchasedQuantity: event.target.value })} /></div>
               <div className="space-y-2"><Label>Custo unitário (R$)</Label><Input type="number" step="0.01" placeholder="55,00" value={form.unitCost} onChange={(event) => setForm({ ...form, unitCost: event.target.value })} /></div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2"><Label>Preço padrão venda (R$)</Label><Input type="number" step="0.01" placeholder="65,00" value={form.defaultSalePrice} onChange={(event) => setForm({ ...form, defaultSalePrice: event.target.value })} /></div>
               <div className="space-y-2"><Label>Data da compra</Label><Input type="date" value={form.purchaseDate} onChange={(event) => setForm({ ...form, purchaseDate: event.target.value })} /></div>
             </div>
@@ -479,7 +481,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       </Dialog>
 
       <Dialog open={Boolean(editCampaign)} onOpenChange={(open) => { if (!open) setEditCampaign(null); }}>
-        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+        <DialogContent className="finance-dialog max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader><DialogTitle>Editar campanha</DialogTitle></DialogHeader>
           {editCampaign && (
             <div className="space-y-4">
@@ -487,7 +489,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                 <Label>Nome da campanha</Label>
                 <Input value={editForm.name} onChange={(event) => setEditForm({ ...editForm, name: event.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Preço padrão (R$)</Label>
                   <Input type="number" min="0" step="0.01" value={editForm.defaultSalePrice} onChange={(event) => setEditForm({ ...editForm, defaultSalePrice: event.target.value })} />
@@ -544,7 +546,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       </Dialog>
 
       <Dialog open={Boolean(lotDialogCampaign)} onOpenChange={(open) => { if (!open) { setLotDialogCampaign(null); resetLotForm(); } }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="finance-dialog max-w-md">
           <DialogHeader><DialogTitle>Adicionar novo lote</DialogTitle></DialogHeader>
           {lotDialogCampaign && (
             <div className="space-y-4">
@@ -552,11 +554,11 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                 <p className="font-semibold">{lotDialogCampaign.name}</p>
                 <p className="mt-1 text-xs text-muted-foreground">Atual: {lotDialogCampaign.purchased_quantity} compradas · {Math.max(0, lotDialogCampaign.purchased_quantity - (orderedByCampaign[lotDialogCampaign.id] || 0))} disponíveis</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2"><Label>Quantidade</Label><Input type="number" min="1" placeholder="12" value={lotForm.quantity} onChange={(event) => setLotForm({ ...lotForm, quantity: event.target.value })} /></div>
                 <div className="space-y-2"><Label>Custo unitário (R$)</Label><Input type="number" min="0" step="0.01" value={lotForm.unitCost} onChange={(event) => setLotForm({ ...lotForm, unitCost: event.target.value })} /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2"><Label>Data da compra</Label><Input type="date" value={lotForm.purchaseDate} onChange={(event) => setLotForm({ ...lotForm, purchaseDate: event.target.value })} /></div>
                 <div className="space-y-2"><Label>Fornecedor</Label><Input placeholder="Opcional" value={lotForm.supplier} onChange={(event) => setLotForm({ ...lotForm, supplier: event.target.value })} /></div>
               </div>
@@ -572,7 +574,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       </Dialog>
 
       <Dialog open={Boolean(historyCampaign)} onOpenChange={(open) => { if (!open) setHistoryCampaign(null); }}>
-        <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto">
+        <DialogContent className="finance-dialog max-h-[80vh] max-w-lg overflow-y-auto">
           <DialogHeader><DialogTitle>Histórico de lotes</DialogTitle></DialogHeader>
           {historyCampaign && (
             <div className="space-y-3">
@@ -599,7 +601,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       </Dialog>
 
       <Dialog open={Boolean(deleteId)} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="finance-dialog max-w-sm">
           <DialogHeader><DialogTitle>Excluir campanha</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">Tem certeza? Esta ação não pode ser desfeita.</p>
           <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button><Button variant="destructive" onClick={confirmDelete}>Excluir</Button></div>

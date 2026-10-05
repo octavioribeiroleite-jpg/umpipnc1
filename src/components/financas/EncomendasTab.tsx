@@ -430,7 +430,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border bg-card p-1 shadow-sm">
-        <div className="grid grid-cols-3 gap-1">
+        <div className="shirt-order-views">
           {([['open', `Em andamento ${openCount}`], ['finished', `Finalizados ${finishedCount}`], ['all', `Todos ${orders.length}`]] as Array<[OrderView, string]>).map(([value, label]) => (
             <Button key={value} variant="ghost" size="sm" className={view === value ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground' : ''} onClick={() => setView(value)}>{label}</Button>
           ))}
@@ -439,7 +439,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
 
       <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
         <div className="relative flex-1"><Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar por nome..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
-        <div className="flex flex-wrap gap-2">
+        <div className="shirt-order-filters">
           <Select value={filterCampaign} onValueChange={(value) => { setFilterCampaign(value); setFilterLot('all'); }}><SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas as campanhas</SelectItem><SelectItem value="none">Sem campanha</SelectItem>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select>
           {visibleLots.length > 0 && <Select value={filterLot} onValueChange={setFilterLot}><SelectTrigger className="w-[125px]"><SelectValue placeholder="Lote" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os lotes</SelectItem>{visibleLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lotLabel(lot.id)}</SelectItem>)}</SelectContent></Select>}
           <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Pagamento</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="parcial">Parcial</SelectItem><SelectItem value="pago">Pago</SelectItem><SelectItem value="brinde">Brinde</SelectItem></SelectContent></Select>
@@ -462,7 +462,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
             return (
               <Card key={order.id} className={finished ? 'border-success/25 bg-success/[0.025]' : ''}>
                 <CardContent className="p-3">
-                  <div className="grid gap-3 lg:grid-cols-[minmax(220px,1.35fr)_minmax(180px,.8fr)_minmax(150px,.65fr)_auto] lg:items-center">
+                  <div className="shirt-order-row">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <p className="min-w-0 whitespace-normal break-words font-bold">{order.buyer_name}</p>
@@ -482,12 +482,12 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
                     </div>
 
                     <Button variant="outline" className={`h-auto min-h-12 justify-between px-3 py-2 ${paymentDone ? 'border-success/30 bg-success/5' : ''}`} disabled={paymentDone} onClick={() => openPay(order)}>
-                      <span className="flex min-w-0 flex-col items-start leading-tight"><span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Pagamento</span><span className="text-xs font-semibold">{order.is_gift ? 'Brinde' : paymentDone ? 'Pago' : paymentStatus === 'partial' ? `Falta ${brl(remaining)}` : brl(order.total_price)}</span></span>
+                      <span className="flex min-w-0 flex-col items-start leading-tight"><span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Pagamento</span><span className="text-xs font-semibold">{order.is_gift ? 'Brinde' : paymentDone ? 'Pago' : paymentStatus === 'partial' ? `Falta ${brl(remaining)}` : brl(order.total_price)}</span></span>
                       <PaymentBadge order={order} />
                     </Button>
 
                     <Button variant={delivered ? 'default' : 'outline'} className={`h-12 justify-between px-3 ${delivered ? 'bg-success hover:bg-success/90' : ''}`} onClick={() => toggleDelivery(order)}>
-                      <span className="flex flex-col items-start leading-tight"><span className={`text-[10px] font-bold uppercase tracking-wide ${delivered ? 'text-success-foreground/80' : 'text-muted-foreground'}`}>Entrega</span><span className="text-xs font-semibold">{delivered ? 'Entregue' : 'Pendente'}</span></span>
+                      <span className="flex flex-col items-start leading-tight"><span className={`text-xs font-bold uppercase tracking-wide ${delivered ? 'text-success-foreground/80' : 'text-muted-foreground'}`}>Entrega</span><span className="text-xs font-semibold">{delivered ? 'Entregue' : 'Pendente'}</span></span>
                       {delivered ? <Check className="h-4 w-4" /> : <Truck className="h-4 w-4" />}
                     </Button>
 
@@ -501,7 +501,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       )}
 
       <Dialog open={orderDialogOpen} onOpenChange={(open) => { setOrderDialogOpen(open); if (!open) resetForm(); }}>
-        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+        <DialogContent className="finance-dialog max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader><DialogTitle>{editingId ? 'Editar Encomenda' : 'Nova Encomenda'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -529,7 +529,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       </Dialog>
 
       <Dialog open={payDialogOpen} onOpenChange={(open) => { setPayDialogOpen(open); if (!open) setPayOrder(null); }}>
-        <DialogContent className="max-w-sm"><DialogHeader><DialogTitle>Registrar pagamento</DialogTitle></DialogHeader>{payOrder && <div className="space-y-4"><div className="rounded-xl bg-muted/40 p-3 text-sm"><p className="font-bold">{payOrder.buyer_name}</p><p>Restante: <strong className="text-destructive">{brl(Math.max(0, payOrder.total_price - payOrder.amount_paid))}</strong></p></div><div className="grid grid-cols-2 gap-2"><Button variant={payMode === 'total' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('total')}><CheckCircle2 className="mb-1 h-5 w-5" /><span>Total</span><span className="text-xs font-normal opacity-80">Quitar tudo</span></Button><Button variant={payMode === 'partial' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('partial')}><CircleDollarSign className="mb-1 h-5 w-5" /><span>Parcial</span><span className="text-xs font-normal opacity-80">Informar valor</span></Button></div>{payMode === 'partial' && <div className="space-y-2"><Label>Valor parcial</Label><Input autoFocus type="number" step="0.01" value={payAmount} onChange={(event) => setPayAmount(event.target.value)} /></div>}<div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Data</Label><Input type="date" value={payDate} onChange={(event) => setPayDate(event.target.value)} /></div><div className="space-y-2"><Label>Forma</Label><Select value={payMethod} onValueChange={setPayMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pix">PIX</SelectItem><SelectItem value="dinheiro">Dinheiro</SelectItem><SelectItem value="transferencia">Transferência</SelectItem><SelectItem value="cartao">Cartão</SelectItem></SelectContent></Select></div></div><div className="space-y-2"><Label>Observação</Label><Textarea value={payNotes} onChange={(event) => setPayNotes(event.target.value)} /></div><Button className="w-full" onClick={handleRegisterPayment} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Confirmar {payMode === 'total' ? 'pagamento total' : 'pagamento parcial'}</Button></div>}</DialogContent>
+        <DialogContent className="finance-dialog max-w-sm"><DialogHeader><DialogTitle>Registrar pagamento</DialogTitle></DialogHeader>{payOrder && <div className="space-y-4"><div className="rounded-xl bg-muted/40 p-3 text-sm"><p className="font-bold">{payOrder.buyer_name}</p><p>Restante: <strong className="text-destructive">{brl(Math.max(0, payOrder.total_price - payOrder.amount_paid))}</strong></p></div><div className="grid grid-cols-2 gap-2"><Button variant={payMode === 'total' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('total')}><CheckCircle2 className="mb-1 h-5 w-5" /><span>Total</span><span className="text-xs font-normal opacity-80">Quitar tudo</span></Button><Button variant={payMode === 'partial' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('partial')}><CircleDollarSign className="mb-1 h-5 w-5" /><span>Parcial</span><span className="text-xs font-normal opacity-80">Informar valor</span></Button></div>{payMode === 'partial' && <div className="space-y-2"><Label>Valor parcial</Label><Input autoFocus type="number" step="0.01" value={payAmount} onChange={(event) => setPayAmount(event.target.value)} /></div>}<div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Data</Label><Input type="date" value={payDate} onChange={(event) => setPayDate(event.target.value)} /></div><div className="space-y-2"><Label>Forma</Label><Select value={payMethod} onValueChange={setPayMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pix">PIX</SelectItem><SelectItem value="dinheiro">Dinheiro</SelectItem><SelectItem value="transferencia">Transferência</SelectItem><SelectItem value="cartao">Cartão</SelectItem></SelectContent></Select></div></div><div className="space-y-2"><Label>Observação</Label><Textarea value={payNotes} onChange={(event) => setPayNotes(event.target.value)} /></div><Button className="w-full" onClick={handleRegisterPayment} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Confirmar {payMode === 'total' ? 'pagamento total' : 'pagamento parcial'}</Button></div>}</DialogContent>
       </Dialog>
 
       <AlertDialog open={Boolean(deleteId)} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>

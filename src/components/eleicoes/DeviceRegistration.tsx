@@ -88,14 +88,14 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
     <div className="space-y-3">
       {!disabled && (
         <div className="flex flex-col gap-2 mb-4">
-          <Label className="text-sm font-medium">Adicionar urna</Label>
-          <div className="flex gap-2">
+          <Label htmlFor="election-device-name" className="text-sm font-medium">Adicionar urna</Label>
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Input
-              placeholder="Rótulo (ex: Mesa 1, Entrada)"
+              id="election-device-name" placeholder="Rótulo (ex: Mesa 1, Entrada)"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              className="h-9 text-sm"
+              className="h-11 min-w-0 text-sm"
             />
             <Button
               onClick={handleAdd}
@@ -123,7 +123,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
             <div key={d.id} className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-2">
               <div className="flex items-center gap-2">
                 <Monitor className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-sm font-semibold text-foreground flex-1">{d.label}</span>
+                <span className="min-w-0 break-words text-sm font-semibold text-foreground flex-1">{d.label}</span>
                 {d.activated ? (
                   <span className="flex items-center gap-1 text-xs font-medium text-success bg-success/15 px-2 py-0.5 rounded-full">
                     <CheckCircle className="w-3 h-3" /> Online
@@ -135,14 +135,14 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSelectedDevice(d)}>
+                <Button variant="outline" size="sm" className="h-11 text-sm" onClick={() => setSelectedDevice(d)}>
                   <QrCode className="h-3.5 w-3.5 mr-1" /> Mostrar QR Code
                 </Button>
-                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => copyDeviceLink(d)}>
+                <Button variant="outline" size="sm" className="h-11 text-sm" onClick={() => copyDeviceLink(d)}>
                   <Copy className="h-3.5 w-3.5 mr-1" /> Copiar link
                 </Button>
                 {!disabled && (
-                  <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive hover:text-destructive" onClick={() => handleRemove(d.id)}>
+                  <Button variant="ghost" size="sm" className="h-11 text-sm text-destructive hover:text-destructive" onClick={() => handleRemove(d.id)}>
                     <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover
                   </Button>
                 )}
@@ -160,7 +160,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
           {selectedDevice && (
             <div className="flex flex-col items-center gap-4 py-3">
               <div className="rounded-xl border border-border bg-background p-4 shadow-sm">
-                <QRCodeSVG value={getDeviceUrl(selectedDevice.token)} size={240} />
+                <QRCodeSVG value={getDeviceUrl(selectedDevice.token)} size={240} className="h-auto max-w-full" />
               </div>
               <code className="w-full rounded-lg bg-muted p-3 text-xs text-center break-all text-foreground">
                 {getDeviceUrl(selectedDevice.token)}

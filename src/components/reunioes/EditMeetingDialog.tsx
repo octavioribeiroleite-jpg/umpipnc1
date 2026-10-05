@@ -79,7 +79,7 @@ export function EditMeetingDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="date">Data *</Label>
               <Input
@@ -101,7 +101,7 @@ export function EditMeetingDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             Cancelar
           </Button>

@@ -33,7 +33,7 @@ export function AppSidebar() {
         collapsed ? 'w-16' : 'w-60 xl:w-64',
       )}
     >
-      <div className="flex items-center justify-between border-b border-sidebar-border p-4">
+      <div className="flex items-center justify-between border-b border-sidebar-border p-2">
         {!collapsed && (
           <button type="button" onClick={() => navigate('/')} className="flex items-center gap-2 text-left">
             <div className="flex items-center justify-center rounded-lg bg-white p-1">
@@ -80,7 +80,7 @@ export function AppSidebar() {
                     aria-current={active ? 'page' : undefined}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      'flex w-full items-center rounded-lg px-3 py-2.5 transition-all duration-200',
+                      'flex min-h-11 w-full items-center rounded-lg px-3 py-2.5 transition-all duration-200',
                       'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                       active
                         ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
@@ -88,7 +88,7 @@ export function AppSidebar() {
                     )}
                   >
                     <item.icon className={cn('h-5 w-5 flex-shrink-0', collapsed ? 'mx-auto' : 'mr-3')} />
-                    {!collapsed && <span className="truncate font-medium">{item.label}</span>}
+                    {!collapsed && <span className="min-w-0 break-words text-left text-sm font-medium">{item.label}</span>}
                   </button>
                 </li>
               );
@@ -108,11 +108,11 @@ export function AppSidebar() {
         )}
       </div>
 
-      <div className="border-t border-sidebar-border p-4">
+      <div className="border-t border-sidebar-border p-2">
         {!collapsed && profile && (
           <div className="mb-3 px-2">
-            <p className="truncate text-sm font-medium">{profile.full_name}</p>
-            <p className="truncate text-xs text-sidebar-muted">{profile.email}</p>
+            <p className="break-words text-sm font-medium">{profile.full_name}</p>
+            <p className="break-all text-xs text-sidebar-muted">{profile.email}</p>
           </div>
         )}
 

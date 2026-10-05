@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { AppLayout } from '@/components/layout/AppLayout';
 import {
@@ -163,35 +164,35 @@ export default function PastorSugestoes() {
 
     return (
       <Card key={f.id} className={isUnread ? 'border-primary/20 bg-primary/5' : 'opacity-80'}>
-        <CardContent className="p-3">
-          <div className="flex items-start gap-2.5">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-start gap-3">
             <div className={`h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0 ${config.color}`}>
               <Icon className="h-3.5 w-3.5" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1 basis-[70%] sm:basis-0">
               <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">{config.label}</Badge>
-                {isUnread && <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">Nova</Badge>}
+                <Badge variant="outline" className="text-xs px-1.5 py-0">{config.label}</Badge>
+                {isUnread && <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0">Nova</Badge>}
               </div>
-              <p className="text-sm leading-snug">{f.message}</p>
+              <p className="break-words text-sm leading-relaxed">{f.message}</p>
               {f.response && (
                 <div className="mt-1.5 p-1.5 bg-muted rounded-md">
-                  <p className="text-[10px] font-medium text-muted-foreground mb-0.5">Resposta:</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Resposta:</p>
                   <p className="text-xs">{f.response}</p>
                 </div>
               )}
-              <div className="flex items-center gap-1 mt-1.5 text-[11px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-1 mt-2 text-xs text-muted-foreground">
                 {senderName && <span className="font-medium">{senderName}</span>}
                 {senderName && <span>·</span>}
                 <span>{formatDistanceToNow(new Date(f.created_at), { addSuffix: true, locale: ptBR })}</span>
               </div>
             </div>
             <TooltipProvider delayDuration={300}>
-              <div className="flex items-center gap-0.5 flex-shrink-0">
+              <div className="ml-auto flex items-center gap-1 flex-shrink-0">
                 {isUnread && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleMarkRead(f.id)}>
+                      <Button size="icon" variant="ghost" className="h-11 w-11" aria-label="Marcar como lida" onClick={() => handleMarkRead(f.id)}>
                         <Check className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -200,7 +201,7 @@ export default function PastorSugestoes() {
                 )}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRespondingTo(respondingTo === f.id ? null : f.id); setResponseText(f.response || ''); }}>
+                    <Button size="icon" variant="ghost" className="h-11 w-11" aria-label="Responder sugestão" onClick={() => { setRespondingTo(respondingTo === f.id ? null : f.id); setResponseText(f.response || ''); }}>
                       <Send className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -208,7 +209,7 @@ export default function PastorSugestoes() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeletingId(f.id)}>
+                    <Button size="icon" variant="ghost" className="h-11 w-11 text-destructive hover:text-destructive" aria-label="Excluir sugestão" onClick={() => setDeletingId(f.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -218,8 +219,8 @@ export default function PastorSugestoes() {
             </TooltipProvider>
           </div>
           {respondingTo === f.id && (
-            <div className="mt-2 space-y-2 border-t pt-2 ml-9">
-              <Textarea placeholder="Escreva uma resposta..." value={responseText} onChange={e => setResponseText(e.target.value)} rows={2} className="text-sm" />
+            <div className="mt-2 space-y-2 border-t pt-2 sm:ml-10">
+              <Textarea aria-label="Resposta à sugestão" placeholder="Escreva uma resposta..." value={responseText} onChange={e => setResponseText(e.target.value)} rows={2} className="text-sm" />
               <div className="flex justify-end gap-2">
                 <Button variant="outline" size="sm" onClick={() => setRespondingTo(null)}>Cancelar</Button>
                 <Button size="sm" onClick={() => handleRespond(f.id)} disabled={saving}>
@@ -236,14 +237,7 @@ export default function PastorSugestoes() {
 
   const content = (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold">Sugestões</h1>
-        <p className="text-sm text-muted-foreground">
-          {unread.length === 0
-            ? <span className="flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> Tudo em dia</span>
-            : `${unread.length} ${unread.length === 1 ? 'sugestão não lida' : 'sugestões não lidas'}`}
-        </p>
-      </div>
+      <PageHeader title="Sugestões" description={unread.length === 0 ? 'Tudo em dia' : `${unread.length} ${unread.length === 1 ? 'sugestão não lida' : 'sugestões não lidas'}`} />
 
       {loading ? (
         <div className="space-y-3">

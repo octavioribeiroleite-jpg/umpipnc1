@@ -30,14 +30,14 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
 
   return (
     <AppCard variant="interactive" noPadding onClick={onClick}>
-      <div className="flex items-center justify-between p-3">
+      <div className="flex items-start justify-between gap-2 p-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             {isCamisa && <Shirt className="h-4 w-4 text-primary shrink-0" />}
             <h3 className="font-semibold text-foreground min-w-0 whitespace-normal break-words">{election.name}</h3>
             <Badge variant={status.variant}>{status.label}</Badge>
           </div>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
             <span>{isCamisa ? election.position : `Cargo: ${election.position}`}</span>
             {election.total_present > 0 && (
               <span className="flex items-center gap-1">
@@ -56,7 +56,7 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
         <Button
           variant="ghost"
           size="icon"
-          className="text-destructive shrink-0"
+          className="h-11 w-11 text-destructive shrink-0" aria-label={`Excluir ${election.name}`}
           onClick={(e) => { e.stopPropagation(); onDelete(election.id); }}
         >
           <Trash2 className="h-4 w-4" />

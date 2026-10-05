@@ -48,21 +48,21 @@ export function SocietyOverviewCard({ society, stats }: Props) {
       </div>
 
       {stats && (
-        <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border/50 pt-3">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 border-t border-border/50 pt-3">
           <div className="min-w-0">
             <div className="flex items-center gap-1 text-muted-foreground">
               <Users className="h-3.5 w-3.5" />
-              <span className="min-w-0 whitespace-normal break-words text-[10px] font-medium">Membros</span>
+              <span className="min-w-0 whitespace-normal break-words text-xs font-medium">Membros</span>
             </div>
             <p className="mt-1 min-w-0 whitespace-normal break-words text-sm font-bold tabular-nums text-foreground">
               {stats.membersActive}
             </p>
           </div>
 
-          <div className="min-w-0">
+          <div className="order-last col-span-2 min-w-0 sm:order-none sm:col-span-1">
             <div className="flex items-center gap-1 text-muted-foreground">
               <DollarSign className="h-3.5 w-3.5" />
-              <span className="min-w-0 whitespace-normal break-words text-[10px] font-medium">Saldo</span>
+              <span className="min-w-0 whitespace-normal break-words text-xs font-medium">Saldo</span>
             </div>
             <p
               className={cn(
@@ -77,7 +77,7 @@ export function SocietyOverviewCard({ society, stats }: Props) {
           <div className="min-w-0">
             <div className="flex items-center gap-1 text-muted-foreground">
               <ListTodo className="h-3.5 w-3.5" />
-              <span className="min-w-0 whitespace-normal break-words text-[10px] font-medium">Pendentes</span>
+              <span className="min-w-0 whitespace-normal break-words text-xs font-medium">Pendentes</span>
             </div>
             <p
               className={cn(

@@ -16,8 +16,8 @@ export function UpdateAvailableBanner() {
   if (!show) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-5 duration-300">
-      <div className="flex items-center gap-3 rounded-full border bg-card/95 backdrop-blur px-4 py-2 shadow-lg">
+    <div className="fixed top-4 left-1/2 w-[calc(100%_-_2rem)] max-w-lg -translate-x-1/2 z-[100] animate-in slide-in-from-top-5 duration-300">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card/95 backdrop-blur px-4 py-2 shadow-lg">
         <RefreshCw className={`h-4 w-4 text-primary ${updating ? "animate-spin" : ""}`} />
         <span className="text-sm font-medium text-card-foreground">
           Nova versão disponível
@@ -29,13 +29,13 @@ export function UpdateAvailableBanner() {
             applyUpdateNow();
           }}
           disabled={updating}
-          className="h-7 px-3 text-xs"
+          className="min-h-11 px-3 text-sm"
         >
           {updating ? "Atualizando..." : "Atualizar agora"}
         </Button>
         <button
           onClick={() => setShow(false)}
-          className="text-muted-foreground hover:text-foreground"
+          className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground"
           aria-label="Dispensar"
         >
           <X className="h-4 w-4" />

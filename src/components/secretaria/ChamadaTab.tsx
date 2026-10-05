@@ -163,9 +163,9 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
 
   const getStatusBadge = (classId: string) => {
     const status = getClassChamadaStatus(classId);
-    if (status === 'aberta') return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-[10px]">Em andamento</Badge>;
-    if (status === 'finalizada') return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px]">Finalizada</Badge>;
-    return <Badge variant="outline" className="text-muted-foreground text-[10px]">Não iniciada</Badge>;
+    if (status === 'aberta') return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">Em andamento</Badge>;
+    if (status === 'finalizada') return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">Finalizada</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground text-xs">Não iniciada</Badge>;
   };
 
   const handleCloseDay = async () => {
@@ -214,9 +214,9 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     if (status === 'idle' && !dayIsClosed) {
       return (
         <div>
-          <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
+          <div className="ebd-attendance-heading">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => setSelectedClass(null)}>
+              <Button variant="ghost" size="icon" aria-label="Voltar às turmas" onClick={() => setSelectedClass(null)}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex-1 min-w-0">
@@ -226,8 +226,8 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             </div>
           </div>
           <div className="p-4 pt-8">
-            <Card>
-              <CardContent className="pt-6 space-y-4">
+            <Card data-ebd-card>
+              <CardContent data-ebd-content className="pt-6 space-y-4">
                 <div className="text-center space-y-2">
                   <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
                     <PlayCircle className="h-7 w-7 text-primary" />
@@ -258,9 +258,9 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
     // Aberta or Finalizada state (or day closed)
     return (
       <div className="flex flex-col min-h-[calc(100vh-200px)]">
-        <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
+        <div className="ebd-attendance-heading">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => setSelectedClass(null)}>
+            <Button variant="ghost" size="icon" aria-label="Voltar às turmas" onClick={() => setSelectedClass(null)}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
@@ -291,7 +291,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           )}
         </div>
 
-        <div className="p-4 space-y-2 flex-1 pb-24">
+        <div className="ebd-attendance-list space-y-2 flex-1">
           {classStudents.map(student => {
             const record = attendance.find(a => a.student_id === student.id && a.date === attendanceDate);
             const isPresent = record?.present ?? false;
@@ -302,14 +302,14 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                 key={student.id}
                 onClick={() => !isReadOnly && toggleAttendance(student, isPresent)}
                 disabled={!!savingStudent || isReadOnly}
-                className={`flex items-center gap-3 w-full p-3 rounded-lg border transition-colors text-left ${
+                className={`ebd-attendance-student flex items-center gap-3 w-full p-3 rounded-lg border transition-colors text-left ${
                   isPresent
                     ? 'bg-primary/5 border-primary/20'
                     : 'bg-card border-border'
                 } ${isReadOnly ? 'opacity-70 cursor-default' : 'hover:bg-muted/50 cursor-pointer'}`}
               >
                 <Checkbox checked={isPresent} className="pointer-events-none" disabled={isReadOnly} />
-                <span className="flex-1 font-medium text-sm">{student.name}</span>
+                <span className="min-w-0 flex-1 break-words font-medium text-sm">{student.name}</span>
                 {isPresent ? (
                   <CheckCircle2 className="h-4 w-4 text-primary" />
                 ) : (
@@ -328,7 +328,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
             <div className="flex items-center gap-2">
               <UserPlus className="h-4 w-4 text-muted-foreground shrink-0" />
               <p className="text-sm font-medium flex-1">Visitantes nesta aula</p>
-              <Badge variant="secondary" className="text-[10px]">{visitorList.length}</Badge>
+              <Badge variant="secondary" className="text-xs">{visitorList.length}</Badge>
             </div>
 
             {visitorList.length > 0 && (
@@ -344,6 +344,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        aria-label={`Remover visitante ${v.name || "sem nome"}`}
                         onClick={() => onRemoveClassVisitor?.(selectedClass.id, v.id)}
                       >
                         <X className="h-3.5 w-3.5" />
@@ -356,11 +357,11 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
 
             {!isReadOnly && (
               visitorInputOpen ? (
-                <div className="flex items-center gap-1.5">
+                <div className="ebd-visitor-form">
                   <Input
                     ref={visitorInputRef}
                     autoFocus
-                    placeholder="Nome do visitante (opcional)"
+                    aria-label="Nome do visitante (opcional)" placeholder="Nome do visitante (opcional)"
                     value={visitorNameDraft}
                     onChange={(e) => setVisitorNameDraft(e.target.value)}
                     onKeyDown={(e) => {
@@ -376,12 +377,13 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                     disabled={addingVisitor}
                   />
                   <Button size="sm" className="h-8 px-3" onClick={submitVisitor} disabled={addingVisitor}>
-                    {addingVisitor ? '...' : 'Add'}
+                    {addingVisitor ? 'Adicionando…' : 'Adicionar'}
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-11 w-11"
+                    aria-label="Cancelar novo visitante"
                     onClick={() => { setVisitorInputOpen(false); setVisitorNameDraft(''); }}
                     disabled={addingVisitor}
                   >
@@ -400,14 +402,14 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               )
             )}
             {isReadOnly && visitorList.length === 0 && (
-              <p className="text-[11px] text-muted-foreground italic">Nenhum visitante.</p>
+              <p className="text-xs text-muted-foreground italic">Nenhum visitante.</p>
             )}
           </div>
         </div>
 
         {/* Footer action */}
         {!dayIsClosed && (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-20">
+          <div className="ebd-attendance-footer">
             {status === 'aberta' && (
               <Button
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
@@ -449,7 +451,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
 
       {/* Day closed banner */}
       {dayIsClosed && (
-        <div className="flex items-center gap-2 p-3 rounded-lg border border-orange-500/30 bg-orange-500/5">
+        <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg border border-orange-500/30 bg-orange-500/5">
           <Lock className="h-4 w-4 text-orange-600 shrink-0" />
           <p className="text-sm text-orange-700 font-medium">Dia fechado — chamada encerrada</p>
           {isAdmin && onReopenDay && (
@@ -466,9 +468,9 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
       )}
 
       {/* Summary card */}
-      <Card>
-        <CardContent className="pt-5 space-y-3">
-          <div className="flex items-center justify-between">
+      <Card data-ebd-card>
+        <CardContent data-ebd-content className="pt-5 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-muted-foreground">Presença geral — {formattedDate}</p>
               <p className="text-2xl font-bold">
@@ -494,7 +496,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
                   <Download className="h-4 w-4" />
                 </Button>
               )}
-              <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="h-14 min-w-14 px-2 rounded-xl bg-primary/10 flex items-center justify-center">
                 <span className="text-lg font-bold text-primary">{totalStats.percentage}%</span>
               </div>
             </div>
@@ -503,7 +505,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
 
           {/* Progresso turmas finalizadas */}
           {classes.length > 0 && !dayIsClosed && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <CheckCircle2 className="h-3.5 w-3.5" />
               <span>{finishedClassesCount}/{classes.length} turmas finalizadas</span>
               {inProgressClassesCount > 0 && (
@@ -513,7 +515,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           )}
 
           {/* Visitor count (somatório por turma) */}
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <UserPlus className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Visitantes</span>
             <span className="text-sm font-semibold ml-auto">{totalVisitors}</span>
@@ -523,7 +525,7 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
               </span>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground -mt-1">
+          <p className="text-xs text-muted-foreground -mt-1">
             Adicione visitantes (com nome opcional) dentro de cada turma.
           </p>
 
@@ -549,33 +551,37 @@ export default function ChamadaTab({ classes, students, attendance, setAttendanc
           const classVis = (classVisitors[cls.id] || []).length;
 
           return (
-            <Card
+            <Card data-ebd-card
               key={cls.id}
               className={`cursor-pointer hover:shadow-md transition-all ${getColorClass(pct)}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Abrir chamada de ${cls.name}`}
+              onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedClass(cls); } }}
               onClick={() => setSelectedClass(cls)}
             >
-              <CardContent className="pt-4 pb-4 space-y-2">
+              <CardContent data-ebd-content className="pt-4 pb-4 space-y-2">
                 <div className="flex items-center gap-2">
                   {index === 0 && stats.present > 0 && (
                     <Trophy className="h-4 w-4 text-yellow-500 shrink-0" />
                   )}
                   <Users className="h-4 w-4 text-primary shrink-0" />
-                  <span className="font-medium text-sm">{cls.name}</span>
+                  <span className="min-w-0 flex-1 break-words font-medium text-sm">{cls.name}</span>
                   <div className="ml-auto shrink-0">
                     {dayIsClosed ? (
-                      <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-[10px]">Fechado</Badge>
+                      <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-xs">Fechado</Badge>
                     ) : (
                       getStatusBadge(cls.id)
                     )}
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-xs text-muted-foreground">{stats.present}/{stats.total} presentes</span>
                   <span className={`text-xs font-semibold ${getPercentColor(pct)}`}>{pct}%</span>
                 </div>
                 <Progress value={pct} className="h-1.5" />
                 {classVis > 0 && (
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <UserPlus className="h-3 w-3" /> {classVis} visitante{classVis > 1 ? 's' : ''}
                   </p>
                 )}

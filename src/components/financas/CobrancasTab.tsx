@@ -400,7 +400,7 @@ export function CobrancasTab() {
 
           <div className="rounded-lg border border-border/60 bg-muted/30 p-3 mb-4">
             <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Resumo financeiro - {selectedYear}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+            <div className="finance-inline-values mb-3">
               <div className="rounded-md bg-background border p-3">
                 <p className="text-xs text-muted-foreground">Previsto</p>
                 <p className="text-lg font-bold text-foreground">{formatCurrency(totalPrevisto)}</p>
@@ -415,15 +415,15 @@ export function CobrancasTab() {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-              <div className="flex justify-between rounded-md bg-background/80 px-3 py-2">
+              <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 rounded-md bg-background/80 px-3 py-2">
                 <span className="text-muted-foreground">Contribuição</span>
                 <span className="font-semibold">{formatCurrency(contributionAmount)} por sócio</span>
               </div>
-              <div className="flex justify-between rounded-md bg-background/80 px-3 py-2">
+              <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 rounded-md bg-background/80 px-3 py-2">
                 <span className="text-muted-foreground">Per capita</span>
                 <span className="font-semibold">{formatCurrency(perCapitaAmount)} por sócio</span>
               </div>
-              <div className="flex justify-between rounded-md bg-background/80 px-3 py-2">
+              <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 rounded-md bg-background/80 px-3 py-2">
                 <span className="text-muted-foreground">Total anual</span>
                 <span className="font-semibold">{formatCurrency(configuredAnnualTotal)} por sócio</span>
               </div>
@@ -437,7 +437,7 @@ export function CobrancasTab() {
             >
               <Check className="h-4 w-4 text-green-600 mx-auto mb-0.5" />
               <p className="text-lg font-bold text-green-700 dark:text-green-300">{paidCharges}</p>
-              <p className="text-[10px] text-green-600 dark:text-green-400">Pagos</p>
+              <p className="text-xs text-green-600 dark:text-green-400">Pagos</p>
             </button>
             <button
               onClick={() => setStatusFilter(statusFilter === 'parcial' ? null : 'parcial')}
@@ -445,7 +445,7 @@ export function CobrancasTab() {
             >
               <Wallet className="h-4 w-4 text-yellow-600 mx-auto mb-0.5" />
               <p className="text-lg font-bold text-yellow-700 dark:text-yellow-300">{partialCharges}</p>
-              <p className="text-[10px] text-yellow-600 dark:text-yellow-400">Parciais</p>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400">Parciais</p>
             </button>
             <button
               onClick={() => setStatusFilter(statusFilter === 'pendente' ? null : 'pendente')}
@@ -453,7 +453,7 @@ export function CobrancasTab() {
             >
               <Clock className="h-4 w-4 text-destructive mx-auto mb-0.5" />
               <p className="text-lg font-bold text-red-700 dark:text-red-300">{pendingCharges}</p>
-              <p className="text-[10px] text-red-600 dark:text-red-400">Pendentes</p>
+              <p className="text-xs text-red-600 dark:text-red-400">Pendentes</p>
             </button>
             <button
               onClick={() => setStatusFilter(statusFilter === 'isento' ? null : 'isento')}
@@ -461,7 +461,7 @@ export function CobrancasTab() {
             >
               <ShieldCheck className="h-4 w-4 text-muted-foreground mx-auto mb-0.5" />
               <p className="text-lg font-bold text-muted-foreground">{exemptCharges}</p>
-              <p className="text-[10px] text-muted-foreground">Isentos</p>
+              <p className="text-xs text-muted-foreground">Isentos</p>
             </button>
           </div>
         </CardContent>
@@ -596,7 +596,7 @@ export function CobrancasTab() {
                     </div>
                     {getStatusBadge(charge)}
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="finance-inline-values text-sm">
                     <div className="rounded-md bg-background/80 p-2">
                       <p className="text-muted-foreground">Total</p>
                       <p className="font-bold">{formatCurrency(charge.amount)}</p>
@@ -628,7 +628,7 @@ export function CobrancasTab() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="finance-dialog max-w-md">
           <DialogHeader>
             <DialogTitle>Dar baixa - {selectedMember?.name}</DialogTitle>
           </DialogHeader>
@@ -697,7 +697,7 @@ export function CobrancasTab() {
       </Dialog>
 
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="finance-dialog max-w-md">
           <DialogHeader>
             <DialogTitle>Detalhes - {viewingMember?.name}</DialogTitle>
           </DialogHeader>

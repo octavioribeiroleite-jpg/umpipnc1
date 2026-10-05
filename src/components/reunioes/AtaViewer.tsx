@@ -300,7 +300,7 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Ata da Reunião
@@ -328,13 +328,13 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
           
           {isEditing ? (
             <div className="space-y-4">
-              <Textarea
+              <Textarea aria-label="Texto da ata"
                 value={editedMinutes}
                 onChange={(e) => setEditedMinutes(e.target.value)}
                 rows={20}
-                className="font-mono text-sm"
+                className="text-sm leading-relaxed"
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap justify-end gap-2">
                 <Button variant="outline" onClick={handleCancelEdit}>
                   <X className="h-4 w-4 mr-2" />
                   Cancelar
@@ -346,7 +346,7 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
               </div>
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm break-words max-w-none dark:prose-invert">
               {formatMinutesDisplay(meeting.final_minutes || '')}
             </div>
           )}
@@ -359,7 +359,7 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
   if (editable) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Badge variant="outline">
               {acceptedSuggestions.length} itens aceitos
@@ -373,15 +373,15 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
           </Button>
         </div>
 
-        <Textarea
+        <Textarea aria-label="Texto da ata"
           value={finalMinutes}
           onChange={(e) => setFinalMinutes(e.target.value)}
           placeholder="Cole ou edite a ata da reunião aqui..."
           rows={20}
-          className="font-mono text-sm"
+          className="text-sm leading-relaxed"
         />
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button
             onClick={handleClose}
             disabled={generating || !finalMinutes.trim()}

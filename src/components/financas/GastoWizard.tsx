@@ -147,7 +147,7 @@ export function GastoWizard({
                   {isDone ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
                 </div>
                 <span
-                  className={`text-[10px] font-medium transition-colors duration-300 ${
+                  className={`text-xs font-medium transition-colors duration-300 ${
                     isActive ? 'text-primary' : isDone ? 'text-primary/70' : 'text-muted-foreground'
                   }`}
                 >
@@ -297,7 +297,7 @@ export function GastoWizard({
 
               <div className="h-px bg-border" />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">Valor</p>
                   <p className="text-xl font-bold text-destructive mt-0.5">

@@ -96,7 +96,7 @@ export function ExtratoDialog({ type, onClose }: Props) {
 
   return (
     <Dialog open={Boolean(type)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100%_-_1.25rem)] max-w-2xl overflow-y-auto rounded-[22px] p-4 sm:w-full sm:p-6">
+      <DialogContent className="finance-dialog max-h-[92dvh] w-[calc(100%_-_1.25rem)] max-w-2xl overflow-y-auto rounded-[22px] p-4 sm:w-full sm:p-6">
         <DialogHeader className="pr-7">
           <DialogTitle className="text-lg sm:text-xl">{type ? TITLES[type] : ''}</DialogTitle>
         </DialogHeader>
@@ -109,18 +109,18 @@ export function ExtratoDialog({ type, onClose }: Props) {
           <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma movimentação registrada</p>
         ) : (
           <div className="space-y-3 sm:space-y-4">
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+            <div className="finance-inline-values">
               <div className="min-w-0 rounded-xl bg-success/10 p-2 text-center sm:p-3">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">Receitas</p>
-                <p className="mt-0.5 min-w-0 whitespace-normal break-words text-xs font-bold tabular-nums text-success sm:text-sm">{brl(totalEntradas)}</p>
+                <p className="text-xs text-muted-foreground sm:text-xs">Receitas</p>
+                <p className="mt-0.5 min-w-0 whitespace-normal break-words finance-metric-number font-bold text-success">{brl(totalEntradas)}</p>
               </div>
               <div className="min-w-0 rounded-xl bg-destructive/10 p-2 text-center sm:p-3">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">Gastos</p>
-                <p className="mt-0.5 min-w-0 whitespace-normal break-words text-xs font-bold tabular-nums text-destructive sm:text-sm">{brl(totalSaidas)}</p>
+                <p className="text-xs text-muted-foreground sm:text-xs">Gastos</p>
+                <p className="mt-0.5 min-w-0 whitespace-normal break-words finance-metric-number font-bold text-destructive">{brl(totalSaidas)}</p>
               </div>
               <div className="min-w-0 rounded-xl bg-muted p-2 text-center sm:p-3">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">Saldo</p>
-                <p className={`mt-0.5 min-w-0 whitespace-normal break-words text-xs font-bold tabular-nums sm:text-sm ${saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <p className="text-xs text-muted-foreground sm:text-xs">Saldo</p>
+                <p className={`mt-0.5 min-w-0 whitespace-normal break-words finance-metric-number font-bold ${saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {brl(saldo)}
                 </p>
               </div>
@@ -128,22 +128,22 @@ export function ExtratoDialog({ type, onClose }: Props) {
 
             {groups.map((group) => (
               <div key={group.key} className="overflow-hidden rounded-xl border">
-                <div className="flex items-center justify-between gap-2 bg-muted/50 px-3 py-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/50 px-3 py-2">
                   <span className="min-w-0 whitespace-normal break-words text-xs font-semibold sm:text-sm">{group.label}</span>
-                  <span className={`flex-shrink-0 text-xs font-bold tabular-nums sm:text-sm ${group.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  <span className={`flex-shrink-0 finance-metric-number font-bold ${group.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {brl(group.saldo)}
                   </span>
                 </div>
                 <div className="divide-y">
                   {group.items.map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between gap-2 px-3 py-2.5">
+                    <div key={transaction.id} className="flex flex-wrap items-start justify-between gap-3 px-3 py-3">
                       <div className="flex min-w-0 items-center gap-2">
                         {transaction.type === 'entrada'
                           ? <TrendingUp className="h-4 w-4 flex-shrink-0 text-success" />
                           : <TrendingDown className="h-4 w-4 flex-shrink-0 text-destructive" />}
                         <div className="min-w-0">
                           <p className="min-w-0 whitespace-normal break-words text-xs sm:text-sm">{transaction.description}</p>
-                          <p className="text-[10px] text-muted-foreground sm:text-xs">
+                          <p className="text-xs text-muted-foreground sm:text-xs">
                             {new Date(`${transaction.date}T00:00:00`).toLocaleDateString('pt-BR')}
                           </p>
                         </div>

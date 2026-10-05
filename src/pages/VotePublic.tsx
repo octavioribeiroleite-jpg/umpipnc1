@@ -48,28 +48,29 @@ function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name
   }
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex w-full min-w-0 flex-col items-center gap-2">
       <div className={`relative ${sizeClass} rounded-xl overflow-hidden bg-muted`}>
         <img src={photos[current]} alt={name} className="w-full h-full object-cover" />
         <button
           onClick={(e) => { e.stopPropagation(); setCurrent(p => p > 0 ? p - 1 : photos.length - 1); }}
-          className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/40 rounded-full p-0.5"
+          aria-label="Foto anterior" className="absolute left-0 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center bg-black/40 rounded-full"
         >
           <ChevronLeft className="h-4 w-4 text-white" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); setCurrent(p => p < photos.length - 1 ? p + 1 : 0); }}
-          className="absolute right-1 top-1/2 -translate-y-1/2 bg-black/40 rounded-full p-0.5"
+          aria-label="Próxima foto" className="absolute right-0 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center bg-black/40 rounded-full"
         >
           <ChevronRight className="h-4 w-4 text-white" />
         </button>
       </div>
-      <div className="flex gap-1">
+      <div className="flex max-w-full flex-wrap justify-center gap-1">
         {photos.map((_, i) => (
           <button
             key={i}
             onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
-            className={`w-2 h-2 rounded-full transition-colors ${i === current ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+            aria-label={`Ver foto ${i + 1}`} aria-pressed={i === current}
+            className={`h-11 w-11 rounded-full border-[17px] border-background transition-colors ${i === current ? 'bg-primary' : 'bg-muted-foreground/30'}`}
           />
         ))}
       </div>
@@ -96,7 +97,7 @@ function CandidateStartPreview({ candidates, isCamisa }: { candidates: Candidate
                   </div>
                 )}
               </div>
-              <p className="mt-2 h-8 overflow-hidden text-xs font-semibold leading-tight text-foreground">
+              <p className="mt-2 min-h-8 break-words text-xs font-semibold leading-tight text-foreground">
                 {isCamisa ? candidate.name : candidate.name}
               </p>
             </div>
@@ -222,16 +223,16 @@ function getTopForNextRound(
 
 function SuccessScreen({ autoReset }: { autoReset: boolean }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4 sm:p-6 text-center">
-      <div className="animate-fade-up w-full max-w-xl rounded-[2rem] bg-background border border-border/70 shadow-2xl px-6 py-10 sm:px-10 sm:py-12 md:px-14 md:py-16">
-        <div className="relative mx-auto mb-8 w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-muted/30 p-4 sm:p-6 text-center">
+      <div className="animate-fade-up w-full max-w-xl rounded-2xl bg-card border border-border shadow-sm px-5 py-8 sm:px-10 sm:py-12 md:px-14 md:py-16">
+        <div className="relative mx-auto mb-8 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40">
           <div className="absolute inset-0 rounded-full bg-success/10 animate-ping" />
           <div className="absolute inset-3 rounded-full bg-success/10" />
           <div className="relative w-full h-full rounded-full bg-success flex items-center justify-center shadow-xl ring-8 ring-success/15">
-            <CheckCircle className="h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 text-success-foreground" strokeWidth={2.5} />
+            <CheckCircle className="h-14 w-14 sm:h-20 sm:w-20 md:h-24 md:w-24 text-success-foreground" strokeWidth={2.5} />
           </div>
         </div>
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-foreground mb-4 tracking-tight leading-none">
+        <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold text-foreground mb-4 tracking-tight leading-none">
           VOTO CONFIRMADO
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground font-semibold">
@@ -621,7 +622,7 @@ export default function VotePublic() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
@@ -629,7 +630,7 @@ export default function VotePublic() {
 
   if (invalidToken) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-background p-6 text-center">
         <XCircle className="h-16 w-16 text-destructive mb-4" />
         <h1 className="text-2xl font-bold mb-2">Dispositivo Não Cadastrado</h1>
         <p className="text-muted-foreground">Este link de urna fixa não é válido ou o dispositivo não foi cadastrado.</p>
@@ -639,7 +640,7 @@ export default function VotePublic() {
 
   if (!election || election.status !== 'open') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-background p-6 text-center">
         <XCircle className="h-16 w-16 text-muted-foreground mb-4" />
         <h1 className="text-2xl font-bold mb-2">Votação Indisponível</h1>
         <p className="text-muted-foreground">
@@ -651,7 +652,7 @@ export default function VotePublic() {
 
   if (!isCamisa && currentRound > MAX_ROUNDS) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-background p-6 text-center">
         <ShieldCheck className="h-16 w-16 text-warning mb-4" />
         <h1 className="text-2xl font-bold mb-2">Escrutínios Encerrados</h1>
         <p className="text-muted-foreground max-w-md">
@@ -665,7 +666,7 @@ export default function VotePublic() {
 
   if (alreadyVoted) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-background p-6 text-center">
         <div className="animate-fade-up">
           <ShieldCheck className="h-24 w-24 text-primary mx-auto mb-6" />
           <h1 className="text-3xl font-bold mb-2">Você já votou</h1>
@@ -686,7 +687,7 @@ export default function VotePublic() {
   if (showNullWarning && isMultiSeat) {
     const nullCount = maxChoices - selectedCandidates.length;
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-8">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-8">
         <div className="w-full max-w-md rounded-2xl border-2 border-warning bg-warning/10 p-6 shadow-lg flex flex-col gap-5">
           <div className="flex flex-col items-center gap-2 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warning text-warning-foreground text-4xl font-bold">
@@ -758,7 +759,7 @@ export default function VotePublic() {
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
     const confirmationBlankSlots = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? autoBlankSlots : 0);
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-6">
           <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto Branco / Nulo?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
           {confirmBlank ? (
@@ -803,8 +804,8 @@ export default function VotePublic() {
   // Pre-voting screen
   if ((isSharedBehavior || !isIndividual) && !readyToVote) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4 text-center sm:p-6">
-        <div className="w-full max-w-2xl animate-fade-up rounded-[2rem] border border-border/70 bg-background px-4 py-6 shadow-2xl sm:px-8 sm:py-8">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-muted/30 p-4 text-center sm:p-6">
+        <div className="w-full max-w-2xl animate-fade-up rounded-2xl border border-border bg-card px-4 py-6 shadow-sm sm:px-8 sm:py-8">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
             <Vote className="h-9 w-9 text-primary" />
           </div>
@@ -836,10 +837,10 @@ export default function VotePublic() {
 
   // Main voting screen
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-8">
+    <div className="min-h-dvh bg-background p-3 sm:p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold">{election.name}</h1>
+          <h1 className="break-words text-2xl md:text-3xl font-bold">{election.name}</h1>
           <p className="text-lg text-muted-foreground mt-1">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
           <p className="text-sm text-muted-foreground mt-1">
             {isCamisa ? 'Escolha o modelo' : isMultiSeat ? `Preencha até ${maxChoices} voto(s) • ${totalSelectedMarks}/${maxChoices}` : 'Escolha seu candidato'}
@@ -852,7 +853,7 @@ export default function VotePublic() {
             const selectedIndex = selectedCandidates.findIndex((candidate) => candidate.id === c.id);
             const selected = selectedIndex >= 0;
             return (
-              <button
+              <div
                 key={c.id}
                 onClick={() => {
                   void primeAudio();
@@ -863,7 +864,7 @@ export default function VotePublic() {
                     return [...current, c];
                   });
                 }}
-                className={`touch-manipulation relative flex min-h-48 flex-col items-center justify-between gap-3 rounded-2xl border-2 bg-card/95 p-3 shadow-sm transition-all hover:border-primary hover:bg-primary/5 active:scale-[0.98] sm:p-4 md:p-6 ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
+                className={`touch-manipulation relative flex min-w-0 min-h-48 cursor-pointer flex-col items-center justify-between gap-3 rounded-2xl border-2 bg-card/95 p-3 shadow-sm transition-all hover:border-primary hover:bg-primary/5 active:scale-[0.98] sm:p-4 md:p-6 ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
               >
                 {isMultiSeat && selected && (
                   <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-sm">
@@ -871,17 +872,17 @@ export default function VotePublic() {
                   </span>
                 )}
                 <CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} />
-                <span className="text-sm md:text-base font-semibold text-center">{c.name}</span>
-                <span className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">
+                <span className="break-words text-sm md:text-base font-semibold text-center">{c.name}</span>
+                <button type="button" aria-label={`${isMultiSeat ? (selected ? 'Desmarcar' : 'Selecionar') : 'Votar em'} ${c.name}`} className="min-h-11 w-full rounded-xl bg-primary px-3 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">
                   {isMultiSeat ? (selected ? 'SELECIONADO' : 'SELECIONAR') : 'VOTAR'}
-                </span>
-              </button>
+                </button>
+              </div>
             );
           })}
         </div>
 
         {isMultiSeat && (
-          <div className="sticky bottom-3 mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
+          <div className="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
             <Button
               className="h-12 w-full text-base font-bold"
               disabled={selectedCandidates.length === 0}

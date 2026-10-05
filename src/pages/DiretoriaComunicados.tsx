@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -101,12 +102,12 @@ export default function DiretoriaComunicados() {
               </DrawerTitle>
             </DrawerHeader>
             <div className="px-4 space-y-4 overflow-y-auto">
-              <Input placeholder="Título" value={title} onChange={e => setTitle(e.target.value)} />
-              <Textarea placeholder="Mensagem..." value={message} onChange={e => setMessage(e.target.value)} rows={4} />
+              <div className="space-y-2"><Label htmlFor="announcement-title">Título</Label><Input id="announcement-title" placeholder="Título" value={title} onChange={e => setTitle(e.target.value)} /></div>
+              <div className="space-y-2"><Label htmlFor="announcement-message">Mensagem</Label><Textarea id="announcement-message" placeholder="Mensagem..." value={message} onChange={e => setMessage(e.target.value)} rows={4} /></div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Prioridade</p>
+                <Label htmlFor="announcement-priority">Prioridade</Label>
                 <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="announcement-priority" className="w-full sm:w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="urgente">Urgente</SelectItem>
@@ -150,7 +151,7 @@ export default function DiretoriaComunicados() {
                     </div>
                     <p className={`text-sm text-muted-foreground ${!isExpanded ? 'line-clamp-2' : ''}`}>{a.message}</p>
                     {a.message.length > 120 && (
-                      <button onClick={() => setExpandedId(isExpanded ? null : a.id)} className="text-xs text-primary mt-1 flex items-center gap-0.5">
+                      <button onClick={() => setExpandedId(isExpanded ? null : a.id)} aria-expanded={isExpanded} className="min-h-11 text-sm text-primary mt-1 flex items-center gap-1">
                         {isExpanded ? <>Menos <ChevronUp className="h-3 w-3" /></> : <>Ver mais <ChevronDown className="h-3 w-3" /></>}
                       </button>
                     )}

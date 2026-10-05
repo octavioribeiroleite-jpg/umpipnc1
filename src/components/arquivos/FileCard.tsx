@@ -78,7 +78,7 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
         </div>
       )}
       
-      <CardContent className={isImage ? 'p-3' : 'p-4'}>
+      <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {!isImage && (
             <div className="h-12 w-12 rounded-lg flex items-center justify-center bg-muted shrink-0">
@@ -87,8 +87,8 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
           )}
           
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{file.name}</p>
-            <div className="flex items-center gap-2 mt-1">
+            <button type="button" onClick={(event) => { event.stopPropagation(); onView(file); }} className="min-h-11 min-w-0 text-left text-sm font-medium [overflow-wrap:anywhere] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{file.name}</button>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <Badge 
                 variant="secondary" 
                 className={`text-xs ${categoryColors[category] || categoryColors.geral}`}
@@ -108,8 +108,8 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"
-                size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                size="icon" aria-label={`Opções de ${file.name}`}
+                className="shrink-0"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>

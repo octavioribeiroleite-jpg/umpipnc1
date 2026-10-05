@@ -10,10 +10,10 @@ interface CalendarViewSelectorProps {
 export function CalendarViewSelector({ viewMode, onViewModeChange }: CalendarViewSelectorProps) {
   return (
     <Tabs value={viewMode} onValueChange={(v) => onViewModeChange(v as ViewMode)} className="md:hidden">
-      <TabsList className="w-full">
-        <TabsTrigger value="week" className="flex-1 text-xs">Semana</TabsTrigger>
-        <TabsTrigger value="fortnight" className="flex-1 text-xs">15 dias</TabsTrigger>
-        <TabsTrigger value="month" className="flex-1 text-xs">Mês</TabsTrigger>
+      <TabsList className="flex h-auto w-full p-1" aria-label="Período do calendário">
+        <TabsTrigger value="week" className="min-h-11 flex-1 text-sm">Semana</TabsTrigger>
+        <TabsTrigger value="fortnight" className="min-h-11 flex-1 text-sm">15 dias</TabsTrigger>
+        <TabsTrigger value="month" className="min-h-11 flex-1 text-sm">Mês</TabsTrigger>
       </TabsList>
     </Tabs>
   );

@@ -12,7 +12,15 @@ publicável do Supabase e execute `npm ci` e `npm run dev`.
 Valide com `npx tsc -p tsconfig.app.json --noEmit`, `node --experimental-strip-types --test tests/*.mjs tests/*.ts`
 e `npm run build`. O resultado está em `dist/client`.
 
-## Configuração
+## Tesouraria pública das sociedades
+
+O novo dashboard está em `/tesouraria`, com leitura pública e lançamentos protegidos
+pelo acesso administrativo existente. O esquema foi aplicado e testado no Supabase IPNC.
+Consulte [ativação e validação](docs/treasury/README.md) antes de publicar a interface,
+que ainda aguarda validação visual interativa. A [prévia estática](docs/treasury/preview.html)
+não realiza consultas ou gravações.
+
+## Configuração do aplicativo
 
 Variáveis VITE são públicas. Nunca coloque service-role, senhas ou chaves de IA
 nelas. Configure `GEMINI_API_KEY` exclusivamente nos segredos das Edge Functions.

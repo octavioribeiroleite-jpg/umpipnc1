@@ -21,7 +21,7 @@ export function ReuniaoPastaData({ date, count, children, defaultOpen = true }: 
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger className="w-full">
         <div className={cn(
-          "flex items-center gap-3 p-3 rounded-lg transition-colors",
+          "flex min-h-11 flex-wrap items-center gap-2 p-3 rounded-xl text-left transition-colors",
           "bg-muted/50 hover:bg-muted cursor-pointer",
           "border border-border/50"
         )}>
@@ -31,7 +31,7 @@ export function ReuniaoPastaData({ date, count, children, defaultOpen = true }: 
             <Folder className="h-5 w-5 text-muted-foreground" />
           )}
           
-          <span className="font-medium text-foreground">
+          <span className="min-w-0 break-words text-sm font-medium text-foreground">
             {formattedDate}
           </span>
           
@@ -50,7 +50,7 @@ export function ReuniaoPastaData({ date, count, children, defaultOpen = true }: 
       </CollapsibleTrigger>
       
       <CollapsibleContent>
-        <div className="ml-4 mt-2 pl-4 border-l-2 border-border/50 space-y-3">
+        <div className="mt-3 space-y-3 sm:ml-2 sm:pl-4 sm:border-l-2 sm:border-border/50">
           {children}
         </div>
       </CollapsibleContent>

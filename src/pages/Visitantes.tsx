@@ -202,8 +202,8 @@ export default function Visitantes() {
                   >
                     <p className="text-xs font-medium text-muted-foreground">{format(s.date, 'dd/MM')}</p>
                     <p className={cn('text-xl font-bold', isSelected ? 'text-primary' : '')}>{s.total}</p>
-                    <p className="text-[10px] text-muted-foreground">pessoas</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{s.members}m · {s.visitors}v</p>
+                    <p className="text-xs text-muted-foreground">pessoas</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{s.members}m · {s.visitors}v</p>
                   </button>
                 );
               })}
@@ -245,17 +245,17 @@ export default function Visitantes() {
       ) : (
         <div className="space-y-6">
           {/* Day summary cards */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <AppCard variant="stat">
-                <p className="text-2xl font-bold text-center">{dayStats.total}</p>
+                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.total}</p>
                 <p className="text-xs text-muted-foreground text-center">Total de pessoas</p>
             </AppCard>
             <AppCard variant="stat">
-                <p className="text-2xl font-bold text-center">{dayStats.members}</p>
+                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.members}</p>
                 <p className="text-xs text-muted-foreground text-center">Membros</p>
             </AppCard>
             <AppCard variant="stat">
-                <p className="text-2xl font-bold text-center">{dayStats.visitors}</p>
+                <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.visitors}</p>
                 <p className="text-xs text-muted-foreground text-center">Visitantes</p>
             </AppCard>
           </div>
@@ -269,8 +269,8 @@ export default function Visitantes() {
               {dayVisitors.length === 0 ? (
                 <p className="text-center text-muted-foreground py-6 text-sm">Nenhuma pessoa neste dia.</p>
               ) : (
-                <div className="overflow-x-auto -mx-4">
-                  <div className="min-w-[500px] px-4">
+                <div className="w-full overflow-x-auto rounded-xl border border-border" role="region" aria-label="Pessoas do dia — deslize para ver todas as colunas" tabIndex={0}>
+                  <div className="min-w-[500px]">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -288,9 +288,9 @@ export default function Visitantes() {
                               <TableCell className="font-medium">{v.full_name}</TableCell>
                               <TableCell>
                                 {v.is_visitor ? (
-                                  <Badge variant="outline" className="text-[10px]">Visitante</Badge>
+                                  <Badge variant="outline" className="text-xs">Visitante</Badge>
                                 ) : v.society_id && societies[v.society_id] ? (
-                                  <Badge variant="outline" className="text-[10px]"
+                                  <Badge variant="outline" className="text-xs"
                                     style={{ borderColor: societies[v.society_id].color, color: societies[v.society_id].color }}>
                                     {societies[v.society_id].name}
                                   </Badge>
@@ -301,9 +301,9 @@ export default function Visitantes() {
                               <TableCell className="text-muted-foreground text-xs">{format(new Date(v.created_at), 'HH:mm')}</TableCell>
                               <TableCell>
                                 {isFirstAccess ? (
-                                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">Novo</Badge>
+                                  <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">Novo</Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="text-[10px]">Retornou</Badge>
+                                  <Badge variant="secondary" className="text-xs">Retornou</Badge>
                                 )}
                               </TableCell>
                             </TableRow>
@@ -326,21 +326,21 @@ export default function Visitantes() {
               <div className="grid gap-2 sm:grid-cols-2">
                 {recurringVisitors.slice(0, 20).map((rv, i) => (
                   <div key={i} className="rounded-lg border p-3 space-y-1">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{rv.fullName}</span>
-                      <Badge variant="secondary" className="text-[10px] shrink-0">{rv.visitCount} dias</Badge>
+                      <Badge variant="secondary" className="text-xs shrink-0">{rv.visitCount} dias</Badge>
                     </div>
                     <div className="flex items-center gap-2">
                       {rv.isVisitor ? (
-                        <Badge variant="outline" className="text-[10px]">Visitante</Badge>
+                        <Badge variant="outline" className="text-xs">Visitante</Badge>
                       ) : rv.societyId && societies[rv.societyId] ? (
-                        <Badge variant="outline" className="text-[10px]"
+                        <Badge variant="outline" className="text-xs"
                           style={{ borderColor: societies[rv.societyId].color, color: societies[rv.societyId].color }}>
                           {societies[rv.societyId].name}
                         </Badge>
                       ) : null}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       Primeira: {format(new Date(rv.firstVisit), 'dd/MM/yyyy')} · Última: {format(new Date(rv.lastVisit), 'dd/MM/yyyy')}
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PastorSidebar } from './PastorSidebar';
 import { PastorMobileHeader } from './PastorMobileHeader';
@@ -41,33 +41,29 @@ export function PastorLayout({ children }: PastorLayoutProps) {
   if (!user) return null;
 
   if (!isPastor && !isAdmin) {
-    navigate('/');
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden">
+    <div className="min-h-dvh w-full bg-background text-foreground">
       <OfflineBanner />
-
-      {/* Desktop layout (>= lg) */}
-      <div className="hidden lg:flex min-h-screen">
-        <PastorSidebar />
-        <main className="flex-1 min-w-0 overflow-x-hidden bg-background/60 backdrop-blur-sm">
-          <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
-            {children}
-          </div>
+      <a href="#pastor-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3 focus:text-primary focus:shadow-lg">
+        Ir para o conteúdo
+      </a>
+      <div className="flex min-h-dvh">
+        <div className="hidden lg:block">
+          <PastorSidebar />
+        </div>
+        <div className="lg:hidden">
+          <PastorMobileHeader />
+        </div>
+        {/* One content tree preserves form state and subscriptions across breakpoints. */}
+        <main id="pastor-content" tabIndex={-1} className="min-w-0 flex-1 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-[calc(4.5rem+env(safe-area-inset-top))] sm:px-6 lg:py-7 lg:px-8">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
-      </div>
-
-      {/* Mobile + tablet layout */}
-      <div className="lg:hidden flex flex-col min-h-screen">
-        <PastorMobileHeader />
-        <main className="flex-1 overflow-x-hidden pt-14 px-3 sm:px-4 pb-24 bg-background/60 backdrop-blur-sm">
-          <div className="mx-auto w-full max-w-3xl">
-            {children}
-          </div>
-        </main>
-        <PastorMobileNav />
+        <div className="lg:hidden">
+          <PastorMobileNav />
+        </div>
       </div>
     </div>
   );

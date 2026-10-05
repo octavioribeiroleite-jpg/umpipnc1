@@ -39,7 +39,7 @@ export function TaskStats({ tasks }: TaskStatsProps) {
   ];
 
   return (
-    <div className="mb-section-gap grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+    <div className="mb-section-gap grid grid-cols-1 min-[480px]:grid-cols-2 xl:grid-cols-4 gap-3">
       {stats.map((stat) => (
         <SummaryCard
           key={stat.label}

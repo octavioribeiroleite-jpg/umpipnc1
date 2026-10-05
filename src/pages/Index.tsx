@@ -56,7 +56,7 @@ function QuickAction({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[66px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-[16px] border border-emerald-100 bg-white/90 px-1.5 py-2 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] dark:border-border dark:bg-card/95 sm:min-h-[78px] sm:gap-2 sm:px-2"
+      className="flex min-h-[66px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-[16px] border border-border bg-card px-1.5 py-2 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] dark:border-border dark:bg-card/95 sm:min-h-[78px] sm:gap-2 sm:px-2"
     >
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 sm:h-9 sm:w-9">
         <Icon className="h-4 w-4" />
@@ -333,7 +333,7 @@ export default function Index() {
 
         <div className="relative flex min-w-0 items-start justify-between gap-3 lg:items-center">
           <div className="min-w-0">
-            <p className="min-w-0 whitespace-normal break-words text-[11px] font-medium text-emerald-100 sm:text-sm">
+            <p className="min-w-0 whitespace-normal break-words text-xs font-medium text-emerald-100 sm:text-sm">
               {capitalizedDate}
             </p>
             <h1 className="mt-1.5 break-words text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
@@ -347,7 +347,7 @@ export default function Index() {
           <button
             type="button"
             onClick={() => navigate('/comunicados')}
-            className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/25 sm:h-11 sm:w-11"
+            className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/25 sm:h-11 sm:w-11"
             aria-label="Abrir comunicados"
           >
             <Bell className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
@@ -418,7 +418,6 @@ export default function Index() {
           description={`${dashboardStats.pendingCharges} cobrança${dashboardStats.pendingCharges === 1 ? '' : 's'} pendente${dashboardStats.pendingCharges === 1 ? '' : 's'}`}
           icon={DollarSign}
           tone="warning"
-          valueClassName="whitespace-nowrap text-[clamp(1rem,4.2vw,1.75rem)] md:text-[clamp(1.15rem,2vw,2rem)]"
           onClick={() => navigate('/financas')}
         />
       </MetricGrid>
@@ -432,7 +431,7 @@ export default function Index() {
               <button
                 type="button"
                 onClick={() => navigate('/calendario')}
-                className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 sm:text-sm"
+                className="min-h-11 px-2 text-sm font-semibold text-primary hover:underline"
               >
                 Ver calendário
               </button>

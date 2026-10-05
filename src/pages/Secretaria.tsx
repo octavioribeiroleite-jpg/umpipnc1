@@ -35,7 +35,7 @@ import './secretaria-home.css';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { HeaderActions } from '@/components/layout/HeaderActions';
+import { SecretariaWorkspace } from '@/components/secretaria/SecretariaWorkspace';
 import { PullToRefresh } from '@/components/layout/PullToRefresh';
 import { useEbdSync } from '@/hooks/useEbdSync';
 import { ensureEbdSession, notifyEbdChange, reportEbdWriteError } from '@/lib/ebd-mutations';
@@ -132,7 +132,7 @@ function loadStoredEbdSession(): StoredEbdSession | null {
 }
 
 // Embedded birthdays component
-function SecretariaAniversariantes({ onSessionExpired }: { onSessionExpired: () => void }) {
+export function SecretariaAniversariantes({ onSessionExpired }: { onSessionExpired: () => void }) {
   const {
     activeBirthdays, todayBirthdays, weekBirthdays, monthBirthdays, nextBirthday,
     departments, isLoading, createBirthday, updateBirthday, deleteBirthday, birthdays,
@@ -646,28 +646,30 @@ export default function Secretaria() {
 
     if (loginStep === 'name') {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="w-full max-w-xs mx-auto space-y-6">
+        <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-6 safe-top safe-bottom">
+          <div className="w-full max-w-sm mx-auto space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div className="flex flex-col items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => { setLoginStep('pin'); setPendingPin(''); }} className="self-start shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => { setLoginStep('pin'); setPendingPin(''); }} className="self-start shrink-0" aria-label="Voltar ao PIN">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <UserCheck className="h-7 w-7 text-primary" />
               </div>
               <div className="text-center">
-                <h2 className="font-semibold text-lg">Qual é o seu nome?</h2>
+                <h1 className="font-semibold text-2xl tracking-tight">Qual é o seu nome?</h1>
                 <p className="text-sm text-muted-foreground">Para registrar quem entrou na sala</p>
               </div>
             </div>
+            <label className="block space-y-2 text-sm font-medium">Seu nome
             <input
               autoFocus
               value={nameInput}
               onChange={e => setNameInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && nameInput.trim()) handleNameSubmit(); }}
               placeholder="Seu nome"
-              className="w-full h-12 px-4 rounded-xl border-2 border-border bg-background text-base outline-none focus:border-primary"
+              className="w-full h-12 px-3 rounded-xl border border-input bg-background text-base outline-none focus:border-primary"
             />
+            </label>
             <Button
               className="w-full h-12 text-base font-semibold gap-2 rounded-xl"
               onClick={handleNameSubmit}
@@ -763,6 +765,7 @@ export default function Secretaria() {
 
         <main className="ebd-content">
           <div className={`ebd-sync ${lastSynced && !syncError && !aiReauthOpen ? 'ebd-sync-ok' : ''}`}>{syncNotice}</div>
+          <div className="ebd-overview">
           <section className="ebd-summary ebd-surface" aria-labelledby="ebd-summary-title" aria-busy={!lastSynced && syncing}>
             <div className="ebd-summary-heading">
               <h2 id="ebd-summary-title">Resumo do encontro</h2>
@@ -778,6 +781,7 @@ export default function Secretaria() {
           </section>
 
           <Button className="ebd-call" onClick={() => setCurrentView('chamada')}><ClipboardList aria-hidden="true" /><span>Abrir chamada</span><ArrowRight aria-hidden="true" /></Button>
+          </div>
 
           {isAdmin && (
             <section className="ebd-section" aria-labelledby="ebd-management-title">
@@ -846,51 +850,9 @@ export default function Secretaria() {
 
   return (
     <PullToRefresh>
-    <div className="min-h-screen bg-background">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border px-2 py-1.5 safe-top">
-        <div className="flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <button
-              onClick={handleBackToHome}
-              aria-label="Voltar"
-              className="p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div className="min-w-0 leading-tight">
-              <h1 className="font-semibold text-sm sm:text-base min-w-0 whitespace-normal break-words">{viewTitles[currentView]}</h1>
-              <p className="text-[10px] text-muted-foreground min-w-0 whitespace-normal break-words">
-                {formattedDate}
-                <span className="mx-1">·</span>
-                <span className={isAdmin ? 'text-primary font-medium' : ''}>{profileLabel}</span>
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            <HeaderActions />
-            <button
-              onClick={handleBackToHome}
-              aria-label="Menu da Secretaria"
-              title="Menu da Secretaria"
-              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-            >
-              <Home className="h-5 w-5" />
-            </button>
-            <button
-              onClick={handleExitApp}
-              aria-label="Sair"
-              title="Sair"
-              className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
+    <SecretariaWorkspace title={viewTitles[currentView]} profileLabel={profileLabel} onBack={handleBackToHome} onExit={handleExitApp} syncNotice={syncNotice}>
       {reauthDialog}
-      <div className="p-4 pb-8 pt-16">
-        {syncNotice}
+      <div className={`ebd-view ebd-view-${currentView}`}>
         {currentView === 'chamada' && (
           <ChamadaTab
             classes={visibleClasses}
@@ -960,7 +922,7 @@ export default function Secretaria() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </SecretariaWorkspace>
     </PullToRefresh>
   );
 }

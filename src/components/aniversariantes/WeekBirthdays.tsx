@@ -15,9 +15,9 @@ export function WeekBirthdays({ birthdays, showActions, onEdit, onToggleActive, 
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <CalendarDays className="h-5 w-5 text-sky-500" />
-        <h2 className="font-semibold text-sm">Próximos 7 dias</h2>
+      <div className="flex flex-wrap items-center gap-2">
+        <CalendarDays className="h-5 w-5 text-primary" />
+        <h2 className="font-semibold text-base">Próximos 7 dias</h2>
       </div>
       <div className="space-y-2">
         {birthdays.map(b => (

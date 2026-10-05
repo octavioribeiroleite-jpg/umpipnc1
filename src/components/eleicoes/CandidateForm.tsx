@@ -137,23 +137,23 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
       {!disabled && (
         <div className="flex gap-2">
           <Input
-            placeholder={`Nome do ${label}`}
+            aria-label={`Nome do ${label}`} placeholder={`Nome do ${label}`}
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            className="h-9"
+            className="h-11 min-w-0"
           />
-          <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleAdd}>
+          <Button size="icon" className="h-11 w-11 shrink-0" aria-label={`Adicionar ${label}`} onClick={handleAdd}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
       )}
 
-      <div className={`grid ${isCamisa ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-3 md:grid-cols-4'} gap-2`}>
+      <div className={`grid ${isCamisa ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} gap-2`}>
         {candidates.map((c) => {
           const photos = getPhotoUrls(c);
           return (
-            <div key={c.id} className="flex flex-col items-center gap-1.5 p-2 border border-border bg-background shadow-sm rounded-lg">
+            <div key={c.id} className="flex flex-col items-center min-w-0 gap-3 p-3 border border-border bg-background shadow-sm rounded-lg">
               {/* Photo display */}
               <div className={`relative ${isCamisa ? 'w-full aspect-square' : 'w-16 h-16'} rounded-lg overflow-hidden bg-muted flex items-center justify-center`}>
                 {photos.length > 0 ? (
@@ -172,11 +172,12 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
               {isCamisa && !disabled && photos.length > 0 && (
                 <div className="flex gap-1 flex-wrap justify-center">
                   {photos.map((url, i) => (
-                    <div key={i} className="relative w-8 h-8 rounded overflow-hidden border group">
+                    <div key={i} className="relative h-11 w-11 rounded-lg overflow-hidden border group">
                       <img src={url} alt="" className="w-full h-full object-cover" />
                       <button
                         onClick={() => handleRemovePhoto(c.id, i)}
-                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                        aria-label={`Remover foto ${i + 1} de ${c.name}`}
+                        className="absolute inset-0 bg-black/50 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 flex items-center justify-center transition-opacity"
                       >
                         <X className="h-3 w-3 text-white" />
                       </button>
@@ -185,7 +186,7 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
                 </div>
               )}
 
-              <span className="text-xs font-medium text-center leading-tight line-clamp-2">{c.name}</span>
+              <span className="break-words text-sm font-medium text-center leading-snug">{c.name}</span>
               
               {!disabled && (
                 <div className="flex gap-1">
@@ -202,11 +203,11 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
                         }
                       }}
                     />
-                    <Button variant="outline" size="icon" className="h-7 w-7" asChild disabled={uploading === c.id}>
+                    <Button variant="outline" size="icon" className="h-11 w-11" aria-label={`Adicionar foto de ${c.name}`} asChild disabled={uploading === c.id}>
                       <span>{isCamisa ? <ImagePlus className="h-3 w-3" /> : <Upload className="h-3 w-3" />}</span>
                     </Button>
                   </label>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemove(c.id)}>
+                  <Button variant="ghost" size="icon" className="h-11 w-11 text-destructive" aria-label={`Remover ${c.name}`} onClick={() => handleRemove(c.id)}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>

@@ -107,12 +107,12 @@ export default function Aniversariantes() {
   return (
     <AppLayout>
       <PageHeader
-        title="Aniversariantes 🎂"
+        title="Aniversariantes"
         description={`${activeBirthdays.length} cadastrados`}
         action={
           canManage ? (
             <Button size="sm" onClick={() => { setEditingBirthday(null); setFormOpen(true); }}>
-              <Plus className="h-4 w-4 mr-1" /> Novo
+              <Plus className="h-4 w-4 mr-1" /> Novo aniversariante
             </Button>
           ) : undefined
         }

@@ -559,25 +559,25 @@ export default function Usuarios() {
   // ==================== RENDER HELPERS ====================
 
   const renderDiretoriaCard = (user: UserWithRole) => (
-    <div key={user.id} className="rounded-lg border bg-card p-3 space-y-2">
-      <div className="flex items-start justify-between">
+    <div key={user.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
+      <div className="flex flex-col gap-3">
         <div className="min-w-0 flex-1">
           <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{user.full_name}</p>
-          <p className="text-xs text-muted-foreground">@{user.username}</p>
+          <p className="break-words text-sm text-muted-foreground">@{user.username}</p>
         </div>
-        <div className="flex items-center gap-1 ml-2">
-          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => copyCredentials(user)} title="Copiar credenciais">
+        <div className="flex flex-wrap items-center gap-1 border-t border-border pt-2">
+          <Button size="sm" variant="ghost" className="h-11 w-11 p-0" onClick={() => copyCredentials(user)} title="Copiar credenciais" aria-label="Copiar credenciais">
             <Copy className="h-3.5 w-3.5" />
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleResetPassword(user)} disabled={resettingPassword === user.user_id} title="Resetar senha">
+          <Button size="sm" variant="ghost" className="h-11 w-11 p-0" onClick={() => handleResetPassword(user)} disabled={resettingPassword === user.user_id} title="Redefinir senha" aria-label="Redefinir senha">
             {resettingPassword === user.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditUserId(user.user_id); setEditFullName(user.full_name); setEditUsername(user.username); setEditPassword(''); setEditDialogOpen(true); }}>
+          <Button size="sm" variant="ghost" className="h-11 w-11 p-0" aria-label={`Editar ${user.full_name}`} onClick={() => { setEditUserId(user.user_id); setEditFullName(user.full_name); setEditUsername(user.username); setEditPassword(''); setEditDialogOpen(true); }}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deletingUser === user.user_id}>
+              <Button size="sm" variant="ghost" className="h-11 w-11 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" aria-label={`Remover ${user.full_name}`} disabled={deletingUser === user.user_id}>
                 {deletingUser === user.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               </Button>
             </AlertDialogTrigger>
@@ -595,7 +595,7 @@ export default function Usuarios() {
         </div>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <Badge className={`${user.role ? roleColors[user.role] : ''} text-[10px] px-1.5 py-0`}>
+        <Badge className={`${user.role ? roleColors[user.role] : ''} text-xs px-2 py-1`}>
           {user.role ? roleLabels[user.role] : '—'}
         </Badge>
       </div>
@@ -607,8 +607,10 @@ export default function Usuarios() {
       return <p className="text-center text-muted-foreground py-8">Nenhum usuário nesta sociedade</p>;
     }
     return (
-      <div className="overflow-x-auto">
-      <Table>
+      <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">Deslize a tabela para consultar todas as colunas e ações.</p>
+      <div role="region" aria-label="Diretoria por sociedade" tabIndex={0} className="overflow-x-auto rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&>div]:overflow-visible">
+      <Table className="min-w-[720px]">
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
@@ -620,11 +622,11 @@ export default function Usuarios() {
         <TableBody>
           {filteredUsers.map((user) => (
             <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.full_name}</TableCell>
-              <TableCell>{user.username}</TableCell>
+              <TableCell className="min-w-[10rem] max-w-[18rem] whitespace-normal break-words font-medium">{user.full_name}</TableCell>
+              <TableCell className="max-w-[16rem] break-words">{user.username}</TableCell>
               <TableCell>
                 <Select value={user.role || ''} onValueChange={(value) => handleRoleChange(user.user_id, value as AppRole)} disabled={updatingUser === user.user_id}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger aria-label={`Cargo de ${user.full_name}`} className="min-h-11 w-[180px]">
                     <SelectValue>{user.role && <Badge className={roleColors[user.role]}>{roleLabels[user.role]}</Badge>}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -636,16 +638,16 @@ export default function Usuarios() {
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <Button size="sm" variant="ghost" onClick={() => copyCredentials(user)} title="Copiar credenciais"><Copy className="h-4 w-4" /></Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleResetPassword(user)} disabled={resettingPassword === user.user_id} title="Resetar senha">
+                  <Button size="sm" variant="ghost" onClick={() => copyCredentials(user)} title="Copiar credenciais" aria-label="Copiar credenciais"><Copy className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleResetPassword(user)} disabled={resettingPassword === user.user_id} title="Redefinir senha" aria-label="Redefinir senha">
                     {resettingPassword === user.user_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setEditUserId(user.user_id); setEditFullName(user.full_name); setEditUsername(user.username); setEditPassword(''); setEditDialogOpen(true); }}>
+                  <Button size="sm" variant="ghost" aria-label={`Editar ${user.full_name}`} onClick={() => { setEditUserId(user.user_id); setEditFullName(user.full_name); setEditUsername(user.username); setEditPassword(''); setEditDialogOpen(true); }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deletingUser === user.user_id}>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label={`Remover ${user.full_name}`} disabled={deletingUser === user.user_id}>
                         {deletingUser === user.user_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
                     </AlertDialogTrigger>
@@ -667,33 +669,34 @@ export default function Usuarios() {
         </TableBody>
       </Table>
       </div>
+      </div>
     );
   };
 
   // ==================== MEMBER RENDER HELPERS ====================
 
   const renderMemberCard = (member: MemberRow) => (
-    <div key={member.id} className="rounded-lg border bg-card p-3 space-y-2">
-      <div className="flex items-start justify-between">
+    <div key={member.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
+      <div className="flex flex-col gap-3">
         <div className="min-w-0 flex-1">
           <p className="font-medium text-sm min-w-0 whitespace-normal break-words">{member.name}</p>
-          <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="flex min-w-0 items-center gap-1.5 mt-1">
             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getSocietyColor(member.society_id) }} />
-            <span className="text-xs text-muted-foreground">{getSocietyName(member.society_id)}</span>
+            <span className="min-w-0 break-words text-sm text-muted-foreground">{getSocietyName(member.society_id)}</span>
           </div>
         </div>
-        <div className="flex items-center gap-1 ml-2">
+        <div className="flex flex-wrap items-center gap-1 border-t border-border pt-2">
           {member.user_id ? (
             <>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => copyMemberCredentials(member)} title="Copiar credenciais">
+              <Button size="sm" variant="ghost" className="h-11 w-11 p-0" onClick={() => copyMemberCredentials(member)} title="Copiar credenciais" aria-label="Copiar credenciais">
                 <Copy className="h-3.5 w-3.5" />
               </Button>
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleMemberResetPassword(member)} disabled={resettingPassword === member.user_id} title="Resetar senha">
+              <Button size="sm" variant="ghost" className="h-11 w-11 p-0" onClick={() => handleMemberResetPassword(member)} disabled={resettingPassword === member.user_id} title="Redefinir senha" aria-label="Redefinir senha">
                 {resettingPassword === member.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
               </Button>
             </>
           ) : (
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleCreateLoginForMember(member)} disabled={creatingLogin === member.id} title="Criar login">
+            <Button size="sm" variant="ghost" className="h-11 w-11 p-0" onClick={() => handleCreateLoginForMember(member)} disabled={creatingLogin === member.id} title="Criar login" aria-label="Criar login">
               {creatingLogin === member.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
             </Button>
           )}
@@ -701,14 +704,14 @@ export default function Usuarios() {
       </div>
       {member.user_id && (
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">@{member.username}</span>
+          <span className="break-words text-sm text-muted-foreground">@{member.username}</span>
         </div>
       )}
       {!member.user_id && (
         <p className="text-xs text-muted-foreground italic">Sem login</p>
       )}
       <div className="flex items-center gap-1.5">
-        <Badge variant={member.active ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+        <Badge variant={member.active ? 'default' : 'secondary'} className="text-xs px-2 py-1">
           {member.active ? 'Ativo' : 'Inativo'}
         </Badge>
       </div>
@@ -720,8 +723,10 @@ export default function Usuarios() {
       return <p className="text-center text-muted-foreground py-8">Nenhum membro encontrado</p>;
     }
     return (
-      <div className="overflow-x-auto">
-      <Table>
+      <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">Deslize a tabela para consultar todas as colunas e ações.</p>
+      <div role="region" aria-label="Membros por sociedade" tabIndex={0} className="overflow-x-auto rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&>div]:overflow-visible">
+      <Table className="min-w-[720px]">
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
@@ -734,7 +739,7 @@ export default function Usuarios() {
         <TableBody>
           {filteredMembers.map((member) => (
             <TableRow key={member.id}>
-              <TableCell className="font-medium">{member.name}</TableCell>
+              <TableCell className="min-w-[10rem] max-w-[18rem] whitespace-normal break-words font-medium">{member.name}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: getSocietyColor(member.society_id) }} />
@@ -757,13 +762,13 @@ export default function Usuarios() {
                 <div className="flex items-center justify-end gap-1">
                   {member.user_id ? (
                     <>
-                      <Button size="sm" variant="ghost" onClick={() => copyMemberCredentials(member)} title="Copiar credenciais"><Copy className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleMemberResetPassword(member)} disabled={resettingPassword === member.user_id} title="Resetar senha">
+                      <Button size="sm" variant="ghost" onClick={() => copyMemberCredentials(member)} title="Copiar credenciais" aria-label="Copiar credenciais"><Copy className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleMemberResetPassword(member)} disabled={resettingPassword === member.user_id} title="Redefinir senha" aria-label="Redefinir senha">
                         {resettingPassword === member.user_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                       </Button>
                     </>
                   ) : (
-                    <Button size="sm" variant="ghost" onClick={() => handleCreateLoginForMember(member)} disabled={creatingLogin === member.id} title="Criar login">
+                    <Button size="sm" variant="ghost" onClick={() => handleCreateLoginForMember(member)} disabled={creatingLogin === member.id} title="Criar login" aria-label="Criar login">
                       {creatingLogin === member.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
                     </Button>
                   )}
@@ -774,13 +779,14 @@ export default function Usuarios() {
         </TableBody>
       </Table>
       </div>
+      </div>
     );
   };
 
   const renderCopyAllButton = (societyId: string | null) => (
     <Button variant="outline" size="sm" onClick={() => copyAllCredentials(societyId)} className="gap-1.5">
       <ClipboardList className="h-4 w-4" />
-      <span className="hidden sm:inline">Copiar todos</span>
+      <span>Copiar todos</span>
     </Button>
   );
 
@@ -791,20 +797,20 @@ export default function Usuarios() {
   // ==================== CREATE DIALOG ====================
   const createDialog = (
     <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Criar Novo Usuário</DialogTitle>
           <DialogDescription>Defina o nome, sociedade, usuário, senha e cargo</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Nome completo</Label>
-            <Input placeholder="Ex: Davi Silva" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            <Label htmlFor="new-user-name">Nome completo</Label>
+            <Input id="new-user-name" placeholder="Ex: Davi Silva" value={newName} onChange={(e) => setNewName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Sociedade</Label>
+            <Label htmlFor="new-user-society">Sociedade</Label>
             <Select value={newSocietyId} onValueChange={setNewSocietyId}>
-              <SelectTrigger><SelectValue placeholder="Selecione a sociedade" /></SelectTrigger>
+              <SelectTrigger id="new-user-society"><SelectValue placeholder="Selecione a sociedade" /></SelectTrigger>
               <SelectContent>
                 {societies.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
@@ -818,17 +824,17 @@ export default function Usuarios() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Usuário (login)</Label>
-            <Input placeholder="Ex: davi" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} autoCapitalize="none" autoCorrect="off" />
+            <Label htmlFor="new-user-login">Usuário (login)</Label>
+            <Input id="new-user-login" placeholder="Ex: davi" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} autoCapitalize="none" autoCorrect="off" />
           </div>
           <div className="space-y-2">
-            <Label>Senha</Label>
-            <Input type="text" placeholder="Ex: Davi123" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+            <Label htmlFor="new-user-password">Senha</Label>
+            <Input id="new-user-password" type="text" placeholder="Ex: Davi123" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Cargo</Label>
+            <Label htmlFor="new-user-role">Cargo</Label>
             <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger id="new-user-role"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="diretoria">Diretoria</SelectItem>
                 <SelectItem value="visualizador">Visualizador</SelectItem>
@@ -864,7 +870,7 @@ export default function Usuarios() {
         }
       />
 
-      <FAB icon={<UserPlus className="h-6 w-6" />} onClick={() => setCreateOpen(true)} />
+      <FAB aria-label="Novo usuário" icon={<UserPlus className="h-6 w-6" />} onClick={() => setCreateOpen(true)} />
 
       {createDialog}
 
@@ -872,25 +878,26 @@ export default function Usuarios() {
         {/* ==================== CARD DIRETORIA ==================== */}
         <Card>
           <CardHeader className="pb-3 md:pb-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
                 <div>
                   <CardTitle className="text-lg md:text-xl">Diretoria</CardTitle>
-                  <CardDescription className="text-xs md:text-sm">Administradores, pastores e diretoria das sociedades</CardDescription>
+                  <CardDescription className="text-sm">Administradores, pastores e diretoria das sociedades</CardDescription>
                 </div>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-3 md:px-6">
+          <CardContent className="px-4 sm:px-6">
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : isMobile ? (
               <div className="space-y-3">
+                <Label htmlFor="directors-society-filter">Sociedade da diretoria</Label>
                 <Select value={mobileSocietyTab} onValueChange={setMobileSocietyTab}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="directors-society-filter" className="w-full">
                     <SelectValue placeholder="Selecione a sociedade" />
                   </SelectTrigger>
                   <SelectContent>
@@ -925,8 +932,8 @@ export default function Usuarios() {
               </div>
             ) : (
               <Tabs defaultValue={societies[0]?.id || 'geral'} className="w-full">
-                <div className="flex items-center justify-between mb-4 gap-2">
-                  <TabsList className="flex flex-wrap h-auto gap-1">
+                <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
+                  <TabsList className="flex w-full flex-wrap h-auto justify-start gap-1">
                     {societies.map((s) => (
                       <TabsTrigger key={s.id} value={s.id}>
                         <div className="flex items-center gap-1.5">
@@ -968,21 +975,21 @@ export default function Usuarios() {
                 <Users className="h-5 w-5 text-primary" />
                 <div>
                   <CardTitle className="text-lg md:text-xl">Membros</CardTitle>
-                  <CardDescription className="text-xs md:text-sm">
+                  <CardDescription className="text-sm">
                     Gerenciamento de login e senha dos membros ({members.length} total)
                   </CardDescription>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <BulkLoginDialog members={pendingMembers as any} onComplete={() => { fetchMembers(); fetchUsers(); }} />
                 <Button variant="outline" size="sm" onClick={copyAllMemberCredentials} className="gap-1.5">
                   <ClipboardList className="h-4 w-4" />
-                  <span className="hidden sm:inline">Copiar todos</span>
+                  <span>Copiar todos</span>
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-3 md:px-6">
+          <CardContent className="px-4 sm:px-6">
             {membersLoading ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -990,8 +997,9 @@ export default function Usuarios() {
             ) : (
               <div className="space-y-3">
                 {/* Society filter */}
+                <Label htmlFor="members-society-filter">Sociedade dos membros</Label>
                 <Select value={memberSocietyFilter} onValueChange={setMemberSocietyFilter}>
-                  <SelectTrigger className="w-full md:w-[250px]">
+                  <SelectTrigger id="members-society-filter" className="w-full md:w-[280px]">
                     <SelectValue placeholder="Filtrar por sociedade" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1029,23 +1037,23 @@ export default function Usuarios() {
 
       {/* Edit User Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Usuário</DialogTitle>
             <DialogDescription>Altere o nome, usuário ou senha</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome completo</Label>
-              <Input placeholder="Nome completo" value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
+              <Label htmlFor="edit-user-name">Nome completo</Label>
+              <Input id="edit-user-name" placeholder="Nome completo" value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Usuário (login)</Label>
-              <Input placeholder="Usuário" value={editUsername} onChange={(e) => setEditUsername(e.target.value)} autoCapitalize="none" autoCorrect="off" />
+              <Label htmlFor="edit-user-login">Usuário (login)</Label>
+              <Input id="edit-user-login" placeholder="Usuário" value={editUsername} onChange={(e) => setEditUsername(e.target.value)} autoCapitalize="none" autoCorrect="off" />
             </div>
             <div className="space-y-2">
-              <Label>Nova senha (opcional)</Label>
-              <Input type="text" placeholder="Deixe vazio para não alterar" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} />
+              <Label htmlFor="edit-user-password">Nova senha (opcional)</Label>
+              <Input id="edit-user-password" type="text" placeholder="Deixe vazio para não alterar" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
@@ -1060,16 +1068,16 @@ export default function Usuarios() {
 
       {/* Reset Password Result Dialog */}
       <Dialog open={resetResultOpen} onOpenChange={setResetResultOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Senha Resetada</DialogTitle>
             <DialogDescription>A senha de <strong>{resetResultUser}</strong> foi alterada com sucesso.</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+            <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-muted">
               <span className="text-sm text-muted-foreground">Nova senha:</span>
-              <span className="font-mono text-lg font-bold">{resetResultPassword}</span>
-              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => { navigator.clipboard.writeText(resetResultPassword); toast.success('Senha copiada!'); }}>
+              <span className="min-w-0 break-all font-mono text-base font-semibold">{resetResultPassword}</span>
+              <Button variant="ghost" size="sm" className="ml-auto" aria-label="Copiar nova senha" onClick={() => { navigator.clipboard.writeText(resetResultPassword); toast.success('Senha copiada!'); }}>
                 <Copy className="h-4 w-4" />
               </Button>
             </div>

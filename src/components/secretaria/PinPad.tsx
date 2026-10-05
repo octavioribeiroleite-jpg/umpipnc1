@@ -72,23 +72,23 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
       ref={containerRef}
       tabIndex={0}
       className={cn(
-        "w-full mx-auto space-y-6 outline-none",
+        "w-full mx-auto space-y-5 outline-none",
         embedded
-          ? "max-w-[420px] rounded-[28px] border border-white/50 bg-[#F7FAF6]/95 p-5 shadow-[0_28px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-6"
-          : "max-w-xs"
+          ? "auth-pin-panel max-w-sm rounded-2xl border border-border bg-card p-4 sm:p-5"
+          : "max-w-sm rounded-2xl border border-border bg-card p-5 sm:p-6"
       )}
     >
       {/* Header */}
       {!embedded && (
         <div className="flex flex-col items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} className="self-start shrink-0">
+          <Button variant="ghost" size="icon" onClick={onBack} className="self-start shrink-0" aria-label="Voltar à seleção de perfil">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
             <Lock className="h-7 w-7 text-primary" />
           </div>
           <div className="text-center">
-            <h2 className="font-semibold text-lg">{profileLabel}</h2>
+            <h2 className="font-semibold text-2xl tracking-tight">{profileLabel}</h2>
             <p className="text-sm text-muted-foreground">Digite o PIN de 6 dígitos</p>
           </div>
         </div>
@@ -96,10 +96,10 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
 
       {embedded && (
         <div className="flex items-center gap-3 mb-1">
-          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl text-muted-foreground hover:bg-emerald-50 hover:text-primary" onClick={onBack}>
+          <Button variant="ghost" size="icon" aria-label="Voltar" className="pin-pad-utility h-11 w-11 rounded-2xl text-muted-foreground hover:bg-primary/10 hover:text-primary" onClick={onBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-primary ring-1 ring-emerald-100">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">
             <Lock className="h-6 w-6" />
           </div>
           <div className="min-w-0">
@@ -111,19 +111,19 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
 
       {/* PIN Slots */}
       <div className={cn(
-        "flex items-center justify-center gap-3 transition-transform",
+        "grid grid-cols-6 gap-2 transition-transform",
         shaking && "animate-shake"
       )}>
         {[0, 1, 2, 3, 4, 5].map(i => (
           <div
             key={i}
             className={cn(
-              "h-12 w-11 rounded-xl border-2 flex items-center justify-center transition-all duration-200",
+              "h-12 min-w-0 w-full rounded-xl border-2 flex items-center justify-center transition-all duration-200",
               pin.length > i
                 ? shaking ? "border-destructive bg-destructive/10" : "border-primary bg-primary/10"
                 : pin.length === i
-                  ? "border-primary/70 bg-white"
-                  : embedded ? "border-emerald-100 bg-white/90" : "border-border"
+                  ? "border-primary/70 bg-card"
+                  : embedded ? "border-border bg-card" : "border-border"
             )}
           >
             {pin.length > i && (
@@ -149,7 +149,7 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
             className={cn(
               "h-14 rounded-2xl text-xl font-bold shadow-sm transition-all duration-100 active:scale-95 active:bg-primary/10",
               embedded
-                ? "border-emerald-100 bg-white/90 text-foreground hover:border-primary/40 hover:bg-emerald-50"
+                ? "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/10"
                 : "rounded-xl hover:bg-accent/50"
             )}
             onClick={() => handleDigit(String(n))}
@@ -161,9 +161,9 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
         <Button
           variant="ghost"
           className={cn(
-            "h-14 rounded-2xl text-sm font-semibold transition-all duration-100 active:scale-95",
+            "pin-pad-utility h-14 rounded-2xl text-sm font-semibold transition-all duration-100 active:scale-95",
             embedded
-              ? "text-muted-foreground hover:bg-emerald-50 hover:text-primary disabled:opacity-40"
+              ? "text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-40"
               : "rounded-xl text-xs text-muted-foreground"
           )}
           onClick={handleClear}
@@ -176,7 +176,7 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
           className={cn(
             "h-14 rounded-2xl text-xl font-bold shadow-sm transition-all duration-100 active:scale-95 active:bg-primary/10",
             embedded
-              ? "border-emerald-100 bg-white/90 text-foreground hover:border-primary/40 hover:bg-emerald-50"
+              ? "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/10"
               : "rounded-xl hover:bg-accent/50"
           )}
           onClick={() => handleDigit('0')}
@@ -187,9 +187,9 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
         <Button
           variant="ghost"
           className={cn(
-            "h-14 rounded-2xl transition-all duration-100 active:scale-95",
+            "pin-pad-utility h-14 rounded-2xl transition-all duration-100 active:scale-95",
             embedded
-              ? "text-muted-foreground hover:bg-emerald-50 hover:text-primary disabled:opacity-40"
+              ? "text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-40"
               : "rounded-xl"
           )}
           onClick={handleDelete}
@@ -223,7 +223,7 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
   if (embedded) return content;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-6 safe-top safe-bottom">
       <style>{`
         @keyframes pinDotIn {
           from { transform: scale(0); }

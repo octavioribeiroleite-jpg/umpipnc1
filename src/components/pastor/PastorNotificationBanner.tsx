@@ -28,7 +28,7 @@ export function PastorNotificationBanner() {
 
   return (
     <Card className="border-primary/30 bg-primary/5 mb-6">
-      <CardContent className="flex items-center justify-between p-4">
+      <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
             <MessageSquare className="h-5 w-5 text-primary" />
@@ -44,7 +44,7 @@ export function PastorNotificationBanner() {
           <Button size="sm" onClick={() => navigate('/sugestoes')}>
             Ver sugestões <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
-          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setDismissed(true)}>
+          <Button size="icon" variant="ghost" className="h-11 w-11" aria-label="Dispensar aviso de sugestões" onClick={() => setDismissed(true)}>
             <X className="h-4 w-4" />
           </Button>
         </div>

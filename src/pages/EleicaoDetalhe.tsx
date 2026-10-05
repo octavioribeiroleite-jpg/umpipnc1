@@ -214,14 +214,14 @@ export default function EleicaoDetalhe() {
   return (
     <AppLayout>
       {/* Header */}
-      <div className="rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm p-3 mb-3">
+      <div className="rounded-2xl bg-card border border-border shadow-sm p-4 mb-4">
         <div className="flex items-center gap-2 mb-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/eleicoes')}>
+          <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Voltar às eleições" onClick={() => navigate('/eleicoes')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-semibold min-w-0 whitespace-normal break-words">{election.name}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold min-w-0 whitespace-normal break-words">{election.name}</h1>
               <Badge
                 variant={election.status === 'open' ? 'default' : 'secondary'}
                 className="shrink-0 gap-1"
@@ -242,7 +242,7 @@ export default function EleicaoDetalhe() {
               completed={completion as any}
               onStepClick={handleStepClick}
             />
-            <p className="text-[11px] text-muted-foreground text-center mt-1">
+            <p className="text-xs text-muted-foreground text-center mt-1">
               Etapa {(currentIndex >= 0 ? currentIndex : autoCurrentIndex) + 1} de {steps.length}: {stepTitles[currentStepKey || '']}
             </p>
           </>
@@ -283,7 +283,7 @@ export default function EleicaoDetalhe() {
 
       {/* Result */}
       {election.status === 'finished' && (
-        <div className="rounded-[18px] bg-white/90 dark:bg-card/95 border border-white/20 dark:border-border/40 shadow-sm backdrop-blur-sm p-4">
+        <div className="rounded-2xl bg-card border border-border shadow-sm p-4">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-warning" />

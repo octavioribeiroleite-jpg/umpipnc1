@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock, BookOpen } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock, BookOpen, Wallet } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
@@ -400,26 +400,26 @@ export default function Auth() {
         className={`space-y-2 transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         style={{ transitionDelay: showCards ? delay : '0ms' }}
       >
-        <p className="px-1 text-[11px] font-bold uppercase tracking-[0.24em] text-white/65">
+        <p className="px-1 text-xs font-semibold uppercase tracking-wider text-white/90">
           {label}
         </p>
         <button
           onClick={onClick}
-          className={`group w-full rounded-[24px] border p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.20)] backdrop-blur-xl transition-all duration-300 active:scale-[0.98] sm:p-5 ${
+          className={`auth-access-card group w-full rounded-2xl border p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.20)] backdrop-blur-xl transition-all duration-300 active:scale-[0.98] sm:p-5 ${
             variant === 'glass'
               ? 'border-white/20 bg-white/12 text-white hover:bg-white/18'
               : 'border-white/45 bg-[#F7FAF6]/95 text-foreground hover:bg-white'
           } hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(0,0,0,0.26)]`}
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div
-              className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-[18px] transition-transform duration-300 group-hover:scale-105 ${
+              className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[18px] transition-transform duration-300 group-hover:scale-105 ${
                 variant === 'glass'
                   ? 'bg-white/18 text-white'
                   : 'bg-emerald-50 text-primary ring-1 ring-emerald-100'
               }`}
             >
-              <Icon className="h-7 w-7" />
+              <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <h3 className={`text-lg font-bold leading-tight ${variant === 'glass' ? 'text-white' : 'text-foreground'}`}>
@@ -504,7 +504,7 @@ export default function Auth() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar pelo nome..."
+                  aria-label="Buscar membro pelo nome" placeholder="Buscar pelo nome..."
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
                   className="pl-9"
@@ -652,10 +652,10 @@ export default function Auth() {
             <img
               src={logoIpnc}
               alt="Renovo IPNC"
-              className="h-52 w-52 sm:h-64 sm:w-64 mx-auto object-contain drop-shadow-[0_24px_45px_rgba(0,0,0,0.55)]"
+              className="h-36 w-36 sm:h-44 sm:w-44 mx-auto object-contain drop-shadow-[0_24px_45px_rgba(0,0,0,0.55)]"
             />
           </div>
-          <h1 className="font-display text-4xl font-bold text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.65)]">
+          <h1 className="font-display text-3xl font-bold text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.65)]">
             Bem-vindo
           </h1>
           <p className="mt-2 text-base font-medium text-white/90 drop-shadow-[0_3px_14px_rgba(0,0,0,0.75)]">
@@ -672,6 +672,16 @@ export default function Auth() {
               description="Pastor, presidente, tesoureiro e demais cargos"
               icon={Lock}
               onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }}
+              delay="400ms"
+            />
+
+            {/* Finanças */}
+            <AccessCard
+              label="Tesouraria"
+              title="Finanças"
+              description="Saldos, extratos e relatórios das sociedades"
+              icon={Wallet}
+              onClick={() => navigateWithTransition('/tesouraria')}
               delay="500ms"
             />
 
@@ -689,7 +699,7 @@ export default function Auth() {
             <div className={`transition-all duration-500 ${showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: showCards ? '800ms' : '0ms' }}>
               <button
                 onClick={() => setStep('login')}
-                className="mx-auto flex items-center justify-center rounded-full border border-white/15 bg-black/20 px-4 py-2 text-center text-xs font-medium text-white/55 backdrop-blur-md transition-colors hover:bg-white/10 hover:text-white/85"
+                className="auth-admin-button mx-auto flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-black/20 px-4 py-2 text-center text-xs font-medium text-white/55 backdrop-blur-md transition-colors hover:bg-white/10 hover:text-white/85"
               >
                 <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
                 Acesso Administrativo
@@ -708,7 +718,7 @@ export default function Auth() {
         ) : step === 'diretoria' && diretoriaStep === 'societies' ? (
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10" onClick={handleBack}>
+              <Button variant="ghost" size="icon" aria-label="Voltar" className="h-11 w-11 text-white hover:bg-white/10" onClick={handleBack}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <h2 className="text-lg font-semibold text-white">Selecione a sociedade</h2>
@@ -755,7 +765,7 @@ export default function Auth() {
         ) : step === 'membro' && membroStep === 'societies' ? (
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10" onClick={handleBack}>
+              <Button variant="ghost" size="icon" aria-label="Voltar" className="h-11 w-11 text-white hover:bg-white/10" onClick={handleBack}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <h2 className="text-lg font-semibold text-white">Selecione sua sociedade</h2>
@@ -785,7 +795,7 @@ export default function Auth() {
             <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
+                  <Button variant="ghost" size="icon" aria-label="Voltar" className="h-11 w-11" onClick={handleBack}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <h2 className="text-lg font-semibold text-foreground">Entrar</h2>
@@ -803,7 +813,7 @@ export default function Auth() {
                       onChange={(e) => setUsername(e.target.value)}
                       required
                       disabled={isLoading}
-                      autoCapitalize="none"
+                      autoComplete="username" autoCapitalize="none"
                       autoCorrect="off"
                     />
                   </div>
@@ -811,6 +821,7 @@ export default function Auth() {
                     <Label htmlFor="password" className="text-foreground/80">Senha</Label>
                     <Input
                       id="password"
+                      autoComplete="current-password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
@@ -844,7 +855,7 @@ export default function Auth() {
 
   // ========== SINGLE RETURN — video never remounts ==========
   return (
-    <div className="min-h-screen relative overflow-hidden bg-black">
+    <div className="auth-page min-h-screen relative overflow-hidden bg-black">
       {/* Video background — always mounted, never re-created */}
       <video
         autoPlay
@@ -885,13 +896,13 @@ export default function Auth() {
       )}
 
       {/* Content — transitions apply here only */}
-      <div className={`relative z-20 min-h-screen flex items-center justify-center p-4 transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
+      <div className={`relative z-20 min-h-screen flex items-center justify-center p-4 pb-16 transition-all duration-500 ${isExiting ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
         {splashPhase === 'done' && renderContent()}
       </div>
 
-      {/* Carimbo de build — sempre visível para diagnóstico de cache */}
+      {/* Carimbo de build no rodapé, sem cobrir o conteúdo em telas menores. */}
       {splashPhase === 'done' && (
-        <div className="fixed bottom-2 left-0 right-0 z-30 px-4 pointer-events-none safe-bottom">
+        <div className="absolute bottom-2 left-0 right-0 z-30 px-4 pointer-events-none safe-bottom">
           <BuildStamp className="text-white/70" />
         </div>
       )}

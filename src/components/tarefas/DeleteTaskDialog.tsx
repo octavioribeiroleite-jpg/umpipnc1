@@ -30,7 +30,7 @@ export function DeleteTaskDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Excluir tarefa</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription className="break-words">
             Tem certeza que deseja excluir a tarefa "{task?.title}"? Esta ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>

@@ -1,0 +1,10 @@
+// Isolated component preview. It never connects to Supabase and is not a release.
+import { build } from 'esbuild';
+import { mkdirSync,readFileSync,writeFileSync,copyFileSync,readdirSync } from 'node:fs';
+import { resolve,join } from 'node:path';
+import { createServer } from 'node:http';
+const root=process.cwd();const out='/tmp/ipnc-treasury-ui';mkdirSync(out,{recursive:true});
+await build({entryPoints:['tests/treasury-ui/app.tsx'],bundle:true,format:'esm',platform:'browser',jsx:'automatic',outdir:out,alias:{'@':resolve(root,'src')},define:{'process.env.NODE_ENV':'"development"'},plugins:[{name:'isolated-treasury-fixtures',setup(b){b.onResolve({filter:/hooks\/useTreasury(?:Workflow)?$/},()=>({path:resolve(root,'tests/treasury-ui/hooks.tsx')}));}}]});
+const css=readdirSync('dist/client/assets').find(n=>n.startsWith('index-')&&n.endsWith('.css'));copyFileSync(join('dist/client/assets',css),join(out,'base.css'));
+writeFileSync(join(out,'index.html'),`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IPNC - teste isolado de tesouraria</title><link rel="stylesheet" href="/base.css"><link rel="stylesheet" href="/app.css"><style>.qa-bar{position:relative;z-index:40;background:#fff2c6;padding:12px 20px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font:13px sans-serif}.qa-bar select{background:white;padding:4px}.tr-sidebar{top:56px!important}.qa-bar label{display:flex;gap:8px;align-items:center}</style><div id="root"></div><script type="module" src="/app.js"></script></html>`);
+if(process.argv.includes('--serve'))createServer((req,res)=>{const allowed={'/':'index.html','/app.js':'app.js','/app.css':'app.css','/base.css':'base.css'};const file=allowed[req.url?.split('?')[0]];if(!file){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');res.end(readFileSync(join(out,file)));}).listen(8081,'127.0.0.1',()=>console.log('Isolated treasury UI: http://127.0.0.1:8081 (fictional fixtures; no network database).'));

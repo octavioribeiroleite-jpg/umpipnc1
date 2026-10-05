@@ -195,7 +195,7 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{summary}</p>
+            <p className="break-words text-sm leading-relaxed whitespace-pre-wrap">{summary}</p>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -248,7 +248,7 @@ export function IASection({ meetingId, canManage, aiOrganized, onUpdate }: IASec
               </span>
             </div>
             {canManage && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={handleSummarize} disabled={summarizing}>
                   {summarizing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
                   Resumir

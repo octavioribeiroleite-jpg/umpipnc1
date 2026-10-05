@@ -28,3 +28,6 @@ supabase/.temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Generated treasury PDF test artifacts (fictional data)
+/tmp/pdfs/

@@ -61,11 +61,11 @@ export const PWAInstallPrompt = () => {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:max-w-sm animate-in slide-in-from-bottom-5 duration-300">
+    <div className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:max-w-sm animate-in slide-in-from-bottom-5 duration-300">
       <div className="rounded-xl border bg-card p-4 shadow-lg">
         <div className="flex items-start gap-3">
           <img src={logoIpnc} alt="Renovo IPNC" className="h-10 w-10 shrink-0 object-contain" />
-          <div className="flex-1 space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm font-semibold text-card-foreground">Instalar IPNC</p>
             <p className="text-xs text-muted-foreground">
               {isIOS
@@ -73,7 +73,7 @@ export const PWAInstallPrompt = () => {
                 : "Instale o app no seu dispositivo para acesso rápido."}
             </p>
           </div>
-          <button onClick={handleDismiss} className="text-muted-foreground hover:text-foreground">
+          <button onClick={handleDismiss} aria-label="Fechar sugestão de instalação" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground">
             <X className="h-4 w-4" />
           </button>
         </div>

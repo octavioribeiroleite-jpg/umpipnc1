@@ -60,24 +60,24 @@ export function AISummaryDrawer() {
           Resumo IA
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="pb-2">
-          <div className="flex items-center justify-between">
+      <DrawerContent className="max-h-[90dvh]">
+        <DrawerHeader className="mx-auto w-full max-w-2xl pb-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <DrawerTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               Resumo Pastoral (IA)
             </DrawerTitle>
             <div className="flex items-center gap-2">
               {aiGeneratedAt && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {format(new Date(aiGeneratedAt), "dd/MM 'às' HH:mm", { locale: ptBR })}
                 </span>
               )}
-              {aiFromCache && <Badge variant="outline" className="text-[10px] px-1">Cache</Badge>}
+              {aiFromCache && <Badge variant="outline" className="text-xs px-1">Cache</Badge>}
             </div>
           </div>
         </DrawerHeader>
-        <div className="px-4 pb-6 max-h-[60vh] overflow-y-auto">
+        <div className="mx-auto w-full max-w-2xl min-h-0 px-4 pb-6 overflow-y-auto">
           {aiLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -85,7 +85,7 @@ export function AISummaryDrawer() {
             </div>
           ) : aiSummary?.geral ? (
             <div className="space-y-3">
-              <p className="text-sm leading-relaxed text-muted-foreground">{aiSummary.geral}</p>
+              <p className="break-words text-sm leading-relaxed text-muted-foreground">{aiSummary.geral}</p>
               {aiSummary.destaques && (
                 <div className="pt-2 border-t">
                   <p className="text-xs font-medium mb-1">Pontos de atenção:</p>

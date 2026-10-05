@@ -76,7 +76,7 @@ export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSess
   };
 
   return (
-    <Card className={isSecretaria ? "ebd-birthdays ebd-surface" : "border-pink-200 dark:border-pink-800/40 bg-gradient-to-br from-pink-50/80 to-orange-50/50 dark:from-pink-950/20 dark:to-orange-950/10"}>
+    <Card className={isSecretaria ? "ebd-birthdays ebd-surface" : "border-border bg-card"}>
       <CardContent className={isSecretaria ? "ebd-birthdays-content" : "pt-4 pb-4 space-y-3"}>
         {isSecretaria ? (
           <div className="ebd-birthdays-heading">
@@ -84,9 +84,9 @@ export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSess
             {onViewAll && <button type="button" className="ebd-view-all" onClick={onViewAll}>Ver todos<ChevronRight aria-hidden="true" /></button>}
           </div>
         ) : (
-        <div className="flex items-center gap-2">
-          <Cake className="h-5 w-5 text-pink-500" />
-          <h2 className="font-semibold text-sm">Aniversariantes da Semana</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <Cake className="h-5 w-5 text-primary" />
+          <h2 className="font-semibold text-base">Aniversariantes da Semana</h2>
           <span className="ml-auto text-xs text-muted-foreground bg-background/60 px-2 py-0.5 rounded-full">
             {birthdays.length} pessoa{birthdays.length > 1 ? 's' : ''}
           </span>
@@ -97,27 +97,27 @@ export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSess
         {isSecretaria && !isLoading && birthdays.length === 0 && <p className="ebd-empty">Nenhum aniversariante nesta semana.</p>}
         <div className={isSecretaria ? "ebd-birthday-list" : "space-y-1"}>
           {(isSecretaria && onViewAll ? birthdays.slice(0, 3) : birthdays).map(b => (
-            <div key={b.id} className={isSecretaria ? "ebd-birthday-row" : "flex items-center gap-2 text-sm"}>
-              <span className={isSecretaria ? "ebd-birthday-date" : "text-muted-foreground font-mono text-xs w-12"}>
+            <div key={b.id} className={isSecretaria ? "ebd-birthday-row" : "flex flex-wrap items-center gap-2 text-sm"}>
+              <span className={isSecretaria ? "ebd-birthday-date" : "shrink-0 text-muted-foreground tabular-nums text-sm w-12"}>
                 {String(b.dia).padStart(2, '0')}/{String(b.mes).padStart(2, '0')}
               </span>
-              <span className={isSecretaria ? "ebd-birthday-name" : "font-medium"}>{b.nome}</span>
+              <span className={isSecretaria ? "ebd-birthday-name" : "min-w-0 flex-1 break-words font-medium"}>{b.nome}</span>
               {b.daysUntil === 0 && (
-                <span className={isSecretaria ? "ebd-birthday-today" : "text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded-full"}>HOJE</span>
+                <span className={isSecretaria ? "ebd-birthday-today" : "text-xs bg-primary/10 text-primary px-2 py-1 rounded-full"}>HOJE</span>
               )}
             </div>
           ))}
         </div>
 
-        {birthdays.length > 0 && <div className={isSecretaria ? "ebd-birthday-actions" : "flex gap-2 pt-1"}>
-          <Button variant="outline" size="sm" className={isSecretaria ? "ebd-secondary-button" : "text-xs flex-1"} onClick={handleCopyList}>
+        {birthdays.length > 0 && <div className={isSecretaria ? "ebd-birthday-actions" : "flex flex-col gap-2 pt-1 sm:flex-row"}>
+          <Button variant="outline" size="sm" className={isSecretaria ? "ebd-secondary-button" : "min-h-11 text-sm flex-1"} onClick={handleCopyList}>
             <Copy className="h-3.5 w-3.5 mr-1" />
             Copiar lista
           </Button>
           <Button
             size="sm"
             variant={isSecretaria ? "outline" : "default"}
-            className={isSecretaria ? "ebd-secondary-button" : "text-xs flex-1 bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white border-0"}
+            className={isSecretaria ? "ebd-secondary-button" : "min-h-11 text-sm flex-1"}
             onClick={handleGenerate}
             disabled={loading}
           >
@@ -138,7 +138,7 @@ export function WeekAnnouncementCard({ birthdays, aiToken, aiExpiresAt, onAiSess
             <Button
               size="sm"
               variant="outline"
-              className="w-full text-xs"
+              className="w-full min-h-11 text-sm"
               onClick={handleCopyMessage}
             >
               {copied ? (

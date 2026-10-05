@@ -167,7 +167,7 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
           return (
             <Card key={category}>
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className={config.color}>
                     {config.icon}
                     <span className="ml-1">{config.title}</span>
@@ -180,7 +180,7 @@ export function ResumoIATab({ meetingId, isProcessed }: ResumoIATabProps) {
               <CardContent className="pt-0">
                 <ul className="space-y-2">
                   {items.map((item, index) => (
-                    <li key={item.id} className="flex gap-2 text-sm">
+                    <li key={item.id} className="flex min-w-0 gap-2 break-words text-sm leading-relaxed">
                       <span className="text-muted-foreground font-mono">{index + 1}.</span>
                       <span>{item.edited_content || item.original_content}</span>
                     </li>

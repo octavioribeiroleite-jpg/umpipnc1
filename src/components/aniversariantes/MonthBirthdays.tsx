@@ -16,9 +16,9 @@ interface Props {
 export function MonthBirthdays({ birthdays, month, showActions, onEdit, onToggleActive, onDelete }: Props) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Calendar className="h-5 w-5 text-primary" />
-        <h2 className="font-semibold text-sm">Aniversariantes de {MONTH_NAMES[month - 1]}</h2>
+        <h2 className="font-semibold text-base">Aniversariantes de {MONTH_NAMES[month - 1]}</h2>
         <span className="text-xs text-muted-foreground">({birthdays.length})</span>
       </div>
       {birthdays.length === 0 ? (

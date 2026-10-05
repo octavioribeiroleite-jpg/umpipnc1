@@ -183,7 +183,7 @@ export function BulkLoginDialog({ members, onComplete }: BulkLoginDialogProps) {
 
       {/* Processing */}
       <Dialog open={processing} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md [&>button]:hidden">
+        <DialogContent className="finance-dialog sm:max-w-md [&>button]:hidden">
           <DialogHeader>
             <DialogTitle>Criando contas...</DialogTitle>
             <DialogDescription>
@@ -196,7 +196,7 @@ export function BulkLoginDialog({ members, onComplete }: BulkLoginDialogProps) {
 
       {/* Results */}
       <Dialog open={!!results} onOpenChange={closeResults}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="finance-dialog sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Relatório de Criação de Logins</DialogTitle>
             <DialogDescription>

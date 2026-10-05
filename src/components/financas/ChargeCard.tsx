@@ -46,14 +46,14 @@ function getStatusBadge(status: string, amount: number, paidAmount?: number | nu
   const isPartial = status === 'pago' && paidAmount !== null && paidAmount !== undefined && paidAmount < amount;
   
   if (isPartial) {
-    return <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-yellow-100 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-400 border-0">Parcial</Badge>;
+    return <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 bg-yellow-100 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-400 border-0">Parcial</Badge>;
   }
   
   const badgeClasses: Record<string, string> = {
-    pago: 'text-[10px] px-1.5 py-0 h-5 bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-400 border-0',
-    pendente: 'text-[10px] px-1.5 py-0 h-5 bg-destructive/10 text-destructive border-0',
-    isento: 'text-[10px] px-1.5 py-0 h-5 bg-muted text-muted-foreground border-0',
-    cancelado: 'text-[10px] px-1.5 py-0 h-5',
+    pago: 'text-xs px-1.5 py-0 h-5 bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-400 border-0',
+    pendente: 'text-xs px-1.5 py-0 h-5 bg-destructive/10 text-destructive border-0',
+    isento: 'text-xs px-1.5 py-0 h-5 bg-muted text-muted-foreground border-0',
+    cancelado: 'text-xs px-1.5 py-0 h-5',
   };
   
   return <Badge variant="secondary" className={badgeClasses[status] || badgeClasses.cancelado}>{statusLabels[status]}</Badge>;
@@ -83,31 +83,31 @@ export function ChargeCard({
 
   return (
     <Card className={cn('mb-1.5', variant && variantStyles[variant])}>
-      <CardContent className="px-3 py-2">
-        <div className="flex items-center justify-between gap-1">
+      <CardContent className="p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
               <h4 className="text-sm font-semibold min-w-0 whitespace-normal break-words">{memberName}</h4>
               <span className="text-xs font-bold text-foreground whitespace-nowrap">
                 R$ {totalValue.toFixed(2).replace('.', ',')}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               {mensalidade && (
                 <div className="flex items-center gap-0.5">
-                  <span className="text-[10px] text-muted-foreground">M</span>
+                  <span className="text-xs text-muted-foreground">M</span>
                   {getStatusBadge(mensalidade.status, mensalidade.amount, mensalidade.paid_amount)}
                 </div>
               )}
               {percapita && (
                 <div className="flex items-center gap-0.5">
-                  <span className="text-[10px] text-muted-foreground">PC</span>
+                  <span className="text-xs text-muted-foreground">PC</span>
                   {getStatusBadge(percapita.status, percapita.amount, percapita.paid_amount)}
                 </div>
               )}
               {dueDate && (
-                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 ml-auto">
+                <span className="text-xs text-muted-foreground flex items-center gap-0.5 ml-auto">
                   <Calendar className="h-2.5 w-2.5" />
                   {new Date(dueDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                 </span>
@@ -117,14 +117,14 @@ export function ChargeCard({
 
           <div className="flex items-center gap-0.5 shrink-0">
             {hasPendingCharges && (
-              <Button size="sm" onClick={onPayment} className="h-7 px-2 text-[11px]">
+              <Button size="sm" onClick={onPayment} className="h-11 px-3 text-sm" aria-label={`Registrar pagamento de ${memberName}`}>
                 <Check className="h-3 w-3" />
               </Button>
             )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
+                <Button variant="ghost" size="icon" className="h-11 w-11" aria-label={`Mais opções de ${memberName}`}>
                   <MoreHorizontal className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>

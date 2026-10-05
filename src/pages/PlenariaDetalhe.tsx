@@ -530,12 +530,12 @@ export default function PlenariaDetalhe() {
   return (
     <AppLayout>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/plenarias')}>
+      <div className="flex flex-wrap items-center gap-3 mb-5 rounded-2xl border border-border bg-card p-4">
+        <Button variant="ghost" size="icon" aria-label="Voltar às plenárias" onClick={() => navigate('/plenarias')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold min-w-0 whitespace-normal break-words">{plenary.title}</h1>
+          <h1 className="text-2xl font-bold min-w-0 whitespace-normal break-words">{plenary.title}</h1>
           <p className="text-sm text-muted-foreground">
             {format(new Date(plenary.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
@@ -550,7 +550,7 @@ export default function PlenariaDetalhe() {
       {/* ===== SEÇÃO 1: CHAMADA ===== */}
       <Card className="mb-4">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Users className="h-5 w-5" />
               Chamada de Presença
@@ -591,7 +591,7 @@ export default function PlenariaDetalhe() {
           {/* Quorum summary - always visible */}
           {totalMembers > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-lg">
                     {presentCount}/{totalMembers}
@@ -636,21 +636,22 @@ export default function PlenariaDetalhe() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar membro..."
+                  aria-label="Buscar membro na chamada" placeholder="Buscar membro..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
                 />
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 {filteredAttendance.map((record) => (
-                  <div key={record.id} className="relative group">
+                  <div key={record.id} className="flex items-stretch gap-2">
                     <button
+                      aria-pressed={record.present}
                       disabled={!canManage || toggling === record.id}
                       onClick={() => handleToggle(record)}
                       className={cn(
-                        'w-full flex flex-col items-center justify-center rounded-lg border p-3 text-center transition-all',
+                        'min-w-0 flex-1 flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
                         'hover:shadow-md disabled:opacity-60',
                         record.present
                           ? 'bg-primary/15 border-primary/40 text-primary'
@@ -675,7 +676,7 @@ export default function PlenariaDetalhe() {
                           handleRemoveMember(record);
                         }}
                         disabled={removing === record.id}
-                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                        aria-label={`Remover ${record.member_name} da chamada`} className="h-11 w-11 shrink-0 rounded-xl border border-border text-destructive flex items-center justify-center hover:bg-destructive/10"
                         title="Remover da chamada"
                       >
                         {removing === record.id ? (
@@ -696,7 +697,7 @@ export default function PlenariaDetalhe() {
       {/* ===== SEÇÃO 2: ANOTAÇÕES / ATA ===== */}
       <Card className="mb-4">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-5 w-5" />
               Anotações / Ata
@@ -714,7 +715,7 @@ export default function PlenariaDetalhe() {
           </div>
         </CardHeader>
         <CardContent>
-          <Textarea
+          <Textarea aria-label="Registro da plenária"
             placeholder="Registre aqui as pautas, decisões, informes e tudo que for discutido durante a plenária. Essas anotações serão incluídas no relatório final em PDF."
             value={notes}
             onChange={(e) => handleNotesChange(e.target.value)}
@@ -746,7 +747,7 @@ export default function PlenariaDetalhe() {
       {finalMinutes && (
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Sparkles className="h-5 w-5" />
                 Ata Organizada
@@ -773,13 +774,13 @@ export default function PlenariaDetalhe() {
           </CardHeader>
           <CardContent>
             {editingFinal ? (
-              <Textarea
+              <Textarea aria-label="Ata organizada da plenária"
                 value={finalMinutes}
                 onChange={(e) => setFinalMinutes(e.target.value)}
                 className="min-h-[300px] resize-y"
               />
             ) : (
-              <div className="whitespace-pre-wrap text-sm text-foreground bg-muted/30 rounded-lg p-4 border">
+              <div className="break-words whitespace-pre-wrap text-sm leading-relaxed text-foreground bg-muted/30 rounded-xl p-4 border">
                 {finalMinutes}
               </div>
             )}

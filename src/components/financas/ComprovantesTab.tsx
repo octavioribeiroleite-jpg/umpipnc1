@@ -158,7 +158,7 @@ export function ComprovantesTab() {
         submissions.map((sub) => (
           <Card key={sub.id}>
             <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
                 <div>
                   <p className="font-medium text-sm">{sub.member_name}</p>
                   <p className="text-xs text-muted-foreground">
@@ -166,7 +166,7 @@ export function ComprovantesTab() {
                   </p>
                   {sub.notes && <p className="text-xs text-muted-foreground mt-1">Obs: {sub.notes}</p>}
                 </div>
-                <Badge variant="outline" className={`text-[10px] ${
+                <Badge variant="outline" className={`text-xs ${
                   sub.status === 'pendente' ? 'bg-warning/10 text-warning border-warning/20' :
                   sub.status === 'aprovado' ? 'bg-success/10 text-success border-success/20' :
                   'bg-destructive/10 text-destructive border-destructive/20'
@@ -175,7 +175,7 @@ export function ComprovantesTab() {
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-2 mt-3">
+              <div className="flex flex-wrap items-center gap-2 mt-4">
                 <Button
                   variant="outline"
                   size="sm"
@@ -222,7 +222,7 @@ export function ComprovantesTab() {
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialog.open} onOpenChange={(open) => { if (!open) setRejectDialog({ open: false, id: null }); }}>
-        <DialogContent>
+        <DialogContent className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Rejeitar Comprovante</DialogTitle>
           </DialogHeader>
@@ -249,7 +249,7 @@ export function ComprovantesTab() {
         previewRequest.current += 1;
         setPreviewUrl(null);
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="finance-dialog max-w-lg">
           <DialogHeader>
             <DialogTitle>Comprovante</DialogTitle>
           </DialogHeader>

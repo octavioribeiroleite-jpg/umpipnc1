@@ -54,15 +54,15 @@ export function AppLayout({ children }: AppLayoutProps) {
   ];
 
   return (
-    <div className="app-page min-h-screen overflow-x-hidden">
-      <OfflineBanner />
-
+    <div className="app-page min-h-screen">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3 focus:text-primary focus:shadow-lg">Pular para o conteúdo</a>
       {/* Keep one content tree: CSS-hidden copies still mount effects and channels. */}
       <div className="min-h-screen min-w-0 md:flex md:h-screen md:overflow-hidden">
         <div className="md:hidden"><MobileHeader /></div>
         <div className="hidden md:flex lg:hidden"><TabletNavigationRail /></div>
         <div className="hidden lg:flex"><AppSidebar /></div>
-        <main className="safe-bottom-content min-w-0 flex-1 overflow-x-hidden bg-background/80 px-page-x pt-mobile-header md:overflow-y-auto md:pb-0 md:pt-0 md:backdrop-blur-sm">
+        <main id="main-content" tabIndex={-1} className="safe-bottom-content min-w-0 flex-1 bg-background px-page-x pt-mobile-header md:overflow-y-auto md:pb-0 md:pt-0">
+          <OfflineBanner />
           <PullToRefresh>
             <div className="mx-auto w-full min-w-0 max-w-reading py-3 md:max-w-app md:py-5 lg:py-6">
               {children}

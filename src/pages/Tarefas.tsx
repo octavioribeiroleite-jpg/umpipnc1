@@ -48,7 +48,7 @@ function KanbanColumn({
   const Icon = config.icon;
 
   return (
-    <div className={status === 'todo' ? 'flex-[1.4] min-w-[320px]' : 'flex-1 min-w-[260px]'}>
+    <div className="min-w-0">
       <div className={`rounded-xl ${config.bg} p-3 md:p-4 min-h-[200px]`}>
         <div className="flex items-center gap-2 mb-4">
           <Icon className="h-4 w-4 text-muted-foreground" />
@@ -180,10 +180,10 @@ export default function Tarefas() {
   if (isLoading) {
     return (
       <AppLayout>
-        <PageHeader title="Tarefas" description="Gerencie as tarefas da diretoria" />
-        <div className="hidden md:flex gap-6">
+        <PageHeader title="Tarefas" description="Gerencie as tarefas da diretoria" eyebrow="Organização" icon={<ListTodo />} />
+        <div className="hidden md:grid grid-cols-1 xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex-1 min-w-[280px]">
+            <div key={i} className="min-w-0">
               <Skeleton className="h-6 w-32 mb-4" />
               <LoadingSkeleton />
             </div>
@@ -197,7 +197,7 @@ export default function Tarefas() {
   if (tasks.length === 0) {
     return (
       <AppLayout>
-        <PageHeader title="Tarefas" description="Gerencie as tarefas da diretoria" />
+        <PageHeader title="Tarefas" description="Gerencie as tarefas da diretoria" eyebrow="Organização" icon={<ListTodo />} />
         <EmptyState onCreateClick={handleCreateClick} />
         <TaskDialog
           open={dialogOpen}
@@ -214,6 +214,8 @@ export default function Tarefas() {
     <AppLayout>
       <PageHeader
         title="Tarefas"
+        eyebrow="Organização"
+        icon={<ListTodo />}
         description="Gerencie as tarefas da diretoria"
         action={
           !isMobile && isManagement && (
@@ -229,7 +231,7 @@ export default function Tarefas() {
       <TaskFilters search={search} onSearchChange={setSearch} priority={priorityFilter} onPriorityChange={setPriorityFilter} />
 
       {/* Desktop: Kanban */}
-      <div className="hidden md:flex gap-4 overflow-x-auto pb-4">
+      <div className="hidden md:grid grid-cols-1 xl:grid-cols-3 gap-4 pb-4">
         <KanbanColumn status="todo" tasks={todoTasks} onEdit={handleEdit} onDelete={handleDelete} />
         <KanbanColumn status="in_progress" tasks={inProgressTasks} onEdit={handleEdit} onDelete={handleDelete} />
         <KanbanColumn status="done" tasks={doneTasks} onEdit={handleEdit} onDelete={handleDelete} />
@@ -238,10 +240,10 @@ export default function Tarefas() {
       {/* Mobile: Tabs */}
       <div className="md:hidden">
         <Tabs defaultValue="todo">
-          <TabsList className="w-full grid grid-cols-3 mb-4">
-            <TabsTrigger value="todo" className="text-xs">A fazer ({todoTasks.length})</TabsTrigger>
-            <TabsTrigger value="in_progress" className="text-xs">Andamento ({inProgressTasks.length})</TabsTrigger>
-            <TabsTrigger value="done" className="text-xs">Concluída ({doneTasks.length})</TabsTrigger>
+          <TabsList className="mb-4 flex h-auto w-full justify-start gap-1 overflow-x-auto p-1">
+            <TabsTrigger value="todo" className="min-h-11 flex-1 text-xs px-3">A fazer ({todoTasks.length})</TabsTrigger>
+            <TabsTrigger value="in_progress" className="min-h-11 flex-1 text-xs px-3">Andamento ({inProgressTasks.length})</TabsTrigger>
+            <TabsTrigger value="done" className="min-h-11 flex-1 text-xs px-3">Concluída ({doneTasks.length})</TabsTrigger>
           </TabsList>
           <TabsContent value="todo" className="mt-0">
             <MobileTaskList tasks={todoTasks} title="A fazer" onEdit={handleEdit} onDelete={handleDelete} variant="full" />

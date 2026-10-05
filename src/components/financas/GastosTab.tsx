@@ -184,7 +184,7 @@ export function GastosTab() {
     <>
       <Card className="mb-4">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total de Gastos</p>
               <p className="text-2xl font-bold text-destructive">
@@ -246,10 +246,10 @@ export function GastosTab() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(tx)}>
+                        <Button variant="ghost" size="icon" aria-label="Editar gasto" onClick={() => openEditDialog(tx)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { setDeletingId(tx.id); setDeleteDialogOpen(true); }}>
+                        <Button variant="ghost" size="icon" aria-label="Excluir gasto" onClick={() => { setDeletingId(tx.id); setDeleteDialogOpen(true); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -266,7 +266,7 @@ export function GastosTab() {
         if (!open) receiptRequest.current += 1;
         setDialogOpen(open);
       }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="finance-dialog sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingTransaction ? 'Editar Gasto' : 'Novo Gasto'}</DialogTitle>
           </DialogHeader>

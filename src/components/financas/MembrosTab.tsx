@@ -280,9 +280,9 @@ export function MembrosTab() {
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <CardTitle className="text-lg">Membros Cadastrados</CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <BulkLoginDialog members={members} onComplete={fetchMembers} />
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
@@ -291,7 +291,7 @@ export function MembrosTab() {
                     Novo Membro
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="finance-dialog">
                 <DialogHeader>
                   <DialogTitle>
                     {editingMember ? 'Editar Membro' : 'Novo Membro'}
@@ -431,7 +431,7 @@ export function MembrosTab() {
 
       {/* Dialog: Credenciais Geradas */}
       <Dialog open={!!credentials} onOpenChange={() => setCredentials(null)}>
-        <DialogContent>
+        <DialogContent className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Login Criado com Sucesso!</DialogTitle>
             <DialogDescription>

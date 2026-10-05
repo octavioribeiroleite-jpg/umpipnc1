@@ -19,7 +19,7 @@ function ChecklistItem({ done, label }: { done: boolean; label: string }) {
   );
 }
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { DeviceRegistration } from './DeviceRegistration';
 import { EditElectionDialog } from './EditElectionDialog';
@@ -495,7 +495,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             >
               <Monitor className="h-5 w-5" />
               <span className="font-medium">Urna Fixa</span>
-              <span className="text-[10px] text-muted-foreground text-center">Um dispositivo</span>
+              <span className="text-xs text-muted-foreground text-center">Um dispositivo</span>
             </button>
             <button
               onClick={() => handleModeChange('individual')}
@@ -507,7 +507,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             >
               <Smartphone className="h-5 w-5" />
               <span className="font-medium">Celular</span>
-              <span className="text-[10px] text-muted-foreground text-center">Cada um no seu</span>
+              <span className="text-xs text-muted-foreground text-center">Cada um no seu</span>
             </button>
             <button
               onClick={() => handleModeChange('both')}
@@ -522,14 +522,14 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 <Smartphone className="h-4 w-4" />
               </div>
               <span className="font-medium">Ambos</span>
-              <span className="text-[10px] text-muted-foreground text-center">Urna + Celular</span>
+              <span className="text-xs text-muted-foreground text-center">Urna + Celular</span>
             </button>
           </div>
         </div>
 
         {/* Checklist + start button */}
         <div className="space-y-2 pt-2 border-t border-border/50">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Pré-requisitos</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pré-requisitos</p>
           <div className="space-y-1">
             <ChecklistItem done={candidates.length > 0} label={`Pelo menos 1 candidato (${candidates.length})`} />
             <ChecklistItem done={totalPresent > 0} label={`Presença confirmada (${totalPresent})`} />
@@ -735,17 +735,17 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
             <p className="text-lg font-bold text-foreground">{totalPresent}</p>
-            <p className="text-[10px] text-muted-foreground">Presentes</p>
+            <p className="text-xs text-muted-foreground">Presentes</p>
           </div>
           <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
             <p className="text-lg font-bold text-foreground">{voteCount}</p>
-            <p className="text-[10px] text-muted-foreground">Cédulas</p>
+            <p className="text-xs text-muted-foreground">Cédulas</p>
           </div>
           <div className={`p-2 rounded-lg border shadow-sm ${voteCount >= totalPresent ? 'border-success/50 bg-success/5' : 'border-warning/50 bg-warning/10'}`}>
             <p className={`text-lg font-bold ${voteCount >= totalPresent ? 'text-success' : 'text-warning'}`}>
               {diff}
             </p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {voteCount >= totalPresent ? 'Todos votaram' : 'Aguardando voto'}
             </p>
           </div>
@@ -793,8 +793,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="text-sm font-bold text-foreground truncate">{c.name}</p>
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                        <p className="min-w-0 break-words text-sm font-bold text-foreground">{c.name}</p>
                         <div className="flex items-center gap-1 shrink-0">
                           <span className="text-sm font-extrabold text-foreground">{c.votes}</span>
                           <span className="text-xs text-muted-foreground">votos</span>
@@ -811,7 +811,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                       </div>
                     </div>
                     {c.elected && (
-                      <span className="shrink-0 rounded-full bg-yellow-400 px-2 py-0.5 text-[10px] font-extrabold text-yellow-900 shadow">
+                      <span className="shrink-0 rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-extrabold text-yellow-900 shadow">
                         ✓ ELEITO
                       </span>
                     )}
@@ -893,7 +893,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                 <Monitor className="h-4 w-4 text-muted-foreground" /> Urnas conectadas
               </p>
-              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 devices.filter((d) => d.activated).length > 0
                   ? 'bg-success/15 text-success'
                   : 'bg-warning/15 text-warning'
@@ -928,12 +928,12 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                   <p className="text-xs font-medium flex items-center gap-1">
                     <Smartphone className="h-3 w-3" /> Voto Individual
                   </p>
-                  <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
-                  <div className="flex gap-1.5">
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { navigator.clipboard.writeText(voteUrl); toast({ title: 'Link copiado!' }); }}>
+                  <code className="text-xs bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { navigator.clipboard.writeText(voteUrl); toast({ title: 'Link copiado!' }); }}>
                       <Copy className="h-3 w-3 mr-1" /> Copiar
                     </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { setExpandedDeviceToken(null); setQrExpanded(true); }}>
+                    <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { setExpandedDeviceToken(null); setQrExpanded(true); }}>
                       <Maximize2 className="h-3 w-3 mr-1" /> Expandir
                     </Button>
                   </div>
@@ -951,9 +951,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                           <Monitor className="h-3 w-3" /> {d.label}
                         </p>
                         {d.activated ? (
-                          <span className="text-[10px] text-success font-medium">✓ Ativada</span>
+                          <span className="text-xs text-success font-medium">✓ Ativada</span>
                         ) : (
-                          <span className="text-[10px] text-muted-foreground">Aguardando</span>
+                          <span className="text-xs text-muted-foreground">Aguardando</span>
                         )}
                       </div>
                       <div className="flex items-center gap-3">
@@ -964,12 +964,12 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                           </div>
                         </div>
                         <div className="flex-1 min-w-0 space-y-1.5">
-                          <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{deviceUrl}</code>
-                          <div className="flex gap-1.5">
-                            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { navigator.clipboard.writeText(deviceUrl); toast({ title: 'Link copiado!' }); }}>
+                          <code className="text-xs bg-muted p-1.5 rounded block break-all leading-tight">{deviceUrl}</code>
+                          <div className="flex flex-wrap gap-1.5">
+                            <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { navigator.clipboard.writeText(deviceUrl); toast({ title: 'Link copiado!' }); }}>
                               <Copy className="h-3 w-3 mr-1" /> Copiar
                             </Button>
-                            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { setExpandedDeviceToken(d.token); setQrExpanded(true); }}>
+                            <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { setExpandedDeviceToken(d.token); setQrExpanded(true); }}>
                               <Maximize2 className="h-3 w-3 mr-1" /> Expandir
                             </Button>
                           </div>
@@ -996,12 +996,12 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               <p className="text-xs font-medium flex items-center gap-1">
                 <LinkIcon className="h-3 w-3" /> Link da Urna
               </p>
-              <code className="text-[10px] bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
-              <div className="flex gap-1.5">
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={copyLink}>
+              <code className="text-xs bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
+              <div className="flex flex-wrap gap-1.5">
+                <Button variant="outline" size="sm" className="h-11 text-xs" onClick={copyLink}>
                   <Copy className="h-3 w-3 mr-1" /> Copiar
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setQrExpanded(true)}>
+                <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => setQrExpanded(true)}>
                   <Maximize2 className="h-3 w-3 mr-1" /> Expandir
                 </Button>
               </div>
@@ -1010,16 +1010,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         )}
       </div>
 
-      {/* Fullscreen QR Dialog */}
+      {/* QR dialog fits short mobile viewports and remains scrollable. */}
       <Dialog open={qrExpanded} onOpenChange={setQrExpanded}>
-        <DialogContent className="max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 border-none rounded-none flex flex-col items-center justify-center bg-background [&>button]:hidden">
-          <button
-            onClick={() => setQrExpanded(false)}
-            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          <div className="flex flex-col items-center gap-6 p-8">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg max-h-[90dvh] overflow-y-auto p-5 pt-14 bg-background">
+          <DialogTitle className="sr-only">QR Code da votação</DialogTitle>
+          <div className="flex min-w-0 flex-col items-center gap-4">
             {electionName && (
               <h2 className="text-xl font-bold text-center">{electionName}</h2>
             )}
@@ -1032,7 +1027,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               value={expandedDeviceToken
                 ? `${window.location.origin}/vote/${electionId}?mode=urna&token=${expandedDeviceToken}`
                 : voteUrl}
-              size={Math.min(window.innerWidth - 80, window.innerHeight - 200, 400)}
+              size={320}
+              className="h-auto w-full max-w-[320px]"
             />
             <code className="text-sm bg-muted p-3 rounded-lg break-all text-center max-w-sm">
               {expandedDeviceToken

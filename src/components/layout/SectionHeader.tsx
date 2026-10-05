@@ -31,11 +31,11 @@ export function SectionHeader({
         )}
 
         <div className="min-w-0">
-          <h2 className="text-section-title min-w-0 whitespace-normal break-words text-slate-950 dark:text-slate-50">
+          <h2 className="text-section-title min-w-0 whitespace-normal break-words text-foreground">
             {title}
           </h2>
           {description && (
-            <p className="mt-0.5 text-xs leading-snug text-slate-500 dark:text-slate-400 sm:text-sm">
+            <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
               {description}
             </p>
           )}

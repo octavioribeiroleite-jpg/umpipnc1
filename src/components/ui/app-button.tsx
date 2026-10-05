@@ -8,8 +8,8 @@ interface AppButtonProps extends ButtonProps {
 
 const presetClasses: Record<string, string> = {
   primary: 'rounded-xl h-11 font-semibold',
-  secondary: 'rounded-xl bg-white/80 dark:bg-card/80 border border-border/40',
-  'ghost-action': 'text-xs h-auto py-1 px-2',
+  secondary: 'rounded-xl bg-card border border-input',
+  'ghost-action': 'text-sm min-h-11 py-2 px-3',
 };
 
 const presetVariants: Record<string, ButtonProps['variant']> = {

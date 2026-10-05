@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import {
   Calendar, Clock, MapPin, Bell, Heart, Copy, Check, Loader2,
@@ -17,6 +17,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import logoIpnc from '@/assets/logo-ipnc.png';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { HeaderActions } from '@/components/layout/HeaderActions';
 
 // ---------- Types ----------
@@ -65,14 +66,14 @@ function WelcomeScreen({ visitor, onContinue }: { visitor: VisitorData; onContin
   const firstName = visitor.fullName.split(' ')[0];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 p-4">
-      <div className="w-full max-w-md text-center space-y-6">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 text-center space-y-5 sm:p-8">
         {/* Logo grande */}
         <div className="animate-fade-in">
           <img
             src={logoIpnc}
             alt="IPNC"
-            className="h-32 w-32 mx-auto object-contain drop-shadow-xl"
+            className="h-24 w-24 mx-auto object-contain drop-shadow-xl"
           />
         </div>
 
@@ -83,7 +84,7 @@ function WelcomeScreen({ visitor, onContinue }: { visitor: VisitorData; onContin
 
         {/* Título */}
         <h1
-          className="text-3xl font-bold text-foreground animate-fade-in"
+          className="text-2xl sm:text-3xl font-bold text-foreground animate-fade-in"
           style={{ animationDelay: '0.5s', animationFillMode: 'both' }}
         >
           Que alegria ter você aqui!
@@ -149,8 +150,8 @@ function ReturnVisitorConfirm({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
-      <div className="w-full max-w-md text-center space-y-6">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 text-center space-y-5 sm:p-8">
         <div className="animate-fade-in">
           <img src={logoIpnc} alt="IPNC" className="h-24 w-24 mx-auto object-contain drop-shadow-lg" />
         </div>
@@ -323,11 +324,11 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-block animate-logo-pulse mb-4">
-            <img src={logoIpnc} alt="IPNC" className="h-28 w-28 mx-auto object-contain drop-shadow-lg" />
+            <img src={logoIpnc} alt="IPNC" className="h-20 w-20 mx-auto object-contain drop-shadow-lg" />
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground animate-fade-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
             Bem-vindo à Igreja Presbiteriana
@@ -363,17 +364,17 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
                 ) : (
                   <RadioGroup value={societyChoice} onValueChange={setSocietyChoice} className="space-y-2">
                     {societies.map((s) => (
-                      <div key={s.id} className="flex items-center space-x-3">
+                      <div key={s.id} className="flex min-h-11 items-center space-x-3 rounded-lg border border-border p-3">
                         <RadioGroupItem value={s.id} id={`soc-${s.id}`} />
-                        <Label htmlFor={`soc-${s.id}`} className="flex items-center gap-2 cursor-pointer font-normal">
+                        <Label htmlFor={`soc-${s.id}`} className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer font-normal leading-relaxed">
                           <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                           {s.name}
                         </Label>
                       </div>
                     ))}
-                    <div className="flex items-center space-x-3">
+                    <div className="flex min-h-11 items-center space-x-3 rounded-lg border border-border p-3">
                       <RadioGroupItem value="visitante" id="soc-visitante" />
-                      <Label htmlFor="soc-visitante" className="cursor-pointer font-normal">
+                      <Label htmlFor="soc-visitante" className="min-w-0 flex-1 cursor-pointer font-normal leading-relaxed">
                         Visitante
                       </Label>
                     </div>
@@ -422,19 +423,20 @@ function Portal({ visitor }: { visitor: VisitorData }) {
   const firstName = visitor.fullName.split(' ')[0];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-card/90 backdrop-blur-md border-b border-border px-4 py-4 safe-top">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border px-4 py-2 safe-top">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 max-w-6xl mx-auto">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Hamburger Menu */}
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="-ml-2">
+                <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 -ml-2" aria-label="Abrir navegação da igreja">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 bg-card text-foreground p-0">
+              <SheetContent side="left" className="w-72 max-w-[85vw] bg-card text-foreground p-0">
+                <SheetTitle className="sr-only">Navegação do portal da igreja</SheetTitle>
                 <div className="flex flex-col h-full">
                   {/* Sidebar header */}
                   <div className="flex items-center gap-2 p-4 border-b border-border">
@@ -454,7 +456,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
                           <li key={item.key}>
                             <button
                               onClick={() => handleTabChange(item.key)}
-                              className={`flex items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-muted ${
+                              className={`flex min-h-11 items-center w-full px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-muted ${
                                 isActive
                                   ? 'bg-primary/10 text-primary shadow-sm'
                                   : 'text-foreground'
@@ -488,13 +490,13 @@ function Portal({ visitor }: { visitor: VisitorData }) {
               </SheetContent>
             </Sheet>
 
-            <img src={logoIpnc} alt="IPNC" className="h-12 w-12 object-contain" />
-            <div>
-              <p className="text-base font-semibold leading-tight">Portal da Igreja</p>
-              <p className="text-sm text-muted-foreground">Olá, {firstName}!</p>
+            <img src={logoIpnc} alt="IPNC" className="h-10 w-10 shrink-0 object-contain" />
+            <div className="min-w-0">
+              <p className="break-words text-sm sm:text-base font-semibold leading-tight">Portal da Igreja</p>
+              <p className="break-words text-xs text-muted-foreground">Olá, {firstName}!</p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <HeaderActions showInstall={false} showVersion={false} />
             <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
               <LogIn className="h-4 w-4 mr-1.5" />
@@ -505,7 +507,8 @@ function Portal({ visitor }: { visitor: VisitorData }) {
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto px-4 py-4 pt-24 pb-24 max-w-2xl mx-auto w-full">
+      <main className="min-w-0 flex-1 px-4 py-5 pb-[calc(6rem+env(safe-area-inset-bottom))] max-w-6xl mx-auto w-full sm:px-6 lg:py-7 lg:pb-28">
+        {activeTab !== 'inicio' && <PageHeader title={tabs.find(tab => tab.key === activeTab)?.label || 'Portal da igreja'} description="Igreja Presbiteriana de Nova Carapina" />}
         {activeTab === 'inicio' && <InicioTab visitor={visitor} onTabChange={setActiveTab} />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
         {activeTab === 'avisos' && <AvisosTab />}
@@ -514,14 +517,15 @@ function Portal({ visitor }: { visitor: VisitorData }) {
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border safe-bottom">
-        <div className="flex justify-around max-w-2xl mx-auto">
+        <div className="grid grid-cols-4 max-w-2xl mx-auto">
           {tabs.map(({ key, label, icon: Icon }) => {
             const active = activeTab === key;
             return (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`flex flex-col items-center gap-0.5 py-2.5 px-4 text-xs transition-colors ${
+                aria-current={active ? 'page' : undefined}
+                className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 py-2.5 px-1 text-xs transition-colors ${
                   active ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
@@ -570,14 +574,7 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
   return (
     <div className="space-y-4">
       {/* Saudação bonita */}
-      <div className="rounded-2xl bg-gradient-to-br from-primary/15 via-primary/8 to-primary/3 p-6 text-center">
-        <p className="text-2xl font-bold text-foreground">
-          Olá, {firstName}! 👋
-        </p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Bem-vindo à <span className="font-semibold text-primary">Igreja Presbiteriana de Nova Carapina</span>
-        </p>
-      </div>
+      <PageHeader title={`Olá, ${firstName}!`} description="Bem-vindo à Igreja Presbiteriana de Nova Carapina" />
 
       {/* Próximo Evento */}
       {loading ? (
@@ -591,7 +588,7 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
                 <Calendar className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-1">Próximo Evento</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Próximo Evento</p>
                 <h3 className="font-semibold text-sm">{nextEvent.title}</h3>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
                   <span>{format(new Date(nextEvent.start_date), "EEEE, dd 'de' MMMM", { locale: ptBR })}</span>
@@ -612,7 +609,7 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
             </div>
             <button
               onClick={() => onTabChange('programacoes')}
-              className="flex items-center gap-1 text-xs text-primary font-medium mt-3 ml-auto hover:underline"
+              className="flex min-h-11 items-center gap-1 text-sm text-primary font-medium mt-3 ml-auto hover:underline"
             >
               Ver todos <ChevronRight className="h-3.5 w-3.5" />
             </button>
@@ -632,21 +629,21 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-600">Último Aviso</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Último Aviso</p>
                   {lastAnnouncement.priority === 'urgente' && (
-                    <Badge variant="destructive" className="text-[10px] py-0">Urgente</Badge>
+                    <Badge variant="destructive" className="text-xs py-0">Urgente</Badge>
                   )}
                 </div>
                 <h3 className="font-semibold text-sm">{lastAnnouncement.title}</h3>
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{lastAnnouncement.message}</p>
-                <p className="text-[10px] text-muted-foreground mt-1.5">
+                <p className="text-xs text-muted-foreground mt-1.5">
                   {formatDistanceToNow(new Date(lastAnnouncement.created_at), { addSuffix: true, locale: ptBR })}
                 </p>
               </div>
             </div>
             <button
               onClick={() => onTabChange('avisos')}
-              className="flex items-center gap-1 text-xs text-primary font-medium mt-3 ml-auto hover:underline"
+              className="flex min-h-11 items-center gap-1 text-sm text-primary font-medium mt-3 ml-auto hover:underline"
             >
               Ver todos <ChevronRight className="h-3.5 w-3.5" />
             </button>
@@ -857,15 +854,15 @@ function ProgramacoesTab() {
                 <Card key={event.id} className="overflow-hidden">
                   <div className="h-1" style={{ backgroundColor: event.color || 'hsl(var(--primary))' }} />
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="font-medium text-sm">{event.title}</h3>
+                    <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                      <h3 className="min-w-0 break-words font-medium text-sm">{event.title}</h3>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {soc && (
-                          <Badge variant="outline" className="text-[10px]" style={{ borderColor: soc.color, color: soc.color }}>
+                          <Badge variant="outline" className="text-xs" style={{ borderColor: soc.color, color: soc.color }}>
                             {soc.name}
                           </Badge>
                         )}
-                        <Badge variant="outline" className={`text-[10px] ${statusStyles[event.status] || ''}`}>
+                        <Badge variant="outline" className={`text-xs ${statusStyles[event.status] || ''}`}>
                           {statusLabels[event.status] || event.status}
                         </Badge>
                       </div>
@@ -882,7 +879,7 @@ function ProgramacoesTab() {
                           {endDate && ` – ${format(endDate, 'HH:mm', { locale: ptBR })}`}
                         </span>
                       )}
-                      {event.all_day && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">Dia inteiro</span>}
+                      {event.all_day && <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Dia inteiro</span>}
                     </div>
                     {event.location && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1.5">
@@ -950,10 +947,10 @@ function AvisosTab() {
           <CardContent className="pt-4 pb-4">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-sm font-semibold">{a.title}</h3>
-              {a.priority === 'urgente' && <Badge variant="destructive" className="text-[10px]">Urgente</Badge>}
+              {a.priority === 'urgente' && <Badge variant="destructive" className="text-xs">Urgente</Badge>}
             </div>
-            <p className="text-sm text-muted-foreground mt-2 whitespace-pre-line">{a.message}</p>
-            <p className="text-[10px] text-muted-foreground mt-2">
+            <p className="break-words text-sm text-muted-foreground mt-2 whitespace-pre-line">{a.message}</p>
+            <p className="text-xs text-muted-foreground mt-2">
               {format(new Date(a.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>
           </CardContent>

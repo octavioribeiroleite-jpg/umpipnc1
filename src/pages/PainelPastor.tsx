@@ -12,6 +12,7 @@ import {
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { AlertsSection } from '@/components/pastor/AlertsSection';
 import { SocietyOverviewCard } from '@/components/pastor/SocietyOverviewCard';
@@ -191,24 +192,21 @@ export default function PainelPastor() {
       ) : (
         <div className="space-y-5">
           {/* 1. Greeting + AI */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-light tracking-tight">{getGreeting()}, {pastorName}</h2>
-              <p className="text-sm text-muted-foreground">
-                {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-              </p>
-            </div>
-            <AISummaryDrawer />
-          </div>
+          <PageHeader
+            title={`${getGreeting()}, ${pastorName}`}
+            eyebrow="Painel pastoral"
+            description={format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+            action={<AISummaryDrawer />}
+          />
 
           {/* 2. Summary chips */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <AppCard variant="stat">
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary shrink-0" />
                 <div>
                   <p className="text-lg font-bold leading-none">{summaryChips.todayCount}</p>
-                  <p className="text-[10px] text-muted-foreground">Hoje</p>
+                  <p className="text-xs text-muted-foreground">Hoje</p>
                 </div>
               </div>
             </AppCard>
@@ -217,7 +215,7 @@ export default function PainelPastor() {
                 <CalendarClock className="h-4 w-4 text-primary shrink-0" />
                 <div>
                   <p className="text-lg font-bold leading-none">{summaryChips.weekCount}</p>
-                  <p className="text-[10px] text-muted-foreground">Semana</p>
+                  <p className="text-xs text-muted-foreground">Semana</p>
                 </div>
               </div>
             </AppCard>
@@ -226,7 +224,7 @@ export default function PainelPastor() {
                 <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
                 <div>
                   <p className="text-lg font-bold leading-none">{summaryChips.awaitingCount}</p>
-                  <p className="text-[10px] text-muted-foreground">Aguardando</p>
+                  <p className="text-xs text-muted-foreground">Aguardando</p>
                 </div>
               </div>
             </AppCard>
@@ -253,7 +251,7 @@ export default function PainelPastor() {
           />
 
           {/* 5. Society Cards */}
-          <div className="space-y-3">
+          <div className="grid gap-4 xl:grid-cols-2">
             {societies.map(s => (
               <SocietyOverviewCard key={s.id} society={s} stats={societyStats[s.id]} />
             ))}
@@ -262,7 +260,7 @@ export default function PainelPastor() {
           {/* 6. Quick Access — 4 cols */}
           <div>
             <SectionTitle>Acesso Rápido</SectionTitle>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {quickActions.map(action => (
                 <AppCard
                   key={action.path}
@@ -271,7 +269,7 @@ export default function PainelPastor() {
                   onClick={() => navigate(action.path)}
                 >
                   <action.icon className="h-5 w-5 text-primary" />
-                  <span className="text-[11px] font-medium text-muted-foreground">{action.label}</span>
+                  <span className="text-sm font-medium text-muted-foreground">{action.label}</span>
                 </AppCard>
               ))}
             </div>

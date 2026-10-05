@@ -1,3 +1,4 @@
+import '@/camisas.css';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -446,9 +447,9 @@ export function CamisasTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="shirts-workspace space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="finance-subtabs" aria-label="Controle de camisas">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
           <TabsTrigger value="encomendas">Encomendas</TabsTrigger>
@@ -487,12 +488,12 @@ export function CamisasTab() {
           )}
 
           {/* ===== Financeiro do lote ===== */}
-          <div className="space-y-3">
+          <div className="shirts-summary-section space-y-3">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Financeiro do lote</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="finance-summary-grid">
               {/* Recebido / Caixa atual */}
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
+              <Card><CardContent className="finance-summary-content">
+                <div className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
                     <TrendingUp className="h-5 w-5 text-success" />
                   </div>
@@ -507,8 +508,8 @@ export function CamisasTab() {
               </CardContent></Card>
 
               {/* A receber (total) */}
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
+              <Card><CardContent className="finance-summary-content">
+                <div className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
                     <Clock className="h-5 w-5 text-amber-500" />
                   </div>
@@ -521,8 +522,8 @@ export function CamisasTab() {
               </CardContent></Card>
 
               {/* Gastos (com brindes) */}
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
+              <Card><CardContent className="finance-summary-content">
+                <div className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
                     <ShoppingCart className="h-5 w-5 text-destructive" />
                   </div>
@@ -539,8 +540,8 @@ export function CamisasTab() {
               </CardContent></Card>
 
               {/* Lucro previsto */}
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
+              <Card><CardContent className="finance-summary-content">
+                <div className="flex items-start gap-3">
                   <div className={`h-10 w-10 rounded-lg ${projectedResult >= 0 ? 'bg-success/10' : 'bg-destructive/10'} flex items-center justify-center`}>
                     <Wallet className={`h-5 w-5 ${projectedResult >= 0 ? 'text-success' : 'text-destructive'}`} />
                   </div>
@@ -557,11 +558,11 @@ export function CamisasTab() {
           </div>
 
           {/* ===== Produção e estoque ===== */}
-          <div className="space-y-3">
+          <div className="shirts-summary-section space-y-3">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Produção e estoque</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
+            <div className="finance-summary-grid">
+              <Card><CardContent className="finance-summary-content">
+                <div className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Package className="h-5 w-5 text-primary" />
                   </div>
@@ -571,15 +572,15 @@ export function CamisasTab() {
                   </div>
                 </div>
               </CardContent></Card>
-              <Card><CardContent className="pt-6">
+              <Card><CardContent className="finance-summary-content">
                 <p className="text-sm text-muted-foreground">Encomendado</p>
                 <p className="text-xl font-bold">{formatCurrency(orderOrdered)}</p>
               </CardContent></Card>
-              <Card><CardContent className="pt-6">
+              <Card><CardContent className="finance-summary-content">
                 <p className="text-sm text-muted-foreground">Entregues</p>
                 <p className="text-xl font-bold">{orderDelivered}<span className="text-sm text-muted-foreground"> / {orders.length}</span></p>
               </CardContent></Card>
-              <Card><CardContent className="pt-6">
+              <Card><CardContent className="finance-summary-content">
                 <p className="text-sm text-muted-foreground">Pagamentos</p>
                 <p className="text-xl font-bold"><span className="text-success">{fullyPaidOrders}</span> / <span className="text-amber-500">{halfPaidOrders}</span></p>
                 <p className="text-xs text-muted-foreground">quitados / metade</p>
@@ -587,20 +588,20 @@ export function CamisasTab() {
             </div>
 
             {orders.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Card><CardContent className="pt-6">
+              <div className="finance-summary-grid">
+                <Card><CardContent className="finance-summary-content">
                   <p className="text-sm text-muted-foreground">Campanhas</p>
                   <p className="text-xl font-bold">{campaigns.length}</p>
                 </CardContent></Card>
-                <Card><CardContent className="pt-6">
+                <Card><CardContent className="finance-summary-content">
                   <p className="text-sm text-muted-foreground">Custo de campanhas</p>
                   <p className="text-xl font-bold">{formatCurrency(campaignCost)}</p>
                 </CardContent></Card>
-                <Card><CardContent className="pt-6">
+                <Card><CardContent className="finance-summary-content">
                   <p className="text-sm text-muted-foreground">Compras antigas</p>
                   <p className="text-xl font-bold">{formatCurrency(legacyPurchaseCost)}</p>
                 </CardContent></Card>
-                <Card><CardContent className="pt-6">
+                <Card><CardContent className="finance-summary-content">
                   <p className="text-sm text-muted-foreground">Brindes</p>
                   <p className="text-xl font-bold">{giftQty}</p>
                   <p className="text-xs text-muted-foreground">{formatCurrency(giftCost)} em custo</p>
@@ -646,7 +647,7 @@ export function CamisasTab() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            className="h-11 w-11 text-destructive hover:text-destructive"
                             onClick={() => {
                               setItemToDelete({ id: p.id, type: 'purchase', transactionId: p.transaction_id || undefined });
                               setDeleteDialogOpen(true);
@@ -705,7 +706,7 @@ export function CamisasTab() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            className="h-11 w-11 text-destructive hover:text-destructive"
                             onClick={() => {
                               setItemToDelete({ id: s.id, type: 'sale', transactionId: s.transaction_id || undefined });
                               setDeleteDialogOpen(true);
@@ -725,9 +726,9 @@ export function CamisasTab() {
 
         <TabsContent value="estoque" className="space-y-4 animate-in fade-in-50">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle>Estoque por Tamanho</CardTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">Em estoque: {orderProduction.total} camisas</Badge>
                 <Badge variant="secondary">Valor: {formatCurrency(stockValue)}</Badge>
               </div>
@@ -766,7 +767,7 @@ export function CamisasTab() {
 
       {/* Dialog de Compra */}
       <Dialog open={purchaseDialogOpen} onOpenChange={setPurchaseDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="finance-dialog max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nova Compra de Camisas</DialogTitle>
           </DialogHeader>
@@ -835,7 +836,7 @@ export function CamisasTab() {
 
       {/* Dialog de Venda */}
       <Dialog open={saleDialogOpen} onOpenChange={setSaleDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="finance-dialog max-w-md">
           <DialogHeader>
             <DialogTitle>Nova Venda de Camisa</DialogTitle>
           </DialogHeader>
@@ -869,7 +870,7 @@ export function CamisasTab() {
                 onChange={(e) => setSaleForm({ ...saleForm, buyer_name: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Tamanho</Label>
                 <Select value={saleForm.size} onValueChange={(v) => setSaleForm({ ...saleForm, size: v })}>
@@ -895,7 +896,7 @@ export function CamisasTab() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Valor Unitário (R$)</Label>
                 <Input

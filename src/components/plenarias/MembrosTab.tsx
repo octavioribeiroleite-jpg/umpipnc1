@@ -140,8 +140,8 @@ export function MembrosTab() {
       {/* Header info */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
               <Users className="h-5 w-5" />
               <span className="font-medium">{activeCount} membros ativos</span>
               <span className="text-sm">/ {members.length} total</span>
@@ -161,7 +161,7 @@ export function MembrosTab() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar membro..."
+            aria-label="Buscar membro" placeholder="Buscar membro..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -181,7 +181,7 @@ export function MembrosTab() {
           {filtered.map((member) => (
             <div
               key={member.id}
-              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+              className="flex flex-col items-start justify-between gap-3 p-4 rounded-xl sm:flex-row sm:items-center border bg-card hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
@@ -189,7 +189,7 @@ export function MembrosTab() {
                     member.active ? 'bg-green-500' : 'bg-muted-foreground/40'
                   }`}
                 />
-                <span className={`font-medium truncate ${!member.active ? 'text-muted-foreground line-through' : ''}`}>
+                <span className={`break-words font-medium ${!member.active ? 'text-muted-foreground line-through' : ''}`}>
                   {member.name}
                 </span>
               </div>
@@ -206,7 +206,7 @@ export function MembrosTab() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-destructive h-8 w-8"
+                    className="text-destructive h-11 w-11" aria-label={`Excluir membro ${member.name}`}
                     onClick={() => setDeleteId(member.id)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -225,8 +225,8 @@ export function MembrosTab() {
             <DialogTitle>Adicionar Membro</DialogTitle>
           </DialogHeader>
           <div>
-            <Label>Nome completo</Label>
-            <Input
+            <Label htmlFor="plenary-member-name">Nome completo</Label>
+            <Input id="plenary-member-name"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Ex: João da Silva"

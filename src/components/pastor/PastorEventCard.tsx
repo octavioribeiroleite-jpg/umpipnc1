@@ -48,15 +48,15 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
   const isResolved = event.status === 'concluido' || event.status === 'nao_realizado' || event.status === 'cancelado';
 
   return (
-    <AppCard noPadding colorStripe={eventColor}>
+    <AppCard colorStripe={eventColor}>
       {/* Row 1: Title + Society badge */}
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <h4 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug">
+        <h4 className="text-sm font-semibold text-foreground break-words leading-relaxed">
           {event.title}
         </h4>
         <Badge
           variant="secondary"
-          className="shrink-0 text-[10px] font-medium px-1.5 py-0.5"
+          className="shrink-0 text-xs font-medium px-1.5 py-0.5"
           style={{
             backgroundColor: `${eventColor}15`,
             color: eventColor,
@@ -68,7 +68,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
       </div>
 
       {/* Row 2: Time + Location */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-2">
         <span className="flex items-center gap-1">
           <Clock className="h-3 w-3" />
           {timeStr}
@@ -87,7 +87,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1"
+            className="h-11 text-sm gap-1"
             disabled={isUpdating}
             onClick={() => onUpdateStatus(event.id, 'concluido')}
           >
@@ -96,7 +96,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isUpdating}>
+              <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Mais opções do evento" disabled={isUpdating}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -115,7 +115,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
       {isResolved && (
         <Badge
           variant="outline"
-          className={`text-[10px] px-1.5 py-0.5 ${
+          className={`text-xs px-1.5 py-0.5 ${
             event.status === 'concluido'
               ? 'border-emerald-300 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400'
               : 'border-muted text-muted-foreground'

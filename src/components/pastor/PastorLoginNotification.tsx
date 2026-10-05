@@ -46,10 +46,10 @@ export function PastorLoginNotification() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="h-11 w-11 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
               <MessageSquare className="h-6 w-6 text-primary" />
             </div>
-            <div>
+            <div className="min-w-0">
               <DialogTitle>Novas Sugestões do Pastor</DialogTitle>
               <DialogDescription>
                 O pastor deixou {count} {count === 1 ? 'nova sugestão' : 'novas sugestões'}. Veja agora!

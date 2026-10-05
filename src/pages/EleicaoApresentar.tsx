@@ -100,7 +100,7 @@ export default function EleicaoApresentar() {
 
   if (loading || !election) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-dvh bg-background flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
       </div>
     );
@@ -115,14 +115,14 @@ export default function EleicaoApresentar() {
   const needed = totalVotes > 0 ? Math.floor(totalVotes / 2) + 1 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/40 flex flex-col">
+    <div className="min-h-dvh bg-gradient-to-br from-background via-background to-muted/40 flex flex-col">
       {/* Header */}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 lg:px-12 py-4 lg:py-6 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-4 lg:py-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 lg:gap-4 min-w-0">
             <img src={logo} alt="Renovo IPNC" className="h-10 lg:h-14 w-auto shrink-0" />
             <div className="min-w-0">
-              <h1 className="text-xl lg:text-3xl font-bold min-w-0 whitespace-normal break-words">{election.name}</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold min-w-0 whitespace-normal break-words">{election.name}</h1>
               <p className="text-sm lg:text-base text-muted-foreground min-w-0 whitespace-normal break-words">
                 {election.position}
               </p>
@@ -133,7 +133,7 @@ export default function EleicaoApresentar() {
       </header>
 
       {/* Main */}
-      <main className="flex-1 flex items-center justify-center p-6 lg:p-12">
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12">
         {showResult ? (
           /* RESULT VIEW */
           <div className="w-full max-w-5xl space-y-8 lg:space-y-12">
@@ -157,7 +157,7 @@ export default function EleicaoApresentar() {
                       </div>
                     )}
                   </div>
-                  <h2 className="text-3xl lg:text-5xl font-bold">{winnerCandidate.name}</h2>
+                  <h2 className="break-words text-2xl lg:text-5xl font-bold">{winnerCandidate.name}</h2>
                   <p className="text-lg lg:text-2xl text-muted-foreground">
                     {winner.count} {winner.count === 1 ? 'voto' : 'votos'} •{' '}
                     {totalVotes > 0 ? Math.round((winner.count / totalVotes) * 100) : 0}%
@@ -171,9 +171,9 @@ export default function EleicaoApresentar() {
               <h3 className="text-xl lg:text-2xl font-semibold text-center">Ranking completo</h3>
               <div className={`grid gap-4 ${
                 results.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' :
-                results.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' :
-                results.length <= 4 ? 'grid-cols-2 sm:grid-cols-4' :
-                'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
+                results.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto' :
+                results.length <= 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
+                'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
               }`}>
                 {results.map((r, i) => {
                   const c = candidates.find((x) => x.id === r.candidate_id);
@@ -205,7 +205,7 @@ export default function EleicaoApresentar() {
                           </div>
                         )}
                       </div>
-                      <p className="text-center text-sm lg:text-base font-extrabold text-foreground leading-tight">
+                      <p className="break-words text-center text-sm lg:text-base font-extrabold text-foreground leading-tight">
                         {c?.name || 'Desconhecido'}
                       </p>
                       <p className="text-xs text-muted-foreground font-semibold">{posLabel} lugar</p>
@@ -253,7 +253,7 @@ export default function EleicaoApresentar() {
         ) : (
           /* PROGRESS VIEW (anonymous) */
           <div className="w-full max-w-5xl">
-            <div className="rounded-3xl bg-card/95 backdrop-blur-xl border border-border/60 shadow-2xl px-6 py-10 sm:px-12 sm:py-14 lg:px-20 lg:py-20 text-center space-y-8 sm:space-y-12 lg:space-y-16">
+            <div className="rounded-2xl bg-card border border-border shadow-sm px-4 py-8 sm:px-12 sm:py-14 lg:px-20 lg:py-20 text-center space-y-8 sm:space-y-12 lg:space-y-16">
               {/* Status amigável */}
               <p className="text-base sm:text-xl lg:text-2xl font-medium text-muted-foreground tracking-wide uppercase">
                 {finished
@@ -269,7 +269,7 @@ export default function EleicaoApresentar() {
                   key={displayedCount}
                   className="font-bold tracking-tight tabular-nums leading-none text-primary animate-fade-up"
                   style={{
-                    fontSize: 'clamp(5rem, 22vw, 14rem)',
+                    fontSize: 'clamp(4rem, 16vw, 14rem)', overflowWrap: 'anywhere',
                     textShadow:
                       '0 0 40px hsl(var(--primary) / 0.3), 0 4px 12px hsl(var(--primary) / 0.2)',
                   }}

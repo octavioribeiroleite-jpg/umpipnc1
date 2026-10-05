@@ -333,7 +333,7 @@ export default function Financas() {
   const showSocietySelector = (isAdmin || isPastor) && societies.length > 0;
   const societySelector = (className?: string) => showSocietySelector ? (
     <Select value={selectedSocietyId || 'all'} onValueChange={(value) => setSelectedSocietyId(value === 'all' ? null : value)}>
-      <SelectTrigger className={cn('h-10 w-full rounded-xl border-white/25 bg-white/15 px-3 text-sm text-white shadow-sm backdrop-blur-md sm:w-60 [&>svg]:text-white/80', className)}>
+      <SelectTrigger aria-label="Sociedade do painel financeiro" className={cn('min-h-11 w-full bg-card sm:w-60', className)}>
         <SelectValue placeholder="Escopo: Geral" />
       </SelectTrigger>
       <SelectContent>
@@ -371,40 +371,22 @@ export default function Financas() {
   return (
     <AppLayout>
       <div className="finance-page min-w-0">
-        <section className="mb-4 rounded-[22px] border border-slate-200/70 bg-white/95 p-4 shadow-card md:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
-                <Landmark className="h-4 w-4" />
-                Escopo financeiro
-              </div>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Olá, {firstName}!</h1>
-              <p className="text-sm text-muted-foreground md:text-base">{roleLabel}</p>
-            </div>
-
-            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:w-1/2">
-              <Button type="button" variant="outline" className="justify-between rounded-xl bg-white/80">
-                <span>{monthWindow.label}</span>
-                <CalendarDays className="h-4 w-4" />
-              </Button>
-              {showSocietySelector ? (
-                societySelector('border-border bg-white text-foreground shadow-sm [&>svg]:text-muted-foreground')
-              ) : (
-                <Button type="button" variant="outline" className="justify-start rounded-xl bg-white/80">{selectedScopeLabel}</Button>
-              )}
-              <Button type="button" variant="outline" size="icon" className="relative rounded-xl bg-white/80" aria-label="Notificações financeiras">
-                <Bell className="h-4 w-4" />
-                {stats.pendencias > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
-                    {stats.pendencias}
-                  </span>
-                )}
-              </Button>
-            </div>
+        <PageHeader
+          title="Finanças"
+          eyebrow="Gestão financeira"
+          description={`Olá, ${firstName}. ${roleLabel}.`}
+          icon={<Landmark />}
+        />
+        <div className="finance-toolbar mb-5 rounded-xl border bg-card p-3 sm:p-4">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <CalendarDays className="h-4 w-4 shrink-0" />
+            <span>{monthWindow.label}</span>
+            <Badge variant="outline" className="gap-1.5"><Bell className="h-3.5 w-3.5" />{stats.pendencias} pendências</Badge>
           </div>
-        </section>
+          {showSocietySelector ? societySelector() : <Badge variant="secondary">{selectedScopeLabel}</Badge>}
+        </div>
 
-        <MetricGrid className="mb-section-gap gap-1.5 xs:gap-2 md:gap-3">
+        <MetricGrid className="finance-summary-grid mb-section-gap">
           <MetricCard
             density="compact"
             title="Saldo atual"
@@ -443,22 +425,22 @@ export default function Financas() {
 
         <ExtratoDialog type={extratoType} onClose={() => setExtratoType(null)} />
 
-        <AppCard className="mb-4 rounded-[22px] p-4 md:mb-5">
-          <div className="mb-4 flex items-center justify-between">
+        <AppCard className="mb-4 rounded-2xl p-4 md:mb-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Ações rápidas</h2>
               <p className="text-sm text-muted-foreground">Fluxos principais da tesouraria</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {quickActions.map((action) => (
               <button
                 key={action.label}
                 type="button"
                 onClick={() => openQuickAction(action)}
-                className="flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border bg-background/70 p-3 text-center text-sm font-medium transition-colors hover:bg-accent"
+                className="flex min-h-14 items-center gap-3 rounded-xl border bg-background p-3 text-left text-sm font-medium transition-colors hover:border-primary/30 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <span className={`flex h-10 w-10 items-center justify-center rounded-full ${action.tone}`}>
+                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${action.tone}`}>
                   <action.icon className="h-5 w-5" />
                 </span>
                 <span className="leading-tight">{action.label}</span>
@@ -468,16 +450,16 @@ export default function Financas() {
         </AppCard>
 
         <div className="mb-4 grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-          <AppCard className="rounded-[22px] p-4">
-            <div className="mb-4 flex items-center justify-between">
+          <AppCard className="rounded-2xl p-4">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Pendências do dia</h2>
-              <Button type="button" variant="link" className="h-auto p-0" onClick={() => handleTabChange('comprovantes')}>Ver todas</Button>
+              <Button type="button" variant="link" className="min-h-11 px-1" onClick={() => handleTabChange('comprovantes')}>Ver todas</Button>
             </div>
             <div className="space-y-2">
               {pendingItems.map((item) => (
-                <div key={item.label} className="flex items-center justify-between rounded-xl border bg-background/70 p-3">
-                  <div className="flex items-center gap-3">
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-full ${item.tone}`}>
+                <div key={item.label} className="flex items-start justify-between gap-3 rounded-xl border bg-background/70 p-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.tone}`}>
                       <item.icon className="h-4 w-4" />
                     </span>
                     <span className="text-sm font-medium">{item.label}</span>
@@ -488,10 +470,10 @@ export default function Financas() {
             </div>
           </AppCard>
 
-          <AppCard className="rounded-[22px] p-4">
-            <div className="mb-4 flex items-center justify-between">
+          <AppCard className="rounded-2xl p-4">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Resumo por sociedade</h2>
-              <Button type="button" variant="link" className="h-auto p-0" onClick={() => handleTabChange('relatorios')}>Ver relatório</Button>
+              <Button type="button" variant="link" className="min-h-11 px-1" onClick={() => handleTabChange('relatorios')}>Ver relatório</Button>
             </div>
             {societySummary.length > 0 ? (
               <Table>
@@ -534,10 +516,10 @@ export default function Financas() {
           </AppCard>
         </div>
 
-        <AppCard className="mb-4 rounded-[22px] p-4 md:mb-5">
-          <div className="mb-4 flex items-center justify-between">
+        <AppCard className="mb-4 rounded-2xl p-4 md:mb-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Movimentações recentes</h2>
-            <Button type="button" variant="link" className="h-auto p-0" onClick={() => setExtratoType('all')}>Ver todas</Button>
+            <Button type="button" variant="link" className="min-h-11 px-1" onClick={() => setExtratoType('all')}>Ver todas</Button>
           </div>
           {recentMovements.length > 0 ? (
             <Table>
@@ -574,7 +556,7 @@ export default function Financas() {
         </AppCard>
 
         <div className="mb-4 grid gap-4 lg:grid-cols-2">
-          <AppCard className="rounded-[22px] p-4">
+          <AppCard className="rounded-2xl p-4">
             <div className="mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-success" />
               <h2 className="text-lg font-semibold">Entradas x Saídas</h2>
@@ -601,7 +583,7 @@ export default function Financas() {
             </div>
           </AppCard>
 
-          <AppCard className="rounded-[22px] p-4">
+          <AppCard className="rounded-2xl p-4">
             <div className="mb-4 flex items-center gap-2">
               <TrendingDown className="h-5 w-5 text-amber-600" />
               <h2 className="text-lg font-semibold">Situação dos fechamentos</h2>
@@ -621,16 +603,15 @@ export default function Financas() {
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="min-w-0">
           <HorizontalScroller className="finance-tabs-scroller sticky top-[calc(var(--mobile-header-height)+0.25rem)] z-20 -mx-1 mb-3 px-1 pb-1 md:static md:mx-0 md:mb-5 md:px-0">
-            <TabsList className="inline-grid h-auto w-max min-w-full grid-flow-col auto-cols-[100px] items-stretch gap-1 rounded-[18px] border border-slate-200/70 bg-white/95 p-1 shadow-card backdrop-blur-xl md:grid-flow-row md:auto-cols-auto md:grid-cols-5 md:rounded-[20px] md:p-1.5">
-              {mainTabs.map(({ value, label, shortLabel, icon: Icon }) => (
+            <TabsList className="finance-main-tabs">
+              {mainTabs.map(({ value, label, icon: Icon }) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="min-w-0 flex-col gap-1 rounded-[14px] px-1.5 py-1.5 text-[10px] font-semibold leading-none text-slate-500 transition-all data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-[0_6px_16px_rgba(4,120,87,0.22)] md:flex-row md:gap-2 md:rounded-[15px] md:px-2 md:py-2 md:text-xs lg:text-sm"
+                  className="min-h-11 gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   <Icon className="h-4 w-4 flex-shrink-0 md:h-[18px] md:w-[18px]" />
-                  <span className="md:hidden">{shortLabel}</span>
-                  <span className="hidden min-w-0 whitespace-normal break-words md:inline">{label}</span>
+                  <span>{label}</span>
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -645,7 +626,7 @@ export default function Financas() {
           </TabsContent>
 
           <TabsContent value="movimentacoes" className="finance-tab-panel mt-0 animate-in fade-in-50">
-            <div className="mb-3 rounded-[18px] border border-slate-200/70 bg-white/95 p-1 shadow-card">
+            <div className="mb-4 rounded-xl border bg-card p-1">
               <div className="grid grid-cols-2 gap-1">
                 <Button
                   type="button"
@@ -653,8 +634,8 @@ export default function Financas() {
                   className={cn(
                     'h-10 rounded-[14px] text-xs font-semibold sm:text-sm',
                     movementView === 'receitas'
-                      ? 'bg-emerald-700 text-white shadow-sm hover:bg-emerald-800 hover:text-white'
-                      : 'text-slate-600 hover:bg-slate-100',
+                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-accent',
                   )}
                   onClick={() => handleMovementChange('receitas')}
                 >
@@ -667,8 +648,8 @@ export default function Financas() {
                   className={cn(
                     'h-10 rounded-[14px] text-xs font-semibold sm:text-sm',
                     movementView === 'gastos'
-                      ? 'bg-emerald-700 text-white shadow-sm hover:bg-emerald-800 hover:text-white'
-                      : 'text-slate-600 hover:bg-slate-100',
+                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-accent',
                   )}
                   onClick={() => handleMovementChange('gastos')}
                 >

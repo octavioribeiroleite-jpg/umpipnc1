@@ -325,7 +325,7 @@ export function ConfiguracoesTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-start gap-2 text-lg">
             <Settings className="h-5 w-5" />
             Valores da Contribuição Anual
           </CardTitle>
@@ -366,7 +366,7 @@ export function ConfiguracoesTab() {
 
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <p className="text-sm font-semibold text-foreground">Total anual por sócio</p>
-            <p className="mt-1 text-3xl font-bold text-primary">{formatCurrency(annualTotal)}</p>
+            <p className="mt-1 text-2xl font-bold text-primary tabular-nums break-words">{formatCurrency(annualTotal)}</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Composição: contribuição {formatCurrency(contributionAmount)} + per capita {formatCurrency(perCapitaAmount)}.
             </p>
@@ -396,7 +396,7 @@ export function ConfiguracoesTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-start gap-2 text-lg">
             <CalendarDays className="h-5 w-5" />
             Lançamento Anual
           </CardTitle>
@@ -405,7 +405,7 @@ export function ConfiguracoesTab() {
           <p className="text-sm text-muted-foreground">
             Gera uma cobrança anual única por membro ativo. A cobrança mostra o total e a composição da contribuição do sócio mais a per capita.
           </p>
-          <div className="flex items-end gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="space-y-2">
               <Label>Ano</Label>
               <Select value={chargeYear} onValueChange={setChargeYear}>
@@ -439,7 +439,7 @@ export function ConfiguracoesTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-start gap-2 text-lg">
             <History className="h-5 w-5" />
             Histórico de Lançamentos
           </CardTitle>

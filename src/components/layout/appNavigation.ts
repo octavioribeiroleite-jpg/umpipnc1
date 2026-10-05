@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   DollarSign,
+  Landmark,
   FolderOpen,
   Heart,
   Home,
@@ -34,6 +35,7 @@ export const primaryNavigationItems: AppNavigationItem[] = [
 ];
 
 export const secondaryNavigationItems: AppNavigationItem[] = [
+  { key: 'tesouraria', icon: Landmark, label: 'Tesouraria da igreja', path: '/tesouraria' },
   { key: 'financas', icon: DollarSign, label: 'Finanças', path: '/financas' },
   { key: 'camisas', icon: Shirt, label: 'Camisas', path: '/camisas' },
   { key: 'plenarias', icon: ClipboardCheck, label: 'Plenárias', path: '/plenarias' },

@@ -527,8 +527,8 @@ export default function PlanilhaAlunosTab({
   return (
     <div className="space-y-4">
       {/* Top controls */}
-      <Card>
-        <CardContent className="p-4 space-y-3">
+      <Card data-ebd-card>
+        <CardContent data-ebd-content className="p-4 space-y-3">
           {visibleClasses.length > 1 && (
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <label className="text-sm font-medium sm:w-24">Turma</label>
@@ -539,7 +539,7 @@ export default function PlanilhaAlunosTab({
                   setSelectedIds(new Set());
                 }}
               >
-                <SelectTrigger className="flex-1">
+                <SelectTrigger aria-label="Turma" className="flex-1">
                   <SelectValue placeholder="Selecionar turma" />
                 </SelectTrigger>
                 <SelectContent>
@@ -556,7 +556,7 @@ export default function PlanilhaAlunosTab({
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="ebd-stat-grid">
             <div className="rounded-md border bg-muted/40 p-2 text-center">
               <div className="text-xs text-muted-foreground">Total</div>
               <div className="text-lg font-bold">{classStudents.length}</div>
@@ -577,19 +577,19 @@ export default function PlanilhaAlunosTab({
 
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar aluno..."
+                aria-label="Buscar aluno" placeholder="Buscar aluno..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
+                className="pl-9"
               />
             </div>
             <Select
               value={filterStatus}
               onValueChange={(v) => setFilterStatus(v as FilterStatus)}
             >
-              <SelectTrigger className="sm:w-40">
+              <SelectTrigger aria-label="Filtrar por status" className="sm:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -602,6 +602,7 @@ export default function PlanilhaAlunosTab({
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
+              aria-label="Nome do novo aluno"
               placeholder={
                 isAllClasses
                   ? 'Selecione uma turma para adicionar...'
@@ -653,8 +654,8 @@ export default function PlanilhaAlunosTab({
 
       {/* Bulk actions */}
       {selectedIds.size > 0 && (
-        <Card className="animate-in fade-in border-primary/30">
-          <CardContent className="p-3 flex flex-wrap items-center gap-2">
+        <Card data-ebd-card className="animate-in fade-in border-primary/30">
+          <CardContent data-ebd-content className="p-3 flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">
               {selectedIds.size} selecionado(s)
             </span>
@@ -687,8 +688,8 @@ export default function PlanilhaAlunosTab({
 
       {/* Students list */}
       {filteredStudents.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center space-y-3">
+        <Card data-ebd-card>
+          <CardContent data-ebd-content className="p-8 text-center space-y-3">
             <Users className="h-12 w-12 mx-auto text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">
               Nenhum aluno encontrado.
@@ -707,13 +708,14 @@ export default function PlanilhaAlunosTab({
       ) : (
         <>
           {/* Desktop table */}
-          <Card className="hidden sm:block">
-            <CardContent className="p-0">
+          <Card data-ebd-card className="ebd-table-panel hidden sm:block">
+            <CardContent data-ebd-content className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">
                       <Checkbox
+                        aria-label="Selecionar todos os alunos filtrados"
                         checked={allFilteredSelected}
                         onCheckedChange={toggleSelectAll}
                       />
@@ -733,7 +735,7 @@ export default function PlanilhaAlunosTab({
                     <TableRow key={s.id}>
                       <TableCell>
                         <Checkbox
-                          checked={selectedIds.has(s.id)}
+                          aria-label={`Selecionar ${s.name}`} checked={selectedIds.has(s.id)}
                           onCheckedChange={() => toggleSelectOne(s.id)}
                         />
                       </TableCell>
@@ -843,11 +845,11 @@ export default function PlanilhaAlunosTab({
           {/* Mobile cards */}
           <div className="sm:hidden space-y-2">
             {filteredStudents.map((s) => (
-              <Card key={s.id}>
-                <CardContent className="p-3 space-y-2">
+              <Card data-ebd-card key={s.id}>
+                <CardContent data-ebd-content className="p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <Checkbox
-                      checked={selectedIds.has(s.id)}
+                      aria-label={`Selecionar ${s.name}`} checked={selectedIds.has(s.id)}
                       onCheckedChange={() => toggleSelectOne(s.id)}
                     />
                     {editingId === s.id ? (
@@ -904,19 +906,19 @@ export default function PlanilhaAlunosTab({
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                       <Badge
                         variant={s.active ? 'default' : 'secondary'}
-                        className="text-[10px]"
+                        className="text-xs"
                       >
                         {s.active ? 'Ativo' : 'Inativo'}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-xs">
                         {s.origin === 'importado' ? 'Importado' : 'Manual'}
                       </Badge>
                       {isAllClasses && (
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-xs">
                           {classNameById[s.class_id] ?? '-'}
                         </Badge>
                       )}
@@ -1024,7 +1026,7 @@ export default function PlanilhaAlunosTab({
           if (!v) resetWizard();
         }}
       >
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
@@ -1173,7 +1175,7 @@ export default function PlanilhaAlunosTab({
                     🔴 {summary.certas} certas
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={bulkIgnoreDuplicates}>
                     Ignorar duplicatas
                   </Button>
@@ -1198,7 +1200,7 @@ export default function PlanilhaAlunosTab({
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="font-medium text-sm">{row.name}</div>
+                          <div className="break-words font-medium text-sm">{row.name}</div>
                           {row.similarTo && (
                             <div className="text-xs text-muted-foreground">
                               {row.status === 'duplicata_certa' && !row.similarId
@@ -1272,8 +1274,8 @@ export default function PlanilhaAlunosTab({
           {/* Step 3 — confirmation */}
           {importStep === 3 && (
             <div className="space-y-4">
-              <Card>
-                <CardContent className="p-4 space-y-1 text-sm">
+              <Card data-ebd-card>
+                <CardContent data-ebd-content className="p-4 space-y-1 text-sm">
                   <div>
                     ✅ <strong>{summary.adicionar}</strong> serão adicionados
                   </div>

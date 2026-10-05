@@ -68,7 +68,7 @@ export function EventCompletionList({
             {title}
           </CardTitle>
           {onViewCalendar && (
-            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={onViewCalendar}>
+            <Button variant="ghost" size="sm" className="text-sm min-h-11 px-3" onClick={onViewCalendar}>
               Calendário <ChevronRight className="h-3 w-3 ml-0.5" />
             </Button>
           )}
@@ -78,7 +78,7 @@ export function EventCompletionList({
         {/* Pending resolution (past events without status) */}
         {pendingResolution.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-amber-600 uppercase tracking-wider">
+            <p className="text-xs font-medium text-amber-600 uppercase tracking-wider">
               ⚠ Aguardando conclusão ({pendingResolution.length})
             </p>
             {pendingResolution.map(event => (
@@ -97,7 +97,7 @@ export function EventCompletionList({
         {/* Upcoming events */}
         {displayUpcoming.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Próximos ({upcomingEvents.length})
             </p>
             {displayUpcoming.map(event => (
@@ -115,7 +115,7 @@ export function EventCompletionList({
         {/* Resolved past events */}
         {resolvedPast.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Realizados ({resolvedPast.length})
             </p>
             {resolvedPast.slice(0, 5).map(event => (
@@ -161,20 +161,20 @@ function EventRow({
       )}
       style={{ borderLeftWidth: 3, borderLeftColor: event.color || 'hsl(var(--primary))' }}
     >
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <div className="min-w-0 flex-1">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+        <div className="min-w-0 flex-[1_1_200px]">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-medium text-sm truncate">{event.title}</span>
+            <span className="font-medium text-sm break-words">{event.title}</span>
             {societyName && (
               <span
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                className="text-xs font-semibold px-1.5 py-0.5 rounded-full"
                 style={{ backgroundColor: `${event.color || '#6b7280'}15`, color: event.color || '#6b7280' }}
               >
                 {societyName}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {event.all_day
@@ -183,7 +183,7 @@ function EventRow({
               }
             </span>
             {event.location && (
-              <span className="flex items-center gap-1 truncate">
+              <span className="flex items-center gap-1 break-words">
                 <MapPin className="h-3 w-3 flex-shrink-0" />
                 {event.location}
               </span>
@@ -197,7 +197,7 @@ function EventRow({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-[10px] border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+              className="min-h-11 px-3 text-xs border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
               disabled={isUpdating}
               onClick={() => onUpdateStatus(event.id, 'concluido')}
             >
@@ -207,7 +207,7 @@ function EventRow({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-[10px] border-red-500/30 text-red-500 hover:bg-red-500/10"
+              className="min-h-11 px-3 text-xs border-red-500/30 text-red-500 hover:bg-red-500/10"
               disabled={isUpdating}
               onClick={() => onUpdateStatus(event.id, 'nao_realizado')}
             >
@@ -216,7 +216,7 @@ function EventRow({
             </Button>
           </div>
         ) : (
-          <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 shrink-0', config.class)}>
+          <Badge variant="outline" className={cn('text-xs px-1.5 py-0 shrink-0', config.class)}>
             {config.label}
           </Badge>
         )}

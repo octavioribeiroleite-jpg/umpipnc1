@@ -57,7 +57,7 @@ export function ReuniaoFilters({ onStatusChange, onMonthChange, onSearchChange }
   const filterSelects = (
     <>
       <Select onValueChange={handleStatusChange} value={statusValue}>
-        <SelectTrigger className="w-full sm:w-[150px]">
+        <SelectTrigger aria-label="Filtrar por status" className="w-full sm:w-[150px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -67,7 +67,7 @@ export function ReuniaoFilters({ onStatusChange, onMonthChange, onSearchChange }
         </SelectContent>
       </Select>
       <Select onValueChange={handleMonthChange} value={monthValue}>
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger aria-label="Filtrar por mês" className="w-full sm:w-[180px]">
           <SelectValue placeholder="Mês" />
         </SelectTrigger>
         <SelectContent>
@@ -88,7 +88,7 @@ export function ReuniaoFilters({ onStatusChange, onMonthChange, onSearchChange }
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por título..."
+              aria-label="Buscar reuniões por título" placeholder="Buscar por título..."
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-9"
@@ -96,7 +96,7 @@ export function ReuniaoFilters({ onStatusChange, onMonthChange, onSearchChange }
           </div>
           <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
             <CollapsibleTrigger asChild>
-              <Button variant="outline" size="icon" className="relative shrink-0">
+              <Button variant="outline" size="icon" className="relative shrink-0" aria-label="Filtros de reuniões">
                 <SlidersHorizontal className="h-4 w-4" />
                 {activeFiltersCount > 0 && (
                   <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
@@ -123,7 +123,7 @@ export function ReuniaoFilters({ onStatusChange, onMonthChange, onSearchChange }
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por título..."
+          aria-label="Buscar reuniões por título" placeholder="Buscar por título..."
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           className="pl-9"

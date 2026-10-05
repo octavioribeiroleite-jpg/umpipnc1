@@ -116,7 +116,7 @@ export function TaskDialog({
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="sm:max-w-[500px]">
+      <ResponsiveDialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[500px]">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {isEditing ? 'Editar Tarefa' : 'Nova Tarefa'}
@@ -161,7 +161,7 @@ export function TaskDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="priority"
@@ -209,7 +209,7 @@ export function TaskDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="due_date"

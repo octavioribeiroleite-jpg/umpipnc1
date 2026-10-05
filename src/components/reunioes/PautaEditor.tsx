@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -156,21 +157,23 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
             {items.map((item, index) => (
               <div
                 key={item.id}
-                className="flex items-start gap-3 p-3 border rounded-lg bg-card"
+                className="flex flex-wrap items-start gap-3 p-4 border rounded-xl bg-card"
               >
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <GripVertical className="h-4 w-4" />
                   <span className="font-medium text-sm">{index + 1}.</span>
                 </div>
-                <div className="flex-1 space-y-2">
+                <div className="min-w-0 flex-1 basis-[75%] space-y-2 sm:basis-0">
                   {editingId === item.id && canManage && !disabled ? (
                     <>
-                      <Input
+                      <Label htmlFor={`agenda-title-${item.id}`}>Título do item</Label>
+                      <Input id={`agenda-title-${item.id}`}
                         value={item.title}
                         onChange={(e) => handleItemChange(item.id, 'title', e.target.value)}
                         placeholder="Título do item"
                       />
-                      <Textarea
+                      <Label htmlFor={`agenda-description-${item.id}`}>Descrição</Label>
+                      <Textarea id={`agenda-description-${item.id}`}
                         value={item.description || ''}
                         onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
                         placeholder="Descrição (opcional)"
@@ -188,15 +191,15 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
                     </>
                   ) : (
                     <>
-                      <p className="font-medium">{item.title}</p>
+                      <p className="break-words font-medium">{item.title}</p>
                       {item.description && (
-                        <p className="text-sm text-muted-foreground">{item.description}</p>
+                        <p className="break-words text-sm leading-relaxed text-muted-foreground">{item.description}</p>
                       )}
                     </>
                   )}
                 </div>
                 {canManage && !disabled && editingId !== item.id && (
-                  <div className="flex gap-1">
+                  <div className="ml-auto flex gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -208,7 +211,7 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteItem(item.id)}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive" aria-label={`Excluir item ${item.title}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -222,12 +225,14 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
         {canManage && !disabled && (
           <div className="border-t pt-4 space-y-3">
             <h4 className="font-medium text-sm">Adicionar Item</h4>
-            <Input
+            <Label htmlFor="new-agenda-title">Título</Label>
+            <Input id="new-agenda-title"
               value={newItem.title}
               onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
               placeholder="Título do item de pauta"
             />
-            <Textarea
+            <Label htmlFor="new-agenda-description">Descrição (opcional)</Label>
+            <Textarea id="new-agenda-description"
               value={newItem.description}
               onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
               placeholder="Descrição (opcional)"

@@ -10,13 +10,17 @@ interface EventCardProps {
 }
 
 const statusStyles = {
-  confirmado: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+  confirmado: 'bg-primary/10 text-primary border-primary/20',
+  concluido: 'bg-success/10 text-success border-success/20',
+  nao_realizado: 'bg-destructive/10 text-destructive border-destructive/20',
   pendente: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   cancelado: 'bg-red-500/10 text-red-500 border-red-500/20 line-through',
 };
 
 const statusLabels = {
   confirmado: 'Confirmado',
+  concluido: 'Concluído',
+  nao_realizado: 'Não realizado',
   pendente: 'Pendente',
   cancelado: 'Cancelado',
 };
@@ -36,24 +40,26 @@ export function EventCard({ event, onClick, compact = false }: EventCardProps) {
 
   if (compact) {
     return (
-      <div
+      <button
+        type="button"
         onClick={onClick}
         className={cn(
-          'text-xs truncate px-1.5 py-0.5 rounded cursor-pointer transition-opacity hover:opacity-80',
+          'min-h-11 w-full break-words px-2 py-1.5 text-left text-xs rounded-md transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           event.status === 'cancelado' && 'line-through opacity-60'
         )}
         style={{ backgroundColor: `${event.color}20`, color: event.color || undefined }}
       >
         {event.title}
-      </div>
+      </button>
     );
   }
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
       className={cn(
-        'flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer',
+        'flex w-full items-start gap-3 p-3 text-left rounded-xl border border-border/50 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         event.status === 'cancelado' && 'opacity-60'
       )}
     >
@@ -65,7 +71,7 @@ export function EventCard({ event, onClick, compact = false }: EventCardProps) {
         <div className="flex items-start justify-between gap-2">
           <p
             className={cn(
-              'font-medium text-sm truncate',
+              'font-medium text-sm break-words',
               event.status === 'cancelado' && 'line-through'
             )}
           >
@@ -78,7 +84,7 @@ export function EventCard({ event, onClick, compact = false }: EventCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
             {formattedDate}
@@ -90,18 +96,18 @@ export function EventCard({ event, onClick, compact = false }: EventCardProps) {
         </div>
 
         {event.location && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
+          <p className="text-xs text-muted-foreground flex items-start gap-1 break-words">
+            <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
             {event.location}
           </p>
         )}
 
         <div className="flex items-center gap-2 pt-1">
-          <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0', statusStyles[event.status])}>
+          <Badge variant="outline" className={cn('text-xs px-2 py-0.5', statusStyles[event.status])}>
             {statusLabels[event.status]}
           </Badge>
         </div>
       </div>
-    </div>
+    </button>
   );
 }

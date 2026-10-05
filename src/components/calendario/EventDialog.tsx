@@ -200,13 +200,13 @@ export function EventDialog({
 
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+            <DialogTitle className="flex items-start gap-2 break-words">
+              <Calendar className="h-5 w-5 shrink-0" />
               {event.title}
             </DialogTitle>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge variant={event.origem === 'reuniao' ? 'secondary' : 'outline'}>
                 {event.origem === 'reuniao' ? 'Via Reunião' : 'Manual'}
               </Badge>
@@ -214,7 +214,7 @@ export function EventDialog({
                 {societyName}
               </span>
               {event.reuniao_id && (
-                <Button variant="ghost" size="sm" onClick={goToMeeting} className="h-6 px-2">
+                <Button variant="ghost" size="sm" onClick={goToMeeting} className="min-h-11 px-3">
                   <Link className="h-3 w-3 mr-1" />
                   Ver reunião
                 </Button>
@@ -224,7 +224,7 @@ export function EventDialog({
 
           <div className="space-y-3 py-2">
             <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
               {event.all_day ? (
                 <span>Dia inteiro — {format(startDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
               ) : (
@@ -233,7 +233,7 @@ export function EventDialog({
             </div>
             {event.location && (
               <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span>{event.location}</span>
               </div>
             )}
@@ -260,19 +260,19 @@ export function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+          <DialogTitle className="flex items-start gap-2 break-words">
+            <Calendar className="h-5 w-5 shrink-0" />
             {isEditing ? 'Editar Evento' : 'Novo Evento'}
           </DialogTitle>
           {event && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge variant={event.origem === 'reuniao' ? 'secondary' : 'outline'}>
                 {event.origem === 'reuniao' ? 'Via Reunião' : 'Manual'}
               </Badge>
               {event.reuniao_id && (
-                <Button variant="ghost" size="sm" onClick={goToMeeting} className="h-6 px-2">
+                <Button variant="ghost" size="sm" onClick={goToMeeting} className="min-h-11 px-3">
                   <Link className="h-3 w-3 mr-1" />
                   Ver reunião
                 </Button>
@@ -297,7 +297,7 @@ export function EventDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="start_date"
@@ -329,7 +329,7 @@ export function EventDialog({
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="end_date"
@@ -404,7 +404,7 @@ export function EventDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="status"
@@ -446,7 +446,7 @@ export function EventDialog({
                         <SelectContent>
                           {colorOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-start gap-2 break-words">
                                 <div
                                   className="w-3 h-3 rounded-full"
                                   style={{ backgroundColor: option.value }}

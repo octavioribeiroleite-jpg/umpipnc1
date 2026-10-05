@@ -151,11 +151,11 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
     <div className="space-y-4">
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Trophy className="h-5 w-5 text-warning" />
           <h3 className="font-semibold text-foreground">Resultado da Eleição</h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">
             {allElected.length}/{seatsCount} vaga(s) preenchida(s)
           </span>
@@ -217,7 +217,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                   </div>
 
                   <div className="text-center">
-                    <p className="text-base font-extrabold text-foreground leading-tight">
+                    <p className="break-words text-base font-extrabold text-foreground leading-tight">
                       {c?.name || 'Desconhecido'}
                     </p>
                     <p className="text-xs font-semibold text-muted-foreground mt-0.5">{pos.label}</p>
@@ -254,12 +254,12 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
             >
               {/* Header do escrutínio */}
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-foreground">
                     {roundResult.round}º Escrutínio
                   </span>
                   {isCurrentRound && (
-                    <Badge variant="secondary" className="text-[10px]">
+                    <Badge variant="secondary" className="text-xs">
                       Atual
                     </Badge>
                   )}
@@ -290,7 +290,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                   const isLeading = i === 0;
                   return (
                     <div key={r.candidate_id} className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           {elected ? (
                             <CheckCircle className="h-4 w-4 text-success shrink-0" />
@@ -302,14 +302,14 @@ export function ResultPanel({ electionId, totalPresent, candidates, election }: 
                             </span>
                           )}
                           <span
-                            className={`text-sm truncate ${
+                            className={`min-w-0 break-words text-sm ${
                               elected || isLeading ? 'font-semibold text-foreground' : 'text-muted-foreground'
                             }`}
                           >
                             {candidate?.name || 'Desconhecido'}
                           </span>
                           {elected && (
-                            <span className="text-[10px] font-medium text-success bg-success/15 px-1.5 py-0.5 rounded-full shrink-0">
+                            <span className="text-xs font-medium text-success bg-success/15 px-1.5 py-0.5 rounded-full shrink-0">
                               ✓ Eleito
                             </span>
                           )}

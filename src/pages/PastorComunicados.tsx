@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { PastorLayout } from '@/components/pastor/PastorLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -134,31 +135,24 @@ export default function PastorComunicados() {
   return (
     <PastorLayout>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">Comunicados</h1>
-            {announcements.length > 0 && (
-              <Badge variant="secondary" className="text-xs">{announcements.length}</Badge>
-            )}
-          </div>
-          <Button size="sm" onClick={() => setDrawerOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Novo
-          </Button>
-        </div>
+        <PageHeader title="Comunicados" description={`Avisos e orientações · ${announcements.length} comunicados`} action={
+          <Button onClick={() => setDrawerOpen(true)}><Plus className="h-4 w-4 mr-2" />Novo comunicado</Button>
+        } />
 
         {/* Drawer */}
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerContent className="max-h-[85vh]">
+          <DrawerContent className="max-h-[90dvh]">
             <DrawerHeader>
               <DrawerTitle className="flex items-center gap-2">
                 <Megaphone className="h-5 w-5 text-primary" />
                 Novo Comunicado
               </DrawerTitle>
             </DrawerHeader>
-            <div className="px-4 space-y-4 overflow-y-auto">
-              <Input placeholder="Título do comunicado" value={title} onChange={e => setTitle(e.target.value)} />
-              <Textarea placeholder="Mensagem..." value={message} onChange={e => setMessage(e.target.value)} rows={4} />
+            <div className="mx-auto w-full max-w-2xl min-h-0 flex-1 px-4 space-y-4 overflow-y-auto">
+              <Label htmlFor="pastor-announcement-title">Título</Label>
+              <Input id="pastor-announcement-title" placeholder="Título do comunicado" value={title} onChange={e => setTitle(e.target.value)} />
+              <Label htmlFor="pastor-announcement-message">Mensagem</Label>
+              <Textarea id="pastor-announcement-message" placeholder="Mensagem..." value={message} onChange={e => setMessage(e.target.value)} rows={4} />
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">Prioridade</p>
@@ -204,7 +198,7 @@ export default function PastorComunicados() {
                 )}
               </div>
             </div>
-            <DrawerFooter>
+            <DrawerFooter className="mx-auto w-full max-w-2xl">
               <Button onClick={handleSend} disabled={sending || !title.trim() || !message.trim()}>
                 {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
                 Enviar Comunicado
@@ -244,18 +238,18 @@ export default function PastorComunicados() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="font-semibold text-sm">{a.title}</p>
+                          <p className="break-words font-semibold text-sm">{a.title}</p>
                           {a.priority === 'urgente' && (
                             <Badge variant="destructive" className="text-xs">Urgente</Badge>
                           )}
                         </div>
-                        <p className={`text-sm text-muted-foreground ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                        <p className={`break-words text-sm leading-relaxed text-muted-foreground ${!isExpanded ? 'line-clamp-2' : ''}`}>
                           {a.message}
                         </p>
                         {a.message.length > 120 && (
                           <button
                             onClick={() => setExpandedId(isExpanded ? null : a.id)}
-                            className="text-xs text-primary mt-1 flex items-center gap-0.5"
+                            className="min-h-11 text-sm text-primary mt-1 flex items-center gap-1"
                           >
                             {isExpanded ? <>Menos <ChevronUp className="h-3 w-3" /></> : <>Ver mais <ChevronDown className="h-3 w-3" /></>}
                           </button>

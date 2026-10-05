@@ -338,10 +338,10 @@ export function MensalidadesTab() {
       <Card className="mb-4">
         <CardContent className="pt-6">
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Label>Competência:</Label>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <Label className="w-full sm:w-auto">Competência:</Label>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger aria-label="Mês de competência" className="w-36">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -353,7 +353,7 @@ export function MensalidadesTab() {
                 </SelectContent>
               </Select>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-24">
+                <SelectTrigger aria-label="Ano de competência" className="w-24">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -365,7 +365,7 @@ export function MensalidadesTab() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-4 ml-auto">
+            <div className="flex flex-wrap gap-2 sm:ml-auto">
               <Badge variant="default" className="bg-success">
                 <Check className="h-3 w-3 mr-1" />
                 {paidCount} pagos
@@ -532,7 +532,7 @@ export function MensalidadesTab() {
 
       {/* Dialog: Registrar Pagamento */}
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent>
+        <DialogContent className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Registrar Pagamento</DialogTitle>
           </DialogHeader>
@@ -563,7 +563,7 @@ export function MensalidadesTab() {
       
       {/* Dialog: Editar Pagamento */}
       <Dialog open={editPaymentDialogOpen} onOpenChange={setEditPaymentDialogOpen}>
-        <DialogContent>
+        <DialogContent className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Editar Pagamento</DialogTitle>
           </DialogHeader>
@@ -590,7 +590,7 @@ export function MensalidadesTab() {
       
       {/* Dialog: Editar Transação */}
       <Dialog open={editTransactionDialogOpen} onOpenChange={setEditTransactionDialogOpen}>
-        <DialogContent>
+        <DialogContent className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Editar Receita</DialogTitle>
           </DialogHeader>

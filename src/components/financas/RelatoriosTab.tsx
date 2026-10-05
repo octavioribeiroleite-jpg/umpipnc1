@@ -27,11 +27,11 @@ const MONTHS = [
 ];
 
 const COLORS = {
-  pago: 'hsl(142, 76%, 36%)',
-  pendente: 'hsl(0, 84%, 60%)',
-  isento: 'hsl(215, 16%, 47%)',
-  receita: 'hsl(142, 76%, 36%)',
-  despesa: 'hsl(0, 84%, 60%)'
+  pago: 'hsl(var(--success))',
+  pendente: 'hsl(var(--destructive))',
+  isento: 'hsl(var(--muted-foreground))',
+  receita: 'hsl(var(--success))',
+  despesa: 'hsl(var(--destructive))'
 };
 
 function SectionHeader({ title, description }: { title: string; description?: string }) {
@@ -69,7 +69,7 @@ function MetricCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
-            <p className={`mt-2 text-xl font-bold ${toneClass.split(' ')[0]}`}>{value}</p>
+            <p className={`mt-2 finance-metric-number font-bold ${toneClass.split(' ')[0]}`}>{value}</p>
             {helper && <p className="mt-1 text-xs text-muted-foreground">{helper}</p>}
           </div>
           <div className={`h-9 w-9 rounded-md flex items-center justify-center shrink-0 ${toneClass.split(' ').slice(1).join(' ')}`}>
@@ -349,7 +349,7 @@ export function RelatoriosTab() {
         <CardContent className="p-4 md:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold text-foreground">Relatório Financeiro</h2>
+              <h2 className="text-lg font-semibold text-foreground">Relatório financeiro</h2>
               <p className="text-sm text-muted-foreground">
                 Confira os dados do período antes de exportar o PDF oficial com anexos.
               </p>
@@ -374,7 +374,7 @@ export function RelatoriosTab() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
+      <div className="finance-summary-grid">
         <MetricCard
           title="Saldo"
           value={formatCurrency(saldo)}
@@ -394,7 +394,7 @@ export function RelatoriosTab() {
             <SectionHeader title="Caixa real" description="Dinheiro que realmente entrou e saiu no período." />
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="finance-inline-values">
               <div className="rounded-md bg-success/10 p-3">
                 <p className="text-xs text-muted-foreground">Entradas</p>
                 <p className="mt-1 text-lg font-bold text-success">{formatCurrency(totalReceitas)}</p>
@@ -419,7 +419,7 @@ export function RelatoriosTab() {
             <SectionHeader title="Cobranças" description="Valores previstos, recebidos e pendentes das cobranças." />
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="finance-inline-values">
               <div className="rounded-md bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Previsto</p>
                 <p className="mt-1 text-lg font-bold text-foreground">{formatCurrency(chargeStats.totalAmount)}</p>
@@ -453,7 +453,7 @@ export function RelatoriosTab() {
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(v) => `R$${v}`} />
+                  <YAxis width={80} className="text-xs" tickFormatter={(v) => `R$${v}`} />
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   <Legend />
                   <Bar dataKey="receitas" name="Receitas" fill={COLORS.receita} radius={[4, 4, 0, 0]} />
@@ -687,7 +687,7 @@ export function RelatoriosTab() {
       </Card>
 
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
-        <DialogContent className="max-w-3xl p-2">
+        <DialogContent className="finance-dialog max-w-3xl p-2">
           {previewImage && (
             <img src={previewImage} alt="Comprovante" className="w-full h-auto rounded" />
           )}

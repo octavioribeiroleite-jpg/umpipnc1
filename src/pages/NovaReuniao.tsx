@@ -182,7 +182,7 @@ export default function NovaReuniao() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="date">Data *</Label>
                   <Input
@@ -214,7 +214,7 @@ export default function NovaReuniao() {
             <CardContent>
               <div className="space-y-3 max-h-[300px] overflow-y-auto">
                 {profiles.map((profile) => (
-                  <div key={profile.id} className="flex items-center space-x-3">
+                  <div key={profile.id} className="flex min-h-11 items-center space-x-3 rounded-lg border border-border px-3">
                     <Checkbox
                       id={profile.user_id}
                       checked={selectedParticipants.includes(profile.user_id)}
@@ -222,7 +222,7 @@ export default function NovaReuniao() {
                     />
                     <label
                       htmlFor={profile.user_id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      className="flex min-h-11 min-w-0 flex-1 flex-wrap items-center break-words text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                     >
                       {profile.full_name}
                       {profile.user_id === user?.id && (
@@ -241,7 +241,7 @@ export default function NovaReuniao() {
           </Card>
         </div>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-end [&_button]:w-full sm:[&_button]:w-auto">
           <Button type="submit" disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Criar Reunião

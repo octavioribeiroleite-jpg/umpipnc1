@@ -161,7 +161,7 @@ export default function Plenarias() {
               description="Crie uma nova plenária para iniciar a chamada."
             />
           ) : (
-            <div className="grid gap-3">
+            <div className="grid gap-4 lg:grid-cols-2">
               {plenaries.map((p) => {
                 const pct = p.total_count ? Math.round((p.present_count! / p.total_count) * 100) : 0;
                 return (
@@ -170,10 +170,10 @@ export default function Plenarias() {
                     variant="interactive"
                     onClick={() => navigate(`/plenarias/${p.id}`)}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold min-w-0 whitespace-normal break-words">{p.title}</h3>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
                             {format(new Date(p.date), "dd/MM/yyyy", { locale: ptBR })}
@@ -189,7 +189,7 @@ export default function Plenarias() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive shrink-0"
+                        className="text-destructive shrink-0" aria-label={`Excluir plenária ${p.title}`}
                         onClick={(e) => { e.stopPropagation(); setDeleteId(p.id); }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -214,12 +214,12 @@ export default function Plenarias() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Título</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Plenária Ordinária - Fevereiro" />
+              <Label htmlFor="plenary-title">Título</Label>
+              <Input id="plenary-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Plenária Ordinária - Fevereiro" />
             </div>
             <div>
-              <Label>Data</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <Label htmlFor="plenary-date">Data</Label>
+              <Input id="plenary-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
           </div>
           <DialogFooter>

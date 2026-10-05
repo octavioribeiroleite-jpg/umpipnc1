@@ -143,7 +143,7 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between">
+          <CardTitle className="text-base flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
               Mensagem para WhatsApp
@@ -171,7 +171,7 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
         </CardHeader>
         <CardContent>
           <div className="bg-muted/50 rounded-lg p-4 border">
-            <p className="text-sm whitespace-pre-wrap font-mono">{localMessage}</p>
+            <p className="break-words text-sm leading-relaxed whitespace-pre-wrap">{localMessage}</p>
           </div>
         </CardContent>
       </Card>
