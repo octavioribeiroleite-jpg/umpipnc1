@@ -1,6 +1,6 @@
 # Composição da entrada IPNC — 05/10/2026
 
-A página `/auth` segue a referência enviada “Portal IPNC: Acesso e Comunhão”, mantendo a logo oficial já aprovada no commit de identidade 04f5f56832a83f35917c3bf3c375592d0dbc3d07. O arquivo mestre, ícones e manifest não foram modificados nesta entrega.
+A página `/auth` segue a referência enviada “Portal IPNC: Acesso e Comunhão”. Após a prévia, o proprietário pediu usar na entrada a marca de duas folhas do mockup, com fundo transparente, e concluir a arte no Canva. A marca da entrada usa um asset separado. O arquivo institucional compartilhado, ícones e manifest não foram modificados nesta entrega.
 
 ## Resultado
 
@@ -55,3 +55,18 @@ Browser controlado, fixture isolada `tests/vite.diretoria.config.ts`, origem loc
 5. Fazer login somente com uma conta de teste autorizada, em ambiente isolado. Não movimentar dinheiro, alterar pessoas reais ou realizar votos para validar esta entrega.
 
 Evidências visuais encontram-se na pasta `evidence/`. A confirmação de deploy, URL e revisão é informada na entrega após o status nativo do Sites.
+
+## Marca transparente preparada no Canva
+
+A cópia [IPNC — Marca da entrada com fundo transparente](https://www.canva.com/d/u1hp0HHGwUUyRqF), design `DAHXLtaTfl4`, foi reconstruída no Canva a partir da referência de duas folhas enviada pelo proprietário. A prévia foi apresentada antes do pedido para concluir no Canva e atualizar o site. As edições foram salvas no Canva; o PNG foi baixado pelo botão nativo de exportação com fundo transparente e tamanho 1×.
+
+- Exportação original: `entry-logo-canva-export.png`, 540 × 562 px, RGBA, com canal alpha de 0 a 255.
+- Arquivo da entrada: `src/assets/logo-ipnc-entry.png`, 403 × 348 px. Foram retiradas somente as margens vazias, mantendo quatro pixels transparentes de margem. O recorte e a otimização PNG preservam exatamente os pixels internos, sem redimensionamento.
+- Texto editável no Canva; folhas raster de 229 × 124 px extraídas da referência. Não houve vetorização ou ampliação artificial. Esta cópia não é apresentada como um original institucional de alta resolução para impressão.
+- A linha decorativa do mockup não faz parte do asset; a linha da composição continua no CSS da página.
+- Import exclusivo em Auth. Imagens institucionais compartilhadas, PWA, relatórios e manifest mantêm a revisão institucional anterior.
+- Cache da entrada: o Vite gera um nome de arquivo com hash de conteúdo para o novo asset, evitando reutilizar a URL da imagem anterior.
+
+Tipos, 224 testes, build e diff check passaram novamente após a troca. O lint mantém somente o erro preexistente de Auth na linha 269. A logo foi medida em 320, 390, 768, 1024 e 1440 px, mantendo a razão 403:348, sem rolagem horizontal. Em celular, usa largura 112 px; em tablet, 128 px; no desktop, 220–280 px. Evidências atuais: `evidence/entry-logo-canva-390.png`, `evidence/entry-logo-canva-1440.png` e `evidence/entry-logo-geometry.json`. As demais capturas desta pasta documentam a validação anterior da composição.
+
+Os metadados de origem, recorte e hashes estão em `entry-logo-source.json`.

@@ -1,0 +1,33 @@
+{
+  "source_dimensions": [
+    540,
+    562
+  ],
+  "mode": "RGBA",
+  "alpha_range": [
+    0,
+    255
+  ],
+  "content_bounds": [
+    39,
+    141,
+    434,
+    481
+  ],
+  "trim_box": [
+    35,
+    137,
+    438,
+    485
+  ],
+  "output_dimensions": [
+    403,
+    348
+  ],
+  "source_sha256": "6b19e94e0b5d90f29717700dcadb334cacb4bf28cec6c837b487155fa28de041",
+  "output_sha256": "37f7bd6da099b8e29d5433ac1c1aca313bfedfe7c49241adc9f5feb4f847d83b",
+  "canva_design_id": "DAHXLtaTfl4",
+  "canva_url": "https://www.canva.com/d/u1hp0HHGwUUyRqF",
+  "source": "entry-logo-canva-export.png",
+  "output": "src/assets/logo-ipnc-entry.png"
+}

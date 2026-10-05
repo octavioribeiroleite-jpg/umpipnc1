@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock, BookOpen, Wallet } from 'lucide-react';
-import logoIpnc from '@/assets/logo-ipnc.png';
+import logoIpnc from '@/assets/logo-ipnc-entry.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import { InstallButton } from '@/components/layout/InstallButton';
@@ -745,7 +745,7 @@ export default function Auth() {
       <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
       <aside className="auth-brand-panel">
         <div className="auth-brand-content">
-          <div className="auth-brand"><img src={logoIpnc} alt="IPNC" width="1280" height="1280" /></div>
+          <div className="auth-brand"><img src={logoIpnc} alt="IPNC · Nova Carapina" width="403" height="348" /></div>
           <div className="auth-brand-heading">
             <p>Igreja Presbiteriana<br />de Nova Carapina</p>
             <span>Servindo. Cuidando. Avançando.</span>

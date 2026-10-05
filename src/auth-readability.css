@@ -33,7 +33,7 @@
 }
 .auth-brand-content { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .auth-brand { flex-shrink: 0; }
-.auth-brand img { display: block; width: 76px; height: 76px; object-fit: contain; }
+.auth-brand img { display: block; width: 112px; height: auto; max-width: 100%; object-fit: contain; }
 .auth-brand-heading { min-width: 0; }
 .auth-brand-heading p { font-size: 1rem; font-weight: 600; line-height: 1.4; overflow-wrap: break-word; }
 .auth-brand-heading > span, .auth-brand-verse, .auth-brand-location { display: none; }
@@ -145,6 +145,7 @@
 .auth-identity-actions > button { flex: 1 1 130px; }
 .auth-page :is(h1,h2,strong) { overflow-wrap: break-word; }
 @media (min-width: 700px) {
+  .auth-brand img { width: 128px; }
   .auth-brand-panel { padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
   .auth-brand-content { gap: 24px; flex: 1 1 380px; }
   .auth-brand-heading p { font-size: 1.25rem; }
@@ -163,7 +164,7 @@
     border-bottom-right-radius: 100px;
   }
   .auth-brand-content { display: block; flex: initial; }
-  .auth-brand img { width: clamp(180px, 16vw, 240px); height: auto; }
+  .auth-brand img { width: clamp(220px, 18vw, 280px); }
   .auth-brand-heading { margin-top: 36px; padding-top: 26px; position: relative; }
   .auth-brand-heading::before { content: ''; position: absolute; top: 0; width: 64px; height: 2px; background: #8db88b; }
   .auth-brand-heading p { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.75rem, 2.6vw, 2.5rem); font-weight: 400; line-height: 1.2; letter-spacing: -.025em; }

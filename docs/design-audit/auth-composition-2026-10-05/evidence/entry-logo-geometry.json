@@ -1,0 +1,72 @@
+[
+  {
+    "accessCards": 4,
+    "logo": {
+      "height": 96.7109375,
+      "left": 20,
+      "naturalHeight": 348,
+      "naturalWidth": 403,
+      "top": 18,
+      "width": 112
+    },
+    "pageWidth": 305,
+    "sidebar": 305,
+    "viewport": 320
+  },
+  {
+    "accessCards": 4,
+    "logo": {
+      "height": 96.7109375,
+      "left": 20,
+      "naturalHeight": 348,
+      "naturalWidth": 403,
+      "top": 18,
+      "width": 112
+    },
+    "pageWidth": 390,
+    "sidebar": 390,
+    "viewport": 390
+  },
+  {
+    "accessCards": 4,
+    "logo": {
+      "height": 110.5234375,
+      "left": 40,
+      "naturalHeight": 348,
+      "naturalWidth": 403,
+      "top": 20,
+      "width": 128
+    },
+    "pageWidth": 768,
+    "sidebar": 768,
+    "viewport": 768
+  },
+  {
+    "accessCards": 4,
+    "logo": {
+      "height": 189.96875,
+      "left": 36.859375,
+      "naturalHeight": 348,
+      "naturalWidth": 403,
+      "top": 48,
+      "width": 220
+    },
+    "pageWidth": 1024,
+    "sidebar": 327.6796875,
+    "viewport": 1024
+  },
+  {
+    "accessCards": 4,
+    "logo": {
+      "height": 223.8203125,
+      "left": 51.8359375,
+      "naturalHeight": 348,
+      "naturalWidth": 403,
+      "top": 48,
+      "width": 259.1953125
+    },
+    "pageWidth": 1440,
+    "sidebar": 460.796875,
+    "viewport": 1440
+  }
+]
