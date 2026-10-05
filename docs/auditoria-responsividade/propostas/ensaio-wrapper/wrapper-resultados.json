@@ -1,0 +1,272 @@
+{
+  "startedAt": "2026-10-05T16:56:19.485Z",
+  "host": "darwin",
+  "architecture": "arm64",
+  "version": "postgres (PostgreSQL) 17.10",
+  "runtimePackage": "@embedded-postgres/darwin-arm64@17.10.0-beta.17",
+  "clientPackage": "pg@8.23.1",
+  "endpoint": {
+    "host": "127.0.0.1",
+    "port": 56608
+  },
+  "cluster": "/private/tmp/ipnc-pg-concurrency-oo6viwdt/cluster-HkQ5B2",
+  "cases": [
+    {
+      "name": "wrapper/active-writer-NOWAIT-aborts-without-touching-body-or-writer",
+      "passed": true,
+      "elapsedMs": 0.6494999999999891
+    },
+    {
+      "name": "wrapper/plain-readers-continue-and-one-batch-commits-only-body",
+      "passed": true,
+      "elapsedMs": 3.96287499999994
+    },
+    {
+      "name": "wrapper/baseline-drift-aborts-before-DDL",
+      "passed": true
+    },
+    {
+      "name": "wrapper/post-DDL-error-rolls-back-body-oid-acl-triggers-policies",
+      "passed": true
+    },
+    {
+      "name": "wrapper/new-writer-waits-then-completes-after-commit",
+      "passed": true,
+      "lock": {
+        "mode": "RowExclusiveLock",
+        "granted": false,
+        "blockers": [
+          27434
+        ],
+        "relname": "ebd_attendance"
+      }
+    },
+    {
+      "name": "wrapper/SHARE-self-compatibility",
+      "passed": true,
+      "otherRolloutAllowed": true
+    },
+    {
+      "name": "wrapper/SHARE ROW EXCLUSIVE-self-compatibility",
+      "passed": true,
+      "otherRolloutAllowed": false
+    },
+    {
+      "name": "wrapper/single-DO-implicit-transaction-postcondition-error-rolls-back",
+      "passed": true
+    },
+    {
+      "name": "wrapper/single-DO-nested-in-migration-does-not-prematurely-commit",
+      "passed": true
+    },
+    {
+      "name": "wrapper/transaction-timeout-set-inside-DO-terminates-and-rolls-back",
+      "passed": true,
+      "timeoutMs": 100,
+      "code": "25P04"
+    }
+  ],
+  "shutdown": {
+    "stopped": true,
+    "portClosed": true,
+    "mode": "fast",
+    "completedAt": "2026-10-05T16:56:20.308Z"
+  },
+  "server": {
+    "version": "PostgreSQL 17.10 on x86_64-apple-darwin24.6.0, compiled by Apple clang version 17.0.0 (clang-1700.6.3.2), 64-bit",
+    "isolation": "read committed",
+    "listen": "127.0.0.1"
+  },
+  "baseline": {
+    "guard": [
+      {
+        "oid": 16573,
+        "proowner": 10,
+        "proacl": "{ipnc_fixture=X/ipnc_fixture}",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=\"\""
+        ]
+      }
+    ],
+    "functionBodies": [
+      {
+        "signature": "ebd_close_day(date)",
+        "body_md5": "efcdfb297593ded80689d51f29b012dc"
+      },
+      {
+        "signature": "ebd_reopen_day(date,uuid)",
+        "body_md5": "965467293ab4a75e2253947b759781be"
+      },
+      {
+        "signature": "ipnc_private.guard_ebd_day()",
+        "body_md5": "13c4f019011f3d0e3f6c0f8b0b0eac8a"
+      }
+    ],
+    "policies": [
+      {
+        "tablename": "ebd_attendance",
+        "policyname": "ipnc_ebd_admin",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "ebd_is_admin()",
+        "with_check": "ebd_is_admin()"
+      },
+      {
+        "tablename": "ebd_attendance",
+        "policyname": "ipnc_ebd_attendance_insert",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_attendance",
+        "policyname": "ipnc_ebd_attendance_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "ipnc_private.ebd_class_allowed(class_id)",
+        "with_check": null
+      },
+      {
+        "tablename": "ebd_attendance",
+        "policyname": "ipnc_ebd_attendance_update",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "UPDATE",
+        "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_call_status",
+        "policyname": "ebd_call_admin",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "ebd_is_admin()",
+        "with_check": "ebd_is_admin()"
+      },
+      {
+        "tablename": "ebd_call_status",
+        "policyname": "ebd_call_insert",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_call_status",
+        "policyname": "ebd_call_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "ipnc_private.ebd_class_allowed(class_id)",
+        "with_check": null
+      },
+      {
+        "tablename": "ebd_call_status",
+        "policyname": "ebd_call_update",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "UPDATE",
+        "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_class_visitor_entries",
+        "policyname": "ipnc_ebd_admin",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "ebd_is_admin()",
+        "with_check": "ebd_is_admin()"
+      },
+      {
+        "tablename": "ebd_class_visitor_entries",
+        "policyname": "ipnc_ebd_visitor_delete",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "DELETE",
+        "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+        "with_check": null
+      },
+      {
+        "tablename": "ebd_class_visitor_entries",
+        "policyname": "ipnc_ebd_visitor_insert",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+      },
+      {
+        "tablename": "ebd_class_visitor_entries",
+        "policyname": "ipnc_ebd_visitor_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "ipnc_private.ebd_class_allowed(class_id)",
+        "with_check": null
+      },
+      {
+        "tablename": "ebd_day_closures",
+        "policyname": "ipnc_ebd_admin",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "ebd_is_admin()",
+        "with_check": "ebd_is_admin()"
+      }
+    ]
+  },
+  "wrapper": {
+    "mode": "SHARE NOWAIT",
+    "tableOrder": "public.ebd_attendance, public.ebd_call_status, public.ebd_class_visitor_entries, public.ebd_day_closures",
+    "lockTimeout": "250ms",
+    "statementTimeout": "2s",
+    "transactionTimeout": "5s",
+    "idleTimeout": "3s",
+    "expectedBaseline": "13c4f019011f3d0e3f6c0f8b0b0eac8a",
+    "expectedProposedBody": "617d4fa54312e7ee5305a2c44faa836f",
+    "metadataFingerprint": "6889f92a33a1fba6b2bd3e184efc56d7"
+  },
+  "singleDo": {
+    "mode": "SHARE ROW EXCLUSIVE NOWAIT",
+    "exactProposalEmbedded": true,
+    "transactionTimeoutEffectiveInsideDO": true
+  },
+  "passed": true,
+  "scriptSha256": "0e91e69e7e60599c337ebfc57d86bf83090fa756993c5617e81d1a27f946c462",
+  "applicationSourcesChanged": false,
+  "remoteDatabaseAccessedByTest": false
+}

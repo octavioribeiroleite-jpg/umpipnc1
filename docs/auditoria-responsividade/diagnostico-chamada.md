@@ -1,6 +1,6 @@
 # Diagnóstico da chamada EBD
 
-05/10/2026. Este documento separa o diagnóstico de código, os ensaios isolados e as medições de navegador registradas pela coordenação. Nenhuma presença, turma ou fechamento real foi alterado. O preflight remoto autorizado consultou somente metadados; a proposta SQL permanece sem autorização de escrita.
+05/10/2026. Este documento separa o diagnóstico de código, os ensaios isolados e as medições de navegador registradas pela coordenação. Nenhuma presença, turma ou fechamento real foi alterado. O preflight e a pós-verificação remotos consultaram somente metadados. Após autorização específica, o operador Astra Ultra aplicou a substituição do guard; [evidência de aplicação e pós-verificação](propostas/aplicacao-guard-20261005.json).
 
 ## Causa observada e mudança
 
@@ -61,9 +61,11 @@ A repetição final inclui a subscription global de pendências e o caminho de r
 - **29 cenários PostgreSQL nativo**, conexões reais concorrentes e `pg_locks`: baseline/proposta, ambas as ordens de finalizar/escrever e fechar/escrever, primeiro ator abortando, visitantes, três alunos em voo, datas distintas, timeout sem cancelamento, confirmação/retry e reversão. Servidor encerrado e porta fechada. Log/JSON: `fundacao-checks/ebd-postgres-concurrency.*`.
 - **Preflight remoto somente leitura:** guard, close/reopen e 13 policies iguais à fixture nativa; quatro triggers habilitados e quatro tabelas com RLS. `propostas/preflight-confirmado.json`.
 
-A falha de backend já existia: turma `finalizada` sozinha não bloqueia presença autorizada, embora dia fechado bloqueie. A concorrência de três aumenta a quantidade potencial de writes já enviados frente ao antigo bloqueio de um. Reduzir para um não elimina a lacuna entre clientes. A proposta isolada `propostas/guard-chamada-finalizada.sql` usa o mesmo lock por dia e acrescenta a recusa de presença/visitante em turma finalizada, inclusive admin, preservando a reabertura explícita e correção histórica.
+No baseline anterior à aplicação, a falha de backend já existia: turma `finalizada` sozinha não bloqueava presença autorizada, embora dia fechado bloqueasse. A concorrência de três aumenta a quantidade potencial de writes já enviados frente ao antigo bloqueio de um. Reduzir para um não eliminava essa lacuna entre clientes. O patch homologado `propostas/guard-chamada-finalizada.sql` usa o mesmo lock por dia e acrescenta a recusa de presença/visitante em turma finalizada, inclusive admin, preservando a reabertura explícita e correção histórica.
 
-**A integridade entre clientes para turma finalizada continua um gate de implantação.** O ensaio local aprovou a proposta, mas ela não foi aplicada em produção. Escopo, hash, preflight, backup privado e rollback exato estão em `propostas/rollout-rollback.md`. Não confundir testes locais, aprovação de UI e deploy com aplicação dessa proteção.
+**Gate SQL atendido.** Após os ensaios locais e a autorização específica, a migration `20261005165755` (`ipnc_guard_ebd_finalized_class_20261005`) concluiu às 16:57:55.949 UTC de 05/10/2026 no projeto Renovo IPNC. A pós-verificação às 16:58:16.066463 UTC confirmou corpo MD5 `617d4fa54312e7ee5305a2c44faa836f`, idêntico ao patch aprovado; a estrutura permaneceu `70a3c96635467d78d1b8e48a4470c8e0`, com OID 25624, owner/ACL/configuração, quatro triggers, quatro tabelas com RLS e 13 policies preservados. Nenhum registro de negócio foi alterado para testar a implantação. Consulte a [evidência de aplicação e pós-verificação](propostas/aplicacao-guard-20261005.json).
+
+O wrapper foi ensaiado em dez cenários locais adicionais: DO único com `SHARE ROW EXCLUSIVE NOWAIT`, recusa diante de writer existente, espera de writer novo, leitores preservados e rollback por erro/timeout (`propostas/ensaio-wrapper/`). Escopo, backup privado e rollback exato continuam em `propostas/rollout-rollback.md`. A confirmação do deploy do frontend é responsabilidade do coordenador, pela ferramenta de status do Sites nesta tarefa; aplicação SQL e deploy do frontend são evidências distintas.
 
 ## Limites e próximos cenários de navegador
 

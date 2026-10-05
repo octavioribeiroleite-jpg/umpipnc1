@@ -8,9 +8,9 @@ Revisão final da implementação/fixtures: `7754b8bc6b4e36e7dfe76fcb60af66d22ec
 
 A marcação de presença passa a responder imediatamente por aluno, mostrando pendência até a confirmação. A auditoria corrigiu também leituras antigas, acessibilidade de formulários/diálogos, navegação pastoral, dados financeiros indisponíveis apresentados como zero/vazio, cache da conta principal e uma divergência no resultado eleitoral apresentado.
 
-**A publicação permanece bloqueada pela autorização específica do patch SQL de chamada finalizada.** O guard atual foi reproduzido aceitando presença depois de finalizar a turma. A função proposta foi homologada em PostgreSQL nativo isolado com duas conexões e 29 cenários. A fila permite até três escritas por instância, portanto publicar apenas a UI sem o guard manteria uma corrida conhecida. Nenhuma função, policy, trigger ou dado de produção foi alterado nesta auditoria. Ver [rollout e rollback](propostas/rollout-rollback.md), incluindo escopo, hash, preflight somente leitura e backup exato privado.
+**Gate SQL atendido em 05/10/2026, às 16:57:55 UTC, após autorização do proprietário para publicar as alterações anteriores.** Somente `ipnc_private.guard_ebd_day()` foi substituída no projeto Renovo IPNC. O pós-preflight confirmou o corpo aprovado e OID, dono, ACL, demais propriedades, quatro triggers, RLS e 13 policies intactos. Nenhum dado real foi consultado ou alterado. A migration `20261005165755` e os resultados estão em [aplicação verificada](propostas/aplicacao-guard-20261005.json); [rollout e rollback](propostas/rollout-rollback.md) preserva o histórico, o hash e o backup privado exato. A proteção foi homologada anteriormente em 29 cenários PostgreSQL; o wrapper de implantação passou mais dez cenários locais.
 
-O coordenador é responsável por integrar a revisão validada na main/GitHub/fonte Sites e confirmar o deploy. Após autorização humana, a aplicação do patch precisa ser executada pelo Astra com novo preflight, transação e verificação de metadados, conforme o roteiro. Não reaplicar migrations históricas.
+O coordenador é responsável pela integração da revisão validada na main/GitHub/fonte Sites e pela confirmação nativa de deploy nesta tarefa. O registro do SQL confirma apenas o banco; a versão publicada do frontend deve ser identificada pelo resultado do Sites. A aplicação pelo Astra Ultra usou novo preflight, backup exato e um bloco atômico com verificação antes/depois, sem reaplicar migrations históricas.
 
 ## Causas comprovadas e solução
 
@@ -20,7 +20,7 @@ O coordenador é responsável por integrar a revisão validada na main/GitHub/fo
 | Uma leitura iniciada antes de uma gravação podia repor o array antigo. Respostas de status/dia podiam reabrir visualmente um fechamento observado. | Tickets de revisão/ordem, mesclagem de registros confirmados e descarte de leitura atravessada por mutação observada. | Promises controladas executam helpers/callbacks reais; ensaio UI de leitura antiga e renovação. |
 | Fila vazia não garantia que dados do PDF haviam sido lidos depois da última alteração. Evento Realtime tinha janela antes do refetch. | Ticket capturado antes da leitura e invalidado ao aceitar/confirmar alteração e observar evento. Dia relido antes do PDF; período/trimestre recusam snapshot antigo e atualizam a consulta. | Geradores reais de dia/período/trimestre com jsPDF em memória, estatísticas reais do histórico; sem download de dados reais. |
 | Resposta perdida/timeout não prova rollback. | `unknown`, barreira de fechamento/PDF e consulta autorizada, sem reenvio cego. Pendência enviada sobrevive à troca de scope/desmontagem. | Conferência manual no novo scope confirmou 1/8 com uma só escrita; leitura anterior de 5 s não regrediu o estado. |
-| A função de banco não verificava turma finalizada. | Proposta isolada, sob o mesmo lock do dia, bloqueando presença/visitante após finalização. | Baseline reproduz falha; proposta passa 29 cenários PostgreSQL nativo. Aplicação remota não autorizada. |
+| A função de banco não verificava turma finalizada. | Guard aplicado sob o mesmo lock do dia, bloqueando presença/visitante após finalização. | Baseline reproduz falha; patch passa 29 cenários PostgreSQL nativo. Aplicação autorizada e metadados remotos verificados em 05/10 às 16:58 UTC. |
 | Menu pastoral sumia entre 768 e 1023 px; formulários tinham controles sem nome; modal controlado retornava foco ao body. | Breakpoint coerente, rótulos associados, botões nativos nas sociedades e restauração de foco em diálogos. | UI real em fixtures; Tab, Enter, resize, altura curta e última ação de tabela. Não certifica leitor de tela ou dispositivo físico. |
 | Erro de consulta era mostrado como lista vazia/saldo zero em vários módulos. | Aviso e retry; snapshot anterior identificado como possivelmente desatualizado; grupos financeiros só publicam depois de todas as leituras bem-sucedidas. | Falha inicial e refetch local: R$ 12.345,67 e rascunho preservados, recuperação remove erro. Não valida RLS remota. |
 | Projetor declarava o primeiro colocado vencedor em empate 3–3–2 sem maioria. | Mesma função de apuração do painel, preservando fórmula existente e gate `show_result`; erro de leitura explícito. | Casos de maioria/empate/escrutínio e tela final 0/1 vaga, 8 cédulas, maioria 5. Nenhum voto emitido. |
@@ -64,10 +64,10 @@ O formulário da sociedade na tesouraria continua com cinco campos: valor, data,
 
 Relatórios tesouraria/anexos mantêm seus testes reais de geração, documentos fictícios e falha explícita de anexo. A prévia da tesouraria deliberadamente não gera relatórios nem exercita upload/assinatura reais. PWA foi revisado por fonte e testes existentes; a fixture bloqueia worker, portanto não foi chamada de instalação aprovada.
 
-## Pendências externas
+## Implantação e limites externos
 
-1. Autorização humana e aplicação/verificação do patch SQL isolado. **Gate crítico.**
-2. Integração/publicação da revisão validada pelo coordenador e confirmação da versão Sites.
-3. Homologação em aparelhos e sessões descartáveis de staging para os limites explicitados. Nenhum teste com dado real foi usado para preencher essas lacunas.
+O gate do banco foi atendido pela aplicação autorizada e verificação documentadas acima. A confirmação do frontend é o resultado nativo de deploy do Sites comunicado pelo coordenador nesta tarefa; este relatório não o antecipa.
+
+Homologação em aparelhos e sessões descartáveis de staging continua necessária para comprovar os limites explicitados. Nenhum teste com dado real foi usado para preencher essas lacunas. Os advisors de segurança mantiveram os mesmos 13 achados anteriores (cinco INFO e oito WARN), sem novos achados após o DDL; os links e a comparação estão no registro da aplicação.
 
 Não é declaração de responsividade perfeita, cobertura de todos os cruzamentos estado × perfil × viewport, conformidade integral de acessibilidade ou auditoria de segurança completa.

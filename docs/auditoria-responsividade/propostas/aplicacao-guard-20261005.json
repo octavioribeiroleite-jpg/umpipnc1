@@ -1,0 +1,668 @@
+{
+  "authorization": {
+    "date": "2026-10-05",
+    "instruction": "Publique todas as alterações feitas anteriormente",
+    "context": "Resposta do proprietário ao fechamento que apresentava este patch SQL como único gate de publicação; autorização transmitida pelo coordenador para o patch específico já apresentado.",
+    "technicalExecutor": "Astra Ultra",
+    "scope": "Substituir somente ipnc_private.guard_ebd_day(); sem dados de negócio, permissões, políticas ou outras funções."
+  },
+  "project": {
+    "id": "xhhfgnkpgtnzlvpvqjpl",
+    "name": "Renovo IPNC",
+    "region": "sa-east-1",
+    "status": "ACTIVE_HEALTHY",
+    "serverVersion": "17.6"
+  },
+  "sourceRevision": "031166679170671b08cad0ed12a52ccefee56176",
+  "sourceImplementationRevision": "7754b8bc6b4e36e7dfe76fcb60af66d22ec876e4",
+  "patch": {
+    "path": "guard-chamada-finalizada.sql",
+    "sha256": "6dda7555722caf4d3e343476515a21b85f6191e21e8b6c8331eeda56e8e3b1f6",
+    "bodyMd5": "617d4fa54312e7ee5305a2c44faa836f",
+    "approvedBytesUnchanged": true
+  },
+  "baselineComparison": {
+    "guard": true,
+    "triggers": true,
+    "tables": true,
+    "policies": true,
+    "closeAndReopen": true
+  },
+  "preflight": {
+    "guard": {
+      "oid": "25624",
+      "proname": "guard_ebd_day",
+      "body_md5": "13c4f019011f3d0e3f6c0f8b0b0eac8a",
+      "owner_name": "postgres",
+      "volatility": "v",
+      "result_type": "trigger",
+      "schema_name": "ipnc_private",
+      "function_acl": [
+        "postgres=X/postgres"
+      ],
+      "language_name": "plpgsql",
+      "security_definer": true,
+      "function_settings": [
+        "search_path=\"\""
+      ]
+    },
+    "locks": [],
+    "database": "postgres",
+    "executor": "postgres",
+    "readonly": "on",
+    "structure": {
+      "tables": [
+        {
+          "force_rls": false,
+          "table_name": "ebd_attendance",
+          "rls_enabled": true
+        },
+        {
+          "force_rls": false,
+          "table_name": "ebd_call_status",
+          "rls_enabled": true
+        },
+        {
+          "force_rls": false,
+          "table_name": "ebd_class_visitor_entries",
+          "rls_enabled": true
+        },
+        {
+          "force_rls": false,
+          "table_name": "ebd_day_closures",
+          "rls_enabled": true
+        }
+      ],
+      "policies": [
+        {
+          "cmd": "ALL",
+          "qual": "ebd_is_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_attendance",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_admin",
+          "with_check": "ebd_is_admin()"
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_attendance",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_attendance_insert",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "ipnc_private.ebd_class_allowed(class_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_attendance",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_attendance_read",
+          "with_check": null
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_attendance",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_attendance_update",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "ALL",
+          "qual": "ebd_is_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_call_status",
+          "permissive": "PERMISSIVE",
+          "policyname": "ebd_call_admin",
+          "with_check": "ebd_is_admin()"
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_call_status",
+          "permissive": "PERMISSIVE",
+          "policyname": "ebd_call_insert",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "ipnc_private.ebd_class_allowed(class_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_call_status",
+          "permissive": "PERMISSIVE",
+          "policyname": "ebd_call_read",
+          "with_check": null
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_call_status",
+          "permissive": "PERMISSIVE",
+          "policyname": "ebd_call_update",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "ALL",
+          "qual": "ebd_is_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_class_visitor_entries",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_admin",
+          "with_check": "ebd_is_admin()"
+        },
+        {
+          "cmd": "DELETE",
+          "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_class_visitor_entries",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_visitor_delete",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_class_visitor_entries",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_visitor_insert",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "ipnc_private.ebd_class_allowed(class_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_class_visitor_entries",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_visitor_read",
+          "with_check": null
+        },
+        {
+          "cmd": "ALL",
+          "qual": "ebd_is_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_day_closures",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_admin",
+          "with_check": "ebd_is_admin()"
+        }
+      ],
+      "triggers": [
+        {
+          "enabled": "O",
+          "table_name": "ebd_attendance",
+          "table_schema": "public",
+          "trigger_name": "ipnc_guard_day",
+          "trigger_definition": "CREATE TRIGGER ipnc_guard_day BEFORE INSERT OR DELETE OR UPDATE ON ebd_attendance FOR EACH ROW EXECUTE FUNCTION ipnc_private.guard_ebd_day()"
+        },
+        {
+          "enabled": "O",
+          "table_name": "ebd_call_status",
+          "table_schema": "public",
+          "trigger_name": "ipnc_guard_day",
+          "trigger_definition": "CREATE TRIGGER ipnc_guard_day BEFORE INSERT OR DELETE OR UPDATE ON ebd_call_status FOR EACH ROW EXECUTE FUNCTION ipnc_private.guard_ebd_day()"
+        },
+        {
+          "enabled": "O",
+          "table_name": "ebd_class_visitor_entries",
+          "table_schema": "public",
+          "trigger_name": "ipnc_guard_day",
+          "trigger_definition": "CREATE TRIGGER ipnc_guard_day BEFORE INSERT OR DELETE OR UPDATE ON ebd_class_visitor_entries FOR EACH ROW EXECUTE FUNCTION ipnc_private.guard_ebd_day()"
+        },
+        {
+          "enabled": "O",
+          "table_name": "ebd_day_closures",
+          "table_schema": "public",
+          "trigger_name": "ipnc_guard_day",
+          "trigger_definition": "CREATE TRIGGER ipnc_guard_day BEFORE INSERT OR DELETE OR UPDATE ON ebd_day_closures FOR EACH ROW EXECUTE FUNCTION ipnc_private.guard_ebd_day()"
+        }
+      ],
+      "guard_catalog": {
+        "oid": "25624",
+        "proacl": [
+          "postgres=X/postgres"
+        ],
+        "probin": null,
+        "procost": 100,
+        "prokind": "f",
+        "prolang": "13619",
+        "proname": "guard_ebd_day",
+        "prorows": 0,
+        "pronargs": 0,
+        "proowner": "16388",
+        "proconfig": [
+          "search_path=\"\""
+        ],
+        "proretset": false,
+        "prosecdef": true,
+        "prorettype": "2279",
+        "prosqlbody": null,
+        "prosupport": "-",
+        "proargmodes": null,
+        "proargnames": null,
+        "proargtypes": [],
+        "proisstrict": false,
+        "proparallel": "u",
+        "protrftypes": null,
+        "provariadic": "0",
+        "provolatile": "v",
+        "proleakproof": false,
+        "pronamespace": "18589",
+        "proallargtypes": null,
+        "proargdefaults": null,
+        "pronargdefaults": 0
+      },
+      "close_and_reopen": [
+        {
+          "signature": "ebd_close_day(date)",
+          "body_md5": "efcdfb297593ded80689d51f29b012dc"
+        },
+        {
+          "signature": "ebd_reopen_day(date,uuid)",
+          "body_md5": "965467293ab4a75e2253947b759781be"
+        }
+      ]
+    },
+    "checked_at": "2026-10-05T16:54:59.167028+00:00",
+    "structure_md5": "70a3c96635467d78d1b8e48a4470c8e0",
+    "server_version": "17.6"
+  },
+  "backup": {
+    "directory": "/Users/octavioribeiroleite/.codex/deployment-backups/ipnc/2026-10-05/20261005T165459Z",
+    "directoryMode": "0700",
+    "filesMode": "0600",
+    "rollbackFile": "rollback-live-guard.sql",
+    "rollbackSha256": "b54b66e01e14ac6ceace4ea936327e63bdcd8226fe3c96bd2817a1b5f1a41be2",
+    "preflightSha256": "297848427c2c3e33b656a0ce089d3d9762757152aef36d7f2ed27f065bb1e90c",
+    "postflightSha256": "56051a76a560792ef4162489e9a8677057e044946d18c3383238fba4ee025bf8"
+  },
+  "application": {
+    "tool": "Supabase.apply_migration",
+    "name": "ipnc_guard_ebd_finalized_class_20261005",
+    "version": "20261005165755",
+    "startedAt": "2026-10-05T16:57:52.898Z",
+    "finishedAt": "2026-10-05T16:57:55.949Z",
+    "success": true,
+    "wrapperSha256": "4d4e3334cdee3782c285ebdc50050b434d9f572748febe4f429c27605f45a9fe",
+    "wrapper": "Um DO atômico, sem BEGIN/COMMIT próprios; EXECUTE contém exatamente os bytes aprovados. SRX NOWAIT nas quatro tabelas; rejeita advisory EBD já em curso; valida corpo/estrutura antes e depois.",
+    "timeouts": {
+      "transaction": "5s",
+      "lock": "5s",
+      "statement": "30s",
+      "idleInTransaction": "5s"
+    },
+    "timeoutNote": "transaction_timeout PG17 ativado dentro de DO foi homologado localmente; ele limita a operação. statement_timeout ajustado dentro do statement é suplementar e não é usado como garantia temporal do DO já iniciado.",
+    "noRetries": true
+  },
+  "postflight": {
+    "guard": {
+      "oid": "25624",
+      "proname": "guard_ebd_day",
+      "body_md5": "617d4fa54312e7ee5305a2c44faa836f",
+      "owner_name": "postgres",
+      "volatility": "v",
+      "result_type": "trigger",
+      "schema_name": "ipnc_private",
+      "function_acl": [
+        "postgres=X/postgres"
+      ],
+      "language_name": "plpgsql",
+      "security_definer": true,
+      "function_settings": [
+        "search_path=\"\""
+      ]
+    },
+    "locks": [],
+    "database": "postgres",
+    "executor": "postgres",
+    "readonly": "on",
+    "structure": {
+      "tables": [
+        {
+          "force_rls": false,
+          "table_name": "ebd_attendance",
+          "rls_enabled": true
+        },
+        {
+          "force_rls": false,
+          "table_name": "ebd_call_status",
+          "rls_enabled": true
+        },
+        {
+          "force_rls": false,
+          "table_name": "ebd_class_visitor_entries",
+          "rls_enabled": true
+        },
+        {
+          "force_rls": false,
+          "table_name": "ebd_day_closures",
+          "rls_enabled": true
+        }
+      ],
+      "policies": [
+        {
+          "cmd": "ALL",
+          "qual": "ebd_is_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_attendance",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_admin",
+          "with_check": "ebd_is_admin()"
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_attendance",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_attendance_insert",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "ipnc_private.ebd_class_allowed(class_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_attendance",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_attendance_read",
+          "with_check": null
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_attendance",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_attendance_update",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "ALL",
+          "qual": "ebd_is_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_call_status",
+          "permissive": "PERMISSIVE",
+          "policyname": "ebd_call_admin",
+          "with_check": "ebd_is_admin()"
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_call_status",
+          "permissive": "PERMISSIVE",
+          "policyname": "ebd_call_insert",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "ipnc_private.ebd_class_allowed(class_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_call_status",
+          "permissive": "PERMISSIVE",
+          "policyname": "ebd_call_read",
+          "with_check": null
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_call_status",
+          "permissive": "PERMISSIVE",
+          "policyname": "ebd_call_update",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "ALL",
+          "qual": "ebd_is_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_class_visitor_entries",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_admin",
+          "with_check": "ebd_is_admin()"
+        },
+        {
+          "cmd": "DELETE",
+          "qual": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_class_visitor_entries",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_visitor_delete",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_class_visitor_entries",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_visitor_insert",
+          "with_check": "(ipnc_private.ebd_class_allowed(class_id) AND (date = ((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "ipnc_private.ebd_class_allowed(class_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_class_visitor_entries",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_visitor_read",
+          "with_check": null
+        },
+        {
+          "cmd": "ALL",
+          "qual": "ebd_is_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ebd_day_closures",
+          "permissive": "PERMISSIVE",
+          "policyname": "ipnc_ebd_admin",
+          "with_check": "ebd_is_admin()"
+        }
+      ],
+      "triggers": [
+        {
+          "enabled": "O",
+          "table_name": "ebd_attendance",
+          "table_schema": "public",
+          "trigger_name": "ipnc_guard_day",
+          "trigger_definition": "CREATE TRIGGER ipnc_guard_day BEFORE INSERT OR DELETE OR UPDATE ON ebd_attendance FOR EACH ROW EXECUTE FUNCTION ipnc_private.guard_ebd_day()"
+        },
+        {
+          "enabled": "O",
+          "table_name": "ebd_call_status",
+          "table_schema": "public",
+          "trigger_name": "ipnc_guard_day",
+          "trigger_definition": "CREATE TRIGGER ipnc_guard_day BEFORE INSERT OR DELETE OR UPDATE ON ebd_call_status FOR EACH ROW EXECUTE FUNCTION ipnc_private.guard_ebd_day()"
+        },
+        {
+          "enabled": "O",
+          "table_name": "ebd_class_visitor_entries",
+          "table_schema": "public",
+          "trigger_name": "ipnc_guard_day",
+          "trigger_definition": "CREATE TRIGGER ipnc_guard_day BEFORE INSERT OR DELETE OR UPDATE ON ebd_class_visitor_entries FOR EACH ROW EXECUTE FUNCTION ipnc_private.guard_ebd_day()"
+        },
+        {
+          "enabled": "O",
+          "table_name": "ebd_day_closures",
+          "table_schema": "public",
+          "trigger_name": "ipnc_guard_day",
+          "trigger_definition": "CREATE TRIGGER ipnc_guard_day BEFORE INSERT OR DELETE OR UPDATE ON ebd_day_closures FOR EACH ROW EXECUTE FUNCTION ipnc_private.guard_ebd_day()"
+        }
+      ],
+      "guard_catalog": {
+        "oid": "25624",
+        "proacl": [
+          "postgres=X/postgres"
+        ],
+        "probin": null,
+        "procost": 100,
+        "prokind": "f",
+        "prolang": "13619",
+        "proname": "guard_ebd_day",
+        "prorows": 0,
+        "pronargs": 0,
+        "proowner": "16388",
+        "proconfig": [
+          "search_path=\"\""
+        ],
+        "proretset": false,
+        "prosecdef": true,
+        "prorettype": "2279",
+        "prosqlbody": null,
+        "prosupport": "-",
+        "proargmodes": null,
+        "proargnames": null,
+        "proargtypes": [],
+        "proisstrict": false,
+        "proparallel": "u",
+        "protrftypes": null,
+        "provariadic": "0",
+        "provolatile": "v",
+        "proleakproof": false,
+        "pronamespace": "18589",
+        "proallargtypes": null,
+        "proargdefaults": null,
+        "pronargdefaults": 0
+      },
+      "close_and_reopen": [
+        {
+          "signature": "ebd_close_day(date)",
+          "body_md5": "efcdfb297593ded80689d51f29b012dc"
+        },
+        {
+          "signature": "ebd_reopen_day(date,uuid)",
+          "body_md5": "965467293ab4a75e2253947b759781be"
+        }
+      ]
+    },
+    "checked_at": "2026-10-05T16:58:16.066463+00:00",
+    "structure_md5": "70a3c96635467d78d1b8e48a4470c8e0",
+    "server_version": "17.6"
+  },
+  "postflightChecks": {
+    "bodyMatchesApprovedPatch": true,
+    "structureExactlyUnchanged": true,
+    "structureHashUnchanged": true,
+    "expectedBodyHash": true,
+    "oidUnchanged": true,
+    "readonly": true
+  },
+  "securityAdvisors": {
+    "beforeObservedAt": "2026-10-05T16:51:42.541Z",
+    "afterObservedAt": "2026-10-05T16:58:17.229Z",
+    "onlyObservedAtChanged": true,
+    "newFindings": 0,
+    "groups": [
+      {
+        "name": "rls_enabled_no_policy",
+        "level": "INFO",
+        "count": 5,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "level": "WARN",
+        "count": 2,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "level": "WARN",
+        "count": 5,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "level": "WARN",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+      }
+    ]
+  },
+  "localWrapperRehearsal": {
+    "passed": 10,
+    "failed": 0,
+    "evidence": "ensaio-wrapper/wrapper-resultados.json",
+    "server": "PostgreSQL 17.10 loopback descartável",
+    "serverStopped": true
+  },
+  "dataSafety": {
+    "businessRowsRead": false,
+    "businessRowsWritten": false,
+    "realPresencesVotesFinanceMessagesCreated": false,
+    "credentialsReadOrRecorded": false,
+    "onlyApplicationDdlObject": "ipnc_private.guard_ebd_day()",
+    "migrationHistoryEntryExpected": true
+  },
+  "outcome": {
+    "sqlGateSatisfied": true,
+    "frontendPublicationConfirmedHere": false,
+    "frontendPublicationAuthority": "Confirmação nativa de deploy do Sites pelo coordenador nesta tarefa.",
+    "noFrontendSourceChange": true
+  },
+  "migrationMirror": {
+    "path": "supabase/migrations/20261005165755_ipnc_guard_ebd_finalized_class_20261005.sql",
+    "sha256": "6dda7555722caf4d3e343476515a21b85f6191e21e8b6c8331eeda56e8e3b1f6",
+    "definitionOnly": true,
+    "approvedBytesCopied": true,
+    "productionSpecificAssertionsOmitted": true,
+    "remoteReexecution": false,
+    "exactExecutedWrapperEvidence": "propostas/aplicacao-guard-20261005-wrapper.sql"
+  }
+}

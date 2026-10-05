@@ -1,0 +1,229 @@
+import assert from 'node:assert/strict';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync, existsSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { createServer, createConnection } from 'node:net';
+import { dirname, join, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { initializeEbdFixture } from 'file:///Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo%20IPNC/tests/fixtures/ebd-database.mjs';
+
+// Manual opt-in: use only a task-private runtime installed under /tmp. There is
+// intentionally no connection-string input and no dependency in the app lock.
+const runtime = realpathSync(process.argv[2] || 'missing-temporary-runtime');
+const temporaryRoot = realpathSync('/tmp');
+assert.ok(runtime.startsWith(temporaryRoot + sep), 'Runtime must live under /tmp');
+const requireRuntime = createRequire(join(runtime, 'package.json'));
+const { Client } = requireRuntime('pg');
+const native = join(runtime, 'node_modules/@embedded-postgres/darwin-arm64/native/bin');
+const repo = '/Users/octavioribeiroleite/.codex/worktrees/ipnc-auditoria-responsividade/Aplicativo IPNC';
+const output = join(repo, 'docs/auditoria-responsividade/propostas/ensaio-wrapper');
+mkdirSync(output, { recursive: true });
+const cluster = mkdtempSync(join(runtime, 'cluster-'));
+const data = join(cluster, 'data');
+const socket = join(cluster, 'socket');
+mkdirSync(socket, { mode: 0o700 });
+const password = randomBytes(32).toString('hex');
+const pwfile = join(cluster, 'password');
+writeFileSync(pwfile, password, { mode: 0o600 });
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const port = await new Promise((resolve, reject) => {
+  const probe = createServer();
+  probe.once('error', reject);
+  probe.listen(0, '127.0.0.1', () => { const { port } = probe.address(); probe.close(error => error ? reject(error) : resolve(port)); });
+});
+const report = { startedAt: new Date().toISOString(), host: process.platform, architecture: process.arch,
+  version: execFileSync(join(native, 'postgres'), ['--version'], { encoding: 'utf8' }).trim(),
+  runtimePackage: '@embedded-postgres/darwin-arm64@17.10.0-beta.17', clientPackage: 'pg@8.23.1',
+  endpoint: { host: '127.0.0.1', port }, cluster, cases: [], shutdown: null };
+const clients = new Set();
+let started = false;
+let observer;
+let fixture;
+const run = (binary, args) => execFileSync(join(native, binary), args, { encoding: 'utf8', timeout: 30_000 });
+const connect = async label => {
+  const client = new Client({ host: '127.0.0.1', port, user: 'ipnc_fixture', database: 'postgres', password,
+    application_name: `ipnc-isolated-${label}`, connectionTimeoutMillis: 5000, statement_timeout: 10_000, lock_timeout: 5000 });
+  client.on('error', () => {}); // Expected in the controlled response-loss test.
+  await client.connect(); clients.add(client);
+  return client;
+};
+const disconnect = async client => { clients.delete(client); await client.end().catch(() => {}); };
+const begin = async (client, jwt = fixture.claims()) => {
+  await client.query('begin isolation level read committed');
+  await client.query('set local role authenticated');
+  await client.query("select set_config('request.jwt.claims',$1,true)", [JSON.stringify(jwt)]);
+};
+const commit = client => client.query('commit');
+const rollback = client => client.query('rollback');
+const session = async (client, jwt, work) => {
+  await begin(client, jwt);
+  try { const result = await work(); await commit(client); return result; }
+  catch (error) { await rollback(client); throw error; }
+};
+const write = (client, { pupil = fixture.ids.one, classId = fixture.ids.a, day = fixture.today, present = true, actor = fixture.ids.teacher } = {}) => client.query(
+  `insert into ebd_attendance(student_id,class_id,date,present,marked_by) values($1,$2,$3,$4,$5)
+   on conflict(student_id,date) do update set present=excluded.present,marked_by=excluded.marked_by returning id,present`,
+  [pupil, classId, day, present, actor]);
+const finalize = (client, status = 'finalizada', day = fixture.today) => client.query(
+  "insert into ebd_call_status(class_id,date,status,changed_by) values($1,$2,$3,'Synthetic concurrency fixture') on conflict(class_id,date) do update set status=excluded.status returning status", [fixture.ids.a, day, status]);
+const close = client => client.query('select ebd_close_day($1) value', [fixture.today]);
+const reset = async () => {
+  await observer.query('truncate ebd_attendance,ebd_class_visitor_entries,ebd_call_status,ebd_day_closures');
+};
+const pending = promise => {
+  const state = { settled: false };
+  state.result = promise.then(value => { state.settled = true; return { value }; }, error => { state.settled = true; return { error }; });
+  return state;
+};
+const waitBlocked = async (blocked, blocker, operation) => {
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    const result = await observer.query(`select l.pid,l.locktype,l.classid::text,l.objid::text,l.objsubid,l.granted,
+      a.wait_event_type,a.wait_event,pg_blocking_pids(l.pid) blockers
+      from pg_locks l join pg_stat_activity a on a.pid=l.pid
+      where l.pid=$1 and l.locktype='advisory' and not l.granted`, [blocked.processID]);
+    const lock = result.rows.find(item => item.classid === '1869639283' && item.blockers.includes(blocker.processID));
+    if (lock) { assert.equal(operation.settled, false, 'Operation must still await the transaction lock'); return lock; }
+    if (operation.settled) throw new Error('Expected advisory wait but second operation already completed');
+    await delay(20);
+  }
+  throw new Error('Timed out observing second session waiting for advisory lock');
+};
+const result = async operation => { const settled = await operation.result; if (settled.error) throw settled.error; return settled.value; };
+const denied = async (operation, expression) => {
+  const settled = await operation.result;
+  assert.ok(settled.error, 'Expected server rejection');
+  assert.equal(settled.error.code, 'P0001');
+  assert.match(settled.error.message, expression);
+  return { code: settled.error.code, message: settled.error.message };
+};
+const record = (name, evidence = {}) => { report.cases.push({ name, passed: true, ...evidence }); console.log(`ok ${name}`); };
+
+try {
+  console.log(run('initdb', ['-D', data, '-U', 'ipnc_fixture', '--auth-host=scram-sha-256', '--auth-local=scram-sha-256', '--pwfile', pwfile, '--no-locale', '-E', 'UTF8']));
+  rmSync(pwfile);
+  // No launch agent/service, no external interface, no global installation.
+  console.log(run('pg_ctl', ['-D', data, '-l', join(cluster, 'server.log'), '-o', `-h 127.0.0.1 -p ${port} -k ${socket} -c unix_socket_permissions=0700 -c wal_level=logical -c max_connections=12 -c shared_buffers=16MB`, '-w', 'start']));
+  started = true;
+  observer = await connect('observer');
+  fixture = await initializeEbdFixture({ exec: sql => observer.query(sql), query: (sql, values) => observer.query(sql, values) });
+  const a = await connect('A');
+  const b = await connect('B');
+  report.server = (await observer.query('select version(),current_setting(\'transaction_isolation\') isolation,current_setting(\'listen_addresses\') listen')).rows[0];
+  const metadata = async () => (await observer.query("select oid,proowner,proacl,prosecdef,proconfig from pg_proc where oid='ipnc_private.guard_ebd_day()'::regprocedure")).rows;
+  const original = await metadata();
+  report.baseline = {
+    guard: original,
+    functionBodies: (await observer.query("select p.oid::regprocedure::text signature,md5(p.prosrc) body_md5 from pg_proc p where p.oid in ('ipnc_private.guard_ebd_day()'::regprocedure,'public.ebd_close_day(date)'::regprocedure,'public.ebd_reopen_day(date,uuid)'::regprocedure) order by signature")).rows,
+    policies: (await observer.query("select tablename,policyname,permissive,roles::text[] roles,cmd,qual,with_check from pg_policies where schemaname='public' and tablename in ('ebd_attendance','ebd_class_visitor_entries','ebd_day_closures','ebd_call_status') order by tablename,policyname")).rows,
+  };
+
+
+  const baseline='13c4f019011f3d0e3f6c0f8b0b0eac8a';
+  const proposal=readFileSync(join(repo,'docs/auditoria-responsividade/propostas/guard-chamada-finalizada.sql'),'utf8');
+  const revert=readFileSync(join(repo,'docs/auditoria-responsividade/propostas/rollback-guard-chamada-finalizada.sql'),'utf8');
+  const tables='public.ebd_attendance, public.ebd_call_status, public.ebd_class_visitor_entries, public.ebd_day_closures';
+  const invariantSQL=`select md5(json_build_object(
+    'guard',(select row_to_json(g) from (select oid,proowner,proacl,prosecdef,proconfig,provolatile,prorettype,prolang from pg_proc where oid='ipnc_private.guard_ebd_day()'::regprocedure) g),
+    'triggers',(select json_agg(t order by table_name,trigger_name) from (select c.relname table_name,tgname trigger_name,tgenabled,pg_get_triggerdef(t.oid,true) definition from pg_trigger t join pg_class c on c.oid=t.tgrelid where not tgisinternal and tgfoid='ipnc_private.guard_ebd_day()'::regprocedure)t),
+    'policies',(select json_agg(p order by tablename,policyname) from (select tablename,policyname,permissive,roles,cmd,qual,with_check from pg_policies where schemaname='public' and tablename in('ebd_attendance','ebd_call_status','ebd_class_visitor_entries','ebd_day_closures'))p),
+    'rls',(select json_agg(r order by relname) from(select relname,relrowsecurity,relforcerowsecurity from pg_class where oid in('public.ebd_attendance'::regclass,'public.ebd_call_status'::regclass,'public.ebd_class_visitor_entries'::regclass,'public.ebd_day_closures'::regclass))r)
+  )::text) hash`;
+  const invariant=(await observer.query(invariantSQL)).rows[0].hash;
+  const body=async()=> (await observer.query("select md5(prosrc) value from pg_proc where oid='ipnc_private.guard_ebd_day()'::regprocedure")).rows[0].value;
+  await observer.query(proposal);const expected=await body();await observer.query(revert);assert.equal(await body(),baseline);
+  const assertion=(bodyHash)=>`do $check$ begin
+    if (select md5(prosrc) from pg_proc where oid='ipnc_private.guard_ebd_day()'::regprocedure) is distinct from '${bodyHash}' then raise exception 'Unexpected guard body'; end if;
+    if (${invariantSQL}) is distinct from '${invariant}' then raise exception 'Guard metadata/trigger/policy/RLS drift'; end if;
+  end $check$;`;
+  const setupTx=`begin isolation level read committed;set local lock_timeout='250ms';set local statement_timeout='2s';set local transaction_timeout='5s';set local idle_in_transaction_session_timeout='3s';lock table ${tables} in share mode nowait;`;
+  const wrapper=(pre=baseline,fail=false)=>setupTx+assertion(pre)+proposal+assertion(expected)+(fail?"do $sentinel$ begin raise exception 'Injected postcondition failure';end $sentinel$;":'')+'commit;';
+  report.wrapper={mode:'SHARE NOWAIT',tableOrder:tables,lockTimeout:'250ms',statementTimeout:'2s',transactionTimeout:'5s',idleTimeout:'3s',expectedBaseline:baseline,expectedProposedBody:expected,metadataFingerprint:invariant};
+
+  await reset();await begin(a);await write(a);
+  let start=performance.now();await assert.rejects(()=>b.query(wrapper()),e=>e.code==='55P03');await rollback(b);
+  assert.equal(await body(),baseline);await commit(a);
+  record('wrapper/active-writer-NOWAIT-aborts-without-touching-body-or-writer',{elapsedMs:performance.now()-start});
+
+  await a.query('begin');await a.query('select id from ebd_attendance limit 0');
+  start=performance.now();await b.query(wrapper());await a.query('select id from ebd_attendance limit 0');await commit(a);
+  assert.equal(await body(),expected);assert.equal((await observer.query(invariantSQL)).rows[0].hash,invariant);
+  record('wrapper/plain-readers-continue-and-one-batch-commits-only-body',{elapsedMs:performance.now()-start});await observer.query(revert);
+
+  await assert.rejects(()=>a.query(wrapper('incorrect-baseline')),/Unexpected guard body/);await rollback(a);assert.equal(await body(),baseline);
+  record('wrapper/baseline-drift-aborts-before-DDL');
+  await assert.rejects(()=>a.query(wrapper(baseline,true)),/Injected postcondition failure/);await rollback(a);assert.equal(await body(),baseline);assert.equal((await observer.query(invariantSQL)).rows[0].hash,invariant);
+  record('wrapper/post-DDL-error-rolls-back-body-oid-acl-triggers-policies');
+
+  await a.query(setupTx+assertion(baseline));await begin(b);const saving=pending(write(b,{present:false}));
+  let lock;for(let i=0;i<100;i++){
+    lock=(await observer.query("select l.mode,l.granted,pg_blocking_pids(l.pid) blockers,c.relname from pg_locks l join pg_class c on c.oid=l.relation where l.pid=$1 and not l.granted",[b.processID])).rows.find(x=>x.blockers.includes(a.processID));
+    if(lock)break;await delay(10);
+  }
+  assert.ok(lock);assert.equal(lock.mode,'RowExclusiveLock');assert.equal(saving.settled,false);
+  await a.query(proposal+assertion(expected)+'commit;');await result(saving);await commit(b);
+  assert.equal((await observer.query('select count(*)::int n from ebd_attendance')).rows[0].n,1);
+  record('wrapper/new-writer-waits-then-completes-after-commit',{lock});await observer.query(revert);
+
+  for(const mode of ['SHARE','SHARE ROW EXCLUSIVE']){
+    await a.query('begin');await a.query(`lock table ${tables} in ${mode} mode nowait`);await b.query('begin');
+    if(mode==='SHARE')await b.query(`lock table ${tables} in ${mode} mode nowait`);
+    else await assert.rejects(()=>b.query(`lock table ${tables} in ${mode} mode nowait`),e=>e.code==='55P03');
+    await rollback(b);await rollback(a);record(`wrapper/${mode}-self-compatibility`,{otherRolloutAllowed:mode==='SHARE'});
+  }
+  assert.equal(await body(),baseline);assert.equal((await observer.query(invariantSQL)).rows[0].hash,invariant);
+
+  const checks=hash=>assertion(hash).replace('do $check$ begin','').replace('end $check$;','');
+  const oneStatement=(fail=false)=>`do $ipnc_rollout$ begin
+    perform set_config('lock_timeout','250ms',true);
+    perform set_config('statement_timeout','2s',true);
+    perform set_config('transaction_timeout','5s',true);
+    perform set_config('idle_in_transaction_session_timeout','3s',true);
+    lock table ${tables} in share row exclusive mode nowait;
+    ${checks(baseline)}
+    execute $exact_proposal$${proposal}$exact_proposal$;
+    ${checks(expected)}
+    ${fail?"raise exception 'Injected single DO failure';":''}
+  end $ipnc_rollout$;`;
+  await assert.rejects(()=>a.query(oneStatement(true)),/Injected single DO failure/);
+  assert.equal(await body(),baseline);assert.equal((await observer.query(invariantSQL)).rows[0].hash,invariant);
+  record('wrapper/single-DO-implicit-transaction-postcondition-error-rolls-back');
+  await a.query('begin');await a.query(oneStatement());
+  assert.equal(await body(),baseline,'External observer sees no commit before outer migration commits');
+  await commit(a);assert.equal(await body(),expected);assert.equal((await observer.query(invariantSQL)).rows[0].hash,invariant);
+  record('wrapper/single-DO-nested-in-migration-does-not-prematurely-commit');
+  await observer.query(revert);assert.equal(await body(),baseline);
+
+  const timeoutClient=await connect('transaction-timeout');
+  await assert.rejects(()=>timeoutClient.query(`do $timeout$ begin perform set_config('transaction_timeout','100ms',true); execute $proposal$${proposal}$proposal$; perform pg_sleep(0.3); end $timeout$;`),e=>e.code==='25P04');
+  await disconnect(timeoutClient);assert.equal(await body(),baseline);assert.equal((await observer.query(invariantSQL)).rows[0].hash,invariant);
+  record('wrapper/transaction-timeout-set-inside-DO-terminates-and-rolls-back',{timeoutMs:100,code:'25P04'});
+  report.singleDo={mode:'SHARE ROW EXCLUSIVE NOWAIT',exactProposalEmbedded:true,transactionTimeoutEffectiveInsideDO:true};
+  report.passed=true;
+
+
+} catch (error) {
+  report.passed = false;
+  report.failure = { message: error.message, stack: error.stack, code: error.code };
+  process.exitCode = 1;
+  console.error(error);
+} finally {
+  await Promise.all([...clients].map(disconnect));
+  if (started) {
+    try {
+      const stop = run('pg_ctl', ['-D', data, '-m', 'fast', '-w', 'stop']);
+      console.log(stop);
+      const alive = await new Promise(resolve => {
+        const probe = createConnection({ host:'127.0.0.1',port });
+        probe.once('connect', () => { probe.destroy(); resolve(true); });
+        probe.once('error', () => resolve(false));
+      });
+      report.shutdown = { stopped: !existsSync(join(data, 'postmaster.pid')), portClosed: !alive, mode: 'fast', completedAt: new Date().toISOString() };
+      assert.equal(report.shutdown.stopped, true); assert.equal(report.shutdown.portClosed, true);
+    } catch (error) { report.shutdown = { error: error.message }; process.exitCode = 1; report.passed = false; }
+  }
+  if (existsSync(pwfile)) rmSync(pwfile);
+  writeFileSync(join(output, 'wrapper-resultados.json'), JSON.stringify(report, null, 2) + '\n');
+  console.log(JSON.stringify({ passed:report.passed, cases:report.cases.length, shutdown:report.shutdown }));
+}

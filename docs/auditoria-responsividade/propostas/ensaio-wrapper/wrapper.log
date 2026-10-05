@@ -1,0 +1,41 @@
+The files belonging to this database system will be owned by user "octavioribeiroleite".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "C".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+creating directory /private/tmp/ipnc-pg-concurrency-oo6viwdt/cluster-HkQ5B2/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default "max_connections" ... 100
+selecting default "shared_buffers" ... 128MB
+selecting default time zone ... America/Sao_Paulo
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+Success. You can now start the database server using:
+
+    '/private/tmp/ipnc-pg-concurrency-oo6viwdt/node_modules/@embedded-postgres/darwin-arm64/native/bin/pg_ctl' -D /private/tmp/ipnc-pg-concurrency-oo6viwdt/cluster-HkQ5B2/data -l logfile start
+
+
+waiting for server to start.... done
+server started
+
+ok wrapper/active-writer-NOWAIT-aborts-without-touching-body-or-writer
+ok wrapper/plain-readers-continue-and-one-batch-commits-only-body
+ok wrapper/baseline-drift-aborts-before-DDL
+ok wrapper/post-DDL-error-rolls-back-body-oid-acl-triggers-policies
+ok wrapper/new-writer-waits-then-completes-after-commit
+ok wrapper/SHARE-self-compatibility
+ok wrapper/SHARE ROW EXCLUSIVE-self-compatibility
+ok wrapper/single-DO-implicit-transaction-postcondition-error-rolls-back
+ok wrapper/single-DO-nested-in-migration-does-not-prematurely-commit
+ok wrapper/transaction-timeout-set-inside-DO-terminates-and-rolls-back
+waiting for server to shut down.... done
+server stopped
+
+{"passed":true,"cases":10,"shutdown":{"stopped":true,"portClosed":true,"mode":"fast","completedAt":"2026-10-05T16:56:20.308Z"}}

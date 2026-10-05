@@ -1,0 +1,19 @@
+{
+  "capturedAt": "2026-10-05T17:03:04.270298+00:00",
+  "implementationRevision": "7754b8bc6b4e36e7dfe76fcb60af66d22ec876e4",
+  "sourceTreeSha256": "9bb787a9794deb385860bb424504ed7e4f4928954e1b2bd1867163659be13f0a",
+  "filesCompared": 379,
+  "allMatch": true,
+  "additionalMigration": {
+    "path": "supabase/migrations/20261005165755_ipnc_guard_ebd_finalized_class_20261005.sql",
+    "sha256": "6dda7555722caf4d3e343476515a21b85f6191e21e8b6c8331eeda56e8e3b1f6",
+    "definitionOnly": true,
+    "approvedBytesCopied": true,
+    "productionSpecificAssertionsOmitted": true,
+    "remoteReexecution": false,
+    "exactExecutedWrapperEvidence": "propostas/aplicacao-guard-20261005-wrapper.sql"
+  },
+  "originalPatchUnchanged": true,
+  "wrapperEmbedsExactApprovedBytes": true,
+  "frontendTestsNotRepeatedBecauseSourceUnchanged": true
+}

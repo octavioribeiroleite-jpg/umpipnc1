@@ -24,7 +24,7 @@ A igualdade de todos os arquivos foi reconferida após tipos/testes/lint/build. 
 
 Depois dos commits, `commit-verificado.json` confirmou os mesmos 379 hashes em `7754b8bc6b4e36e7dfe76fcb60af66d22ec876e4`, sem fonte/scripts/testes pendentes. O commit posterior de documentação conserva esse código.
 
-As 54 provas direcionadas EBD fazem parte dos 193 testes gerais. Os 29 cenários de PostgreSQL nativo com conexões simultâneas têm execução separada em `../fundacao-checks/ebd-postgres-concurrency.{json,log}`; não somar como se fossem testes do runner Node geral. O banco foi encerrado e a porta fechada. Proposta SQL continua fora das migrations e sem aplicação remota autorizada.
+As 54 provas direcionadas EBD fazem parte dos 193 testes gerais. Os 29 cenários de PostgreSQL nativo com conexões simultâneas têm execução separada em `../fundacao-checks/ebd-postgres-concurrency.{json,log}`; não somar como se fossem testes do runner Node geral. O banco foi encerrado e a porta fechada. Na data dessa suíte, a proposta SQL estava fora das migrations e sem aplicação remota autorizada; `results.json` preserva esse fato histórico. Posteriormente, autorização do proprietário permitiu a aplicação verificada da migration `20261005165755`, sem mudar a fonte frontend validada. O espelho local contém somente os bytes aprovados; ver [aplicação SQL](../propostas/aplicacao-guard-20261005.json) e [manifesto reconferido](../propostas/fonte-preservada-pos-sql.json).
 
 `provisorio-antes-contador/` conserva a rodada anterior de 191 testes; não substitui os arquivos finais desta pasta. Logs são ignorados pelo `.gitignore` geral e precisam ser incluídos explicitamente na entrega de evidências quando desejado.
 

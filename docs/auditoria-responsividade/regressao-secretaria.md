@@ -1,6 +1,6 @@
 # Regressão e manutenção da Secretaria/EBD
 
-05/10/2026. Roteiro de manutenção do comportamento confirmado e das pendências explícitas. Nunca usar presença, visitante, PIN ou fechamento real como dado de teste. Publicação e aplicação da proposta SQL têm seus próprios gates; este roteiro não autoriza nenhum deles.
+05/10/2026. Roteiro de manutenção do comportamento confirmado e das pendências explícitas. Nunca usar presença, visitante, PIN ou fechamento real como dado de teste. A aplicação específica do guard foi autorizada e confirmada separadamente; [evidência de aplicação e pós-verificação](propostas/aplicacao-guard-20261005.json). Este roteiro de testes não autoriza outras operações remotas.
 
 ## Verificações reproduzíveis
 
@@ -39,7 +39,7 @@ O runner só aceita runtime sob `/tmp`, cria cluster novo com SCRAM e dados sint
 | Refetch antigo não reabre status ou dia após alteração observada | Callback real de Secretaria com status/fechamento antigos entregue depois da alteração | Conferir aviso temporário de atualização e refetch seguinte |
 | Professor só opera turma/dia permitido, sessão precisa ser válida | PGlite/PG com policies e helpers originais | Mock não substitui JWT/PIN/PostgREST isolados |
 | Fechamento serializa com presença/visitante | PG nativo: ambas ordens, COMMIT/ROLLBACK e snapshot coerente | Tela recebe fechamento remoto e cancela queued |
-| Finalizada bloqueia writes entre clientes somente com proposta | PG baseline aceita, proposta rejeita sob o mesmo lock | Gate SQL ainda pendente; UI sozinha não fornece garantia |
+| Finalizada bloqueia writes entre clientes com guard aplicado | PG baseline aceita; patch homologado rejeita sob o mesmo lock; corpo implantado idêntico ao aprovado | Gate SQL atendido, conforme evidência de aplicação; UI sozinha não fornece essa garantia |
 
 ## Regras para mexer na fila
 
@@ -82,7 +82,11 @@ A repetição final com viewport 390×844 e zoom META+0 registrou marcação p95
 - Callbacks de status/fechamento e geradores PDF atravessando alteração local já têm prova e correção isolada. Permanecem a interação visual completa e alterações remotas ainda não observadas; não confundir revisão local com snapshot transacional de todos os recursos.
 - Auth/PostgREST/Realtime de ambiente isolado legítimo: PIN errado, token emitido/renovado, revogação durante HTTP e reconexão. Claims GUC da fixture simulam o gateway confiável.
 - Perda arbitrária de transporte antes da confirmação de COMMIT; o teste nativo faz descarte controlado após commit e destrói o socket antes do retry.
-- Aplicação SQL no alvo e deploy publicado: nenhum deles foi executado por este conjunto. Consultar `propostas/rollout-rollback.md` e o relatório final da coordenação.
+- A aplicação SQL foi confirmada separadamente: migration `20261005165755`, pós-verificação do corpo aprovado e estrutura preservada em [evidência de aplicação e pós-verificação](propostas/aplicacao-guard-20261005.json). Esse fato não decorre do runner de testes. O coordenador confirma o deploy do frontend pela ferramenta de status do Sites nesta tarefa.
+
+## Registro da aplicação específica
+
+Migration `ipnc_guard_ebd_finalized_class_20261005`, versão `20261005165755`, concluída em 05/10/2026 às 16:57:55.949 UTC. Pós-verificação às 16:58:16.066463 UTC: corpo MD5 `617d4fa54312e7ee5305a2c44faa836f`; estrutura MD5 `70a3c96635467d78d1b8e48a4470c8e0` inalterada. OID 25624, owner/ACL/configuração, quatro triggers, quatro tabelas com RLS e 13 policies foram preservados. Nenhum dado real foi usado como teste. O wrapper teve dez cenários isolados adicionais em `propostas/ensaio-wrapper/`, com rollback e encerramento do PostgreSQL local confirmados. A reversão exata continua documentada em `propostas/rollout-rollback.md` e reintroduziria a lacuna do baseline; não a executar automaticamente.
 
 ## Outros ajustes de fundação desta auditoria
 
