@@ -1,4 +1,4 @@
-/* Public treasury shares the IPNC visual system. Fund colors remain data-driven. */
+/* Treasury shares the IPNC visual system. Fund colors remain data-driven. */
 .treasury-workspace {
   --tr-ink: hsl(var(--foreground));
   --tr-muted: hsl(var(--muted-foreground));

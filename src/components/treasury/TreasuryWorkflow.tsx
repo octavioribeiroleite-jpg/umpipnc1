@@ -1,21 +1,23 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
-import { useTreasuryQueue, useTreasuryBank, useTreasuryAdministration, useTreasuryWorkflowMutations, fetchTreasuryReport, downloadTreasuryReceipt } from '@/hooks/useTreasuryWorkflow';
+import { useTreasuryQueue, useTreasuryBank, useTreasuryWorkflowMutations, fetchTreasuryReport, downloadTreasuryReceipt } from '@/hooks/useTreasuryWorkflow';
 import { centsToInput, formatCents, formatTreasuryDate, parseBrlToCents, todayLocal, type TreasuryEntry, type TreasuryFund } from '@/lib/treasury';
 import { savePdfFile } from '@/lib/treasury-download';
 import './treasury-workflow.css';
+import { TreasuryPins } from './TreasuryPins';
 
 export function TreasuryWorkflow({ admin, managedFunds, funds, fundId, onEdit }: { admin: boolean; managedFunds: string[]; funds: TreasuryFund[]; fundId?: string; onEdit: (entry: TreasuryEntry) => void }) {
   const [page, setPage] = useState(0);
   const queue = useTreasuryQueue(fundId, page, true);
   const writableFunds = admin ? funds : funds.filter(fund => managedFunds.includes(fund.id));
   return <div className="tr-workflow">
+    {admin && <TreasuryPins funds={funds} />}
     <section className="tr-panel" aria-label="Recebimentos pendentes"><div className="tr-section-heading"><div><h2>Conferência de recebimentos</h2><p>Aguardando confirmação e devolvidos. Estes valores não compõem o saldo.</p></div><span className="tr-count">{queue.data?.total_count ?? '—'}</span></div>
       {queue.isPending ? <p role="status">Carregando pendências…</p> : queue.error ? <p role="alert">{queue.error.message}</p> : !queue.data?.entries.length ? <p className="tr-inline-empty">Nenhuma pendência nesta sociedade.</p> : <div className="tr-review-list">{queue.data.entries.map(entry => <article className="tr-review-item" key={entry.id}><div><span className={`tr-review-status ${entry.status}`}>{entry.status === 'pending' ? 'Aguardando confirmação' : 'Devolvido'}</span><strong>{entry.person_name}</strong><p>{entry.description}</p><small>{formatTreasuryDate(entry.occurred_on)} · {funds.find(f => f.id === entry.fund_id)?.abbreviation}</small>{entry.review_note && <p>Conferência: {entry.review_note}</p>}</div><div><strong>{formatCents(entry.amount_cents)}</strong>{admin && <button className="tr-button" onClick={() => onEdit(entry)}>Conferir / ajustar</button>}</div></article>)}</div>}
       {(page > 0 || (queue.data?.total_count ?? 0) > 20) && <div className="tr-pagination"><button className="tr-button" disabled={!page} onClick={() => setPage(p => p - 1)}>Anterior</button><span>Página {page + 1}</span><button className="tr-button" disabled={(page + 1) * 20 >= (queue.data?.total_count ?? 0)} onClick={() => setPage(p => p + 1)}>Próxima</button></div>}
     </section>
     <TreasuryReports funds={writableFunds} admin={admin} selectedFund={fundId} />
-    {admin && <><TreasuryBankPanel /><TreasuryManagers funds={funds} /></>}
+    {admin && <><TreasuryBankPanel /></>}
   </div>;
 }
 
@@ -56,15 +58,5 @@ function TreasuryBankPanel() {
     <div className="tr-review-list">{rows.slice(page * 10, page * 10 + 10).map(row => <article className="tr-review-item" key={row.id}><div><strong>{row.reference}</strong><small>{formatTreasuryDate(row.occurred_on)} · {row.kind === 'income' ? 'Crédito' : 'Débito'}</small><button className="tr-button" disabled={createBank.isPending} onClick={() => { setEditing({ id: row.id, revision: row.revision }); setForm({ reference: row.reference, occurred_on: row.occurred_on, kind: row.kind, amount: centsToInput(row.amount_cents) }); }}>Corrigir movimento</button></div><div><strong>{formatCents(row.amount_cents)}</strong><span className={row.remaining_cents ? 'tr-review-status pending' : 'tr-review-status confirmed'}>{row.remaining_cents ? `Falta vincular ${formatCents(row.remaining_cents)}` : 'Conferido integralmente'}</span></div></article>)}</div>
     {!rows.length && !bank.isPending && <p>Nenhum movimento bancário neste filtro.</p>}{rows.length > 10 && <div className="tr-pagination"><button className="tr-button" disabled={!page} onClick={() => setPage(p => p - 1)}>Anterior</button><span>Página {page + 1}</span><button className="tr-button" disabled={(page + 1) * 10 >= rows.length} onClick={() => setPage(p => p + 1)}>Próxima</button></div>}
     <p className="treasury-field-help">Referências e comprovantes são privados. O cadastro não importa lançamentos das finanças antigas nem altera cobranças de camisas ou mensalidades.</p>
-  </details>;
-}
-function TreasuryManagers({ funds }: { funds: TreasuryFund[] }) {
-  const administration = useTreasuryAdministration(true);
-  const { assign } = useTreasuryWorkflowMutations();
-  const [user, setUser] = useState(''); const [fund, setFund] = useState(''); const [error, setError] = useState('');
-  const save = async (user_id: string, fund_id: string, revoke = false) => { setError(''); try { await assign.mutateAsync({ user_id, fund_id, revoke }); toast.success(revoke ? 'Permissão revogada.' : 'Tesoureiro vinculado à sociedade.'); } catch (error) { setError((error as Error).message); } };
-  return <details className="tr-panel tr-admin-section"><summary>Acesso dos tesoureiros</summary><p>Vincule uma conta existente à sua sociedade. A conta poderá enviar recebimentos e baixar relatórios dessa sociedade. Confirmar e editar continuam sendo ações administrativas.</p><form onSubmit={e => { e.preventDefault(); void save(user, fund); }}><fieldset disabled={assign.isPending} className="tr-report-controls"><legend className="sr-only">Vincular tesoureiro</legend><label>Conta<select required value={user} onChange={e => setUser(e.target.value)}><option value="">Selecione a conta</option>{administration.data?.accounts.map(a => <option key={a.user_id} value={a.user_id}>{a.name} ({a.username})</option>)}</select></label><label>Sociedade<select required value={fund} onChange={e => setFund(e.target.value)}><option value="">Selecione a sociedade</option>{funds.map(f => <option key={f.id} value={f.id}>{f.abbreviation}</option>)}</select></label><button className="tr-button" type="submit">Vincular tesoureiro</button></fieldset></form>
-    {administration.data?.managers.map(m => <div key={`${m.user_id}:${m.fund_id}`} className="tr-manager-row"><span>{administration.data.accounts.find(a => a.user_id === m.user_id)?.name ?? 'Conta indisponível'} · {funds.find(f => f.id === m.fund_id)?.abbreviation}</span><button className="tr-button" disabled={assign.isPending} onClick={() => void save(m.user_id, m.fund_id, true)}>Revogar acesso</button></div>)}
-    {(error || administration.error) && <p role="alert" className="treasury-form-error">{error || administration.error?.message}</p>}
   </details>;
 }

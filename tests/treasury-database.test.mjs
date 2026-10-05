@@ -5,8 +5,15 @@ import { PGlite } from '@electric-sql/pglite';
 
 const db = new PGlite();
 await db.exec(`
-create role anon; create role authenticated;
-create schema auth; create schema storage; create schema ipnc_private;
+create role anon; create role authenticated; create role service_role bypassrls;
+create schema auth; create schema storage; create schema ipnc_private; create schema extensions;
+-- PGlite lacks pgcrypto. These isolated stand-ins exercise authorization and
+-- rotation, not cryptographic strength. Production pgcrypto is checked separately.
+create function extensions.digest(value text,algorithm text) returns bytea language sql as $$ select sha256(convert_to(value,'UTF8')) $$;
+create function extensions.gen_salt(algorithm text,cost integer) returns text language sql as $$ select gen_random_uuid()::text $$;
+create function extensions.crypt(value text,salt text) returns text language sql as $$ select split_part(salt,':',1)||':'||encode(sha256(convert_to(value||split_part(salt,':',1),'UTF8')),'hex') $$;
+create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
+create function ipnc_private.portal_valid(wanted text) returns boolean language sql as $$ select false $$;
 create table auth.users(id uuid primary key);
 create table public.profiles(user_id uuid primary key references auth.users,full_name text,username text,active boolean);
 create type public.app_role as enum('admin','diretoria','visualizador','pastor');
@@ -17,6 +24,7 @@ create function ipnc_private.actor_has_role(wanted public.app_role) returns bool
 revoke all on function ipnc_private.actor_active(), ipnc_private.actor_has_role(public.app_role) from public, anon;
 grant execute on function ipnc_private.actor_active(), ipnc_private.actor_has_role(public.app_role) to authenticated;
 grant usage on schema public,auth,ipnc_private,storage to anon,authenticated;
+revoke usage on schema ipnc_private from anon;
 create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
 create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);
 alter table storage.objects enable row level security;
@@ -26,13 +34,15 @@ grant select on public.profiles to authenticated;
 await db.exec(readFileSync(new URL('../supabase/migrations/20260928151725_public_treasury.sql', import.meta.url),'utf8'));
 await db.exec(readFileSync(new URL('../supabase/migrations/20261005140755_treasury_approval_reconciliation.sql', import.meta.url),'utf8'));
 await db.exec(readFileSync(new URL('../supabase/migrations/20261005140907_treasury_public_read_policy.sql', import.meta.url),'utf8'));
+await db.exec(readFileSync(new URL('../supabase/migrations/20261005142735_treasury_society_pin_access.sql', import.meta.url),'utf8'));
+await db.exec(readFileSync(new URL('../supabase/migrations/20261005143113_treasury_directory_binding.sql', import.meta.url),'utf8'));
 const ids = Object.fromEntries(['admin','treasurer','outsider','inactive','fund','other','bank','income','expense','pending'].map(k=>[k,crypto.randomUUID()]));
 await db.query(`insert into auth.users select unnest($1::uuid[])`,[[ids.admin,ids.treasurer,ids.outsider,ids.inactive]]);
 await db.query(`insert into profiles select id,'Test','test',id<>$1 from auth.users`,[ids.inactive]);
 await db.query(`insert into user_roles values($1,'admin'),($2,'admin'),($3,'diretoria'),($4,'visualizador')`,[ids.admin,ids.inactive,ids.treasurer,ids.outsider]);
 await db.query(`insert into treasury_funds(id,name,abbreviation) values($1,'Test fund','T1'),($2,'Other','T2')`,[ids.fund,ids.other]);
 await db.query(`insert into treasury_managers values($1,$2),($3,$2)`,[ids.treasurer,ids.fund,ids.inactive]);
-const as = async (who,fn) => { await db.exec(`begin; set local role ${who?'authenticated':'anon'};`); await db.query(`select set_config('request.jwt.claim.sub',$1,true)`,[who||'']); try { const result=await fn(); await db.exec('commit'); return result; } catch(error) {await db.exec('rollback');throw error;} };
+const as = async (who,fn,claims={}) => { await db.exec(`begin; set local role ${who?'authenticated':'anon'};`); await db.query(`select set_config('request.jwt.claim.sub',$1,true)`,[who||'']); await db.query("select set_config('request.jwt.claims',$1,true)",[JSON.stringify(claims)]); try { const result=await fn(); await db.exec('commit'); return result; } catch(error) {await db.exec('rollback');throw error;} };
 const insert = (id,fund,amount=10000,extra={}) => db.query(`insert into treasury_entries(id,fund_id,kind,amount_cents,occurred_on,person_name,description,status,payment_method,shirt_cents,monthly_fee_cents,per_capita_cents,bank_transaction_id,review_note) values($1,$2,$3,$4,'2025-02-10','Fixture only','Fixture only',$5,$6,$7,$8,$9,$10,$11) returning *`,[id,fund,extra.kind||'income',amount,extra.status||'pending',extra.payment_method||'pix',extra.shirt_cents||0,extra.monthly_fee_cents||0,extra.per_capita_cents||0,extra.bank_id||null,extra.note||'']);
 const denied = fn => assert.rejects(fn,e=>e.code==='42501');
 
@@ -48,10 +58,14 @@ test('treasurer submits only own pending income; public cannot see pending, forg
  await denied(()=>as(ids.outsider,()=>insert(crypto.randomUUID(),ids.fund)));
  await denied(()=>as(ids.inactive,()=>insert(crypto.randomUUID(),ids.fund)));
  await denied(()=>as(null,()=>insert(crypto.randomUUID(),ids.fund)));
- assert.equal((await as(null,()=>db.query('select * from treasury_entries'))).rows.length,0);
+ await denied(()=>as(null,()=>db.query('select * from treasury_entries')));
+ await denied(()=>as(null,()=>db.query('select treasury_dashboard()')));
+ await denied(()=>as(null,()=>db.query('select treasury_statement()')));
+ const directory=(await as(null,()=>db.query('select treasury_directory() data'))).rows[0].data;
+ assert.ok(directory.length); assert.deepEqual(Object.keys(directory[0]).sort(),['abbreviation','color','id','name']);
  assert.equal((await as(ids.outsider,()=>db.query('select * from treasury_entries'))).rows.length,0);
  assert.equal((await as(ids.treasurer,()=>db.query('select * from treasury_entries'))).rows.length,1);
- const data=(await as(null,()=>db.query('select treasury_dashboard() data'))).rows[0].data;
+ const data=(await as(ids.admin,()=>db.query('select treasury_dashboard() data'))).rows[0].data;
  assert.equal(data.totals.balance_cents,0);
 });
 test('admin confirms once against a single bank credit and protects split/reserve accounting',async()=>{
@@ -62,9 +76,9 @@ test('admin confirms once against a single bank credit and protects split/reserv
  await assert.rejects(()=>as(ids.admin,()=>insert(crypto.randomUUID(),ids.fund,50,{shirt_cents:40,monthly_fee_cents:40})),e=>e.code==='23514');
  await as(ids.admin,()=>insert(ids.expense,ids.fund,3000,{kind:'expense',status:'confirmed',payment_method:'cash',note:'Conferido no caixa',per_capita_cents:400}));
  await assert.rejects(()=>as(ids.admin,()=>insert(crypto.randomUUID(),ids.fund,1000,{kind:'expense',status:'confirmed',payment_method:'cash',note:'Conferido no caixa',per_capita_cents:700})),e=>e.code==='23514');
- const dashboard=(await as(null,()=>db.query('select treasury_dashboard() data'))).rows[0].data;
+ const dashboard=(await as(ids.admin,()=>db.query('select treasury_dashboard() data'))).rows[0].data;
  assert.equal(dashboard.totals.balance_cents,7000); assert.equal(dashboard.totals.reserved_cents,600); assert.equal(dashboard.totals.available_cents,6400);
- const statement=(await as(null,()=>db.query('select treasury_statement($1) data',[ids.fund]))).rows[0].data;
+ const statement=(await as(ids.treasurer,()=>db.query('select treasury_statement($1) data',[ids.fund]))).rows[0].data;
  assert.equal(statement.entries[0].balance_after_cents,7000); assert.equal(statement.income_cents-statement.expense_cents,7000);
  assert.equal((await as(ids.admin,()=>db.query('select * from treasury_entry_audit'))).rows.length,3);
 });
@@ -126,7 +140,7 @@ test('1005 confirmed entries, backdated carry-forward, filters and stale edits r
  await as(ids.admin,()=>db.query(`insert into treasury_entries(fund_id,kind,amount_cents,occurred_on,person_name,description,status,payment_method,review_note) select $1,'income',1,'2024-01-01','Test','Bulk test','confirmed','cash','Conferido em teste' from generate_series(1,1005)`,[ids.fund]));
  const report=(await as(ids.treasurer,()=>db.query('select treasury_report(2025,$1) data',[ids.fund]))).rows[0].data;
  assert.equal(report.opening_cents,1005); assert.equal(report.entries.at(-1).balance_after_cents,8005);
- const data=(await as(null,()=>db.query(`select treasury_statement($1,'expense',null,'2025-01-01','2025-12-31',0,20) data`,[ids.fund]))).rows[0].data;
+ const data=(await as(ids.treasurer,()=>db.query(`select treasury_statement($1,'expense',null,'2025-01-01','2025-12-31',0,20) data`,[ids.fund]))).rows[0].data;
  assert.equal(data.entries[0].balance_after_cents,8005);
  const stale=await as(ids.admin,()=>db.query('update treasury_entries set amount_cents=20000,revision=2 where id=$1 and revision=1 returning id',[ids.income]));
  assert.equal(stale.rows.length,0);
@@ -144,5 +158,50 @@ test('one bank credit may be allocated across societies without exceeding the cr
  await assert.rejects(()=>as(ids.admin,()=>insert(crypto.randomUUID(),b,1,{status:'confirmed',bank_id:bank})),e=>e.code==='23514');
  const reconciliation=(await as(ids.admin,()=>db.query('select treasury_bank_reconciliation() data'))).rows[0].data.find(row=>row.id===bank);
  assert.equal(reconciliation.allocated_cents,3000);assert.equal(reconciliation.remaining_cents,0);
+});
+
+test('society PIN login is narrow, rotated/revoked server-side, and cannot reach other application roles',async()=>{
+ const portal=crypto.randomUUID();
+ await db.query('insert into auth.users values($1)',[portal]);
+ await db.query("insert into profiles values($1,'Fixture PIN',$2,true)",[portal,`portal-treasury-${ids.fund}`]);
+ await db.query("insert into user_roles values($1,'visualizador')",[portal]);
+ await denied(()=>as(null,()=>db.query('select treasury_set_pin($1,$2,true)',[ids.fund,'123456'])));
+ await denied(()=>as(ids.outsider,()=>db.query('select treasury_set_pin($1,$2,true)',[ids.fund,'123456'])));
+ await denied(()=>as(ids.inactive,()=>db.query('select treasury_set_pin($1,$2,true)',[ids.fund,'123456'])));
+ await assert.rejects(()=>as(ids.admin,()=>db.query('select treasury_set_pin($1,$2,true)',[ids.fund,'1234'])),e=>e.code==='22023');
+ await as(ids.admin,()=>db.query('select treasury_set_pin($1,$2,true)',[ids.fund,'123456']));
+ const rows=await as(ids.admin,()=>db.query('select treasury_pin_status() data'));
+ const status=rows.rows[0].data.find(p=>p.fund_id===ids.fund);
+ assert.equal(status.active,true); assert.equal(status.configured,true); assert.ok(!('pin_hash' in status));
+ const verified=(await db.query('select treasury_verify_pin($1,$2) data',[ids.fund,'123456'])).rows[0].data;
+ assert.equal((await db.query('select treasury_verify_pin($1,$2) data',[ids.fund,'000000'])).rows[0].data,null);
+ await denied(()=>as(ids.admin,()=>db.query('select treasury_verify_pin($1,$2)',[ids.fund,'123456'])));
+ const fingerprint=(await db.query("select encode(extensions.digest('IPNC:PIN:v1:'||$1,'sha256'),'hex') value",[verified.version])).rows[0].value;
+ const claim={app_metadata:{ipnc_portal:{namespace:'treasury',id:ids.fund,fingerprint,issued_at:Math.floor(Date.now()/1000)}}};
+ const pinAs=fn=>as(portal,fn,claim);
+ const access=(await pinAs(()=>db.query('select treasury_access() data'))).rows[0].data;
+ assert.equal(access.admin,false);assert.deepEqual(access.fund_ids,[ids.fund]);
+ assert.equal((await pinAs(()=>db.query('select ipnc_private.actor_active() active'))).rows[0].active,false);
+ const dashboard=(await pinAs(()=>db.query('select treasury_dashboard() data'))).rows[0].data;
+ assert.deepEqual(dashboard.funds.map(f=>f.id),[ids.fund]);
+ assert.equal((await pinAs(()=>db.query('select treasury_statement($1) data',[ids.other]))).rows[0].data.total_count,0);
+ await pinAs(()=>insert(crypto.randomUUID(),ids.fund,50));
+ await denied(()=>pinAs(()=>insert(crypto.randomUUID(),ids.other,50)));
+ await denied(()=>pinAs(()=>insert(crypto.randomUUID(),ids.fund,50,{status:'confirmed'})));
+ await denied(()=>pinAs(()=>insert(crypto.randomUUID(),ids.fund,50,{kind:'expense'})));
+ await denied(()=>pinAs(()=>db.query('select treasury_set_pin($1,$2,true)',[ids.fund,'654321'])));
+ await denied(()=>pinAs(()=>db.query('select * from ipnc_private.treasury_pins')));
+ await denied(()=>pinAs(()=>db.query('select treasury_report(2025,$1)',[ids.other])));
+ const altered={app_metadata:{ipnc_portal:{...claim.app_metadata.ipnc_portal,id:ids.other}}};
+ assert.deepEqual((await as(portal,()=>db.query('select treasury_access() data'),altered)).rows[0].data.fund_ids,[]);
+ const expired={app_metadata:{ipnc_portal:{...claim.app_metadata.ipnc_portal,issued_at:Math.floor(Date.now()/1000)-43201}}};
+ assert.deepEqual((await as(portal,()=>db.query('select treasury_access() data'),expired)).rows[0].data.fund_ids,[]);
+ await as(ids.admin,()=>db.query('select treasury_set_pin($1,$2,true)',[ids.fund,'654321']));
+ assert.deepEqual((await pinAs(()=>db.query('select treasury_access() data'))).rows[0].data.fund_ids,[]);
+ assert.equal((await pinAs(()=>db.query('select * from treasury_entries'))).rows.length,0);
+ await denied(()=>pinAs(()=>insert(crypto.randomUUID(),ids.fund,50)));
+ assert.equal((await db.query('select treasury_verify_pin($1,$2) data',[ids.fund,'123456'])).rows[0].data,null);
+ await as(ids.admin,()=>db.query('select treasury_set_pin($1,null,false)',[ids.fund]));
+ assert.equal((await db.query('select treasury_verify_pin($1,$2) data',[ids.fund,'654321'])).rows[0].data,null);
 });
 test.after(async()=>{await db.close();});

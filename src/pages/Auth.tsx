@@ -17,6 +17,7 @@ import PinPad from '@/components/secretaria/PinPad';
 import { BuildStamp } from '@/components/BuildStamp';
 import { InstallButton } from '@/components/layout/InstallButton';
 import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
+import { TreasuryAccessDialog } from '@/components/treasury/TreasuryAccessDialog';
 
 interface Society {
   id: string;
@@ -39,6 +40,7 @@ const DIRETORIA_FUNCTIONS = ['Presidente', 'Vice-Presidente', 'Secretário(a)', 
 
 export default function Auth() {
   const [step, setStep] = useState<MainStep>('select');
+  const [treasuryOpen, setTreasuryOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -688,7 +690,7 @@ export default function Auth() {
               title="Finanças"
               description="Saldos, extratos e relatórios das sociedades"
               icon={Wallet}
-              onClick={() => navigateWithTransition('/tesouraria')}
+              onClick={() => setTreasuryOpen(true)}
               delay="500ms"
             />
 
@@ -863,6 +865,7 @@ export default function Auth() {
   // ========== SINGLE RETURN — video never remounts ==========
   return (
     <div className="auth-page min-h-screen relative overflow-hidden bg-black">
+      <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
       <div className="absolute right-3 z-40 text-white/80" style={{ top: 'max(12px, env(safe-area-inset-top))' }}><UpdateAvailableBanner className="bg-black/15 backdrop-blur-sm hover:bg-white/10" /></div>
       {/* Video background — always mounted, never re-created */}
       <video

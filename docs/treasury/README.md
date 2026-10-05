@@ -1,5 +1,7 @@
 # Tesouraria da Igreja Presbiteriana de Nova Carapina
 
+> **Acesso atual:** o proprietário substituiu a consulta pública por PIN de cada sociedade, configurado no painel administrativo. Consulte [WORKFLOW.md](WORKFLOW.md). O histórico abaixo não descreve as permissões atuais.
+
 > **Atualização de 05/10/2026:** o fluxo de tesoureiros por sociedade, confirmação administrativa, conferência bancária, reserva de per capita e PDFs está implementado. As migrations foram aplicadas no Supabase em 05/10; consulte [WORKFLOW.md](WORKFLOW.md) para regras, testes e configuração de acesso. O texto abaixo documenta o estado histórico de 28/09/2026.
 
 ## Entrega e estado da ativação

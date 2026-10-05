@@ -79,3 +79,5 @@ verify_jwt = true
 
 [functions.member-submit-payment-receipt]
 verify_jwt = true
+[functions.treasury-pin-login]
+verify_jwt = false

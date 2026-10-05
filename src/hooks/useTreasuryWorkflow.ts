@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { treasuryClient as supabase } from '@/integrations/supabase/treasury-client';
+import { useTreasuryIdentity } from '@/hooks/useTreasuryIdentity';
 import { decodeTreasuryEntry, safeCents, treasuryError } from '@/lib/treasury';
 import type { TreasuryReport, TreasuryAttachment } from '@/lib/treasury-report';
 
@@ -20,23 +20,19 @@ type Database = { public: { Tables: { treasury_bank_transactions: Table<BankMove
 const client = supabase as unknown as SupabaseClient<Database>;
 export const RECEIPT_BUCKET = 'treasury-receipts';
 
-export function useTreasuryAccess() {
-  const { user, loading } = useAuth();
-  return useQuery({ queryKey: ['treasury', 'access', user?.id], enabled: Boolean(user) && !loading, retry: false, staleTime: 0,
-    queryFn: async ({ signal }) => { const result = await client.rpc('treasury_access').abortSignal(signal); if (result.error) throw treasuryError(result.error); return result.data; } });
-}
+export function useTreasuryAccess() { return useTreasuryIdentity().access; }
 export function useTreasuryQueue(fundId?: string, page = 0, enabled = false) {
-  const { user } = useAuth();
+  const { user } = useTreasuryIdentity();
   return useQuery({ queryKey: ['treasury', 'review', user?.id, fundId, page], enabled: Boolean(user) && enabled, retry: false, staleTime: 0, refetchInterval: 30_000,
     queryFn: async ({ signal }) => { const result = await client.rpc('treasury_review_queue', { p_fund_id: fundId || null, p_offset: page * 20, p_limit: 20 }).abortSignal(signal); if (result.error) throw treasuryError(result.error); return { entries: result.data.entries.map(entry => decodeTreasuryEntry(entry, false)), total_count: safeCents(result.data.total_count) }; } });
 }
 export function useTreasuryBank(enabled: boolean) {
-  const { user } = useAuth();
+  const { user } = useTreasuryIdentity();
   return useQuery({ queryKey: ['treasury', 'bank', user?.id], enabled: Boolean(user) && enabled, retry: false, staleTime: 0,
     queryFn: async ({ signal }) => { const result = await client.rpc('treasury_bank_reconciliation').abortSignal(signal); if (result.error) throw treasuryError(result.error); return result.data.map(row => ({ ...row, amount_cents: safeCents(row.amount_cents), allocated_cents: safeCents(row.allocated_cents), remaining_cents: safeCents(row.remaining_cents) })); } });
 }
 export function useTreasuryAdministration(enabled: boolean) {
-  const { user } = useAuth();
+  const { user } = useTreasuryIdentity();
   return useQuery({ queryKey: ['treasury', 'administration', user?.id], enabled: Boolean(user) && enabled, retry: false,
     queryFn: async () => { const [accounts, managers] = await Promise.all([client.rpc('treasury_admin_accounts'), client.from('treasury_managers').select('*')]); if (accounts.error || managers.error) throw treasuryError(accounts.error || managers.error); return { accounts: accounts.data, managers: managers.data }; } });
 }
@@ -90,7 +86,7 @@ export async function attachTreasuryReceipt(entryId: string, file: File, attachm
   if (result.error && result.error.code !== '23505') throw treasuryError(result.error);
 }
 export function useTreasuryAttachments(entryId?: string, enabled = false) {
-  const { user } = useAuth();
+  const { user } = useTreasuryIdentity();
   return useQuery({ queryKey: ['treasury', 'attachments', user?.id, entryId], enabled: Boolean(user && entryId && enabled), retry: false,
     queryFn: async () => { const result = await client.from('treasury_attachments').select('*').eq('entry_id', entryId); if (result.error) throw treasuryError(result.error); return result.data; } });
 }

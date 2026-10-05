@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { treasuryClient as supabase } from '@/integrations/supabase/treasury-client';
 import { useTreasuryAccess } from './useTreasuryWorkflow';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTreasuryIdentity } from '@/hooks/useTreasuryIdentity';
 import {
   decodeTreasuryDashboard, decodeTreasuryEntry, decodeTreasuryStatement,
   insertTreasuryEntryIdempotently,
@@ -36,8 +36,9 @@ type TreasuryDatabase = {
 const treasury = supabase as unknown as SupabaseClient<TreasuryDatabase>;
 
 export function useTreasuryDashboard() {
+  const { user, canAccess } = useTreasuryIdentity();
   return useQuery({
-    queryKey: ['treasury', 'dashboard'],
+    queryKey: ['treasury', 'dashboard', user?.id], enabled: canAccess,
     queryFn: async ({ signal }) => {
       const { data, error } = await treasury.rpc('treasury_dashboard').abortSignal(signal);
       if (error) throw treasuryError(error);
@@ -50,8 +51,9 @@ export function useTreasuryDashboard() {
 }
 
 export function useTreasuryStatement(filters: TreasuryStatementFilters = {}) {
+  const { user, canAccess } = useTreasuryIdentity();
   return useQuery({
-    queryKey: ['treasury', 'statement', filters],
+    queryKey: ['treasury', 'statement', user?.id, filters], enabled: canAccess,
     queryFn: async ({ signal }) => {
       const { data, error } = await treasury.rpc('treasury_statement', treasuryStatementParams(filters)).abortSignal(signal);
       if (error) throw treasuryError(error);
@@ -64,11 +66,11 @@ export function useTreasuryStatement(filters: TreasuryStatementFilters = {}) {
 }
 
 export function useTreasuryMutations() {
-  const { user, isAdmin, profile } = useAuth();
+  const { user, isAdmin, canAccess } = useTreasuryIdentity();
   const queryClient = useQueryClient();
   const access = useTreasuryAccess();
   const requireAdmin = () => {
-    if (!user || !isAdmin || !profile?.active) throw treasuryError({ code: '42501' });
+    if (!user || !isAdmin || !canAccess) throw treasuryError({ code: '42501' });
   };
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['treasury'] });
@@ -77,7 +79,7 @@ export function useTreasuryMutations() {
   const createEntry = useMutation({
     retry: false,
     mutationFn: async (input: TreasuryEntryInput & { id: string }) => {
-      if (!user || !profile?.active || (!isAdmin && (!access.data?.fund_ids.includes(input.fund_id) || input.kind !== 'income' || input.status !== 'pending'))) throw treasuryError({ code: '42501' });
+      if (!user || !canAccess || (!isAdmin && (!access.data?.fund_ids.includes(input.fund_id) || input.kind !== 'income' || input.status !== 'pending'))) throw treasuryError({ code: '42501' });
       return insertTreasuryEntryIdempotently(input, {
         insert: async row => treasury.from('treasury_entries').insert(row).select().single(),
         findById: async id => treasury.from('treasury_entries').select().eq('id', id).maybeSingle(),

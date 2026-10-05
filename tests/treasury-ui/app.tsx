@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TreasuryDashboard } from '../../src/components/treasury/TreasuryDashboard';
 import { TreasuryEntryDialog } from '../../src/components/treasury/TreasuryEntryDialog';
 import { TreasuryWorkflow } from '../../src/components/treasury/TreasuryWorkflow';
@@ -16,4 +17,4 @@ function App(){
  {role!=='public'&&<TreasuryEntryDialog admin={role==='admin'} open={open} onOpenChange={setOpen} funds={role==='admin'?funds:[funds[0]]} initialFundId={FUND} entry={editing}/>}
  </Context.Provider>;
 }
-createRoot(document.getElementById('root')).render(<App/>);
+createRoot(document.getElementById('root')).render(<QueryClientProvider client={new QueryClient()}><App/></QueryClientProvider>);

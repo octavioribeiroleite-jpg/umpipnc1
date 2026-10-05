@@ -12,13 +12,14 @@ publicável do Supabase e execute `npm ci` e `npm run dev`.
 Valide com `npx tsc -p tsconfig.app.json --noEmit`, `node --experimental-strip-types --test tests/*.mjs tests/*.ts`
 e `npm run build`. O resultado está em `dist/client`.
 
-## Tesouraria pública das sociedades
+## Tesouraria das sociedades
 
-O novo dashboard está em `/tesouraria`, com leitura pública e lançamentos protegidos
-pelo acesso administrativo existente. O esquema foi aplicado e testado no Supabase IPNC.
-Consulte [ativação e validação](docs/treasury/README.md) antes de publicar a interface,
-que ainda aguarda validação visual interativa. A [prévia estática](docs/treasury/preview.html)
-não realiza consultas ou gravações.
+Na entrada, **Finanças** abre um popup com as sociedades e o acesso administrativo.
+Cada sociedade informa seu PIN e acessa somente seu caixa. O administrador entra
+com sua conta existente e define os PINs em **PINs das sociedades**. Saldo, extrato,
+pendências e relatórios exigem autorização também no banco; não há consulta pública
+dos valores. Consulte [fluxo e verificação](docs/treasury/WORKFLOW.md). A
+[prévia estática histórica](docs/treasury/preview.html) não consulta nem grava dados.
 
 ## Configuração do aplicativo
 

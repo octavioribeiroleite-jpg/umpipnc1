@@ -14,7 +14,7 @@ test('public disconnected overview never invents balances or exposes writing act
   const html = render(emptyProps);
   assert.match(html, /Dashboard financeiro/);
   assert.match(html, /Igreja Presbiteriana de Nova Carapina/);
-  assert.match(html, /Consulta pública/);
+  assert.match(html, /Acesso necessário/);
   assert.match(html, /Extrato indisponível/);
   assert.doesNotMatch(html, /R\$|Novo lançamento|Nova sociedade|Editar lançamento/);
   for (const name of ['UMP', 'SAF', 'UPH', 'UPA']) assert.match(html, new RegExp(`Consultar extrato da ${name}`));

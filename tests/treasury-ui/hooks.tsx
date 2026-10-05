@@ -17,3 +17,11 @@ export async function downloadTreasuryReceipt(){return new Uint8Array();}
 export async function fetchTreasuryReport(){throw Error('Prévia isolada: geração validada nos testes automatizados de PDF.');}
 
 export async function setTreasuryAttachmentActive(){}
+
+export function useTreasuryIdentity(){return {user:{id:'fixture-admin'}};}
+const fixturePins = new Map();
+export const treasuryClient = {rpc: async(name,args) => {
+ if(name==='treasury_pin_status') return {data:[FUND,OTHER].map(fund_id=>({fund_id,configured:fixturePins.has(fund_id),active:fixturePins.get(fund_id)===true})),error:null};
+ if(name==='treasury_set_pin'){fixturePins.set(args.p_fund_id,args.p_enabled);return {data:null,error:null};}
+ throw Error('API não simulada na prévia isolada');
+}};

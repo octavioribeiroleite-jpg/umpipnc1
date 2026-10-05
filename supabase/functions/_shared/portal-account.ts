@@ -2,8 +2,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0';
 
 /** Reserved PIN accounts. Never changes a member's personal credentials. */
 export async function portalSession(input: {
-  namespace: 'ebd' | 'diretoria'; id: string; name: string; credential: string;
-  societyId?: string | null; role?: 'diretoria' | 'pastor';
+  namespace: 'ebd' | 'diretoria' | 'treasury'; id: string; name: string; credential: string;
+  societyId?: string | null; role?: 'diretoria' | 'pastor' | 'visualizador';
 }) {
   const url = Deno.env.get('SUPABASE_URL')!;
   const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

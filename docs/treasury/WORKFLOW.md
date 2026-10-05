@@ -1,14 +1,16 @@
 # Tesouraria: recebimento, confirmação e prestação de contas
 
-Implementação de 05/10/2026. As migrations de confirmação/conferência e leitura pública foram aplicadas no Supabase em 05/10. A interface integra a entrega na `main`; a publicação só está concluída quando o Sites confirma `succeeded` para a revisão enviada. A configuração descrita no README de 28/09 é histórica, com lançamentos diretos de administrador.
+Implementação de 05/10/2026. As migrations de confirmação/conferência e acesso privado por PIN foram aplicadas no Supabase em 05/10. A interface integra a entrega na `main`; a publicação só está concluída quando o Sites confirma `succeeded` para a revisão enviada. A configuração descrita no README de 28/09 é histórica, com lançamentos diretos de administrador.
 
 ## Regras implementadas
 
-- A conta de um tesoureiro é vinculada explicitamente pelo administrador a uma ou mais sociedades em **Acesso dos tesoureiros**. Informar “tesoureiro” como cargo no PIN da diretoria não concede permissão. A conta precisa existir e ter perfil ativo.
+- **Entrada por sociedade:** Finanças, na tela inicial, abre o popup com SAF, UMP, UPA, UPH e acesso administrativo. Cada sociedade informa seu próprio PIN de 6 números. O administrador entra com sua conta existente; essa sessão é independente do login da diretoria/EBD.
+- **Configuração:** no painel administrativo, **PINs das sociedades** permite definir, trocar ou desativar um PIN. Nenhum PIN padrão é criado. Os valores são armazenados como hash bcrypt em schema privado e nunca retornam ao navegador. Troca/desativação invalida a autorização dos tokens anteriores no servidor. A sessão da sociedade dura no máximo 12 horas e é persistida apenas na aba; o PIN não é persistido.
+- Vínculos de contas anteriores são preservados no banco para compatibilidade. A configuração principal da interface passa a ser **PINs das sociedades**. Informar “tesoureiro” no PIN da diretoria não concede acesso financeiro. Sessões PIN da tesouraria não recebem poderes nos módulos da diretoria/EBD.
 - O tesoureiro envia apenas entradas da sociedade vinculada. Elas entram como **Aguardando confirmação**. Não pode alterar, confirmar, rejeitar, lançar saída, anexar arquivos ou conceder acesso.
 - O administrador vê todas as pendências. Em **Conferir / ajustar**, corrige os dados e confirma ou devolve, informando o motivo. Registra também saídas. Toda criação e alteração deixa trilha de auditoria com ator e registros anterior/novo. Não há exclusão financeira.
 - Somente confirmados entram em cards, gráficos, extrato, saldo acumulado e PDFs. Pendentes/devolvidos aparecem em lista separada, acessível ao administrador e ao responsável da sociedade.
-- Preservada a decisão anterior: a consulta pública mostra os movimentos confirmados de todas as sociedades. A observação da conferência também é pública depois de confirmar; o formulário informa isso. Referências bancárias, comprovantes, auditoria e permissões são privados.
+- **Valores privados:** saldo, extrato e pendências ficam restritos ao administrador e aos responsáveis daquela sociedade. A decisão anterior de leitura pública foi substituída pelo pedido do proprietário de 05/10. Sem login, somente nomes, siglas e cores das sociedades são retornados para montar o popup. Alterar o identificador na URL/API não libera outro caixa.
 - Uma tentativa de gravação mantém o UUID, e edição compara a revisão. Reenvio de uma operação confirmada não produz uma segunda movimentação; uma tentativa com dados diferentes não é silenciosamente aceita.
 
 ## Pix dividido e reserva
@@ -40,7 +42,7 @@ O modelo visual segue `Relatorio_Financeiro_2026.pdf` do repositório: capa verd
 
 1. No projeto IPNC `xhhfgnkpgtnzlvpvqjpl`, já foram aplicadas `20261005140755_treasury_approval_reconciliation.sql` e `20261005140907_treasury_public_read_policy.sql`. Os nomes locais correspondem ao histórico remoto. Requerem a migration pública de 28/09 e os helpers administrativos existentes. Não reaplicar migrations nem o histórico inteiro em banco vazio.
 2. A migration preserva registros anteriores como confirmados. Novos registros passam a pendentes por padrão. Não cria credenciais, tesoureiros, lançamentos de exemplo ou vínculos presumidos. O bucket é novo e privado; buckets existentes não mudam.
-3. Publicar a interface atualizada pelo fluxo existente, entrar com administrador e vincular as contas reais em **Acesso dos tesoureiros**.
+3. Também foram aplicadas `20261005142735_treasury_society_pin_access.sql` e `20261005143113_treasury_directory_binding.sql`, com a função `treasury-pin-login` publicada. Entrar com administrador e definir os PINs reais em **PINs das sociedades**. A validação passa por limite de tentativas antes de conferir o PIN; somente o backend pode executar a verificação privada.
 4. Executar os roteiros abaixo em ambiente de homologação antes de usar lançamentos reais. A versão antiga do teste SQL de 28/09 é histórica e não representa o fluxo novo.
 
 ## Testes automatizados
@@ -72,8 +74,8 @@ Abrir `http://127.0.0.1:8081/`. O aviso amarelo identifica os **dados fictícios
 
 ## Verificação manual em homologação
 
-1. Abrir `/tesouraria` sem login: somente confirmados, nenhuma ação de escrita, nenhuma pendência/anexo/referência bancária.
-2. Como administrador, vincular uma conta ativa à UMP. Entrar com essa conta: caixa UMP abre por padrão. A ação é **Registrar recebimento**, sem opção de saída ou confirmação. Tentar escrita direta na SAF deve ser recusado pelo banco.
+1. Na tela inicial, clicar em Finanças: popup com as sociedades e acesso administrativo, sem saldos. Abrir `/tesouraria` sem sessão também exige autenticação. PIN errado ou desativado mantém o usuário fora do painel. Consultas anônimas diretas a saldo/extrato/lançamentos são recusadas.
+2. Como administrador, definir e confirmar um PIN de 6 números da UMP. Sair, escolher UMP e informar o PIN: abre o caixa UMP com **Registrar recebimento**, sem saída ou confirmação. Tentar consultar/gravar SAF por URL/API deve ser recusado ou retornar vazio. Trocar/desativar o PIN administrativo bloqueia novas operações com a sessão antiga.
 3. Enviar um recebimento de teste de R$ 100,00 com composição 60/30/10. Confirmar que aparece na lista de pendências e que saldo/extrato permanecem inalterados. Reenviar o mesmo UUID não pode criar outro registro.
 4. Administrador registra o crédito de R$ 100,00, abre a pendência, vincula e confirma. Esperado: entrada 100, saldo 100, reserva 10, disponível 90. Mesmo Pix confirmado novamente não soma mais 100. Uma alocação que exceda o crédito é recusada.
 5. Conferir devolução com motivo, correção de data/valor, saída e utilização da reserva. Dois administradores editando a mesma revisão: o segundo recebe conflito, salvo reenvio exato da mesma operação já salva. Em duas sessões, tentar exceder o mesmo crédito simultaneamente: apenas o valor disponível pode ser confirmado.
@@ -83,9 +85,10 @@ Abrir `http://127.0.0.1:8081/`. O aviso amarelo identifica os **dados fictícios
 
 ## Validação desta entrega
 
-- Após integrar as atualizações de EBD e PWA já existentes no Sites, **110 testes automatizados passaram** e os tipos foram aprovados. O gerador de PDF da tesouraria é carregado sob demanda. O processo de publicação executa novamente o build da revisão final.
+- A suíte cobre o fluxo de PIN, isolamento das sociedades, bloqueio anônimo, sessão expirada, alteração de claims, rotação/desativação, limite de tentativas e concessão restrita de sessão, além dos testes de EBD/PWA e finanças. O gerador de PDF da tesouraria é carregado sob demanda.
 - PDFs de teste renderizados e páginas principais inspecionadas.
 - Conferidas as policies reais dos buckets existentes: limitadas a `receipts`/`election-photos`; não dão acesso ao novo bucket.
 - A entrada pública e o acesso Finanças foram conferidos no navegador local. Os roteiros de escrita com contas reais e concorrência entre sessões continuam sendo validação de homologação; não foram criadas credenciais ou movimentações fictícias em produção.
-- As duas migrations foram aplicadas. A consulta pública de saldo/extrato foi validada sob o papel `anon`, com o helper administrativo permanecendo restrito. Banco sem lançamentos, quatro sociedades, bucket privado e relatório vedado ao anônimo. O teste isolado reproduz também os grants restritos do helper real.
+- A consulta anônima de nomes retorna quatro sociedades; os endpoints financeiros e o verificador de PIN são negados ao anônimo. Nenhum PIN ou lançamento foi criado em produção. No PGlite, primitivas de pgcrypto são substituídas apenas para testar autorização; bcrypt real foi verificado separadamente no Supabase com valores descartáveis, sem gravar registros.
+- A tabela privada de PINs tem RLS sem policies de cliente e nenhum grant de leitura: o aviso informativo do verificador descreve essa proteção intencional. O schema privado continua sem USAGE para `anon`. O wrapper público da lista é ligado à função interna durante a criação e expõe somente nomes/identificadores.
 - O verificador de segurança não apontou novos achados na primeira migration. Existem avisos anteriores sobre funções públicas e proteção contra senhas vazadas desabilitada; eles não foram introduzidos por este módulo. Consulte o [verificador de segurança](https://supabase.com/docs/guides/database/database-linter) e a [proteção de senhas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
