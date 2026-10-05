@@ -1,102 +1,89 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const BATCH_SIZE = 5;
+const initialCount = (electionId: string | undefined) => ({
+  electionId, realCount: 0, displayedCount: 0, lastReleased: 0,
+  hasSnapshot: false, isError: false, loading: Boolean(electionId),
+});
 
-/**
- * Hook que escuta votos em tempo real mas só revela o contador
- * em lotes (default: 5 votos), para preservar o sigilo: ninguém
- * consegue cronometrar "fulano votou agora".
- *
- * O contador exibido também é liberado integralmente quando:
- *  - o total de presentes é atingido
- *  - a votação é encerrada (force=true)
- */
+/** Releases the anonymous count in batches, at capacity, or when voting ends. */
 export function useBufferedVoteCount(
   electionId: string | undefined,
   totalPresent: number,
   force: boolean = false,
   batchSize: number = BATCH_SIZE,
 ) {
-  const [realCount, setRealCount] = useState(0);
-  const [displayedCount, setDisplayedCount] = useState(0);
-  const lastReleasedRef = useRef(0);
-  const inFlightRef = useRef(false);
-  const pendingRef = useRef(false);
+  const [count, setCount] = useState(() => initialCount(electionId));
+  const [retryVersion, setRetryVersion] = useState(0);
+  const retry = useCallback(() => setRetryVersion(version => version + 1), []);
 
-  // Fetch + realtime
   useEffect(() => {
-    if (!electionId) return;
+    if (!electionId) {
+      setCount(initialCount(undefined));
+      return;
+    }
+    // Each subscription owns its queue. Cleanup cannot unlock another election's
+    // request, and a late response from the old election cannot publish its count.
+    let active = true;
+    let inFlight = false;
+    let pending = false;
+    let sequence = 0;
+    setCount(previous => previous.electionId === electionId ? previous : initialCount(electionId));
 
     const fetchCount = async () => {
-      if (inFlightRef.current) {
-        pendingRef.current = true;
-        return;
-      }
-
-      inFlightRef.current = true;
+      if (!active) return;
+      if (inFlight) { pending = true; return; }
+      inFlight = true;
+      const request = ++sequence;
+      setCount(previous => ({ ...previous, loading: true }));
       try {
-        const { count } = await supabase
-          .from('election_votes' as any)
-          .select('*', { count: 'exact', head: true })
-          .eq('election_id', electionId);
-        setRealCount(count || 0);
+        const { count: total, error } = await supabase.from('election_votes')
+          .select('*', { count: 'exact', head: true }).eq('election_id', electionId);
+        if (error) throw error;
+        if (total === null) throw new Error('Contagem indisponível');
+        if (active && request === sequence) setCount(previous => ({
+          ...previous, realCount: total, hasSnapshot: true, isError: false, loading: false,
+        }));
+      } catch {
+        if (active && request === sequence) setCount(previous => ({ ...previous, isError: true, loading: false }));
       } finally {
-        inFlightRef.current = false;
-        if (pendingRef.current) {
-          pendingRef.current = false;
-          void fetchCount();
-        }
+        inFlight = false;
+        if (active && pending) { pending = false; void fetchCount(); }
       }
     };
 
-    fetchCount();
-
-    const channel = supabase
-      .channel(`buffered-votes-${electionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'election_votes',
-          filter: `election_id=eq.${electionId}`,
-        },
-        () => fetchCount(),
-      )
+    void fetchCount();
+    const channel = supabase.channel(`buffered-votes-${electionId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'election_votes', filter: `election_id=eq.${electionId}` }, () => void fetchCount())
       .subscribe();
-
     const interval = setInterval(fetchCount, 3000);
-
     return () => {
+      active = false;
+      sequence++;
+      pending = false;
       clearInterval(interval);
       supabase.removeChannel(channel);
-      inFlightRef.current = false;
-      pendingRef.current = false;
     };
-  }, [electionId]);
+  }, [electionId, retryVersion]);
 
-  // Decide quanto mostrar
+  // Preserve the existing release rules exactly: force, capacity, then batches.
   useEffect(() => {
-    if (force) {
-      setDisplayedCount(realCount);
-      lastReleasedRef.current = realCount;
-      return;
-    }
+    if (count.electionId !== electionId || !count.hasSnapshot) return;
+    setCount(previous => {
+      if (previous.electionId !== electionId || !previous.hasSnapshot) return previous;
+      if (force || (totalPresent > 0 && previous.realCount >= totalPresent)) {
+        if (previous.displayedCount === previous.realCount && previous.lastReleased === previous.realCount) return previous;
+        return { ...previous, displayedCount: previous.realCount, lastReleased: previous.realCount };
+      }
+      const fullBatches = Math.floor(previous.realCount / batchSize) * batchSize;
+      if (fullBatches > previous.lastReleased) return { ...previous, displayedCount: fullBatches, lastReleased: fullBatches };
+      return previous;
+    });
+  }, [count.electionId, count.hasSnapshot, count.realCount, electionId, totalPresent, force, batchSize]);
 
-    if (totalPresent > 0 && realCount >= totalPresent) {
-      setDisplayedCount(realCount);
-      lastReleasedRef.current = realCount;
-      return;
-    }
-
-    // Só revela em múltiplos do batch
-    const fullBatches = Math.floor(realCount / batchSize) * batchSize;
-    if (fullBatches > lastReleasedRef.current) {
-      setDisplayedCount(fullBatches);
-      lastReleasedRef.current = fullBatches;
-    }
-  }, [realCount, totalPresent, force, batchSize]);
-
-  return { displayedCount, realCount };
+  // Hide the old identity synchronously, before the new effect is committed.
+  const current = count.electionId === electionId ? count : initialCount(electionId);
+  return { displayedCount: current.displayedCount, realCount: current.realCount,
+    hasSnapshot: current.hasSnapshot, isError: current.isError, loading: current.loading, retry };
 }

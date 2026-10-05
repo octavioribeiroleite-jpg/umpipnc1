@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useState, useMemo, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,7 @@ export default function Arquivos() {
 
   // Debounce search
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  useMemo(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(filters.search || '');
     }, 300);
@@ -40,7 +41,7 @@ export default function Arquivos() {
     search: debouncedSearch,
   }), [filters, debouncedSearch]);
 
-  const { data: files, isLoading } = useFiles(queryFilters);
+  const { data: files, isLoading, isError, isFetching, refetch } = useFiles(queryFilters);
   const deleteMutation = useDeleteFile();
 
   const handleDownload = (file: FileRecord) => {
@@ -80,6 +81,8 @@ export default function Arquivos() {
       {/* Filters */}
       <FileFilters filters={filters} onFiltersChange={setFilters} />
 
+      {isError && <QueryErrorState message="Não foi possível carregar os arquivos." onRetry={() => void refetch()} retrying={isFetching} hasPreviousData={!!files?.length} />}
+
       {/* Loading State */}
       {isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
@@ -90,7 +93,7 @@ export default function Arquivos() {
       )}
 
       {/* Empty State */}
-      {!isLoading && (!files || files.length === 0) && (
+      {!isLoading && !isError && (!files || files.length === 0) && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <FileX className="h-16 w-16 text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Nenhum arquivo encontrado</h3>

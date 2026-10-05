@@ -13,6 +13,8 @@ import { ResultPanel } from '@/components/eleicoes/ResultPanel';
 import { DeviceRegistration } from '@/components/eleicoes/DeviceRegistration';
 import { ElectionStepper, StepDef } from '@/components/eleicoes/ElectionStepper';
 import { ElectionStepCard } from '@/components/eleicoes/ElectionStepCard';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 
 interface Election {
   id: string;
@@ -41,11 +43,11 @@ export default function EleicaoDetalhe() {
   const [attendance, setAttendance] = useState<AttendanceItem[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
-  const [loading, setLoading] = useState(true);
+  const read = useSnapshotRead(id || 'missing');
   const [activeStep, setActiveStep] = useState<string | null>('candidatos');
 
-  const fetchAll = async () => {
-    if (!id) return;
+  const fetchAll = () => read.run(async () => {
+    if (!id) throw new Error('Eleição indisponível');
     const [elRes, atRes, caRes, devRes] = await Promise.all([
       supabase.from('elections' as any).select('*').eq('id', id).single(),
       supabase.from('election_attendance' as any).select('*').eq('election_id', id).order('name' as any),
@@ -53,12 +55,10 @@ export default function EleicaoDetalhe() {
       supabase.from('election_devices' as any).select('*').eq('election_id', id).order('created_at' as any),
     ]);
 
-    if (elRes.error) {
-      toast({ title: 'Eleição não encontrada', variant: 'destructive' });
-      navigate('/eleicoes');
-      return;
-    }
+    for (const result of [elRes, atRes, caRes, devRes]) if (result.error) throw result.error;
+    if (!elRes.data) throw new Error('Eleição indisponível');
 
+    return () => {
     setElection(elRes.data as any);
     setAttendance((atRes.data as any[]) || []);
     const parsedCandidates = ((caRes.data as any[]) || []).map((c: any) => ({
@@ -67,8 +67,8 @@ export default function EleicaoDetalhe() {
     }));
     setCandidates(parsedCandidates);
     setDevices((devRes.data as any[]) || []);
-    setLoading(false);
-  };
+    };
+  });
 
   useEffect(() => { fetchAll(); }, [id]);
 
@@ -123,12 +123,12 @@ export default function EleicaoDetalhe() {
   const currentStepKey = activeStep ?? steps[autoCurrentIndex]?.key;
   const currentIndex = steps.findIndex((s) => s.key === currentStepKey);
 
-  if (loading || !election) {
+  if (!read.hasSnapshot || !election) {
     return (
       <AppLayout>
-        <div className="flex justify-center py-12">
+        {read.error ? <QueryErrorState message="Não foi possível consultar a eleição e suas etapas." onRetry={fetchAll} retrying={read.loading} /> : <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+        </div>}
       </AppLayout>
     );
   }
@@ -213,6 +213,7 @@ export default function EleicaoDetalhe() {
 
   return (
     <AppLayout>
+      {read.error && <QueryErrorState message="Não foi possível atualizar a eleição e suas etapas." onRetry={fetchAll} retrying={read.loading} hasPreviousData />}
       {/* Header */}
       <div className="rounded-2xl bg-card border border-border shadow-sm p-4 mb-4">
         <div className="flex items-center gap-2 mb-2">

@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useId, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,10 +77,10 @@ const currentYear = new Date().getFullYear();
 const currentMonth = months[new Date().getMonth()];
 
 export function MensalidadesTab() {
+  const formId = useId();
   const [members, setMembers] = useState<Member[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -104,9 +106,10 @@ export function MensalidadesTab() {
   const competence = `${selectedMonth}/${selectedYear}`;
 
   const { effectiveSocietyId: societyId } = useAuth();
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(JSON.stringify([societyId, competence]));
+  const loading = readLoading && !hasSnapshot;
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = () => runRead(async () => {
     
     // Calculate date range for the month
     const monthIndex = months.indexOf(selectedMonth);
@@ -133,30 +136,18 @@ export function MensalidadesTab() {
       transactionsQuery,
     ]);
 
-    if (membersRes.error) {
-      toast({ title: 'Erro ao carregar membros', variant: 'destructive' });
-    } else {
+    const failed = [membersRes, paymentsRes, transactionsRes].find(result => result.error);
+    if (failed?.error) throw failed.error;
+    return () => {
       setMembers(membersRes.data || []);
-    }
-
-    if (paymentsRes.error) {
-      toast({ title: 'Erro ao carregar pagamentos', variant: 'destructive' });
-    } else {
       setPayments(paymentsRes.data || []);
-    }
-    
-    if (transactionsRes.error) {
-      toast({ title: 'Erro ao carregar transações', variant: 'destructive' });
-    } else {
       setTransactions(transactionsRes.data || []);
-    }
-
-    setLoading(false);
-  };
+    };
+  });
 
   useEffect(() => {
     fetchData();
-  }, [competence]);
+  }, [competence, societyId, runRead]);
 
   const getMemberPayment = (memberId: string) => {
     return payments.find((p) => p.member_id === memberId);
@@ -333,8 +324,12 @@ export function MensalidadesTab() {
   const paidCount = members.filter((m) => getMemberPayment(m.id)?.status === 'pago').length;
   const pendingCount = members.length - paidCount;
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar os pagamentos e recebimentos." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-sm text-muted-foreground">Consultando dados financeiros…</div>;
+
   return (
     <>
+      {readFailure}
       <Card className="mb-4">
         <CardContent className="pt-6">
           <div className="flex flex-wrap items-center gap-4">
@@ -430,14 +425,14 @@ export function MensalidadesTab() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => openEditPaymentDialog(payment)}
+                                aria-label="Editar pagamento" onClick={() => openEditPaymentDialog(payment)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => setDeletePaymentId(payment.id)}
+                                aria-label="Excluir pagamento" onClick={() => setDeletePaymentId(payment.id)}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -509,14 +504,14 @@ export function MensalidadesTab() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => openEditTransactionDialog(transaction)}
+                          aria-label="Editar receita" onClick={() => openEditTransactionDialog(transaction)}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => setDeleteTransactionId(transaction.id)}
+                          aria-label="Excluir receita" onClick={() => setDeleteTransactionId(transaction.id)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -542,9 +537,9 @@ export function MensalidadesTab() {
               <strong>{competence}</strong>
             </p>
             <div>
-              <Label htmlFor="amount">Valor (R$)</Label>
+              <Label htmlFor={`${formId}-amount`}>Valor (R$)</Label>
               <Input
-                id="amount"
+                id={`${formId}-amount`}
                 type="number"
                 step="0.01"
                 value={paymentAmount}
@@ -569,9 +564,9 @@ export function MensalidadesTab() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="editAmount">Valor (R$)</Label>
+              <Label htmlFor={`${formId}-editAmount`}>Valor (R$)</Label>
               <Input
-                id="editAmount"
+                id={`${formId}-editAmount`}
                 type="number"
                 step="0.01"
                 value={editPaymentAmount}
@@ -596,17 +591,17 @@ export function MensalidadesTab() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="editDescription">Descrição</Label>
+              <Label htmlFor={`${formId}-editDescription`}>Descrição</Label>
               <Input
-                id="editDescription"
+                id={`${formId}-editDescription`}
                 value={editTransactionForm.description}
                 onChange={(e) => setEditTransactionForm({ ...editTransactionForm, description: e.target.value })}
               />
             </div>
             <div>
-              <Label htmlFor="editTransAmount">Valor (R$)</Label>
+              <Label htmlFor={`${formId}-editTransAmount`}>Valor (R$)</Label>
               <Input
-                id="editTransAmount"
+                id={`${formId}-editTransAmount`}
                 type="number"
                 step="0.01"
                 value={editTransactionForm.amount}
@@ -614,9 +609,9 @@ export function MensalidadesTab() {
               />
             </div>
             <div>
-              <Label htmlFor="editDate">Data</Label>
+              <Label htmlFor={`${formId}-editDate`}>Data</Label>
               <Input
-                id="editDate"
+                id={`${formId}-editDate`}
                 type="date"
                 value={editTransactionForm.date}
                 onChange={(e) => setEditTransactionForm({ ...editTransactionForm, date: e.target.value })}

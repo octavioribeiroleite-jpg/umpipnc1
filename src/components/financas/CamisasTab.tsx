@@ -1,5 +1,7 @@
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import '@/camisas.css';
-import { useState, useEffect } from 'react';
+import { useId, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,6 +65,7 @@ interface Sale {
 }
 
 export function CamisasTab() {
+  const formId = useId();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('resumo');
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -71,7 +74,6 @@ export function CamisasTab() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [orders, setOrders] = useState<ShirtOrder[]>([]);
   const [campaigns, setCampaigns] = useState<ShirtCampaign[]>([]);
-  const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
 
   // Dialog states
@@ -106,13 +108,14 @@ export function CamisasTab() {
   });
 
   const { effectiveSocietyId: societyId } = useAuth();
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(societyId || 'all');
+  const loading = readLoading && !hasSnapshot;
 
   useEffect(() => {
     fetchData();
-  }, [societyId]);
+  }, [societyId, runRead]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = () => runRead(async () => {
     let invQuery = supabase.from('shirt_inventory').select('*').order('size');
     let purchQuery = supabase.from('shirt_purchases').select('*').order('date', { ascending: false });
     let salesQuery = supabase.from('shirt_sales').select('*').order('date', { ascending: false });
@@ -133,17 +136,20 @@ export function CamisasTab() {
       invQuery, purchQuery, salesQuery, membersQuery, ordersQuery, campaignsQuery
     ]);
 
-    setInventory(invRes.data || []);
-    setPurchases(purchRes.data || []);
-    setSales(salesRes.data || []);
-    setMembers(membersRes.data || []);
-    setOrders(((ordersRes.data || []) as any[]).map(o => ({
-      ...o,
-      items: Array.isArray(o.items) ? (o.items as OrderItem[]) : [],
-    })) as ShirtOrder[]);
-    setCampaigns((campaignsRes.data || []) as ShirtCampaign[]);
-    setLoading(false);
-  };
+    const failure = [invRes, purchRes, salesRes, membersRes, ordersRes, campaignsRes].find(result => result.error);
+    if (failure) throw failure.error;
+    return () => {
+      setInventory(invRes.data || []);
+      setPurchases(purchRes.data || []);
+      setSales(salesRes.data || []);
+      setMembers(membersRes.data || []);
+      setOrders(((ordersRes.data || []) as any[]).map(o => ({
+        ...o,
+        items: Array.isArray(o.items) ? (o.items as OrderItem[]) : [],
+      })) as ShirtOrder[]);
+      setCampaigns((campaignsRes.data || []) as ShirtCampaign[]);
+    };
+  });
 
   const handlePurchase = async () => {
     if (!user) return;
@@ -438,6 +444,9 @@ export function CamisasTab() {
     : (campaigns[0] ? Number(campaigns[0].unit_cost || 0) : 0);
   const giftCost = giftQty * avgUnitCost;
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível atualizar os dados de camisas." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-muted-foreground">Consultando dados financeiros…</div>;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -448,6 +457,7 @@ export function CamisasTab() {
 
   return (
     <div className="shirts-workspace space-y-6">
+      {readFailure}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="finance-subtabs" aria-label="Controle de camisas">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
@@ -773,16 +783,18 @@ export function CamisasTab() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Data</Label>
+              <Label htmlFor={`${formId}-purchase-date`}>Data</Label>
               <Input
+                id={`${formId}-purchase-date`}
                 type="datetime-local"
                 value={purchaseForm.date}
                 onChange={(e) => setPurchaseForm({ ...purchaseForm, date: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Fornecedor</Label>
+              <Label htmlFor={`${formId}-purchase-supplier`}>Fornecedor</Label>
               <Input
+                id={`${formId}-purchase-supplier`}
                 placeholder="Nome do fornecedor"
                 value={purchaseForm.supplier}
                 onChange={(e) => setPurchaseForm({ ...purchaseForm, supplier: e.target.value })}
@@ -793,8 +805,9 @@ export function CamisasTab() {
               <div className="grid grid-cols-3 gap-2">
                 {SIZES.map(size => (
                   <div key={size} className="space-y-1">
-                    <Label className="text-xs">{size}</Label>
+                    <Label className="text-xs" htmlFor={`${formId}-purchase-quantity-${size}`}>{size}</Label>
                     <Input
+                      id={`${formId}-purchase-quantity-${size}`} aria-label={`Quantidade tamanho ${size}`}
                       type="number"
                       min="0"
                       placeholder="0"
@@ -809,8 +822,9 @@ export function CamisasTab() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Custo Total (R$)</Label>
+              <Label htmlFor={`${formId}-purchase-cost`}>Custo Total (R$)</Label>
               <Input
+                id={`${formId}-purchase-cost`}
                 type="number"
                 step="0.01"
                 placeholder="0,00"
@@ -819,8 +833,9 @@ export function CamisasTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Observações</Label>
+              <Label htmlFor={`${formId}-purchase-notes`}>Observações</Label>
               <Textarea
+                id={`${formId}-purchase-notes`}
                 placeholder="Observações..."
                 value={purchaseForm.notes}
                 onChange={(e) => setPurchaseForm({ ...purchaseForm, notes: e.target.value })}
@@ -842,17 +857,18 @@ export function CamisasTab() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Data</Label>
+              <Label htmlFor={`${formId}-sale-date`}>Data</Label>
               <Input
+                id={`${formId}-sale-date`}
                 type="datetime-local"
                 value={saleForm.date}
                 onChange={(e) => setSaleForm({ ...saleForm, date: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Comprador (Membro)</Label>
+              <Label htmlFor={`${formId}-sale-member`}>Comprador (Membro)</Label>
               <Select value={saleForm.member_id} onValueChange={(v) => setSaleForm({ ...saleForm, member_id: v })}>
-                <SelectTrigger>
+                <SelectTrigger id={`${formId}-sale-member`}>
                   <SelectValue placeholder="Selecione um membro..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -863,8 +879,9 @@ export function CamisasTab() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Ou digite o nome</Label>
+              <Label htmlFor={`${formId}-sale-buyer`}>Ou digite o nome</Label>
               <Input
+                id={`${formId}-sale-buyer`}
                 placeholder="Nome do comprador"
                 value={saleForm.buyer_name}
                 onChange={(e) => setSaleForm({ ...saleForm, buyer_name: e.target.value })}
@@ -872,9 +889,9 @@ export function CamisasTab() {
             </div>
             <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Tamanho</Label>
+                <Label htmlFor={`${formId}-sale-size`}>Tamanho</Label>
                 <Select value={saleForm.size} onValueChange={(v) => setSaleForm({ ...saleForm, size: v })}>
-                  <SelectTrigger>
+                  <SelectTrigger id={`${formId}-sale-size`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -887,8 +904,9 @@ export function CamisasTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Quantidade</Label>
+                <Label htmlFor={`${formId}-sale-quantity`}>Quantidade</Label>
                 <Input
+                  id={`${formId}-sale-quantity`}
                   type="number"
                   min="1"
                   value={saleForm.quantity}
@@ -898,8 +916,9 @@ export function CamisasTab() {
             </div>
             <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Valor Unitário (R$)</Label>
+                <Label htmlFor={`${formId}-sale-unit-price`}>Valor Unitário (R$)</Label>
                 <Input
+                  id={`${formId}-sale-unit-price`}
                   type="number"
                   step="0.01"
                   placeholder="0,00"
@@ -908,9 +927,9 @@ export function CamisasTab() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Método</Label>
+                <Label htmlFor={`${formId}-sale-method`}>Método</Label>
                 <Select value={saleForm.payment_method} onValueChange={(v) => setSaleForm({ ...saleForm, payment_method: v })}>
-                  <SelectTrigger>
+                  <SelectTrigger id={`${formId}-sale-method`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

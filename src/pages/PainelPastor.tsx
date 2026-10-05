@@ -126,6 +126,8 @@ export default function PainelPastor() {
         supabase.from('meetings').select('id, date, society_id').order('date', { ascending: false }),
       ]);
 
+      const failed = [societiesRes, membersRes, tasksRes, transRes, paymentsRes, meetingsRes].find(result => result.error);
+      if (failed?.error) throw failed.error;
       const socs = societiesRes.data || [];
       setSocieties(socs);
 

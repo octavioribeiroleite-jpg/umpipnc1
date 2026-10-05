@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useId, useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -120,11 +122,13 @@ function PaymentBadge({ order }: { order: ShirtOrder }) {
 }
 
 export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
+  const formId = useId();
   const { user, effectiveSocietyId: societyId } = useAuth();
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(societyId || 'all');
+  const loading = readLoading && !hasSnapshot;
   const [orders, setOrders] = useState<ShirtOrder[]>([]);
   const [campaigns, setCampaigns] = useState<ShirtCampaign[]>([]);
   const [lots, setLots] = useState<ShirtCampaignLot[]>([]);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [view, setView] = useState<OrderView>('open');
 
@@ -177,8 +181,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
   const campaignLots = (campaignId: string) => orderedLots.filter((lot) => lot.campaign_id === campaignId);
   const latestLotId = (campaignId: string) => campaignLots(campaignId).at(-1)?.id || '';
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(() => runRead(async () => {
     let ordersQuery = (supabase as any).from('shirt_orders').select('*').order('buyer_name');
     let campaignsQuery = supabase.from('shirt_campaigns').select('*').order('purchase_date', { ascending: false });
     let lotsQuery = (supabase as any).from('shirt_campaign_lots').select('*').order('purchase_date', { ascending: true });
@@ -189,18 +192,23 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       lotsQuery = lotsQuery.eq('society_id', societyId);
     }
 
-    const [{ data: orderData, error }, { data: campaignData }, { data: lotData }] = await Promise.all([
+    const [orderResult, campaignResult, lotResult] = await Promise.all([
       ordersQuery, campaignsQuery, lotsQuery,
     ]);
 
-    if (error) toast.error('Erro ao carregar encomendas');
-    setOrders(((orderData || []) as any[]).map((order) => ({
-      ...order, items: Array.isArray(order.items) ? order.items as OrderItem[] : [],
-    })) as ShirtOrder[]);
-    setCampaigns((campaignData || []) as ShirtCampaign[]);
-    setLots((lotData || []) as ShirtCampaignLot[]);
-    setLoading(false);
-  }, [societyId]);
+    const failure = [orderResult, campaignResult, lotResult].find(result => result.error);
+    if (failure) throw failure.error;
+    const { data: orderData } = orderResult;
+    const { data: campaignData } = campaignResult;
+    const { data: lotData } = lotResult;
+    return () => {
+      setOrders(((orderData || []) as any[]).map((order) => ({
+        ...order, items: Array.isArray(order.items) ? order.items as OrderItem[] : [],
+      })) as ShirtOrder[]);
+      setCampaigns((campaignData || []) as ShirtCampaign[]);
+      setLots((lotData || []) as ShirtCampaignLot[]);
+    };
+  }), [societyId, runRead]);
 
   useEffect(() => { void fetchData(); }, [fetchData]);
   useEffect(() => {
@@ -425,10 +433,14 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
   const openCount = orders.filter((order) => !isFinished(order)).length;
   const finishedCount = orders.filter(isFinished).length;
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível atualizar as encomendas." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-muted-foreground">Consultando dados financeiros…</div>;
+
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div className="space-y-4">
+      {readFailure}
       <div className="rounded-xl border bg-card p-1 shadow-sm">
         <div className="shirt-order-views">
           {([['open', `Em andamento ${openCount}`], ['finished', `Finalizados ${finishedCount}`], ['all', `Todos ${orders.length}`]] as Array<[OrderView, string]>).map(([value, label]) => (
@@ -438,14 +450,14 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
       </div>
 
       <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
-        <div className="relative flex-1"><Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar por nome..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
+        <div className="relative flex-1"><Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input aria-label="Buscar encomendas por nome" className="pl-8" placeholder="Buscar por nome..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
         <div className="shirt-order-filters">
-          <Select value={filterCampaign} onValueChange={(value) => { setFilterCampaign(value); setFilterLot('all'); }}><SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas as campanhas</SelectItem><SelectItem value="none">Sem campanha</SelectItem>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select>
-          {visibleLots.length > 0 && <Select value={filterLot} onValueChange={setFilterLot}><SelectTrigger className="w-[125px]"><SelectValue placeholder="Lote" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os lotes</SelectItem>{visibleLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lotLabel(lot.id)}</SelectItem>)}</SelectContent></Select>}
-          <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Pagamento</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="parcial">Parcial</SelectItem><SelectItem value="pago">Pago</SelectItem><SelectItem value="brinde">Brinde</SelectItem></SelectContent></Select>
-          <Select value={filterDelivery} onValueChange={setFilterDelivery}><SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Entrega</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="entregue">Entregue</SelectItem></SelectContent></Select>
-          <Select value={filterColor} onValueChange={setFilterColor}><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Cor</SelectItem>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select>
-          <Select value={filterSize} onValueChange={setFilterSize}><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Tamanho</SelectItem>{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select>
+          <Select value={filterCampaign} onValueChange={(value) => { setFilterCampaign(value); setFilterLot('all'); }}><SelectTrigger aria-label="Filtrar por campanha" className="w-[170px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas as campanhas</SelectItem><SelectItem value="none">Sem campanha</SelectItem>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select>
+          {visibleLots.length > 0 && <Select value={filterLot} onValueChange={setFilterLot}><SelectTrigger aria-label="Filtrar por lote" className="w-[125px]"><SelectValue placeholder="Lote" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os lotes</SelectItem>{visibleLots.map((lot) => <SelectItem key={lot.id} value={lot.id}>{lotLabel(lot.id)}</SelectItem>)}</SelectContent></Select>}
+          <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger aria-label="Filtrar por pagamento" className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Pagamento</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="parcial">Parcial</SelectItem><SelectItem value="pago">Pago</SelectItem><SelectItem value="brinde">Brinde</SelectItem></SelectContent></Select>
+          <Select value={filterDelivery} onValueChange={setFilterDelivery}><SelectTrigger aria-label="Filtrar por entrega" className="w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Entrega</SelectItem><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="entregue">Entregue</SelectItem></SelectContent></Select>
+          <Select value={filterColor} onValueChange={setFilterColor}><SelectTrigger aria-label="Filtrar por cor" className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Cor</SelectItem>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select>
+          <Select value={filterSize} onValueChange={setFilterSize}><SelectTrigger aria-label="Filtrar por tamanho" className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Tamanho</SelectItem>{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select>
           <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" />Nova Encomenda</Button>
         </div>
       </div>
@@ -505,31 +517,31 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
           <DialogHeader><DialogTitle>{editingId ? 'Editar Encomenda' : 'Nova Encomenda'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-2"><Label>Campanha</Label><Select value={orderForm.campaign_id} onValueChange={applyCampaignDefaults}><SelectTrigger><SelectValue placeholder="Selecione uma campanha" /></SelectTrigger><SelectContent>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-2"><Label>Lote</Label><Select value={orderForm.lot_id} onValueChange={(value) => setOrderForm({ ...orderForm, lot_id: value })} disabled={!orderForm.campaign_id || campaignLots(orderForm.campaign_id).length === 0}><SelectTrigger><SelectValue placeholder="Selecione o lote" /></SelectTrigger><SelectContent>{campaignLots(orderForm.campaign_id).map((lot) => <SelectItem key={lot.id} value={lot.id}>{lotLabel(lot.id)} · {lot.quantity} camisas</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-2"><Label htmlFor={`${formId}-order-campaign`}>Campanha</Label><Select value={orderForm.campaign_id} onValueChange={applyCampaignDefaults}><SelectTrigger id={`${formId}-order-campaign`}><SelectValue placeholder="Selecione uma campanha" /></SelectTrigger><SelectContent>{campaigns.map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-2"><Label htmlFor={`${formId}-order-lot`}>Lote</Label><Select value={orderForm.lot_id} onValueChange={(value) => setOrderForm({ ...orderForm, lot_id: value })} disabled={!orderForm.campaign_id || campaignLots(orderForm.campaign_id).length === 0}><SelectTrigger id={`${formId}-order-lot`}><SelectValue placeholder="Selecione o lote" /></SelectTrigger><SelectContent>{campaignLots(orderForm.campaign_id).map((lot) => <SelectItem key={lot.id} value={lot.id}>{lotLabel(lot.id)} · {lot.quantity} camisas</SelectItem>)}</SelectContent></Select></div>
             </div>
-            <div className="space-y-2"><Label>Nome</Label><Input value={orderForm.buyer_name} onChange={(event) => setOrderForm({ ...orderForm, buyer_name: event.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor={`${formId}-order-buyer`}>Nome</Label><Input id={`${formId}-order-buyer`} value={orderForm.buyer_name} onChange={(event) => setOrderForm({ ...orderForm, buyer_name: event.target.value })} /></div>
             <div className="space-y-2">
               <div className="flex items-center justify-between"><Label>Camisas</Label><Button type="button" variant="outline" size="sm" onClick={() => setItems([...items, emptyItem()])}><Plus className="mr-1 h-3 w-3" />Item</Button></div>
               {items.map((item, index) => (
                 <div key={index} className="flex flex-wrap items-end gap-2 rounded-lg border p-3">
-                  <div className="min-w-0 basis-[8rem] flex-1 space-y-1"><Label className="text-xs">Cor</Label><Select value={item.color} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, color: value } : current))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="w-32 space-y-1"><Label className="text-xs">Tamanho</Label><Select value={item.size} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, size: value } : current))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent className="max-h-72">{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="w-20 space-y-1"><Label className="text-xs">Qtd.</Label><Input type="number" min="1" value={item.qty} onChange={(event) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, qty: Number(event.target.value) || 0 } : current))} /></div>
+                  <div className="min-w-0 basis-[8rem] flex-1 space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-color-${index}`}>Cor</Label><Select value={item.color} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, color: value } : current))}><SelectTrigger id={`${formId}-order-color-${index}`} aria-label={`Cor do item ${index + 1}`}><SelectValue /></SelectTrigger><SelectContent>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="w-32 space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-size-${index}`}>Tamanho</Label><Select value={item.size} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, size: value } : current))}><SelectTrigger id={`${formId}-order-size-${index}`} aria-label={`Tamanho do item ${index + 1}`}><SelectValue /></SelectTrigger><SelectContent className="max-h-72">{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="w-20 space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-quantity-${index}`}>Qtd.</Label><Input id={`${formId}-order-quantity-${index}`} aria-label={`Quantidade do item ${index + 1}`} type="number" min="1" value={item.qty} onChange={(event) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, qty: Number(event.target.value) || 0 } : current))} /></div>
                   <Button type="button" variant="ghost" size="icon" className="ml-auto shrink-0 text-destructive" aria-label={`Remover item ${index + 1}`} disabled={items.length === 1} onClick={() => setItems(items.filter((_, itemIndex) => itemIndex !== index))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               ))}
             </div>
             <label className="flex cursor-pointer items-center gap-2 text-sm"><input type="checkbox" checked={orderForm.is_gift} onChange={(event) => setOrderForm({ ...orderForm, is_gift: event.target.checked })} /><Gift className="h-4 w-4" />Brinde</label>
-            {!orderForm.is_gift && <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Valor unitário</Label><Input type="number" step="0.01" value={orderForm.unit_price} onChange={(event) => setOrderForm({ ...orderForm, unit_price: event.target.value })} /></div><div className="space-y-2"><Label>Pagamento</Label><Select value={orderForm.payment_type} onValueChange={(value) => setOrderForm({ ...orderForm, payment_type: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="a_vista">À vista</SelectItem><SelectItem value="parcelado">Parcelado</SelectItem></SelectContent></Select></div></div>}
-            <div className="space-y-2"><Label>Observações</Label><Textarea value={orderForm.notes} onChange={(event) => setOrderForm({ ...orderForm, notes: event.target.value })} /></div>
+            {!orderForm.is_gift && <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label htmlFor={`${formId}-order-unit-price`}>Valor unitário</Label><Input id={`${formId}-order-unit-price`} type="number" step="0.01" value={orderForm.unit_price} onChange={(event) => setOrderForm({ ...orderForm, unit_price: event.target.value })} /></div><div className="space-y-2"><Label htmlFor={`${formId}-order-payment`}>Pagamento</Label><Select value={orderForm.payment_type} onValueChange={(value) => setOrderForm({ ...orderForm, payment_type: value })}><SelectTrigger id={`${formId}-order-payment`}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="a_vista">À vista</SelectItem><SelectItem value="parcelado">Parcelado</SelectItem></SelectContent></Select></div></div>}
+            <div className="space-y-2"><Label htmlFor={`${formId}-order-notes`}>Observações</Label><Textarea id={`${formId}-order-notes`} value={orderForm.notes} onChange={(event) => setOrderForm({ ...orderForm, notes: event.target.value })} /></div>
             <Button className="w-full" onClick={handleSaveOrder} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editingId ? 'Salvar alterações' : 'Registrar encomenda'}</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={payDialogOpen} onOpenChange={(open) => { setPayDialogOpen(open); if (!open) setPayOrder(null); }}>
-        <DialogContent className="finance-dialog max-w-sm"><DialogHeader><DialogTitle>Registrar pagamento</DialogTitle></DialogHeader>{payOrder && <div className="space-y-4"><div className="rounded-xl bg-muted/40 p-3 text-sm"><p className="font-bold">{payOrder.buyer_name}</p><p>Restante: <strong className="text-destructive">{brl(Math.max(0, payOrder.total_price - payOrder.amount_paid))}</strong></p></div><div className="grid grid-cols-2 gap-2"><Button variant={payMode === 'total' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('total')}><CheckCircle2 className="mb-1 h-5 w-5" /><span>Total</span><span className="text-xs font-normal opacity-80">Quitar tudo</span></Button><Button variant={payMode === 'partial' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('partial')}><CircleDollarSign className="mb-1 h-5 w-5" /><span>Parcial</span><span className="text-xs font-normal opacity-80">Informar valor</span></Button></div>{payMode === 'partial' && <div className="space-y-2"><Label>Valor parcial</Label><Input autoFocus type="number" step="0.01" value={payAmount} onChange={(event) => setPayAmount(event.target.value)} /></div>}<div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Data</Label><Input type="date" value={payDate} onChange={(event) => setPayDate(event.target.value)} /></div><div className="space-y-2"><Label>Forma</Label><Select value={payMethod} onValueChange={setPayMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pix">PIX</SelectItem><SelectItem value="dinheiro">Dinheiro</SelectItem><SelectItem value="transferencia">Transferência</SelectItem><SelectItem value="cartao">Cartão</SelectItem></SelectContent></Select></div></div><div className="space-y-2"><Label>Observação</Label><Textarea value={payNotes} onChange={(event) => setPayNotes(event.target.value)} /></div><Button className="w-full" onClick={handleRegisterPayment} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Confirmar {payMode === 'total' ? 'pagamento total' : 'pagamento parcial'}</Button></div>}</DialogContent>
+        <DialogContent className="finance-dialog max-w-sm"><DialogHeader><DialogTitle>Registrar pagamento</DialogTitle></DialogHeader>{payOrder && <div className="space-y-4"><div className="rounded-xl bg-muted/40 p-3 text-sm"><p className="font-bold">{payOrder.buyer_name}</p><p>Restante: <strong className="text-destructive">{brl(Math.max(0, payOrder.total_price - payOrder.amount_paid))}</strong></p></div><div className="grid grid-cols-2 gap-2"><Button variant={payMode === 'total' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('total')}><CheckCircle2 className="mb-1 h-5 w-5" /><span>Total</span><span className="text-xs font-normal opacity-80">Quitar tudo</span></Button><Button variant={payMode === 'partial' ? 'default' : 'outline'} className="h-auto flex-col py-3" onClick={() => changePayMode('partial')}><CircleDollarSign className="mb-1 h-5 w-5" /><span>Parcial</span><span className="text-xs font-normal opacity-80">Informar valor</span></Button></div>{payMode === 'partial' && <div className="space-y-2"><Label htmlFor={`${formId}-payment-amount`}>Valor parcial</Label><Input id={`${formId}-payment-amount`} autoFocus type="number" step="0.01" value={payAmount} onChange={(event) => setPayAmount(event.target.value)} /></div>}<div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label htmlFor={`${formId}-payment-date`}>Data</Label><Input id={`${formId}-payment-date`} type="date" value={payDate} onChange={(event) => setPayDate(event.target.value)} /></div><div className="space-y-2"><Label htmlFor={`${formId}-payment-method`}>Forma</Label><Select value={payMethod} onValueChange={setPayMethod}><SelectTrigger id={`${formId}-payment-method`}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pix">PIX</SelectItem><SelectItem value="dinheiro">Dinheiro</SelectItem><SelectItem value="transferencia">Transferência</SelectItem><SelectItem value="cartao">Cartão</SelectItem></SelectContent></Select></div></div><div className="space-y-2"><Label htmlFor={`${formId}-payment-notes`}>Observação</Label><Textarea id={`${formId}-payment-notes`} value={payNotes} onChange={(event) => setPayNotes(event.target.value)} /></div><Button className="w-full" onClick={handleRegisterPayment} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Confirmar {payMode === 'total' ? 'pagamento total' : 'pagamento parcial'}</Button></div>}</DialogContent>
       </Dialog>
 
       <AlertDialog open={Boolean(deleteId)} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>

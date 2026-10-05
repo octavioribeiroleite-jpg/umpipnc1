@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -84,7 +85,7 @@ export default function Calendario() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const { events, upcomingEvents, isLoading, createEvent, updateEvent, deleteEvent } = useEvents(month, year);
+  const { events, upcomingEvents, isLoading, isError, isFetching, refetch, isUpcomingLoading, isUpcomingError, isUpcomingFetching, refetchUpcoming, createEvent, updateEvent, deleteEvent } = useEvents(month, year);
   const { isManagement, isAdmin, profile, society } = useAuth();
 
   // Check if the current user can edit a specific event
@@ -308,6 +309,7 @@ export default function Calendario() {
             </div>
           </CardHeader>
           <CardContent className="px-2 md:px-6">
+            {isError && <QueryErrorState message="Não foi possível carregar os eventos do mês." onRetry={() => void refetch()} retrying={isFetching} hasPreviousData={events.length > 0} />}
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -334,13 +336,14 @@ export default function Calendario() {
             <CardTitle className="text-lg">Próximos Eventos</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {isUpcomingError && <QueryErrorState message="Não foi possível carregar os próximos eventos." onRetry={() => void refetchUpcoming()} retrying={isUpcomingFetching} hasPreviousData={upcomingEvents.length > 0} />}
+            {isUpcomingLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : upcomingEvents.length === 0 ? (
+            ) : upcomingEvents.length === 0 ? (isUpcomingError ? null : (
               <p className="text-sm text-muted-foreground text-center py-8">Nenhum evento próximo</p>
-            ) : (
+            )) : (
               <div className="space-y-3">
                 {upcomingEvents.map((event) => (
                   <EventCard key={event.id} event={event} onClick={() => handleEventClick(event)} />

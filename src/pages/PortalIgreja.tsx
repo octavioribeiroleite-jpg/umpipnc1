@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -271,20 +273,18 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
   const [fullName, setFullName] = useState('');
   const [societyChoice, setSocietyChoice] = useState('');
   const [societies, setSocieties] = useState<Society[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead('portal-IdentificationForm');
+  const loading = readLoading && !hasSnapshot;
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    supabase
-      .from('societies')
-      .select('id, name, slug, color')
-      .eq('active', true)
-      .order('name')
-      .then(({ data }) => {
-        if (data) setSocieties(data as Society[]);
-        setLoading(false);
-      });
-  }, []);
+  const fetchData = useCallback(() => runRead(async () => {
+    const { data, error } = await supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name');
+    if (error) throw error;
+    return () => setSocieties(data || []);
+  }), [runRead]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar sociedades de identificação." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -357,12 +357,13 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
 
               <div className="space-y-3">
                 <Label>Você é integrante de qual sociedade?</Label>
-                {loading ? (
+                {readFailure}
+                {!hasSnapshot ? (loading ? (
                   <div className="space-y-2">
                     {[1, 2, 3].map((i) => <Skeleton key={i} className="h-6 w-32" />)}
                   </div>
-                ) : (
-                  <RadioGroup value={societyChoice} onValueChange={setSocietyChoice} className="space-y-2">
+                ) : null) : (
+                  <RadioGroup aria-label="Sociedade ou visitante" value={societyChoice} onValueChange={setSocietyChoice} className="space-y-2">
                     {societies.map((s) => (
                       <div key={s.id} className="flex min-h-11 items-center space-x-3 rounded-lg border border-border p-3">
                         <RadioGroupItem value={s.id} id={`soc-${s.id}`} />
@@ -382,7 +383,7 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
                 )}
               </div>
 
-              <Button type="submit" className="w-full" disabled={submitting}>
+              <Button type="submit" className="w-full" disabled={submitting || !hasSnapshot}>
                 {submitting ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Entrando...</>
                 ) : (
@@ -545,36 +546,32 @@ function Portal({ visitor }: { visitor: VisitorData }) {
 function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange: (tab: PortalTab) => void }) {
   const [nextEvent, setNextEvent] = useState<any>(null);
   const [lastAnnouncement, setLastAnnouncement] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead('portal-InicioTab');
+  const loading = readLoading && !hasSnapshot;
 
   const firstName = visitor.fullName.split(' ')[0];
 
-  useEffect(() => {
-    Promise.all([
-      supabase
-        .from('events')
-        .select('*')
-        .gte('start_date', new Date().toISOString())
-        .neq('status', 'cancelado')
-        .order('start_date', { ascending: true })
-        .limit(1),
-      supabase
-        .from('pastor_announcements')
-        .select('*')
-        .eq('scope', 'church')
-        .order('created_at', { ascending: false })
-        .limit(1),
-    ]).then(([eventRes, announcementRes]) => {
-      if (eventRes.data && eventRes.data.length > 0) setNextEvent(eventRes.data[0]);
-      if (announcementRes.data && announcementRes.data.length > 0) setLastAnnouncement(announcementRes.data[0]);
-      setLoading(false);
-    });
-  }, []);
+  const fetchData = useCallback(() => runRead(async () => {
+    const [eventsResult, announcementsResult] = await Promise.all([
+      supabase.from('events').select('*').gte('start_date', new Date().toISOString()).neq('status', 'cancelado').order('start_date', { ascending: true }).limit(1),
+      supabase.from('pastor_announcements').select('*').eq('scope', 'church').order('created_at', { ascending: false }).limit(1),
+    ]);
+    if (eventsResult.error) throw eventsResult.error;
+    if (announcementsResult.error) throw announcementsResult.error;
+    return () => {
+      setNextEvent(eventsResult.data?.[0] || null);
+      setLastAnnouncement(announcementsResult.data?.[0] || null);
+    };
+  }), [runRead]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar programações e avisos do início." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+
 
   return (
     <div className="space-y-4">
       {/* Saudação bonita */}
       <PageHeader title={`Olá, ${firstName}!`} description="Bem-vindo à Igreja Presbiteriana de Nova Carapina" />
+      {readFailure}
 
       {/* Próximo Evento */}
       {loading ? (
@@ -669,26 +666,24 @@ function DizimosPortalTab() {
   const [pixKeyType, setPixKeyType] = useState('');
   const [pixBeneficiary, setPixBeneficiary] = useState('');
   const [pixInstructions, setPixInstructions] = useState('');
-  const [loading, setLoading] = useState(true);
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead('portal-DizimosPortalTab');
+  const loading = readLoading && !hasSnapshot;
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    supabase
-      .from('settings')
-      .select('key, value')
-      .in('key', ['pix_key', 'pix_key_type', 'pix_beneficiary', 'pix_instructions'])
-      .then(({ data }) => {
-        if (data) {
-          data.forEach((s: any) => {
-            if (s.key === 'pix_key') setPixKey(s.value);
-            if (s.key === 'pix_key_type') setPixKeyType(s.value);
-            if (s.key === 'pix_beneficiary') setPixBeneficiary(s.value);
-            if (s.key === 'pix_instructions') setPixInstructions(s.value);
-          });
-        }
-        setLoading(false);
-      });
-  }, []);
+  const fetchData = useCallback(() => runRead(async () => {
+    const { data, error } = await supabase.from('settings').select('key, value').in('key', ['pix_key', 'pix_key_type', 'pix_beneficiary', 'pix_instructions']);
+    if (error) throw error;
+    const values = new Map((data || []).map(setting => [setting.key, setting.value]));
+    return () => {
+      setPixKey(values.get('pix_key') || '');
+      setPixKeyType(values.get('pix_key_type') || '');
+      setPixBeneficiary(values.get('pix_beneficiary') || '');
+      setPixInstructions(values.get('pix_instructions') || '');
+    };
+  }), [runRead]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar informações de dízimos e ofertas." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+
 
   const handleCopy = async () => {
     try {
@@ -700,6 +695,8 @@ function DizimosPortalTab() {
       toast.error('Não foi possível copiar');
     }
   };
+
+  if (!hasSnapshot && readError) return readFailure;
 
   if (loading) {
     return (
@@ -713,6 +710,7 @@ function DizimosPortalTab() {
   if (!pixKey) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        {readFailure}
         <Heart className="h-12 w-12 mb-3 opacity-40" />
         <p className="text-sm font-medium">Chave PIX não configurada</p>
         <p className="text-xs mt-1">Em breve as informações estarão disponíveis.</p>
@@ -722,6 +720,7 @@ function DizimosPortalTab() {
 
   return (
     <div className="space-y-5">
+      {readFailure}
       {/* Bloco motivacional */}
       <div className="relative rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 overflow-hidden">
         <Heart className="absolute top-4 right-4 h-16 w-16 text-primary opacity-[0.08]" />
@@ -792,28 +791,23 @@ const statusLabels: Record<string, string> = {
 function ProgramacoesTab() {
   const [events, setEvents] = useState<any[]>([]);
   const [societies, setSocieties] = useState<Record<string, Society>>({});
-  const [loading, setLoading] = useState(true);
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead('portal-ProgramacoesTab');
+  const loading = readLoading && !hasSnapshot;
 
-  useEffect(() => {
-    Promise.all([
-      supabase
-        .from('events')
-        .select('*')
-        .gte('start_date', new Date().toISOString())
-        .neq('status', 'cancelado')
-        .order('start_date', { ascending: true })
-        .limit(30),
+  const fetchData = useCallback(() => runRead(async () => {
+    const [eventsResult, societiesResult] = await Promise.all([
+      supabase.from('events').select('*').gte('start_date', new Date().toISOString()).neq('status', 'cancelado').order('start_date', { ascending: true }).limit(30),
       supabase.from('societies').select('id, name, slug, color').eq('active', true),
-    ]).then(([eventsRes, socRes]) => {
-      if (eventsRes.data) setEvents(eventsRes.data);
-      if (socRes.data) {
-        const map: Record<string, Society> = {};
-        (socRes.data as Society[]).forEach((s) => (map[s.id] = s));
-        setSocieties(map);
-      }
-      setLoading(false);
-    });
-  }, []);
+    ]);
+    if (eventsResult.error) throw eventsResult.error;
+    if (societiesResult.error) throw societiesResult.error;
+    const societyMap: Record<string, Society> = {};
+    (societiesResult.data || []).forEach(society => { societyMap[society.id] = society; });
+    return () => { setEvents(eventsResult.data || []); setSocieties(societyMap); };
+  }), [runRead]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar programações." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+
 
   const groupedByMonth: Record<string, any[]> = {};
   events.forEach((event) => {
@@ -821,6 +815,8 @@ function ProgramacoesTab() {
     if (!groupedByMonth[key]) groupedByMonth[key] = [];
     groupedByMonth[key].push(event);
   });
+
+  if (!hasSnapshot && readError) return readFailure;
 
   if (loading) {
     return (
@@ -833,6 +829,7 @@ function ProgramacoesTab() {
 
   return (
     <div className="space-y-4">
+      {readFailure}
       <h2 className="font-semibold text-lg">Próximas Programações</h2>
       {events.length === 0 ? (
         <Card>
@@ -905,20 +902,19 @@ function ProgramacoesTab() {
 
 function AvisosTab() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead('portal-AvisosTab');
+  const loading = readLoading && !hasSnapshot;
 
-  useEffect(() => {
-    supabase
-      .from('pastor_announcements')
-      .select('*')
-      .eq('scope', 'church')
-      .order('created_at', { ascending: false })
-      .limit(30)
-      .then(({ data }) => {
-        setAnnouncements(data || []);
-        setLoading(false);
-      });
-  }, []);
+  const fetchData = useCallback(() => runRead(async () => {
+    const { data, error } = await supabase.from('pastor_announcements').select('*').eq('scope', 'church').order('created_at', { ascending: false }).limit(30);
+    if (error) throw error;
+    return () => setAnnouncements(data || []);
+  }), [runRead]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar avisos." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+
+
+  if (!hasSnapshot && readError) return readFailure;
 
   if (loading) {
     return (
@@ -932,6 +928,7 @@ function AvisosTab() {
   if (announcements.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        {readFailure}
         <Bell className="h-12 w-12 mb-3 opacity-40" />
         <p className="text-sm font-medium">Nenhum aviso</p>
         <p className="text-xs mt-1">Quando houver novidades, elas aparecerão aqui.</p>
@@ -941,6 +938,7 @@ function AvisosTab() {
 
   return (
     <div className="space-y-3">
+      {readFailure}
       <h2 className="text-lg font-semibold">Avisos</h2>
       {announcements.map((a: any) => (
         <Card key={a.id} className={a.priority === 'urgente' ? 'border-destructive/50' : ''}>

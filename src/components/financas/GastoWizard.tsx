@@ -163,7 +163,7 @@ export function GastoWizard({
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
-        type="file"
+        aria-label="Comprovante do gasto" type="file"
         accept="image/*,.pdf"
         onChange={handleFileSelect}
         className="hidden"
@@ -179,6 +179,7 @@ export function GastoWizard({
             </div>
             <p className="text-sm text-muted-foreground">Descreva brevemente o que foi gasto.</p>
             <Textarea
+              aria-label="Descrição do gasto"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Ex: Material de limpeza, aluguel do salão..."
@@ -200,7 +201,7 @@ export function GastoWizard({
                 R$
               </span>
               <Input
-                type="number"
+                aria-label="Valor do gasto em reais" type="number"
                 step="0.01"
                 min="0"
                 value={formData.amount}
@@ -221,7 +222,7 @@ export function GastoWizard({
             </div>
             <p className="text-sm text-muted-foreground">Quando esse gasto ocorreu?</p>
             <Input
-              type="date"
+              aria-label="Data do gasto" type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               className="text-lg h-14"
@@ -259,7 +260,7 @@ export function GastoWizard({
                 <Button
                   type="button"
                   variant="destructive"
-                  size="icon"
+                  aria-label="Remover comprovante" size="icon"
                   className="absolute -top-2 -right-2 h-7 w-7 rounded-full"
                   onClick={removeReceipt}
                 >

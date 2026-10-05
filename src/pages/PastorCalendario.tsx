@@ -442,7 +442,7 @@ export default function PastorCalendario() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Select value={societyFilter} onValueChange={setSocietyFilter}>
-                    <SelectTrigger className="w-full sm:w-[180px] h-11 text-sm">
+                    <SelectTrigger aria-label="Filtrar por sociedade" className="w-full sm:w-[180px] h-11 text-sm">
                       <SelectValue placeholder="Todas as Sociedades" />
                     </SelectTrigger>
                     <SelectContent>

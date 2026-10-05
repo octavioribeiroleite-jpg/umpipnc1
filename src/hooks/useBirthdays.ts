@@ -111,7 +111,7 @@ export function useBirthdays(supabase = mainSupabase, scope = 'main') {
   const queryClient = useQueryClient();
   const requiresEbdAdmin = scope.startsWith('ebd-admin');
 
-  const { data: birthdays = [], isLoading } = useQuery({
+  const { data: birthdays = [], isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['aniversariantes', scope],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('list_birthdays');
@@ -195,6 +195,9 @@ export function useBirthdays(supabase = mainSupabase, scope = 'main') {
     nextBirthday,
     departments,
     isLoading,
+    isError,
+    isFetching,
+    refetch,
     createBirthday,
     updateBirthday,
     deleteBirthday,

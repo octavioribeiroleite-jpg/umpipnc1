@@ -1,3 +1,5 @@
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -149,6 +151,7 @@ export default function Financas() {
     profile,
     society,
   } = useAuth();
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(societyId || 'all');
   const [searchParams, setSearchParams] = useSearchParams();
   const initialRawTab = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState<MainFinanceTab>(normalizeMainTab(initialRawTab));
@@ -178,20 +181,6 @@ export default function Financas() {
   const roleLabel = isCentralScope ? 'Tesouraria central das sociedades' : `Tesouraria ${selectedScopeLabel}`;
 
   useEffect(() => {
-    if (!isAdmin && !isPastor) return;
-
-    void supabase
-      .from('societies')
-      .select('id, name')
-      .eq('active', true)
-      .order('name')
-      .then(({ data }) => {
-        if (!data) return;
-        setSocieties(data);
-      });
-  }, [isAdmin, isPastor]);
-
-  useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     setActiveTab(normalizeMainTab(tabFromUrl));
     if (tabFromUrl === 'receitas' || tabFromUrl === 'gastos') {
@@ -216,70 +205,74 @@ export default function Financas() {
     setSearchParams({ tab: view });
   };
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      const { startOfMonth, endOfMonth, competence } = getMonthWindow();
+  const fetchStats = () => runRead(async () => {
+    const { startOfMonth, endOfMonth, competence } = getMonthWindow();
 
-      let chargesQuery = supabase
-        .from('charges')
-        .select('id, status, society_id')
-        .eq('competence', competence);
+    let chargesQuery = supabase
+      .from('charges')
+      .select('id, status, society_id')
+      .eq('competence', competence);
 
-      let transactionsQuery = supabase
-        .from('transactions')
-        .select('id, amount, type, date, description, society_id, receipt_url, created_at, societies(name)');
+    let transactionsQuery = supabase
+      .from('transactions')
+      .select('id, amount, type, date, description, society_id, receipt_url, created_at, societies(name)');
 
-      if (societyId) {
-        chargesQuery = chargesQuery.eq('society_id', societyId);
-        transactionsQuery = transactionsQuery.eq('society_id', societyId);
-      }
+    if (societyId) {
+      chargesQuery = chargesQuery.eq('society_id', societyId);
+      transactionsQuery = transactionsQuery.eq('society_id', societyId);
+    }
 
-      let submissionsQuery = supabase
-        .from('member_payment_submissions')
-        .select('id, status, society_id')
-        .eq('status', 'pendente');
+    let submissionsQuery = supabase
+      .from('member_payment_submissions')
+      .select('id, status, society_id')
+      .eq('status', 'pendente');
 
-      if (societyId) {
-        submissionsQuery = submissionsQuery.eq('society_id', societyId);
-      }
+    if (societyId) {
+      submissionsQuery = submissionsQuery.eq('society_id', societyId);
+    }
 
-      const [chargesResult, transactionsResult] = await Promise.all([
-        chargesQuery,
-        transactionsQuery,
-      ]);
+    const [chargesResult, transactionsResult, submissionsResult, societiesResult] = await Promise.all([
+      chargesQuery, transactionsQuery, submissionsQuery,
+      isAdmin || isPastor
+        ? supabase.from('societies').select('id, name').eq('active', true).order('name')
+        : Promise.resolve({ data: societies, error: null }),
+    ]);
+    const failure = [chargesResult, transactionsResult, submissionsResult, societiesResult].find(result => result.error);
+    if (failure) throw failure.error;
+    const loadedSocieties = societiesResult.data || [];
+    const transactions = (transactionsResult.data || []) as any[];
+    const totalEntradas = transactions
+      .filter((transaction) => transaction.type === 'entrada')
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+    const totalSaidas = transactions
+      .filter((transaction) => transaction.type === 'saida')
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+    const monthTransactions = transactions.filter((transaction) => transaction.date >= startOfMonth && transaction.date <= endOfMonth);
+    const entradasMes = monthTransactions
+      .filter((transaction) => transaction.type === 'entrada')
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+    const saidasMes = monthTransactions
+      .filter((transaction) => transaction.type === 'saida')
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 
-      const submissionsResult = await submissionsQuery;
-      const transactions = (transactionsResult.data || []) as any[];
-      const totalEntradas = transactions
-        .filter((transaction) => transaction.type === 'entrada')
-        .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
-      const totalSaidas = transactions
-        .filter((transaction) => transaction.type === 'saida')
-        .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
-      const monthTransactions = transactions.filter((transaction) => transaction.date >= startOfMonth && transaction.date <= endOfMonth);
-      const entradasMes = monthTransactions
-        .filter((transaction) => transaction.type === 'entrada')
-        .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
-      const saidasMes = monthTransactions
-        .filter((transaction) => transaction.type === 'saida')
-        .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+    const charges = chargesResult.data || [];
+    const cobrancasPendentes = charges.filter((charge) => charge.status === 'pendente').length;
+    const comprovantesPendentes = submissionsResult.data?.length || 0;
+    const recent = [...transactions]
+      .sort((a, b) => `${b.date}${b.created_at || ''}`.localeCompare(`${a.date}${a.created_at || ''}`))
+      .slice(0, 5)
+      .map((transaction) => ({
+        id: transaction.id,
+        date: transaction.date,
+        society: transaction.societies?.name || loadedSocieties.find((item) => item.id === transaction.society_id)?.name || selectedScopeLabel,
+        type: movementTypeLabel(transaction.type),
+        description: transaction.description,
+        amount: Number(transaction.amount),
+        status: transaction.receipt_url ? 'Conferido' : transaction.type === 'saida' ? 'Pago' : 'Em análise',
+      }));
 
-      const charges = chargesResult.data || [];
-      const cobrancasPendentes = charges.filter((charge) => charge.status === 'pendente').length;
-      const comprovantesPendentes = submissionsResult.data?.length || 0;
-      const recent = [...transactions]
-        .sort((a, b) => `${b.date}${b.created_at || ''}`.localeCompare(`${a.date}${a.created_at || ''}`))
-        .slice(0, 5)
-        .map((transaction) => ({
-          id: transaction.id,
-          date: transaction.date,
-          society: transaction.societies?.name || societies.find((item) => item.id === transaction.society_id)?.name || selectedScopeLabel,
-          type: movementTypeLabel(transaction.type),
-          description: transaction.description,
-          amount: Number(transaction.amount),
-          status: transaction.receipt_url ? 'Conferido' : transaction.type === 'saida' ? 'Pago' : 'Em análise',
-        }));
-
+    return () => {
+      setSocieties(loadedSocieties);
       setStats({
         saldo: totalEntradas - totalSaidas,
         receitasTotal: totalEntradas,
@@ -292,8 +285,8 @@ export default function Financas() {
       });
       setRecentMovements(recent);
 
-      if (!societyId && societies.length > 0) {
-        setSocietySummary(societies.map((item) => {
+      if (!societyId && loadedSocieties.length > 0) {
+        setSocietySummary(loadedSocieties.map((item) => {
           const societyTransactions = transactions.filter((transaction) => transaction.society_id === item.id);
           const societyMonthTransactions = monthTransactions.filter((transaction) => transaction.society_id === item.id);
           const entradas = societyTransactions.filter((transaction) => transaction.type === 'entrada').reduce((sum, transaction) => sum + Number(transaction.amount), 0);
@@ -316,7 +309,9 @@ export default function Financas() {
         setSocietySummary([]);
       }
     };
+  });
 
+  useEffect(() => {
     void fetchStats();
 
     const channel = supabase
@@ -328,7 +323,7 @@ export default function Financas() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [societyId, societies.length]);
+  }, [societyId, isAdmin, isPastor, runRead]);
 
   const showSocietySelector = (isAdmin || isPastor) && societies.length > 0;
   const societySelector = (className?: string) => showSocietySelector ? (
@@ -368,9 +363,13 @@ export default function Financas() {
     handleTabChange(action.tab);
   };
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível atualizar os valores financeiros." onRetry={() => void fetchStats()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return <AppLayout><div className="finance-page min-w-0"><PageHeader title="Finanças" eyebrow="Gestão financeira" description={`Olá, ${firstName}. ${roleLabel}.`} icon={<Landmark />} />{societySelector()}{readFailure || <p role="status" className="py-8 text-muted-foreground">Consultando valores financeiros…</p>}</div></AppLayout>;
+
   return (
     <AppLayout>
       <div className="finance-page min-w-0">
+        {readFailure}
         <PageHeader
           title="Finanças"
           eyebrow="Gestão financeira"

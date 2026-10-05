@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +35,7 @@ export default function Estudos() {
   const { profile } = useAuth();
   const [studies, setStudies] = useState<StudyNote[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selectedStudy, setSelectedStudy] = useState<StudyNote | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDate, setNewDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -56,10 +58,12 @@ export default function Estudos() {
   const yearOptions = Array.from({ length: 5 }, (_, i) => String(currentYear - i));
 
   const fetchStudies = useCallback(async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from('study_notes')
       .select('*')
       .order('date', { ascending: false });
+    setLoadError(Boolean(error));
     if (error) {
       toast.error('Erro ao carregar estudos');
     } else {
@@ -367,12 +371,13 @@ export default function Estudos() {
           </Dialog>
         </div>
 
-        {loading ? (
+        {loadError && <QueryErrorState message="Não foi possível carregar os estudos." onRetry={fetchStudies} retrying={loading} hasPreviousData={studies.length > 0} />}
+        {loading && studies.length === 0 ? (
           <div className="space-y-3">
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
           </div>
-        ) : studies.length === 0 ? (
+        ) : loadError && studies.length === 0 ? null : studies.length === 0 ? (
           <EmptyState
             icon={<BookOpen className="h-12 w-12" />}
             title="Nenhum estudo registrado ainda"

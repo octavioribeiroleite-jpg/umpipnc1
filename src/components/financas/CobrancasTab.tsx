@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useId, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,13 +55,15 @@ const formatCurrency = (value: number) => `R$ ${Number(value || 0).toFixed(2).re
 const parseMoney = (value: string) => Number(String(value || '0').replace(',', '.')) || 0;
 
 export function CobrancasTab() {
+  const formId = useId();
   const { user, effectiveSocietyId: societyId } = useAuth();
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(JSON.stringify([societyId, selectedYear]));
+  const loading = readLoading && !hasSnapshot;
   const [members, setMembers] = useState<Member[]>([]);
   const [charges, setCharges] = useState<Charge[]>([]);
   const [settings, setSettings] = useState<FinancialSettings | null>(null);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<MemberStatus | null>(null);
 
@@ -99,10 +103,9 @@ export function CobrancasTab() {
       }, () => fetchData())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [societyId, selectedYear]);
+  }, [societyId, selectedYear, runRead]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = () => runRead(async () => {
 
     let membersQuery = supabase.from('members').select('id, name').eq('active', true).order('name');
     let chargesQuery = supabase
@@ -123,11 +126,14 @@ export function CobrancasTab() {
 
     const [membersRes, chargesRes, settingsRes] = await Promise.all([membersQuery, chargesQuery, settingsQuery.maybeSingle()]);
 
-    setMembers(membersRes.data || []);
-    setCharges(chargesRes.data || []);
-    setSettings(settingsRes.data || null);
-    setLoading(false);
-  };
+    const failure = [membersRes, chargesRes, settingsRes].find(result => result.error);
+    if (failure) throw failure.error;
+    return () => {
+      setMembers(membersRes.data || []);
+      setCharges(chargesRes.data || []);
+      setSettings(settingsRes.data || null);
+    };
+  });
 
   const getAnnualCharge = (memberId: string) => charges.find(c => c.member_id === memberId);
   const getPaidAmount = (charge: Charge | null | undefined) => Number(charge?.paid_amount || 0);
@@ -348,6 +354,9 @@ export function CobrancasTab() {
     return matchesSearch && matchesFilter;
   });
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível atualizar as cobranças." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-muted-foreground">Consultando dados financeiros…</div>;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -358,6 +367,7 @@ export function CobrancasTab() {
 
   return (
     <div className="space-y-4">
+      {readFailure}
       <Card>
         <CardContent className="pt-6 pb-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -366,7 +376,7 @@ export function CobrancasTab() {
               <p className="text-xs text-muted-foreground">Uma cobrança por sócio, com contribuição e per capita juntas.</p>
             </div>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[120px]">
+              <SelectTrigger aria-label="Ano das cobranças" className="w-[120px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -470,7 +480,7 @@ export function CobrancasTab() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar membro..."
+          aria-label="Buscar membro nas cobranças" placeholder="Buscar membro..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-9"
@@ -643,10 +653,10 @@ export function CobrancasTab() {
               </div>
 
               <div className="space-y-2">
-                <Label>Valor recebido</Label>
+                <Label htmlFor={`${formId}-amount`}>Valor recebido</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
-                  <Input
+                  <Input id={`${formId}-amount`}
                     type="number"
                     step="0.01"
                     min="0.01"
@@ -660,14 +670,14 @@ export function CobrancasTab() {
               </div>
 
               <div className="space-y-2">
-                <Label>Data e Hora do Pagamento</Label>
-                <Input type="datetime-local" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
+                <Label htmlFor={`${formId}-paid-at`}>Data e Hora do Pagamento</Label>
+                <Input id={`${formId}-paid-at`} type="datetime-local" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
               </div>
 
               <div className="space-y-2">
-                <Label>Método de Pagamento</Label>
+                <Label htmlFor={`${formId}-payment-method`}>Método de Pagamento</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id={`${formId}-payment-method`}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pix">PIX</SelectItem>
                     <SelectItem value="dinheiro">Dinheiro</SelectItem>
@@ -678,13 +688,13 @@ export function CobrancasTab() {
               </div>
 
               <div className="space-y-2">
-                <Label>Observação (opcional)</Label>
-                <Textarea placeholder="Observações..." value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} />
+                <Label htmlFor={`${formId}-notes`}>Observação (opcional)</Label>
+                <Textarea id={`${formId}-notes`} placeholder="Observações..." value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} />
               </div>
 
               <div className="space-y-2">
-                <Label>Comprovante (opcional)</Label>
-                <Input type="file" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
+                <Label htmlFor={`${formId}-receipt`}>Comprovante (opcional)</Label>
+                <Input id={`${formId}-receipt`} type="file" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
               </div>
 
               <Button className="w-full" onClick={handlePayment} disabled={submitting}>

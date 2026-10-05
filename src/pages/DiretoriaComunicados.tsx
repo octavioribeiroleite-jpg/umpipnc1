@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +30,7 @@ export default function DiretoriaComunicados() {
   const { user, profile, society } = useAuth();
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [sending, setSending] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -43,12 +45,14 @@ export default function DiretoriaComunicados() {
 
   const fetchAnnouncements = async () => {
     if (!profile?.society_id) return;
-    const { data } = await supabase
+    setLoading(true);
+    const { data, error } = await supabase
       .from('pastor_announcements')
       .select('*')
       .contains('target_societies', [profile.society_id])
       .order('created_at', { ascending: false });
-    setAnnouncements(data || []);
+    setLoadError(Boolean(error));
+    if (!error) setAnnouncements(data || []);
     setLoading(false);
   };
 
@@ -127,12 +131,13 @@ export default function DiretoriaComunicados() {
           </DrawerContent>
         </Drawer>
 
-        {loading ? (
+        {loadError && <QueryErrorState message="Não foi possível carregar os comunicados." onRetry={fetchAnnouncements} retrying={loading} hasPreviousData={announcements.length > 0} />}
+        {loading && announcements.length === 0 ? (
           <div className="space-y-3">
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
           </div>
-        ) : announcements.length === 0 ? (
+        ) : loadError && announcements.length === 0 ? null : announcements.length === 0 ? (
           <EmptyState
             icon={<Megaphone className="h-12 w-12" />}
             title="Nenhum comunicado"

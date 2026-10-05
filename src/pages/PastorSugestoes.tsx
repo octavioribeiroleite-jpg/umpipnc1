@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,7 @@ export default function PastorSugestoes() {
   const { isManagement, isPastor, isAdmin, user, loading: authLoading } = useAuth();
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
   const [saving, setSaving] = useState(false);
@@ -78,6 +80,7 @@ export default function PastorSugestoes() {
   };
 
   const fetchFeedbacks = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('pastor_feedback')
@@ -85,8 +88,10 @@ export default function PastorSugestoes() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       setFeedbacks((data as Feedback[]) || []);
+      setLoadError(false);
     } catch (err) {
       console.error(err);
+      setLoadError(true);
       toast.error('Erro ao carregar sugestões');
     } finally {
       setLoading(false);
@@ -237,13 +242,14 @@ export default function PastorSugestoes() {
 
   const content = (
     <div className="space-y-4">
-      <PageHeader title="Sugestões" description={unread.length === 0 ? 'Tudo em dia' : `${unread.length} ${unread.length === 1 ? 'sugestão não lida' : 'sugestões não lidas'}`} />
+      <PageHeader title="Sugestões" description={loadError ? 'Consulta indisponível' : unread.length === 0 ? 'Tudo em dia' : `${unread.length} ${unread.length === 1 ? 'sugestão não lida' : 'sugestões não lidas'}`} />
 
-      {loading ? (
+      {loadError && <QueryErrorState message="Não foi possível carregar as sugestões." onRetry={fetchFeedbacks} retrying={loading} hasPreviousData={feedbacks.length > 0} />}
+      {loading && feedbacks.length === 0 ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
         </div>
-      ) : feedbacks.length === 0 ? (
+      ) : loadError && feedbacks.length === 0 ? null : feedbacks.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />

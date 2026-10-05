@@ -50,29 +50,32 @@ export function useMeetings() {
       if (meetingsError) throw meetingsError;
 
       // Fetch profiles for moderator names
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name');
 
       // Fetch participants count for each meeting
-      const { data: participants } = await supabase
+      const { data: participants, error: participantsError } = await supabase
         .from('meeting_participants')
         .select('meeting_id');
 
       // Fetch agenda items count
-      const { data: agendaItems } = await supabase
+      const { data: agendaItems, error: agendaError } = await supabase
         .from('agenda_items')
         .select('meeting_id');
 
       // Fetch contributions
-      const { data: contributions } = await supabase
+      const { data: contributions, error: contributionsError } = await supabase
         .from('contributions')
         .select('meeting_id, status');
 
       // Fetch AI suggestions
-      const { data: aiSuggestions } = await supabase
+      const { data: aiSuggestions, error: suggestionsError } = await supabase
         .from('ai_suggestions')
         .select('meeting_id, status');
+
+      const detailsError = [profilesError, participantsError, agendaError, contributionsError, suggestionsError].find(Boolean);
+      if (detailsError) throw detailsError;
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
 
@@ -99,6 +102,7 @@ export function useMeetings() {
       });
 
       setMeetings(meetingsWithDetails);
+      setError(null);
     } catch (err) {
       console.error('Error fetching meetings:', err);
       setError('Erro ao carregar reuniões');

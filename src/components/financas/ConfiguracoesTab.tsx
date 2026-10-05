@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useId, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +31,10 @@ interface LaunchGroup {
 const formatCurrency = (value: number) => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
 
 export function ConfiguracoesTab() {
+  const formId = useId();
   const { effectiveSocietyId: societyId } = useAuth();
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(societyId || 'all');
+  const loadingLaunches = readLoading && !hasSnapshot;
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [chargeYear, setChargeYear] = useState(currentYear.toString());
@@ -42,7 +47,6 @@ export function ConfiguracoesTab() {
   const [existingSettings, setExistingSettings] = useState<any>(null);
   const [activeMembers, setActiveMembers] = useState(0);
   const [launches, setLaunches] = useState<LaunchGroup[]>([]);
-  const [loadingLaunches, setLoadingLaunches] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<LaunchGroup | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -51,21 +55,30 @@ export function ConfiguracoesTab() {
   const annualTotal = contributionAmount + perCapitaAmount;
 
   useEffect(() => {
-    if (societyId) {
-      fetchSettings();
-      fetchActiveMembers();
-      fetchLaunches();
-    }
-  }, [societyId]);
+    if (societyId) void fetchData(true);
+  }, [societyId, runRead]);
 
-  const fetchSettings = async () => {
-    const { data } = await supabase
+  const fetchData = (refreshForm = false) => runRead(async () => {
+    const [settings, members, launches] = await Promise.all([loadSettings(), loadActiveMembers(), loadLaunches()]);
+    return () => {
+      if (refreshForm || !hasSnapshot) settings();
+      members();
+      launches();
+    };
+  });
+  const fetchSettings = () => fetchData(true);
+  const fetchLaunches = () => fetchData();
+
+  const loadSettings = async () => {
+    const { data, error } = await supabase
       .from('financial_settings')
       .select('*')
       .eq('competence', 'geral')
       .eq('society_id', societyId!)
       .maybeSingle();
 
+    if (error) throw error;
+    return () => {
     if (data) {
       setExistingSettings(data);
       setFormData({
@@ -78,25 +91,27 @@ export function ConfiguracoesTab() {
       setExistingSettings(null);
       setFormData({ monthly_fee: '', per_capita: '', due_day: '10', notes: '' });
     }
+    };
   };
 
-  const fetchActiveMembers = async () => {
-    const { count } = await supabase
+  const loadActiveMembers = async () => {
+    const { count, error } = await supabase
       .from('members')
       .select('*', { count: 'exact', head: true })
       .eq('active', true)
       .eq('society_id', societyId!);
-    setActiveMembers(count || 0);
+    if (error) throw error;
+    return () => setActiveMembers(count || 0);
   };
 
-  const fetchLaunches = async () => {
-    setLoadingLaunches(true);
-    const { data: charges } = await supabase
+  const loadLaunches = async () => {
+    const { data: charges, error } = await supabase
       .from('charges')
       .select('competence, status, amount, paid_amount')
       .eq('type', ANNUAL_CHARGE_TYPE)
       .eq('society_id', societyId!);
 
+    if (error) throw error;
     if (charges && charges.length > 0) {
       const yearMap: Record<string, { competences: Set<string>; total: number; paid: number; partial: number; pending: number }> = {};
       
@@ -128,11 +143,10 @@ export function ConfiguracoesTab() {
         }))
         .sort((a, b) => parseInt(b.year) - parseInt(a.year));
 
-      setLaunches(groups);
+      return () => setLaunches(groups);
     } else {
-      setLaunches([]);
+      return () => setLaunches([]);
     }
-    setLoadingLaunches(false);
   };
 
   const handleSave = async () => {
@@ -199,7 +213,6 @@ export function ConfiguracoesTab() {
         : 'Configurações salvas!';
       toast.success(msg);
       fetchSettings();
-      fetchLaunches();
     } catch (error: any) {
       toast.error('Erro ao salvar: ' + error.message);
     } finally {
@@ -321,8 +334,12 @@ export function ConfiguracoesTab() {
     );
   }
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar as configurações e os lançamentos." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-sm text-muted-foreground">Consultando configurações financeiras…</div>;
+
   return (
     <div className="space-y-6">
+      {readFailure}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-start gap-2 text-lg">
@@ -333,8 +350,8 @@ export function ConfiguracoesTab() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Contribuição anual do sócio (R$)</Label>
-              <Input
+              <Label htmlFor={`${formId}-contribution`}>Contribuição anual do sócio (R$)</Label>
+              <Input id={`${formId}-contribution`}
                 type="number"
                 step="0.01"
                 placeholder="72,00"
@@ -343,8 +360,8 @@ export function ConfiguracoesTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Per capita anual (R$)</Label>
-              <Input
+              <Label htmlFor={`${formId}-per-capita`}>Per capita anual (R$)</Label>
+              <Input id={`${formId}-per-capita`}
                 type="number"
                 step="0.01"
                 placeholder="30,00"
@@ -353,8 +370,8 @@ export function ConfiguracoesTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Dia do Vencimento</Label>
-              <Input
+              <Label htmlFor={`${formId}-due-day`}>Dia do Vencimento</Label>
+              <Input id={`${formId}-due-day`}
                 type="number"
                 min="1"
                 max="28"
@@ -373,8 +390,8 @@ export function ConfiguracoesTab() {
           </div>
 
           <div className="space-y-2">
-            <Label>Observações</Label>
-            <Textarea
+            <Label htmlFor={`${formId}-notes`}>Observações</Label>
+            <Textarea id={`${formId}-notes`}
               placeholder="Observações gerais..."
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -407,9 +424,9 @@ export function ConfiguracoesTab() {
           </p>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="space-y-2">
-              <Label>Ano</Label>
+              <Label htmlFor={`${formId}-year`}>Ano</Label>
               <Select value={chargeYear} onValueChange={setChargeYear}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger id={`${formId}-year`} className="w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -473,6 +490,7 @@ export function ConfiguracoesTab() {
                       variant="ghost"
                       size="icon"
                       className="text-destructive hover:text-destructive shrink-0"
+                      aria-label={`Excluir cobranças pendentes de ${launch.year}`}
                       onClick={() => setDeleteConfirm(launch)}
                     >
                       <Trash2 className="h-4 w-4" />

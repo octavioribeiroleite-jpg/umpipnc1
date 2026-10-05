@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -39,6 +40,7 @@ export default function Plenarias() {
   const activeTab = searchParams.get('tab') || 'plenarias';
   const [plenaries, setPlenaries] = useState<Plenary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -50,11 +52,13 @@ export default function Plenarias() {
 
   const fetchPlenaries = async () => {
     setLoading(true);
+    try {
     const { data, error } = await supabase
       .from('plenaries')
       .select('*')
       .order('date', { ascending: false });
 
+    setLoadError(Boolean(error));
     if (error) {
       toast({ title: 'Erro ao carregar plenárias', variant: 'destructive' });
       setLoading(false);
@@ -63,23 +67,28 @@ export default function Plenarias() {
 
     const withCounts = await Promise.all(
       (data || []).map(async (p) => {
-        const { count: totalCount } = await supabase
+        const { count: totalCount, error: totalError } = await supabase
           .from('plenary_attendance')
           .select('*', { count: 'exact', head: true })
           .eq('plenary_id', p.id);
 
-        const { count: presentCount } = await supabase
+        const { count: presentCount, error: presentError } = await supabase
           .from('plenary_attendance')
           .select('*', { count: 'exact', head: true })
           .eq('plenary_id', p.id)
           .eq('present', true);
 
+        if (totalError || presentError) throw totalError || presentError;
         return { ...p, total_count: totalCount || 0, present_count: presentCount || 0 };
       })
     );
 
     setPlenaries(withCounts);
-    setLoading(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchPlenaries(); }, []);
@@ -149,12 +158,13 @@ export default function Plenarias() {
             </Button>
           </div>
 
-          {loading ? (
+          {loadError && <QueryErrorState message="Não foi possível carregar as plenárias." onRetry={fetchPlenaries} retrying={loading} hasPreviousData={plenaries.length > 0} />}
+          {loading && plenaries.length === 0 ? (
             <div className="space-y-3">
               <Skeleton className="h-20 w-full" />
               <Skeleton className="h-20 w-full" />
             </div>
-          ) : plenaries.length === 0 ? (
+          ) : loadError && plenaries.length === 0 ? null : plenaries.length === 0 ? (
             <EmptyState
               icon={<ClipboardCheck className="h-12 w-12" />}
               title="Nenhuma plenária registrada"

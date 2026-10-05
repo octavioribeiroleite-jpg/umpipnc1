@@ -1,3 +1,5 @@
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -94,7 +96,8 @@ export function RelatoriosTab() {
   const { effectiveSocietyId: societyId } = useAuth();
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
-  const [loading, setLoading] = useState(true);
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(JSON.stringify([societyId, selectedYear]));
+  const loading = readLoading && !hasSnapshot;
   const [exporting, setExporting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
@@ -110,8 +113,8 @@ export function RelatoriosTab() {
   const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   useEffect(() => {
-    fetchData();
-  }, [selectedYear, societyId]);
+    if (societyId) void fetchData();
+  }, [selectedYear, societyId, runRead]);
 
   useEffect(() => {
     const loadSignedUrls = async () => {
@@ -132,26 +135,12 @@ export function RelatoriosTab() {
     if (transactions.length > 0) loadSignedUrls();
   }, [transactions]);
 
-  const fetchData = async () => {
-    if (!societyId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchChargeStats(),
-        fetchMonthlyData(),
-        fetchCategoryData(),
-        fetchTransactions()
-      ]);
-    } catch (error) {
-      console.error('Erro ao carregar relatório:', error);
-      toast.error('Erro ao carregar dados do relatório');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchData = () => runRead(async () => {
+    const commits = await Promise.all([
+      fetchChargeStats(), fetchMonthlyData(), fetchCategoryData(), fetchTransactions(),
+    ]);
+    return () => commits.forEach(commit => commit());
+  });
 
   const fetchChargeStats = async () => {
     const yearCompetences = [selectedYear, ...MONTHS.map(m => `${m}/${selectedYear}`)];
@@ -166,7 +155,7 @@ export function RelatoriosTab() {
     const { data: charges, error } = await query;
     if (error) throw error;
 
-    setChargeStats({
+    return () => setChargeStats({
       total: charges?.length || 0,
       pago: (charges || []).filter(c => c.status === 'pago').length,
       pendente: (charges || []).filter(c => c.status === 'pendente').length,
@@ -203,7 +192,7 @@ export function RelatoriosTab() {
       return { month: month.slice(0, 3), receitas, despesas, saldo: receitas - despesas };
     });
 
-    setMonthlyData(data);
+    return () => setMonthlyData(data);
   };
 
   const fetchCategoryData = async () => {
@@ -239,7 +228,7 @@ export function RelatoriosTab() {
       groupedData[name].value += Number(t.amount);
     }
 
-    setCategoryData(Object.values(groupedData).sort((a, b) => b.value - a.value));
+    return () => setCategoryData(Object.values(groupedData).sort((a, b) => b.value - a.value));
   };
 
   const fetchTransactions = async () => {
@@ -271,13 +260,14 @@ export function RelatoriosTab() {
       return { ...t, category_name: cat?.name || 'Sem categoria', category_color: cat?.color || '#94a3b8' };
     });
 
-    setTransactions(formatted);
-
     const receitas = formatted.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0);
     const despesas = formatted.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0);
-    setTotalReceitas(receitas);
-    setTotalDespesas(despesas);
-    setSaldo(receitas - despesas);
+    return () => {
+      setTransactions(formatted);
+      setTotalReceitas(receitas);
+      setTotalDespesas(despesas);
+      setSaldo(receitas - despesas);
+    };
   };
 
   const getSignedUrl = signedReceiptUrl;
@@ -335,9 +325,15 @@ export function RelatoriosTab() {
     }
   };
 
+  if (!societyId) return <p className="py-8 text-center text-muted-foreground">Selecione uma sociedade para consultar o relatório.</p>;
+
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar o relatório financeiro." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-sm text-muted-foreground">Consultando dados financeiros…</div>;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
+      {readFailure}
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -356,7 +352,7 @@ export function RelatoriosTab() {
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-full sm:w-[130px]">
+                <SelectTrigger aria-label="Ano do relatório financeiro" className="w-full sm:w-[130px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -365,7 +361,7 @@ export function RelatoriosTab() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={exportToPDF} disabled={exporting || !societyId} className="sm:min-w-56">
+              <Button onClick={exportToPDF} disabled={exporting || readError || readLoading || !societyId} className="sm:min-w-56">
                 {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                 Exportar PDF oficial
               </Button>

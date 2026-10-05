@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -69,6 +70,9 @@ export default function Configuracoes() {
   const { isAdmin, isPastor, user } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usersError, setUsersError] = useState(false);
+  const [secError, setSecError] = useState(false);
+  const [dirError, setDirError] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
 
@@ -98,6 +102,8 @@ export default function Configuracoes() {
       supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name'),
       supabase.from('settings').select('key, value').like('key', 'diretoria_pin_%'),
     ]);
+    setDirError(Boolean(societiesRes.error || settingsRes.error));
+    if (societiesRes.error || settingsRes.error) { setDirPinsLoading(false); return; }
     if (societiesRes.data) setDirSocieties(societiesRes.data);
     if (settingsRes.data) {
       const pins: Record<string, string> = {};
@@ -136,10 +142,12 @@ export default function Configuracoes() {
 
   const fetchSecretariaCredentials = async () => {
     setSecLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('settings')
       .select('key, value')
       .in('key', ['secretaria_admin_password', 'secretaria_professor_password']);
+    setSecError(Boolean(error));
+    if (error) { setSecLoading(false); return; }
     
     if (data) {
       const get = (key: string) => data.find(s => s.key === key)?.value || '';
@@ -205,8 +213,10 @@ export default function Configuracoes() {
       }));
 
       setUsers(usersWithRoles);
+      setUsersError(false);
     } catch (error) {
       console.error('Error fetching users:', error);
+      setUsersError(true);
       toast.error('Erro ao carregar usuários');
     } finally {
       setLoading(false);
@@ -404,11 +414,12 @@ export default function Configuracoes() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {loading ? (
+              {usersError && <QueryErrorState message="Não foi possível carregar os usuários." onRetry={fetchUsers} retrying={loading} hasPreviousData={users.length > 0} />}
+              {loading && users.length === 0 ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : users.length === 0 ? (
+              ) : usersError && users.length === 0 ? null : users.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
                   Nenhum usuário cadastrado
                 </p>
@@ -645,7 +656,7 @@ export default function Configuracoes() {
               <CardDescription>Gerencie os PINs de acesso à Secretaria EBD</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {secLoading ? (
+              {secError ? <QueryErrorState message="Não foi possível consultar a configuração da Secretaria." onRetry={fetchSecretariaCredentials} retrying={secLoading} /> : secLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
@@ -723,7 +734,7 @@ export default function Configuracoes() {
               <CardDescription>Gerencie os PINs de acesso por sociedade</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {dirPinsLoading ? (
+              {dirError ? <QueryErrorState message="Não foi possível consultar as sociedades e seus acessos." onRetry={fetchDiretoriaPins} retrying={dirPinsLoading} /> : dirPinsLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>

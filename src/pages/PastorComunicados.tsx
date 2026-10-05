@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,6 +53,7 @@ export default function PastorComunicados() {
   const [societies, setSocieties] = useState<Society[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [sending, setSending] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -63,16 +65,20 @@ export default function PastorComunicados() {
   const [recipientType, setRecipientType] = useState<RecipientType>('church');
   const [selectedSociety, setSelectedSociety] = useState('');
 
-  useEffect(() => {
-    Promise.all([
+  const loadAnnouncements = async () => {
+    setLoading(true);
+    await Promise.all([
       supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name'),
       supabase.from('pastor_announcements').select('*').order('created_at', { ascending: false }),
     ]).then(([socRes, annRes]) => {
+      setLoadError(Boolean(socRes.error || annRes.error));
+      if (socRes.error || annRes.error) { setLoading(false); return; }
       if (socRes.data) setSocieties(socRes.data);
       if (annRes.data) setAnnouncements(annRes.data as Announcement[]);
       setLoading(false);
     });
-  }, []);
+  };
+  useEffect(() => { void loadAnnouncements(); }, []);
 
   const resetForm = () => {
     setTitle('');
@@ -135,7 +141,7 @@ export default function PastorComunicados() {
   return (
     <PastorLayout>
       <div className="space-y-4">
-        <PageHeader title="Comunicados" description={`Avisos e orientações · ${announcements.length} comunicados`} action={
+        <PageHeader title="Comunicados" description={loadError ? "Consulta indisponível" : `Avisos e orientações · ${announcements.length} comunicados`} action={
           <Button onClick={() => setDrawerOpen(true)}><Plus className="h-4 w-4 mr-2" />Novo comunicado</Button>
         } />
 
@@ -157,7 +163,7 @@ export default function PastorComunicados() {
               <div className="space-y-2">
                 <p className="text-sm font-medium">Prioridade</p>
                 <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-label="Prioridade" className="w-36"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="urgente">Urgente</SelectItem>
@@ -167,7 +173,7 @@ export default function PastorComunicados() {
 
               <div className="space-y-3">
                 <p className="text-sm font-medium">Destinatários</p>
-                <RadioGroup value={recipientType} onValueChange={(v) => setRecipientType(v as RecipientType)} className="space-y-2">
+                <RadioGroup aria-label="Destinatários" value={recipientType} onValueChange={(v) => setRecipientType(v as RecipientType)} className="space-y-2">
                   <div className="flex items-center gap-2">
                     <RadioGroupItem value="church" id="church" />
                     <Label htmlFor="church" className="text-sm">🏛️ Toda a igreja (todos veem)</Label>
@@ -183,7 +189,7 @@ export default function PastorComunicados() {
                 </RadioGroup>
                 {recipientType === 'specific' && (
                   <Select value={selectedSociety} onValueChange={setSelectedSociety}>
-                    <SelectTrigger><SelectValue placeholder="Selecione a sociedade" /></SelectTrigger>
+                    <SelectTrigger aria-label="Sociedade destinatária"><SelectValue placeholder="Selecione a sociedade" /></SelectTrigger>
                     <SelectContent>
                       {societies.map(s => (
                         <SelectItem key={s.id} value={s.id}>
@@ -211,11 +217,12 @@ export default function PastorComunicados() {
         </Drawer>
 
         {/* History */}
-        {loading ? (
+        {loadError && <QueryErrorState message="Não foi possível carregar os comunicados." onRetry={loadAnnouncements} retrying={loading} hasPreviousData={announcements.length > 0} />}
+        {loading && announcements.length === 0 ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-        ) : announcements.length === 0 ? (
+        ) : loadError && announcements.length === 0 ? null : announcements.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center space-y-3">
               <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50" />

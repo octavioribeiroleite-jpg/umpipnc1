@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,6 +66,8 @@ export default function Visitantes() {
     if (canAccess) fetchData();
   }, [canAccess]);
 
+  const [loadError, setLoadError] = useState(false);
+
   const fetchData = async () => {
     setDataLoading(true);
     try {
@@ -72,6 +75,8 @@ export default function Visitantes() {
         supabase.from('portal_visitors' as any).select('*').order('created_at', { ascending: false }).limit(1000),
         supabase.from('societies').select('id, name, color').eq('active', true),
       ]);
+      if (visitorsRes.error || socRes.error) throw visitorsRes.error || socRes.error;
+      setLoadError(false);
       if (visitorsRes.data) setVisitors(visitorsRes.data as any[]);
       if (socRes.data) {
         const map: Record<string, SocietyInfo> = {};
@@ -79,6 +84,7 @@ export default function Visitantes() {
         setSocieties(map);
       }
     } catch (e) {
+      setLoadError(true);
       console.error('Error fetching visitors:', e);
     } finally {
       setDataLoading(false);
@@ -167,6 +173,8 @@ export default function Visitantes() {
   if (!canAccess) return null;
 
   const Layout = isPastor && !isAdmin ? PastorLayout : AppLayout;
+
+  if (loadError) return <Layout><PageHeader title="Visitantes" /><QueryErrorState message="Não foi possível consultar os visitantes." onRetry={fetchData} retrying={dataLoading} /></Layout>;
 
   const content = (
     <>

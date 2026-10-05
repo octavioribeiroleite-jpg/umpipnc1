@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -37,7 +38,7 @@ export default function Aniversariantes() {
   const canManage = isManagement || isAdmin;
   const {
     activeBirthdays, todayBirthdays, weekBirthdays, monthBirthdays, nextBirthday,
-    departments, isLoading, createBirthday, updateBirthday, deleteBirthday, birthdays,
+    departments, isLoading, isError, isFetching, refetch, createBirthday, updateBirthday, deleteBirthday, birthdays,
   } = useBirthdays();
 
   const [search, setSearch] = useState('');
@@ -104,6 +105,10 @@ export default function Aniversariantes() {
     );
   }
 
+  if (isError && birthdays.length === 0) {
+    return <AppLayout><PageHeader title="Aniversariantes" /><QueryErrorState message="Não foi possível carregar os aniversariantes." onRetry={() => { void refetch(); }} retrying={isFetching} /></AppLayout>;
+  }
+
   return (
     <AppLayout>
       <PageHeader
@@ -119,6 +124,7 @@ export default function Aniversariantes() {
       />
 
       <div className="space-y-5">
+        {isError && <QueryErrorState message="Não foi possível atualizar os aniversariantes." onRetry={() => { void refetch(); }} retrying={isFetching} hasPreviousData />}
         <BirthdayFilters
           search={search}
           onSearchChange={setSearch}

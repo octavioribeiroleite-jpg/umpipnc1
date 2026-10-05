@@ -1,4 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useId, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { signedReceiptUrl } from '@/lib/receipts';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,10 +30,12 @@ interface Submission {
 }
 
 export function ComprovantesTab() {
+  const formId = useId();
   const { user, effectiveSocietyId: societyId } = useAuth();
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(societyId || 'all');
+  const loading = readLoading && !hasSnapshot;
   const { toast } = useToast();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectDialog, setRejectDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const [rejectReason, setRejectReason] = useState('');
@@ -47,9 +51,9 @@ export function ComprovantesTab() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [societyId]);
+  }, [societyId, runRead]);
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = () => runRead(async () => {
     let query = supabase
       .from('member_payment_submissions')
       .select('*')
@@ -59,25 +63,18 @@ export function ComprovantesTab() {
       query = query.eq('society_id', societyId);
     }
 
-    const { data } = await query;
-
-    if (data) {
-      // Fetch member names
-      const memberIds = [...new Set(data.map(s => s.member_id))];
-      const { data: members } = await supabase
-        .from('members')
-        .select('id, name')
-        .in('id', memberIds);
-
-      const memberMap = new Map((members || []).map(m => [m.id, m.name]));
-
-      setSubmissions(data.map(s => ({
-        ...s,
-        member_name: memberMap.get(s.member_id) || 'Membro desconhecido',
-      })) as Submission[]);
-    }
-    setLoading(false);
-  };
+    const { data, error } = await query;
+    if (error) throw error;
+    const memberIds = [...new Set((data || []).map(s => s.member_id))];
+    const { data: members, error: membersError } = memberIds.length
+      ? await supabase.from('members').select('id, name').in('id', memberIds)
+      : { data: [], error: null };
+    if (membersError) throw membersError;
+    const memberMap = new Map((members || []).map(m => [m.id, m.name]));
+    return () => setSubmissions((data || []).map(s => ({
+      ...s, member_name: memberMap.get(s.member_id) || 'Membro desconhecido',
+    })) as Submission[]);
+  });
 
   const handleApprove = async (sub: Submission) => {
     setActionLoading(sub.id);
@@ -135,12 +132,16 @@ export function ComprovantesTab() {
 
   const pendingCount = submissions.filter(s => s.status === 'pendente').length;
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar os comprovantes." onRetry={() => void fetchSubmissions()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-sm text-muted-foreground">Consultando dados financeiros…</div>;
+
   if (loading) {
     return <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-20" />)}</div>;
   }
 
   return (
     <div className="space-y-4">
+      {readFailure}
       {pendingCount > 0 && (
         <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 text-warning text-sm font-medium">
           {pendingCount} comprovante{pendingCount > 1 ? 's' : ''} pendente{pendingCount > 1 ? 's' : ''} de aprovação
@@ -228,8 +229,8 @@ export function ComprovantesTab() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Motivo (opcional)</Label>
-              <Textarea
+              <Label htmlFor={`${formId}-rejection-reason`}>Motivo (opcional)</Label>
+              <Textarea id={`${formId}-rejection-reason`}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Ex: comprovante ilegível, valor incorreto..."

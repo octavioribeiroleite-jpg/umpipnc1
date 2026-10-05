@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -15,7 +16,7 @@ import { FAB } from '@/components/ui/fab';
 
 export default function Reunioes() {
   const navigate = useNavigate();
-  const { meetings, loading, deleteMeeting, refetch } = useMeetings();
+  const { meetings, loading, error, deleteMeeting, refetch } = useMeetings();
   const { isManagement } = useAuth();
   
   const [statusFilter, setStatusFilter] = useState('all');
@@ -73,13 +74,14 @@ export default function Reunioes() {
       />
 
       <div className="space-y-3 md:space-y-4">
-        {loading ? (
+        {error && <QueryErrorState message="Não foi possível carregar as reuniões." onRetry={() => void refetch()} retrying={loading} hasPreviousData={meetings.length > 0} />}
+        {loading && meetings.length === 0 ? (
           <>
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
           </>
-        ) : groupedMeetings.length === 0 ? (
+        ) : groupedMeetings.length === 0 ? (error ? null : (
           <EmptyState
             icon={<FileText className="h-12 w-12" />}
             title={meetings.length === 0 ? 'Nenhuma reunião cadastrada' : 'Nenhuma reunião encontrada'}
@@ -92,7 +94,7 @@ export default function Reunioes() {
               ) : undefined
             }
           />
-        ) : (
+        )) : (
           groupedMeetings.map(([date, meetingsInDate]) => (
             <ReuniaoPastaData key={date} date={date} count={meetingsInDate.length} defaultOpen={true}>
               {meetingsInDate.map((meeting) => (

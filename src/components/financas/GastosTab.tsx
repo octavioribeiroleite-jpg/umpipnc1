@@ -1,3 +1,5 @@
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,8 +47,9 @@ interface Transaction {
 
 export function GastosTab() {
   const { user, effectiveSocietyId: societyId } = useAuth();
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(societyId || 'all');
+  const loading = readLoading && !hasSnapshot;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -63,16 +66,15 @@ export function GastosTab() {
   const receiptRequest = useRef(0);
 
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = () => runRead(async () => {
     let txQuery = supabase.from('transactions').select('*').eq('type', 'saida').order('date', { ascending: false });
     if (societyId) txQuery = txQuery.eq('society_id', societyId);
     const { data, error } = await txQuery;
-    if (!error) setTransactions(data || []);
-    setLoading(false);
-  };
+    if (error) throw error;
+    return () => setTransactions(data || []);
+  });
 
-  useEffect(() => { fetchData(); }, [societyId]);
+  useEffect(() => { fetchData(); }, [societyId, runRead]);
 
   const openNewDialog = () => {
     receiptRequest.current += 1;
@@ -180,8 +182,12 @@ export function GastosTab() {
 
   const totalGastos = transactions.reduce((sum, tx) => sum + tx.amount, 0);
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar os gastos." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-sm text-muted-foreground">Consultando dados financeiros…</div>;
+
   return (
     <>
+      {readFailure}
       <Card className="mb-4">
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

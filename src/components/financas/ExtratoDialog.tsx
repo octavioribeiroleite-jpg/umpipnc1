@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2, TrendingDown, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,29 +36,21 @@ interface Props {
 
 export function ExtratoDialog({ type, onClose }: Props) {
   const { effectiveSocietyId: societyId } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(JSON.stringify([societyId, type]));
   const [transactions, setTransactions] = useState<Tx[]>([]);
 
+  const fetchTransactions = useCallback(() => runRead(async () => {
+    let query = supabase.from('transactions').select('id, date, description, amount, type').order('date', { ascending: false });
+    if (type && type !== 'all') query = query.eq('type', type);
+    if (societyId) query = query.eq('society_id', societyId);
+    const { data, error } = await query;
+    if (error) throw error;
+    return () => setTransactions(data || []);
+  }), [type, societyId, runRead]);
+
   useEffect(() => {
-    if (!type) return;
-
-    const fetchTransactions = async () => {
-      setLoading(true);
-      let query = supabase
-        .from('transactions')
-        .select('id, date, description, amount, type')
-        .order('date', { ascending: false });
-
-      if (type !== 'all') query = query.eq('type', type);
-      if (societyId) query = query.eq('society_id', societyId);
-
-      const { data } = await query;
-      setTransactions((data || []) as Tx[]);
-      setLoading(false);
-    };
-
-    void fetchTransactions();
-  }, [type, societyId]);
+    if (type) void fetchTransactions();
+  }, [type, fetchTransactions]);
 
   const groups = useMemo(() => {
     const map = new Map<string, Tx[]>();
@@ -101,11 +95,12 @@ export function ExtratoDialog({ type, onClose }: Props) {
           <DialogTitle className="text-lg sm:text-xl">{type ? TITLES[type] : ''}</DialogTitle>
         </DialogHeader>
 
-        {loading ? (
+        {readError && <QueryErrorState message="Não foi possível consultar o extrato." onRetry={() => void fetchTransactions()} retrying={readLoading} hasPreviousData={hasSnapshot} />}
+        {!hasSnapshot ? (readLoading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-        ) : transactions.length === 0 ? (
+        ) : null) : transactions.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma movimentação registrada</p>
         ) : (
           <div className="space-y-3 sm:space-y-4">

@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -133,7 +134,7 @@ export default function Tarefas() {
   const isMobile = useIsMobile();
   const { isManagement } = useAuth();
 
-  const { data: tasks = [], isLoading } = useTasks();
+  const { data: tasks = [], isLoading, isError, isFetching, refetch } = useTasks();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -198,7 +199,7 @@ export default function Tarefas() {
     return (
       <AppLayout>
         <PageHeader title="Tarefas" description="Gerencie as tarefas da diretoria" eyebrow="Organização" icon={<ListTodo />} />
-        <EmptyState onCreateClick={handleCreateClick} />
+        {isError ? <QueryErrorState message="Não foi possível carregar as tarefas." onRetry={() => void refetch()} retrying={isFetching} /> : <EmptyState onCreateClick={handleCreateClick} />}
         <TaskDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
@@ -227,6 +228,7 @@ export default function Tarefas() {
         }
       />
 
+      {isError && <QueryErrorState message="Não foi possível atualizar as tarefas." onRetry={() => void refetch()} retrying={isFetching} hasPreviousData />}
       <TaskStats tasks={tasks} />
       <TaskFilters search={search} onSearchChange={setSearch} priority={priorityFilter} onPriorityChange={setPriorityFilter} />
 

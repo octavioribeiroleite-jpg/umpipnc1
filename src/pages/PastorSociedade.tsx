@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -32,6 +33,8 @@ export default function PastorSociedade() {
   const { slug } = useParams<{ slug: string }>();
   const [society, setSociety] = useState<Society | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [lookupError, setLookupError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(null);
   const [stats, setStats] = useState({
@@ -48,17 +51,21 @@ export default function PastorSociedade() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
 
-  useEffect(() => {
+  const loadSociety = useCallback(() => {
     if (!slug) return;
+    setLoading(true);
+    setLookupError(false);
     supabase
       .from('societies')
       .select('*')
       .eq('slug', slug)
       .maybeSingle()
-      .then(({ data }) => {
-        if (data) setSociety(data as Society);
+      .then(({ data, error }) => {
+        if (error || !data) { setLookupError(true); setLoading(false); return; }
+        setSociety(data as Society);
       });
   }, [slug]);
+  useEffect(() => { loadSociety(); }, [loadSociety]);
 
   useEffect(() => {
     if (society) void fetchData();
@@ -93,16 +100,19 @@ export default function PastorSociedade() {
         }),
       ]);
 
+      const failed = [meetingsRes, tasksRes, membersRes, transRes].find(result => result.error);
+      if (failed?.error) throw failed.error;
       const allMembers = membersRes.data || [];
       const memberIds = allMembers.map((member) => member.id);
 
       let mensalidades = 0;
       if (memberIds.length > 0) {
-        const { data: paymentsData } = await supabase
+        const { data: paymentsData, error: paymentsError } = await supabase
           .from('membership_payments')
           .select('amount')
           .eq('status', 'pago')
           .in('member_id', memberIds);
+        if (paymentsError) throw paymentsError;
         mensalidades = (paymentsData || []).reduce((sum, payment) => sum + Number(payment.amount), 0);
       }
 
@@ -132,13 +142,17 @@ export default function PastorSociedade() {
       });
 
       if (aiRes.data?.summaries) setSummaryData(aiRes.data);
+      setLoadError(false);
     } catch (error) {
+      setLoadError(true);
       console.error(error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
+
+  if (lookupError || loadError) return <PastorLayout><QueryErrorState message="Não foi possível consultar os dados da sociedade." onRetry={() => { if (lookupError) loadSociety(); else void fetchData(); }} retrying={loading || refreshing} /></PastorLayout>;
 
   if (!society || loading) {
     return (

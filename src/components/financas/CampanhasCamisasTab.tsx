@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useId, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,11 +69,13 @@ interface Props {
 }
 
 export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDataChange }: Props) {
+  const formId = useId();
   const { effectiveSocietyId: societyId } = useAuth();
+  const { loading: readLoading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(societyId || 'all');
+  const loading = readLoading && !hasSnapshot;
   const [campaigns, setCampaigns] = useState<ShirtCampaign[]>([]);
   const [orderedByCampaign, setOrderedByCampaign] = useState<Record<string, number>>({});
   const [lotsByCampaign, setLotsByCampaign] = useState<Record<string, ShirtCampaignLot[]>>({});
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -107,8 +111,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
     notes: '',
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(() => runRead(async () => {
     let campaignQuery = supabase.from('shirt_campaigns').select('*').order('purchase_date', { ascending: false });
     let orderQuery = supabase.from('shirt_orders').select('campaign_id, quantity');
     let lotQuery = (supabase as any).from('shirt_campaign_lots').select('*').order('purchase_date', { ascending: true });
@@ -119,29 +122,35 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
       lotQuery = lotQuery.eq('society_id', societyId);
     }
 
-    const [{ data: campaignData }, { data: orderData }, { data: lotData }] = await Promise.all([
+    const [campaignResult, orderResult, lotResult] = await Promise.all([
       campaignQuery,
       orderQuery,
       lotQuery,
     ]);
 
-    setCampaigns((campaignData || []) as ShirtCampaign[]);
+    const failure = [campaignResult, orderResult, lotResult].find(result => result.error);
+    if (failure) throw failure.error;
+    const { data: orderData } = orderResult;
+    const { data: campaignData } = campaignResult;
+    const { data: lotData } = lotResult;
+    return () => {
+      setCampaigns((campaignData || []) as ShirtCampaign[]);
 
-    const orderMap: Record<string, number> = {};
-    (orderData || []).forEach((order: { campaign_id: string | null; quantity: number }) => {
-      if (order.campaign_id) {
-        orderMap[order.campaign_id] = (orderMap[order.campaign_id] || 0) + Number(order.quantity || 0);
-      }
-    });
-    setOrderedByCampaign(orderMap);
+      const orderMap: Record<string, number> = {};
+      (orderData || []).forEach((order: { campaign_id: string | null; quantity: number }) => {
+        if (order.campaign_id) {
+          orderMap[order.campaign_id] = (orderMap[order.campaign_id] || 0) + Number(order.quantity || 0);
+        }
+      });
+      setOrderedByCampaign(orderMap);
 
-    const lotMap: Record<string, ShirtCampaignLot[]> = {};
-    ((lotData || []) as ShirtCampaignLot[]).forEach((lot) => {
-      lotMap[lot.campaign_id] = [...(lotMap[lot.campaign_id] || []), lot];
-    });
-    setLotsByCampaign(lotMap);
-    setLoading(false);
-  }, [societyId]);
+      const lotMap: Record<string, ShirtCampaignLot[]> = {};
+      ((lotData || []) as ShirtCampaignLot[]).forEach((lot) => {
+        lotMap[lot.campaign_id] = [...(lotMap[lot.campaign_id] || []), lot];
+      });
+      setLotsByCampaign(lotMap);
+    };
+  }), [societyId, runRead]);
 
   useEffect(() => {
     void fetchData();
@@ -298,12 +307,16 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
     onDataChange?.();
   };
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível atualizar as campanhas e lotes." onRetry={() => void fetchData()} retrying={readLoading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <div role="status" className="py-8 text-center text-muted-foreground">Consultando dados financeiros…</div>;
+
   if (loading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
 
   return (
     <div className="space-y-4">
+      {readFailure}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold">Campanhas de camisas</h3>
@@ -464,16 +477,16 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
         <DialogContent className="finance-dialog max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader><DialogTitle>Nova campanha de camisas</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2"><Label>Nome da campanha</Label><Input placeholder="Ex.: Camisas UMP 2026" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor={`${formId}-create-name`}>Nome da campanha</Label><Input id={`${formId}-create-name`} placeholder="Ex.: Camisas UMP 2026" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
             <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2"><Label>Qtd. comprada</Label><Input type="number" min="1" placeholder="44" value={form.purchasedQuantity} onChange={(event) => setForm({ ...form, purchasedQuantity: event.target.value })} /></div>
-              <div className="space-y-2"><Label>Custo unitário (R$)</Label><Input type="number" step="0.01" placeholder="55,00" value={form.unitCost} onChange={(event) => setForm({ ...form, unitCost: event.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor={`${formId}-create-quantity`}>Qtd. comprada</Label><Input id={`${formId}-create-quantity`} type="number" min="1" placeholder="44" value={form.purchasedQuantity} onChange={(event) => setForm({ ...form, purchasedQuantity: event.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor={`${formId}-create-unit-cost`}>Custo unitário (R$)</Label><Input id={`${formId}-create-unit-cost`} type="number" step="0.01" placeholder="55,00" value={form.unitCost} onChange={(event) => setForm({ ...form, unitCost: event.target.value })} /></div>
             </div>
             <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2"><Label>Preço padrão venda (R$)</Label><Input type="number" step="0.01" placeholder="65,00" value={form.defaultSalePrice} onChange={(event) => setForm({ ...form, defaultSalePrice: event.target.value })} /></div>
-              <div className="space-y-2"><Label>Data da compra</Label><Input type="date" value={form.purchaseDate} onChange={(event) => setForm({ ...form, purchaseDate: event.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor={`${formId}-create-sale-price`}>Preço padrão venda (R$)</Label><Input id={`${formId}-create-sale-price`} type="number" step="0.01" placeholder="65,00" value={form.defaultSalePrice} onChange={(event) => setForm({ ...form, defaultSalePrice: event.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor={`${formId}-create-date`}>Data da compra</Label><Input id={`${formId}-create-date`} type="date" value={form.purchaseDate} onChange={(event) => setForm({ ...form, purchaseDate: event.target.value })} /></div>
             </div>
-            <div className="space-y-2"><Label>Fornecedor</Label><Input placeholder="Opcional" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor={`${formId}-create-supplier`}>Fornecedor</Label><Input id={`${formId}-create-supplier`} placeholder="Opcional" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} /></div>
             <div className="rounded-md bg-muted/40 p-3 text-sm">Custo total: <strong>{brl(totalCostPreview)}</strong><p className="mt-1 text-xs text-muted-foreground">Será criada uma única saída financeira com este valor.</p></div>
             <Button className="w-full" onClick={handleCreate} disabled={submitting}>{submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar campanha</Button>
           </div>
@@ -486,17 +499,20 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
           {editCampaign && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Nome da campanha</Label>
-                <Input value={editForm.name} onChange={(event) => setEditForm({ ...editForm, name: event.target.value })} />
+                <Label htmlFor={`${formId}-edit-name`}>Nome da campanha</Label>
+                <Input
+                  id={`${formId}-edit-name`} value={editForm.name} onChange={(event) => setEditForm({ ...editForm, name: event.target.value })} />
               </div>
               <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Preço padrão (R$)</Label>
-                  <Input type="number" min="0" step="0.01" value={editForm.defaultSalePrice} onChange={(event) => setEditForm({ ...editForm, defaultSalePrice: event.target.value })} />
+                  <Label htmlFor={`${formId}-edit-sale-price`}>Preço padrão (R$)</Label>
+                  <Input
+                    id={`${formId}-edit-sale-price`} type="number" min="0" step="0.01" value={editForm.defaultSalePrice} onChange={(event) => setEditForm({ ...editForm, defaultSalePrice: event.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Fornecedor</Label>
-                  <Input placeholder="Opcional" value={editForm.supplier} onChange={(event) => setEditForm({ ...editForm, supplier: event.target.value })} />
+                  <Label htmlFor={`${formId}-edit-supplier`}>Fornecedor</Label>
+                  <Input
+                    id={`${formId}-edit-supplier`} placeholder="Opcional" value={editForm.supplier} onChange={(event) => setEditForm({ ...editForm, supplier: event.target.value })} />
                 </div>
               </div>
 
@@ -507,20 +523,23 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Quantidade adicional</Label>
-                    <Input type="number" min="0" placeholder="0" value={editForm.additionalQuantity} onChange={(event) => setEditForm({ ...editForm, additionalQuantity: event.target.value })} />
+                    <Label htmlFor={`${formId}-edit-quantity`}>Quantidade adicional</Label>
+                    <Input
+                      id={`${formId}-edit-quantity`} type="number" min="0" placeholder="0" value={editForm.additionalQuantity} onChange={(event) => setEditForm({ ...editForm, additionalQuantity: event.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Custo unitário (R$)</Label>
-                    <Input type="number" min="0" step="0.01" value={editForm.additionalUnitCost} onChange={(event) => setEditForm({ ...editForm, additionalUnitCost: event.target.value })} />
+                    <Label htmlFor={`${formId}-edit-unit-cost`}>Custo unitário (R$)</Label>
+                    <Input
+                      id={`${formId}-edit-unit-cost`} type="number" min="0" step="0.01" value={editForm.additionalUnitCost} onChange={(event) => setEditForm({ ...editForm, additionalUnitCost: event.target.value })} />
                   </div>
                 </div>
                 {Number(editForm.additionalQuantity || 0) > 0 && (
                   <div className="mt-3 space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label>Data da compra</Label>
-                        <Input type="date" value={editForm.purchaseDate} onChange={(event) => setEditForm({ ...editForm, purchaseDate: event.target.value })} />
+                        <Label htmlFor={`${formId}-edit-date`}>Data da compra</Label>
+                        <Input
+                          id={`${formId}-edit-date`} type="date" value={editForm.purchaseDate} onChange={(event) => setEditForm({ ...editForm, purchaseDate: event.target.value })} />
                       </div>
                       <div className="rounded-md bg-muted/40 p-3 text-sm">
                         <p className="text-xs text-muted-foreground">Custo adicional</p>
@@ -529,8 +548,9 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Observação do novo lote</Label>
-                      <Textarea placeholder="Ex.: Reposição, segundo lote..." value={editForm.notes} onChange={(event) => setEditForm({ ...editForm, notes: event.target.value })} />
+                      <Label htmlFor={`${formId}-edit-notes`}>Observação do novo lote</Label>
+                      <Textarea
+                        id={`${formId}-edit-notes`} placeholder="Ex.: Reposição, segundo lote..." value={editForm.notes} onChange={(event) => setEditForm({ ...editForm, notes: event.target.value })} />
                     </div>
                   </div>
                 )}
@@ -555,14 +575,14 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                 <p className="mt-1 text-xs text-muted-foreground">Atual: {lotDialogCampaign.purchased_quantity} compradas · {Math.max(0, lotDialogCampaign.purchased_quantity - (orderedByCampaign[lotDialogCampaign.id] || 0))} disponíveis</p>
               </div>
               <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label>Quantidade</Label><Input type="number" min="1" placeholder="12" value={lotForm.quantity} onChange={(event) => setLotForm({ ...lotForm, quantity: event.target.value })} /></div>
-                <div className="space-y-2"><Label>Custo unitário (R$)</Label><Input type="number" min="0" step="0.01" value={lotForm.unitCost} onChange={(event) => setLotForm({ ...lotForm, unitCost: event.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor={`${formId}-lot-quantity`}>Quantidade</Label><Input id={`${formId}-lot-quantity`} type="number" min="1" placeholder="12" value={lotForm.quantity} onChange={(event) => setLotForm({ ...lotForm, quantity: event.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor={`${formId}-lot-unit-cost`}>Custo unitário (R$)</Label><Input id={`${formId}-lot-unit-cost`} type="number" min="0" step="0.01" value={lotForm.unitCost} onChange={(event) => setLotForm({ ...lotForm, unitCost: event.target.value })} /></div>
               </div>
               <div className="finance-form-pair grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label>Data da compra</Label><Input type="date" value={lotForm.purchaseDate} onChange={(event) => setLotForm({ ...lotForm, purchaseDate: event.target.value })} /></div>
-                <div className="space-y-2"><Label>Fornecedor</Label><Input placeholder="Opcional" value={lotForm.supplier} onChange={(event) => setLotForm({ ...lotForm, supplier: event.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor={`${formId}-lot-date`}>Data da compra</Label><Input id={`${formId}-lot-date`} type="date" value={lotForm.purchaseDate} onChange={(event) => setLotForm({ ...lotForm, purchaseDate: event.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor={`${formId}-lot-supplier`}>Fornecedor</Label><Input id={`${formId}-lot-supplier`} placeholder="Opcional" value={lotForm.supplier} onChange={(event) => setLotForm({ ...lotForm, supplier: event.target.value })} /></div>
               </div>
-              <div className="space-y-2"><Label>Observação</Label><Textarea placeholder="Ex.: Segundo lote, reposição..." value={lotForm.notes} onChange={(event) => setLotForm({ ...lotForm, notes: event.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor={`${formId}-lot-notes`}>Observação</Label><Textarea id={`${formId}-lot-notes`} placeholder="Ex.: Segundo lote, reposição..." value={lotForm.notes} onChange={(event) => setLotForm({ ...lotForm, notes: event.target.value })} /></div>
               <div className="rounded-md bg-muted/40 p-3 text-sm">
                 <div className="flex justify-between"><span>Custo deste lote</span><strong>{brl(lotTotalPreview)}</strong></div>
                 <div className="mt-1 flex justify-between text-xs text-muted-foreground"><span>Total após adicionar</span><span>{Number(lotDialogCampaign.purchased_quantity) + Number(lotForm.quantity || 0)} camisas</span></div>

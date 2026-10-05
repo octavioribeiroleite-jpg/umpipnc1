@@ -1,3 +1,4 @@
+import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -92,6 +93,8 @@ export default function Usuarios() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [societies, setSocieties] = useState<Society[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usersError, setUsersError] = useState(false);
+  const [membersError, setMembersError] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
   
@@ -151,6 +154,7 @@ export default function Usuarios() {
   };
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -181,8 +185,10 @@ export default function Usuarios() {
         });
 
       setUsers(usersWithRoles);
+      setUsersError(false);
     } catch (error) {
       console.error('Error fetching users:', error);
+      setUsersError(true);
       toast.error('Erro ao carregar usuários');
     } finally {
       setLoading(false);
@@ -198,10 +204,11 @@ export default function Usuarios() {
         .order('name');
       if (membersError) throw membersError;
 
-      const { data: profilesData } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, username');
 
+      if (profilesError) throw profilesError;
       const profileMap = new Map<string, { username: string }>();
       (profilesData || []).forEach((p: any) => {
         profileMap.set(p.user_id, { username: p.username });
@@ -222,8 +229,10 @@ export default function Usuarios() {
       });
 
       setMembers(enriched);
+      setMembersError(false);
     } catch (error) {
       console.error('Error fetching members:', error);
+      setMembersError(true);
       toast.error('Erro ao carregar membros');
     } finally {
       setMembersLoading(false);
@@ -889,11 +898,12 @@ export default function Usuarios() {
             </div>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
-            {loading ? (
+            {usersError && <QueryErrorState message="Não foi possível carregar os usuários." onRetry={fetchUsers} retrying={loading} hasPreviousData={users.length > 0} />}
+            {loading && users.length === 0 ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : isMobile ? (
+            ) : usersError && users.length === 0 ? null : isMobile ? (
               <div className="space-y-3">
                 <Label htmlFor="directors-society-filter">Sociedade da diretoria</Label>
                 <Select value={mobileSocietyTab} onValueChange={setMobileSocietyTab}>
@@ -976,7 +986,7 @@ export default function Usuarios() {
                 <div>
                   <CardTitle className="text-lg md:text-xl">Membros</CardTitle>
                   <CardDescription className="text-sm">
-                    Gerenciamento de login e senha dos membros ({members.length} total)
+                    Gerenciamento de login e senha dos membros {membersError ? '· consulta indisponível' : `(${members.length} total)`}
                   </CardDescription>
                 </div>
               </div>
@@ -990,11 +1000,12 @@ export default function Usuarios() {
             </div>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
-            {membersLoading ? (
+            {membersError && <QueryErrorState message="Não foi possível carregar os membros." onRetry={fetchMembers} retrying={membersLoading} hasPreviousData={members.length > 0} />}
+            {membersLoading && members.length === 0 ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : (
+            ) : membersError && members.length === 0 ? null : (
               <div className="space-y-3">
                 {/* Society filter */}
                 <Label htmlFor="members-society-filter">Sociedade dos membros</Label>

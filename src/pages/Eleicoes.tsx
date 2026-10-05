@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useCallback, useId, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -44,9 +46,9 @@ interface Society {
 }
 
 export default function Eleicoes() {
+  const formId = useId();
   const [elections, setElections] = useState<Election[]>([]);
   const [societies, setSocieties] = useState<Society[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -59,6 +61,7 @@ export default function Eleicoes() {
   const [activeTab, setActiveTab] = useState<'cargo' | 'camisa'>('cargo');
   const { toast } = useToast();
   const { user, isAdmin, isPastor } = useAuth();
+  const { loading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(user?.id || "anonymous");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,39 +74,25 @@ export default function Eleicoes() {
     }
   }, [seatsCount, electionType]);
 
-  const fetchElections = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('elections' as any)
-      .select('*')
-      .order('created_at', { ascending: false });
+  const fetchElections = useCallback(() => runRead(async () => {
+    const [electionsResult, societiesResult] = await Promise.all([
+      supabase.from('elections').select('*').order('created_at', { ascending: false }),
+      supabase.from('societies').select('id, name').eq('active', true),
+    ]);
+    if (electionsResult.error) throw electionsResult.error;
+    if (societiesResult.error) throw societiesResult.error;
+    const withCounts = await Promise.all((electionsResult.data || []).map(async election => {
+      const { count, error } = await supabase.from('election_votes').select('*', { count: 'exact', head: true }).eq('election_id', election.id);
+      if (error) throw error;
+      return { ...election, vote_count: count || 0 };
+    }));
+    return () => {
+      setElections(withCounts);
+      setSocieties(societiesResult.data || []);
+    };
+  }), [runRead]);
 
-    if (error) {
-      toast({ title: 'Erro ao carregar eleições', variant: 'destructive' });
-      setLoading(false);
-      return;
-    }
-
-    const withCounts = await Promise.all(
-      ((data as any[]) || []).map(async (e: any) => {
-        const { count } = await supabase
-          .from('election_votes' as any)
-          .select('*', { count: 'exact', head: true })
-          .eq('election_id', e.id);
-        return { ...e, vote_count: count || 0 };
-      })
-    );
-
-    setElections(withCounts);
-    setLoading(false);
-  };
-
-  const fetchSocieties = async () => {
-    const { data } = await supabase.from('societies').select('id, name').eq('active', true);
-    setSocieties(data || []);
-  };
-
-  useEffect(() => { fetchElections(); fetchSocieties(); }, []);
+  useEffect(() => { void fetchElections(); }, [fetchElections]);
 
   const handleCreate = async () => {
     if (!name.trim() || !position.trim()) {
@@ -160,13 +149,13 @@ export default function Eleicoes() {
         title="Eleições"
         description="Organize eleições e acompanhe cada etapa da votação"
         action={
-          <Button onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
+          <Button disabled={!hasSnapshot || readError} onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
             <Plus className="h-4 w-4 mr-2" /> Nova Eleição
           </Button>
         }
       />
 
-      <FAB aria-label="Nova eleição" onClick={() => setDialogOpen(true)} />
+      <FAB disabled={!hasSnapshot || readError} aria-label="Nova eleição" onClick={() => setDialogOpen(true)} />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'cargo' | 'camisa')} className="mb-4">
         <TabsList className="grid w-full grid-cols-2">
@@ -175,12 +164,13 @@ export default function Eleicoes() {
         </TabsList>
       </Tabs>
 
-      {loading ? (
+      {readError && <QueryErrorState message="Não foi possível consultar as eleições e suas contagens." onRetry={() => void fetchElections()} retrying={loading} hasPreviousData={hasSnapshot} />}
+      {!hasSnapshot ? (loading ? (
         <div className="space-y-3">
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : null) : filtered.length === 0 ? (
         <EmptyState
           icon={activeTab === 'camisa' ? <Shirt className="h-12 w-12" /> : <Vote className="h-12 w-12" />}
           title={activeTab === 'camisa' ? 'Nenhuma votação de camisa' : 'Nenhuma eleição registrada'}
@@ -201,9 +191,9 @@ export default function Eleicoes() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Tipo</Label>
+              <Label htmlFor={`${formId}-type`}>Tipo</Label>
               <Select value={electionType} onValueChange={(v) => setElectionType(v as 'cargo' | 'camisa')}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id={`${formId}-type`}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cargo">Eleição de Cargo</SelectItem>
                   <SelectItem value="camisa">Votação de Camisa</SelectItem>
@@ -211,18 +201,21 @@ export default function Eleicoes() {
               </Select>
             </div>
             <div>
-              <Label>{electionType === 'camisa' ? 'Nome da Votação' : 'Nome da Eleição'}</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Camisa UMP 2025' : 'Ex: Eleição Diretoria 2025'} />
+              <Label htmlFor={`${formId}-name`}>{electionType === 'camisa' ? 'Nome da Votação' : 'Nome da Eleição'}</Label>
+              <Input
+                id={`${formId}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Camisa UMP 2025' : 'Ex: Eleição Diretoria 2025'} />
             </div>
             <div>
-              <Label>{electionType === 'camisa' ? 'Descrição' : 'Cargo'}</Label>
-              <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
+              <Label htmlFor={`${formId}-position`}>{electionType === 'camisa' ? 'Descrição' : 'Cargo'}</Label>
+              <Input
+                id={`${formId}-position`} value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
             </div>
             {electionType === 'cargo' && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <Label>Quantidade de vagas</Label>
+                  <Label htmlFor={`${formId}-seats`}>Quantidade de vagas</Label>
                   <Input
+                    id={`${formId}-seats`}
                     type="number"
                     min={1}
                     value={seatsCount}
@@ -239,8 +232,9 @@ export default function Eleicoes() {
                   )}
                 </div>
                 <div>
-                  <Label>Escolhas por voto</Label>
+                  <Label htmlFor={`${formId}-choices`}>Escolhas por voto</Label>
                   <Input
+                    id={`${formId}-choices`}
                     type="number"
                     min={1}
                     max={seatsCount}
@@ -268,9 +262,9 @@ export default function Eleicoes() {
               </div>
             )}
             <div>
-              <Label>Sociedade {electionType === 'cargo' ? '(opcional)' : ''}</Label>
+              <Label htmlFor={`${formId}-society`}>Sociedade {electionType === 'cargo' ? '(opcional)' : ''}</Label>
               <Select value={societyId} onValueChange={setSocietyId}>
-                <SelectTrigger><SelectValue placeholder="Geral (toda a igreja)" /></SelectTrigger>
+                <SelectTrigger id={`${formId}-society`}><SelectValue placeholder="Geral (toda a igreja)" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="general">Geral (toda a igreja)</SelectItem>
                   {societies.map((s) => (

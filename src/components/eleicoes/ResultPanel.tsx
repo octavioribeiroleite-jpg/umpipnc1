@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { QueryErrorState } from '@/components/ui/query-error-state';
+import { useCallback, useEffect, useState } from 'react';
+import { calculateElectionRounds, type ElectionRoundResult } from '@/lib/election-results';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Trophy, CheckCircle, Medal, Users, FileX, AlertTriangle } from 'lucide-react';
@@ -16,139 +19,36 @@ function getCandidatePhoto(candidate: { photo_url: string | null; photo_urls?: s
 }
 
 export function ResultPanel({ electionId, totalPresent, candidates, election }: ResultPanelProps) {
-  const [roundResults, setRoundResults] = useState<{
-    round: number;
-    totalBallots: number;
-    blankVotes: number;
-    electedIds: string[];
-    rows: { candidate_id: string; count: number }[];
-    hasTie: boolean;
-  }[]>([]);
+  const [roundResults, setRoundResults] = useState<ElectionRoundResult[]>([]);
+
+  const { seats_count, current_round, majority_rule } = election || {};
+  const scope = JSON.stringify([electionId, seats_count, current_round, majority_rule, candidates.map(candidate => [candidate.id, candidate.birth_date])]);
+  const { loading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(scope);
+  const fetchResults = useCallback(() => runRead(async () => {
+    const { data, error } = await supabase.from('election_votes').select('*').eq('election_id', electionId);
+    if (error) throw error;
+    const results = calculateElectionRounds(data || [], candidates, { seats_count, current_round, majority_rule });
+    return () => setRoundResults(results);
+  }), [electionId, candidates, seats_count, current_round, majority_rule, runRead]);
 
   useEffect(() => {
-    const fetchResults = async () => {
-      const { data } = await supabase
-        .from('election_votes' as any)
-        .select('*')
-        .eq('election_id', electionId);
-
-      if (data) {
-        const votes = data as any[];
-        const maxRound = Math.max(election?.current_round || 1, ...votes.map((v) => v.round_number || 1));
-        const alreadyElected = new Set<string>();
-        const seatsCount = election?.seats_count || 1;
-        const MAX_ROUNDS = 3;
-
-        const parsed = Array.from({ length: maxRound }, (_, index) => {
-          const round = index + 1;
-          const roundVotes = votes.filter((v) => (v.round_number || 1) === round);
-          const totalBallots = new Set(roundVotes.map((v) => v.ballot_id || v.id)).size;
-
-          const blankVotes = roundVotes.filter((v) => v.is_blank === true).length;
-
-          const counts = roundVotes.reduce((acc: Record<string, number>, v: any) => {
-            if (!v.is_blank && v.candidate_id && !alreadyElected.has(v.candidate_id))
-              acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
-            return acc;
-          }, {});
-
-          const rows = Object.entries(counts)
-            .map(([candidate_id, count]) => ({ candidate_id, count: count as number }))
-            .sort((a, b) => b.count - a.count);
-
-          const needed = Math.floor(totalBallots / 2) + 1;
-          const vagas = Math.max(0, seatsCount - alreadyElected.size);
-          let electedIds: string[] = [];
-          let hasTie = false;
-
-          if (round === 1) {
-            const aprovados = rows.filter((r) =>
-              election?.majority_rule === 'absolute_50' ? r.count >= needed : true
-            );
-            const cutoffCount = aprovados[vagas - 1]?.count;
-            const nextCount = aprovados[vagas]?.count;
-            const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
-
-            if (!tieAtCutoff) {
-              electedIds = aprovados.slice(0, vagas).map((r) => r.candidate_id);
-            } else {
-              electedIds = aprovados
-                .filter((r) => r.count > cutoffCount)
-                .map((r) => r.candidate_id);
-              hasTie = true;
-            }
-          } else if (round < MAX_ROUNDS) {
-            // 2º escrutínio: MAIORIA SIMPLES — top N com mais votos
-            const cutoffCount = rows[vagas - 1]?.count;
-            const nextCount = rows[vagas]?.count;
-            const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
-
-            if (!tieAtCutoff) {
-              electedIds = rows.slice(0, vagas).map((r) => r.candidate_id);
-            } else {
-              hasTie = true;
-            }
-          } else {
-            const cutoffCount = rows[vagas - 1]?.count;
-            const nextCount = rows[vagas]?.count;
-            const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
-
-            if (!tieAtCutoff) {
-              electedIds = rows.slice(0, vagas).map((r) => r.candidate_id);
-            } else {
-              const clearlyElected = rows
-                .filter((r) => r.count > cutoffCount)
-                .map((r) => r.candidate_id);
-
-              const vagasRestantes = vagas - clearlyElected.length;
-
-              const tiedIds = rows
-                .filter((r) => r.count === cutoffCount)
-                .map((r) => r.candidate_id);
-
-              const tiedByAge = tiedIds
-                .map((id) => candidates.find((c) => c.id === id))
-                .filter(Boolean)
-                .sort((a, b) => {
-                  if (!a?.birth_date) return 1;
-                  if (!b?.birth_date) return -1;
-                  return new Date(a.birth_date).getTime() - new Date(b.birth_date).getTime();
-                })
-                .slice(0, vagasRestantes)
-                .map((c) => c!.id);
-
-              electedIds = [...clearlyElected, ...tiedByAge];
-              hasTie = tiedIds.length > vagasRestantes;
-            }
-          }
-
-          electedIds.forEach((id) => alreadyElected.add(id));
-          return { round, totalBallots, blankVotes, electedIds, rows, hasTie };
-        });
-        setRoundResults(parsed);
-      }
-    };
-    fetchResults();
-
-    const channel = supabase
-      .channel(`result-${electionId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'election_votes',
-        filter: `election_id=eq.${electionId}`,
-      }, fetchResults)
+    void fetchResults();
+    const channel = supabase.channel(`result-${electionId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'election_votes', filter: `election_id=eq.${electionId}` }, fetchResults)
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
-  }, [electionId, election?.current_round, election?.majority_rule, election?.seats_count]);
+  }, [electionId, fetchResults]);
 
   const allElected = roundResults.flatMap((r) => r.electedIds);
   const seatsCount = election?.seats_count || 1;
   const isValid = roundResults.length > 0 && allElected.length >= seatsCount;
 
+  const readFailure = readError ? <QueryErrorState message="Não foi possível consultar os votos para apuração." onRetry={() => void fetchResults()} retrying={loading} hasPreviousData={hasSnapshot} /> : null;
+  if (!hasSnapshot) return readFailure || <p role="status" className="py-8 text-center text-muted-foreground">Consultando resultado…</p>;
+
   return (
     <div className="space-y-4">
+      {readFailure}
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
