@@ -1,0 +1,97 @@
+[
+  {
+    "logos": [
+      {
+        "alt": "Renovo IPNC",
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ],
+        "size": [
+          28,
+          28
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 320
+  },
+  {
+    "logos": [
+      {
+        "alt": "Renovo IPNC",
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ],
+        "size": [
+          28,
+          28
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 390
+  },
+  {
+    "logos": [
+      {
+        "alt": "Renovo IPNC",
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ],
+        "size": [
+          36,
+          36
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 768
+  },
+  {
+    "logos": [
+      {
+        "alt": "Renovo IPNC",
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ],
+        "size": [
+          36,
+          36
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 1024
+  },
+  {
+    "logos": [
+      {
+        "alt": "Renovo IPNC",
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ],
+        "size": [
+          36,
+          36
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 1440
+  }
+]

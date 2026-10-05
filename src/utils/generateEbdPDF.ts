@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import logoBase64 from '@/assets/logo-ipnc.png';
+import { drawPdfBrandLogo } from './drawPdfBrandLogo';
 
 interface EbdClass {
   id: string;
@@ -117,7 +118,7 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
   doc.rect(0, 0, pageWidth, 42, 'F');
 
   try {
-    doc.addImage(logoBase64, 'PNG', margin, 5, 20, 20);
+    drawPdfBrandLogo(doc, logoBase64, margin, 5, 20);
   } catch { /* skip */ }
 
   const textX = margin + 26;
@@ -446,7 +447,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
   // === HEADER ===
   doc.setFillColor(30, 58, 95);
   doc.rect(0, 0, pageWidth, 42, 'F');
-  try { doc.addImage(logoBase64, 'PNG', margin, 5, 20, 20); } catch { /* skip */ }
+  try { drawPdfBrandLogo(doc, logoBase64, margin, 5, 20); } catch { /* skip */ }
   const textX = margin + 26;
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
@@ -696,7 +697,7 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
   // === HEADER ===
   doc.setFillColor(30, 58, 95);
   doc.rect(0, 0, pageWidth, 42, 'F');
-  try { doc.addImage(logoBase64, 'PNG', margin, 5, 20, 20); } catch { /* skip */ }
+  try { drawPdfBrandLogo(doc, logoBase64, margin, 5, 20); } catch { /* skip */ }
   const textX = margin + 26;
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);

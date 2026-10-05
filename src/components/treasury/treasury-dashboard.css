@@ -24,7 +24,7 @@
 .tr-brand { display: flex; align-items: center; gap: 12px; margin: 0 12px 28px; text-decoration: none; font-size: 1.625rem; font-weight: 700; line-height: 1.2; letter-spacing: -.025em; }
 .tr-brand-icon { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 48px; border: 1px solid currentColor; border-radius: 12px; }
 .tr-brand-icon img { width: 40px; height: 40px; object-fit: contain; }
-.tr-mobile-brand img { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
+.tr-mobile-brand img { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; padding: 3px; background: #123b2e; border-radius: 8px; }
 .tr-brand small { display: block; margin-top: 5px; font-size: 0.75rem; letter-spacing: .08em; font-weight: 500; color: #d7efe2; opacity: 1; }
 .tr-sidebar-label { margin: 20px 12px 8px; font-size: 0.75rem; letter-spacing: .06em; font-weight: 600; color: #d7efe2; opacity: 1; }
 .tr-nav { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 11px 12px; width: 100%; margin: 4px 0; border-radius: 12px; color: inherit; font-size: 0.875rem; text-align: left; }

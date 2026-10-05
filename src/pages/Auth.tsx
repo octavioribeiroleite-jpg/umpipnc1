@@ -14,6 +14,7 @@ import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight,
 import logoIpnc from '@/assets/logo-ipnc-entry.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
+import SocietySelector from '@/components/auth/SocietySelector';
 import { InstallButton } from '@/components/layout/InstallButton';
 import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 import { TreasuryAccessDialog } from '@/components/treasury/TreasuryAccessDialog';
@@ -599,83 +600,15 @@ export default function Auth() {
             embedded
           />
         ) : step === 'diretoria' && diretoriaStep === 'societies' ? (
-          <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
-            <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="icon" aria-label="Voltar" className="h-11 w-11 text-white hover:bg-white/10" onClick={handleBack}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-lg font-semibold text-white">Selecione a sociedade</h2>
-            </div>
-            {pinLoading && (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
-              </div>
-            )}
-            {!pinLoading && (
-              <div className="grid grid-cols-2 gap-3">
-                {societies.map((society) => (
-                  <button
-                    key={society.id}
-                    type="button"
-                    className="min-w-0 rounded-2xl border text-card-foreground text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
-                    onClick={() => handleSelectDiretoriaSociety(society)}
-                  >
-                    <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
-                      <div
-                        className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-                        style={{ backgroundColor: society.color }}
-                      >
-                        {society.slug.toUpperCase().slice(0, 3)}
-                      </div>
-                      <span className="font-semibold text-sm text-foreground">{society.name}</span>
-                    </CardContent>
-                  </button>
-                ))}
-                {/* Pastor virtual card */}
-                <button
-                  type="button"
-                  className="min-w-0 rounded-2xl border text-card-foreground text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
-                  onClick={() => handleSelectDiretoriaSociety({ id: 'pastor', name: 'Pastor', slug: 'pastor', color: '#1e3a5f' })}
-                >
-                  <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
-                    <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: '#1e3a5f' }}>
-                      <Church className="h-6 w-6" />
-                    </div>
-                    <span className="font-semibold text-sm text-foreground">Pastor</span>
-                  </CardContent>
-                </button>
-              </div>
-            )}
-          </div>
+          <SocietySelector
+            societies={societies}
+            loading={pinLoading}
+            onBack={handleBack}
+            onSelect={handleSelectDiretoriaSociety}
+            onSelectPastor={() => handleSelectDiretoriaSociety({ id: 'pastor', name: 'Pastor', slug: 'pastor', color: '#1e3a5f' })}
+          />
         ) : step === 'membro' && membroStep === 'societies' ? (
-          <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
-            <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="icon" aria-label="Voltar" className="h-11 w-11 text-white hover:bg-white/10" onClick={handleBack}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-lg font-semibold text-white">Selecione sua sociedade</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {societies.map((society) => (
-                <button
-                  key={society.id}
-                  type="button"
-                  className="min-w-0 rounded-2xl border text-card-foreground text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer border-white/20 shadow-lg bg-card/90 dark:bg-card/95 backdrop-blur-md hover:shadow-xl hover:bg-card/95 dark:bg-card transition-all duration-200 active:scale-[0.97]"
-                  onClick={() => handleSelectMembroSociety(society)}
-                >
-                  <CardContent className="flex flex-col items-center justify-center gap-2 p-5">
-                    <div
-                      className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-                      style={{ backgroundColor: society.color }}
-                    >
-                      {society.slug.toUpperCase().slice(0, 3)}
-                    </div>
-                    <span className="font-semibold text-sm text-foreground">{society.name}</span>
-                  </CardContent>
-                </button>
-              ))}
-            </div>
-          </div>
+          <SocietySelector societies={societies} onBack={handleBack} onSelect={handleSelectMembroSociety} />
         ) : (
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <Button variant="ghost" onClick={handleBack} className="mb-3"><ArrowLeft className="h-4 w-4" />Voltar</Button>
@@ -740,8 +673,10 @@ export default function Auth() {
     );
   };
 
+  const isSocietySelection = !isEnteringApp && ((step === 'diretoria' && diretoriaStep === 'societies') || (step === 'membro' && membroStep === 'societies'));
+
   return (
-    <div className="auth-page">
+    <div className={`auth-page ${isSocietySelection ? 'auth-page-society' : ''}`}>
       <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
       <aside className="auth-brand-panel">
         <div className="auth-brand-content">
@@ -766,9 +701,9 @@ export default function Auth() {
           {(step !== 'select' || isEnteringApp) && <h1 className="sr-only">{isEnteringApp ? 'Entrando no aplicativo IPNC' : step === 'login' ? 'Acesso administrativo' : step === 'diretoria' ? 'Acesso da diretoria' : 'Acesso IPNC'}</h1>}
           {step === 'select' && !isEnteringApp && <p className="auth-values">Comunhão <span>·</span> Discipulado <span>·</span> Serviço <span>·</span> Missão</p>}
           {renderContent()}
-          <footer className="auth-page-footer">
+          <footer className={`auth-page-footer ${step !== 'select' ? 'auth-page-footer-flow' : ''}`}>
             <p className="auth-copyright">© {new Date().getFullYear()} IPNC</p>
-            {step === 'select' && !isEnteringApp && <p className="auth-footer-motto">Tudo para a glória de Deus.</p>}
+            {(step === 'select' || isSocietySelection) && !isEnteringApp && <p className="auth-footer-motto">{isSocietySelection ? 'Para a glória de Deus.' : 'Tudo para a glória de Deus.'}</p>}
           </footer>
         </div>
       </main>

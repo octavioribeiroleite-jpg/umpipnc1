@@ -40,7 +40,7 @@ const isoDay = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'
 const displayText = fixtureState === 'long'
  ? 'Conteúdo inteiramente fictício para avaliar quebra de linha, leitura, rolagem e ações em dispositivos estreitos. '.repeat(12)
  : 'Conteúdo fictício de demonstração, sem consulta a pessoas ou serviços reais.';
-data.societies = [data.societies[0], ...['SAF','UPA','UPH'].map((name,index)=>({id:`00000000-0000-0000-0000-${String(index+3).padStart(12,'0')}`,name,slug:name.toLowerCase(),color:['#a35a78','#bd793f','#356296'][index],active:true}))];
+data.societies = [data.societies[0], ...['SAF','UPA','UPH','UCP'].map((name,index)=>({id:`00000000-0000-0000-0000-${String(index+3).padStart(12,'0')}`,name,slug:name.toLowerCase(),color:['#a35a78','#bd793f','#356296','#75539c'][index],active:true}))];
 data.events[0] = {...data.events[0],start_date:`${isoDay}T18:00:00`,end_date:`${isoDay}T20:00:00`,description:displayText};
 data.meetings[0] = {...data.meetings[0],date:`${isoDay}T14:00:00`,meeting_notes:displayText,whatsapp_message:displayText};
 if (fixtureState === 'long' || fixtureParams.get('processed') === '1') {

@@ -1,0 +1,72 @@
+[
+  {
+    "logos": [
+      {
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 320
+  },
+  {
+    "logos": [
+      {
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 390
+  },
+  {
+    "logos": [
+      {
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 768
+  },
+  {
+    "logos": [
+      {
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 1024
+  },
+  {
+    "logos": [
+      {
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 1440
+  }
+]

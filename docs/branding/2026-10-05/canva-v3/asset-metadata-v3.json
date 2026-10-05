@@ -1,0 +1,307 @@
+{
+  "compositions": {
+    "apple-touch-icon-v3.png": {
+      "art_alpha_bbox": [
+        12,
+        23,
+        168,
+        157
+      ],
+      "art_size": [
+        156,
+        134
+      ],
+      "canvas_size": [
+        180,
+        180
+      ],
+      "placement": [
+        12,
+        23
+      ],
+      "resampling": "LANCZOS reduction only",
+      "upscale_applied": false
+    },
+    "favicon-32x32-v3.png": {
+      "art_alpha_bbox": [
+        2,
+        4,
+        30,
+        28
+      ],
+      "art_size": [
+        28,
+        24
+      ],
+      "canvas_size": [
+        32,
+        32
+      ],
+      "placement": [
+        2,
+        4
+      ],
+      "resampling": "LANCZOS reduction only",
+      "upscale_applied": false
+    },
+    "icon-192x192-v3.png": {
+      "art_alpha_bbox": [
+        13,
+        23,
+        180,
+        168
+      ],
+      "art_size": [
+        168,
+        145
+      ],
+      "canvas_size": [
+        192,
+        192
+      ],
+      "placement": [
+        12,
+        23
+      ],
+      "resampling": "LANCZOS reduction only",
+      "upscale_applied": false
+    },
+    "icon-512x512-v3.png": {
+      "art_alpha_bbox": [
+        58,
+        86,
+        453,
+        426
+      ],
+      "art_size": [
+        403,
+        348
+      ],
+      "canvas_size": [
+        512,
+        512
+      ],
+      "placement": [
+        54,
+        82
+      ],
+      "resampling": "none",
+      "upscale_applied": false
+    },
+    "icon-maskable-512x512-v3.png": {
+      "art_alpha_bbox": [
+        107,
+        126,
+        407,
+        386
+      ],
+      "art_size": [
+        304,
+        262
+      ],
+      "canvas_size": [
+        512,
+        512
+      ],
+      "placement": [
+        104,
+        125
+      ],
+      "resampling": "LANCZOS reduction only",
+      "upscale_applied": false
+    },
+    "ipnc-social-v3.png": {
+      "art_alpha_bbox": [
+        402,
+        430,
+        797,
+        770
+      ],
+      "art_size": [
+        403,
+        348
+      ],
+      "canvas_size": [
+        1200,
+        1200
+      ],
+      "placement": [
+        398,
+        426
+      ],
+      "resampling": "none",
+      "upscale_applied": false
+    }
+  },
+  "favicon": {
+    "complete_art_in_all_frames": true,
+    "direct_reduction_from_source_per_frame": true,
+    "ico_sizes": [
+      16,
+      32,
+      48,
+      64,
+      128,
+      256
+    ],
+    "png32_matches_ico32": true
+  },
+  "files": [
+    {
+      "bytes": 13856,
+      "filename": "apple-touch-icon-v3.png",
+      "mode": "RGB",
+      "sha256": "7f7627369399fa720bbc397f52eba652b58505a8c7fb36a7f3c1a0caa9c07460",
+      "size": [
+        180,
+        180
+      ]
+    },
+    {
+      "bytes": 1383,
+      "filename": "favicon-32x32-v3.png",
+      "mode": "RGB",
+      "sha256": "2bfaee3713bb472453372854c26442dfe27ea6df1b6ed7123f31939560c5caac",
+      "size": [
+        32,
+        32
+      ]
+    },
+    {
+      "bytes": 15434,
+      "filename": "icon-192x192-v3.png",
+      "mode": "RGB",
+      "sha256": "3c7adf66b368183703b6c1d1c620cde2b8ee921a4a30c22866214619dcc35603",
+      "size": [
+        192,
+        192
+      ]
+    },
+    {
+      "bytes": 44152,
+      "filename": "icon-512x512-v3.png",
+      "mode": "RGB",
+      "sha256": "5b75c379a6bf21593eba634d7ca4d46fadec445a5bd700e96244042922d1ed43",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "bytes": 37149,
+      "filename": "icon-maskable-512x512-v3.png",
+      "mode": "RGB",
+      "sha256": "f86ef8b8f7389e98263c734e1f47509e9649cb79bc395d237f48bd7cb4f0a69c",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "bytes": 51912,
+      "filename": "ipnc-social-v3.png",
+      "mode": "RGB",
+      "sha256": "f409dcdbc2b9ca0ab2e5f9732c8bba310700ca0eaccc2c970860edbb81311283",
+      "size": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "bytes": 51524,
+      "filename": "logo-ipnc.png",
+      "mode": "RGBA",
+      "sha256": "37f7bd6da099b8e29d5433ac1c1aca313bfedfe7c49241adc9f5feb4f847d83b",
+      "size": [
+        403,
+        348
+      ]
+    },
+    {
+      "bytes": 188683,
+      "filename": "qa-contact-sheet-v3.png",
+      "mode": "RGB",
+      "sha256": "69bda6275f1b2c2f041eb2fc135f4749307e96ce5decc9831a7a30365afbcf62",
+      "size": [
+        1360,
+        1000
+      ]
+    },
+    {
+      "bytes": 40506,
+      "filename": "favicon-v3.ico",
+      "mode": "RGB",
+      "sha256": "0b456bebeb82367e600dcdfa6af120612010689461d00aa9b70749e1a7bab547",
+      "size": [
+        256,
+        256
+      ]
+    }
+  ],
+  "maskable": {
+    "art_alpha_bbox": [
+      107,
+      126,
+      407,
+      386
+    ],
+    "complete_art_inside_safe_circle": true,
+    "launcher_shapes": {
+      "circle": {
+        "clipped_alpha_bbox": null,
+        "source_pixels_clipped": false
+      },
+      "rounded": {
+        "clipped_alpha_bbox": null,
+        "source_pixels_clipped": false
+      },
+      "squircle": {
+        "clipped_alpha_bbox": null,
+        "source_pixels_clipped": false
+      }
+    },
+    "maximum_art_bbox_corner_radius": 199.2510978639766,
+    "safe_circle_center": [
+      256,
+      256
+    ],
+    "safe_circle_radius": 204.8,
+    "safe_radius_margin": 5.5489021360234005
+  },
+  "master": {
+    "copied_bytes_identically": true,
+    "rgba_pixel_sha256": "29d8e4fba27f712ac0fbdba65243b4d5aa8d81592a22243a5b44827c4e4ab211",
+    "sha256": "37f7bd6da099b8e29d5433ac1c1aca313bfedfe7c49241adc9f5feb4f847d83b"
+  },
+  "pillow_version": "11.3.0",
+  "pipeline": "scripts/generate-brand-assets-v3.py",
+  "processing": {
+    "background": "#123b2e",
+    "complete_art_in_every_output": true,
+    "crop_applied": false,
+    "png_encoding": "lossless",
+    "recolor_applied": false,
+    "redraw_applied": false,
+    "upscale_applied": false
+  },
+  "qa": {
+    "contact_sheet": "qa-contact-sheet-v3.png",
+    "preview_enlargement_for_inspection_only": true,
+    "production_pixels_not_modified": true
+  },
+  "source": {
+    "alpha_bbox": [
+      4,
+      4,
+      399,
+      344
+    ],
+    "mode": "RGBA",
+    "path": "/Users/octavioribeiroleite/.codex/worktrees/ipnc-visual-completo/Aplicativo IPNC/src/assets/logo-ipnc-entry.png",
+    "sha256": "37f7bd6da099b8e29d5433ac1c1aca313bfedfe7c49241adc9f5feb4f847d83b",
+    "size": [
+      403,
+      348
+    ]
+  }
+}

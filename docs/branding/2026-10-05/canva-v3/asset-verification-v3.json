@@ -1,0 +1,98 @@
+{
+  "canva_export_provenance": {
+    "all_export_alpha_content_preserved": true,
+    "entry_pixels_equal_export_crop": true,
+    "extracted_crop_box": [
+      35,
+      137,
+      438,
+      485
+    ],
+    "path": "docs/design-audit/auth-composition-2026-10-05/entry-logo-canva-export.png",
+    "rgba_resolution": [
+      540,
+      562
+    ],
+    "sha256": "6b19e94e0b5d90f29717700dcadb334cacb4bf28cec6c837b487155fa28de041",
+    "transparent_margin_px": 4
+  },
+  "date": "2026-10-05",
+  "favicon_ico_sha256": "0b456bebeb82367e600dcdfa6af120612010689461d00aa9b70749e1a7bab547",
+  "files": {
+    "public/icons/apple-touch-icon-v3.png": {
+      "dimensions": [
+        180,
+        180
+      ],
+      "mode": "RGB",
+      "sha256": "7f7627369399fa720bbc397f52eba652b58505a8c7fb36a7f3c1a0caa9c07460"
+    },
+    "public/icons/favicon-32x32-v3.png": {
+      "dimensions": [
+        32,
+        32
+      ],
+      "mode": "RGB",
+      "sha256": "2bfaee3713bb472453372854c26442dfe27ea6df1b6ed7123f31939560c5caac"
+    },
+    "public/icons/icon-192x192-v3.png": {
+      "dimensions": [
+        192,
+        192
+      ],
+      "mode": "RGB",
+      "sha256": "3c7adf66b368183703b6c1d1c620cde2b8ee921a4a30c22866214619dcc35603"
+    },
+    "public/icons/icon-512x512-v3.png": {
+      "dimensions": [
+        512,
+        512
+      ],
+      "mode": "RGB",
+      "sha256": "5b75c379a6bf21593eba634d7ca4d46fadec445a5bd700e96244042922d1ed43"
+    },
+    "public/icons/icon-maskable-512x512-v3.png": {
+      "dimensions": [
+        512,
+        512
+      ],
+      "mode": "RGB",
+      "sha256": "f86ef8b8f7389e98263c734e1f47509e9649cb79bc395d237f48bd7cb4f0a69c"
+    },
+    "public/icons/ipnc-social-v3.png": {
+      "dimensions": [
+        1200,
+        1200
+      ],
+      "mode": "RGB",
+      "sha256": "f409dcdbc2b9ca0ab2e5f9732c8bba310700ca0eaccc2c970860edbb81311283"
+    }
+  },
+  "git_diff_check": "passed",
+  "manifest_dimensions_match_pngs": true,
+  "manifest_identity_preserved": true,
+  "master_bytes_identical": true,
+  "master_sha256": "37f7bd6da099b8e29d5433ac1c1aca313bfedfe7c49241adc9f5feb4f847d83b",
+  "metadata_references": "v3",
+  "old_public_icons_remaining": false,
+  "precache_matches_manifest": true,
+  "production_files_equal_generated_bytes": true,
+  "production_upscale_applied": false,
+  "public_icon_directory": [
+    "apple-touch-icon-v3.png",
+    "favicon-32x32-v3.png",
+    "icon-192x192-v3.png",
+    "icon-512x512-v3.png",
+    "icon-maskable-512x512-v3.png",
+    "ipnc-social-v3.png"
+  ],
+  "pwa_test_failed": 0,
+  "pwa_test_passed": 12,
+  "scope": "Canva v3 public assets, exact master, metadata, manifest and cache",
+  "source_rgba_resolution": [
+    403,
+    348
+  ],
+  "source_sha256": "37f7bd6da099b8e29d5433ac1c1aca313bfedfe7c49241adc9f5feb4f847d83b",
+  "sw_and_registrator_cache_version": "ump-cache-v11"
+}

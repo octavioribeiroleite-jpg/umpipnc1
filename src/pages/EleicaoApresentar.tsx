@@ -93,7 +93,7 @@ export default function EleicaoApresentar() {
       <header className="border-b border-border bg-card">
         <div className="max-w-[1600px] mx-auto px-[16px] min-[700px]:px-[32px] py-[24px] flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 lg:gap-4 min-w-0">
-            <img src={logo} alt="Renovo IPNC" className="h-10 lg:h-14 w-auto shrink-0" />
+            <img src={logo} alt="Renovo IPNC" className="h-10 lg:h-14 w-auto shrink-0 rounded-lg bg-[#123b2e] p-1 object-contain" />
             <div className="min-w-0">
               <h1 className="text-[clamp(2.5rem,4vw,3.5rem)] leading-tight font-bold min-w-0 whitespace-normal [overflow-wrap:anywhere]">{election.name}</h1>
               <p className="text-lg text-muted-foreground min-w-0 whitespace-normal [overflow-wrap:anywhere]">

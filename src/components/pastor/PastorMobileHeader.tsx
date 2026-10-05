@@ -41,7 +41,11 @@ export function PastorMobileHeader() {
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          {isPastorHome && <img src={logoIpnc} alt="IPNC" className="h-[36px] w-[36px] object-contain flex-shrink-0" />}
+          {isPastorHome && (
+            <div className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-lg bg-[#123b2e] p-1">
+              <img src={logoIpnc} alt="IPNC" className="h-full w-full object-contain" />
+            </div>
+          )}
           <span title={profile?.full_name} className="font-semibold text-foreground text-sm sm:text-base break-words leading-tight">
             {profile?.full_name?.trim().split(/\s+/).slice(0, 1).join(' ') || 'Painel do Pastor'}
           </span>

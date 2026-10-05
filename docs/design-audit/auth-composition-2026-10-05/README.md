@@ -1,6 +1,6 @@
 # Composição da entrada IPNC — 05/10/2026
 
-A página `/auth` segue a referência enviada “Portal IPNC: Acesso e Comunhão”. Após a prévia, o proprietário pediu usar na entrada a marca de duas folhas do mockup, com fundo transparente, e concluir a arte no Canva. A marca da entrada usa um asset separado. O arquivo institucional compartilhado, ícones e manifest não foram modificados nesta entrega.
+A página `/auth` segue a referência enviada “Portal IPNC: Acesso e Comunhão”. Após a prévia, o proprietário pediu usar na entrada a marca de duas folhas do mockup, com fundo transparente, e concluir a arte no Canva. O trecho abaixo documenta a entrega inicial da entrada (v32). Na revisão seguinte, a marca foi integrada aos demais consumidores e a seleção foi refeita conforme a nova referência: consulte `docs/branding/2026-10-05/canva-v3/README.md` e `docs/design-audit/society-selection-2026-10-05/README.md`.
 
 ## Resultado
 
@@ -64,7 +64,7 @@ A cópia [IPNC — Marca da entrada com fundo transparente](https://www.canva.co
 - Arquivo da entrada: `src/assets/logo-ipnc-entry.png`, 403 × 348 px. Foram retiradas somente as margens vazias, mantendo quatro pixels transparentes de margem. O recorte e a otimização PNG preservam exatamente os pixels internos, sem redimensionamento.
 - Texto editável no Canva; folhas raster de 229 × 124 px extraídas da referência. Não houve vetorização ou ampliação artificial. Esta cópia não é apresentada como um original institucional de alta resolução para impressão.
 - A linha decorativa do mockup não faz parte do asset; a linha da composição continua no CSS da página.
-- Import exclusivo em Auth. Imagens institucionais compartilhadas, PWA, relatórios e manifest mantêm a revisão institucional anterior.
+- Na v32 o import era exclusivo em Auth. A revisão v3 documentada no relatório de branding estende a mesma arte aos consumidores compartilhados, PWA e PDFs.
 - Cache da entrada: o Vite gera um nome de arquivo com hash de conteúdo para o novo asset, evitando reutilizar a URL da imagem anterior.
 
 Tipos, 224 testes, build e diff check passaram novamente após a troca. O lint mantém somente o erro preexistente de Auth na linha 269. A logo foi medida em 320, 390, 768, 1024 e 1440 px, mantendo a razão 403:348, sem rolagem horizontal. Em celular, usa largura 112 px; em tablet, 128 px; no desktop, 220–280 px. Evidências atuais: `evidence/entry-logo-canva-390.png`, `evidence/entry-logo-canva-1440.png` e `evidence/entry-logo-geometry.json`. As demais capturas desta pasta documentam a validação anterior da composição.

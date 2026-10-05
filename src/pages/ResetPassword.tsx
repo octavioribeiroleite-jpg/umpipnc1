@@ -51,7 +51,7 @@ export default function ResetPassword() {
 
   return <main className="min-h-dvh flex items-center justify-center bg-background p-4">
     <div className="w-full max-w-[400px] space-y-6">
-      <img src={logo} alt="Renovo IPNC" className="mx-auto h-24 w-24 object-contain" />
+      <img src={logo} alt="Renovo IPNC" className="mx-auto h-24 w-24 rounded-2xl bg-[#123b2e] p-1 object-contain" />
       <Card>
         <CardHeader>
           <KeyRound className="h-10 w-10 text-primary" aria-hidden="true" />

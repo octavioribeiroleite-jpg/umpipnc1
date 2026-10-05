@@ -75,7 +75,7 @@ export function PastorSidebar() {
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="bg-white rounded-lg p-1 shrink-0 flex items-center justify-center">
+          <div className="bg-[#123b2e] rounded-lg p-1 shrink-0 flex items-center justify-center">
             <img src={logoIpnc} alt="IPNC" className="h-9 w-9 object-contain" />
           </div>
           <div className="min-w-0">

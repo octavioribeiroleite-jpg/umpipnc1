@@ -1,0 +1,272 @@
+[
+  {
+    "cards": [
+      {
+        "height": 117.3359375,
+        "iconLoaded": true,
+        "name": "SAF",
+        "width": 265
+      },
+      {
+        "height": 117.3359375,
+        "iconLoaded": true,
+        "name": "UCP",
+        "width": 265
+      },
+      {
+        "height": 117.3359375,
+        "iconLoaded": true,
+        "name": "UMP",
+        "width": 265
+      },
+      {
+        "height": 117.3359375,
+        "iconLoaded": true,
+        "name": "UPA",
+        "width": 265
+      },
+      {
+        "height": 117.3359375,
+        "iconLoaded": true,
+        "name": "UPH",
+        "width": 265
+      },
+      {
+        "height": 117.3359375,
+        "iconLoaded": true,
+        "name": "Pastor",
+        "width": 265
+      }
+    ],
+    "grid": "265px",
+    "headingTop": 72,
+    "notificationBottom": 56,
+    "overflow": false,
+    "width": 320
+  },
+  {
+    "cards": [
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "SAF",
+        "width": 320
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "UCP",
+        "width": 320
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "UMP",
+        "width": 320
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "UPA",
+        "width": 320
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "UPH",
+        "width": 320
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "Pastor",
+        "width": 320
+      }
+    ],
+    "grid": "320px",
+    "headingTop": 72,
+    "notificationBottom": 56,
+    "overflow": false,
+    "width": 375
+  },
+  {
+    "cards": [
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "SAF",
+        "width": 335
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "UCP",
+        "width": 335
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "UMP",
+        "width": 335
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "UPA",
+        "width": 335
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "UPH",
+        "width": 335
+      },
+      {
+        "height": 108,
+        "iconLoaded": true,
+        "name": "Pastor",
+        "width": 335
+      }
+    ],
+    "grid": "335px",
+    "headingTop": 72,
+    "notificationBottom": 56,
+    "overflow": false,
+    "width": 390
+  },
+  {
+    "cards": [
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "SAF",
+        "width": 334
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "UCP",
+        "width": 334
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "UMP",
+        "width": 334
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "UPA",
+        "width": 334
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "UPH",
+        "width": 334
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "Pastor",
+        "width": 334
+      }
+    ],
+    "grid": "334px 334px",
+    "headingTop": 221.9140625,
+    "notificationBottom": 56,
+    "overflow": false,
+    "width": 768
+  },
+  {
+    "cards": [
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "SAF",
+        "width": 462
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "UCP",
+        "width": 462
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "UMP",
+        "width": 462
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "UPA",
+        "width": 462
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "UPH",
+        "width": 462
+      },
+      {
+        "height": 136,
+        "iconLoaded": true,
+        "name": "Pastor",
+        "width": 462
+      }
+    ],
+    "grid": "462px 462px",
+    "headingTop": 159.9140625,
+    "notificationBottom": 56,
+    "overflow": false,
+    "width": 1024
+  },
+  {
+    "cards": [
+      {
+        "height": 170,
+        "iconLoaded": true,
+        "name": "SAF",
+        "width": 628
+      },
+      {
+        "height": 170,
+        "iconLoaded": true,
+        "name": "UCP",
+        "width": 628
+      },
+      {
+        "height": 170,
+        "iconLoaded": true,
+        "name": "UMP",
+        "width": 628
+      },
+      {
+        "height": 170,
+        "iconLoaded": true,
+        "name": "UPA",
+        "width": 628
+      },
+      {
+        "height": 170,
+        "iconLoaded": true,
+        "name": "UPH",
+        "width": 628
+      },
+      {
+        "height": 170,
+        "iconLoaded": true,
+        "name": "Pastor",
+        "width": 628
+      }
+    ],
+    "grid": "628px 628px",
+    "headingTop": 106.75,
+    "notificationBottom": 56,
+    "overflow": false,
+    "width": 1440
+  }
+]

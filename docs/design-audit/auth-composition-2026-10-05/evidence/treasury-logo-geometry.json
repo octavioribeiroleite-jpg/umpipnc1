@@ -1,0 +1,30 @@
+[
+  {
+    "logos": [
+      {
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 390
+  },
+  {
+    "logos": [
+      {
+        "fit": "contain",
+        "loaded": true,
+        "natural": [
+          403,
+          348
+        ]
+      }
+    ],
+    "overflow": false,
+    "width": 1440
+  }
+]

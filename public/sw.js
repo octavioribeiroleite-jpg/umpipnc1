@@ -1,8 +1,8 @@
-const CACHE_NAME = 'ump-cache-v10';
+const CACHE_NAME = 'ump-cache-v11';
 const STATIC_ASSETS = [
-  '/icons/icon-192x192-v2.png',
-  '/icons/icon-512x512-v2.png',
-  '/icons/icon-maskable-512x512-v2.png'
+  '/icons/icon-192x192-v3.png',
+  '/icons/icon-512x512-v3.png',
+  '/icons/icon-maskable-512x512-v3.png'
 ];
 
 self.addEventListener('install', (event) => {

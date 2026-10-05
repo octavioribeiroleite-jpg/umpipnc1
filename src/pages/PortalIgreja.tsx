@@ -75,7 +75,7 @@ function WelcomeScreen({ visitor, onContinue }: { visitor: VisitorData; onContin
           <img
             src={logoIpnc}
             alt="IPNC"
-            className="h-24 w-24 mx-auto object-contain"
+            className="h-24 w-24 mx-auto rounded-2xl bg-[#123b2e] p-1 object-contain"
           />
         </div>
 
@@ -156,7 +156,7 @@ function ReturnVisitorConfirm({
     <div className="min-h-dvh flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 text-center space-y-5 sm:p-8">
         <div className="">
-          <img src={logoIpnc} alt="IPNC" className="h-24 w-24 mx-auto object-contain" />
+          <img src={logoIpnc} alt="IPNC" className="h-24 w-24 mx-auto rounded-2xl bg-[#123b2e] p-1 object-contain" />
         </div>
 
         <h1
@@ -321,7 +321,7 @@ function IdentificationForm({ onComplete }: { onComplete: (v: VisitorData) => vo
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-block animate-logo-pulse mb-4">
-            <img src={logoIpnc} alt="IPNC" className="h-20 w-20 mx-auto object-contain" />
+            <img src={logoIpnc} alt="IPNC" className="h-20 w-20 mx-auto rounded-2xl bg-[#123b2e] p-1 object-contain" />
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground">
             Bem-vindo à Igreja Presbiteriana
@@ -431,7 +431,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
   return <div ref={shellRef} className="ipnc-portal min-h-dvh min-w-0 bg-background min-[700px]:flex">
     <aside aria-label="Portal da igreja" className="sticky top-0 hidden h-dvh w-[76px] shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar text-sidebar-foreground p-[8px] min-[700px]:flex min-[1100px]:w-[224px] min-[1100px]:p-[16px]">
       <div className="flex min-h-[64px] items-center gap-3 min-[1100px]:px-2">
-        <img src={logoIpnc} alt="IPNC" className="h-[44px] w-[44px] shrink-0 rounded-xl bg-white p-1 object-contain" />
+        <img src={logoIpnc} alt="IPNC" className="h-[44px] w-[44px] shrink-0 rounded-xl bg-[#123b2e] p-1 object-contain" />
         <span className="hidden min-w-0 text-base font-semibold min-[1100px]:block">Portal da igreja</span>
       </div>
       {renderMenu(true)}

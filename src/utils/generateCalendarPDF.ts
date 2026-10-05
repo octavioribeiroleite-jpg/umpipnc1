@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import logoBase64 from '@/assets/logo-ipnc.png';
+import { drawPdfBrandLogo } from './drawPdfBrandLogo';
 
 interface PDFEvent {
   id: string;
@@ -123,7 +124,7 @@ export function generateCalendarPDF(params: GenerateCalendarPDFParams) {
 
   // Logo
   try {
-    doc.addImage(logoBase64, 'PNG', margin, 5, 22, 22);
+    drawPdfBrandLogo(doc, logoBase64, margin, 5, 22);
   } catch {
     // Logo not available, skip
   }

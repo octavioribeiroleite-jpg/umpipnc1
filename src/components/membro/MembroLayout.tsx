@@ -64,7 +64,9 @@ export function MembroLayout({ children, activeTab, onTabChange }: MembroLayoutP
       <header className="fixed top-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-md safe-top">
         <div className="flex items-center justify-between px-3 sm:px-4 py-3 max-w-2xl mx-auto w-full gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <img src={logoIpnc} alt="IPNC" className="h-8 w-8 object-contain flex-shrink-0" />
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#123b2e] p-1">
+              <img src={logoIpnc} alt="IPNC" className="h-full w-full object-contain" />
+            </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-sm leading-tight truncate">{session?.memberName || 'Membro'}</p>
               {session && (

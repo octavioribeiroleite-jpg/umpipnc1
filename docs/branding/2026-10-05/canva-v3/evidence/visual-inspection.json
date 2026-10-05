@@ -1,0 +1,45 @@
+{
+  "reviewedAt": "2026-10-05",
+  "fixtureOnly": true,
+  "automatedResult": "passed",
+  "brandVisualResult": "passed",
+  "reviewedImages": [
+    "four-brand-headers.png",
+    "all-eight-pages.png"
+  ],
+  "documents": [
+    {
+      "filename": "chamada-ebd-20261004.pdf",
+      "pagesReviewed": 1,
+      "brandLegible": true,
+      "brandRatioPreserved": true,
+      "brandGreenBaseVisible": true,
+      "brandClippingOrTitleOverlap": false
+    },
+    {
+      "filename": "relatorio-chamadas-ebd.pdf",
+      "pagesReviewed": 1,
+      "brandLegible": true,
+      "brandRatioPreserved": true,
+      "brandGreenBaseVisible": true,
+      "brandClippingOrTitleOverlap": false
+    },
+    {
+      "filename": "relatorio-trimestral-ebd.pdf",
+      "pagesReviewed": 3,
+      "brandLegible": true,
+      "brandRatioPreserved": true,
+      "brandGreenBaseVisible": true,
+      "brandClippingOrTitleOverlap": false
+    },
+    {
+      "filename": "cronograma-ipnc---dados-ficticios-outubro-2026.pdf",
+      "pagesReviewed": 3,
+      "brandLegible": true,
+      "brandRatioPreserved": true,
+      "brandGreenBaseVisible": true,
+      "brandClippingOrTitleOverlap": false
+    }
+  ],
+  "scope": "Brand image and placement only. Existing text, data, table order, calculations and report layout remain unchanged. Browser UI validation belongs to root."
+}

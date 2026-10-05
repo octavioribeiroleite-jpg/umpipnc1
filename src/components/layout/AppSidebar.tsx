@@ -36,7 +36,7 @@ export function AppSidebar() {
       <div className="flex items-center justify-between border-b border-sidebar-border p-2">
         {!collapsed && (
           <button type="button" onClick={() => navigate('/')} className="flex items-center gap-2 text-left">
-            <div className="flex items-center justify-center rounded-lg bg-white p-1">
+            <div className="flex items-center justify-center rounded-lg bg-[#123b2e] p-1">
               <img src={logoIpnc} alt="Renovo IPNC" className="h-9 w-9 object-contain" />
             </div>
             <div className="flex flex-col">

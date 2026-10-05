@@ -112,7 +112,7 @@ test('installation precaches the versioned identity and uses a distinct maskable
   });
   handlers.install({ waitUntil: promise => { install = promise; } }); await install;
   assert.deepEqual(cachedPaths, manifest.icons.map(icon => icon.src));
-  assert.ok(manifest.icons.every(icon => icon.src.endsWith('-v2.png')));
+  assert.ok(manifest.icons.every(icon => icon.src.endsWith('-v3.png')));
   const regular = manifest.icons.find(icon => icon.sizes === '512x512' && icon.purpose === 'any');
   const maskable = manifest.icons.find(icon => icon.purpose === 'maskable');
   assert.notDeepEqual(readFileSync(new URL(`../public${regular.src}`, import.meta.url)), readFileSync(new URL(`../public${maskable.src}`, import.meta.url)));
@@ -124,11 +124,11 @@ test('service worker only removes old app caches and never intercepts login, API
   vm.runInNewContext(worker, {
     URL,
     self: { location: { origin: 'https://renovo.test' }, addEventListener: (name, fn) => { handlers[name] = fn; }, clients: { claim: async () => { claimed = true; } }, skipWaiting: () => { skipped = true; } },
-    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'another-app'], delete: async key => { deleted.push(key); } },
+    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'another-app'], delete: async key => { deleted.push(key); } },
   });
   let activated;
   handlers.activate({ waitUntil: promise => { activated = promise; } }); await activated;
-  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9']); assert.equal(claimed, true);
+  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10']); assert.equal(claimed, true);
   handlers.message({ data: { type: 'SKIP_WAITING' } }); assert.equal(skipped, true);
   for (const [url, mode, method] of [
     ['https://renovo.test/auth','navigate','GET'],

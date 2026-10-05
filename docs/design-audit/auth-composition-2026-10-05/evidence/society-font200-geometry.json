@@ -1,0 +1,103 @@
+{
+  "viewport_measurements": [
+    {
+      "cards": [
+        {
+          "contentFits": true,
+          "height": 268.4921875,
+          "name": "SAF",
+          "width": 265
+        },
+        {
+          "contentFits": true,
+          "height": 268.4921875,
+          "name": "UCP",
+          "width": 265
+        },
+        {
+          "contentFits": true,
+          "height": 268.4921875,
+          "name": "UMP",
+          "width": 265
+        },
+        {
+          "contentFits": true,
+          "height": 268.4921875,
+          "name": "UPA",
+          "width": 265
+        },
+        {
+          "contentFits": true,
+          "height": 268.4921875,
+          "name": "UPH",
+          "width": 265
+        },
+        {
+          "contentFits": true,
+          "height": 268.4921875,
+          "name": "Pastor",
+          "width": 265
+        }
+      ],
+      "font": "32px",
+      "headingTop": -977,
+      "notificationBottom": -993,
+      "overflow": false,
+      "width": 320
+    },
+    {
+      "cards": [
+        {
+          "contentFits": true,
+          "height": 297.9765625,
+          "name": "SAF",
+          "width": 326.5
+        },
+        {
+          "contentFits": true,
+          "height": 297.9765625,
+          "name": "UCP",
+          "width": 326.5
+        },
+        {
+          "contentFits": true,
+          "height": 297.9765625,
+          "name": "UMP",
+          "width": 326.5
+        },
+        {
+          "contentFits": true,
+          "height": 297.9765625,
+          "name": "UPA",
+          "width": 326.5
+        },
+        {
+          "contentFits": true,
+          "height": 297.9765625,
+          "name": "UPH",
+          "width": 326.5
+        },
+        {
+          "contentFits": true,
+          "height": 297.9765625,
+          "name": "Pastor",
+          "width": 326.5
+        }
+      ],
+      "font": "32px",
+      "headingTop": -432.5,
+      "notificationBottom": -448.5,
+      "overflow": false,
+      "width": 768
+    }
+  ],
+  "fresh_selection_focus_validation": {
+    "width": 320,
+    "font": "32px",
+    "scroll": 0,
+    "headingTop": 116,
+    "notificationBottom": 100,
+    "focused": "Selecione a sociedade",
+    "overflow": false
+  }
+}
