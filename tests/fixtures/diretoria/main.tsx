@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { emitFixtureRealtime, setFixtureReadFailure } from './backend';
+import { StableRefreshBoundary } from '@/components/ui/stable-refresh-boundary';
 import {createRoot} from 'react-dom/client';
 import {BrowserRouter,Routes,Route} from 'react-router-dom';
 import {QueryClientProvider,QueryClient} from '@tanstack/react-query';
 import {TooltipProvider} from '@/components/ui/tooltip';
 import {AuthProvider} from '@/contexts/AuthContext';
+import {MembroSessionProvider} from '@/contexts/MembroSessionContext';
 import {DiretoriaSessionProvider} from '@/contexts/DiretoriaSessionContext';
 import {Toaster} from '@/components/ui/sonner';
 import {Toaster as Toasts} from '@/components/ui/toaster';
@@ -11,6 +14,21 @@ import {PageErrorBoundary} from '@/components/PageErrorBoundary';
 import '../../../src/index.css';
 import '../../../src/responsive-foundation.css';
 import '../../../src/camisas-separation.css';
+import '../../../src/auth-readability.css';
+import '../../../src/society-selector.css';
+import '../../../src/identity-confirmation.css';
+import SocietyScreenEnhancer from '@/components/auth/SocietyScreenEnhancer';
+import IdentityConfirmationEnhancer from '@/components/auth/IdentityConfirmationEnhancer';
+import {fixtureRole,fixtureState,fixtureParams} from './options';
+import Auth from '@/pages/Auth';
+import ResetPassword from '@/pages/ResetPassword';
+import NotFound from '@/pages/NotFound';
+import PainelPastor from '@/pages/PainelPastor';
+import PastorSociedade from '@/pages/PastorSociedade';
+import PastorCalendario from '@/pages/PastorCalendario';
+import PastorComunicados from '@/pages/PastorComunicados';
+import PortalIgreja from '@/pages/PortalIgreja';
+import VotePublic from '@/pages/VotePublic';
 import Index from '@/pages/Index';
 import Reunioes from '@/pages/Reunioes';
 import NovaReuniao from '@/pages/NovaReuniao';
@@ -33,9 +51,18 @@ import Visitantes from '@/pages/Visitantes';
 import Estudos from '@/pages/Estudos';
 import Aniversariantes from '@/pages/Aniversariantes';
 import PastorSugestoes from '@/pages/PastorSugestoes';
-const nativeFetch=window.fetch.bind(window);
-window.fetch=(input,init)=>{const url=new URL(typeof input==='string'?input:input instanceof URL?input.href:input.url,location.origin);if(url.hostname.endsWith('.supabase.co'))return Promise.reject(Error('Backend real bloqueado no teste'));return nativeFetch(input,init)};
-createRoot(document.getElementById('root')!).render(<PageErrorBoundary><QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><TooltipProvider><BrowserRouter basename="/__diretoria"><AuthProvider><DiretoriaSessionProvider><Routes>
+function BoundaryFixture(){const [pending,setPending]=useState(false);const [draft,setDraft]=useState('Rascunho fictício preservado');return <main className="p-6 space-y-4"><h1>Fixture de atualização visual</h1><p data-qa-browser>{navigator.userAgent}</p><button onClick={()=>setPending(value=>!value)}>{pending?'Concluir atualização':'Simular atualização'}</button><StableRefreshBoundary><label htmlFor="fixture-draft">Rascunho</label><input id="fixture-draft" name="draft" value={draft} onChange={event=>setDraft(event.target.value)}/><button>Botão da superfície</button>{pending&&<span className="animate-spin">Consultando</span>}</StableRefreshBoundary></main>;}
+function FixtureControls(){
+ const [readFailure,setReadFailure] = useState(fixtureState === 'error');
+ const [refetchStatus,setRefetchStatus] = useState('');
+ const changeReadFailure = (failed:boolean) => { setFixtureReadFailure(failed); setReadFailure(failed); };
+ if(fixtureParams.get('controls')==='0')return null;
+ const change=(key:string,value:string)=>{const url=new URL(location.href);url.searchParams.set(key,value);location.assign(url);};
+ return <details style={{position:'fixed',right:8,bottom:8,zIndex:1000,maxWidth:'calc(100vw - 16px)',padding:8,border:'1px solid #9e7d27',background:'#fff4cf',color:'#423311',borderRadius:8,fontSize:12}}><summary>TESTE LOCAL · {fixtureRole} · {fixtureState}</summary><p>Dados fictícios; autenticação substituída.</p><label>Perfil <select value={fixtureRole} onChange={e=>change('role',e.target.value)}>{['admin','pastor','diretoria','unauthorized','anonymous'].map(v=><option key={v}>{v}</option>)}</select></label><label> Estado <select value={fixtureState} onChange={e=>change('state',e.target.value)}>{['normal','empty','error','long','loading'].map(v=><option key={v}>{v}</option>)}</select></label><div className="mt-2 flex flex-wrap gap-2"><button type="button" aria-pressed={!readFailure} onClick={()=>changeReadFailure(false)}>Leitura normal</button><button type="button" aria-pressed={readFailure} onClick={()=>changeReadFailure(true)}>Simular falha de leitura</button><button type="button" onClick={async()=>{const count=await emitFixtureRealtime();setRefetchStatus(`${count} callbacks locais disparados`);}}>Disparar refetch local</button></div><p role="status">{refetchStatus || 'Refetch local apenas nas telas com assinatura Realtime.'}</p></details>;
+}
+const unavailable=<main className="p-6"><h1>Prévia separada</h1><p>EBD e tesouraria usam suas próprias fixtures isoladas. Esta prévia não concede sessão nesses módulos.</p></main>;
+createRoot(document.getElementById('root')!).render(<PageErrorBoundary><QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><TooltipProvider><BrowserRouter basename="/__diretoria"><AuthProvider><DiretoriaSessionProvider><MembroSessionProvider><Routes>
+<Route path="/__boundary" element={<BoundaryFixture/>}/>
 <Route path="/" element={<Index/>}/>
 <Route path="/reunioes" element={<Reunioes/>}/>
 <Route path="/reunioes/nova" element={<NovaReuniao/>}/>
@@ -58,4 +85,16 @@ createRoot(document.getElementById('root')!).render(<PageErrorBoundary><QueryCli
 <Route path="/estudos" element={<Estudos/>}/>
 <Route path="/aniversariantes" element={<Aniversariantes/>}/>
 <Route path="/sugestoes" element={<PastorSugestoes/>}/>
-<Route path="/auth" element={<h1>Saída confirmada — ambiente de teste</h1>}/></Routes><Toaster/><Toasts/></DiretoriaSessionProvider></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></PageErrorBoundary>);
+<Route path="/auth" element={<Auth/>}/>
+<Route path="/reset-password" element={<ResetPassword/>}/>
+<Route path="/pastor" element={<PainelPastor/>}/>
+<Route path="/pastor/sociedade/:slug" element={<PastorSociedade/>}/>
+<Route path="/pastor/calendario" element={<PastorCalendario/>}/>
+<Route path="/pastor/comunicados" element={<PastorComunicados/>}/>
+<Route path="/pastor/sugestoes" element={<PastorSugestoes/>}/>
+<Route path="/pastor-sugestoes" element={<PastorSugestoes/>}/>
+<Route path="/igreja" element={<PortalIgreja/>}/>
+<Route path="/vote/:electionId" element={<VotePublic/>}/>
+<Route path="/membro" element={<main className="min-h-screen flex items-center justify-center p-6"><section className="max-w-md space-y-4 text-center"><h1 className="text-xl font-semibold">Portal dos membros ainda não liberado</h1><p>Por enquanto, o acesso está disponível apenas para a diretoria e os responsáveis autorizados.</p><a href="/__diretoria/auth" className="underline">Acessar como responsável</a></section></main>}/>
+<Route path="/secretaria" element={unavailable}/><Route path="/tesouraria" element={unavailable}/>
+<Route path="*" element={<NotFound/>}/></Routes><Toaster/><Toasts/><FixtureControls/><SocietyScreenEnhancer/><IdentityConfirmationEnhancer/></MembroSessionProvider></DiretoriaSessionProvider></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></PageErrorBoundary>);

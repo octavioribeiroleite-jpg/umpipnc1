@@ -71,8 +71,10 @@ if (location.pathname.includes('ebd-back')) {
   const { QueryClientProvider, QueryClient } = await import('@tanstack/react-query');
   const { default: Secretaria } = await import('../../src/pages/Secretaria');
   const { saveStoredEbdSession } = await import('../../src/lib/ebd-session-storage');
-  if (!localStorage.getItem('ebd-test-initialized-design-v1')) {
-    saveStoredEbdSession({ accessLevel:'admin', birthdayAiToken:'synthetic', birthdayAiExpiresAt:new Date(Date.now()+3600000).toISOString() });
+  const fixtureEntry = new URLSearchParams(location.search).get('entry') === '1';
+  if (fixtureEntry) { const {clearStoredEbdSession}=await import('../../src/lib/ebd-session-storage'); clearStoredEbdSession(); }
+  if (!fixtureEntry) {
+    saveStoredEbdSession({ accessLevel:role, professorNome:role==='professor'?'Professor fictício':undefined, professorClassId:role==='professor'?'new':undefined, birthdayAiToken:'synthetic', birthdayAiExpiresAt:new Date(Date.now()+3600000).toISOString() });
     localStorage.setItem('ebd-test-initialized-design-v1','yes');
   }
   createRoot(document.getElementById('root')!).render(<QueryClientProvider client={new QueryClient()}><BrowserRouter>
