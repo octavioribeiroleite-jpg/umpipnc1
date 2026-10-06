@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Delete, LogIn, Loader2, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PublicHomeButton from '@/components/auth/PublicHomeButton';
+import logoIpnc from '@/assets/logo-ipnc.png';
+import './PinPad.css';
 
 interface PinPadProps {
   profileLabel: string;
@@ -12,9 +14,10 @@ interface PinPadProps {
   loading?: boolean;
   error?: boolean;
   embedded?: boolean;
+  presentation?: 'access' | 'compact';
 }
 
-export default function PinPad({ profileLabel, onBack, onHome, onComplete, loading, error: externalError, embedded }: PinPadProps) {
+export default function PinPad({ profileLabel, onBack, onHome, onComplete, loading, error: externalError, embedded, presentation = 'access' }: PinPadProps) {
   const [pin, setPin] = useState('');
   const [shaking, setShaking] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -72,171 +75,70 @@ export default function PinPad({ profileLabel, onBack, onHome, onComplete, loadi
   }, [loading, shaking, handleDigit, handleDelete, pin, onComplete]);
 
   const content = (
-    <div
-      ref={containerRef}
-      tabIndex={0}
-      className={cn(
-        "w-full mx-auto space-y-5 outline-none",
-        embedded
-          ? "auth-pin-panel max-w-[400px] rounded-2xl border border-border bg-card p-4 sm:p-5"
-          : "max-w-[400px] rounded-2xl border border-border bg-card p-5 sm:p-6"
+    <>
+      {presentation === 'access' && (
+        <svg className="ipnc-pin-background" viewBox="0 0 1600 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <g fill="#b6d7c5" fillOpacity="0.27">
+            <path d="M1370 256C1308 135 1377 29 1510 0C1490 114 1455 203 1370 256Z" />
+            <path d="M1370 256C1431 131 1530 127 1600 87C1557 214 1453 254 1370 256Z" />
+            <path d="M1510 0C1478 166 1534 266 1580 360C1620 230 1624 90 1510 0Z" />
+            <path d="M80 1000C-32 887 -53 692 0 547C124 676 157 823 80 1000Z" />
+            <path d="M80 1000C44 837 110 704 255 646C228 809 156 925 80 1000Z" />
+            <path d="M80 1000C125 867 220 824 347 786C294 927 197 992 80 1000Z" />
+          </g>
+          <g fill="none" stroke="#86b49a" strokeOpacity="0.16" strokeWidth="2">
+            <path d="M1510 0L1370 256M1600 87L1370 256M1510 0L1580 360M0 547L80 1000M255 646L80 1000M347 786L80 1000" />
+          </g>
+        </svg>
       )}
-    >
-      {/* Header */}
-      {!embedded && (
-        <div className="flex flex-col items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} disabled={loading} className="self-start shrink-0" aria-label="Voltar à seleção de perfil">
-            <ArrowLeft className="h-5 w-5" />
+      <div ref={containerRef} tabIndex={0}
+        data-presentation={presentation}
+        className={cn('ipnc-pin-card', embedded && 'auth-pin-panel')}
+      >
+        <nav className="ipnc-pin-navigation" aria-label="Navegação do acesso">
+          <Button type="button" variant="ghost" onClick={onBack} disabled={loading} className="ipnc-pin-back">
+            <ArrowLeft aria-hidden="true" />Voltar
           </Button>
-          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Lock className="h-7 w-7 text-primary" />
-          </div>
-          <div className="text-center">
-            <h2 className="font-semibold text-2xl tracking-tight">{profileLabel}</h2>
-            <p className="text-sm text-muted-foreground">Digite o PIN de 6 dígitos</p>
-          </div>
+          <PublicHomeButton onClick={onHome} disabled={loading} className="ipnc-pin-home" />
+        </nav>
+
+        <header className="ipnc-pin-heading">
+          {presentation === 'access' && <img className="ipnc-pin-logo" src={logoIpnc} alt="IPNC" width="1254" height="1254" />}
+          <span className="ipnc-pin-lock"><Lock aria-hidden="true" /></span>
+          <h2>{profileLabel === 'Administrador' ? 'Acesso administrativo' : profileLabel}</h2>
+          <p>Digite seu PIN de 6 dígitos</p>
+        </header>
+
+        <div className={cn('ipnc-pin-slots', shaking && 'ipnc-pin-shaking')} aria-label="PIN de 6 dígitos">
+          {[0, 1, 2, 3, 4, 5].map(i => (
+            <div key={i} className={cn('ipnc-pin-slot', pin.length > i && 'ipnc-pin-slot-filled', pin.length === i && 'ipnc-pin-slot-current')}>
+              {pin.length > i && <span className="ipnc-pin-dot" />}
+            </div>
+          ))}
         </div>
-      )}
+        <span className="sr-only" role="status">{pin.length} de 6 dígitos preenchidos</span>
+        {shaking && <p className="ipnc-pin-error" role="alert">PIN incorreto</p>}
 
-      {embedded && (
-        <div className="flex flex-wrap items-center gap-3 mb-1">
-          <Button variant="ghost" size="icon" aria-label="Voltar" className="pin-pad-utility h-[44px] w-[44px] shrink-0 rounded-2xl text-muted-foreground hover:bg-primary/10 hover:text-primary" onClick={onBack} disabled={loading}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">
-            <Lock className="h-6 w-6" />
-          </div>
-          <div className="min-w-0 flex-1 basis-[8rem]">
-            <h2 className="text-lg font-bold leading-tight text-foreground">{profileLabel}</h2>
-            <p className="text-sm font-medium text-muted-foreground">Informe o PIN de 6 dígitos</p>
-          </div>
+        <div className="ipnc-pin-keypad">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+            <Button key={n} type="button" variant="outline" className="ipnc-pin-key" onClick={() => handleDigit(String(n))} disabled={loading || pin.length >= 6}>{n}</Button>
+          ))}
+          <Button type="button" variant="ghost" className="ipnc-pin-key ipnc-pin-utility" onClick={handleClear} disabled={loading || pin.length === 0}>Limpar</Button>
+          <Button type="button" variant="outline" className="ipnc-pin-key" onClick={() => handleDigit('0')} disabled={loading || pin.length >= 6}>0</Button>
+          <Button type="button" variant="outline" className="ipnc-pin-key ipnc-pin-delete" onClick={handleDelete} disabled={loading || pin.length === 0} aria-label="Apagar último dígito"><Delete aria-hidden="true" /></Button>
         </div>
-      )}
 
-      <PublicHomeButton onClick={onHome} disabled={loading} className="w-full justify-center rounded-xl text-primary" />
-
-      {/* PIN Slots */}
-      <div className={cn(
-        "grid grid-cols-6 gap-2 transition-transform",
-        shaking && "animate-shake"
-      )}>
-        {[0, 1, 2, 3, 4, 5].map(i => (
-          <div
-            key={i}
-            className={cn(
-              "h-12 min-w-0 w-full rounded-xl border-2 flex items-center justify-center transition-all duration-200",
-              pin.length > i
-                ? shaking ? "border-destructive bg-destructive/10" : "border-primary bg-primary/10"
-                : pin.length === i
-                  ? "border-primary/70 bg-card"
-                  : embedded ? "border-border bg-card" : "border-border"
-            )}
-          >
-            {pin.length > i && (
-              <div className={cn(
-                "h-3 w-3 rounded-full transition-transform duration-200",
-                shaking ? "bg-destructive scale-100" : "bg-primary scale-100",
-              )} style={{ animation: 'pinDotIn 150ms ease-out' }} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      {shaking && (
-        <p className="text-center text-sm text-destructive font-medium">PIN incorreto</p>
-      )}
-
-      {/* Numeric Keypad */}
-      <div className="grid grid-cols-3 gap-2">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
-          <Button
-            key={n}
-            variant="outline"
-            className={cn(
-              "h-14 rounded-2xl text-xl font-bold shadow-sm transition-all duration-100 active:scale-95 active:bg-primary/10",
-              embedded
-                ? "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/10"
-                : "rounded-xl hover:bg-accent/50"
-            )}
-            onClick={() => handleDigit(String(n))}
-            disabled={loading || pin.length >= 6}
-          >
-            {n}
+        {pin.length === 6 && (
+          <Button type="button" className="ipnc-pin-confirm" onClick={() => onComplete(pin)} disabled={loading}>
+            {loading ? <Loader2 className="animate-spin" aria-hidden="true" /> : <LogIn aria-hidden="true" />}
+            {loading ? 'Verificando...' : 'Confirmar e entrar'}
           </Button>
-        ))}
-        <Button
-          variant="ghost"
-          className={cn(
-            "pin-pad-utility h-14 rounded-2xl text-sm font-semibold transition-all duration-100 active:scale-95",
-            embedded
-              ? "text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-40"
-              : "rounded-xl text-xs text-muted-foreground"
-          )}
-          onClick={handleClear}
-          disabled={loading || pin.length === 0}
-        >
-          Limpar
-        </Button>
-        <Button
-          variant="outline"
-          className={cn(
-            "h-14 rounded-2xl text-xl font-bold shadow-sm transition-all duration-100 active:scale-95 active:bg-primary/10",
-            embedded
-              ? "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/10"
-              : "rounded-xl hover:bg-accent/50"
-          )}
-          onClick={() => handleDigit('0')}
-          disabled={loading || pin.length >= 6}
-        >
-          0
-        </Button>
-        <Button
-          variant="ghost"
-          className={cn(
-            "pin-pad-utility h-14 rounded-2xl transition-all duration-100 active:scale-95",
-            embedded
-              ? "text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-40"
-              : "rounded-xl"
-          )}
-          onClick={handleDelete}
-          disabled={loading || pin.length === 0}
-          aria-label="Apagar último dígito"
-        >
-          <Delete className="h-5 w-5" />
-        </Button>
+        )}
+        {presentation === 'access' && <p className="ipnc-pin-help">Use o teclado numérico ou clique nos botões</p>}
       </div>
-
-      {/* Confirm button */}
-      {pin.length === 6 && (
-        <Button
-          className="w-full h-12 text-base font-semibold gap-2 rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-200"
-          onClick={() => onComplete(pin)}
-          disabled={loading}
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-          {loading ? 'Verificando...' : 'Confirmar e entrar'}
-        </Button>
-      )}
-
-      {!embedded && (
-        <p className="text-center text-xs text-muted-foreground">
-          Use o teclado numérico ou clique nos botões
-        </p>
-      )}
-    </div>
+    </>
   );
 
   if (embedded) return content;
-
-  return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-6 safe-top safe-bottom">
-      <style>{`
-        @keyframes pinDotIn {
-          from { transform: scale(0); }
-          to { transform: scale(1); }
-        }
-      `}</style>
-      {content}
-    </div>
-  );
+  return <div className="ipnc-pin-page">{content}</div>;
 }

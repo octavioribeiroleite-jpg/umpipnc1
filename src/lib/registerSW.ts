@@ -1,7 +1,7 @@
 import { refreshSite } from './refresh-site';
 
-const SW_SCRIPT_URL = "/sw.js?v=2026-10-06-ebd-access-v7";
-const CURRENT_CACHE = "ump-cache-v15";
+const SW_SCRIPT_URL = "/sw.js?v=2026-10-06-pin-access-v8";
+const CURRENT_CACHE = "ump-cache-v16";
 let manualRefresh: Promise<void> | null = null;
 const PREVIEW_RELOAD_KEY = "__preview_sw_cleanup_reloaded__";
 const ROUTE_RESTORE_KEY = "__sw_restore_path__";

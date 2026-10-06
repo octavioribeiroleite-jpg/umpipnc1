@@ -650,9 +650,10 @@ export default function Auth() {
 
   const isSocietySelection = !isEnteringApp && ((step === 'diretoria' && diretoriaStep === 'societies') || (step === 'membro' && membroStep === 'societies'));
   const isIdentityConfirmation = !isEnteringApp && ((step === 'diretoria' && diretoriaStep === 'name-confirm' && !!savedName) || (step === 'membro' && membroStep === 'name-confirm' && !!membroSavedName));
+  const isPinEntry = !isEnteringApp && step === 'diretoria' && diretoriaStep === 'pin';
 
   return (
-    <div className={`auth-page ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''}`}>
+    <div className={`auth-page ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''} ${isPinEntry ? 'auth-page-pin' : ''}`}>
       <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
       <aside className="auth-brand-panel">
         <div className="auth-brand-content">

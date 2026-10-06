@@ -567,6 +567,7 @@ export default function Secretaria() {
               </DialogHeader>
               <PinPad
                 embedded
+                presentation="compact"
                 profileLabel={accessLevel === 'admin' ? 'Administrador' : 'Senha da sala'}
                 onBack={() => setAiReauthOpen(false)}
                 onHome={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })}

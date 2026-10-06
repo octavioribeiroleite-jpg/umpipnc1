@@ -39,6 +39,8 @@ function harness({ pin = '123456', loading = false } = {}) {
     'react/jsx-runtime': { jsx, jsxs: jsx },
     '@/components/ui/button': { Button: component },
     '@/components/auth/PublicHomeButton': { default: component },
+    '@/assets/logo-ipnc.png': { default: 'fixture-logo.png' },
+    './PinPad.css': {},
     '@/lib/utils': { cn: (...values) => values.filter(Boolean).join(' ') },
     'lucide-react': { ArrowLeft: component, Delete: component, LogIn: component, Loader2: component, Lock: component },
   };
