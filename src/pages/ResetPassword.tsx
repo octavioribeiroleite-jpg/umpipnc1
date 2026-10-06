@@ -4,11 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, KeyRound } from 'lucide-react';
-import logo from '@/assets/logo-ipnc.png';
-import PublicHomeButton from '@/components/auth/PublicHomeButton';
+import { AccessShell } from '@/components/auth/AccessShell';
 
 export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
@@ -50,17 +48,10 @@ export default function ResetPassword() {
     finally { setIsLoading(false); }
   };
 
-  return <main className="min-h-dvh flex items-center justify-center bg-background p-4">
-    <div className="w-full max-w-[400px] space-y-6">
-      <img src={logo} alt="Marca IPNC" className="mx-auto h-24 w-24 rounded-2xl bg-white p-1 object-contain" />
-      <PublicHomeButton disabled={isLoading} className="rounded-xl text-primary" />
-      <Card>
-        <CardHeader>
-          <KeyRound className="h-10 w-10 text-primary" aria-hidden="true" />
-          <CardTitle>{sessionState === 'checking' ? 'Verificando link' : sessionState === 'valid' ? 'Redefinir senha' : sessionState === 'error' ? 'Não foi possível verificar o link' : 'Link inválido'}</CardTitle>
-          <CardDescription>{sessionState === 'checking' ? 'Aguarde a confirmação do seu acesso.' : sessionState === 'valid' ? 'Digite e confirme sua nova senha.' : sessionState === 'error' ? 'Confira sua conexão e tente novamente.' : 'O link expirou ou é inválido. Solicite um novo link na entrada administrativa.'}</CardDescription>
-        </CardHeader>
-        <CardContent>
+  return <AccessShell headingIcon={KeyRound} showHome disabled={isLoading}
+    title={sessionState === 'checking' ? 'Verificando link' : sessionState === 'valid' ? 'Redefinir senha' : sessionState === 'error' ? 'Não foi possível verificar o link' : 'Link inválido'}
+    description={sessionState === 'checking' ? 'Aguarde a confirmação do seu acesso.' : sessionState === 'valid' ? 'Digite e confirme sua nova senha.' : sessionState === 'error' ? 'Confira sua conexão e tente novamente.' : 'O link expirou ou é inválido. Solicite um novo link na entrada administrativa.'}>
+      {sessionState !== 'invalid' && <div className="ipnc-access-form">
           {sessionState === 'checking' ? <p role="status" className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Verificando…</p> : sessionState === 'valid' ?
             <form onSubmit={handleResetPassword} className="space-y-5">
               <div className="space-y-2"><Label htmlFor="password">Nova senha</Label><Input id="password" type="password" autoComplete="new-password" placeholder="Mínimo 6 caracteres" value={password} onChange={event => {setPassword(event.target.value);setErrorMessage('');}} required disabled={isLoading} aria-describedby="reset-error" /></div>
@@ -68,8 +59,6 @@ export default function ResetPassword() {
               <p id="reset-error" role={errorMessage ? 'alert' : undefined} className="min-h-6 text-sm text-destructive">{errorMessage}</p>
               <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? 'Salvando…' : 'Salvar nova senha'}</Button>
             </form> : sessionState === 'error' ? <Button className="w-full" onClick={() => window.location.reload()}>Tentar novamente</Button> : null}
-        </CardContent>
-      </Card>
-    </div>
-  </main>;
+      </div>}
+  </AccessShell>;
 }

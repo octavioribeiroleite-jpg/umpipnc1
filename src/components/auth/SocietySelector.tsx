@@ -1,8 +1,6 @@
-import type { CSSProperties } from 'react';
-import { useEffect, useRef } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { ArrowLeft, ChevronRight, Loader2, Users } from 'lucide-react';
-import logoIpnc from '@/assets/logo-ipnc.png';
+import { Loader2 } from 'lucide-react';
+import { AccessShell } from './AccessShell';
+import { AccessOption } from './AccessOption';
 import safIcon from '@/assets/societies/saf.png';
 import ucpIcon from '@/assets/societies/ucp.png';
 import umpIcon from '@/assets/societies/ump.png';
@@ -20,6 +18,8 @@ interface SocietyOption {
 interface SocietySelectorProps {
   societies: SocietyOption[];
   loading?: boolean;
+  error?: boolean;
+  onRetry?: () => void;
   onBack: () => void;
   onSelect: (society: SocietyOption) => void;
   onSelectPastor?: () => void;
@@ -33,61 +33,28 @@ const SOCIETY_META: Record<string, { image: string; description: string; color: 
   uph: { image: uphIcon, description: 'União Presbiteriana de Homens', color: '#138262', order: 5 },
 };
 
-function SocietyCard({ title, description, label, color, image, icon: Icon = Users, onClick }: {
-  title: string;
-  description: string;
-  image?: string;
-  label: string;
-  color: string;
-  icon?: LucideIcon;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="auth-society-card"
-      aria-label={label}
-      style={{ '--society-color': color } as CSSProperties}
-      onClick={onClick}
-    >
-      <span className="auth-society-icon">{image ? <img src={image} alt="" width="384" height="384" /> : <Icon aria-hidden />}</span>
-      <span className="auth-society-copy">
-        <span className="auth-society-name">{title}</span>
-        <span className="auth-society-description">{description}</span>
-      </span>
-      <span className="auth-society-arrow"><ChevronRight aria-hidden /></span>
-    </button>
-  );
-}
-
-export default function SocietySelector({ societies, loading = false, onBack, onSelect, onSelectPastor }: SocietySelectorProps) {
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { headingRef.current?.focus(); }, []);
+export default function SocietySelector({ societies, loading = false, error = false, onRetry, onBack, onSelect, onSelectPastor }: SocietySelectorProps) {
   const orderedSocieties = [...societies].sort((a, b) => (SOCIETY_META[a.slug.trim().toLowerCase()]?.order ?? 99) - (SOCIETY_META[b.slug.trim().toLowerCase()]?.order ?? 99));
   return (
-    <section className="auth-society-selector animate-fade-up" aria-busy={loading}>
-      <header className="auth-society-heading">
-        <button type="button" className="auth-society-back" aria-label="Voltar" onClick={onBack}>
-          <ArrowLeft aria-hidden />
-        </button>
-        <div className="auth-society-heading-copy">
-          <h2 ref={headingRef} tabIndex={-1}>Selecione a sociedade</h2>
-          <p>Escolha a sociedade que deseja acessar.</p>
-        </div>
-        <div className="auth-society-brand"><img src={logoIpnc} alt="IPNC" width="1254" height="1254" /></div>
-      </header>
+    <AccessShell title="Selecione a sociedade" description="Escolha a sociedade que deseja acessar." onBack={onBack} focusHeading className="ipnc-society-access">
+      <div className="ipnc-society-options" aria-busy={loading}>
       {loading ? (
-        <div className="auth-society-loading" role="status">
+        <div className="ipnc-access-loading" role="status">
           <Loader2 className="animate-spin" aria-hidden />
           <span className="sr-only">Carregando sociedades</span>
         </div>
+      ) : error ? (
+        <div className="ipnc-access-form" role="alert">
+          <p>Não foi possível consultar as sociedades. Confira sua conexão e tente novamente.</p>
+          <button type="button" className="ebd-access__back" onClick={onRetry}>Tentar novamente</button>
+        </div>
       ) : (
-        <div className="auth-society-grid">
+        <div className="ebd-access__profiles">
           {orderedSocieties.map((society) => (
-            <SocietyCard
+            <AccessOption
               key={society.id}
               title={society.slug.trim().toUpperCase()}
-              label={'Acessar ' + society.slug.trim().toUpperCase() + ' — ' + society.name}
+              ariaLabel={'Acessar ' + society.slug.trim().toUpperCase() + ' — ' + society.name}
               description={SOCIETY_META[society.slug.trim().toLowerCase()]?.description ?? society.name}
               image={SOCIETY_META[society.slug.trim().toLowerCase()]?.image}
               color={SOCIETY_META[society.slug.trim().toLowerCase()]?.color ?? society.color}
@@ -95,10 +62,11 @@ export default function SocietySelector({ societies, loading = false, onBack, on
             />
           ))}
           {onSelectPastor && (
-            <SocietyCard title="Pastor" description="Área pastoral" label="Acesso pastoral" color="#1465dc" image={pastorIcon} onClick={onSelectPastor} />
+            <AccessOption title="Pastor" description="Área pastoral" ariaLabel="Acesso pastoral" color="#1465dc" image={pastorIcon} onClick={onSelectPastor} />
           )}
         </div>
       )}
-    </section>
+      </div>
+    </AccessShell>
   );
 }

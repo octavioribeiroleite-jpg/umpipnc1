@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { DirectoryPinsPanel } from '@/components/settings/DirectoryPinsPanel';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,7 +38,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck, BookOpen, Save, KeyRound } from 'lucide-react';
+import { Settings, Users, DollarSign, Calendar, Shield, Trash2, Loader2, AlertTriangle, CheckCircle, XCircle, UserCheck, BookOpen, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 type AppRole = 'admin' | 'diretoria' | 'visualizador';
@@ -79,7 +80,6 @@ export default function Configuracoes() {
   const [loading, setLoading] = useState(true);
   const [usersError, setUsersError] = useState(false);
   const [secError, setSecError] = useState(false);
-  const [dirError, setDirError] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
 
@@ -89,63 +89,12 @@ export default function Configuracoes() {
   const [secAdminPin, setSecAdminPin] = useState('');
   const [secProfPin, setSecProfPin] = useState('');
 
-  // Diretoria PINs state
-  const [dirPins, setDirPins] = useState<Record<string, string>>({});
-  const [dirPinsLoading, setDirPinsLoading] = useState(false);
-  const [dirPinsSaving, setDirPinsSaving] = useState(false);
-  const [dirSocieties, setDirSocieties] = useState<{ id: string; name: string; slug: string; color: string }[]>([]);
-
   useEffect(() => {
     if (isAdmin) {
       fetchUsers();
       fetchSecretariaCredentials();
-      fetchDiretoriaPins();
     }
   }, [isAdmin]);
-
-  const fetchDiretoriaPins = async () => {
-    setDirPinsLoading(true);
-    const [societiesRes, settingsRes] = await Promise.all([
-      supabase.from('societies').select('id, name, slug, color').eq('active', true).order('name'),
-      supabase.from('settings').select('key, value').like('key', 'diretoria_pin_%'),
-    ]);
-    setDirError(Boolean(societiesRes.error || settingsRes.error));
-    if (societiesRes.error || settingsRes.error) { setDirPinsLoading(false); return; }
-    if (societiesRes.data) setDirSocieties(societiesRes.data);
-    if (settingsRes.data) {
-      const pins: Record<string, string> = {};
-      settingsRes.data.forEach(s => {
-        const slug = s.key.replace('diretoria_pin_', '');
-        pins[slug] = s.value;
-      });
-      setDirPins(pins);
-    }
-    setDirPinsLoading(false);
-  };
-
-  const saveDiretoriaPins = async () => {
-    const invalid = Object.entries(dirPins).some(([, v]) => !/^\d{6}$/.test(v));
-    if (invalid) {
-      toast.error('Todos os PINs devem ter exatamente 6 dígitos numéricos');
-      return;
-    }
-    setDirPinsSaving(true);
-    try {
-      for (const [slug, value] of Object.entries(dirPins)) {
-        const key = `diretoria_pin_${slug}`;
-        const { error } = await supabase
-          .from('settings')
-          .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-        if (error) throw error;
-      }
-      toast.success('PINs da Diretoria atualizados!');
-    } catch (error) {
-      console.error('Error saving diretoria PINs:', error);
-      toast.error('Erro ao salvar PINs');
-    } finally {
-      setDirPinsSaving(false);
-    }
-  };
 
   const fetchSecretariaCredentials = async () => {
     setSecLoading(true);
@@ -699,104 +648,7 @@ export default function Configuracoes() {
         )}
 
         {/* Diretoria PINs (Admin only) */}
-        {isAdmin && (
-          <Card id="settings-diretoria" className="scroll-mt-4">
-            <CardHeader>
-              <CardTitle className="text-lg flex flex-wrap items-center gap-2">
-                <KeyRound className="h-5 w-5" />
-                PINs da Diretoria
-              </CardTitle>
-              <CardDescription>Gerencie os PINs de acesso por sociedade</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {dirError ? <QueryErrorState message="Não foi possível consultar as sociedades e seus acessos." onRetry={fetchDiretoriaPins} retrying={dirPinsLoading} /> : dirPinsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={() => setShowPins(value => !value)}>{showPins ? 'Ocultar PINs' : 'Mostrar PINs'}</Button>
-                  {/* PIN Geral */}
-                  <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[40px_minmax(0,1fr)_180px]">
-                    <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold shrink-0">
-                      🔑
-                    </div>
-                    <Label htmlFor="dir-pin-geral" className="min-w-0 break-words">PIN geral</Label>
-                    <Input
-                      id="dir-pin-geral"
-                      value={dirPins['geral'] || ''}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, '').slice(0, 6);
-                        setDirPins(prev => ({ ...prev, geral: v }));
-                      }}
-                      type={showPins ? 'text' : 'password'}
-                      autoComplete="off"
-                      inputMode="numeric"
-                      maxLength={6}
-                      placeholder="000000"
-                      className="col-span-2 w-full tracking-widest text-center font-mono sm:col-span-1"
-                    />
-                  </div>
-                  <hr className="my-2 border-border" />
-                  {/* Pastor */}
-                  <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[40px_minmax(0,1fr)_180px]">
-                    <div className="h-10 w-10 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ backgroundColor: '#1e3a5f' }}>
-                      ⛪
-                    </div>
-                    <Label htmlFor="dir-pin-pastor" className="min-w-0 break-words">Pastor</Label>
-                    <Input
-                      id="dir-pin-pastor"
-                      value={dirPins['pastor'] || ''}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, '').slice(0, 6);
-                        setDirPins(prev => ({ ...prev, pastor: v }));
-                      }}
-                      type={showPins ? 'text' : 'password'}
-                      autoComplete="off"
-                      inputMode="numeric"
-                      maxLength={6}
-                      placeholder="000000"
-                      className="col-span-2 w-full tracking-widest text-center font-mono sm:col-span-1"
-                    />
-                  </div>
-                  {/* Sociedades */}
-                  {dirSocieties.map((society) => (
-                    <div key={society.slug} className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[40px_minmax(0,1fr)_180px]">
-                      <div
-                        className="h-10 w-10 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0"
-                        style={{ backgroundColor: society.color }}
-                      >
-                        {society.slug.toUpperCase().slice(0, 3)}
-                      </div>
-                      <Label htmlFor={`dir-pin-${society.slug}`} className="min-w-0 break-words">{society.name}</Label>
-                      <Input
-                        id={`dir-pin-${society.slug}`}
-                        value={dirPins[society.slug] || ''}
-                        onChange={(e) => {
-                          const v = e.target.value.replace(/\D/g, '').slice(0, 6);
-                          setDirPins(prev => ({ ...prev, [society.slug]: v }));
-                        }}
-                        type={showPins ? 'text' : 'password'}
-                        autoComplete="off"
-                        inputMode="numeric"
-                        maxLength={6}
-                        placeholder="000000"
-                        className="col-span-2 w-full tracking-widest text-center font-mono sm:col-span-1"
-                      />
-                    </div>
-                  ))}
-                  <Button
-                    onClick={saveDiretoriaPins}
-                    disabled={dirPinsSaving}
-                  >
-                    {dirPinsSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                    Salvar PINs
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {isAdmin && <DirectoryPinsPanel isAdmin={isAdmin} />}
 
         </div>
       </div>

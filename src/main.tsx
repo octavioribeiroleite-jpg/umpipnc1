@@ -15,8 +15,8 @@ import { registerServiceWorker } from "./lib/registerSW";
 import { startAppResumeHome } from "./lib/app-resume-navigation";
 import { startAppOpening } from "./lib/app-opening";
 
-// registerSW restores any update route during module initialization. Returning
-// after a long absence must take precedence before the app renders that route.
+// registerSW restores any update route during module initialization. The PWA
+// launch policy takes precedence before the app can render a private route.
 const resumeHome = startAppResumeHome(window, navigator);
 const root = document.getElementById("root")!;
 const splash = document.getElementById("ipnc-opening");

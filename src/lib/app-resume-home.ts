@@ -41,17 +41,22 @@ function isTimestamp(value: unknown): value is number {
  */
 export function createAppResumeHomeController(
   environment: AppResumeHomeEnvironment,
-  options: { onReturnHome(event: AppResumeHomeEvent): void; timeoutMs?: number },
+  options: {
+    onReturnHome(event: AppResumeHomeEvent): void;
+    timeoutMs?: number;
+    shouldPreserveBackground?(): boolean;
+  },
 ) {
   const timeoutMs = options.timeoutMs ?? APP_BACKGROUND_TIMEOUT_MS;
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
-    throw new RangeError('The background timeout must be a positive duration.');
+  if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+    throw new RangeError('The background timeout must be a non-negative duration.');
   }
 
   let started = false;
   let hasBeenVisible = false;
   let lastActiveAt = 0;
   let backgroundAt: number | null = null;
+  let preserveBackground = false;
   let heartbeat: number | null = null;
 
   const readStamp = (): LifecycleStamp | null => {
@@ -83,6 +88,9 @@ export function createAppResumeHomeController(
   const markBackground = () => {
     if (!started || backgroundAt !== null) return;
     backgroundAt = environment.now();
+    // Snapshot the native interaction before its change/cancel event arrives.
+    // A file picker can finish while the document is still hidden.
+    preserveBackground = options.shouldPreserveBackground?.() ?? false;
     persist();
   };
 
@@ -90,12 +98,13 @@ export function createAppResumeHomeController(
     if (!started || environment.document.visibilityState !== 'visible') return;
     const now = environment.now();
     const elapsedMs = backgroundAt === null ? 0 : Math.max(0, now - backgroundAt);
-    const shouldReturnHome = backgroundAt !== null && elapsedMs >= timeoutMs;
+    const shouldReturnHome = backgroundAt !== null && !preserveBackground && elapsedMs >= timeoutMs;
     const reason = hasBeenVisible ? 'resume' : 'cold-start';
 
     // Consume the pending return before calling navigation: visibilitychange and
     // pageshow often arrive together, including after a bfcache restoration.
     backgroundAt = null;
+    preserveBackground = false;
     lastActiveAt = now;
     hasBeenVisible = true;
     persist();
@@ -118,6 +127,7 @@ export function createAppResumeHomeController(
       if (started) return;
       started = true;
       hasBeenVisible = false;
+      preserveBackground = false;
       const now = environment.now();
       const saved = readStamp();
       lastActiveAt = saved?.lastActiveAt ?? now;
@@ -126,6 +136,8 @@ export function createAppResumeHomeController(
       backgroundAt = reference === undefined ? null : Math.min(reference, now);
 
       environment.document.addEventListener('visibilitychange', visibilityChanged);
+      environment.document.addEventListener('freeze', markBackground);
+      environment.document.addEventListener('resume', markForeground);
       environment.window.addEventListener('pagehide', markBackground);
       environment.window.addEventListener('pageshow', markForeground);
       heartbeat = environment.setInterval(activeHeartbeat, ACTIVE_HEARTBEAT_MS);
@@ -141,6 +153,8 @@ export function createAppResumeHomeController(
       if (!started) return;
       started = false;
       environment.document.removeEventListener('visibilitychange', visibilityChanged);
+      environment.document.removeEventListener('freeze', markBackground);
+      environment.document.removeEventListener('resume', markForeground);
       environment.window.removeEventListener('pagehide', markBackground);
       environment.window.removeEventListener('pageshow', markForeground);
       if (heartbeat !== null) environment.clearInterval(heartbeat);

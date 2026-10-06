@@ -1,8 +1,22 @@
-.treasury-access-dialog{background:#fff!important;color:#183a30!important;border:1px solid #d5e3dd!important;max-width:480px!important;width:calc(100% - 32px)!important;max-height:calc(100dvh - 32px);overflow-y:auto;border-radius:20px!important;padding:24px!important}
-.treasury-access-dialog.treasury-access-dialog-pin{max-width:620px!important;width:calc(100% - 24px)!important;max-height:calc(100dvh - 24px);background:#f9fcfa!important;padding:18px!important;gap:12px}
-.treasury-access-dialog-pin .ipnc-pin-card{width:100%;max-width:none;padding:0;border:0;background:transparent;box-shadow:none}
-.treasury-access-dialog-pin .ipnc-pin-card[data-presentation='dialog'] .ipnc-pin-navigation{padding-right:calc(3rem + 12px)}
-@media(max-width:479px){.treasury-access-dialog.treasury-access-dialog-pin{width:calc(100% - 16px)!important;max-height:calc(100dvh - 16px);padding:12px!important}}
-.treasury-access-dialog .ta-home{justify-self:start;max-width:calc(100% - 24px);height:auto;white-space:normal;text-align:left;color:#245540;border-radius:10px}.treasury-access-dialog .ta-home:hover{background:#edf5f0;color:#193b30}.treasury-access-dialog .ta-home:focus-visible{outline:3px solid #8db3a0;outline-offset:3px}
-.ta-heading{text-align:center;padding:4px 12px 16px}.ta-symbol{display:inline-flex;padding:13px;border-radius:18px;background:#e8f2ec;color:#245540;margin-bottom:12px}.ta-heading h2{font-size: 1.5rem;color:#193b30}.ta-heading p{color:#51665e;font-size: 0.875rem;line-height:1.5;margin-top:8px}
-.ta-options{display:grid;gap:10px}.ta-option{display:flex;align-items:center;gap:13px;width:100%;padding:15px 12px;border:1px solid #d8e2dd;border-radius:15px;background:#fbfcfa;text-align:left;min-height:70px;color:#234036}.ta-option:hover{background:#edf5f0;border-color:#6c9d85}.ta-option>span:not(.ta-abbreviation){flex:1;min-width:0}.ta-option strong,.ta-option small{display:block}.ta-option small{font-size: 0.75rem;line-height:1.4;color:#52685e;margin-top:3px}.ta-abbreviation{border:1px solid;border-radius:11px;font-size: 0.6875rem;font-weight:700;padding:10px 7px;min-width:44px;text-align:center}.ta-admin{margin-top:8px;background:#edf4ef}.ta-form fieldset{display:grid;gap:18px;min-width:0}.ta-form label{display:grid;gap:8px;font-size: 0.875rem;font-weight:600}.ta-form input{width:100%;min-width:0;height:48px;border:1px solid hsl(var(--input));background:#fff;color:#193b30;border-radius:12px;padding:10px 12px;font-size: 1rem}.ta-form h3{font-size: 1rem;line-height:1.4}.ta-pin{letter-spacing:.6em;text-align:center;font-size: 1.5rem!important}.ta-back{display:inline-flex;align-items:center;gap:8px;min-height:48px;font-size: 0.875rem;margin-bottom:14px}.ta-submit{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;background:#245b43;border-radius:11px;color:#fff;font-weight:600}.ta-error{padding:12px;background:#fff1f0;border:1px solid #e8b3ab;color:#8c3025;border-radius:12px;font-size: 0.875rem}.ta-form button:disabled{opacity:.6}.ta-option:focus-visible,.ta-form button:focus-visible,.ta-form input:focus-visible{outline:3px solid #8db3a0;outline-offset:3px}.treasury-locked{min-height:100dvh;background:#eff4ef;display:grid;place-content:center;text-align:center;padding:24px;gap:16px;color:#234036}.treasury-locked h1{font-size: 1.75rem;font-weight:700}.treasury-locked button{min-height:48px;padding:12px 24px;border-radius:12px;background:#245b43;color:white}.treasury-locked a{text-decoration:underline;min-height:48px;padding:12px}
+/* The same EBD access model, sized to an accessible financial dialog. */
+.treasury-access-dialog {
+  background: #f8fbf8 !important; color: #073b32 !important;
+  border: 1px solid #d5e3dd !important; max-width: 760px !important;
+  width: calc(100% - 32px) !important; max-height: calc(100dvh - 32px);
+  overflow-y: auto; border-radius: 20px !important; padding: 20px !important;
+}
+.treasury-access-dialog.treasury-access-dialog-pin { max-width: 640px !important; }
+.treasury-access-dialog .ebd-access { background: transparent; }
+.treasury-access-dialog .ebd-access__navigation { padding-right: 36px; }
+.treasury-access-dialog .ta-options { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.treasury-access-dialog .ta-form fieldset { display: grid; gap: 18px; min-width: 0; }
+.treasury-access-dialog .ta-submit { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; background: #087b56; border-radius: 12px; color: white; font-weight: 650; }
+.ta-error { padding: 12px; background: #fff1f0; border: 1px solid #e8b3ab; color: #8c3025; border-radius: 12px; font-size: 0.875rem; }
+@media (max-width: 479px) {
+  .treasury-access-dialog { width: calc(100% - 16px) !important; max-height: calc(100dvh - 16px); padding: 12px !important; }
+}
+.treasury-locked { min-height: 100dvh; background: #eff4ef; display: grid; place-content: center; text-align: center; padding: 24px; gap: 16px; color: #234036; }
+.treasury-locked h1 { font-size: 1.75rem; font-weight: 700; }
+.treasury-locked button { min-height: 48px; padding: 12px 24px; border-radius: 12px; background: #245b43; color: white; }
+.treasury-locked a { text-decoration: underline; min-height: 48px; padding: 12px; }
+.treasury-access-dialog .ta-form label { display: grid; gap: 8px; }

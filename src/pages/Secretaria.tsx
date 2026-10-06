@@ -35,7 +35,7 @@ import ConfiguracoesEbdTab from '@/components/secretaria/ConfiguracoesEbdTab';
 import AcessosEbdTab from '@/components/secretaria/AcessosEbdTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
-import PublicHomeButton from '@/components/auth/PublicHomeButton';
+import { AccessShell } from '@/components/auth/AccessShell';
 import { APP_HOME_PATH } from '@/lib/app-home';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import './secretaria-home.css';
@@ -596,21 +596,9 @@ export default function Secretaria() {
 
     if (loginStep === 'name') {
       return (
-        <div className="ipnc-safe-managed ipnc-safe-page-x min-h-[var(--app-viewport-height)] flex items-center justify-center bg-background px-4 py-6 safe-top safe-bottom">
-          <div className="w-full max-w-sm mx-auto space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
-            <div className="flex flex-col items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => { setLoginStep('pin'); setPendingPin(''); }} className="self-start shrink-0" aria-label="Voltar ao PIN">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <UserCheck className="h-7 w-7 text-primary" />
-              </div>
-              <div className="text-center">
-                <h1 className="font-semibold text-2xl tracking-tight">Qual é o seu nome?</h1>
-                <p className="text-sm text-muted-foreground">Para registrar quem entrou na sala</p>
-              </div>
-            </div>
-            <PublicHomeButton disabled={loading} className="w-full justify-center rounded-xl text-primary" />
+        <AccessShell title="Qual é o seu nome?" description="Para registrar quem entrou na sala" headingIcon={UserCheck}
+          onBack={() => { setLoginStep('pin'); setPendingPin(''); }} backLabel="Voltar ao PIN" showHome disabled={loading} backDisabled={false}>
+          <div className="ipnc-access-form">
             <label className="block space-y-2 text-sm font-medium">Seu nome
             <input
               autoFocus
@@ -629,7 +617,7 @@ export default function Secretaria() {
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </div>
-        </div>
+        </AccessShell>
       );
     }
 

@@ -28,6 +28,7 @@ import IdentityConfirmationEnhancer from '@/components/auth/IdentityConfirmation
 import IdentityFixture from './identity';
 import {fixtureRole,fixtureState,fixtureParams} from './options';
 import Auth from '@/pages/Auth';
+import Secretaria from '@/pages/Secretaria';
 import ResetPassword from '@/pages/ResetPassword';
 import NotFound from '@/pages/NotFound';
 import PainelPastor from '@/pages/PainelPastor';
@@ -109,5 +110,5 @@ createRoot(root).render(<AppShell><PageErrorBoundary><QueryClientProvider client
 <Route path="/igreja" element={<PortalIgreja/>}/>
 <Route path="/vote/:electionId" element={<VotePublic/>}/>
 <Route path="/membro" element={<MemberAccessUnavailable/>}/>
-<Route path="/secretaria" element={unavailable}/><Route path="/tesouraria" element={unavailable}/>
+<Route path="/secretaria" element={<Secretaria/>}/><Route path="/tesouraria" element={unavailable}/>
 <Route path="*" element={<NotFound/>}/></Routes><Toaster/><Toasts/><PWAInstallPrompt/><FixtureControls/><SocietyScreenEnhancer/><IdentityConfirmationEnhancer/></MembroSessionProvider></DiretoriaSessionProvider></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></PageErrorBoundary></AppShell>);

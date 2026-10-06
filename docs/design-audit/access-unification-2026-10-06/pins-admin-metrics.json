@@ -1,0 +1,149 @@
+{
+  "fixture": "isolated-admin",
+  "metrics": [
+    {
+      "card": {
+        "bottom": 1344.21875,
+        "height": 1264.28125,
+        "left": 16,
+        "right": 344,
+        "top": 79.9375,
+        "width": 328,
+        "x": 16,
+        "y": 79.9375
+      },
+      "controlsOutsideViewport": false,
+      "copyCount": 6,
+      "fieldCount": 6,
+      "fieldMinWidth": 183.15625,
+      "generalEditor": false,
+      "height": 812,
+      "horizontalOverflow": 0,
+      "minimumControlHeight": 48,
+      "revealToggle": false,
+      "visibleFields": true,
+      "width": 375
+    },
+    {
+      "card": {
+        "bottom": 1488.515625,
+        "height": 1408.28125,
+        "left": 16,
+        "right": 289,
+        "top": 80.234375,
+        "width": 273,
+        "x": 16,
+        "y": 80.234375
+      },
+      "controlsOutsideViewport": false,
+      "copyCount": 6,
+      "fieldCount": 6,
+      "fieldMinWidth": 128.15625,
+      "generalEditor": false,
+      "height": 740,
+      "horizontalOverflow": 0,
+      "minimumControlHeight": 48,
+      "revealToggle": false,
+      "visibleFields": true,
+      "width": 320
+    },
+    {
+      "card": {
+        "bottom": 1000.015625,
+        "height": 846.28125,
+        "left": 100,
+        "right": 729,
+        "top": 153.734375,
+        "width": 629,
+        "x": 100,
+        "y": 153.734375
+      },
+      "controlsOutsideViewport": false,
+      "copyCount": 6,
+      "fieldCount": 6,
+      "fieldMinWidth": 169.15625,
+      "generalEditor": false,
+      "height": 1024,
+      "horizontalOverflow": 0,
+      "minimumControlHeight": 48,
+      "revealToggle": false,
+      "visibleFields": true,
+      "width": 768
+    },
+    {
+      "card": {
+        "bottom": 876.015625,
+        "height": 846.28125,
+        "left": 100,
+        "right": 820,
+        "top": 29.734375,
+        "width": 720,
+        "x": 100,
+        "y": 29.734375
+      },
+      "controlsOutsideViewport": false,
+      "copyCount": 6,
+      "fieldCount": 6,
+      "fieldMinWidth": 169.15625,
+      "generalEditor": false,
+      "height": 900,
+      "horizontalOverflow": 0,
+      "minimumControlHeight": 48,
+      "revealToggle": false,
+      "visibleFields": true,
+      "width": 1024
+    },
+    {
+      "card": {
+        "bottom": 876.015625,
+        "height": 846.28125,
+        "left": 532.5,
+        "right": 1252.5,
+        "top": 29.734375,
+        "width": 720,
+        "x": 532.5,
+        "y": 29.734375
+      },
+      "controlsOutsideViewport": false,
+      "copyCount": 6,
+      "fieldCount": 6,
+      "fieldMinWidth": 169.15625,
+      "generalEditor": false,
+      "height": 900,
+      "horizontalOverflow": 0,
+      "minimumControlHeight": 48,
+      "revealToggle": false,
+      "visibleFields": true,
+      "width": 1440
+    },
+    {
+      "card": {
+        "bottom": 1344.21875,
+        "height": 1264.28125,
+        "left": 16,
+        "right": 359,
+        "top": 79.9375,
+        "width": 343,
+        "x": 16,
+        "y": 79.9375
+      },
+      "controlsOutsideViewport": false,
+      "copyCount": 6,
+      "fieldCount": 6,
+      "fieldMinWidth": 186.453125,
+      "generalEditor": false,
+      "height": 844,
+      "horizontalOverflow": 0,
+      "minimumControlHeight": 48,
+      "revealToggle": false,
+      "visibleFields": true,
+      "width": 390
+    }
+  ],
+  "behavior": {
+    "invalidPinFocused": true,
+    "copyDisabledForUnsaved": true,
+    "saveConfirmation": true,
+    "copyConfirmed": true
+  }
+}

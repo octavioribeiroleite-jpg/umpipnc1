@@ -148,7 +148,8 @@ test('every installed display-mode transition closes invitations and teardown re
 });
 test('manifest preserves identity and declares actual PNG dimensions', () => {
   const manifest = JSON.parse(readFileSync(new URL('../public/manifest.json', import.meta.url)));
-  assert.equal(manifest.id, '/'); assert.equal(manifest.start_url, '/'); assert.equal(manifest.display, 'standalone');
+  assert.equal(manifest.id, '/'); assert.equal(manifest.start_url, '/auth?home=1'); assert.equal(manifest.display, 'standalone');
+  assert.deepEqual(manifest.launch_handler, { client_mode: 'navigate-existing' });
   assert.equal(manifest.scope, '/'); assert.equal(manifest.orientation, 'portrait-primary');
   assert.deepEqual(manifest.display_override, ['fullscreen', 'standalone']);
   assert.equal(manifest.theme_color, '#f7fbf8');
@@ -182,7 +183,7 @@ test('HTML has one covering viewport, a matching system theme and the versioned 
   assert.equal((html.match(/name="theme-color"/g) || []).length, 1);
   assert.ok(html.includes(`name="theme-color" content="${manifest.theme_color}"`));
   assert.match(html, /apple-mobile-web-app-status-bar-style" content="black-translucent"/);
-  assert.match(html, /rel="manifest" href="\/manifest\.json\?v=ipnc-mobile-v5"/);
+  assert.match(html, /rel="manifest" href="\/manifest\.json\?v=ipnc-access-v6"/);
   assert.match(html, /rel="apple-touch-icon" sizes="180x180" href="\/icons\/apple-touch-icon-v5\.png"/);
   const apple = readFileSync(new URL('../public/icons/apple-touch-icon-v5.png', import.meta.url));
   assert.equal(`${apple.readUInt32BE(16)}x${apple.readUInt32BE(20)}`, '180x180');
@@ -198,11 +199,11 @@ test('service worker only removes old app caches and never intercepts login, API
   vm.runInNewContext(worker, {
     URL,
     self: { location: { origin: 'https://renovo.test' }, addEventListener: (name, fn) => { handlers[name] = fn; }, clients: { claim: async () => { claimed = true; } }, skipWaiting: () => { skipped = true; } },
-    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'ump-cache-v16', 'ump-cache-v17', 'ump-cache-v18', 'ump-cache-v19', 'another-app'], delete: async key => { deleted.push(key); } },
+    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'ump-cache-v16', 'ump-cache-v17', 'ump-cache-v18', 'ump-cache-v19', 'ump-cache-v20', 'another-app'], delete: async key => { deleted.push(key); } },
   });
   let activated;
   handlers.activate({ waitUntil: promise => { activated = promise; } }); await activated;
-  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'ump-cache-v16', 'ump-cache-v17', 'ump-cache-v18']); assert.equal(claimed, true);
+  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'ump-cache-v16', 'ump-cache-v17', 'ump-cache-v18', 'ump-cache-v19']); assert.equal(claimed, true);
   handlers.message({ data: { type: 'SKIP_WAITING' } }); assert.equal(skipped, true);
   for (const [url, mode, method] of [
     ['https://renovo.test/auth','navigate','GET'],

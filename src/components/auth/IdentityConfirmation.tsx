@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 
 interface IdentityConfirmationProps {
   name: string;
+  hideBack?: boolean;
   society?: string;
   role?: string;
   loading?: boolean;
@@ -12,7 +13,7 @@ interface IdentityConfirmationProps {
   onConfirm: () => void;
 }
 
-export default function IdentityConfirmation({ name, society, role, loading = false, onBack, onDifferentPerson, onConfirm }: IdentityConfirmationProps) {
+export default function IdentityConfirmation({ name, hideBack = false, society, role, loading = false, onBack, onDifferentPerson, onConfirm }: IdentityConfirmationProps) {
   const headingId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -22,11 +23,11 @@ export default function IdentityConfirmation({ name, society, role, loading = fa
 
   return (
     <section className="auth-identity" aria-labelledby={headingId} aria-busy={loading}>
-      <Button type="button" variant="ghost" className="auth-identity-back" onClick={onBack}>
+      {!hideBack && <Button type="button" variant="ghost" className="auth-identity-back" onClick={onBack}>
         <ArrowLeft aria-hidden />Voltar
-      </Button>
-      <div className="auth-identity-card">
-        <div className="auth-identity-icon"><UserCheck aria-hidden /></div>
+      </Button>}
+      <div className={`auth-identity-card ${hideBack ? 'ipnc-access-form' : ''}`}>
+        {!hideBack && <div className="auth-identity-icon"><UserCheck aria-hidden /></div>}
         <h2 ref={headingRef} id={headingId} tabIndex={-1}>
           <span className="auth-identity-question">Você é</span>
           <span className="auth-identity-name">{name}?</span>

@@ -225,7 +225,7 @@ test('start is idempotent and stop removes listeners and timers without touching
   const page = fixture({ storage: memoryStorage([authRecord]) });
   page.controller.start();
   page.controller.start();
-  assert.equal(page.document.count() + page.window.count(), 3);
+  assert.equal(page.document.count() + page.window.count(), 5);
   assert.equal(page.timers.size, 1);
   page.controller.stop();
   page.controller.stop();
@@ -238,4 +238,24 @@ test('start is idempotent and stop removes listeners and timers without touching
   assert.deepEqual(page.returned, []);
   assert.equal(page.storage.getItem(authRecord[0]), authRecord[1]);
   assert.deepEqual([...page.storage.data.keys()].sort(), [APP_LIFECYCLE_STORAGE_KEY, authRecord[0]].sort());
+});
+
+test('zero timeout is an immediate resume policy while negative or non-finite durations are rejected', () => {
+  const page = fixture();
+  const immediate = page.reopen({ timeoutMs: 0 });
+  immediate.start(); page.visibility('hidden'); page.visibility('visible');
+  assert.deepEqual(page.returned, [{ reason: 'resume', elapsedMs: 0 }]);
+  immediate.stop();
+  for (const timeoutMs of [-1, Infinity, NaN]) assert.throws(() => page.reopen({ timeoutMs }), RangeError);
+});
+
+test('protected native interaction is latched only for its own background cycle', () => {
+  const page = fixture();
+  let selecting = true;
+  const immediate = page.reopen({ timeoutMs: 0, shouldPreserveBackground: () => selecting });
+  immediate.start(); page.visibility('hidden'); selecting = false; page.visibility('visible');
+  assert.deepEqual(page.returned, []);
+  page.visibility('hidden'); page.visibility('visible');
+  assert.deepEqual(page.returned, [{ reason: 'resume', elapsedMs: 0 }]);
+  immediate.stop();
 });

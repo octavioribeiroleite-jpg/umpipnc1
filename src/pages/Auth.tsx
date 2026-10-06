@@ -1,5 +1,5 @@
 import { loadStoredEbdSession } from '@/lib/ebd-session-storage';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDiretoriaSession } from '@/contexts/DiretoriaSessionContext';
@@ -7,7 +7,7 @@ import { useMembroSession } from '@/contexts/MembroSessionContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock, BookOpen, Wallet } from 'lucide-react';
@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import SocietySelector from '@/components/auth/SocietySelector';
 import IdentityConfirmation from '@/components/auth/IdentityConfirmation';
+import { AccessShell } from '@/components/auth/AccessShell';
 import PublicHomeButton from '@/components/auth/PublicHomeButton';
 import { APP_HOME_PATH, requestsPublicHome } from '@/lib/app-home';
 import { InstallButton } from '@/components/layout/InstallButton';
@@ -50,19 +51,23 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [societies, setSocieties] = useState<Society[]>([]);
+  const [societiesLoading, setSocietiesLoading] = useState(true);
+  const [societiesError, setSocietiesError] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [isEnteringApp, setIsEnteringApp] = useState(false);
   const [entryMessage, setEntryMessage] = useState('');
 
   // Diretoria PIN flow state
-  const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('pin');
+  const [diretoriaStep, setDiretoriaStep] = useState<DiretoriaStep>('societies');
   const [selectedDiretoriaSociety, setSelectedDiretoriaSociety] = useState<Society | null>(null);
   const [pinError, setPinError] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
   const [savedName, setSavedName] = useState<string | null>(null);
   const [operatorName, setOperatorName] = useState('');
   const [operatorFunction, setOperatorFunction] = useState('');
-  const [generalPin, setGeneralPin] = useState<string | null>(null);
+  const [pinMessage, setPinMessage] = useState('');
+  const [pinAttempt, setPinAttempt] = useState(0);
+  const pinSubmitting = useRef(false);
 
   // Membro flow state
   const [membroStep, setMembroStep] = useState<MembroStep>('societies');
@@ -99,24 +104,29 @@ export default function Auth() {
     navigate(path);
   }, [navigate]);
 
-  useEffect(() => {
-    const fetchSocieties = async () => {
-      const { data } = await supabase
+  const fetchSocieties = useCallback(async () => {
+    setSocietiesLoading(true);
+    setSocietiesError(false);
+    try {
+      const { data, error } = await supabase
         .from('societies')
         .select('*')
         .eq('active', true)
         .order('name');
-      if (data) setSocieties(data as Society[]);
-    };
-    fetchSocieties();
+      if (error || !data) throw error || new Error('Societies unavailable');
+      setSocieties(data as Society[]);
+    } catch { setSocietiesError(true); }
+    finally { setSocietiesLoading(false); }
   }, []);
+  useEffect(() => { void fetchSocieties(); }, [fetchSocieties]);
 
   // ========== HANDLERS ==========
 
   const handleReturnHome = useCallback(() => {
     setStep('select');
-    setDiretoriaStep('pin');
-    setGeneralPin(null);
+    setDiretoriaStep('societies');
+    setSelectedDiretoriaSociety(null);
+    setPinMessage('');
     setPinError(false);
     setPassword('');
     setLoginError('');
@@ -132,14 +142,11 @@ export default function Auth() {
 
   const handleBack = () => {
     if (step === 'diretoria') {
-      if (diretoriaStep === 'societies') {
-        setDiretoriaStep('pin');
-        setGeneralPin(null);
-        setSelectedDiretoriaSociety(null);
-        return;
-      }
-      if (diretoriaStep === 'name-confirm' || diretoriaStep === 'name-input') {
+      if (diretoriaStep === 'pin' || diretoriaStep === 'name-confirm' || diretoriaStep === 'name-input') {
         setDiretoriaStep('societies');
+        setSelectedDiretoriaSociety(null);
+        setPinMessage('');
+        setPinError(false);
         setSavedName(null);
         setOperatorName('');
         setOperatorFunction('');
@@ -157,34 +164,51 @@ export default function Auth() {
       }
     }
     setStep('select');
-    setDiretoriaStep('pin');
-    setGeneralPin(null);
+    setDiretoriaStep('societies');
+    setSelectedDiretoriaSociety(null);
   };
 
-  const handleSelectDiretoriaSociety = async (society: Society) => {
-    if (!generalPin) return;
+  const handleSelectDiretoriaSociety = (society: Society) => {
     setSelectedDiretoriaSociety(society);
+    setPinError(false);
+    setPinMessage('');
+    setSavedName(null);
+    setOperatorName('');
+    setOperatorFunction('');
+    setDiretoriaStep('pin');
+  };
+
+  const handlePinComplete = async (pin: string) => {
+    const society = selectedDiretoriaSociety;
+    if (!society || pinSubmitting.current || !/^\d{6}$/.test(pin)) return;
+    pinSubmitting.current = true;
     setPinLoading(true);
+    setPinError(false);
+    setPinMessage('');
 
     try {
       const { data, error } = await supabase.functions.invoke('validate-diretoria-pin', {
-        body: { society_slug: society.slug, pin: generalPin },
+        body: { society_slug: society.slug, pin },
       });
 
       if (error || !data?.success) {
-        toast({ variant: 'destructive', title: 'Erro ao entrar' });
-        setPinLoading(false);
+        let message = data?.error;
+        if (!message && error?.context instanceof Response) {
+          try { message = (await error.context.json()).error; } catch { /* Connection errors use the message below. */ }
+        }
+        setPinMessage(message || 'Não foi possível confirmar o acesso. Confira sua conexão e tente novamente.');
+        setPinAttempt(value => value + 1);
         return;
       }
 
-      await supabase.auth.setSession({
+      const sessionResult = await supabase.auth.setSession({
         access_token: data.session.access_token,
         refresh_token: data.session.refresh_token,
       });
+      if (sessionResult.error) throw sessionResult.error;
 
       // Pastor has a fixed identity — skip name input
       if (society.slug === 'pastor') {
-        setPinLoading(false);
         finishDiretoriaLogin('Pr. Ronne Peterson Moreira', 'Pastor');
         return;
       }
@@ -203,36 +227,10 @@ export default function Auth() {
       }
     } catch (err) {
       console.error('Society login error:', err);
-      toast({ variant: 'destructive', title: 'Erro ao entrar' });
+      setPinMessage('Não foi possível confirmar o acesso. Confira sua conexão e tente novamente.');
+      setPinAttempt(value => value + 1);
     } finally {
-      setPinLoading(false);
-    }
-  };
-
-  const handlePinComplete = async (pin: string) => {
-    setPinLoading(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('validate-diretoria-pin', {
-        body: { pin, validate_only: true },
-      });
-
-      if (error || !data?.success) {
-        setPinError(true);
-        toast({ variant: 'destructive', title: 'PIN incorreto' });
-        setTimeout(() => setPinError(false), 600);
-        setPinLoading(false);
-        return;
-      }
-
-      setGeneralPin(pin);
-      setDiretoriaStep('societies');
-    } catch (err) {
-      console.error('PIN validation error:', err);
-      setPinError(true);
-      toast({ variant: 'destructive', title: 'Erro ao validar PIN' });
-      setTimeout(() => setPinError(false), 600);
-    } finally {
+      pinSubmitting.current = false;
       setPinLoading(false);
     }
   };
@@ -290,7 +288,7 @@ export default function Auth() {
     setMembersLoading(false);
 
     if (saved && savedId) {
-      const exists = societyMembers.some((m: any) => m.id === savedId);
+      const exists = societyMembers.some(m => m.id === savedId);
       if (exists) {
         setMembroSavedName(saved);
         setMembroSavedId(savedId);
@@ -413,7 +411,7 @@ export default function Auth() {
     // Membro name-confirm
     if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
       return (
-        <IdentityConfirmation name={membroSavedName} society={selectedMembroSociety?.slug.toUpperCase()}
+        <IdentityConfirmation hideBack name={membroSavedName} society={selectedMembroSociety?.slug.toUpperCase()}
           loading={memberLoginLoading} onBack={handleBack} onDifferentPerson={handleDifferentMembro} onConfirm={handleConfirmMembro} />
       );
     }
@@ -494,7 +492,7 @@ export default function Auth() {
     // Diretoria name-confirm
     if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
       return (
-        <IdentityConfirmation name={savedName} role={operatorFunction} society={selectedDiretoriaSociety?.slug.toUpperCase()}
+        <IdentityConfirmation hideBack name={savedName} role={operatorFunction} society={selectedDiretoriaSociety?.slug.toUpperCase()}
           onBack={handleBack} onDifferentPerson={handleDifferentPerson} onConfirm={handleConfirmName} />
       );
     }
@@ -502,18 +500,7 @@ export default function Auth() {
     // Diretoria name-input
     if (step === 'diretoria' && diretoriaStep === 'name-input') {
       return (
-        <div className="w-full max-w-[400px]">
-          <Button variant="ghost" onClick={handleBack} className="mb-3"><ArrowLeft className="h-4 w-4" />Voltar</Button>
-          <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
-            <CardContent className="pt-6 space-y-5">
-              <div className="text-center space-y-2">
-                <div className="mx-auto h-14 w-14 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${selectedDiretoriaSociety?.color}20` }}>
-                  <UserCheck className="h-7 w-7" style={{ color: selectedDiretoriaSociety?.color }} />
-                </div>
-                <h2 className="font-semibold text-lg text-foreground">Identificação</h2>
-                <p className="text-sm text-muted-foreground">Informe seus dados para a {selectedDiretoriaSociety?.name}</p>
-              </div>
+        <div className="ipnc-access-form space-y-5">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="operator-name" className="text-foreground/80">Nome completo</Label>
@@ -542,15 +529,13 @@ export default function Auth() {
               <Button className="w-full" disabled={!operatorName.trim() || !operatorFunction} onClick={handleSaveName}>
                 Continuar
               </Button>
-            </CardContent>
-          </Card>
         </div>
       );
     }
 
     // Main screen (select / societies / pin / login)
     return (
-      <div className={`auth-content ${step === 'select' ? 'auth-content-select' : step === 'login' ? 'auth-content-form' : 'auth-content-flow'}`}>
+      <div className={step === 'select' ? 'auth-content auth-content-select' : 'w-full'}>
         {step === 'select' && (
           <header className="auth-content-heading">
             <span className="auth-mobile-lock"><Lock aria-hidden="true" /></span>
@@ -561,20 +546,21 @@ export default function Auth() {
         )}
         {step === 'select' ? (
           <div className="auth-access-list">
-            <AccessCard title="Diretoria" description="Reuniões, tarefas e organização" icon={Users} tone="green" onClick={() => { setStep('diretoria'); setDiretoriaStep('pin'); }} />
+            <AccessCard title="Diretoria" description="Reuniões, tarefas e organização" icon={Users} tone="green" onClick={() => { setStep('diretoria'); setDiretoriaStep('societies'); }} />
             <AccessCard title="Secretaria EBD" description="Turmas, chamada e histórico" icon={BookOpen} tone="blue" onClick={() => navigateWithTransition('/secretaria')} />
             <AccessCard title="Finanças" description="Acesso privado por sociedade" icon={Wallet} tone="gold" onClick={() => setTreasuryOpen(true)} />
             <AccessCard title="Portal da igreja" description="Programação e avisos" icon={Church} tone="violet" onClick={() => navigateWithTransition('/igreja')} />
           </div>
         ) : step === 'diretoria' && diretoriaStep === 'pin' ? (
           <PinPad
-            profileLabel="Diretoria"
+            key={`${selectedDiretoriaSociety?.slug}:${pinAttempt}`}
+            profileLabel={`Diretoria · ${selectedDiretoriaSociety?.slug.toUpperCase() ?? ''}`}
             onBack={handleBack}
             onHome={handleReturnHome}
             onComplete={handlePinComplete}
             loading={pinLoading}
             error={pinError}
-            embedded
+            errorMessage={pinMessage}
           />
         ) : step === 'diretoria' && diretoriaStep === 'societies' ? (
           <SocietySelector
@@ -587,16 +573,7 @@ export default function Auth() {
         ) : step === 'membro' && membroStep === 'societies' ? (
           <SocietySelector societies={societies} onBack={handleBack} onSelect={handleSelectMembroSociety} />
         ) : (
-          <div className="auth-account-entry animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
-            <PublicHomeButton onClick={handleReturnHome} disabled={isLoading} className="mb-3" />
-            <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-foreground">Acesso administrativo</h2>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form onSubmit={handleLogin} className="ipnc-access-form space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="username" className="text-foreground/80">Usuário</Label>
                     <Input
@@ -636,9 +613,6 @@ export default function Auth() {
                     )}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-          </div>
         )}
 
         {step === 'select' && (
@@ -655,6 +629,38 @@ export default function Auth() {
   const isPinEntry = !isEnteringApp && step === 'diretoria' && diretoriaStep === 'pin';
   const isHomeEntry = !isEnteringApp && step === 'select';
   const isAccountEntry = !isEnteringApp && step === 'login';
+
+  // Entry screens share the EBD layout directly, without the home sidebar.
+  if (isPinEntry) return (
+          <PinPad
+            key={`${selectedDiretoriaSociety?.slug}:${pinAttempt}`}
+            profileLabel={`Diretoria · ${selectedDiretoriaSociety?.slug.toUpperCase() ?? ''}`}
+            onBack={handleBack}
+            onHome={handleReturnHome}
+            onComplete={handlePinComplete}
+            loading={pinLoading}
+            error={pinError}
+            errorMessage={pinMessage}
+          />
+  );
+  if (isSocietySelection) {
+    return <SocietySelector societies={societies} loading={societiesLoading} error={societiesError} onRetry={() => void fetchSocieties()} onBack={handleBack}
+      onSelect={step === 'diretoria' ? handleSelectDiretoriaSociety : handleSelectMembroSociety}
+      onSelectPastor={step === 'diretoria' ? () => handleSelectDiretoriaSociety({ id: 'pastor', name: 'Pastor', slug: 'pastor', color: '#1e3a5f' }) : undefined} />;
+  }
+  if (isAccountEntry) {
+    return <AccessShell title="Acesso administrativo" description="Entre com sua conta para gerenciar a IPNC."
+      onBack={handleReturnHome} onHome={handleReturnHome} disabled={isLoading}>
+      {renderContent()}
+    </AccessShell>;
+  }
+  if (isIdentityConfirmation || (!isEnteringApp && step === 'diretoria' && diretoriaStep === 'name-input')) {
+    return <AccessShell title={isIdentityConfirmation ? 'Confirme sua identidade' : 'Identificação'}
+      description={isIdentityConfirmation ? undefined : `Informe seus dados para a ${selectedDiretoriaSociety?.name}.`}
+      headingIcon={UserCheck} onBack={handleBack} onHome={handleReturnHome}>
+      {renderContent()}
+    </AccessShell>;
+  }
 
   return (
     <div className={`auth-page ipnc-safe-managed ${isHomeEntry || isAccountEntry ? 'ipnc-opening-surface' : ''} ${isHomeEntry ? 'auth-page-home' : ''} ${isAccountEntry ? 'auth-page-account' : ''} ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''} ${isPinEntry ? 'auth-page-pin' : ''}`}>

@@ -1,0 +1,32 @@
+{
+  "installation": "simulated",
+  "physicalOsTested": false,
+  "nativeVisibilityObserved": false,
+  "nativeVisibilityAttempt": {
+    "events": "boot:/auth?home=1 · pageshow:false",
+    "heading": "Diretoria · UMP",
+    "visibility": "visible"
+  },
+  "activePin": {
+    "heading": "Diretoria · UMP",
+    "pinProgress": "2 de 6 dígitos preenchidos",
+    "visibility": "visible"
+  },
+  "simulatedBackground": {
+    "fixtureEvents": "boot:/auth?home=1 · pageshow:false · SIMULATED:hidden · visibility:visible",
+    "heading": "Diretoria · UMP",
+    "pinProgress": "2 de 6 dígitos preenchidos",
+    "realVisibility": "visible"
+  },
+  "resumed": {
+    "events": "boot:/auth?home=1 · pageshow:false",
+    "heading": "Como deseja acessar?Escolha como acessar",
+    "home": "1",
+    "installedSimulation": "TESTE LOCAL · PWA simulada",
+    "path": "/__diretoria/auth",
+    "pinProgress": null,
+    "otherStatusText": "Refetch local apenas nas telas com assinatura Realtime."
+  },
+  "keyboardAndResizePreservedPin": true,
+  "nativeFilePickerTested": false
+}

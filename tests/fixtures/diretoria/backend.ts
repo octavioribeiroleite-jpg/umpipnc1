@@ -70,6 +70,7 @@ export async function emitFixtureRealtime() {
  await Promise.allSettled(callbacks.map(handler => Promise.resolve().then(() => handler.callback({eventType:'UPDATE',schema:'public',table:handler.table,new:{},old:{},fixture:true}))));
  return callbacks.length;
 }
+data.settings.push(...['saf','ucp','ump','upa','uph','pastor'].map((slug,index)=>({key:`diretoria_pin_${slug}`,value:`65432${index}`})));
 const keepWhenEmpty=new Set(['societies','profiles','user_roles','settings','elections']);
 const failure=()=>({data:null,error:{message:'Falha simulada de conexão — dados fictícios'},count:null});
 function ilikePattern(pattern:string) {
@@ -94,6 +95,7 @@ function query(table:string){
   return {data:one?rows[0]??null:rows,error:null,count:operation==='select'?count:rows.length};
  };
  const chain:any={select:()=>chain,order:()=>chain,range:(from:number,to:number)=>{offset=from;limit=to-from+1;return chain},abortSignal:()=>chain,limit:(n:number)=>{limit=n;return chain},single:()=>{one=true;return chain},maybeSingle:()=>{one=true;return chain},eq:(k:string,v:any)=>{filters.push(r=>r[k]===v);return chain},neq:(k:string,v:any)=>{filters.push(r=>r[k]!==v);return chain},gte:()=>chain,lte:()=>chain,gt:()=>chain,lt:()=>chain,is:()=>chain,in:(k:string,v:any[])=>{filters.push(r=>v.includes(r[k]));return chain},
+ like:(key:string,pattern:string)=>{const matcher=ilikePattern(pattern);filters.push(row=>row[key]!=null&&matcher.test(String(row[key])));return chain},
  ilike:(key:string,pattern:string)=>{const matcher=ilikePattern(pattern);filters.push(row=>row[key]!=null&&matcher.test(String(row[key])));return chain},
  or:(expression:string)=>{const terms=expression.split(',').map(term=>/^([^.]+)\.ilike\.(.*)$/.exec(term));if(terms.every(Boolean)){const alternatives=terms.map(term=>({key:term![1],matcher:ilikePattern(term![2])}));filters.push(row=>alternatives.some(({key,matcher})=>row[key]!=null&&matcher.test(String(row[key]))));}return chain},
  not:()=>chain,match:()=>chain,contains:()=>chain,
@@ -127,7 +129,8 @@ async function invoke(name:string,options:{body?:Record<string,any>}={}){
   }
  }
  if(name==='summarize-for-pastor')return {data:{summaries:{geral:displayText,financas:displayText,tarefas:displayText,destaques:[displayText]},generated_at:now,from_cache:true},error:null};
- if(name==='validate-diretoria-pin')return {data:{success:true,session:fakeSession},error:null};
+ if(name==='validate-diretoria-pin'){const configured=data.settings.find(row=>row.key===`diretoria_pin_${body.society_slug}`);return configured?.value===body.pin?{data:{success:true,session:fakeSession},error:null}:{data:{success:false,error:'PIN incorreto'},error:null};}
+ if(name==='treasury-pin-login')return {data:{session:fakeSession},error:null};
  if(name==='member-list')return {data:{members:mode==='empty'?[]:data.members},error:null};
  if(name==='manage-users')return {data:{users:[profile]},error:null};
  return {data:null,error:{message:'Serviço desabilitado nesta prévia isolada'}};
@@ -145,6 +148,7 @@ export const supabase:any={from:query,channel:createChannel,removeChannel:async(
  rpc:async(name:string)=>{
   await fixturePause();if(readsFail)return failure();
   if(name==='list_birthdays')return {data:mode==='empty'?[]:data.aniversariantes,error:null};
+  if(name==='treasury_access')return {data:{admin:fixtureRole==='admin',fund_ids:data.societies.map(s=>s.id)},error:null};
   if(name==='treasury_directory')return {data:data.societies.map(s=>({id:s.id,name:s.name,abbreviation:s.slug.toUpperCase(),color:s.color})),error:null};
   if(name==='register_portal_visit')return {data:{id:crypto.randomUUID()},error:null};
   return {data:name.includes('is_')?fixtureRole==='admin':[],error:null};

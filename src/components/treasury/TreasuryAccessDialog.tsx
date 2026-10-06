@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, LockKeyhole, ShieldCheck, Wallet } from 'lucide-react';
+import { LockKeyhole, ShieldCheck, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { treasuryClient } from '@/integrations/supabase/treasury-client';
-import PublicHomeButton from '@/components/auth/PublicHomeButton';
+import { AccessShell } from '@/components/auth/AccessShell';
+import { AccessOption } from '@/components/auth/AccessOption';
 import PinPad from '@/components/secretaria/PinPad';
 import { APP_HOME_PATH } from '@/lib/app-home';
 import './treasury-access.css';
@@ -64,9 +65,27 @@ export function TreasuryAccessDialog({ open, onOpenChange, onEntered }: { open: 
       <DialogDescription className="sr-only">Informe o PIN da {societyChoice.abbreviation}, definido pelo administrador.</DialogDescription>
       <PinPad key={`${societyChoice.id}:${pinReset}`} embedded presentation="dialog" profileLabel={`Acesso da ${societyChoice.abbreviation}`} onBack={back} onHome={goHome} onComplete={enteredPin => void login(enteredPin)} loading={busy} />
     </> : <>
-      <PublicHomeButton onClick={goHome} disabled={busy} className="ta-home" />
-      <div className="ta-heading"><span className="ta-symbol"><Wallet size={24} /></span><DialogTitle>Tesouraria</DialogTitle><DialogDescription>{!choice ? 'Escolha sua sociedade ou o acesso administrativo.' : 'Entre com sua conta de administrador.'}</DialogDescription></div>
-      {!choice ? <div className="ta-options">{directory.isPending ? <p role="status">Carregando sociedades…</p> : directory.error ? <div role="alert"><p>{directory.error.message}</p><button onClick={() => void directory.refetch()}>Tentar novamente</button></div> : directory.data?.map(fund => <button className="ta-option" key={fund.id} onClick={() => setChoice(fund)}><span className="ta-abbreviation" style={{ borderColor: fund.color }}>{fund.abbreviation}</span><span><strong>{fund.abbreviation}</strong><small>{fund.name}</small></span><ArrowRight size={18} /></button>)}<button className="ta-option ta-admin" onClick={() => setChoice('admin')}><ShieldCheck size={24} /><span><strong>Acesso administrativo</strong><small>Gerenciar PINs e todas as sociedades</small></span><ArrowRight size={18} /></button></div> : <form className="ta-form" onSubmit={event => { event.preventDefault(); void login(); }}><button type="button" className="ta-back" disabled={busy} onClick={back}><ArrowLeft size={16} />Voltar às opções</button><fieldset disabled={busy}><legend className="sr-only">Acesso administrativo</legend><label>Usuário<input autoFocus autoComplete="username" autoCapitalize="none" required value={username} onChange={e => setUsername(e.target.value)} /></label><label>Senha<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label><button type="submit" className="ta-submit"><LockKeyhole size={17} />{busy ? 'Validando acesso…' : 'Entrar no painel'}</button></fieldset></form>}
+      <DialogTitle className="sr-only">{choice ? 'Acesso administrativo à tesouraria' : 'Tesouraria'}</DialogTitle>
+      <DialogDescription className="sr-only">{choice ? 'Entre com sua conta de administrador.' : 'Escolha sua sociedade ou o acesso administrativo.'}</DialogDescription>
+      <AccessShell presentation="dialog" title={choice ? 'Acesso administrativo' : 'Tesouraria'}
+        description={!choice ? 'Escolha sua sociedade para continuar com segurança.' : 'Entre com sua conta para gerenciar a tesouraria.'}
+        headingIcon={Wallet} onBack={choice ? back : goHome} onHome={goHome} disabled={busy}>
+        {!choice ? <div className="ebd-access__profiles ta-options">
+          {directory.isPending ? <p role="status">Carregando sociedades…</p>
+            : directory.error ? <div role="alert"><p>{directory.error.message}</p><button onClick={() => void directory.refetch()}>Tentar novamente</button></div>
+            : directory.data?.map(fund => <AccessOption key={fund.id} className="ta-option" title={fund.abbreviation} description={fund.name}
+              color={fund.color} icon={Wallet} onClick={() => setChoice(fund)} />)}
+          <AccessOption className="ta-option ta-admin" title="Acesso administrativo" description="Gerenciar PINs e todas as sociedades"
+            icon={ShieldCheck} onClick={() => setChoice('admin')} />
+        </div> : <form className="ipnc-access-form ta-form" onSubmit={event => { event.preventDefault(); void login(); }}>
+          <fieldset disabled={busy}>
+            <legend className="sr-only">Acesso administrativo</legend>
+            <label>Usuário<input autoFocus autoComplete="username" autoCapitalize="none" required value={username} onChange={e => setUsername(e.target.value)} /></label>
+            <label>Senha<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
+            <button type="submit" className="ta-submit"><LockKeyhole size={17} />{busy ? 'Validando acesso…' : 'Entrar no painel'}</button>
+          </fieldset>
+        </form>}
+      </AccessShell>
     </>}
     {error && <p className="ta-error" role="alert">{error}</p>}
   </DialogContent></Dialog>;

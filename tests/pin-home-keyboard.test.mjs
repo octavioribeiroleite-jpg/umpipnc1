@@ -15,7 +15,7 @@ const compiled = ts.transpileModule(source, {
   },
 }).outputText;
 
-function harness({ pin = '123456', loading = false } = {}) {
+function harness({ pin = '123456', loading = false, errorMessage } = {}) {
   const listeners = new Map(), cleanups = [], completed = [];
   let stateIndex = 0;
   class Element {
@@ -39,6 +39,7 @@ function harness({ pin = '123456', loading = false } = {}) {
     'react/jsx-runtime': { jsx, jsxs: jsx },
     '@/components/ui/button': { Button: component },
     '@/components/auth/PublicHomeButton': { default: component },
+    '@/components/auth/AccessShell': { AccessShell: component },
     '@/assets/logo-ipnc.png': { default: 'fixture-logo.png' },
     './PinPad.css': {},
     '@/lib/utils': { cn: (...values) => values.filter(Boolean).join(' ') },
@@ -55,10 +56,11 @@ function harness({ pin = '123456', loading = false } = {}) {
       removeEventListener(name, listener) { assert.equal(listeners.get(name), listener); listeners.delete(name); },
     },
   });
-  module.exports.default({ profileLabel: 'Perfil fictício', loading, onBack() {}, onComplete: value => completed.push(value) });
+  const tree = module.exports.default({ profileLabel: 'Perfil fictício', loading, errorMessage, onBack() {}, onComplete: value => completed.push(value) });
   assert.equal(typeof listeners.get('keydown'), 'function');
   return {
     completed,
+    tree,
     container: new Element('div'),
     button: () => new Element('button'),
     buttonChild: () => new Element('span', new Element('button')),
@@ -95,4 +97,19 @@ test('Enter never submits while loading or before six digits have been entered',
     assert.deepEqual(h.completed, []);
     h.cleanup();
   }
+});
+
+test('transport feedback is visible without claiming that the PIN was incorrect', () => {
+  const h = harness({ errorMessage: 'Não foi possível verificar o acesso. Tente novamente.' });
+  const alerts = [];
+  function walk(node) {
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (!node?.props) return;
+    if (node.props.role === 'alert') alerts.push(node.props.children);
+    walk(node.props.children);
+  }
+  walk(h.tree);
+  assert.deepEqual(alerts, ['Não foi possível verificar o acesso. Tente novamente.']);
+  assert.doesNotMatch(JSON.stringify(h.tree), /PIN incorreto/);
+  h.cleanup();
 });
