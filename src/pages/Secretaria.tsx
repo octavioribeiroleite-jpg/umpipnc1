@@ -278,6 +278,7 @@ export default function Secretaria() {
   const [loginStep, setLoginStep] = useState<LoginStep>('profile');
   const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(storedSession?.accessLevel ?? null);
   const [loading, setLoading] = useState(false);
+  const entryRequestRef = useRef(false);
   const [pinError, setPinError] = useState(false);
   const [pendingPin, setPendingPin] = useState('');
   const [nameInput, setNameInput] = useState('');
@@ -304,7 +305,9 @@ export default function Secretaria() {
   const currentView = navigation.screen.view;
   useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); }, [navigation.screen]);
   const setCurrentView = (view: CurrentView) => navigation.open({ view });
-  const { weekBirthdays, todayBirthdays, isLoading: birthdaysLoading } = useBirthdays(supabase, `ebd-${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}`);
+  const { weekBirthdays, todayBirthdays, isLoading: birthdaysLoading } = useBirthdays(supabase, `ebd-${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}`, {
+    enabled: !!accessLevel && !aiReauthOpen,
+  });
   const allWeekAnnouncements = [
     ...todayBirthdays.map(b => ({ ...b, daysUntil: 0 })),
     ...weekBirthdays,
@@ -323,79 +326,95 @@ export default function Secretaria() {
   };
 
   const handlePinComplete = async (pin: string) => {
+    if (entryRequestRef.current) return;
+    entryRequestRef.current = true;
     setLoading(true);
+    try {
+      if (selectedProfile === 'admin') {
+        const { data, error } = await supabase.functions.invoke('manage-ebd-class-password', {
+          body: { action: 'birthday-ai-session', admin_pin: pin },
+        });
 
-    if (selectedProfile === 'admin') {
-      const { data, error } = await supabase.functions.invoke('manage-ebd-class-password', {
-        body: { action: 'birthday-ai-session', admin_pin: pin },
-      });
-
-      if (!error && data?.success && data.birthday_ai_token && data.session) {
-        const accepted = await supabase.auth.setSession(data.session);
-        if (accepted.error) { toast.error('Não foi possível entrar.'); setLoading(false); return; }
-        setAccessLevel('admin');
-        setAdminPin(pin);
-        setBirthdayAiToken(data.birthday_ai_token);
-        setBirthdayAiExpiresAt(data.birthday_ai_expires_at);
-        try {
-          saveStoredEbdSession({
-            accessLevel: 'admin',
-            birthdayAiToken: data.birthday_ai_token, birthdayAiExpiresAt: data.birthday_ai_expires_at,
-          });
-        } catch { /* ignore */ }
-      } else {
-        setPinError(true);
-        toast.error('PIN incorreto');
-        setTimeout(() => setPinError(false), 600);
+        if (!error && data?.success && data.birthday_ai_token && data.session) {
+          const accepted = await supabase.auth.setSession(data.session);
+          if (accepted.error) { toast.error('Não foi possível entrar.'); return; }
+          setAccessLevel('admin');
+          setAdminPin(pin);
+          setBirthdayAiToken(data.birthday_ai_token);
+          setBirthdayAiExpiresAt(data.birthday_ai_expires_at);
+          try {
+            saveStoredEbdSession({
+              accessLevel: 'admin',
+              birthdayAiToken: data.birthday_ai_token, birthdayAiExpiresAt: data.birthday_ai_expires_at,
+            });
+          } catch { /* ignore */ }
+        } else {
+          setPinError(true);
+          toast.error('PIN incorreto');
+          setTimeout(() => setPinError(false), 600);
+        }
+        return;
       }
-      setLoading(false);
-      return;
-    }
 
-    // Professor: guarda a senha da sala e segue para informar o nome
-    setPendingPin(pin);
-    setNameInput('');
-    setLoginStep('name');
-    setLoading(false);
+      // Professor: guarda a senha da sala e segue para informar o nome
+      setPendingPin(pin);
+      setNameInput('');
+      setLoginStep('name');
+    } catch {
+      toast.error('Não foi possível entrar.');
+    } finally {
+      entryRequestRef.current = false;
+      setLoading(false);
+    }
   };
 
   const handleNameSubmit = async () => {
+    if (entryRequestRef.current) return;
     if (!nameInput.trim()) {
       toast.error('Informe seu nome');
       return;
     }
+    entryRequestRef.current = true;
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke('ebd-class-login', {
-      body: { pin: pendingPin, name: nameInput.trim() },
-    });
-    setLoading(false);
-
-    if (error || !data?.success || !data.session) {
-      toast.error((data as any)?.error || 'Senha da sala incorreta');
-      setPendingPin('');
-      setLoginStep('pin');
-      return;
-    }
-    const accepted = await supabase.auth.setSession(data.session);
-    if (accepted.error) { toast.error('Não foi possível entrar.'); return; }
-    setProfessorNome(data.teacher.name);
-    setProfessorClassId(data.teacher.class_id);
-    setBirthdayAiToken(data.birthday_ai_token ?? '');
-    setBirthdayAiExpiresAt(data.birthday_ai_expires_at ?? '');
-    setPendingPin('');
-    setAccessLevel('professor');
     try {
-      saveStoredEbdSession({
-        accessLevel: 'professor',
-        professorNome: data.teacher.name,
-        professorClassId: data.teacher.class_id,
-        birthdayAiToken: data.birthday_ai_token,
-        birthdayAiExpiresAt: data.birthday_ai_expires_at,
+      const { data, error } = await supabase.functions.invoke('ebd-class-login', {
+        body: { pin: pendingPin, name: nameInput.trim() },
       });
-    } catch { /* ignore */ }
+
+      if (error || !data?.success || !data.session) {
+        toast.error((data as any)?.error || 'Senha da sala incorreta');
+        setPendingPin('');
+        setLoginStep('pin');
+        return;
+      }
+      const accepted = await supabase.auth.setSession(data.session);
+      if (accepted.error) { toast.error('Não foi possível entrar.'); return; }
+      setProfessorNome(data.teacher.name);
+      setProfessorClassId(data.teacher.class_id);
+      setBirthdayAiToken(data.birthday_ai_token ?? '');
+      setBirthdayAiExpiresAt(data.birthday_ai_expires_at ?? '');
+      setPendingPin('');
+      setAccessLevel('professor');
+      try {
+        saveStoredEbdSession({
+          accessLevel: 'professor',
+          professorNome: data.teacher.name,
+          professorClassId: data.teacher.class_id,
+          birthdayAiToken: data.birthday_ai_token,
+          birthdayAiExpiresAt: data.birthday_ai_expires_at,
+        });
+      } catch { /* ignore */ }
+    } catch {
+      toast.error('Não foi possível entrar.');
+    } finally {
+      entryRequestRef.current = false;
+      setLoading(false);
+    }
   };
 
   const refreshBirthdaySession = async (pin: string) => {
+    if (entryRequestRef.current) return;
+    entryRequestRef.current = true;
     setLoading(true);
     try {
       const { data, error } = accessLevel === 'admin'
@@ -426,7 +445,7 @@ export default function Secretaria() {
       setPinError(true);
       toast.error(error instanceof Error ? error.message : 'Não foi possível validar o acesso.');
       setTimeout(() => setPinError(false), 600);
-    } finally { setLoading(false); }
+    } finally { entryRequestRef.current = false; setLoading(false); }
   };
 
   const handleBack = () => {
@@ -437,7 +456,7 @@ export default function Secretaria() {
     setNameInput('');
   };
 
-  const readData = useCallback(async () => {
+  const readData = useCallback(async (onSnapshotStart?: () => void) => {
     const snapshotVersion = captureEbdSnapshot();
     const scope = dataScopeRef.current;
     const attendanceVersion = attendanceQueue.readVersion();
@@ -448,9 +467,9 @@ export default function Secretaria() {
       setAiReauthOpen(true);
       throw new Error('Confirme o PIN para atualizar os dados.');
     }
-    const [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes] = await Promise.all([
+    onSnapshotStart?.();
+    const [classesRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes] = await Promise.all([
       supabase.from('ebd_classes').select('*').eq('active', true).order('order_index'),
-      supabase.from('ebd_students').select('*').eq('active', true).order('name'),
       supabase.from('ebd_students').select('*').order('name'),
       supabase.from('ebd_attendance').select('*').eq('date', sundayDate),
       supabase.rpc('ebd_closure' as any, { p_date: sundayDate }),
@@ -459,14 +478,17 @@ export default function Secretaria() {
     ]);
 
     if (scope !== dataScopeRef.current) throw new Error('Acesso alterado durante a atualização.');
-    const readError = [classesRes, activeStudentsRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes].find(result => result.error)?.error;
+    const readError = [classesRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes].find(result => result.error)?.error;
     if (readError) throw readError;
     assertEbdSnapshotCurrent(snapshotVersion);
+    const activeStudentRows = (allStudentsRes.data || []).filter(student => student.active);
     setCallStatuses(Object.fromEntries((statusRes.data || []).map((row: any) => [row.class_id, row.status])));
 
     if (classesRes.data) setClasses(classesRes.data);
-    if (activeStudentsRes.data) setActiveStudents(activeStudentsRes.data);
-    if (allStudentsRes.data) setAllStudents(allStudentsRes.data);
+    if (allStudentsRes.data) {
+      setActiveStudents(activeStudentRows);
+      setAllStudents(allStudentsRes.data);
+    }
     if (attendanceRes.data) setAttendance(attendanceQueue.reconcile(attendanceRes.data, attendanceVersion));
     const cvMap: Record<string, VisitorEntry[]> = {};
     ((visitorEntriesRes as any).data || []).forEach((row: any) => {
@@ -484,13 +506,14 @@ export default function Secretaria() {
       setClosureId(null);
       setVisitorCount(totalV);
     }
-    return { classes: classesRes.data || [], activeStudents: activeStudentsRes.data || [], attendance: attendanceRes.data || [], classVisitors: cvMap };
+    return { classes: classesRes.data || [], activeStudents: activeStudentRows, attendance: attendanceRes.data || [], classVisitors: cvMap };
   }, [sundayDate, attendanceQueue]);
 
   const { refresh: fetchData, lastSynced, syncError, syncing } = useEbdSync(
     !!accessLevel && !aiReauthOpen,
     dataScope,
     readData,
+    { coalesceBeforeSnapshot: true },
   );
 
   useEffect(() => {

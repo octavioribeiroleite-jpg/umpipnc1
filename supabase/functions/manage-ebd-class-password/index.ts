@@ -34,6 +34,7 @@ Deno.serve(async (req) => {
     // Secretaria admin PIN (the Secretaria screen logs in via an internal PIN,
     // not a backend session).
     let authorized = false
+    let validatedAdminSetting: { value: string } | null = null
 
     const authHeader = req.headers.get('Authorization') ?? ''
     const token = authHeader.replace('Bearer ', '')
@@ -41,9 +42,9 @@ Deno.serve(async (req) => {
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       })
-      const { data: { user } } = await userClient.auth.getUser()
-      if (user) {
-        const actor = await resolveAiActor(adminClient, authHeader)
+      const { data: { user }, error: userError } = await userClient.auth.getUser()
+      if (!userError && user) {
+        const actor = await resolveAiActor(adminClient, authHeader, user)
         if (actor?.roles.some(r => r === 'admin' || r === 'diretoria')) authorized = true
         const { data: isEbdAdmin } = await userClient.rpc('ebd_is_admin' as any)
         if (isEbdAdmin && body.action !== 'birthday-ai-session') authorized = true
@@ -58,7 +59,10 @@ Deno.serve(async (req) => {
         .select('value')
         .eq('key', 'secretaria_admin_password')
         .maybeSingle()
-      if (setting?.value && setting.value === body.admin_pin) authorized = true
+      if (setting?.value && setting.value === body.admin_pin) {
+        authorized = true
+        validatedAdminSetting = setting
+      }
     }
 
     if (!authorized) {
@@ -73,8 +77,10 @@ Deno.serve(async (req) => {
       typeof pin === 'string' && /^[0-9]{6}$/.test(pin)
 
     if (action === 'birthday-ai-session') {
-      const { data: setting, error } = await adminClient.from('settings').select('value')
-        .eq('key', 'secretaria_admin_password').maybeSingle()
+      const { data: setting, error } = validatedAdminSetting
+        ? { data: validatedAdminSetting, error: null }
+        : await adminClient.from('settings').select('value')
+          .eq('key', 'secretaria_admin_password').maybeSingle()
       if (error || !setting?.value) {
         return Response.json({ error: 'Acesso da secretaria não configurado.' }, { status: 503, headers: corsHeaders })
       }

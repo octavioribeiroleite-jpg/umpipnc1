@@ -30,3 +30,16 @@ test('missing or invalid auth, inactive profile and lookup failure deny AI', asy
     assert.equal(await resolveAiActor(client(options),'Bearer fake-token'),null);
   }
 });
+
+test('a server-verified user avoids a second Auth lookup and still requires the server profile and roles', async () => {
+  const knownUser = { id: userId, app_metadata: {}, user_metadata: { role: 'admin' } };
+  const verified = client();
+  verified.auth.getUser = () => { throw Error('duplicate Auth lookup'); };
+  assert.deepEqual(await resolveAiActor(verified, 'Bearer fake-token', knownUser), { userId, roles: ['visualizador'], societyId: 'real-society' });
+  for (const options of [{ active: false }, { dbError: 'unavailable' }]) {
+    const denied = client(options);
+    denied.auth.getUser = verified.auth.getUser;
+    assert.equal(await resolveAiActor(denied, 'Bearer fake-token', knownUser), null);
+  }
+  assert.equal(await resolveAiActor(verified, 'Basic ignored', knownUser), null);
+});

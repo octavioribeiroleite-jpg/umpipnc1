@@ -1,0 +1,17 @@
+{
+  "revision": "24297c695756b445a49823a8963e4391b73d9893",
+  "sourceHash": "396b8a8996aeacdb67d65fdae560c03cc5ca79ab6494d594d791b6e1e95cc871",
+  "fingerprintPaths": [
+    "src/pages/Secretaria.tsx",
+    "src/hooks/useEbdSync.ts",
+    "src/hooks/useBirthdays.ts",
+    "src/lib/refresh-queue.ts",
+    "src/contexts/AuthContext.tsx",
+    "src/App.tsx",
+    "src/main.tsx",
+    "src/utils/generateEbdPDF.ts",
+    "src/integrations/supabase/ebd-client.ts"
+  ],
+  "capturedSourceStatus": "clean; verified before baseline browser actions",
+  "method": "git show of captured revision; no production credentials queried"
+}

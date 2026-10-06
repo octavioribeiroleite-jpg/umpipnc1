@@ -1,0 +1,286 @@
+[
+  {
+    "name": "after-admin",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "admin-login",
+      "started": 10878,
+      "requestStart": 0,
+      "homeMs": 381.1000000014901,
+      "dataMs": 798
+    },
+    "requestCount": 17,
+    "pending": 0,
+    "lastResponseMs": 1195,
+    "syntheticJsonBytes": 4090,
+    "counts": {
+      "edge.manage-ebd-class-password": 1,
+      "auth.setSession/getUser": 1,
+      "rpc.list_birthdays": 1,
+      "rpc.ebd_session_valid": 2,
+      "rpc.ebd_closure": 2,
+      "read.ebd_classes": 2,
+      "read.ebd_students": 2,
+      "read.ebd_attendance": 2,
+      "read.ebd_class_visitor_entries": 2,
+      "read.ebd_call_status": 2
+    },
+    "cpuRenderMs": 58.400000002235174,
+    "authenticated": true,
+    "home": true
+  },
+  {
+    "name": "after-professor",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "professor-login",
+      "started": 24175.400000002235,
+      "requestStart": 0,
+      "homeMs": 370.69999999925494,
+      "dataMs": 781.5999999977648
+    },
+    "requestCount": 17,
+    "pending": 0,
+    "lastResponseMs": 1180,
+    "syntheticJsonBytes": 4090,
+    "counts": {
+      "edge.ebd-class-login": 1,
+      "auth.setSession/getUser": 1,
+      "rpc.list_birthdays": 1,
+      "rpc.ebd_session_valid": 2,
+      "rpc.ebd_closure": 2,
+      "read.ebd_classes": 2,
+      "read.ebd_students": 2,
+      "read.ebd_attendance": 2,
+      "read.ebd_class_visitor_entries": 2,
+      "read.ebd_call_status": 2
+    },
+    "cpuRenderMs": 48.29999999329448,
+    "authenticated": true,
+    "home": true
+  },
+  {
+    "name": "after-stored-admin",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "stored-session",
+      "started": 165,
+      "requestStart": 0,
+      "homeMs": 27.099999997764826,
+      "dataMs": 432.19999999925494
+    },
+    "requestCount": 15,
+    "pending": 0,
+    "lastResponseMs": 832.0999999977648,
+    "syntheticJsonBytes": 3558,
+    "counts": {
+      "rpc.list_birthdays": 1,
+      "rpc.ebd_session_valid": 2,
+      "rpc.ebd_closure": 2,
+      "read.ebd_classes": 2,
+      "read.ebd_students": 2,
+      "read.ebd_attendance": 2,
+      "read.ebd_class_visitor_entries": 2,
+      "read.ebd_call_status": 2
+    },
+    "cpuRenderMs": 17.299999993294477,
+    "authenticated": true,
+    "home": true
+  },
+  {
+    "name": "after-renewal",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "pin-renewal",
+      "started": 42165.5,
+      "requestStart": 29
+    },
+    "requestCount": 17,
+    "pending": 0,
+    "lastResponseMs": 1165.8999999985099,
+    "syntheticJsonBytes": 4090,
+    "counts": {
+      "edge.manage-ebd-class-password": 1,
+      "auth.setSession/getUser": 1,
+      "rpc.list_birthdays": 1,
+      "rpc.ebd_session_valid": 2,
+      "rpc.ebd_closure": 2,
+      "read.ebd_classes": 2,
+      "read.ebd_students": 2,
+      "read.ebd_attendance": 2,
+      "read.ebd_class_visitor_entries": 2,
+      "read.ebd_call_status": 2
+    },
+    "cpuRenderMs": 54.99999998509884,
+    "authenticated": true,
+    "home": true
+  },
+  {
+    "name": "after-realtime-20",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "stored-session",
+      "started": 131.90000000223517,
+      "requestStart": 0,
+      "homeMs": 22.5,
+      "dataMs": 431.69999999925494
+    },
+    "requestCount": 8,
+    "pending": 0,
+    "lastResponseMs": 425.29999999701977,
+    "syntheticJsonBytes": 1921,
+    "counts": {
+      "rpc.list_birthdays": 1,
+      "rpc.ebd_session_valid": 1,
+      "rpc.ebd_closure": 1,
+      "read.ebd_classes": 1,
+      "read.ebd_students": 1,
+      "read.ebd_attendance": 1,
+      "read.ebd_class_visitor_entries": 1,
+      "read.ebd_call_status": 1
+    },
+    "cpuRenderMs": 16.899999998509884,
+    "authenticated": true,
+    "home": true
+  },
+  {
+    "name": "after-realtime-400",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "stored-session",
+      "started": 91.09999999776483,
+      "requestStart": 0,
+      "homeMs": 19.800000000745058,
+      "dataMs": 430.70000000298023
+    },
+    "requestCount": 15,
+    "pending": 0,
+    "lastResponseMs": 825.6000000014901,
+    "syntheticJsonBytes": 3558,
+    "counts": {
+      "rpc.list_birthdays": 1,
+      "rpc.ebd_session_valid": 2,
+      "rpc.ebd_closure": 2,
+      "read.ebd_classes": 2,
+      "read.ebd_students": 2,
+      "read.ebd_attendance": 2,
+      "read.ebd_class_visitor_entries": 2,
+      "read.ebd_call_status": 2
+    },
+    "cpuRenderMs": 20.900000002235174,
+    "authenticated": true,
+    "home": true
+  },
+  {
+    "name": "after-double-enter",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "professor-login",
+      "started": 18392.199999999255,
+      "requestStart": 0,
+      "homeMs": 361.3999999985099,
+      "dataMs": 770.1999999992549
+    },
+    "requestCount": 17,
+    "pending": 0,
+    "lastResponseMs": 1171.0999999977648,
+    "syntheticJsonBytes": 4090,
+    "counts": {
+      "edge.ebd-class-login": 1,
+      "auth.setSession/getUser": 1,
+      "rpc.list_birthdays": 1,
+      "rpc.ebd_session_valid": 2,
+      "rpc.ebd_closure": 2,
+      "read.ebd_classes": 2,
+      "read.ebd_students": 2,
+      "read.ebd_attendance": 2,
+      "read.ebd_class_visitor_entries": 2,
+      "read.ebd_call_status": 2
+    },
+    "cpuRenderMs": 23.799999993294477,
+    "authenticated": true,
+    "home": true,
+    "enterEvents": [
+      {
+        "at": 18650.89999999851,
+        "authInFlight": true
+      },
+      {
+        "at": 18666.099999997765,
+        "authInFlight": true
+      }
+    ]
+  },
+  {
+    "name": "after-session-failure",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "admin-login",
+      "started": 15138.89999999851,
+      "requestStart": 0
+    },
+    "requestCount": 2,
+    "pending": 0,
+    "lastResponseMs": 351.6000000014901,
+    "syntheticJsonBytes": 437,
+    "counts": {
+      "edge.manage-ebd-class-password": 1,
+      "auth.setSession/getUser": 1
+    },
+    "cpuRenderMs": 9.799999997019768,
+    "authenticated": false,
+    "home": false,
+    "enterEvents": []
+  },
+  {
+    "name": "after-session-retry",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "admin-login",
+      "started": 25492.39999999851,
+      "requestStart": 2,
+      "homeMs": 359.9000000022352,
+      "dataMs": 764.2000000029802
+    },
+    "requestCount": 17,
+    "pending": 0,
+    "lastResponseMs": 1165.7000000029802,
+    "syntheticJsonBytes": 4090,
+    "counts": {
+      "edge.manage-ebd-class-password": 1,
+      "auth.setSession/getUser": 1,
+      "rpc.list_birthdays": 1,
+      "rpc.ebd_session_valid": 2,
+      "rpc.ebd_closure": 2,
+      "read.ebd_classes": 2,
+      "read.ebd_students": 2,
+      "read.ebd_attendance": 2,
+      "read.ebd_class_visitor_entries": 2,
+      "read.ebd_call_status": 2
+    },
+    "cpuRenderMs": 22.599999990314245,
+    "authenticated": true,
+    "home": true,
+    "enterEvents": []
+  },
+  {
+    "name": "after-wrong-pin",
+    "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+    "operation": {
+      "type": "admin-login",
+      "started": 41235.10000000149,
+      "requestStart": 0
+    },
+    "requestCount": 1,
+    "pending": 0,
+    "lastResponseMs": 152.10000000149012,
+    "syntheticJsonBytes": 86,
+    "counts": {
+      "edge.manage-ebd-class-password": 1
+    },
+    "cpuRenderMs": 17.5,
+    "authenticated": false,
+    "home": false,
+    "enterEvents": []
+  }
+]

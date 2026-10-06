@@ -1,0 +1,597 @@
+{
+  "sourceRevision": "24297c695756b445a49823a8963e4391b73d9893",
+  "mode": "stored-admin",
+  "edgeMs": 150,
+  "authMs": 200,
+  "readMs": 200,
+  "realtimeMs": 200,
+  "authenticated": true,
+  "valid": true,
+  "requests": [
+    {
+      "id": 1,
+      "endpoint": "rpc.list_birthdays",
+      "started": 129.89999999850988,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 330.80000000074506,
+      "elapsedMs": 200.90000000223517
+    },
+    {
+      "id": 2,
+      "endpoint": "rpc.ebd_session_valid",
+      "started": 130.10000000149012,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 331.19999999925494,
+      "elapsedMs": 201.09999999776483
+    },
+    {
+      "id": 3,
+      "endpoint": "rpc.ebd_closure",
+      "started": 331.30000000074506,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 532.1000000014901,
+      "elapsedMs": 200.80000000074506
+    },
+    {
+      "id": 4,
+      "endpoint": "read.ebd_classes",
+      "started": 331.30000000074506,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      },
+      "ended": 532.5,
+      "elapsedMs": 201.19999999925494
+    },
+    {
+      "id": 5,
+      "endpoint": "read.ebd_students",
+      "started": 331.30000000074506,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      },
+      "ended": 532.6000000014901,
+      "elapsedMs": 201.30000000074506
+    },
+    {
+      "id": 6,
+      "endpoint": "read.ebd_students",
+      "started": 331.30000000074506,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {},
+      "ended": 532.6999999992549,
+      "elapsedMs": 201.39999999850988
+    },
+    {
+      "id": 7,
+      "endpoint": "read.ebd_attendance",
+      "started": 331.3999999985099,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 533.3999999985099,
+      "elapsedMs": 202
+    },
+    {
+      "id": 8,
+      "endpoint": "read.ebd_class_visitor_entries",
+      "started": 331.3999999985099,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 533.5,
+      "elapsedMs": 202.10000000149012
+    },
+    {
+      "id": 9,
+      "endpoint": "read.ebd_call_status",
+      "started": 331.3999999985099,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 533.6000000014901,
+      "elapsedMs": 202.20000000298023
+    },
+    {
+      "id": 10,
+      "endpoint": "rpc.ebd_session_valid",
+      "started": 534,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 734.5,
+      "elapsedMs": 200.5
+    },
+    {
+      "id": 11,
+      "endpoint": "rpc.ebd_closure",
+      "started": 734.5,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 935.6999999992549,
+      "elapsedMs": 201.19999999925494
+    },
+    {
+      "id": 12,
+      "endpoint": "read.ebd_classes",
+      "started": 734.6000000014901,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      },
+      "ended": 935.8999999985099,
+      "elapsedMs": 201.29999999701977
+    },
+    {
+      "id": 13,
+      "endpoint": "read.ebd_students",
+      "started": 734.6000000014901,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      },
+      "ended": 935.8999999985099,
+      "elapsedMs": 201.29999999701977
+    },
+    {
+      "id": 14,
+      "endpoint": "read.ebd_students",
+      "started": 734.6000000014901,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {},
+      "ended": 935.8999999985099,
+      "elapsedMs": 201.29999999701977
+    },
+    {
+      "id": 15,
+      "endpoint": "read.ebd_attendance",
+      "started": 734.6000000014901,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 935.8999999985099,
+      "elapsedMs": 201.29999999701977
+    },
+    {
+      "id": 16,
+      "endpoint": "read.ebd_class_visitor_entries",
+      "started": 734.6000000014901,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 935.8999999985099,
+      "elapsedMs": 201.29999999701977
+    },
+    {
+      "id": 17,
+      "endpoint": "read.ebd_call_status",
+      "started": 734.6999999992549,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 936,
+      "elapsedMs": 201.30000000074506
+    },
+    {
+      "id": 18,
+      "endpoint": "edge.manage-ebd-class-password",
+      "started": 11820.199999999255,
+      "configuredDelayMs": 150,
+      "authenticated": true,
+      "ended": 11970.89999999851,
+      "elapsedMs": 150.69999999925494
+    },
+    {
+      "id": 19,
+      "endpoint": "auth.setSession/getUser",
+      "started": 11971,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 12172.5,
+      "elapsedMs": 201.5
+    },
+    {
+      "id": 20,
+      "endpoint": "rpc.list_birthdays",
+      "started": 12185.800000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 12388,
+      "elapsedMs": 202.19999999925494
+    },
+    {
+      "id": 21,
+      "endpoint": "rpc.ebd_session_valid",
+      "started": 12186.10000000149,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 12388.5,
+      "elapsedMs": 202.39999999850988
+    },
+    {
+      "id": 22,
+      "endpoint": "rpc.ebd_closure",
+      "started": 12388.5,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 12590.10000000149,
+      "elapsedMs": 201.60000000149012
+    },
+    {
+      "id": 23,
+      "endpoint": "read.ebd_classes",
+      "started": 12388.60000000149,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      },
+      "ended": 12590.699999999255,
+      "elapsedMs": 202.09999999776483
+    },
+    {
+      "id": 24,
+      "endpoint": "read.ebd_students",
+      "started": 12388.699999999255,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      },
+      "ended": 12590.89999999851,
+      "elapsedMs": 202.19999999925494
+    },
+    {
+      "id": 25,
+      "endpoint": "read.ebd_students",
+      "started": 12388.800000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {},
+      "ended": 12590.89999999851,
+      "elapsedMs": 202.09999999776483
+    },
+    {
+      "id": 26,
+      "endpoint": "read.ebd_attendance",
+      "started": 12388.800000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 12591,
+      "elapsedMs": 202.19999999925494
+    },
+    {
+      "id": 27,
+      "endpoint": "read.ebd_class_visitor_entries",
+      "started": 12388.800000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 12591.199999999255,
+      "elapsedMs": 202.39999999850988
+    },
+    {
+      "id": 28,
+      "endpoint": "read.ebd_call_status",
+      "started": 12388.800000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "ended": 12591.199999999255,
+      "elapsedMs": 202.39999999850988
+    },
+    {
+      "id": 29,
+      "endpoint": "rpc.ebd_session_valid",
+      "started": 12591.60000000149,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "ended": 12793.10000000149,
+      "elapsedMs": 201.5
+    },
+    {
+      "id": 30,
+      "endpoint": "rpc.ebd_closure",
+      "started": 12793.300000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true
+    },
+    {
+      "id": 31,
+      "endpoint": "read.ebd_classes",
+      "started": 12793.300000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      }
+    },
+    {
+      "id": 32,
+      "endpoint": "read.ebd_students",
+      "started": 12793.300000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      }
+    },
+    {
+      "id": 33,
+      "endpoint": "read.ebd_students",
+      "started": 12793.300000000745,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {}
+    },
+    {
+      "id": 34,
+      "endpoint": "read.ebd_attendance",
+      "started": 12793.39999999851,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      }
+    },
+    {
+      "id": 35,
+      "endpoint": "read.ebd_class_visitor_entries",
+      "started": 12793.39999999851,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      }
+    },
+    {
+      "id": 36,
+      "endpoint": "read.ebd_call_status",
+      "started": 12793.5,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      }
+    }
+  ],
+  "operations": [
+    {
+      "type": "stored-session",
+      "started": 105.69999999925494,
+      "requestStart": 0,
+      "homeMs": 24.199999999254942,
+      "dataMs": 435.30000000074506
+    },
+    {
+      "type": "pin-renewal",
+      "started": 11820,
+      "requestStart": 17
+    }
+  ],
+  "renders": [
+    {
+      "phase": "mount",
+      "actualMs": 5.699999999254942,
+      "committed": 123.80000000074506
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 130.60000000149012
+    },
+    {
+      "phase": "update",
+      "actualMs": 3.599999997764826,
+      "committed": 135.5
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 135.80000000074506
+    },
+    {
+      "phase": "update",
+      "actualMs": 0,
+      "committed": 135.89999999850988
+    },
+    {
+      "phase": "update",
+      "actualMs": 4.299999997019768,
+      "committed": 335.8999999985099
+    },
+    {
+      "phase": "update",
+      "actualMs": 6.099999997764826,
+      "committed": 540.6999999992549
+    },
+    {
+      "phase": "update",
+      "actualMs": 2.7000000029802322,
+      "committed": 821.6000000014901
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0.19999999925494194,
+      "committed": 822
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 3.7999999970197678,
+      "committed": 825.8999999985099
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0.5,
+      "committed": 832.6000000014901
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 832.8999999985099
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.30000000074505806,
+      "committed": 841.6999999992549
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 842
+    },
+    {
+      "phase": "update",
+      "actualMs": 3.899999998509884,
+      "committed": 940.1999999992549
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 940.6000000014901
+    },
+    {
+      "phase": "update",
+      "actualMs": 0,
+      "committed": 983.1999999992549
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.8000000007450581,
+      "committed": 11713.89999999851
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.8000000007450581,
+      "committed": 11727.39999999851
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.8000000007450581,
+      "committed": 11743.39999999851
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.6999999992549419,
+      "committed": 11755.800000000745
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.7000000029802322,
+      "committed": 11765.699999999255
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.6999999992549419,
+      "committed": 11774.39999999851
+    },
+    {
+      "phase": "update",
+      "actualMs": 2.900000002235174,
+      "committed": 11823.39999999851
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 11823.800000000745
+    },
+    {
+      "phase": "update",
+      "actualMs": 0,
+      "committed": 11834
+    },
+    {
+      "phase": "update",
+      "actualMs": 7.899999998509884,
+      "committed": 12181.699999999255
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0.6999999992549419,
+      "committed": 12187.89999999851
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0.10000000149011612,
+      "committed": 12189.300000000745
+    },
+    {
+      "phase": "update",
+      "actualMs": 4.100000005215406,
+      "committed": 12204
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 12205.10000000149
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.09999999776482582,
+      "committed": 12371.300000000745
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 12373.699999999255
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 12373.800000000745
+    },
+    {
+      "phase": "update",
+      "actualMs": 5.100000001490116,
+      "committed": 12394.199999999255
+    },
+    {
+      "phase": "update",
+      "actualMs": 0,
+      "committed": 12394.800000000745
+    },
+    {
+      "phase": "update",
+      "actualMs": 5.700000002980232,
+      "committed": 12597.800000000745
+    }
+  ],
+  "totalRenderCpuMs": 62.20000000298023,
+  "mountedHome": true,
+  "firstDataReady": true,
+  "limitations": [
+    "Controlled synthetic latency, no production auth speed claim",
+    "Direct Secretaria route benchmark excludes eager App bundle download/parse",
+    "No physical PWA or OS lifecycle test"
+  ],
+  "sourceHash": "396b8a8996aeacdb67d65fdae560c03cc5ca79ab6494d594d791b6e1e95cc871",
+  "sourceStatus": "clean; verified before capture"
+}

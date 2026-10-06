@@ -1,13 +1,16 @@
 import type { Actor as AiActor } from "./ai-auth-policy.ts";
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0';
+import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2.89.0';
 
 type PortalClaim = { namespace?: unknown; id?: unknown; fingerprint?: unknown };
 
-/** Accept only a server-verified Auth user; never trust user_metadata for roles. */
-export async function resolveAiActor(client: SupabaseClient, authorization: string | null): Promise<(AiActor & { userId: string }) | null> {
+/** verifiedUser is server-only: it must be the successful getUser() result for
+ * this exact Authorization header. Never accept it from a request body or JWT decode. */
+export async function resolveAiActor(client: SupabaseClient, authorization: string | null, verifiedUser?: User): Promise<(AiActor & { userId: string }) | null> {
   if (!authorization?.startsWith("Bearer ") || authorization.length > 8192) return null;
   try {
-    const { data, error } = await client.auth.getUser(authorization.slice(7));
+    const { data, error } = verifiedUser
+      ? { data: { user: verifiedUser }, error: null }
+      : await client.auth.getUser(authorization.slice(7));
     if (error || !data?.user?.id) return null;
     const encoded = authorization.slice(7).split('.')[1];
     let portal: PortalClaim | undefined;

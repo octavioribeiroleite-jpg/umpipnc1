@@ -13,16 +13,31 @@ export async function portalSession(input: {
   const digest = await crypto.subtle.sign('HMAC', key, enc.encode(`IPNC:PORTAL:v1:${url}:${input.namespace}:${input.id}:${input.credential}`));
   const password = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('') + '!aA1';
   const fingerprint = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(`IPNC:PIN:v1:${input.credential}`))), b => b.toString(16).padStart(2, '0')).join('');
+  const optimizeEbd = input.namespace === 'ebd';
+  // A separate HMAC domain proves which server configuration prepared this
+  // account. This marker cannot be used as the password or its digest.
+  const accountVersion = optimizeEbd
+    ? Array.from(new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(JSON.stringify([
+      'IPNC:PORTAL:ACCOUNT-MARKER', 1, url, input.namespace, input.id, input.credential,
+    ])))), b => b.toString(16).padStart(2, '0')).join('')
+    : undefined;
   const username = `portal-${input.namespace}-${input.id}`;
   const email = `${username}@ipnc.local`;
-  const claims = { namespace: input.namespace, id: input.id, fingerprint, issued_at: Math.floor(Date.now() / 1000) };
-  const { data: profile, error: lookupError } = await admin.from('profiles').select('user_id').eq('username', username).maybeSingle();
+  const claims = { namespace: input.namespace, id: input.id, fingerprint, issued_at: Math.floor(Date.now() / 1000),
+    ...(optimizeEbd ? { account_version: accountVersion } : {}) };
+  const { data: profile, error: lookupError } = await admin.from('profiles')
+    .select(optimizeEbd ? 'user_id,active,society_id' : 'user_id').eq('username', username).maybeSingle();
   if (lookupError) throw Error('Não foi possível validar o acesso.');
   let userId = profile?.user_id;
   if (userId) {
     const { data, error } = await admin.auth.admin.getUserById(userId);
     if (error || data.user?.email !== email || data.user.app_metadata?.ipnc_portal?.namespace !== input.namespace || data.user.app_metadata?.ipnc_portal?.id !== input.id) throw Error('Conta reservada indisponível.');
-    const updated = await admin.auth.admin.updateUserById(userId, { password, app_metadata: { ipnc_portal: claims } });
+    const sameEbdCredential = optimizeEbd && data.user.app_metadata.ipnc_portal.fingerprint === fingerprint
+      && data.user.app_metadata.ipnc_portal.account_version === accountVersion;
+    // Always refresh issued_at: EBD authorization still expires after 15 minutes.
+    const updated = await admin.auth.admin.updateUserById(userId, {
+      ...(!sameEbdCredential ? { password } : {}), app_metadata: { ipnc_portal: claims },
+    });
     if (updated.error) throw Error('Não foi possível renovar o acesso.');
   } else {
     const created = await admin.auth.admin.createUser({ email, password, email_confirm: true,
@@ -30,8 +45,10 @@ export async function portalSession(input: {
     if (created.error || !created.data.user) throw Error('Não foi possível preparar o acesso. Tente novamente.');
     userId = created.data.user.id;
   }
-  const updated = await admin.from('profiles').update({ society_id: input.societyId ?? null, active: true }).eq('user_id', userId).select('user_id').single();
-  if (updated.error) throw Error('Não foi possível preparar o perfil.');
+  if (!optimizeEbd || profile?.active !== true || profile.society_id !== (input.societyId ?? null)) {
+    const updated = await admin.from('profiles').update({ society_id: input.societyId ?? null, active: true }).eq('user_id', userId).select('user_id').single();
+    if (updated.error) throw Error('Não foi possível preparar o perfil.');
+  }
   if (input.role) {
     const assigned = await admin.from('user_roles').upsert({ user_id: userId, role: input.role }, { onConflict: 'user_id,role' });
     if (assigned.error) throw Error('Não foi possível validar a permissão.');

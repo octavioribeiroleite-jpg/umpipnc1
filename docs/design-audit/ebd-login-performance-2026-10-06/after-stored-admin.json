@@ -1,0 +1,272 @@
+{
+  "sourceRevision": "24297c695756b445a49823a8963e4391b73d9893",
+  "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+  "sourceStatus": "M src/hooks/useBirthdays.ts\n M src/hooks/useEbdSync.ts\n M src/pages/Secretaria.tsx",
+  "mode": "stored-admin",
+  "edgeMs": 150,
+  "authMs": 200,
+  "readMs": 200,
+  "realtimeMs": 200,
+  "authenticated": true,
+  "valid": true,
+  "authFailuresRemaining": 0,
+  "requests": [
+    {
+      "id": 1,
+      "endpoint": "rpc.list_birthdays",
+      "started": 192.09999999776483,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "syntheticJsonBytes": 284,
+      "rowCount": 1,
+      "ended": 393.3999999985099,
+      "elapsedMs": 201.30000000074506
+    },
+    {
+      "id": 2,
+      "endpoint": "rpc.ebd_session_valid",
+      "started": 192.29999999701977,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "syntheticJsonBytes": 39,
+      "ended": 393.5999999977648,
+      "elapsedMs": 201.30000000074506
+    },
+    {
+      "id": 3,
+      "endpoint": "rpc.ebd_closure",
+      "started": 393.69999999925494,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "syntheticJsonBytes": 39,
+      "ended": 594.6999999992549,
+      "elapsedMs": 201
+    },
+    {
+      "id": 4,
+      "endpoint": "read.ebd_classes",
+      "started": 393.69999999925494,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      },
+      "syntheticJsonBytes": 214,
+      "rowCount": 2,
+      "ended": 594.8999999985099,
+      "elapsedMs": 201.19999999925494
+    },
+    {
+      "id": 5,
+      "endpoint": "read.ebd_students",
+      "started": 393.79999999701977,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {},
+      "syntheticJsonBytes": 1234,
+      "rowCount": 9,
+      "ended": 594.8999999985099,
+      "elapsedMs": 201.10000000149012
+    },
+    {
+      "id": 6,
+      "endpoint": "read.ebd_attendance",
+      "started": 393.79999999701977,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "syntheticJsonBytes": 37,
+      "rowCount": 0,
+      "ended": 594.8999999985099,
+      "elapsedMs": 201.10000000149012
+    },
+    {
+      "id": 7,
+      "endpoint": "read.ebd_class_visitor_entries",
+      "started": 393.79999999701977,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "syntheticJsonBytes": 37,
+      "rowCount": 0,
+      "ended": 594.8999999985099,
+      "elapsedMs": 201.10000000149012
+    },
+    {
+      "id": 8,
+      "endpoint": "read.ebd_call_status",
+      "started": 393.79999999701977,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "syntheticJsonBytes": 37,
+      "rowCount": 0,
+      "ended": 594.8999999985099,
+      "elapsedMs": 201.10000000149012
+    },
+    {
+      "id": 9,
+      "endpoint": "rpc.ebd_session_valid",
+      "started": 595,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "syntheticJsonBytes": 39,
+      "ended": 796,
+      "elapsedMs": 201
+    },
+    {
+      "id": 10,
+      "endpoint": "rpc.ebd_closure",
+      "started": 796.1999999992549,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "syntheticJsonBytes": 39,
+      "ended": 996.8999999985099,
+      "elapsedMs": 200.69999999925494
+    },
+    {
+      "id": 11,
+      "endpoint": "read.ebd_classes",
+      "started": 796.1999999992549,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "active": true
+      },
+      "syntheticJsonBytes": 214,
+      "rowCount": 2,
+      "ended": 997,
+      "elapsedMs": 200.80000000074506
+    },
+    {
+      "id": 12,
+      "endpoint": "read.ebd_students",
+      "started": 796.1999999992549,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {},
+      "syntheticJsonBytes": 1234,
+      "rowCount": 9,
+      "ended": 997.0999999977648,
+      "elapsedMs": 200.89999999850988
+    },
+    {
+      "id": 13,
+      "endpoint": "read.ebd_attendance",
+      "started": 796.1999999992549,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "syntheticJsonBytes": 37,
+      "rowCount": 0,
+      "ended": 997.0999999977648,
+      "elapsedMs": 200.89999999850988
+    },
+    {
+      "id": 14,
+      "endpoint": "read.ebd_class_visitor_entries",
+      "started": 796.1999999992549,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "syntheticJsonBytes": 37,
+      "rowCount": 0,
+      "ended": 997.0999999977648,
+      "elapsedMs": 200.89999999850988
+    },
+    {
+      "id": 15,
+      "endpoint": "read.ebd_call_status",
+      "started": 796.1999999992549,
+      "configuredDelayMs": 200,
+      "authenticated": true,
+      "filters": {
+        "date": "2026-10-06"
+      },
+      "syntheticJsonBytes": 37,
+      "rowCount": 0,
+      "ended": 997.0999999977648,
+      "elapsedMs": 200.89999999850988
+    }
+  ],
+  "operations": [
+    {
+      "type": "stored-session",
+      "started": 165,
+      "requestStart": 0,
+      "homeMs": 27.099999997764826,
+      "dataMs": 432.19999999925494
+    }
+  ],
+  "renders": [
+    {
+      "phase": "mount",
+      "actualMs": 7.599999997764826,
+      "committed": 186.79999999701977
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 192.79999999701977
+    },
+    {
+      "phase": "update",
+      "actualMs": 3.5,
+      "committed": 204.09999999776483
+    },
+    {
+      "phase": "nested-update",
+      "actualMs": 0,
+      "committed": 204.39999999850988
+    },
+    {
+      "phase": "update",
+      "actualMs": 0,
+      "committed": 204.5
+    },
+    {
+      "phase": "update",
+      "actualMs": 2.099999997764826,
+      "committed": 396.79999999701977
+    },
+    {
+      "phase": "update",
+      "actualMs": 2,
+      "committed": 597.0999999977648
+    },
+    {
+      "phase": "update",
+      "actualMs": 2.099999997764826,
+      "committed": 999.5
+    }
+  ],
+  "totalRenderCpuMs": 17.299999993294477,
+  "mountedHome": true,
+  "firstDataReady": true,
+  "settledAtMs": 1498.0999999977648,
+  "requestCounts": {
+    "rpc.list_birthdays": 1,
+    "rpc.ebd_session_valid": 2,
+    "rpc.ebd_closure": 2,
+    "read.ebd_classes": 2,
+    "read.ebd_students": 2,
+    "read.ebd_attendance": 2,
+    "read.ebd_class_visitor_entries": 2,
+    "read.ebd_call_status": 2
+  },
+  "limitations": [
+    "Controlled synthetic latency, no production auth speed claim",
+    "Direct Secretaria route benchmark excludes eager App bundle download/parse",
+    "No physical PWA or OS lifecycle test"
+  ]
+}

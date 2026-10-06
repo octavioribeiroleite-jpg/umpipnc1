@@ -1,0 +1,108 @@
+{
+  "sourceRevision": "24297c695756b445a49823a8963e4391b73d9893",
+  "sourceHash": "a088e1a409d517fe8d999d768ac1fc6b2a7916ea1ef0633ebafd2ff82260a7aa",
+  "sourceStatus": "M src/hooks/useBirthdays.ts\n M src/hooks/useEbdSync.ts\n M src/pages/Secretaria.tsx",
+  "mode": "login",
+  "edgeMs": 150,
+  "authMs": 200,
+  "readMs": 200,
+  "realtimeMs": 200,
+  "authenticated": false,
+  "valid": true,
+  "authFailuresRemaining": 0,
+  "requests": [
+    {
+      "id": 1,
+      "endpoint": "edge.manage-ebd-class-password",
+      "started": 15138.89999999851,
+      "configuredDelayMs": 150,
+      "authenticated": false,
+      "syntheticJsonBytes": 305,
+      "ended": 15289.699999999255,
+      "elapsedMs": 150.80000000074506
+    },
+    {
+      "id": 2,
+      "endpoint": "auth.setSession/getUser",
+      "started": 15289.800000000745,
+      "configuredDelayMs": 200,
+      "authenticated": false,
+      "syntheticJsonBytes": 132,
+      "ended": 15490.5,
+      "elapsedMs": 200.69999999925494
+    }
+  ],
+  "operations": [
+    {
+      "type": "admin-login",
+      "started": 15138.89999999851,
+      "requestStart": 0
+    }
+  ],
+  "renders": [
+    {
+      "phase": "mount",
+      "actualMs": 2.199999999254942,
+      "committed": 158.39999999850988
+    },
+    {
+      "phase": "update",
+      "actualMs": 1.800000000745058,
+      "committed": 225.80000000074506
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.6999999992549419,
+      "committed": 15054.10000000149
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.5999999977648258,
+      "committed": 15060.699999999255
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.3999999985098839,
+      "committed": 15067.199999999255
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.5,
+      "committed": 15072.699999999255
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.4000000022351742,
+      "committed": 15078.800000000745
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.6999999992549419,
+      "committed": 15085
+    },
+    {
+      "phase": "update",
+      "actualMs": 0.8000000007450581,
+      "committed": 15139.800000000745
+    },
+    {
+      "phase": "update",
+      "actualMs": 1.699999999254942,
+      "committed": 15495.5
+    }
+  ],
+  "enterEvents": [],
+  "totalRenderCpuMs": 9.799999997019768,
+  "mountedHome": false,
+  "firstDataReady": false,
+  "settledAtMs": 15991.5,
+  "requestCounts": {
+    "edge.manage-ebd-class-password": 1,
+    "auth.setSession/getUser": 1
+  },
+  "limitations": [
+    "Controlled synthetic latency, no production auth speed claim",
+    "Direct Secretaria route benchmark excludes eager App bundle download/parse",
+    "No physical PWA or OS lifecycle test"
+  ]
+}

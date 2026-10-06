@@ -107,12 +107,13 @@ export function getDaysUntilBirthday(dia: number, mes: number): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-export function useBirthdays(supabase = mainSupabase, scope = 'main') {
+export function useBirthdays(supabase = mainSupabase, scope = 'main', options: { enabled?: boolean } = {}) {
   const queryClient = useQueryClient();
   const requiresEbdAdmin = scope.startsWith('ebd-admin');
 
   const { data: birthdays = [], isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['aniversariantes', scope],
+    enabled: options.enabled ?? true,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('list_birthdays');
       if (error) throw error;
