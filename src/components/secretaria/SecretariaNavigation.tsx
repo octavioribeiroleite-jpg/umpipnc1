@@ -23,7 +23,7 @@ export function SecretariaNavigation({ admin, currentView, onView, onExit, child
   return <div className="ebd-navigation-shell">
     <a href="#ebd-main" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-card focus:p-3">Ir para o conteúdo</a>
     <aside className="ebd-sidebar">
-      <button type="button" className="ebd-sidebar-brand" onClick={() => onView('home')} aria-label="Início da Secretaria"><img src={logoIpnc} alt="Renovo IPNC" /><span>IPNC<small>Secretaria EBD</small></span></button>
+      <button type="button" className="ebd-sidebar-brand" onClick={() => onView('home')} aria-label="Início da Secretaria"><img src={logoIpnc} alt="Marca IPNC" /><span>IPNC<small>Secretaria EBD</small></span></button>
       <nav aria-label="Secretaria EBD"><ul>{items.map(item => <li key={item.key}><button type="button" onClick={item.onClick} title={item.label} aria-label={item.label} aria-current={item.active ? 'page' : undefined}><item.icon aria-hidden="true" /><span>{item.label}</span></button></li>)}</ul></nav>
       <button type="button" className="ebd-sidebar-exit" onClick={onExit} title="Sair da Secretaria" aria-label="Sair da Secretaria"><LogOut aria-hidden="true" /><span>Sair da Secretaria</span></button>
     </aside>

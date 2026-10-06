@@ -1,5 +1,7 @@
 # Marca Canva IPNC — assets v3, 05/10/2026
 
+Registro histórico da versão 33. A arte vigente foi substituída pelo novo PNG fornecido pelo proprietário: consulte `../approved-v4/README.md`. Arquivos, dimensões e evidências abaixo descrevem a revisão v3 daquela entrega.
+
 Esta entrega substitui os assets de runtime da entrega anterior registrada em `docs/branding/2026-10-05/README.md`. A fonte vigente é a marca transparente escolhida pelo proprietário: duas folhas verdes, IPNC branco e NOVA CARAPINA em verde claro. O registro anterior e suas evidências permanecem como histórico da arte anterior.
 
 ## Fonte e fidelidade

@@ -1,0 +1,76 @@
+{
+  "fixtureOnly": true,
+  "pdfImageCompression": "FAST",
+  "files": [
+    {
+      "file": "pdf-chamada-ebd-20261004.pdf",
+      "bytes": 1113401,
+      "sha256": "4a8c79514cfcc2c170d2112d163c51077478faed9cccfcdc1a12c4a24306a28e"
+    },
+    {
+      "file": "pdf-chamada-ebd-20261004-1.png",
+      "bytes": 150865,
+      "sha256": "0f31255b914f2b0631a701b4b1d9016cbce278928ed2a6d8f56f31dcbaecc3fe"
+    },
+    {
+      "file": "pdf-relatorio-chamadas-ebd.pdf",
+      "bytes": 1103464,
+      "sha256": "694122cf55858f5ffbf25a660f8226567f61cb56d71361d76d2b25fb234feae9"
+    },
+    {
+      "file": "pdf-relatorio-chamadas-ebd-1.png",
+      "bytes": 149890,
+      "sha256": "0c5caa7fe740c2bb192c1ca6731616c8580eb1b0635e8b447c586bdb98aa1c88"
+    },
+    {
+      "file": "pdf-relatorio-trimestral-ebd.pdf",
+      "bytes": 1128294,
+      "sha256": "7b350bc44c57ecb03b4671c3c76b9d319911bd7d33721046d3bc04ef1b1fc014"
+    },
+    {
+      "file": "pdf-relatorio-trimestral-ebd-1.png",
+      "bytes": 170071,
+      "sha256": "2573a94f1d9a3513333546f463abd5d87ff2a4ac5e0dd347ea86416a8e31e21b"
+    },
+    {
+      "file": "pdf-relatorio-trimestral-ebd-2.png",
+      "bytes": 159494,
+      "sha256": "0dddeb0739eef03371748280ad4765041e09c272712ec2796355152cbd9fed3f"
+    },
+    {
+      "file": "pdf-relatorio-trimestral-ebd-3.png",
+      "bytes": 93947,
+      "sha256": "ff3b8caa0f1b6bbf899837fd3ea4b726ae8d53b773ceaeb774cc79ef21285291"
+    },
+    {
+      "file": "pdf-cronograma-ipnc---dados-ficticios-outubro-2026.pdf",
+      "bytes": 1143892,
+      "sha256": "f2e575eba71e187386d983b2cd31a352a2f26dd639a221634341aa2ed8b0754a"
+    },
+    {
+      "file": "pdf-cronograma-ipnc---dados-ficticios-outubro-2026-1.png",
+      "bytes": 143114,
+      "sha256": "f408473e588486f9d2ea44baaa17dca4f74194dd576b697f42b727c5ea824dba"
+    },
+    {
+      "file": "pdf-cronograma-ipnc---dados-ficticios-outubro-2026-2.png",
+      "bytes": 112470,
+      "sha256": "4128be1afa22de03085db97f145291d81827326f36f0e9ae438bb44a4a62a400"
+    },
+    {
+      "file": "pdf-cronograma-ipnc---dados-ficticios-outubro-2026-3.png",
+      "bytes": 71785,
+      "sha256": "3095ac7e56b1eb468b9fff98a233d2d87e76648918233e41a17c26130b0028a2"
+    },
+    {
+      "file": "pdf-four-brand-headers.png",
+      "bytes": 147263,
+      "sha256": "cabb5bbea7fbe83a99d440653682c0dc9f20042f5622b126cc12b47a12994526"
+    },
+    {
+      "file": "pdf-all-eight-pages.png",
+      "bytes": 178069,
+      "sha256": "3f6de1244eb078c204bb7ef140fa4d9fcf28f52169a644e3f1c78b2936987f11"
+    }
+  ]
+}

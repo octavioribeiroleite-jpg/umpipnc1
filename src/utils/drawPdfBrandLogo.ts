@@ -1,6 +1,6 @@
 import type jsPDF from 'jspdf';
 
-/** Keep the transparent, white-lettered brand legible without stretching it. */
+/** Keep the transparent, green brand legible without stretching it. */
 export function drawPdfBrandLogo(doc: jsPDF, image: string, x: number, y: number, size: number) {
   const { width, height } = doc.getImageProperties(image);
   const padding = 1;
@@ -11,9 +11,10 @@ export function drawPdfBrandLogo(doc: jsPDF, image: string, x: number, y: number
 
   doc.saveGraphicsState();
   try {
-    doc.setFillColor(18, 59, 46);
+    doc.setFillColor(255, 255, 255);
     doc.roundedRect(x, y, size, size, 2, 2, 'F');
-    doc.addImage(image, 'PNG', x + (size - imageWidth) / 2, y + (size - imageHeight) / 2, imageWidth, imageHeight);
+    // PNG compression is lossless, keeping the original pixels and transparency.
+    doc.addImage(image, 'PNG', x + (size - imageWidth) / 2, y + (size - imageHeight) / 2, imageWidth, imageHeight, undefined, 'FAST');
   } finally {
     doc.restoreGraphicsState();
   }

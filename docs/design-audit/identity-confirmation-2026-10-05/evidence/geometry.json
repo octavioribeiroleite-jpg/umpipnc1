@@ -1,0 +1,212 @@
+[
+  {
+    "buttons": [
+      {
+        "height": 56,
+        "width": 246,
+        "x": 37,
+        "y": 558.15625
+      },
+      {
+        "height": 56,
+        "width": 246,
+        "x": 37,
+        "y": 626.15625
+      }
+    ],
+    "card": {
+      "height": 480.3125,
+      "width": 288,
+      "x": 16,
+      "y": 230.84375
+    },
+    "logo": {
+      "background": "rgba(0, 0, 0, 0)",
+      "height": 60,
+      "natural": [
+        1254,
+        1254
+      ],
+      "width": 60,
+      "x": 244,
+      "y": 72
+    },
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "buttons": [
+      {
+        "height": 56,
+        "width": 144.5,
+        "x": 37,
+        "y": 592.15625
+      },
+      {
+        "height": 56,
+        "width": 144.5,
+        "x": 193.5,
+        "y": 592.15625
+      }
+    ],
+    "card": {
+      "height": 412.3125,
+      "width": 343,
+      "x": 16,
+      "y": 264.84375
+    },
+    "logo": {
+      "background": "rgba(0, 0, 0, 0)",
+      "height": 60,
+      "natural": [
+        1254,
+        1254
+      ],
+      "width": 60,
+      "x": 299,
+      "y": 72
+    },
+    "scrollWidth": 375,
+    "width": 375
+  },
+  {
+    "buttons": [
+      {
+        "height": 56,
+        "width": 152,
+        "x": 37,
+        "y": 592.15625
+      },
+      {
+        "height": 56,
+        "width": 152,
+        "x": 201,
+        "y": 592.15625
+      }
+    ],
+    "card": {
+      "height": 412.3125,
+      "width": 358,
+      "x": 16,
+      "y": 264.84375
+    },
+    "logo": {
+      "background": "rgba(0, 0, 0, 0)",
+      "height": 60,
+      "natural": [
+        1254,
+        1254
+      ],
+      "width": 60,
+      "x": 314,
+      "y": 72
+    },
+    "scrollWidth": 390,
+    "width": 390
+  },
+  {
+    "buttons": [
+      {
+        "height": 72,
+        "width": 291,
+        "x": 81,
+        "y": 587.5
+      },
+      {
+        "height": 72,
+        "width": 291,
+        "x": 396,
+        "y": 587.5
+      }
+    ],
+    "card": {
+      "height": 495.0078125,
+      "width": 688,
+      "x": 40,
+      "y": 205.4921875
+    },
+    "logo": {
+      "background": "rgba(0, 0, 0, 0)",
+      "height": 88,
+      "natural": [
+        1254,
+        1254
+      ],
+      "width": 88,
+      "x": 640,
+      "y": 72
+    },
+    "scrollWidth": 768,
+    "width": 768
+  },
+  {
+    "buttons": [
+      {
+        "height": 72,
+        "width": 327,
+        "x": 173,
+        "y": 598.828125
+      },
+      {
+        "height": 72,
+        "width": 327,
+        "x": 524,
+        "y": 598.828125
+      }
+    ],
+    "card": {
+      "height": 517.6640625,
+      "width": 760,
+      "x": 132,
+      "y": 194.1640625
+    },
+    "logo": {
+      "background": "rgba(0, 0, 0, 0)",
+      "height": 88,
+      "natural": [
+        1254,
+        1254
+      ],
+      "width": 88,
+      "x": 896,
+      "y": 72
+    },
+    "scrollWidth": 1024,
+    "width": 1024
+  },
+  {
+    "buttons": [
+      {
+        "height": 72,
+        "width": 327,
+        "x": 381,
+        "y": 598.828125
+      },
+      {
+        "height": 72,
+        "width": 327,
+        "x": 732,
+        "y": 598.828125
+      }
+    ],
+    "card": {
+      "height": 517.6640625,
+      "width": 760,
+      "x": 340,
+      "y": 194.1640625
+    },
+    "logo": {
+      "background": "rgba(0, 0, 0, 0)",
+      "height": 88,
+      "natural": [
+        1254,
+        1254
+      ],
+      "width": 88,
+      "x": 1312,
+      "y": 72
+    },
+    "scrollWidth": 1440,
+    "width": 1440
+  }
+]

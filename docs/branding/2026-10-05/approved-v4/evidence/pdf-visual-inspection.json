@@ -1,0 +1,51 @@
+{
+  "reviewedAt": "2026-10-06T00:12:58.576263+00:00",
+  "fixtureOnly": true,
+  "realProductionCode": true,
+  "temporaryHelperOverride": false,
+  "pngCompression": "FAST",
+  "scope": "Approved v4 brand, transparency, ratio, white frame and lossless PNG compression. Existing report content and layout remain unchanged.",
+  "visualResult": "passed",
+  "reviewedContactSheets": [
+    "pdf-four-brand-headers.png",
+    "pdf-all-eight-pages.png"
+  ],
+  "documents": [
+    {
+      "filename": "pdf-chamada-ebd-20261004.pdf",
+      "pagesReviewed": 1,
+      "brandLegible": true,
+      "brandRatioPreserved": true,
+      "lightFrameVisible": true,
+      "brandClippingOrTitleOverlap": false,
+      "renderedBodyAndBrandPixelIdenticalToUncompressedBaseline": true
+    },
+    {
+      "filename": "pdf-relatorio-chamadas-ebd.pdf",
+      "pagesReviewed": 1,
+      "brandLegible": true,
+      "brandRatioPreserved": true,
+      "lightFrameVisible": true,
+      "brandClippingOrTitleOverlap": false,
+      "renderedBodyAndBrandPixelIdenticalToUncompressedBaseline": true
+    },
+    {
+      "filename": "pdf-relatorio-trimestral-ebd.pdf",
+      "pagesReviewed": 3,
+      "brandLegible": true,
+      "brandRatioPreserved": true,
+      "lightFrameVisible": true,
+      "brandClippingOrTitleOverlap": false,
+      "renderedBodyAndBrandPixelIdenticalToUncompressedBaseline": true
+    },
+    {
+      "filename": "pdf-cronograma-ipnc---dados-ficticios-outubro-2026.pdf",
+      "pagesReviewed": 3,
+      "brandLegible": true,
+      "brandRatioPreserved": true,
+      "lightFrameVisible": true,
+      "brandClippingOrTitleOverlap": false,
+      "renderedBodyAndBrandPixelIdenticalToUncompressedBaseline": true
+    }
+  ]
+}

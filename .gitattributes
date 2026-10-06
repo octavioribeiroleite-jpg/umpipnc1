@@ -1,0 +1,2 @@
+# PDF proofs are binary documents, not text source.
+*.pdf binary

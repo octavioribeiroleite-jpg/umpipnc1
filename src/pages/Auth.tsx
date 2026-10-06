@@ -15,6 +15,7 @@ import logoIpnc from '@/assets/logo-ipnc-entry.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import SocietySelector from '@/components/auth/SocietySelector';
+import IdentityConfirmation from '@/components/auth/IdentityConfirmation';
 import { InstallButton } from '@/components/layout/InstallButton';
 import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 import { TreasuryAccessDialog } from '@/components/treasury/TreasuryAccessDialog';
@@ -390,33 +391,8 @@ export default function Auth() {
     // Membro name-confirm
     if (step === 'membro' && membroStep === 'name-confirm' && membroSavedName) {
       return (
-        <div className="w-full max-w-[400px]">
-          <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
-            <CardContent className="pt-6 space-y-5">
-              <div className="text-center space-y-3">
-                <div className="mx-auto h-16 w-16 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${selectedMembroSociety?.color}20` }}>
-                  <UserCheck className="h-8 w-8" style={{ color: selectedMembroSociety?.color }} />
-                </div>
-                <h2 className="font-semibold text-lg text-foreground">Você é</h2>
-                <p className="text-2xl font-bold" style={{ color: selectedMembroSociety?.color }}>{membroSavedName}?</p>
-                <p className="text-sm text-muted-foreground">{selectedMembroSociety?.name}</p>
-              </div>
-              <div className="auth-identity-actions">
-                <Button variant="outline" onClick={handleDifferentMembro} disabled={memberLoginLoading}>
-                  Não sou eu
-                </Button>
-                <Button onClick={handleConfirmMembro} disabled={memberLoginLoading}>
-                  {memberLoginLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                  Sim, sou eu!
-                </Button>
-              </div>
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleBack}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <IdentityConfirmation name={membroSavedName} society={selectedMembroSociety?.slug.toUpperCase()}
+          loading={memberLoginLoading} onBack={handleBack} onDifferentPerson={handleDifferentMembro} onConfirm={handleConfirmMembro} />
       );
     }
 
@@ -496,31 +472,8 @@ export default function Auth() {
     // Diretoria name-confirm
     if (step === 'diretoria' && diretoriaStep === 'name-confirm' && savedName) {
       return (
-        <div className="w-full max-w-[400px]">
-          <Button variant="ghost" onClick={handleBack} className="mb-3"><ArrowLeft className="h-4 w-4" />Voltar</Button>
-          <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
-            <CardContent className="pt-6 space-y-5">
-              <div className="text-center space-y-3">
-                <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserCheck className="h-8 w-8 text-primary" />
-                </div>
-                <h2 className="font-semibold text-lg text-foreground">Você é</h2>
-                <p className="text-2xl font-bold text-primary">{savedName}?</p>
-                {operatorFunction && (
-                  <p className="text-sm text-muted-foreground">{operatorFunction} — {selectedDiretoriaSociety?.name}</p>
-                )}
-              </div>
-              <div className="auth-identity-actions">
-                <Button variant="outline" onClick={handleDifferentPerson}>
-                  Não sou eu
-                </Button>
-                <Button onClick={handleConfirmName}>
-                  Sim, sou eu!
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <IdentityConfirmation name={savedName} role={operatorFunction} society={selectedDiretoriaSociety?.slug.toUpperCase()}
+          onBack={handleBack} onDifferentPerson={handleDifferentPerson} onConfirm={handleConfirmName} />
       );
     }
 
@@ -674,13 +627,14 @@ export default function Auth() {
   };
 
   const isSocietySelection = !isEnteringApp && ((step === 'diretoria' && diretoriaStep === 'societies') || (step === 'membro' && membroStep === 'societies'));
+  const isIdentityConfirmation = !isEnteringApp && ((step === 'diretoria' && diretoriaStep === 'name-confirm' && !!savedName) || (step === 'membro' && membroStep === 'name-confirm' && !!membroSavedName));
 
   return (
-    <div className={`auth-page ${isSocietySelection ? 'auth-page-society' : ''}`}>
+    <div className={`auth-page ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''}`}>
       <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
       <aside className="auth-brand-panel">
         <div className="auth-brand-content">
-          <div className="auth-brand"><img src={logoIpnc} alt="IPNC · Nova Carapina" width="403" height="348" /></div>
+          <div className="auth-brand"><img src={logoIpnc} alt="IPNC" width="1254" height="1254" /></div>
           <div className="auth-brand-heading">
             <p>Igreja Presbiteriana<br />de Nova Carapina</p>
             <span>Servindo. Cuidando. Avançando.</span>
@@ -700,6 +654,7 @@ export default function Auth() {
         <div className="auth-main-inner">
           {(step !== 'select' || isEnteringApp) && <h1 className="sr-only">{isEnteringApp ? 'Entrando no aplicativo IPNC' : step === 'login' ? 'Acesso administrativo' : step === 'diretoria' ? 'Acesso da diretoria' : 'Acesso IPNC'}</h1>}
           {step === 'select' && !isEnteringApp && <p className="auth-values">Comunhão <span>·</span> Discipulado <span>·</span> Serviço <span>·</span> Missão</p>}
+          {isIdentityConfirmation && <div className="auth-identity-brand"><img src={logoIpnc} alt="IPNC" width="1254" height="1254" /></div>}
           {renderContent()}
           <footer className={`auth-page-footer ${step !== 'select' ? 'auth-page-footer-flow' : ''}`}>
             <p className="auth-copyright">© {new Date().getFullYear()} IPNC</p>

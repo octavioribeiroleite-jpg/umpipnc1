@@ -1,0 +1,104 @@
+{
+  "compression": "FAST",
+  "installedJsPDFVersion": "4.0.0",
+  "mechanism": "PNG Sub filter and zlib level 1 on RGB and alpha; no quantization or resampling",
+  "isolatedExperiment": {
+    "result": "PASS",
+    "productionModified": false,
+    "documentationModified": false,
+    "jspdfVersion": "4.0.0",
+    "mechanism": "PNG Sub filter plus fflate zlib level 1 on RGB and alpha; no quantization or resampling",
+    "documents": [
+      {
+        "filename": "chamada-ebd-20261004.pdf",
+        "baselineBytes": 6319090,
+        "fastBytes": 1113401,
+        "reductionPercent": 82.38,
+        "pages": 1,
+        "RGBAEqualToMasterAndBaseline": true,
+        "RGBAndAlphaUseFlateDecode": true,
+        "reportTextEqualExceptGenerationTime": true,
+        "renderedBodyAndBrandPixelsEqual": true
+      },
+      {
+        "filename": "relatorio-chamadas-ebd.pdf",
+        "baselineBytes": 6309153,
+        "fastBytes": 1103464,
+        "reductionPercent": 82.51,
+        "pages": 1,
+        "RGBAEqualToMasterAndBaseline": true,
+        "RGBAndAlphaUseFlateDecode": true,
+        "reportTextEqualExceptGenerationTime": true,
+        "renderedBodyAndBrandPixelsEqual": true
+      },
+      {
+        "filename": "relatorio-trimestral-ebd.pdf",
+        "baselineBytes": 6333983,
+        "fastBytes": 1128294,
+        "reductionPercent": 82.19,
+        "pages": 3,
+        "RGBAEqualToMasterAndBaseline": true,
+        "RGBAndAlphaUseFlateDecode": true,
+        "reportTextEqualExceptGenerationTime": true,
+        "renderedBodyAndBrandPixelsEqual": true
+      },
+      {
+        "filename": "cronograma-ipnc---dados-ficticios-outubro-2026.pdf",
+        "baselineBytes": 6349581,
+        "fastBytes": 1143892,
+        "reductionPercent": 81.98,
+        "pages": 3,
+        "RGBAEqualToMasterAndBaseline": true,
+        "RGBAndAlphaUseFlateDecode": true,
+        "reportTextEqualExceptGenerationTime": true,
+        "renderedBodyAndBrandPixelsEqual": true
+      }
+    ],
+    "minimalProposal": "doc.addImage(image, 'PNG', x + (size - imageWidth) / 2, y + (size - imageHeight) / 2, imageWidth, imageHeight, undefined, 'FAST');"
+  },
+  "finalRealWorktree": {
+    "result": "PASS",
+    "realProductionCode": true,
+    "temporaryHelperOverride": false,
+    "pdfImageCompression": "FAST",
+    "documents": [
+      {
+        "filename": "chamada-ebd-20261004.pdf",
+        "beforeBytes": 6319090,
+        "afterBytes": 1113401,
+        "reductionPercent": 82.38,
+        "pages": 1,
+        "reportContentUnchangedExceptGeneratedTimestamp": true,
+        "renderedBodyAndBrandPixelsIdentical": true
+      },
+      {
+        "filename": "relatorio-chamadas-ebd.pdf",
+        "beforeBytes": 6309153,
+        "afterBytes": 1103464,
+        "reductionPercent": 82.51,
+        "pages": 1,
+        "reportContentUnchangedExceptGeneratedTimestamp": true,
+        "renderedBodyAndBrandPixelsIdentical": true
+      },
+      {
+        "filename": "relatorio-trimestral-ebd.pdf",
+        "beforeBytes": 6333983,
+        "afterBytes": 1128294,
+        "reductionPercent": 82.19,
+        "pages": 3,
+        "reportContentUnchangedExceptGeneratedTimestamp": true,
+        "renderedBodyAndBrandPixelsIdentical": true
+      },
+      {
+        "filename": "cronograma-ipnc---dados-ficticios-outubro-2026.pdf",
+        "beforeBytes": 6349581,
+        "afterBytes": 1143892,
+        "reductionPercent": 81.98,
+        "pages": 3,
+        "reportContentUnchangedExceptGeneratedTimestamp": true,
+        "renderedBodyAndBrandPixelsIdentical": true
+      }
+    ]
+  },
+  "finalHelperSHA256": "5cc89131c89a1fae0e5c987cf5f927e264e71f6c183dc4d7b4b49bbfd57dde96"
+}

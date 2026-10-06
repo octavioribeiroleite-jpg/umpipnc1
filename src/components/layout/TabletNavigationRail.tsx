@@ -26,9 +26,9 @@ export function TabletNavigationRail() {
         onClick={() => navigate('/')}
         aria-label="Ir para a página inicial"
         title="Home"
-        className="mx-auto mt-3 flex h-[48px] w-[48px] items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-sm transition-colors hover:bg-white/15"
+        className="mx-auto mt-3 flex h-[48px] w-[48px] items-center justify-center rounded-2xl border border-white/10 bg-white shadow-sm transition-colors hover:bg-emerald-50"
       >
-        <img src={logoIpnc} alt="Renovo IPNC" className="h-[36px] w-[36px] object-contain" />
+        <img src={logoIpnc} alt="Marca IPNC" className="h-[36px] w-[36px] object-contain" />
       </button>
 
       <div className="mx-3 my-3 h-px bg-sidebar-border" />

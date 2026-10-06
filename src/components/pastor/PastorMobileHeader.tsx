@@ -42,8 +42,8 @@ export function PastorMobileHeader() {
             </button>
           )}
           {isPastorHome && (
-            <div className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-lg bg-[#123b2e] p-1">
-              <img src={logoIpnc} alt="IPNC" className="h-full w-full object-contain" />
+            <div className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-lg bg-white p-1">
+              <img src={logoIpnc} alt="Marca IPNC" className="h-full w-full object-contain" />
             </div>
           )}
           <span title={profile?.full_name} className="font-semibold text-foreground text-sm sm:text-base break-words leading-tight">

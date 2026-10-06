@@ -1,0 +1,131 @@
+{
+  "source": {
+    "path": "docs/branding/2026-10-05/approved-v4/official-source.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "2df611f147250f6df0caeb189051cea1cd0748c05ed90bb752501125021f7081",
+    "alpha_range": [
+      0,
+      255
+    ]
+  },
+  "master_byte_matches": {
+    "src/assets/logo-ipnc.png": true,
+    "src/assets/logo-ipnc-entry.png": true
+  },
+  "derivative_exact_reproduction": {
+    "apple-touch-icon-v4.png": true,
+    "favicon-32x32-v4.png": true,
+    "icon-192x192-v4.png": true,
+    "icon-512x512-v4.png": true,
+    "icon-maskable-512x512-v4.png": true,
+    "ipnc-social-v4.png": true
+  },
+  "independent_pixel_checks": {
+    "apple-touch-icon-v4.png": {
+      "dimensions_correct": true,
+      "complete_source_canvas_used": true,
+      "direct_downsampling_and_composite_match": true,
+      "upscale": false
+    },
+    "favicon-32x32-v4.png": {
+      "dimensions_correct": true,
+      "complete_source_canvas_used": true,
+      "direct_downsampling_and_composite_match": true,
+      "upscale": false
+    },
+    "icon-192x192-v4.png": {
+      "dimensions_correct": true,
+      "complete_source_canvas_used": true,
+      "direct_downsampling_and_composite_match": true,
+      "upscale": false
+    },
+    "icon-512x512-v4.png": {
+      "dimensions_correct": true,
+      "complete_source_canvas_used": true,
+      "direct_downsampling_and_composite_match": true,
+      "upscale": false
+    },
+    "icon-maskable-512x512-v4.png": {
+      "dimensions_correct": true,
+      "complete_source_canvas_used": true,
+      "direct_downsampling_and_composite_match": true,
+      "upscale": false
+    },
+    "ipnc-social-v4.png": {
+      "dimensions_correct": true,
+      "complete_source_canvas_used": true,
+      "direct_downsampling_and_composite_match": true,
+      "upscale": false
+    }
+  },
+  "maskable": {
+    "all_nonzero_alpha_pixel_centers_inside_safe_circle": true,
+    "maximum_alpha_pixel_center_radius": 172.57027554014044,
+    "safe_radius": 204.8,
+    "margin": 32.22972445985957,
+    "normal_icon_is_distinct": true,
+    "launcher_masks": {
+      "circle": {
+        "clipped_pixels": false,
+        "difference_bbox": null
+      },
+      "rounded": {
+        "clipped_pixels": false,
+        "difference_bbox": null
+      },
+      "squircle": {
+        "clipped_pixels": false,
+        "difference_bbox": null
+      }
+    }
+  },
+  "favicon_frames": {
+    "16": {
+      "size": [
+        16,
+        16
+      ],
+      "complete_source_downsample_matches": true
+    },
+    "32": {
+      "size": [
+        32,
+        32
+      ],
+      "complete_source_downsample_matches": true
+    },
+    "48": {
+      "size": [
+        48,
+        48
+      ],
+      "complete_source_downsample_matches": true
+    },
+    "64": {
+      "size": [
+        64,
+        64
+      ],
+      "complete_source_downsample_matches": true
+    },
+    "128": {
+      "size": [
+        128,
+        128
+      ],
+      "complete_source_downsample_matches": true
+    },
+    "256": {
+      "size": [
+        256,
+        256
+      ],
+      "complete_source_downsample_matches": true
+    }
+  },
+  "public_old_v3_assets_removed": true,
+  "all_checks_passed": true
+}

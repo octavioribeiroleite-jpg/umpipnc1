@@ -22,6 +22,7 @@ import '../../../src/identity-confirmation.css';
 import '../../../src/interface-system.css';
 import SocietyScreenEnhancer from '@/components/auth/SocietyScreenEnhancer';
 import IdentityConfirmationEnhancer from '@/components/auth/IdentityConfirmationEnhancer';
+import IdentityFixture from './identity';
 import {fixtureRole,fixtureState,fixtureParams} from './options';
 import Auth from '@/pages/Auth';
 import ResetPassword from '@/pages/ResetPassword';
@@ -66,6 +67,7 @@ function FixtureControls(){
 const unavailable=<main className="p-6"><h1>Prévia separada</h1><p>EBD e tesouraria usam suas próprias fixtures isoladas. Esta prévia não concede sessão nesses módulos.</p></main>;
 createRoot(document.getElementById('root')!).render(<PageErrorBoundary><QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><TooltipProvider><BrowserRouter basename="/__diretoria"><AuthProvider><DiretoriaSessionProvider><MembroSessionProvider><Routes>
 <Route path="/__boundary" element={<BoundaryFixture/>}/>
+<Route path="/__identity" element={<IdentityFixture/>}/>
 <Route path="/" element={<Index/>}/>
 <Route path="/reunioes" element={<Reunioes/>}/>
 <Route path="/reunioes/nova" element={<NovaReuniao/>}/>

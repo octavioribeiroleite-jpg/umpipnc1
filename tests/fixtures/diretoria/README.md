@@ -44,6 +44,7 @@ Todos os exemplos começam em `http://127.0.0.1:8083`:
 
 - `/__diretoria/auth?role=anonymous` — entrada real, incluindo CSS e enhancers de identificação/sociedade.
 - `/__diretoria/auth?role=anonymous&identity=return` — após PIN e sociedade, confirmação de identidade sintética.
+- `/__diretoria/__identity?role=anonymous&controls=0` — componente de confirmação isolado; callbacks apenas mostram qual ação foi recebida, sem autenticar. `state=long&font=200` exercita nome muito extenso e fonte ampliada; `identity-role=member&identity-loading=1` mostra a espera com ações desabilitadas.
 - `/__diretoria/reset-password?role=admin` e `&recovery=invalid` — formulário ou link inválido.
 - `/__diretoria/pastor?role=pastor` — dashboard pastoral; `&state=error` ou `&state=long`.
 - `/__diretoria/pastor/sociedade/ump?role=pastor` — detalhe e resumo IA estático, sem chamada paga.

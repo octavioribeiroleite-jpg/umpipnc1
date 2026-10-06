@@ -28,8 +28,8 @@ export function PastorLayout({ children, wide = false }: PastorLayoutProps) {
         <div className="relative text-center">
           <img
             src={logoIpnc}
-            alt="Renovo IPNC"
-            className="h-32 w-32 sm:h-44 sm:w-44 md:h-56 md:w-56 mx-auto object-contain mb-6 animate-logo-pulse"
+            alt="Marca IPNC"
+            className="h-32 w-32 sm:h-44 sm:w-44 md:h-56 md:w-56 mx-auto rounded-2xl bg-white p-2 sm:p-3 object-contain mb-6 animate-logo-pulse"
           />
           <h1 className="text-white text-xl sm:text-2xl font-bold tracking-tight mb-1">Igreja Presbiteriana</h1>
           <p className="text-white/60 text-sm sm:text-base mb-8">de Nova Carapina</p>

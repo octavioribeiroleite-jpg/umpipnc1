@@ -74,7 +74,7 @@ export default function SocietySelector({ societies, loading = false, onBack, on
           <h2 ref={headingRef} tabIndex={-1}>Selecione a sociedade</h2>
           <p>Escolha a sociedade que deseja acessar.</p>
         </div>
-        <div className="auth-society-brand"><img src={logoIpnc} alt="IPNC · Nova Carapina" width="403" height="348" /></div>
+        <div className="auth-society-brand"><img src={logoIpnc} alt="IPNC" width="1254" height="1254" /></div>
       </header>
       {loading ? (
         <div className="auth-society-loading" role="status">

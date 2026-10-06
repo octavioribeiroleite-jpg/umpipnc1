@@ -73,7 +73,7 @@ export function TreasuryDashboard(props: Props) {
   return <div className="treasury-workspace">
     <a className="tr-skip" href="#treasury-content">Pular para o conteúdo</a>
     <aside className="tr-sidebar" aria-label="Navegação da tesouraria">
-      <a className="tr-brand" href="/tesouraria"><span className="tr-brand-icon"><img src={logoIpnc} alt="Logo IPNC" /></span><span>IPNC<small>TESOURARIA</small></span></a>
+      <a className="tr-brand" href="/tesouraria"><span className="tr-brand-icon"><img src={logoIpnc} alt="Marca IPNC" /></span><span>IPNC<small>TESOURARIA</small></span></a>
       <p className="tr-sidebar-label">GESTÃO FINANCEIRA</p>
       <button className={`tr-nav ${!selectedFundId ? 'active' : ''}`} onClick={() => props.onFund()} aria-label="Visão geral" title="Visão geral"><LayoutDashboard size={18} /><span className="tr-nav-copy">Visão geral</span></button>
       <p className="tr-sidebar-label">SOCIEDADES</p>
@@ -83,7 +83,7 @@ export function TreasuryDashboard(props: Props) {
     </aside>
 
     <div className="tr-main">
-      <header className="tr-topbar"><a href="/tesouraria" className="tr-mobile-brand"><img src={logoIpnc} alt="Logo IPNC" />IPNC <span>Tesouraria</span></a><span className="tr-church-name">Igreja Presbiteriana de Nova Carapina</span><div className="tr-top-actions"><span className="tr-access"><span />{admin ? 'Acesso administrativo' : props.treasurer ? 'Acesso do tesoureiro' : 'Acesso necessário'}</span>{admin || props.treasurer ? <button className="tr-icon-button" onClick={props.onLogout} aria-label={admin ? "Sair do acesso administrativo" : "Sair da tesouraria"}><LogOut size={18} /></button> : <button className="tr-button tr-button-small" onClick={props.onLogin}><LockKeyhole size={15} /><span>Acesso do tesoureiro</span></button>}</div></header>
+      <header className="tr-topbar"><a href="/tesouraria" className="tr-mobile-brand"><img src={logoIpnc} alt="Marca IPNC" />IPNC <span>Tesouraria</span></a><span className="tr-church-name">Igreja Presbiteriana de Nova Carapina</span><div className="tr-top-actions"><span className="tr-access"><span />{admin ? 'Acesso administrativo' : props.treasurer ? 'Acesso do tesoureiro' : 'Acesso necessário'}</span>{admin || props.treasurer ? <button className="tr-icon-button" onClick={props.onLogout} aria-label={admin ? "Sair do acesso administrativo" : "Sair da tesouraria"}><LogOut size={18} /></button> : <button className="tr-button tr-button-small" onClick={props.onLogin}><LockKeyhole size={15} /><span>Acesso do tesoureiro</span></button>}</div></header>
       <main id="treasury-content" className="tr-content">
         <div className="tr-title-row"><div>{selected ? <button className="tr-back" onClick={() => props.onFund()}><ArrowLeft size={14} />Visão geral</button> : <p className="tr-eyebrow">TRANSPARÊNCIA & CUIDADO</p>}<h1>{selected ? `Caixa da ${selected.abbreviation}` : 'Dashboard financeiro'}</h1><p>{selected ? selected.name : 'Os recursos de cada sociedade, em um só lugar.'}</p></div><div className="tr-heading-actions"><button className="tr-button" onClick={props.onShare}><Share2 size={16} />Compartilhar</button>{(admin || props.treasurer) && <button className="tr-button tr-primary" onClick={props.onNewEntry} disabled={!data}><Plus size={18} />{admin ? 'Novo lançamento' : 'Registrar recebimento'}</button>}</div></div>
         {admin && <nav className="tr-admin-navigation" aria-label="Ferramentas administrativas da tesouraria">{[

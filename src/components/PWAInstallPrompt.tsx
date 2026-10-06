@@ -29,8 +29,8 @@ export function PWAInstallPrompt() {
             <X className="h-5 w-5" />
           </button>
         </DialogClose>
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-950 shadow-md">
-          <img src={logoIpnc} alt="Renovo IPNC" className="h-16 w-16 object-contain" />
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-md">
+          <img src={logoIpnc} alt="Marca IPNC" className="h-16 w-16 object-contain" />
         </div>
         <DialogHeader className="space-y-3">
           <DialogTitle className="pr-2 text-2xl font-bold leading-tight sm:text-2xl">Tenha o Renovo na sua tela inicial</DialogTitle>

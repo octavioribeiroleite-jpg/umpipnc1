@@ -69,8 +69,8 @@ export function MobileHeader() {
             </button>
           )}
 
-          {isHome && (<div className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/10 shadow-[0_6px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
-            <img src={logoIpnc} alt="Renovo IPNC" className="h-[28px] w-[28px] object-contain" />
+          {isHome && (<div className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white shadow-[0_6px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+            <img src={logoIpnc} alt="Marca IPNC" className="h-[28px] w-[28px] object-contain" />
           </div> )}
 
           <div className="min-w-0">

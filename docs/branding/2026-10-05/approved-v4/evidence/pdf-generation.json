@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-10-06T00:11:22.780Z",
+  "fixtureOnly": true,
+  "networkAccess": "disabled",
+  "repo": "/Users/octavioribeiroleite/.codex/worktrees/ipnc-visual-completo/Aplicativo IPNC",
+  "logo": {
+    "path": "/Users/octavioribeiroleite/.codex/worktrees/ipnc-visual-completo/Aplicativo IPNC/src/assets/logo-ipnc.png",
+    "sha256": "2df611f147250f6df0caeb189051cea1cd0748c05ed90bb752501125021f7081",
+    "width": 1254,
+    "height": 1254
+  },
+  "brandFrameRGB": [
+    255,
+    255,
+    255
+  ],
+  "pdfImageCompression": "FAST",
+  "snapshotUnchangedByExports": true,
+  "fixtureInputsUnchangedByExports": true,
+  "sources": [
+    {
+      "file": "src/utils/generateCalendarPDF.ts",
+      "sha256": "0e681eace9ce2d851e2fbe458596607834e1172157c0dd620c69eabdc3d8f44f"
+    },
+    {
+      "file": "src/utils/generateEbdPDF.ts",
+      "sha256": "a844aecdba7252ef54cd286d7cff7a911d2cfcfe3f014f11ca3c074482abd6f1"
+    },
+    {
+      "file": "src/utils/drawPdfBrandLogo.ts",
+      "sha256": "5cc89131c89a1fae0e5c987cf5f927e264e71f6c183dc4d7b4b49bbfd57dde96"
+    },
+    {
+      "file": "src/lib/ebd-attendance-queue.ts",
+      "sha256": "6310d7b51993707b3af7e9e5fdcba0bee0ade1ed00d62244a90d1b35000f8713"
+    }
+  ],
+  "guards": [
+    {
+      "generator": "generateEbdAttendancePDF",
+      "staleSnapshotBlocked": true
+    },
+    {
+      "generator": "generateEbdPeriodPDF",
+      "staleSnapshotBlocked": true
+    },
+    {
+      "generator": "generateEbdQuarterlyPDF",
+      "staleSnapshotBlocked": true
+    }
+  ],
+  "documents": [
+    {
+      "filename": "pdf-chamada-ebd-20261004.pdf",
+      "pages": 1,
+      "bytes": 1113401,
+      "originalOutputFilename": "chamada-ebd-20261004.pdf"
+    },
+    {
+      "filename": "pdf-relatorio-chamadas-ebd.pdf",
+      "pages": 1,
+      "bytes": 1103464,
+      "originalOutputFilename": "relatorio-chamadas-ebd.pdf"
+    },
+    {
+      "filename": "pdf-relatorio-trimestral-ebd.pdf",
+      "pages": 3,
+      "bytes": 1128294,
+      "originalOutputFilename": "relatorio-trimestral-ebd.pdf"
+    },
+    {
+      "filename": "pdf-cronograma-ipnc---dados-ficticios-outubro-2026.pdf",
+      "pages": 3,
+      "bytes": 1143892,
+      "originalOutputFilename": "cronograma-ipnc---dados-ficticios-outubro-2026.pdf"
+    }
+  ],
+  "realProductionCode": true,
+  "temporaryHelperOverride": false
+}

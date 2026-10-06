@@ -1,0 +1,52 @@
+index.html:18:    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32-v4.png" />
+index.html:19:    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=ipnc-v4" />
+index.html:26:    <meta property="og:image" content="https://renovo-ipnc.octavioribeiroleite.chatgpt.site/icons/ipnc-social-v4.png" />
+index.html:27:    <meta property="og:image:width" content="1200" />
+index.html:28:    <meta property="og:image:height" content="1200" />
+index.html:29:    <meta property="og:image:alt" content="Logo oficial IPNC" />
+index.html:32:    <meta name="twitter:image" content="https://renovo-ipnc.octavioribeiroleite.chatgpt.site/icons/ipnc-social-v4.png" />
+index.html:33:    <meta name="twitter:image:alt" content="Logo oficial IPNC" />
+public/manifest.json:12:      "src": "/icons/icon-192x192-v4.png",
+public/manifest.json:18:      "src": "/icons/icon-512x512-v4.png",
+public/manifest.json:24:      "src": "/icons/icon-maskable-512x512-v4.png",
+public/manifest.json:27:      "purpose": "maskable"
+public/sw.js:3:  '/icons/icon-192x192-v4.png',
+public/sw.js:4:  '/icons/icon-512x512-v4.png',
+public/sw.js:5:  '/icons/icon-maskable-512x512-v4.png'
+src/pages/EleicaoApresentar.tsx:10:import logo from '@/assets/logo-ipnc.png';
+src/pages/PortalIgreja.tsx:21:import logoIpnc from '@/assets/logo-ipnc.png';
+src/pages/PortalIgreja.tsx:76:            src={logoIpnc}
+src/pages/PortalIgreja.tsx:159:          <img src={logoIpnc} alt="Marca IPNC" className="h-24 w-24 mx-auto rounded-2xl bg-white p-1 object-contain" />
+src/pages/PortalIgreja.tsx:324:            <img src={logoIpnc} alt="Marca IPNC" className="h-20 w-20 mx-auto rounded-2xl bg-white p-1 object-contain" />
+src/pages/PortalIgreja.tsx:434:        <img src={logoIpnc} alt="Marca IPNC" className="h-[44px] w-[44px] shrink-0 rounded-xl bg-white p-1 object-contain" />
+src/pages/ResetPassword.tsx:10:import logo from '@/assets/logo-ipnc.png';
+src/pages/PastorSociedade.tsx:27:import logoIpnc from '@/assets/logo-ipnc.png';
+src/pages/PastorSociedade.tsx:148:            <img src={logoIpnc} alt="Marca IPNC" className="h-full w-full object-contain animate-logo-pulse" />
+src/pages/Auth.tsx:14:import logoIpnc from '@/assets/logo-ipnc-entry.png';
+src/pages/Auth.tsx:637:          <div className="auth-brand"><img src={logoIpnc} alt="IPNC" width="1254" height="1254" /></div>
+src/pages/Auth.tsx:657:          {isIdentityConfirmation && <div className="auth-identity-brand"><img src={logoIpnc} alt="IPNC" width="1254" height="1254" /></div>}
+src/utils/generateCalendarPDF.ts:4:import logoBase64 from '@/assets/logo-ipnc.png';
+src/utils/generateEbdPDF.ts:5:import logoBase64 from '@/assets/logo-ipnc.png';
+src/components/auth/SocietySelector.tsx:5:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/auth/SocietySelector.tsx:77:        <div className="auth-society-brand"><img src={logoIpnc} alt="IPNC" width="1254" height="1254" /></div>
+src/components/pastor/PastorLayout.tsx:7:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/pastor/PastorLayout.tsx:30:            src={logoIpnc}
+src/components/PWAInstallPrompt.tsx:6:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/PWAInstallPrompt.tsx:33:          <img src={logoIpnc} alt="Marca IPNC" className="h-16 w-16 object-contain" />
+src/components/pastor/PastorMobileHeader.tsx:5:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/pastor/PastorMobileHeader.tsx:46:              <img src={logoIpnc} alt="Marca IPNC" className="h-full w-full object-contain" />
+src/components/membro/MembroLayout.tsx:7:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/membro/MembroLayout.tsx:68:              <img src={logoIpnc} alt="Marca IPNC" className="h-full w-full object-contain" />
+src/components/secretaria/SecretariaNavigation.tsx:4:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/secretaria/SecretariaNavigation.tsx:26:      <button type="button" className="ebd-sidebar-brand" onClick={() => onView('home')} aria-label="Início da Secretaria"><img src={logoIpnc} alt="Marca IPNC" /><span>IPNC<small>Secretaria EBD</small></span></button>
+src/components/layout/AppSidebar.tsx:7:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/layout/AppSidebar.tsx:40:              <img src={logoIpnc} alt="Marca IPNC" className="h-9 w-9 object-contain" />
+src/components/treasury/TreasuryDashboard.tsx:3:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/treasury/TreasuryDashboard.tsx:76:      <a className="tr-brand" href="/tesouraria"><span className="tr-brand-icon"><img src={logoIpnc} alt="Marca IPNC" /></span><span>IPNC<small>TESOURARIA</small></span></a>
+src/components/treasury/TreasuryDashboard.tsx:86:      <header className="tr-topbar"><a href="/tesouraria" className="tr-mobile-brand"><img src={logoIpnc} alt="Marca IPNC" />IPNC <span>Tesouraria</span></a><span className="tr-church-name">Igreja Presbiteriana de Nova Carapina</span><div className="tr-top-actions"><span className="tr-access"><span />{admin ? 'Acesso administrativo' : props.treasurer ? 'Acesso do tesoureiro' : 'Acesso necessário'}</span>{admin || props.treasurer ? <button className="tr-icon-button" onClick={props.onLogout} aria-label={admin ? "Sair do acesso administrativo" : "Sair da tesouraria"}><LogOut size={18} /></button> : <button className="tr-button tr-button-small" onClick={props.onLogin}><LockKeyhole size={15} /><span>Acesso do tesoureiro</span></button>}</div></header>
+src/components/pastor/PastorSidebar.tsx:23:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/pastor/PastorSidebar.tsx:79:            <img src={logoIpnc} alt="Marca IPNC" className="h-9 w-9 object-contain" />
+src/components/layout/TabletNavigationRail.tsx:5:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/layout/TabletNavigationRail.tsx:31:        <img src={logoIpnc} alt="Marca IPNC" className="h-[36px] w-[36px] object-contain" />
+src/components/layout/MobileHeader.tsx:4:import logoIpnc from '@/assets/logo-ipnc.png';
+src/components/layout/MobileHeader.tsx:73:            <img src={logoIpnc} alt="Marca IPNC" className="h-[28px] w-[28px] object-contain" />
