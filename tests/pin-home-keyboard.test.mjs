@@ -50,6 +50,7 @@ function harness({ pin = '123456', loading = false } = {}) {
     require(name) { assert.ok(name in imports, `Unexpected component dependency: ${name}`); return imports[name]; },
     HTMLElement: Element,
     window: {
+      scrollTo() {},
       addEventListener(name, listener) { assert.equal(listeners.has(name), false); listeners.set(name, listener); },
       removeEventListener(name, listener) { assert.equal(listeners.get(name), listener); listeners.delete(name); },
     },

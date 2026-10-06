@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Delete, LogIn, Loader2, Lock } from 'lucide-react';
+import { ArrowLeft, Delete, LogIn, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PublicHomeButton from '@/components/auth/PublicHomeButton';
 import logoIpnc from '@/assets/logo-ipnc.png';
@@ -14,7 +14,7 @@ interface PinPadProps {
   loading?: boolean;
   error?: boolean;
   embedded?: boolean;
-  presentation?: 'access' | 'compact';
+  presentation?: 'access' | 'compact' | 'dialog';
 }
 
 export default function PinPad({ profileLabel, onBack, onHome, onComplete, loading, error: externalError, embedded, presentation = 'access' }: PinPadProps) {
@@ -22,10 +22,12 @@ export default function PinPad({ profileLabel, onBack, onHome, onComplete, loadi
   const [shaking, setShaking] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-focus container for keyboard input
+  // Keep the access navigation visible while enabling keyboard input.
   useEffect(() => {
-    containerRef.current?.focus();
-  }, []);
+    if (presentation === 'access') window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    else containerRef.current?.closest('[role="dialog"]')?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    containerRef.current?.focus({ preventScroll: true });
+  }, [presentation]);
 
   // Reset pin and shake on external error
   useEffect(() => {
@@ -74,37 +76,38 @@ export default function PinPad({ profileLabel, onBack, onHome, onComplete, loadi
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [loading, shaking, handleDigit, handleDelete, pin, onComplete]);
 
+  const navigation = (
+    <nav className="ipnc-pin-navigation" aria-label="Navegação do acesso">
+      <Button type="button" variant="ghost" onClick={onBack} disabled={loading} className="ipnc-pin-back">
+        <ArrowLeft aria-hidden="true" />Voltar
+      </Button>
+      <PublicHomeButton onClick={onHome} disabled={loading} className="ipnc-pin-home" />
+    </nav>
+  );
+
   const content = (
     <>
       {presentation === 'access' && (
         <svg className="ipnc-pin-background" viewBox="0 0 1600 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <g fill="#b6d7c5" fillOpacity="0.27">
-            <path d="M1370 256C1308 135 1377 29 1510 0C1490 114 1455 203 1370 256Z" />
-            <path d="M1370 256C1431 131 1530 127 1600 87C1557 214 1453 254 1370 256Z" />
-            <path d="M1510 0C1478 166 1534 266 1580 360C1620 230 1624 90 1510 0Z" />
-            <path d="M80 1000C-32 887 -53 692 0 547C124 676 157 823 80 1000Z" />
-            <path d="M80 1000C44 837 110 704 255 646C228 809 156 925 80 1000Z" />
-            <path d="M80 1000C125 867 220 824 347 786C294 927 197 992 80 1000Z" />
+          <g fill="#b6d7c5" fillOpacity="0.2">
+            <path d="M1460 1000C1350 850 1410 725 1560 662C1540 824 1505 930 1460 1000Z" />
+            <path d="M1460 1000C1305 995 1240 870 1230 790C1370 814 1450 900 1460 1000Z" />
+            <path d="M1460 1000C1500 860 1550 838 1600 800V1000Z" />
           </g>
           <g fill="none" stroke="#86b49a" strokeOpacity="0.16" strokeWidth="2">
-            <path d="M1510 0L1370 256M1600 87L1370 256M1510 0L1580 360M0 547L80 1000M255 646L80 1000M347 786L80 1000" />
+            <path d="M1560 662L1460 1000M1230 790L1460 1000M1600 800L1460 1000" />
           </g>
         </svg>
       )}
+      {presentation === 'access' && navigation}
       <div ref={containerRef} tabIndex={0}
         data-presentation={presentation}
         className={cn('ipnc-pin-card', embedded && 'auth-pin-panel')}
       >
-        <nav className="ipnc-pin-navigation" aria-label="Navegação do acesso">
-          <Button type="button" variant="ghost" onClick={onBack} disabled={loading} className="ipnc-pin-back">
-            <ArrowLeft aria-hidden="true" />Voltar
-          </Button>
-          <PublicHomeButton onClick={onHome} disabled={loading} className="ipnc-pin-home" />
-        </nav>
+        {presentation !== 'access' && navigation}
 
         <header className="ipnc-pin-heading">
-          {presentation === 'access' && <img className="ipnc-pin-logo" src={logoIpnc} alt="IPNC" width="1254" height="1254" />}
-          <span className="ipnc-pin-lock"><Lock aria-hidden="true" /></span>
+          <img className="ipnc-pin-logo" src={logoIpnc} alt="IPNC" width="1254" height="1254" />
           <h2>{profileLabel === 'Administrador' ? 'Acesso administrativo' : profileLabel}</h2>
           <p>Digite seu PIN de 6 dígitos</p>
         </header>
@@ -134,7 +137,7 @@ export default function PinPad({ profileLabel, onBack, onHome, onComplete, loadi
             {loading ? 'Verificando...' : 'Confirmar e entrar'}
           </Button>
         )}
-        {presentation === 'access' && <p className="ipnc-pin-help">Use o teclado numérico ou clique nos botões</p>}
+        {presentation !== 'compact' && <p className="ipnc-pin-help">Use o teclado numérico ou clique nos botões</p>}
       </div>
     </>
   );

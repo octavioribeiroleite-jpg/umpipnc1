@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock, BookOpen, Wallet } from 'lucide-react';
-import logoIpnc from '@/assets/logo-ipnc-entry.png';
+import logoIpnc from '@/assets/logo-ipnc.png';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import SocietySelector from '@/components/auth/SocietySelector';
@@ -552,8 +552,9 @@ export default function Auth() {
       <div className={`auth-content ${step === 'select' ? 'auth-content-select' : step === 'login' ? 'auth-content-form' : 'auth-content-flow'}`}>
         {step === 'select' && (
           <header className="auth-content-heading">
+            <span className="auth-mobile-lock"><Lock aria-hidden="true" /></span>
             <p className="auth-eyebrow">Bem-vindo à IPNC</p>
-            <h1>Como deseja acessar?</h1>
+            <h1><span className="auth-heading-desktop">Como deseja acessar?</span><span className="auth-heading-mobile">Escolha como acessar</span></h1>
             <p className="auth-intro">Escolha sua área para continuar.</p>
           </header>
         )}
@@ -585,7 +586,7 @@ export default function Auth() {
         ) : step === 'membro' && membroStep === 'societies' ? (
           <SocietySelector societies={societies} onBack={handleBack} onSelect={handleSelectMembroSociety} />
         ) : (
-          <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
+          <div className="auth-account-entry animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
             <PublicHomeButton onClick={handleReturnHome} disabled={isLoading} className="mb-3" />
             <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
               <CardHeader className="pb-2">
@@ -651,9 +652,23 @@ export default function Auth() {
   const isSocietySelection = !isEnteringApp && ((step === 'diretoria' && diretoriaStep === 'societies') || (step === 'membro' && membroStep === 'societies'));
   const isIdentityConfirmation = !isEnteringApp && ((step === 'diretoria' && diretoriaStep === 'name-confirm' && !!savedName) || (step === 'membro' && membroStep === 'name-confirm' && !!membroSavedName));
   const isPinEntry = !isEnteringApp && step === 'diretoria' && diretoriaStep === 'pin';
+  const isHomeEntry = !isEnteringApp && step === 'select';
+  const isAccountEntry = !isEnteringApp && step === 'login';
 
   return (
-    <div className={`auth-page ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''} ${isPinEntry ? 'auth-page-pin' : ''}`}>
+    <div className={`auth-page ${isHomeEntry ? 'auth-page-home' : ''} ${isAccountEntry ? 'auth-page-account' : ''} ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''} ${isPinEntry ? 'auth-page-pin' : ''}`}>
+      {(isHomeEntry || isAccountEntry) && <>
+        <svg className="auth-mobile-art auth-mobile-canopy" viewBox="0 0 390 240" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <defs><linearGradient id="auth-mobile-canopy" x1="0" y1="1" x2="1" y2="0"><stop stopColor="#b7d8c8" /><stop offset="1" stopColor="#07513e" /></linearGradient></defs>
+          <path d="M130 0H390V234C339 162 260 140 212 87C176 48 154 19 130 0Z" fill="url(#auth-mobile-canopy)" />
+          <g fill="#c0e2d0" fillOpacity=".2"><path d="M329 170C261 156 256 96 260 43C308 67 337 109 329 170Z" /><path d="M338 171C325 113 344 65 388 37C389 102 376 145 338 171Z" /></g>
+          <path d="M260 43L329 170M388 37L338 171" stroke="#d9eee2" strokeOpacity=".12" fill="none" />
+        </svg>
+        <svg className="auth-mobile-art auth-mobile-floor" viewBox="0 0 390 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <path d="M0 50C80 96 143 110 236 177C299 222 356 237 390 260H0Z" fill="#dfeee5" fillOpacity=".5" />
+          <g fill="#96c6ac" fillOpacity=".22"><path d="M5 260C-6 189 12 147 57 119C62 187 38 235 5 260Z" /><path d="M17 260C31 208 60 187 105 188C83 233 53 254 17 260Z" /></g>
+        </svg>
+      </>}
       <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
       <aside className="auth-brand-panel">
         <div className="auth-brand-content">
@@ -676,10 +691,12 @@ export default function Auth() {
         <div className="auth-update"><UpdateAvailableBanner /></div>
         <div className="auth-main-inner">
           {(step !== 'select' || isEnteringApp) && <h1 className="sr-only">{isEnteringApp ? 'Entrando no aplicativo IPNC' : step === 'login' ? 'Acesso administrativo' : step === 'diretoria' ? 'Acesso da diretoria' : 'Acesso IPNC'}</h1>}
+          {(isHomeEntry || isAccountEntry) && <img className="auth-mobile-logo" src={logoIpnc} alt="IPNC" width="1254" height="1254" />}
           {step === 'select' && !isEnteringApp && <p className="auth-values">Comunhão <span>·</span> Discipulado <span>·</span> Serviço <span>·</span> Missão</p>}
           {isIdentityConfirmation && <div className="auth-identity-brand"><img src={logoIpnc} alt="IPNC" width="1254" height="1254" /></div>}
           {renderContent()}
           <footer className={`auth-page-footer ${step !== 'select' ? 'auth-page-footer-flow' : ''}`}>
+            {(isHomeEntry || isAccountEntry) && <div className="auth-mobile-family"><div><BookOpen aria-hidden="true" /></div><p>Mais que uma igreja<br />uma família</p></div>}
             <p className="auth-copyright">© {new Date().getFullYear()} IPNC</p>
             {(step === 'select' || isSocietySelection) && !isEnteringApp && <p className="auth-footer-motto">{isSocietySelection ? 'Para a glória de Deus.' : 'Tudo para a glória de Deus.'}</p>}
           </footer>
