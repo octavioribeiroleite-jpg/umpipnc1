@@ -9,16 +9,16 @@
     <title>Renovo IPNC</title>
     <meta name="description" content="Sistema de gestão - Igreja Presbiteriana de Nova Carapina" />
     <meta name="author" content="IPNC" />
-    <meta name="theme-color" content="#123b2e" />
+    <meta name="theme-color" content="#f7fbf8" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Renovo IPNC" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-v4.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-v5.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32-v4.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=ipnc-v4" />
-    <link rel="manifest" href="/manifest.json?v=ipnc-v4" />
-    <link rel="preload" as="image" href="/images/bg-app.png" fetchpriority="high" />
+    <link rel="manifest" href="/manifest.json?v=ipnc-mobile-v5" />
+    <link rel="preload" as="image" href="/icons/icon-512x512-v5.png" fetchpriority="high" />
 
     <meta property="og:title" content="Renovo IPNC" />
     <meta property="og:description" content="Sistema de gestão - Igreja Presbiteriana de Nova Carapina" />
@@ -31,10 +31,15 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:image" content="https://renovo-ipnc.octavioribeiroleite.chatgpt.site/icons/ipnc-social-v4.png" />
     <meta name="twitter:image:alt" content="Logo oficial IPNC" />
+    <style>
+      html,body{margin:0;min-height:100%;background:#f7fbf8}
+      .ipnc-boot{min-height:100vh;min-height:100dvh;display:grid;place-items:center;background:radial-gradient(ellipse at 100% 0,#deeee4 0,transparent 55%),#f7fbf8}
+      .ipnc-boot img{display:block;width:min(200px,55vw);height:auto;object-fit:contain}
+    </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="ipnc-boot" role="status" aria-label="Carregando IPNC"><img src="/icons/icon-512x512-v5.png" alt="IPNC" width="200" height="200" /></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

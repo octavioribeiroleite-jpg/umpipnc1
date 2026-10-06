@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import vm from 'node:vm';
 
-function setup({ installed = false, ios = false, path = '/tesouraria?sociedade=fixture', age = 0, record = true } = {}) {
+function setup({ installed = false, mode = 'standalone', ios = false, path = '/tesouraria?sociedade=fixture', age = 0, record = true } = {}) {
   let now = Date.parse('2026-10-05T12:00:00Z');
   const cache = new Map();
   const load = name => {
@@ -34,7 +34,7 @@ function setup({ installed = false, ios = false, path = '/tesouraria?sociedade=f
     history: { state: { fixture: true }, replaceState(state, title, destination) {
       historyChanges.push(destination); location.href = new URL(destination, location).href;
     } },
-    matchMedia: () => ({ matches: installed }),
+    matchMedia: query => ({ matches: installed && query === `(display-mode: ${mode})` }),
     setInterval: callback => { const id = timers.size + 1; timers.set(id, callback); return id; },
     clearInterval: id => timers.delete(id),
   });
@@ -95,4 +95,20 @@ test('public home intent is explicit and never changes authorization', () => {
     { exports: module.exports, URLSearchParams });
   assert.equal(module.exports.requestsPublicHome('?home=1'), true);
   for (const search of ['', '?home=0', '?sociedade=fixture']) assert.equal(module.exports.requestsPublicHome(search), false);
+});
+
+
+test('fullscreen launch and resume preserve the home lifecycle without changing session credentials', () => {
+  const cold = setup({ installed: true, mode: 'fullscreen', record: false });
+  assert.deepEqual(cold.historyChanges, ['/auth?home=1']);
+  assert.ok(cold.localStorage.getItem(cold.lifecycle.APP_LIFECYCLE_STORAGE_KEY));
+  assert.equal(cold.localStorage.getItem('fixture-auth-session'), 'preserved');
+  cold.navigation.stop();
+  const live = setup({ installed: true, mode: 'fullscreen', age: 5 * 60_000 });
+  assert.deepEqual(live.historyChanges, []);
+  live.navigation.markMounted();
+  live.visibility('hidden'); live.advance(30 * 60_000); live.visibility('visible');
+  assert.deepEqual(live.reloads, ['/auth?home=1']);
+  assert.equal(live.localStorage.getItem('fixture-auth-session'), 'preserved');
+  live.navigation.stop();
 });

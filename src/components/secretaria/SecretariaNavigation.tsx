@@ -20,7 +20,7 @@ const destinations = [
 /** Navigation is presentation only; Secretaria owns sessions and view guards. */
 export function SecretariaNavigation({ admin, currentView, onView, onExit, children }: Props) {
   const items = destinations.filter(item => admin || !item.admin).map(item => ({ ...item, active: currentView === item.key, onClick: () => onView(item.key) }));
-  return <div className="ebd-navigation-shell">
+  return <div className="ebd-navigation-shell ipnc-navigation-layout ipnc-safe-managed">
     <a href="#ebd-main" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-card focus:p-3">Ir para o conteúdo</a>
     <aside className="ebd-sidebar">
       <button type="button" className="ebd-sidebar-brand" onClick={() => onView('home')} aria-label="Início da Secretaria"><img src={logoIpnc} alt="Marca IPNC" /><span>IPNC<small>Secretaria EBD</small></span></button>

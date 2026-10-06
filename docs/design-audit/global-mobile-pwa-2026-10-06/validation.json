@@ -1,0 +1,393 @@
+{
+  "date": "2026-10-06",
+  "baselineCommit": "a385fcf80efc68f48523f1771daaad49f9b103be",
+  "checks": {
+    "types": {
+      "command": "npx tsc -p tsconfig.app.json --noEmit",
+      "exitCode": 0
+    },
+    "tests": {
+      "command": "node --experimental-strip-types --test tests/*.mjs tests/*.ts",
+      "passed": 256,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "pwaTests": {
+      "command": "node --experimental-strip-types --test tests/pwa-install.test.mjs",
+      "passed": 15,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "build": {
+      "command": "npm run build",
+      "exitCode": 0,
+      "warnings": [
+        "Existing ineffective dynamic imports",
+        "Existing chunks larger than 500 kB",
+        "Existing SWC plugin recommendation"
+      ]
+    },
+    "diffCheck": {
+      "command": "git diff --check",
+      "exitCode": 0
+    },
+    "lint": {
+      "status": "preexisting failures remain; no new diagnostics",
+      "summary": {
+        "files": 42,
+        "errors": 37,
+        "warnings": 4,
+        "baselineErrors": 37,
+        "baselineWarnings": 4,
+        "newDiagnosticsFromPriorComparison": 0,
+        "countsChanged": []
+      },
+      "files": [
+        {
+          "file": "public/sw.js",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "scripts/treasury-ui-preview.mjs",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/App.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/PWAInstallPrompt.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/layout/AppLayout.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/layout/AppLoadingSplash.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/layout/AppShell.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/layout/BottomNav.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/layout/MobileHeader.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/layout/TabletNavigationRail.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/layout/useNavigationHeight.ts",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/membro/MembroLayout.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/pastor/PastorLayout.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/pastor/PastorMobileHeader.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/pastor/PastorSidebar.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/secretaria/PinPad.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/secretaria/ProfileSelect.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/secretaria/SecretariaNavigation.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/ui/alert-dialog.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/ui/card.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/ui/drawer.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/ui/fab.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/ui/sheet.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/components/ui/sonner.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "baselineErrors": 0,
+          "baselineWarnings": 1
+        },
+        {
+          "file": "src/components/ui/toast.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/lib/app-resume-navigation.ts",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/lib/app-shell-surface.ts",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/lib/pwa-display.ts",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/lib/pwaInstall.ts",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/lib/registerSW.ts",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/main.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/pages/Auth.tsx",
+          "errors": 1,
+          "warnings": 0,
+          "baselineErrors": 1,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/pages/PortalIgreja.tsx",
+          "errors": 9,
+          "warnings": 0,
+          "baselineErrors": 9,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/pages/Secretaria.tsx",
+          "errors": 13,
+          "warnings": 0,
+          "baselineErrors": 13,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "src/pages/VotePublic.tsx",
+          "errors": 14,
+          "warnings": 0,
+          "baselineErrors": 14,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "tests/app-resume-navigation.test.mjs",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "tests/app-shell-surface.test.ts",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "tests/fixtures/diretoria/main.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "baselineErrors": 0,
+          "baselineWarnings": 2
+        },
+        {
+          "file": "tests/fixtures/ebd-history.tsx",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "tests/fixtures/mobile-safe-area.ts",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "tests/pwa-install.test.mjs",
+          "errors": 0,
+          "warnings": 0,
+          "baselineErrors": 0,
+          "baselineWarnings": 0
+        },
+        {
+          "file": "tests/treasury-ui/app.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "baselineErrors": 0,
+          "baselineWarnings": 1
+        }
+      ]
+    }
+  },
+  "brand": {
+    "master": "src/assets/logo-ipnc.png",
+    "resolution": [
+      1254,
+      1254
+    ],
+    "sha256": "2df611f147250f6df0caeb189051cea1cd0748c05ed90bb752501125021f7081",
+    "bytePreserved": true,
+    "redrawn": false
+  },
+  "businessPreservation": {
+    "databaseChanged": false,
+    "supabaseChanged": false,
+    "permissionsChanged": false,
+    "authCriteriaChanged": false,
+    "existingRoutesChanged": false,
+    "packageLockChanged": false,
+    "realDataWritesForValidation": false
+  },
+  "browser": {
+    "measurements": {
+      "recordCount": 122,
+      "horizontalOverflowCases": 0,
+      "physicalPwaOpenCloseReopen": "not executed",
+      "nativeKeyboard": "not executed; focused form, Tab, scroll and 360x430 viewport checked",
+      "reducedMotion": "splash animation none; standard duration 0.3s",
+      "modalTheme": "dimmed #6f7170, restored #f8fbf8"
+    },
+    "nativeInstalledPwa": "NOT EXECUTED: no Android/iPhone, adb or usable iOS simulator available",
+    "screenshots": [
+      "account-font-200-reduced-height.png",
+      "diretoria-home-390-safe.png",
+      "diretoria-pin-390-safe.png",
+      "ebd-attendance-390-safe.png",
+      "ebd-landscape-safe-left-44.png",
+      "ebd-pin-390-safe.png",
+      "ebd-profile-390-safe.png",
+      "home-1440.png",
+      "home-390-safe.png",
+      "install-dialog-390-safe.png",
+      "pastor-390-safe.png",
+      "portal-390-safe.png",
+      "portal-menu-390-safe.png",
+      "society-selection-390-safe.png",
+      "splash-390-safe.png",
+      "treasury-dialog-390-safe.png"
+    ]
+  },
+  "publication": "Performed after committing this validated source; exact Git SHA and native Sites deployment revision are provided in the delivery message."
+}

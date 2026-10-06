@@ -1,10 +1,10 @@
 import { APP_HOME_PATH, hasDirectEntryIntent } from './app-home';
 import { APP_LIFECYCLE_STORAGE_KEY, createAppResumeHomeController } from './app-resume-home';
+import { isInstalledDisplayMode } from './pwa-display';
 
 export function startAppResumeHome(browser: Window, device: Navigator) {
   let mounted = false;
-  const installed = browser.matchMedia('(display-mode: standalone)').matches ||
-    Boolean((device as Navigator & { standalone?: boolean }).standalone);
+  const installed = isInstalledDisplayMode({ matchMedia: browser.matchMedia.bind(browser), navigator: device as Navigator & { standalone?: boolean } });
   // The first launch of this version has no lifecycle stamp from older releases.
   // An installed app starts at the public entry while direct links keep their intent.
   if (installed && !hasDirectEntryIntent(browser.location)) {

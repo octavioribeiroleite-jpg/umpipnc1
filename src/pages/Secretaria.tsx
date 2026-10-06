@@ -596,7 +596,7 @@ export default function Secretaria() {
 
     if (loginStep === 'name') {
       return (
-        <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-6 safe-top safe-bottom">
+        <div className="ipnc-safe-managed ipnc-safe-page-x min-h-[var(--app-viewport-height)] flex items-center justify-center bg-background px-4 py-6 safe-top safe-bottom">
           <div className="w-full max-w-sm mx-auto space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div className="flex flex-col items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => { setLoginStep('pin'); setPendingPin(''); }} className="self-start shrink-0" aria-label="Voltar ao PIN">

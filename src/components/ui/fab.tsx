@@ -12,7 +12,7 @@ export const FAB = forwardRef<HTMLButtonElement, FABProps>(
       <button
         ref={ref}
         className={cn(
-          'fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] right-4 z-40 flex items-center justify-center',
+          'fixed bottom-[calc(5rem_+_var(--safe-bottom))] right-[max(1rem,var(--safe-right))] z-40 flex items-center justify-center',
           'h-14 w-14 rounded-full bg-primary text-primary-foreground',
           'shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30',
           'transition-all duration-200 hover:scale-105 active:scale-95',

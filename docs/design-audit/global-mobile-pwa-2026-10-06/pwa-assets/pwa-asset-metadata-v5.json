@@ -1,0 +1,190 @@
+{
+  "compositions": {
+    "apple-touch-icon-v5.png": {
+      "art_alpha_bbox": [
+        4,
+        18,
+        176,
+        176
+      ],
+      "art_canvas_size": [
+        180,
+        180
+      ],
+      "canvas_size": [
+        180,
+        180
+      ],
+      "opaque_background": "#f7fbf8",
+      "placement": [
+        0,
+        0
+      ],
+      "resampling": "LANCZOS reduction only",
+      "upscale_applied": false
+    },
+    "icon-192x192-v5.png": {
+      "art_alpha_bbox": [
+        5,
+        20,
+        188,
+        190
+      ],
+      "art_canvas_size": [
+        192,
+        192
+      ],
+      "canvas_size": [
+        192,
+        192
+      ],
+      "opaque_background": null,
+      "placement": [
+        0,
+        0
+      ],
+      "resampling": "LANCZOS reduction only",
+      "upscale_applied": false
+    },
+    "icon-512x512-v5.png": {
+      "art_alpha_bbox": [
+        11,
+        55,
+        504,
+        508
+      ],
+      "art_canvas_size": [
+        512,
+        512
+      ],
+      "canvas_size": [
+        512,
+        512
+      ],
+      "opaque_background": null,
+      "placement": [
+        0,
+        0
+      ],
+      "resampling": "LANCZOS reduction only",
+      "upscale_applied": false
+    },
+    "icon-maskable-512x512-v5.png": {
+      "art_alpha_bbox": [
+        104,
+        131,
+        409,
+        413
+      ],
+      "art_canvas_size": [
+        320,
+        320
+      ],
+      "canvas_size": [
+        512,
+        512
+      ],
+      "opaque_background": "#f7fbf8",
+      "placement": [
+        96,
+        96
+      ],
+      "resampling": "LANCZOS reduction only",
+      "upscale_applied": false
+    }
+  },
+  "files": [
+    {
+      "dimensions": [
+        192,
+        192
+      ],
+      "filename": "icon-192x192-v5.png",
+      "mode": "RGBA",
+      "sha256": "b6666d1bb2a8438000780e6e7604df6421b20c62b5f2c5fafb46c5be7f69dcbd"
+    },
+    {
+      "dimensions": [
+        512,
+        512
+      ],
+      "filename": "icon-512x512-v5.png",
+      "mode": "RGBA",
+      "sha256": "b04f789d5733a162e9496a030e8098b2aaaa7ed38a07345f2a5d7dd520518fb8"
+    },
+    {
+      "dimensions": [
+        512,
+        512
+      ],
+      "filename": "icon-maskable-512x512-v5.png",
+      "mode": "RGB",
+      "sha256": "49c9aa4bd3bd2415cfe057c95a8e0d4afc7a0ae989694e6add34f81f4065162b"
+    },
+    {
+      "dimensions": [
+        180,
+        180
+      ],
+      "filename": "apple-touch-icon-v5.png",
+      "mode": "RGB",
+      "sha256": "5f8ea51762adf85aba17c2f1f182f457dd2724ea32b270318729622a9991dd78"
+    }
+  ],
+  "maskable": {
+    "alpha_bbox": [
+      104,
+      131,
+      409,
+      413
+    ],
+    "complete_art_inside_safe_circle": true,
+    "launcher_shapes": {
+      "circle": {
+        "artwork_pixels_clipped": false
+      },
+      "rounded": {
+        "artwork_pixels_clipped": false
+      },
+      "squircle": {
+        "artwork_pixels_clipped": false
+      }
+    },
+    "maximum_artwork_pixel_corner_radius": 198.0353503796734,
+    "safe_circle_center": [
+      256,
+      256
+    ],
+    "safe_circle_radius": 204.8,
+    "safe_radius_margin": 6.764649620326622
+  },
+  "pillow_version": "12.3.0",
+  "pipeline": "scripts/generate-pwa-assets-v5.py",
+  "processing": {
+    "complete_source_canvas_preserved": true,
+    "crop_applied": false,
+    "png_encoding": "lossless",
+    "recolor_applied": false,
+    "redraw_applied": false,
+    "source_master_modified": false,
+    "upscale_applied": false
+  },
+  "source": {
+    "alpha_bbox": [
+      0,
+      4,
+      1238,
+      1254
+    ],
+    "alpha_range": [
+      0,
+      255
+    ],
+    "filename": "logo-ipnc.png",
+    "sha256": "2df611f147250f6df0caeb189051cea1cd0748c05ed90bb752501125021f7081",
+    "size": [
+      1254,
+      1254
+    ]
+  }
+}

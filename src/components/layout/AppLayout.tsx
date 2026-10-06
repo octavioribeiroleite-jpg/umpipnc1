@@ -60,15 +60,15 @@ export function AppLayout({ children, width = 'standard', variant = 'default' }:
   ];
 
   return (
-    <div className={`app-page min-h-screen${variant === 'dashboard' ? ' diretoria-dashboard-shell' : ''}`}>
+    <div className={`app-page ipnc-navigation-layout ipnc-safe-managed min-h-[var(--app-viewport-height)]${variant === 'dashboard' ? ' diretoria-dashboard-shell' : ''}`}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3 focus:text-primary focus:shadow-lg">Pular para o conteúdo</a>
       <ExitConfirmDialog open={exitOpen} onOpenChange={setExitOpen} onConfirm={async () => { await signOut(); navigate('/auth'); }} />
       {/* Keep one content tree: CSS-hidden copies still mount effects and channels. */}
-      <div className="min-h-screen min-w-0 min-[700px]:flex min-[700px]:h-screen min-[700px]:overflow-hidden">
+      <div className="min-h-[var(--app-viewport-height)] min-w-0 min-[700px]:flex min-[700px]:h-[var(--app-viewport-height)] min-[700px]:overflow-hidden">
         <div className="min-[700px]:hidden"><MobileHeader /></div>
         <div className="hidden min-[700px]:flex min-[1100px]:hidden"><TabletNavigationRail /></div>
         <div className="hidden min-[1100px]:flex"><AppSidebar /></div>
-        <main id="main-content" tabIndex={-1} className="safe-bottom-content min-w-0 flex-1 bg-background px-page-x pt-mobile-header min-[700px]:overflow-y-auto min-[700px]:pb-0 min-[700px]:pt-0">
+        <main id="main-content" tabIndex={-1} className="safe-bottom-content ipnc-safe-page-x min-w-0 flex-1 bg-background pt-mobile-header min-[700px]:overflow-y-auto min-[700px]:pb-0 min-[700px]:pt-0">
           <OfflineBanner />
           <PullToRefresh>
             <div className="mx-auto w-full min-w-0 py-4 min-[700px]:py-6" style={{ maxWidth: width === 'wide' ? '85rem' : width === 'reading' ? '48rem' : 'var(--content-max-width)' }}>

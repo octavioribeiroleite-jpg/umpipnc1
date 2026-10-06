@@ -1,0 +1,4780 @@
+{
+  "date": "2026-10-06",
+  "physicalDevice": false,
+  "installationFlowExecuted": false,
+  "nativeKeyboardExecuted": false,
+  "method": "Isolated real React UI; read-only DOM geometry, browser screenshots, CDP viewport/reduced motion. Insets and identities are fixture-only.",
+  "syntheticInsets": {
+    "portrait": {
+      "top": 44,
+      "right": 18,
+      "bottom": 34,
+      "left": 18
+    },
+    "landscape": {
+      "top": 0,
+      "right": 0,
+      "bottom": 21,
+      "left": 44
+    }
+  },
+  "mobileDimensions": [
+    [
+      360,
+      800
+    ],
+    [
+      360,
+      780
+    ],
+    [
+      375,
+      812
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      393,
+      873
+    ],
+    [
+      412,
+      915
+    ],
+    [
+      430,
+      932
+    ]
+  ],
+  "records": [
+    {
+      "family": "/",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7faf4",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/reunioes",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Reuniões",
+      "url": "/__diretoria/reunioes?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/reunioes/nova",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Nova Reunião",
+      "url": "/__diretoria/reunioes/nova?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/reunioes/meeting",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Planejamento das atividades e encontro de famílias",
+      "url": "/__diretoria/reunioes/meeting?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/tarefas",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Tarefas",
+      "url": "/__diretoria/tarefas?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/calendario",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Calendário",
+      "url": "/__diretoria/calendario?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/financas",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 113,
+            "height": 113,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Finanças da Diretoria",
+      "url": "/__diretoria/financas?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/camisas",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Camisas",
+      "url": "/__diretoria/camisas?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/arquivos",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Arquivos",
+      "url": "/__diretoria/arquivos?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/configuracoes",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Configurações",
+      "url": "/__diretoria/configuracoes?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/usuarios",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Gestão de Usuários",
+      "url": "/__diretoria/usuarios?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/plenarias",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Plenárias",
+      "url": "/__diretoria/plenarias?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/plenarias/plenary",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Plenária de planejamento — exemplo",
+      "url": "/__diretoria/plenarias/plenary?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/comunicados",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 113,
+            "height": 113,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Comunicados",
+      "url": "/__diretoria/comunicados?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/eleicoes",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Eleições",
+      "url": "/__diretoria/eleicoes?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/eleicoes/election",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Eleição da diretoria — exemplo",
+      "url": "/__diretoria/eleicoes/election?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/estudos",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Estudos",
+      "url": "/__diretoria/estudos?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/aniversariantes",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Aniversariantes",
+      "url": "/__diretoria/aniversariantes?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/pastor",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/pastor/sociedade/ump",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "União de Jovens — Exemplo",
+      "url": "/__diretoria/pastor/sociedade/ump?role=pastor&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/pastor/calendario",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Calendário unificado",
+      "url": "/__diretoria/pastor/calendario?role=pastor&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/pastor/comunicados",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Comunicados",
+      "url": "/__diretoria/pastor/comunicados?role=pastor&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/pastor/sugestoes",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Sugestões",
+      "url": "/__diretoria/pastor/sugestoes?role=pastor&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/pastor-sugestoes",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Sugestões",
+      "url": "/__diretoria/pastor-sugestoes?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/sugestoes",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Sugestões",
+      "url": "/__diretoria/sugestoes?role=diretoria&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/dizimos",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Dízimos e ofertas",
+      "url": "/__diretoria/dizimos?role=pastor&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/visitantes",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Visitantes",
+      "url": "/__diretoria/visitantes?role=pastor&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/reset-password",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "44px 18px 34px",
+      "theme": "#f7fbf8",
+      "title": "",
+      "url": "/__diretoria/reset-password?role=anonymous&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/membro",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "44px 18px 34px",
+      "theme": "#f7fbf8",
+      "title": "Portal dos membros ainda não liberado",
+      "url": "/__diretoria/membro?role=anonymous&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/vote/election",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "44px 18px 34px",
+      "theme": "#f7fbf8",
+      "title": "Eleição da diretoria — exemplo",
+      "url": "/__diretoria/vote/election?role=anonymous&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/eleicao/election/apresentar",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "44px 18px 34px",
+      "theme": "#f7fbf8",
+      "title": "Eleição da diretoria — exemplo",
+      "url": "/__diretoria/eleicao/election/apresentar?role=anonymous&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "/not-found",
+      "physicalDevice": false,
+      "phase": "final",
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "44px 18px 34px",
+      "theme": "#f7fbf8",
+      "title": "Página não encontrada",
+      "url": "/__diretoria/not-found?role=anonymous&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "home",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Como deseja acessar?Escolha como acessar",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "home",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Como deseja acessar?Escolha como acessar",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "home",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 375,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Como deseja acessar?Escolha como acessar",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "home",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Como deseja acessar?Escolha como acessar",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "home",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 393,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Como deseja acessar?Escolha como acessar",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "home",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 412,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Como deseja acessar?Escolha como acessar",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "home",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 430,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Como deseja acessar?Escolha como acessar",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "diretoria",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            766,
+            766,
+            766,
+            766
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 800,
+            "height": 99,
+            "left": 0,
+            "right": 360,
+            "top": 701,
+            "width": 360,
+            "x": 0,
+            "y": 701
+          }
+        }
+      ],
+      "documentWidth": 360,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 360,
+            "top": 0,
+            "width": 360,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7faf4",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0&safe=1",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "diretoria",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            746,
+            746,
+            746,
+            746
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 780,
+            "height": 99,
+            "left": 0,
+            "right": 360,
+            "top": 681,
+            "width": 360,
+            "x": 0,
+            "y": 681
+          }
+        }
+      ],
+      "documentWidth": 360,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 360,
+            "top": 0,
+            "width": 360,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7faf4",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0&safe=1",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "diretoria",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            778,
+            778,
+            778,
+            778
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 812,
+            "height": 99,
+            "left": 0,
+            "right": 375,
+            "top": 713,
+            "width": 375,
+            "x": 0,
+            "y": 713
+          }
+        }
+      ],
+      "documentWidth": 375,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 375,
+            "top": 0,
+            "width": 375,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7faf4",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0&safe=1",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "diretoria",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7faf4",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "diretoria",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            839,
+            839,
+            839,
+            839
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 873,
+            "height": 99,
+            "left": 0,
+            "right": 393,
+            "top": 774,
+            "width": 393,
+            "x": 0,
+            "y": 774
+          }
+        }
+      ],
+      "documentWidth": 393,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 393,
+            "top": 0,
+            "width": 393,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7faf4",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0&safe=1",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "diretoria",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            881,
+            881,
+            881,
+            881
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 915,
+            "height": 99,
+            "left": 0,
+            "right": 412,
+            "top": 816,
+            "width": 412,
+            "x": 0,
+            "y": 816
+          }
+        }
+      ],
+      "documentWidth": 412,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 412,
+            "top": 0,
+            "width": 412,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7faf4",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0&safe=1",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "diretoria",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            898,
+            898,
+            898,
+            898
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 932,
+            "height": 99,
+            "left": 0,
+            "right": 430,
+            "top": 833,
+            "width": 430,
+            "x": 0,
+            "y": 833
+          }
+        }
+      ],
+      "documentWidth": 430,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 430,
+            "top": 0,
+            "width": 430,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7faf4",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0&safe=1",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "pastor",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            766,
+            766,
+            766,
+            766
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 800,
+            "height": 99,
+            "left": 0,
+            "right": 360,
+            "top": 701,
+            "width": 360,
+            "x": 0,
+            "y": 701
+          }
+        }
+      ],
+      "documentWidth": 360,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 360,
+            "top": 0,
+            "width": 360,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0&safe=1",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "pastor",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            746,
+            746,
+            746,
+            746
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 780,
+            "height": 99,
+            "left": 0,
+            "right": 360,
+            "top": 681,
+            "width": 360,
+            "x": 0,
+            "y": 681
+          }
+        }
+      ],
+      "documentWidth": 360,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 360,
+            "top": 0,
+            "width": 360,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0&safe=1",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "pastor",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            778,
+            778,
+            778,
+            778
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 812,
+            "height": 99,
+            "left": 0,
+            "right": 375,
+            "top": 713,
+            "width": 375,
+            "x": 0,
+            "y": 713
+          }
+        }
+      ],
+      "documentWidth": 375,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 375,
+            "top": 0,
+            "width": 375,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0&safe=1",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "pastor",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "pastor",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            839,
+            839,
+            839,
+            839
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 873,
+            "height": 99,
+            "left": 0,
+            "right": 393,
+            "top": 774,
+            "width": 393,
+            "x": 0,
+            "y": 774
+          }
+        }
+      ],
+      "documentWidth": 393,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 393,
+            "top": 0,
+            "width": 393,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0&safe=1",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "pastor",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            881,
+            881,
+            881,
+            881
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 915,
+            "height": 99,
+            "left": 0,
+            "right": 412,
+            "top": 816,
+            "width": 412,
+            "x": 0,
+            "y": 816
+          }
+        }
+      ],
+      "documentWidth": 412,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 412,
+            "top": 0,
+            "width": 412,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0&safe=1",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "pastor",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            898,
+            898,
+            898,
+            898
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 932,
+            "height": 99,
+            "left": 0,
+            "right": 430,
+            "top": 833,
+            "width": 430,
+            "x": 0,
+            "y": 833
+          }
+        }
+      ],
+      "documentWidth": 430,
+      "header": [
+        {
+          "padding": "44px 0px 0px",
+          "rect": {
+            "bottom": 109,
+            "height": 109,
+            "left": 0,
+            "right": 430,
+            "top": 0,
+            "width": 430,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0&safe=1",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "treasury",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/?safe=1",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "treasury",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/?safe=1",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "treasury",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 375,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/?safe=1",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "treasury",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/?safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "treasury",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 393,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/?safe=1",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "treasury",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 412,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/?safe=1",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "treasury",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 430,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/?safe=1",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "ebd",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            766,
+            766,
+            766
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 800,
+            "height": 99,
+            "left": 0,
+            "right": 360,
+            "top": 701,
+            "width": 360,
+            "x": 0,
+            "y": 701
+          }
+        }
+      ],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "ebd",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            746,
+            746,
+            746
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 780,
+            "height": 99,
+            "left": 0,
+            "right": 360,
+            "top": 681,
+            "width": 360,
+            "x": 0,
+            "y": 681
+          }
+        }
+      ],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "ebd",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            778,
+            778,
+            778
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 812,
+            "height": 99,
+            "left": 0,
+            "right": 375,
+            "top": 713,
+            "width": 375,
+            "x": 0,
+            "y": 713
+          }
+        }
+      ],
+      "documentWidth": 375,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "ebd",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "ebd",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            839,
+            839,
+            839
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 873,
+            "height": 99,
+            "left": 0,
+            "right": 393,
+            "top": 774,
+            "width": 393,
+            "x": 0,
+            "y": 774
+          }
+        }
+      ],
+      "documentWidth": 393,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "ebd",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            881,
+            881,
+            881
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 915,
+            "height": 99,
+            "left": 0,
+            "right": 412,
+            "top": 816,
+            "width": 412,
+            "x": 0,
+            "y": 816
+          }
+        }
+      ],
+      "documentWidth": 412,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "ebd",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            898,
+            898,
+            898
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 932,
+            "height": 99,
+            "left": 0,
+            "right": 430,
+            "top": 833,
+            "width": 430,
+            "x": 0,
+            "y": 833
+          }
+        }
+      ],
+      "documentWidth": 430,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "portal",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            766,
+            766,
+            766,
+            766
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 800,
+            "height": 107,
+            "left": 0,
+            "right": 360,
+            "top": 693,
+            "width": 360,
+            "x": 0,
+            "y": 693
+          }
+        }
+      ],
+      "documentWidth": 360,
+      "header": [
+        {
+          "padding": "44px 18px 0px",
+          "rect": {
+            "bottom": 117,
+            "height": 117,
+            "left": 0,
+            "right": 360,
+            "top": 0,
+            "width": 360,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "portal",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            746,
+            746,
+            746,
+            746
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 780,
+            "height": 107,
+            "left": 0,
+            "right": 360,
+            "top": 673,
+            "width": 360,
+            "x": 0,
+            "y": 673
+          }
+        }
+      ],
+      "documentWidth": 360,
+      "header": [
+        {
+          "padding": "44px 18px 0px",
+          "rect": {
+            "bottom": 117,
+            "height": 117,
+            "left": 0,
+            "right": 360,
+            "top": 0,
+            "width": 360,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "portal",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            778,
+            778,
+            778,
+            778
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 812,
+            "height": 107,
+            "left": 0,
+            "right": 375,
+            "top": 705,
+            "width": 375,
+            "x": 0,
+            "y": 705
+          }
+        }
+      ],
+      "documentWidth": 375,
+      "header": [
+        {
+          "padding": "44px 18px 0px",
+          "rect": {
+            "bottom": 117,
+            "height": 117,
+            "left": 0,
+            "right": 375,
+            "top": 0,
+            "width": 375,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "portal",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 107,
+            "left": 0,
+            "right": 390,
+            "top": 737,
+            "width": 390,
+            "x": 0,
+            "y": 737
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [
+        {
+          "padding": "44px 18px 0px",
+          "rect": {
+            "bottom": 117,
+            "height": 117,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "portal",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            839,
+            839,
+            839,
+            839
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 873,
+            "height": 107,
+            "left": 0,
+            "right": 393,
+            "top": 766,
+            "width": 393,
+            "x": 0,
+            "y": 766
+          }
+        }
+      ],
+      "documentWidth": 393,
+      "header": [
+        {
+          "padding": "44px 18px 0px",
+          "rect": {
+            "bottom": 117,
+            "height": 117,
+            "left": 0,
+            "right": 393,
+            "top": 0,
+            "width": 393,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "portal",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            881,
+            881,
+            881,
+            881
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 915,
+            "height": 99,
+            "left": 0,
+            "right": 412,
+            "top": 816,
+            "width": 412,
+            "x": 0,
+            "y": 816
+          }
+        }
+      ],
+      "documentWidth": 412,
+      "header": [
+        {
+          "padding": "44px 18px 0px",
+          "rect": {
+            "bottom": 117,
+            "height": 117,
+            "left": 0,
+            "right": 412,
+            "top": 0,
+            "width": 412,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "portal",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            898,
+            898,
+            898,
+            898
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 932,
+            "height": 99,
+            "left": 0,
+            "right": 430,
+            "top": 833,
+            "width": 430,
+            "x": 0,
+            "y": 833
+          }
+        }
+      ],
+      "documentWidth": 430,
+      "header": [
+        {
+          "padding": "44px 18px 0px",
+          "rect": {
+            "bottom": 117,
+            "height": 117,
+            "left": 0,
+            "right": 430,
+            "top": 0,
+            "width": 430,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#ffffff",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "portal-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 768,
+      "header": [
+        {
+          "padding": "44px 24px 0px",
+          "rect": {
+            "bottom": 113,
+            "height": 113,
+            "left": 94,
+            "right": 768,
+            "top": 0,
+            "width": 674,
+            "x": 94,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        768,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": false,
+        "containers": []
+      }
+    },
+    {
+      "family": "portal-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1024,
+      "header": [
+        {
+          "padding": "44px 24px 0px",
+          "rect": {
+            "bottom": 113,
+            "height": 113,
+            "left": 94,
+            "right": 1024,
+            "top": 0,
+            "width": 930,
+            "x": 94,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        1024,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": false,
+        "containers": []
+      }
+    },
+    {
+      "family": "portal-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1440,
+      "header": [
+        {
+          "padding": "44px 32px 0px",
+          "rect": {
+            "bottom": 113,
+            "height": 113,
+            "left": 242,
+            "right": 1440,
+            "top": 0,
+            "width": 1198,
+            "x": 242,
+            "y": 0
+          }
+        }
+      ],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Bem-vindo à nossa comunidade, Visitante!",
+      "url": "/__diretoria/igreja?role=anonymous&controls=0&safe=1&portal=return",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": false,
+        "containers": []
+      }
+    },
+    {
+      "family": "diretoria-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 768,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7fbf8",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0",
+      "viewport": [
+        768,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": false,
+        "containers": [
+          {
+            "class": "safe-bottom-content ipnc-safe-page-x min-w-0 flex-1 bg-background pt-mobile-header min-[700px]:overflow-y-auto min-[700px]:pb-0 min-[700px]:pt-0",
+            "height": 1000,
+            "overflowY": "auto",
+            "scrollHeight": 1965,
+            "tag": "MAIN"
+          }
+        ]
+      }
+    },
+    {
+      "family": "diretoria-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1024,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7fbf8",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0",
+      "viewport": [
+        1024,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": false,
+        "containers": [
+          {
+            "class": "safe-bottom-content ipnc-safe-page-x min-w-0 flex-1 bg-background pt-mobile-header min-[700px]:overflow-y-auto min-[700px]:pb-0 min-[700px]:pt-0",
+            "height": 1000,
+            "overflowY": "auto",
+            "scrollHeight": 1956,
+            "tag": "MAIN"
+          }
+        ]
+      }
+    },
+    {
+      "family": "diretoria-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1440,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9faf3",
+      "title": "Bom dia, Maria!",
+      "url": "/__diretoria/?role=admin&controls=0",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": false,
+        "containers": [
+          {
+            "class": "safe-bottom-content ipnc-safe-page-x min-w-0 flex-1 bg-background pt-mobile-header min-[700px]:overflow-y-auto min-[700px]:pb-0 min-[700px]:pt-0",
+            "height": 1000,
+            "overflowY": "auto",
+            "scrollHeight": 1405,
+            "tag": "MAIN"
+          }
+        ]
+      }
+    },
+    {
+      "family": "pastor-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 753,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0",
+      "viewport": [
+        768,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "pastor-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1009,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0",
+      "viewport": [
+        1024,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "pastor-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1425,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Bom dia, Maria",
+      "url": "/__diretoria/pastor?role=pastor&controls=0",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "ebd-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 753,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        768,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "ebd-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1009,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        1024,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "ebd-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1425,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "treasury-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 753,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/",
+      "viewport": [
+        768,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "treasury-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1009,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/",
+      "viewport": [
+        1024,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "treasury-tablet-desktop",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 1425,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fff2c6",
+      "title": "Caixa da UMP",
+      "url": "/",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scroll": {
+        "bodyOverflow": true,
+        "containers": []
+      }
+    },
+    {
+      "family": "ebd-profile",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Secretaria EBD",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "ebd-profile",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Secretaria EBD",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "ebd-profile",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 375,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Secretaria EBD",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "ebd-profile",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Secretaria EBD",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "ebd-profile",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 393,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Secretaria EBD",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "ebd-profile",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 412,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Secretaria EBD",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "ebd-profile",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 430,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f8fbf8",
+      "title": "Secretaria EBD",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "ebd-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "ebd-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "ebd-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 375,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "ebd-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "ebd-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 393,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "ebd-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 412,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "ebd-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 430,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "",
+      "url": "/tests/fixtures/ebd-back.html?entry=1&safe=1",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "diretoria-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "diretoria-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "diretoria-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 375,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "diretoria-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "diretoria-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 393,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "diretoria-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 412,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "diretoria-pin",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 430,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f9fcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "society-selection",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fafcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        360,
+        800
+      ]
+    },
+    {
+      "family": "society-selection",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fafcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "family": "society-selection",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 375,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fafcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        375,
+        812
+      ]
+    },
+    {
+      "family": "society-selection",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fafcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "society-selection",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 393,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fafcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        393,
+        873
+      ]
+    },
+    {
+      "family": "society-selection",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 412,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fafcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        412,
+        915
+      ]
+    },
+    {
+      "family": "society-selection",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 430,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fafcf9",
+      "title": "Acesso da diretoria",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        430,
+        932
+      ]
+    },
+    {
+      "family": "account-font-200-reduced-height",
+      "phase": "final",
+      "physicalDevice": false,
+      "nativeKeyboard": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 360,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#fdfefd",
+      "title": "Acesso administrativo",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        360,
+        430
+      ]
+    },
+    {
+      "family": "loading-splash",
+      "phase": "final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7fbf8",
+      "title": "",
+      "url": "/__diretoria/pastor?role=pastor&state=loading&controls=0&safe=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "install-dialog",
+      "phase": "final",
+      "physicalDevice": false,
+      "installationExecuted": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#6f7170",
+      "title": "Como deseja acessar?Escolha como acessar",
+      "url": "/__diretoria/auth?home=1",
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "family": "ebd-attendance-final",
+      "physicalDevice": false,
+      "fixtureOnly": true,
+      "bodyPadding": "0px",
+      "bottom": [
+        {
+          "controls": [
+            810,
+            810,
+            810
+          ],
+          "padding": "0px 0px 34px",
+          "rect": {
+            "bottom": 844,
+            "height": 99,
+            "left": 0,
+            "right": 390,
+            "top": 745,
+            "width": 390,
+            "x": 0,
+            "y": 745
+          }
+        }
+      ],
+      "documentWidth": 390,
+      "header": [],
+      "safe": [
+        "44px",
+        "18px",
+        "34px",
+        "18px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#f7fbf8",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        390,
+        844
+      ],
+      "phase": "final"
+    },
+    {
+      "family": "ebd-landscape-final",
+      "physicalDevice": false,
+      "bodyPadding": "0px",
+      "bottom": [],
+      "documentWidth": 844,
+      "header": [],
+      "safe": [
+        "0px",
+        "0px",
+        "21px",
+        "44px"
+      ],
+      "stagePadding": "0px",
+      "theme": "#12372a",
+      "title": "Chamada",
+      "url": "/tests/fixtures/ebd-back.html?view=chamada&class=new",
+      "viewport": [
+        844,
+        390
+      ],
+      "phase": "final"
+    }
+  ],
+  "summary": {
+    "recordCount": 122,
+    "horizontalOverflowCases": 0,
+    "physicalPwaOpenCloseReopen": "not executed",
+    "nativeKeyboard": "not executed; focused form, Tab, scroll and 360x430 viewport checked",
+    "reducedMotion": "splash animation none; standard duration 0.3s",
+    "modalTheme": "dimmed #6f7170, restored #f8fbf8"
+  }
+}

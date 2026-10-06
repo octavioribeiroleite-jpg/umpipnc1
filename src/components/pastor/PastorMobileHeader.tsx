@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -7,30 +7,21 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { InstallButton } from '@/components/layout/InstallButton';
+import { useNavigationHeight } from '@/components/layout/useNavigationHeight';
 
 export function PastorMobileHeader() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   useSwipeBack();
-  const headerRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const header = headerRef.current;
-    const shell = header?.closest<HTMLElement>('.ipnc-pastor-layout');
-    if (!header || !shell) return;
-    const measure = () => shell.style.setProperty('--mobile-header-height', `${header.getBoundingClientRect().height}px`);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(header);
-    return () => { observer.disconnect(); shell.style.removeProperty('--mobile-header-height'); };
-  }, []);
-
+  const headerContentRef = useRef<HTMLDivElement>(null);
+  useNavigationHeight(headerContentRef, '--mobile-header-content-height');
 
   const isPastorHome = location.pathname === '/pastor';
 
   return (
-    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-card safe-top">
-      <div className="flex items-center justify-between min-h-[64px] py-2 px-3 sm:px-4 gap-2">
+    <header className="ipnc-mobile-header fixed top-0 left-0 right-0 z-50 border-b border-border bg-card">
+      <div ref={headerContentRef} className="ipnc-mobile-header-content ipnc-safe-page-x flex items-center justify-between min-h-16 py-2 gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           {!isPastorHome && (
             <button

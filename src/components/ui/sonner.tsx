@@ -9,6 +9,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
+      offset={{ top: 'calc(1rem + var(--safe-top))', right: 'calc(1rem + var(--safe-right))', bottom: 'calc(1rem + var(--app-bottom-overlay-height, var(--safe-bottom)))', left: 'calc(1rem + var(--safe-left))' }}
+      mobileOffset={{ top: 'calc(1rem + var(--safe-top))', right: 'calc(1rem + var(--safe-right))', bottom: 'calc(1rem + var(--app-bottom-overlay-height, var(--safe-bottom)))', left: 'calc(1rem + var(--safe-left))' }}
       className="toaster group"
       toastOptions={{
         classNames: {

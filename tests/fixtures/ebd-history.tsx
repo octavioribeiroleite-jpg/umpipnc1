@@ -4,8 +4,11 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 import { buildDayRoster } from '../../src/lib/ebd-roster';
+import AppShell from '../../src/components/layout/AppShell';
+import { applyFixtureSafeAreas } from './mobile-safe-area';
 import '../../src/index.css';
 import '../../src/interface-system.css';
+applyFixtureSafeAreas();
 if (new URLSearchParams(location.search).get('font') === '200') document.documentElement.style.fontSize = '32px';
 const date = '2026-09-20';
 const classes = [
@@ -93,14 +96,19 @@ if (location.pathname.includes('ebd-back') || location.pathname === '/secretaria
     saveStoredEbdSession({ accessLevel:role, professorNome:role==='professor'?'Professor fictício':undefined, professorClassId:role==='professor'?'new':undefined, birthdayAiToken:'synthetic', birthdayAiExpiresAt:new Date(Date.now()+3600000).toISOString() });
     localStorage.setItem('ebd-test-initialized-design-v1','yes');
   }
-  createRoot(document.getElementById('root')!).render(<QueryClientProvider client={new QueryClient()}><BrowserRouter><AccessProvider>
+  // Load the shell foundation after the real page's own CSS.
+  await import('../../src/mobile-app-shell.css');
+  createRoot(document.getElementById('root')!).render(<AppShell><QueryClientProvider client={new QueryClient()}><BrowserRouter><AccessProvider>
     <Routes><Route path="/auth" element={<h1>Login do teste — saída confirmada</h1>}/><Route path="/" element={<h1>Área principal protegida — nunca deve montar após falha</h1>}/><Route path="*" element={<Secretaria/>}/></Routes>
     <aside className="bg-white border p-2 flex flex-wrap gap-2"><button onClick={()=>window.dispatchEvent(new Event("ebd-session-expired"))}>Simular confirmação de acesso</button><button onClick={()=>history.back()}>Voltar nativo (teste)</button><button onClick={()=>location.reload()}>Recarregar (teste)</button></aside>
     <Toaster/>
-  </AccessProvider></BrowserRouter></QueryClientProvider>);
-} else createRoot(document.getElementById('root')!).render(<>
+  </AccessProvider></BrowserRouter></QueryClientProvider></AppShell>);
+} else {
+  await import('../../src/mobile-app-shell.css');
+  createRoot(document.getElementById('root')!).render(<AppShell>
   <header className="fixed inset-x-0 top-0 z-30 border-b bg-background px-4 py-3"><strong>Histórico</strong><p className="text-xs text-muted-foreground">Ambiente de teste · {role==='admin'?'Administrador':'Professor'}</p></header>
   <main className="mx-auto max-w-3xl px-4 pb-8 pt-20"><HistoricoTab classes={classes} students={students.filter(s=>s.active)} accessLevel={role}/></main>
   <aside className="m-4 rounded border p-3 text-xs"><p>Controles do teste local</p><button className="p-2 underline" onClick={()=>{failNext=true;document.getElementById('test-output')!.textContent='Falha preparada';}}>Simular próxima falha</button><button className="p-2 underline" onClick={()=>{closeDay(date);window.dispatchEvent(new Event('ebd-data-changed'));}}>Simular fechamento remoto</button><button className="p-2 underline" onClick={()=>{document.getElementById('test-output')!.textContent=JSON.stringify(attendance);}}>Conferir dados simulados</button><output id="test-output" className="block break-all"/></aside>
   <Toaster />
-</>);
+</AppShell>);
+}

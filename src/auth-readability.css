@@ -160,10 +160,10 @@
   .auth-mobile-floor { bottom: 0; height: 260px; }
   .auth-page:is(.auth-page-home, .auth-page-account) .auth-brand-panel { display: contents; }
   .auth-page:is(.auth-page-home, .auth-page-account) .auth-brand-content { display: none; }
-  .auth-page:is(.auth-page-home, .auth-page-account) .auth-brand-bottom { order: 2; margin: 0; padding: 0 20px max(28px, env(safe-area-inset-bottom)); text-align: center; }
+  .auth-page:is(.auth-page-home, .auth-page-account) .auth-brand-bottom { order: 2; margin: 0; padding: 0 20px max(28px, var(--safe-bottom, 0px)); text-align: center; }
   .auth-page:is(.auth-page-home, .auth-page-account) .auth-brand-install > button { color: #245a43; border-color: #b8d1c3; background: #eff7f2; font-size: .875rem; box-shadow: none; backdrop-filter: none; }
   .auth-page:is(.auth-page-home, .auth-page-account) .auth-brand-install > button:focus-visible { outline: 3px solid #18774f; outline-offset: 4px; }
-  .auth-page:is(.auth-page-home, .auth-page-account) .auth-main { order: 1; width: 100%; padding: calc(64px + env(safe-area-inset-top)) 20px 24px; }
+  .auth-page:is(.auth-page-home, .auth-page-account) .auth-main { order: 1; width: 100%; padding: calc(64px + var(--safe-top, 0px)) 20px 24px; }
   .auth-page:is(.auth-page-home, .auth-page-account) .auth-main-inner { max-width: 480px; }
   .auth-page:is(.auth-page-home, .auth-page-account) .auth-mobile-logo { display: block; width: 180px; height: 180px; max-width: 70%; object-fit: contain; margin: 8px auto 20px; }
   .auth-page:is(.auth-page-home, .auth-page-account) .auth-update { top: 12px; right: 16px; color: #fff; }

@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
+import AppShell from "./components/layout/AppShell";
 import SocietyScreenEnhancer from "./components/auth/SocietyScreenEnhancer";
 import IdentityConfirmationEnhancer from "./components/auth/IdentityConfirmationEnhancer";
 import "./index.css";
@@ -8,6 +9,7 @@ import "./auth-readability.css";
 import "./society-selector.css";
 import "./identity-confirmation.css";
 import "./interface-system.css";
+import "./mobile-app-shell.css";
 import { registerServiceWorker } from "./lib/registerSW";
 import { startAppResumeHome } from "./lib/app-resume-navigation";
 
@@ -16,11 +18,11 @@ import { startAppResumeHome } from "./lib/app-resume-navigation";
 const resumeHome = startAppResumeHome(window, navigator);
 
 createRoot(document.getElementById("root")!).render(
-  <>
+  <AppShell>
     <App />
     <SocietyScreenEnhancer />
     <IdentityConfirmationEnhancer />
-  </>,
+  </AppShell>,
 );
 resumeHome.markMounted();
 if (import.meta.hot) import.meta.hot.dispose(() => resumeHome.stop());

@@ -90,12 +90,12 @@ export default function Auth() {
     if (options?.showWelcome) {
       setIsEnteringApp(true);
       setEntryMessage('Bem-vindo à Igreja Presbiteriana de Nova Carapina');
-      setTimeout(() => navigate(path), 1200);
+      navigate(path);
       return;
     }
 
     setIsExiting(true);
-    setTimeout(() => navigate(path), 450);
+    navigate(path);
   }, [navigate]);
 
   useEffect(() => {
@@ -656,7 +656,7 @@ export default function Auth() {
   const isAccountEntry = !isEnteringApp && step === 'login';
 
   return (
-    <div className={`auth-page ${isHomeEntry ? 'auth-page-home' : ''} ${isAccountEntry ? 'auth-page-account' : ''} ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''} ${isPinEntry ? 'auth-page-pin' : ''}`}>
+    <div className={`auth-page ipnc-safe-managed ${isHomeEntry ? 'auth-page-home' : ''} ${isAccountEntry ? 'auth-page-account' : ''} ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''} ${isPinEntry ? 'auth-page-pin' : ''}`}>
       {(isHomeEntry || isAccountEntry) && <>
         <svg className="auth-mobile-art auth-mobile-canopy" viewBox="0 0 390 240" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <defs><linearGradient id="auth-mobile-canopy" x1="0" y1="1" x2="1" y2="0"><stop stopColor="#b7d8c8" /><stop offset="1" stopColor="#07513e" /></linearGradient></defs>

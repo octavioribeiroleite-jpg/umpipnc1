@@ -1,11 +1,13 @@
+import { INSTALLED_DISPLAY_QUERIES, isInstalledDisplayMode } from './pwa-display';
+
 interface InstallEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 export function createPWAInstallController(browser: Window, device: Navigator) {
-  const standalone = browser.matchMedia('(display-mode: standalone)');
-  const iosStandalone = () => Boolean((device as Navigator & { standalone?: boolean }).standalone);
+  const displayModes = INSTALLED_DISPLAY_QUERIES.map(query => browser.matchMedia(query));
+  const isInstalled = () => isInstalledDisplayMode({ matchMedia: browser.matchMedia.bind(browser), navigator: device as Navigator & { standalone?: boolean } });
   const ua = device.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(ua) || (device.platform === 'MacIntel' && device.maxTouchPoints > 1);
   const isAndroid = /Android/i.test(ua);
@@ -13,7 +15,7 @@ export function createPWAInstallController(browser: Window, device: Navigator) {
   let deferred: InstallEvent | null = null;
   let opener: HTMLElement | null = null;
   let state = {
-    isInstalled: standalone.matches || iosStandalone(),
+    isInstalled: isInstalled(),
     isIOS, isAndroid, isEmbedded,
     isMacSafari: /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium|Edg/.test(ua),
     isOpen: false, canPrompt: false, isInstalling: false, message: '',
@@ -33,10 +35,10 @@ export function createPWAInstallController(browser: Window, device: Navigator) {
     deferred = event as InstallEvent;
     update({ canPrompt: true });
   };
-  const modeChanged = () => { if (standalone.matches || iosStandalone()) installed(); };
+  const modeChanged = () => { if (isInstalled()) installed(); };
   browser.addEventListener('beforeinstallprompt', beforeInstall);
   browser.addEventListener('appinstalled', installed);
-  standalone.addEventListener('change', modeChanged);
+  displayModes.forEach(mode => mode.addEventListener('change', modeChanged));
 
   return {
     getSnapshot: () => state,
@@ -69,7 +71,7 @@ export function createPWAInstallController(browser: Window, device: Navigator) {
     dispose: () => {
       browser.removeEventListener('beforeinstallprompt', beforeInstall);
       browser.removeEventListener('appinstalled', installed);
-      standalone.removeEventListener('change', modeChanged);
+      displayModes.forEach(mode => mode.removeEventListener('change', modeChanged));
       listeners.clear();
     },
   };

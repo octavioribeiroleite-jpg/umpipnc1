@@ -215,7 +215,7 @@ button[role="combobox"] > svg {
 }
 
 .safe-bottom-content {
-  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 1rem);
+  padding-bottom: calc(var(--bottom-nav-height) + 1rem);
 }
 
 .touch-target {

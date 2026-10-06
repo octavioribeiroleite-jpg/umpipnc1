@@ -71,9 +71,10 @@ export function PastorSidebar() {
   };
 
   return (
-    <aside className="ipnc-pastor-sidebar sticky top-0 h-dvh flex-shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
+    <aside className="ipnc-pastor-sidebar sticky top-0 h-[var(--app-viewport-height)] pl-[var(--safe-left)] [--pastor-sidebar-width:76px] min-[1100px]:[--pastor-sidebar-width:224px] flex-shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col" style={{ width: 'calc(var(--pastor-sidebar-width) + var(--safe-left))' }}>
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
+        <div className="safe-top">
         <div className="flex items-center gap-3">
           <div className="bg-white rounded-lg p-1 shrink-0 flex items-center justify-center">
             <img src={logoIpnc} alt="Marca IPNC" className="h-9 w-9 object-contain" />
@@ -82,6 +83,7 @@ export function PastorSidebar() {
             <h2 className="font-bold text-sm">Painel do Pastor</h2>
             <p className="break-words text-xs text-sidebar-muted">{profile?.full_name || 'Pastor'}</p>
           </div>
+        </div>
         </div>
       </div>
 
@@ -149,6 +151,7 @@ export function PastorSidebar() {
 
       {/* Footer */}
       <div className="p-3 border-t border-sidebar-border">
+        <div className="safe-bottom">
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -159,6 +162,7 @@ export function PastorSidebar() {
         </Button>
         <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={doSignOut} />
         <BuildStamp className="mt-3" />
+        </div>
       </div>
     </aside>
   );

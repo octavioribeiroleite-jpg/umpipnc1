@@ -9,7 +9,7 @@ interface ProfileSelectProps {
 
 export default function ProfileSelect({ onSelect, onBack }: ProfileSelectProps) {
   return (
-    <main className="ebd-access" aria-labelledby="ebd-access-title">
+    <main className="ebd-access ipnc-safe-managed" aria-labelledby="ebd-access-title">
       <svg className="ebd-access__art" viewBox="0 0 1600 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
         <defs>
           <linearGradient id="ebd-access-canopy" x1="0" y1="1" x2="1" y2="0">

@@ -6,8 +6,7 @@
   top: 0;
   isolation: isolate;
   display: flex;
-  height: 100vh;
-  height: 100dvh;
+  height: var(--app-viewport-height);
   flex: 0 0 auto;
   flex-direction: column;
   color: var(--diretoria-nav-text);
@@ -15,6 +14,7 @@
     linear-gradient(170deg, #063b2d 0%, #062c23 58%, #07392e 100%);
   border-right: 1px solid rgba(169, 207, 183, 0.16);
   box-shadow: 5px 0 22px rgba(4, 44, 31, 0.05);
+  padding-left: var(--safe-left);
 }
 
 .diretoria-nav-shell::before {
@@ -49,12 +49,12 @@
 }
 
 .diretoria-sidebar {
-  width: 240px;
+  width: calc(240px + var(--safe-left));
   transition: width 220ms ease;
 }
 
 .diretoria-sidebar[data-collapsed='true'] {
-  width: 76px;
+  width: calc(76px + var(--safe-left));
 }
 
 .diretoria-sidebar__header {
@@ -63,7 +63,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 18px 14px 14px;
+  padding: calc(18px + var(--safe-top)) 14px 14px;
   border-radius: 0 0 26px 0;
   background: #f9faf3;
 }
@@ -123,7 +123,7 @@
 .diretoria-sidebar[data-collapsed='true'] .diretoria-sidebar__header {
   flex-direction: column;
   gap: 6px;
-  padding: 14px 10px 8px;
+  padding: calc(14px + var(--safe-top)) 10px 8px;
 }
 
 .diretoria-sidebar[data-collapsed='true'] .diretoria-sidebar__collapse {
@@ -251,7 +251,7 @@
 }
 
 .diretoria-sidebar__footer {
-  padding: 14px 14px 12px;
+  padding: 14px 14px calc(12px + var(--safe-bottom));
 }
 
 .diretoria-sidebar__profile {
@@ -328,7 +328,7 @@
 }
 
 .diretoria-sidebar[data-collapsed='true'] .diretoria-sidebar__footer {
-  padding: 10px 8px;
+  padding: 10px 8px calc(10px + var(--safe-bottom));
 }
 
 .diretoria-sidebar[data-collapsed='true'] .diretoria-sidebar__update-button,
@@ -349,7 +349,7 @@
 }
 
 .diretoria-rail {
-  width: 76px;
+  width: calc(76px + var(--safe-left));
 }
 
 .diretoria-rail__brand {
@@ -357,7 +357,7 @@
   height: 50px;
   flex-shrink: 0;
   padding: 4px;
-  margin: 14px auto 0;
+  margin: calc(14px + var(--safe-top)) auto 0;
 }
 
 .diretoria-rail__brand img {
@@ -391,7 +391,7 @@
 .diretoria-rail__footer {
   display: grid;
   gap: 4px;
-  padding: 8px;
+  padding: 8px 8px calc(8px + var(--safe-bottom));
 }
 
 .diretoria-rail .diretoria-rail__update,
@@ -419,7 +419,7 @@
 
 @media (max-height: 650px) {
   .diretoria-sidebar__header {
-    padding-top: 10px;
+    padding-top: calc(10px + var(--safe-top));
     padding-bottom: 10px;
   }
 
@@ -430,7 +430,7 @@
 
   .diretoria-sidebar__footer {
     padding-top: 10px;
-    padding-bottom: 8px;
+    padding-bottom: calc(8px + var(--safe-bottom));
   }
 
   .diretoria-sidebar__profile {

@@ -42,6 +42,7 @@ import Secretaria from "./pages/Secretaria";
 import Aniversariantes from "./pages/Aniversariantes";
 import NotFound from "./pages/NotFound";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import AppLoadingSplash from "@/components/layout/AppLoadingSplash";
 import "./camisas-separation.css";
 
 const queryClient = new QueryClient({
@@ -63,7 +64,7 @@ function FinancialRoute({ children }: { children: JSX.Element }) {
   const { user, loading, rolesLoaded, isAdmin, isManagement, isPastor } = useAuth();
   const { session: diretoriaSession } = useDiretoriaSession();
 
-  if (loading || !rolesLoaded) return <main role="status" className="min-h-screen flex items-center justify-center p-6">Carregando seu acesso às finanças…</main>;
+  if (loading || !rolesLoaded) return <AppLoadingSplash role="status" label="Carregando seu acesso às finanças…" />;
   if (!user) return <Navigate to="/auth" replace />;
 
   const isAuthenticatedDiretoriaService = Boolean(

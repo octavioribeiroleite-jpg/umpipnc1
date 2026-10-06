@@ -6,6 +6,10 @@ import { TreasuryDashboard } from '../../src/components/treasury/TreasuryDashboa
 import { TreasuryEntryDialog } from '../../src/components/treasury/TreasuryEntryDialog';
 import { TreasuryWorkflow } from '../../src/components/treasury/TreasuryWorkflow';
 import { Context, FUND, OTHER, seed } from './hooks';
+import AppShell from '../../src/components/layout/AppShell';
+import { applyFixtureSafeAreas } from '../fixtures/mobile-safe-area';
+import '../../src/mobile-app-shell.css';
+applyFixtureSafeAreas();
 if(new URLSearchParams(location.search).get('font')==='200') document.documentElement.style.fontSize='32px';
 function App(){
  const [role,setRole]=useState('treasurer');const [entries,setEntries]=useState(seed);const [open,setOpen]=useState(false);const [editing,setEditing]=useState(null);const [selected,setSelected]=useState(FUND);const [filters,setFilters]=useState({search:'',kind:'',start:'',end:''});
@@ -20,4 +24,4 @@ function App(){
  {role!=='public'&&<TreasuryEntryDialog admin={role==='admin'} open={open} onOpenChange={setOpen} funds={role==='admin'?funds:[funds[0]]} initialFundId={FUND} entry={editing}/>}
  </Context.Provider>;
 }
-createRoot(document.getElementById('root')).render(<QueryClientProvider client={new QueryClient()}><App/></QueryClientProvider>);
+createRoot(document.getElementById('root')).render(<AppShell><QueryClientProvider client={new QueryClient()}><App/></QueryClientProvider></AppShell>);

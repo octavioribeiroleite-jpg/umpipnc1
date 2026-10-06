@@ -143,5 +143,5 @@ export default function PinPad({ profileLabel, onBack, onHome, onComplete, loadi
   );
 
   if (embedded) return content;
-  return <div className="ipnc-pin-page">{content}</div>;
+  return <div className="ipnc-pin-page ipnc-safe-managed">{content}</div>;
 }

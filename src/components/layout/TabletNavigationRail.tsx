@@ -51,7 +51,7 @@ export function TabletNavigationRail() {
                     active && 'diretoria-nav-item--active',
                   )}
                 >
-                  <item.icon aria-hidden="true" className="diretoria-nav-item__icon" strokeWidth={active ? 2.4 : 2} />
+                  <item.icon aria-hidden="true" className="diretoria-nav-item__icon" />
                 </button>
               </li>
             );

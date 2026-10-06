@@ -428,14 +428,16 @@ function Portal({ visitor }: { visitor: VisitorData }) {
     </button>)}
   </nav>;
 
-  return <div ref={shellRef} className="ipnc-portal min-h-dvh min-w-0 bg-background min-[700px]:flex">
-    <aside aria-label="Portal da igreja" className="sticky top-0 hidden h-dvh w-[76px] shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar text-sidebar-foreground p-[8px] min-[700px]:flex min-[1100px]:w-[224px] min-[1100px]:p-[16px]">
+  return <div ref={shellRef} className="ipnc-portal ipnc-safe-managed min-h-[var(--app-viewport-height)] min-w-0 bg-background min-[700px]:flex">
+    <aside aria-label="Portal da igreja" className="sticky top-0 hidden h-[var(--app-viewport-height)] w-[calc(76px+var(--safe-left))] shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar text-sidebar-foreground p-[8px] pl-[calc(8px+var(--safe-left))] min-[700px]:flex min-[1100px]:w-[calc(224px+var(--safe-left))] min-[1100px]:p-[16px] min-[1100px]:pl-[calc(16px+var(--safe-left))]">
+      <div className="safe-top">
       <div className="flex min-h-[64px] items-center gap-3 min-[1100px]:px-2">
         <img src={logoIpnc} alt="Marca IPNC" className="h-[44px] w-[44px] shrink-0 rounded-xl bg-white p-1 object-contain" />
         <span className="hidden min-w-0 text-base font-semibold min-[1100px]:block">Portal da igreja</span>
       </div>
+      </div>
       {renderMenu(true)}
-      <div className="border-t border-border pt-4">
+      <div className="safe-bottom border-t border-border pt-4">
         <p className="hidden [overflow-wrap:anywhere] text-base min-[1100px]:block">{visitor.fullName}</p>
         <Button variant="ghost" className="mt-2 w-full min-w-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground min-[1100px]:justify-start" onClick={() => navigate('/auth')} aria-label="Acessar como responsável" title="Acessar como responsável">
           <LogIn className="h-[20px] w-[20px] shrink-0" /><span className="hidden min-[1100px]:inline">Acesso responsável</span>
@@ -444,8 +446,8 @@ function Portal({ visitor }: { visitor: VisitorData }) {
     </aside>
     <div className="flex min-w-0 flex-1 flex-col">
       <a href="#portal-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-card focus:p-3">Ir para o conteúdo</a>
-      <header className="sticky top-0 z-40 border-b border-border bg-card px-[16px] py-3 safe-top min-[700px]:px-[24px]">
-        <div className="mx-auto flex max-w-[1120px] min-w-0 flex-wrap items-center justify-between gap-3">
+      <header className="ipnc-safe-page-x sticky top-0 z-40 border-b border-border bg-card safe-top">
+        <div className="mx-auto flex max-w-[1120px] min-w-0 flex-wrap items-center justify-between gap-3 py-3">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild><Button variant="ghost" size="icon" className="shrink-0 min-[700px]:hidden" aria-label="Abrir navegação da igreja"><Menu className="h-5 w-5" /></Button></SheetTrigger>
@@ -460,7 +462,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
           <HeaderActions showInstall={false} showVersion={false} />
         </div>
       </header>
-      <main id="portal-content" tabIndex={-1} className="mx-auto w-full max-w-[1120px] min-w-0 flex-1 px-[16px] py-[20px] pb-[calc(var(--portal-nav-height,64px)+20px)] min-[700px]:px-[24px] min-[700px]:pb-[24px]">
+      <main id="portal-content" tabIndex={-1} className="ipnc-safe-page-x mx-auto w-full max-w-[1120px] min-w-0 flex-1 py-[20px] pb-[calc(var(--portal-nav-height,64px)+20px)] min-[700px]:pb-[calc(24px+var(--safe-bottom))]">
         {activeTab !== 'inicio' && <PageHeader title={tabs.find(tab => tab.key === activeTab)?.label || 'Portal da igreja'} description="Igreja Presbiteriana de Nova Carapina" />}
         {activeTab === 'inicio' && <InicioTab visitor={visitor} onTabChange={handleTabChange} />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
@@ -468,7 +470,7 @@ function Portal({ visitor }: { visitor: VisitorData }) {
         {activeTab === 'dizimos' && <DizimosPortalTab />}
       </main>
       <nav ref={mobileNavRef} aria-label="Navegação principal do portal" className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-card safe-bottom min-[700px]:hidden">
-        <div className="mx-auto grid max-w-[760px] grid-cols-4">
+        <div className="ipnc-safe-page-x mx-auto grid max-w-[760px] grid-cols-4">
           {tabs.map(({ key, label, icon: Icon }) => <button key={key} type="button" onClick={() => handleTabChange(key)} aria-current={activeTab === key ? 'page' : undefined}
             className={`flex min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 px-1 py-2 text-xs ${activeTab === key ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
             <Icon className="h-[20px] w-[20px] shrink-0" /><span className="w-full [overflow-wrap:anywhere] text-center">{label}</span>

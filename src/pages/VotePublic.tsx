@@ -914,7 +914,7 @@ export default function VotePublic() {
         </div>
 
         {isMultiSeat && (
-          <div className="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
+          <div className="sticky bottom-[calc(0.75rem+var(--safe-bottom))] mt-5 space-y-2 rounded-2xl border border-border bg-background/95 p-3 shadow-xl backdrop-blur">
             <Button
               className="h-12 w-full text-base font-bold"
               disabled={selectedCandidates.length === 0}
