@@ -34,3 +34,24 @@
 .tr-admin-navigation { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; }
 .tr-admin-navigation a { display:flex; align-items:center; min-height:48px; padding:10px 14px; border:1px solid var(--tr-border, hsl(var(--border))); border-radius:12px; background:hsl(var(--card)); color:hsl(var(--foreground)); font-size:14px; }
 .tr-admin-navigation a:focus-visible { outline:2px solid hsl(var(--ring)); outline-offset:2px; }
+
+html.dark .tr-review-item { border-color: hsl(var(--border)); background: hsl(var(--card)); }
+html.dark .tr-review-item small,
+html.dark .tr-admin-section > p,
+html.dark .tr-bank-values dt { color: hsl(var(--muted-foreground)); }
+html.dark .tr-workflow .tr-review-status { background: hsl(var(--warning) / .14); color: hsl(var(--warning)); }
+html.dark .tr-workflow .tr-review-status.rejected { background: hsl(var(--destructive) / .14); color: hsl(var(--destructive)); }
+html.dark .tr-workflow .tr-review-status.confirmed { background: hsl(var(--success) / .14); color: hsl(var(--success)); }
+html.dark .tr-report-controls label,
+html.dark .tr-bank-form label,
+html.dark .tr-bank-search { color: hsl(var(--foreground)); }
+html.dark .tr-workflow input,
+html.dark .tr-workflow select { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+html.dark .tr-workflow input:focus-visible,
+html.dark .tr-workflow select:focus-visible,
+html.dark .tr-admin-section summary:focus-visible { outline-color: hsl(var(--ring)); }
+html.dark .tr-manager-row,
+html.dark .tr-composition,
+html.dark .tr-attachments { border-color: hsl(var(--border)); }
+html.dark .tr-reserve { background: hsl(var(--warning) / .1); border-color: hsl(var(--warning) / .35); }
+html.dark .tr-reserve strong { color: hsl(var(--foreground)); }

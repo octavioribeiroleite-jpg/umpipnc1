@@ -376,3 +376,69 @@
   .auth-page .auth-identity-back { margin-bottom: 24px; font-size: 1.125rem; }
   .auth-page-identity .auth-page-footer { margin-top: 80px; }
 }
+
+/* Inherit the system palette instead of the entry's light-only local palette. */
+html.dark .auth-page {
+  --foreground: inherit;
+  --card: inherit;
+  --card-foreground: inherit;
+  --primary: inherit;
+  --primary-foreground: inherit;
+  --secondary: inherit;
+  --secondary-foreground: inherit;
+  --muted: inherit;
+  --muted-foreground: inherit;
+  --accent: inherit;
+  --accent-foreground: inherit;
+  --destructive: inherit;
+  --border: inherit;
+  --input: inherit;
+  --ring: inherit;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+html.dark .auth-page:is(.auth-page-home, .auth-page-account, .auth-page-society, .auth-page-identity) { background: hsl(var(--background)); }
+html.dark .auth-brand-panel { background: hsl(var(--card)); border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+html.dark .auth-page .auth-brand-install > button { border-color: hsl(var(--input)); color: hsl(var(--foreground)); background: hsl(var(--secondary)); }
+html.dark .auth-page .auth-brand-install > button:hover { border-color: hsl(var(--primary)); background: hsl(var(--muted)); }
+html.dark .auth-page :is(.auth-eyebrow, .auth-access-arrow, .auth-admin-button, .auth-society-loading) { color: hsl(var(--primary)); }
+html.dark .auth-page :is(.auth-content-heading h1, .auth-access-copy strong, .auth-society-name) { color: hsl(var(--foreground)); }
+html.dark :is(.auth-intro, .auth-access-copy > span, .auth-copyright, .auth-footer-motto, .auth-values, .auth-values span, .auth-mobile-family, .auth-society-heading p, .auth-society-description) { color: hsl(var(--muted-foreground)); }
+html.dark .auth-page :is(.auth-access-card, .auth-society-card, .auth-pin-panel, [class*='shadow-2xl']) { background: hsl(var(--card)); border-color: hsl(var(--border)); color: hsl(var(--foreground)); box-shadow: 0 8px 32px #00000040; }
+html.dark .auth-page :is(.auth-access-card, .auth-society-card):hover { border-color: hsl(var(--primary) / .7); background: hsl(var(--secondary)); box-shadow: 0 10px 32px #00000060; }
+html.dark .auth-page .auth-access-card .auth-access-icon, html.dark .auth-mobile-lock { background: hsl(var(--secondary)); color: hsl(var(--primary)); }
+html.dark .auth-access-card[data-tone='blue'] .auth-access-icon { background: hsl(var(--info) / .15); color: hsl(var(--info)); }
+html.dark .auth-access-card[data-tone='gold'] .auth-access-icon { background: hsl(var(--warning) / .15); color: hsl(var(--warning)); }
+html.dark .auth-access-card[data-tone='violet'] .auth-access-icon { background: color-mix(in srgb, #59408d 18%, hsl(var(--card))); color: color-mix(in srgb, #59408d 45%, hsl(var(--foreground))); }
+html.dark .auth-access-footer { border-color: hsl(var(--border)); }
+html.dark .auth-admin-button:hover { background: hsl(var(--secondary)); }
+html.dark .auth-mobile-family > div::before, html.dark .auth-mobile-family > div::after { background: hsl(var(--border)); }
+html.dark .auth-page :is(.auth-account-entry input, .pin-pad-utility) { border-color: hsl(var(--input)); background: hsl(var(--background)); color: hsl(var(--foreground)); }
+html.dark .auth-page .auth-account-entry button[type='submit'] { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+html.dark .auth-page button:disabled { color: hsl(var(--muted-foreground)); background: hsl(var(--muted)); border-color: hsl(var(--border)); }
+html.dark .auth-page :is(.auth-access-card, .auth-admin-button, .auth-brand-install > button, .auth-society-card, .auth-society-back):focus-visible { outline-color: hsl(var(--ring)); }
+html.dark .auth-page :is(.auth-update, .auth-update > button) { color: hsl(var(--primary-foreground)); }
+html.dark .auth-page .auth-update > button { background: hsl(var(--primary)); }
+html.dark :is(.auth-mobile-logo, .auth-brand img, .auth-identity-brand img, .auth-society-brand img) { filter: drop-shadow(0 0 1px hsl(var(--foreground) / .42)); }
+html.dark .auth-page-society::before { background: radial-gradient(ellipse at 0 100%, hsl(var(--primary) / .05), transparent 45%), radial-gradient(ellipse at 100% 95%, hsl(var(--primary) / .04), transparent 35%); }
+html.dark .auth-society-back { color: hsl(var(--foreground)); background: hsl(var(--secondary)); }
+html.dark .auth-society-back:hover { background: hsl(var(--muted)); }
+html.dark .auth-society-arrow { color: color-mix(in srgb, var(--society-color) 45%, hsl(var(--foreground))); background: color-mix(in srgb, var(--society-color) 18%, hsl(var(--card))); }
+html.dark .auth-society-icon svg { color: color-mix(in srgb, var(--society-color) 45%, hsl(var(--foreground))); }
+html.dark .auth-page-identity::before, html.dark .auth-page-identity::after { border-color: hsl(var(--primary) / .12); background: linear-gradient(125deg, hsl(var(--primary) / .08), transparent); }
+html.dark .auth-identity-card { background: hsl(var(--card)); border-color: hsl(var(--border)); box-shadow: 0 18px 52px #00000040; }
+html.dark .auth-identity-icon { background: hsl(var(--secondary)); color: hsl(var(--primary)); }
+html.dark :is(.auth-identity-question, .auth-identity-meta) { color: hsl(var(--muted-foreground)); }
+html.dark .auth-identity-name { color: hsl(var(--foreground)); }
+html.dark .auth-identity-actions .auth-identity-secondary { border-color: hsl(var(--input)); background: hsl(var(--card)); color: hsl(var(--foreground)); }
+html.dark .auth-identity-actions .auth-identity-secondary:hover { background: hsl(var(--secondary)); }
+html.dark .auth-identity-actions .auth-identity-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+html.dark .auth-identity-actions .auth-identity-primary:hover { background: color-mix(in srgb, hsl(var(--primary)) 90%, hsl(var(--foreground))); }
+html.dark .auth-identity-actions > button:focus-visible, html.dark .auth-identity-back:focus-visible { outline-color: hsl(var(--ring)); }
+html.dark .auth-identity-back { color: hsl(var(--primary)); }
+@media (min-width: 1024px) {
+  html.dark .auth-brand-panel { background: linear-gradient(145deg, hsl(var(--secondary)), hsl(var(--background))); }
+  html.dark .auth-brand-heading > span, html.dark .auth-brand-verse cite, html.dark .auth-brand-location { color: hsl(var(--muted-foreground)); }
+  html.dark .auth-brand-heading::before, html.dark .auth-values::before { background: hsl(var(--primary)); }
+  html.dark .auth-brand img { filter: none; }
+}

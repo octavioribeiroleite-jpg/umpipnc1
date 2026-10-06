@@ -172,3 +172,45 @@
 .ipnc-access-shell .auth-identity-actions { gap: 12px; margin-top: 10px; }
 .ipnc-access-shell .auth-identity-actions > button { flex: 1 1 8rem; min-width: 0; min-height: 48px; padding: 12px; font-size: 1rem; }
 .ipnc-access-form :is(input, textarea) { padding: .625rem .75rem; }
+
+/* The system theme changes surfaces and contrast, preserving the light artwork. */
+html.dark .ebd-access {
+  --access-ink: hsl(var(--foreground));
+  --access-green: hsl(var(--primary));
+  --access-muted: hsl(var(--muted-foreground));
+  background: radial-gradient(ellipse at 10% 40%, hsl(var(--primary) / .06) 0, transparent 35%), hsl(var(--background));
+}
+html.dark .ebd-access__back:hover { background: hsl(var(--secondary)); }
+html.dark .ebd-access__logo { filter: drop-shadow(0 0 1px hsl(var(--foreground) / .42)); }
+html.dark .ebd-access__lock { background: hsl(var(--secondary)); }
+html.dark .ebd-access__profile {
+  border-color: hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow: 0 12px 30px -10px #00000040;
+}
+html.dark .ebd-access__profile:hover {
+  border-color: hsl(var(--primary) / .7);
+  background: hsl(var(--secondary));
+  box-shadow: 0 16px 32px -10px #00000060;
+}
+html.dark .ebd-access__profile-icon {
+  color: color-mix(in srgb, var(--access-option-color, var(--access-green)) 45%, hsl(var(--foreground)));
+  background: color-mix(in srgb, var(--access-option-color, var(--access-green)) 18%, hsl(var(--card)));
+}
+html.dark .ebd-access__profile-icon:has(img) { background: hsl(var(--foreground)); }
+html.dark .ebd-access__profile:disabled:hover { background: hsl(var(--card)); border-color: hsl(var(--border)); box-shadow: 0 12px 30px -10px #00000040; }
+html.dark .ebd-access__footer { color: var(--access-muted); }
+html.dark .ebd-access__book { color: hsl(var(--primary) / .8); }
+html.dark .ebd-access__book::before, html.dark .ebd-access__book::after { background: hsl(var(--border)); }
+html.dark .ipnc-access-form {
+  border-color: hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow: 0 12px 30px -10px #00000040;
+}
+html.dark .ipnc-access-form :is(input, textarea, [role="combobox"]) {
+  border-color: hsl(var(--input));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+html.dark .ipnc-access-form :is(input, textarea)::placeholder { color: hsl(var(--muted-foreground)); }
+html.dark .ipnc-access-shell .auth-identity-card { box-shadow: 0 12px 30px -10px #00000040; }

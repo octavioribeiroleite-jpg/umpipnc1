@@ -1,0 +1,583 @@
+{
+  "bodyBackground": "rgb(13, 33, 26)",
+  "colorScheme": "dark",
+  "edgeBackground": "#0d211a",
+  "htmlClass": "dark",
+  "logos": [
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.01,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        33,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Puxe para atualizar",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "dashboard-motto",
+      "contrast": 8.61,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        33,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(172, 190, 178)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Juntos por uma igreja viva,servindo a Cristo.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "dashboard-avatar",
+      "contrast": 16.81,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        33,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "MO",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 15.15,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        33,
+        26
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Maria Oliveira — Revisão fictícia",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 8.61,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        33,
+        26
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(172, 190, 178)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Administração — UMP",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "dashboard-date",
+      "contrast": 11.5,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(241, 248, 239)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Terça-feira, 6 de outubro",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.44,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "32px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "H1",
+      "text": "Boa tarde, Maria!",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 8.83,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "32px",
+      "foreground": "rgb(243, 214, 155)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Maria!",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "dashboard-society",
+      "contrast": 11.42,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(238, 248, 236)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "UMP IPNC • 1 membro ativo",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.44,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "19px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "“Mas tu, ó homem de Deus,avança...”",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "font-semibold text-base",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "1 nova sugestão do Pastor",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm text-muted-foreground",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Clique para ver e responder",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(113, 214, 167)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 min-h-12 rounded-lg px-3 py-2 text-sm",
+      "contrast": 10.08,
+      "disabled": false,
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(15, 26, 21)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Ver sugestões",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 whitespace-normal break-words text-sm font-semibold text-foreground sm:text-base",
+      "contrast": 13.38,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Comprovantes pendentes",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "mt-0.5 line-clamp-2 text-xs leading-snug text-muted-foreground sm:text-sm",
+      "contrast": 7.96,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "1 comprovante aguardando aprovação",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "summary-label whitespace-normal break-words font-medium text-muted-foreground text-sm leading-snug",
+      "contrast": 13.27,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(237, 244, 237)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Eventos",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "summary-label whitespace-normal break-words font-medium text-muted-foreground text-sm leading-snug",
+      "contrast": 13.27,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(237, 244, 237)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Membros",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "summary-label whitespace-normal break-words font-medium text-muted-foreground text-sm leading-snug",
+      "contrast": 13.27,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(237, 244, 237)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Tarefas",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "summary-label whitespace-normal break-words font-medium text-muted-foreground text-sm leading-snug",
+      "contrast": 13.27,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(237, 244, 237)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Finanças",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-[0.62em] font-bold tracking-normal opacity-70",
+      "contrast": 9.84,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "17.019px",
+      "foreground": "rgb(239, 207, 131)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "R$",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 [overflow-wrap:anywhere]",
+      "contrast": 9.84,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "27.45px",
+      "foreground": "rgb(239, 207, 131)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "12.345,67",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-section-title min-w-0 whitespace-normal break-words text-foreground",
+      "contrast": 13.38,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Próximos eventos",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-h-12 px-2 text-sm font-semibold text-primary hover:underline",
+      "contrast": 8.4,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Ver calendário",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-base font-bold leading-none sm:text-lg",
+      "contrast": 9.83,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        44,
+        35
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(110, 231, 183)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "06",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-[9px] font-bold uppercase sm:text-[10px]",
+      "contrast": 9.83,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        44,
+        35
+      ],
+      "fontSize": "10px",
+      "foreground": "rgb(110, 231, 183)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "out",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 whitespace-normal break-words text-sm font-semibold text-foreground sm:text-base",
+      "contrast": 13.38,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Encontro das famílias e planejamento da sociedade",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 whitespace-normal break-words text-xs text-muted-foreground sm:text-sm",
+      "contrast": 7.96,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "18:00 • Salão principal",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-section-title min-w-0 whitespace-normal break-words text-foreground",
+      "contrast": 13.38,
+      "disabled": false,
+      "effectiveBackground": [
+        20,
+        44,
+        35
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Acesso rápido",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground",
+      "contrast": 11.46,
+      "disabled": false,
+      "effectiveBackground": [
+        29,
+        56,
+        42
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Reunião",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground",
+      "contrast": 11.46,
+      "disabled": false,
+      "effectiveBackground": [
+        29,
+        56,
+        42
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Evento",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground",
+      "contrast": 11.52,
+      "disabled": false,
+      "effectiveBackground": [
+        59,
+        49,
+        29
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Tarefa",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground",
+      "contrast": 11.52,
+      "disabled": false,
+      "effectiveBackground": [
+        59,
+        49,
+        29
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Finanças",
+      "weight": "600"
+    }
+  ],
+  "scheme": "dark",
+  "theme": "dark",
+  "themeColor": "#0d211a",
+  "url": "http://127.0.0.1:8086/?role=admin",
+  "viewport": {
+    "clientWidth": 768,
+    "height": 1024,
+    "scrollWidth": 768,
+    "width": 768
+  }
+}

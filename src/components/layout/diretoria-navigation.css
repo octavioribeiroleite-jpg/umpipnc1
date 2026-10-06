@@ -417,6 +417,17 @@
     linear-gradient(170deg, #05281f 0%, #031e17 58%, #062d23 100%);
 }
 
+html.dark .diretoria-nav-shell.diretoria-sidebar:not([data-collapsed='true']) .diretoria-sidebar__update-button {
+  border-color: hsl(var(--sidebar-border));
+  color: hsl(var(--sidebar-foreground));
+  background: hsl(var(--sidebar-accent));
+}
+
+html.dark .diretoria-nav-shell.diretoria-sidebar:not([data-collapsed='true']) .diretoria-sidebar__update-button:hover {
+  color: hsl(var(--sidebar-accent-foreground));
+  background: color-mix(in srgb, hsl(var(--sidebar-accent)) 80%, hsl(var(--sidebar-foreground)));
+}
+
 @media (max-height: 650px) {
   .diretoria-sidebar__header {
     padding-top: calc(10px + var(--safe-top));

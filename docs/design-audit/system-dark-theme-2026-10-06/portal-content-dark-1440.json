@@ -1,0 +1,435 @@
+{
+  "bodyBackground": "rgb(22, 29, 26)",
+  "colorScheme": "dark",
+  "edgeBackground": "#161d1a",
+  "htmlClass": "dark",
+  "logos": [
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "hidden min-w-0 text-base font-semibold min-[1100px]:block",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Portal da igreja",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 [overflow-wrap:anywhere] text-base hidden min-[1100px]:block",
+      "contrast": 10.7,
+      "disabled": false,
+      "effectiveBackground": [
+        37,
+        60,
+        49
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Início",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 [overflow-wrap:anywhere] text-base hidden min-[1100px]:block",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Programações",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 [overflow-wrap:anywhere] text-base hidden min-[1100px]:block",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Avisos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 [overflow-wrap:anywhere] text-base hidden min-[1100px]:block",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Dízimos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "hidden [overflow-wrap:anywhere] text-base min-[1100px]:block",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Visitante Fictício",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "hidden min-[1100px]:inline",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Acesso responsável",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "[overflow-wrap:anywhere] text-base font-semibold",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Portal da igreja",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "[overflow-wrap:anywhere] text-sm text-muted-foreground",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Olá, Visitante!",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "mb-2 text-sm font-medium text-sidebar-foreground/80",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(240, 244, 242, 0.8)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Igreja Presbiteriana de Nova Carapina",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "[overflow-wrap:anywhere] text-[1.625rem] font-bold leading-tight min-[700px]:text-[2rem]",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "32px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "H1",
+      "text": "Bem-vindo à nossa comunidade, Visitante!",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "mt-3 text-base leading-relaxed text-sidebar-foreground/90",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "16px",
+      "foreground": "rgba(240, 244, 242, 0.9)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Programações e avisos da igreja em um só lugar.",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(36, 51, 45)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 mt-4 min-h-[48px]",
+      "contrast": 11.93,
+      "disabled": false,
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Ver programações",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-xs font-semibold uppercase tracking-wider text-primary mb-1",
+      "contrast": 9.7,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Próximo Evento",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "[overflow-wrap:anywhere] font-semibold text-base",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "H3",
+      "text": "Encontro das famílias e planejamento da sociedade",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "terça-feira, 06 de outubro",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "flex items-center gap-1",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "18:00",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "flex items-center gap-1 text-xs text-muted-foreground mt-1",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Salão principal",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "flex min-h-[48px] items-center gap-1 text-sm text-primary font-medium mt-3 ml-auto hover:underline",
+      "contrast": 9.7,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Ver todos",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-xs font-semibold uppercase tracking-wider text-amber-600",
+      "contrast": 5.38,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(217, 119, 6)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Último Aviso",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "[overflow-wrap:anywhere] font-semibold text-base",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "H3",
+      "text": "Aviso sobre o encontro da sociedade",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-base leading-relaxed text-muted-foreground mt-1 whitespace-pre-line [overflow-wrap:anywhere]",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Conteúdo fictício de demonstração, sem consulta a pessoas ou serv",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-xs text-muted-foreground mt-1.5",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "há 9 dias",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "flex min-h-[48px] items-center gap-1 text-sm text-primary font-medium mt-3 ml-auto hover:underline",
+      "contrast": 9.7,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Ver todos",
+      "weight": "500"
+    }
+  ],
+  "scheme": "dark",
+  "theme": "dark",
+  "themeColor": "#161d1a",
+  "url": "http://127.0.0.1:8086/igreja?role=anonymous&portal=return",
+  "viewport": {
+    "clientWidth": 1440,
+    "height": 1000,
+    "scrollWidth": 1440,
+    "width": 1440
+  }
+}

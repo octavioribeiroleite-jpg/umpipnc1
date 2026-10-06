@@ -1,0 +1,407 @@
+{
+  "bodyBackground": "rgb(13, 18, 16)",
+  "colorScheme": "dark",
+  "edgeBackground": "#0d1210",
+  "htmlClass": "dark",
+  "logos": [
+    {
+      "alt": "IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "IPNC",
+      "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.03,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "37.44px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Igreja Presbiterianade Nova Carapina",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Servindo. Cuidando. Avançando.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.03,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "“Mas tu, ó homem de Deus, avança…”",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-brand-location",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Nova Carapina · Serra/ES",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-values",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "10px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Comunhão · Discipulado · Serviço · Missão",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "10px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "·",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "10px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "·",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "10px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "·",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-eyebrow",
+      "contrast": 10.69,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Bem-vindo à IPNC",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-heading-desktop",
+      "contrast": 17.03,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "60.48px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Como deseja acessar?",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-intro",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Escolha sua área para continuar.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Diretoria",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Reuniões, tarefas e organização",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Secretaria EBD",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Turmas, chamada e histórico",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Finanças",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Acesso privado por sociedade",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Portal da igreja",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Programação e avisos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-admin-button",
+      "contrast": 10.69,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Acesso administrativo",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-copyright",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "© 2026 IPNC",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-footer-motto",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Tudo para a glória de Deus.",
+      "weight": "400"
+    }
+  ],
+  "scheme": "dark",
+  "theme": "dark",
+  "themeColor": "#0d1210",
+  "url": "http://127.0.0.1:8086/auth?home=1",
+  "viewport": {
+    "clientWidth": 1440,
+    "height": 1000,
+    "scrollWidth": 1440,
+    "width": 1440
+  }
+}

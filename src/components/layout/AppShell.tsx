@@ -26,13 +26,18 @@ export default function AppShell({ children }: PropsWithChildren) {
       frame = 0;
       // Sample the visible upper surface, including fixed headers and portals.
       // Decorative SVG leaves have no opaque CSS background of their own.
-      const candidates = document.elementsFromPoint(Math.min(24, window.innerWidth / 2), 1);
+      // Wide layouts have a small light logo plate in the left navigation; the
+      // main upper surface represents the window chrome, rather than that plate.
+      const sampleX = window.innerWidth >= 700 ? window.innerWidth / 2 : Math.min(24, window.innerWidth / 2);
+      const candidates = document.elementsFromPoint(sampleX, 1);
       const backgrounds: string[] = [];
       for (const candidate of candidates) {
         if (candidate === root || candidate === document.body || candidate === shell.current || candidate.classList.contains('ipnc-route-stage') || candidate.closest('[data-sonner-toaster], .ipnc-toast-viewport')) continue;
         backgrounds.push(getComputedStyle(candidate).backgroundColor);
       }
-      const color = composeSurfaceColor(backgrounds);
+      // Use the system base, not body/edge (which contains our previous sample),
+      // so transparent headers and repeated scrim samples cannot feed back.
+      const color = composeSurfaceColor(backgrounds, root.classList.contains('dark') ? [13, 18, 16] : [247, 251, 248]);
       const navHeight = Math.max(0, ...Array.from(document.querySelectorAll('nav')).map(nav => {
         const rect = nav.getBoundingClientRect();
         return getComputedStyle(nav).position === 'fixed' && rect.height > 0 && Math.abs(rect.bottom - window.innerHeight) < 2 ? rect.height : 0;

@@ -1,0 +1,180 @@
+{
+  "bodyBackground": "rgb(13, 18, 16)",
+  "colorScheme": "dark",
+  "edgeBackground": "#0d1210",
+  "htmlClass": "dark",
+  "logos": [
+    {
+      "alt": "IPNC",
+      "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.03,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Voltar à Igreja",
+      "weight": "650"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__eyebrow",
+      "contrast": 10.69,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "11px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Acesso restrito",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.03,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "32px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": true,
+      "tag": "H1",
+      "text": "Secretaria EBD",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__intro",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Escolha seu perfil para continuar com segurança.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-title",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Administrador",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-description",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Acesso completo à chamada, histórico, turmas e configurações.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-title",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Professor",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-description",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Acesso rápido para registrar chamada e acompanhar sua turma.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "11px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Ensinar também é servir",
+      "weight": "650"
+    }
+  ],
+  "scheme": "dark",
+  "theme": "dark",
+  "themeColor": "#0d1210",
+  "url": "http://127.0.0.1:8086/secretaria?role=anonymous&edge=20&auth=20&read=20&realtime=20",
+  "viewport": {
+    "clientWidth": 375,
+    "height": 844,
+    "scrollWidth": 375,
+    "width": 390
+  }
+}

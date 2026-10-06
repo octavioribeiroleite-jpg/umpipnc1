@@ -1,0 +1,67 @@
+{
+  "bodyBackground": "rgb(13, 18, 16)",
+  "colorScheme": "dark",
+  "edgeBackground": "#0d1210",
+  "htmlClass": "dark",
+  "logos": [
+    {
+      "alt": "IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 13.37,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(201, 222, 209)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Carregando…",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 15.92,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(228, 238, 232)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Carregando…",
+      "weight": "400"
+    }
+  ],
+  "scheme": "dark",
+  "theme": "dark",
+  "themeColor": "#0d1210",
+  "url": "http://127.0.0.1:8086/?role=anonymous&state=loading",
+  "viewport": {
+    "clientWidth": 390,
+    "height": 844,
+    "scrollWidth": 390,
+    "width": 390
+  }
+}

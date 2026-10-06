@@ -1,0 +1,129 @@
+{
+  "bodyBackground": "rgb(13, 18, 16)",
+  "colorScheme": "dark",
+  "edgeBackground": "#0d1210",
+  "htmlClass": "dark",
+  "logos": [
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-2xl font-bold text-foreground",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "24px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "H1",
+      "text": "Bem-vindo de volta!",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-lg text-muted-foreground",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Você é Visitante Fictício?",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "font-bold text-foreground",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Visitante Fictício",
+      "weight": "700"
+    },
+    {
+      "background": "rgb(113, 214, 167)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 min-h-12 rounded-xl px-5 sm:px-8 w-full py-5",
+      "contrast": 10.08,
+      "disabled": false,
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(15, 26, 21)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Sim, sou eu",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(22, 29, 26)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 rounded-xl px-5 sm:px-8 w-full py-5",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Não, sou outra pessoa",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-xs text-muted-foreground",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Igreja Presbiteriana de Nova Carapina",
+      "weight": "400"
+    }
+  ],
+  "scheme": "dark",
+  "theme": "dark",
+  "themeColor": "#0d1210",
+  "url": "http://127.0.0.1:8086/igreja?role=anonymous&portal=return",
+  "viewport": {
+    "clientWidth": 390,
+    "height": 844,
+    "scrollWidth": 390,
+    "width": 390
+  }
+}

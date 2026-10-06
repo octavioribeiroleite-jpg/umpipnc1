@@ -1,0 +1,747 @@
+{
+  "bodyBackground": "rgb(247, 251, 248)",
+  "colorScheme": "light",
+  "edgeBackground": "#6f7170",
+  "htmlClass": "",
+  "logos": [
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Puxe para atualizar",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "24px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H1",
+      "text": "Secretaria EBD",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Administrador · EBD",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "px-4 py-2 text-sm text-muted-foreground",
+      "contrast": 5.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Confirme o PIN para retomar a sincronização.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Resumo do encontro",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(136, 84, 8, 0.14)",
+      "class": "ebd-status ",
+      "contrast": 4.53,
+      "disabled": false,
+      "effectiveBackground": [
+        238,
+        231,
+        220
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(151, 90, 10)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Em aberto",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "terça-feira, 06 de out de 2026",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 4.85,
+      "disabled": false,
+      "effectiveBackground": [
+        243,
+        247,
+        245
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "de 8 alunos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 4.85,
+      "disabled": false,
+      "effectiveBackground": [
+        243,
+        247,
+        245
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "2 turmas",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-summary-note",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Encontro aberto para registro de presenças",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 4.93,
+      "disabled": false,
+      "effectiveBackground": [
+        28,
+        128,
+        83
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Abrir chamada",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 13.48,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Gestão da EBD",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Turmas",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Classes e professores",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Alunos",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Base de cadastros",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full break-words text-center text-xs font-medium leading-tight",
+      "contrast": 6.78,
+      "disabled": false,
+      "effectiveBackground": [
+        209,
+        250,
+        229
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(6, 95, 70)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Início",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full break-words text-center text-xs font-medium leading-tight",
+      "contrast": 5.25,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Chamada",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full break-words text-center text-xs font-medium leading-tight",
+      "contrast": 5.25,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Histórico",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full break-words text-center text-xs font-medium leading-tight",
+      "contrast": 5.25,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Mais",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pr-10 text-lg font-semibold leading-tight tracking-tight",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Confirmar acesso",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm text-muted-foreground",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Digite novamente o PIN do seu acesso. Seus dados preenchidos cont",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 11.99,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(7, 59, 50)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Voltar",
+      "weight": "650"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ui-button inline-flex items-center justify-center break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground px-4 h-auto min-h-11 whitespace-normal gap-2 py-2 text-left leading-snug ebd-access__back ebd-access__home",
+      "contrast": 11.99,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(7, 59, 50)",
+      "gradientContext": true,
+      "tag": "BUTTON",
+      "text": "Voltar para a Home",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__eyebrow",
+      "contrast": 5.06,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "10px",
+      "foreground": "rgb(8, 123, 86)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Acesso restrito",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 11.99,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(7, 59, 50)",
+      "gradientContext": true,
+      "tag": "H2",
+      "text": "Secretaria EBD",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__intro",
+      "contrast": 5.23,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(84, 110, 114)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Digite seu PIN de 6 dígitos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "sr-only",
+      "contrast": 11.99,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(7, 59, 50)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "6 de 6 dígitos preenchidos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ipnc-pin-error",
+      "contrast": 6.58,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(165, 48, 45)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "PIN incorreto",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "1",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "2",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "3",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "4",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "5",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "6",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "7",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "8",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "9",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(240, 244, 241)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground min-h-12 px-4 py-2 ipnc-pin-key ipnc-pin-utility",
+      "contrast": 4.91,
+      "disabled": false,
+      "effectiveBackground": [
+        240,
+        244,
+        241
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(84, 110, 114)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Limpar",
+      "weight": "500"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "0",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(8, 123, 86)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 min-h-12 px-4 py-2 ipnc-pin-confirm",
+      "contrast": 5.28,
+      "disabled": false,
+      "effectiveBackground": [
+        8,
+        123,
+        86
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Confirmar e entrar",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "sr-only",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Fechar",
+      "weight": "400"
+    }
+  ],
+  "scheme": "light",
+  "theme": "light",
+  "themeColor": "#6f7170",
+  "url": "http://127.0.0.1:8086/secretaria?view=home",
+  "viewport": {
+    "clientWidth": 390,
+    "height": 844,
+    "scrollWidth": 390,
+    "width": 390
+  }
+}

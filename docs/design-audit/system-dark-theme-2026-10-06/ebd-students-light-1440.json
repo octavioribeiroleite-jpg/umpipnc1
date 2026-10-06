@@ -1,0 +1,571 @@
+{
+  "bodyBackground": "rgb(247, 251, 248)",
+  "colorScheme": "light",
+  "edgeBackground": "#12372a",
+  "htmlClass": "",
+  "logos": [
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "24px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "IPNCSecretaria EBD",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Início",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Chamada",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Histórico",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Turmas",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Aniversariantes",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 8.03,
+      "disabled": false,
+      "effectiveBackground": [
+        38,
+        84,
+        66
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Alunos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 8.03,
+      "disabled": false,
+      "effectiveBackground": [
+        38,
+        84,
+        66
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Senhas das salas",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Acessos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Sair da Secretaria",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Puxe para atualizar",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Secretaria EBD",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "28px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H1",
+      "text": "Planilha de Alunos",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "px-4 py-2 text-sm text-muted-foreground",
+      "contrast": 5.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Dados atualizados às 12:21:07",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm font-medium sm:w-24",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "LABEL",
+      "text": "Turma",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Turma Esperança fictícia",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "LABEL",
+      "text": "Buscar aluno",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "LABEL",
+      "text": "Situação",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Todos",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(28, 128, 83)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 min-h-12 px-4 py-2",
+      "contrast": 4.93,
+      "disabled": true,
+      "effectiveBackground": [
+        28,
+        128,
+        83
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Adicionar",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 rounded-lg px-3 py-2 text-sm",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Exportar CSV",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 rounded-lg px-3 py-2 text-sm",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Importar CSV",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(231, 238, 234)",
+      "class": "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      "contrast": 4.47,
+      "disabled": false,
+      "effectiveBackground": [
+        231,
+        238,
+        234
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "TH",
+      "text": "Nome",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(231, 238, 234)",
+      "class": "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 w-24",
+      "contrast": 4.47,
+      "disabled": false,
+      "effectiveBackground": [
+        231,
+        238,
+        234
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "TH",
+      "text": "Status",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(231, 238, 234)",
+      "class": "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 w-28",
+      "contrast": 4.47,
+      "disabled": false,
+      "effectiveBackground": [
+        231,
+        238,
+        234
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "TH",
+      "text": "Origem",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(231, 238, 234)",
+      "class": "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 w-28",
+      "contrast": 4.47,
+      "disabled": false,
+      "effectiveBackground": [
+        231,
+        238,
+        234
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "TH",
+      "text": "Cadastro",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(231, 238, 234)",
+      "class": "h-12 px-4 align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 w-24 text-right",
+      "contrast": 4.47,
+      "disabled": false,
+      "effectiveBackground": [
+        231,
+        238,
+        234
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "TH",
+      "text": "Ações",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-left hover:underline ",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Aluno Fictício 1",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-sm text-muted-foreground",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "TD",
+      "text": "01/01/2026",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground min-h-12 px-4 py-2",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Inativar",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-sm text-muted-foreground",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "TD",
+      "text": "01/01/2026",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground min-h-12 px-4 py-2",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Inativar",
+      "weight": "600"
+    }
+  ],
+  "scheme": "light",
+  "theme": "light",
+  "themeColor": "#12372a",
+  "url": "http://127.0.0.1:8086/secretaria?view=planilha",
+  "viewport": {
+    "clientWidth": 1425,
+    "height": 900,
+    "scrollWidth": 1425,
+    "width": 1440
+  }
+}

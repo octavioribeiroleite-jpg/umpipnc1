@@ -116,6 +116,7 @@
 .treasury-color-option.is-selected { border-color: var(--fund-color); }
 .treasury-fund-preview { display: flex; align-items: center; gap: 13px; min-width: 0; margin-top: 3px; padding: 15px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 13px; }
 .treasury-fund-preview-badge { display: grid; place-items: center; flex: 0 0 64px; min-height: 54px; padding: 6px; border-radius: 12px; background: color-mix(in srgb, var(--fund-color) 10%, hsl(var(--card))); color: var(--fund-color); font-size: 0.75rem; font-weight: 750; overflow-wrap: anywhere; word-break: break-word; }
+html.dark .treasury-fund-preview-badge { color: color-mix(in srgb, var(--fund-color) 45%, hsl(var(--foreground))); }
 .treasury-fund-preview > div { min-width: 0; }
 .treasury-fund-preview strong { display: block; font-size: 0.8125rem; overflow-wrap: anywhere; }
 .treasury-fund-preview p { margin-top: 3px; color: var(--treasury-muted); font-size: 0.75rem; line-height: 1.5; }

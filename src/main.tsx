@@ -14,6 +14,9 @@ import "./opening.css";
 import { registerServiceWorker } from "./lib/registerSW";
 import { startAppResumeHome } from "./lib/app-resume-navigation";
 import { startAppOpening } from "./lib/app-opening";
+import { startSystemTheme } from "./lib/system-theme";
+
+const stopSystemTheme = startSystemTheme();
 
 // registerSW restores any update route during module initialization. The PWA
 // launch policy takes precedence before the app can render a private route.
@@ -30,6 +33,6 @@ createRoot(root).render(
   </AppShell>,
 );
 resumeHome.markMounted();
-if (import.meta.hot) import.meta.hot.dispose(() => { resumeHome.stop(); opening?.stop(); });
+if (import.meta.hot) import.meta.hot.dispose(() => { resumeHome.stop(); opening?.stop(); stopSystemTheme(); });
 
 registerServiceWorker();

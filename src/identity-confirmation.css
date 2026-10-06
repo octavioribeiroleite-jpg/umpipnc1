@@ -214,3 +214,17 @@
     font-size: 16px !important;
   }
 }
+
+html.dark .identity-confirmation-card { border-color: hsl(var(--border)) !important; background: hsl(var(--card)) !important; box-shadow: 0 30px 80px #00000060 !important; }
+html.dark .identity-confirmation-icon { border-color: hsl(var(--border)); background: hsl(var(--secondary)) !important; box-shadow: 0 12px 30px #00000030; }
+html.dark .identity-confirmation-icon svg { color: hsl(var(--primary)) !important; }
+html.dark .identity-confirmation-kicker { color: hsl(var(--primary)); }
+html.dark .identity-confirmation-question, html.dark .identity-confirmation-meta { color: hsl(var(--muted-foreground)) !important; }
+html.dark .identity-confirmation-name { color: hsl(var(--foreground)) !important; }
+html.dark .identity-confirmation-badge { border-color: color-mix(in srgb, var(--society-color) 50%, hsl(var(--border))); background: color-mix(in srgb, var(--society-color) 18%, hsl(var(--card))); color: color-mix(in srgb, var(--society-color) 40%, hsl(var(--foreground))); }
+html.dark .identity-confirmation-primary { border-color: hsl(var(--primary)) !important; background: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important; box-shadow: 0 14px 30px #00000030 !important; }
+html.dark .identity-confirmation-primary:hover { background: color-mix(in srgb, hsl(var(--primary)) 90%, hsl(var(--foreground))) !important; }
+html.dark .identity-confirmation-secondary { border-color: hsl(var(--input)) !important; background: hsl(var(--card)) !important; color: hsl(var(--foreground)) !important; }
+html.dark .identity-confirmation-secondary:hover { background: hsl(var(--secondary)) !important; }
+html.dark .identity-confirmation-back { color: hsl(var(--muted-foreground)) !important; }
+html.dark .identity-confirmation-back:hover { color: hsl(var(--foreground)) !important; }

@@ -1,0 +1,628 @@
+{
+  "bodyBackground": "rgb(10, 15, 13)",
+  "colorScheme": "dark",
+  "edgeBackground": "#0a0f0d",
+  "htmlClass": "dark",
+  "logos": [
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "UMP",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.41,
+      "disabled": false,
+      "effectiveBackground": [
+        10,
+        15,
+        13
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "SAF",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "tr-church-name",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Igreja Presbiteriana de Nova Carapina",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "tr-eyebrow",
+      "contrast": 10.69,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "TRANSPARÊNCIA & CUIDADO",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.03,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "28px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "H1",
+      "text": "Dashboard financeiro",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Os recursos de cada sociedade, em um só lugar.",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(22, 29, 26)",
+      "class": "tr-button",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Compartilhar",
+      "weight": "500"
+    },
+    {
+      "background": "rgb(113, 214, 167)",
+      "class": "tr-button tr-primary",
+      "contrast": 10.08,
+      "disabled": false,
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(15, 26, 21)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Novo lançamento",
+      "weight": "500"
+    },
+    {
+      "background": "rgb(22, 29, 26)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "A",
+      "text": "Consolidado",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(22, 29, 26)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "A",
+      "text": "Pendências",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(22, 29, 26)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "A",
+      "text": "Conferência",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(22, 29, 26)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "A",
+      "text": "Relatórios",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(22, 29, 26)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "A",
+      "text": "PINs",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.08,
+      "disabled": false,
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(15, 26, 21)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Saldo total das sociedades",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "tr-big-value",
+      "contrast": 10.08,
+      "disabled": false,
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "fontSize": "28px",
+      "foreground": "rgb(15, 26, 21)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "R$ 1.600,00",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.08,
+      "disabled": false,
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(15, 26, 21)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Valores registrados sob a guarda da tesouraria",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "tr-total-detail tr-total-count",
+      "contrast": 10.08,
+      "disabled": false,
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(15, 26, 21)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "4 lançamentos registrados",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Entradas neste mês",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "26px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "R$ 1.250,00",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Movimentações do mês atual",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Saídas neste mês",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "26px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "R$ 250,00",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Movimentações do mês atual",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Saldo calculado apenas com lançamentos confirmados. Pendências fi",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.28,
+      "disabled": false,
+      "effectiveBackground": [
+        36,
+        35,
+        23
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Per capita reservada R$ 150,00",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.28,
+      "disabled": false,
+      "effectiveBackground": [
+        36,
+        35,
+        23
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "R$ 150,00",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.28,
+      "disabled": false,
+      "effectiveBackground": [
+        36,
+        35,
+        23
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Disponível após reserva R$ 1.450,00",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 14.28,
+      "disabled": false,
+      "effectiveBackground": [
+        36,
+        35,
+        23
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "R$ 1.450,00",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.03,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Caixas das sociedades",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Selecione uma sociedade para consultar o extrato.",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(22, 29, 26)",
+      "class": "tr-button tr-button-small",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Nova sociedade",
+      "weight": "500"
+    },
+    {
+      "background": "color(srgb 0.103282 0.142992 0.156806)",
+      "class": "tr-fund-badge",
+      "contrast": null,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "color(srgb 0.634846 0.70839 0.813676)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "UMP",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "H3",
+      "text": "União de Mocidade Presbiteriana — fictícia",
+      "weight": "400"
+    },
+    {
+      "background": "color(srgb 0.138184 0.142208 0.143865)",
+      "class": "tr-fund-badge",
+      "contrast": null,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "color(srgb 0.791904 0.70486 0.755441)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "SAF",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "H3",
+      "text": "Sociedade Auxiliadora Feminina — fictícia",
+      "weight": "400"
+    }
+  ],
+  "scheme": "dark",
+  "theme": "dark",
+  "themeColor": "#0a0f0d",
+  "url": "http://127.0.0.1:8086/tesouraria?role=admin",
+  "viewport": {
+    "clientWidth": 753,
+    "height": 1024,
+    "scrollWidth": 753,
+    "width": 768
+  }
+}

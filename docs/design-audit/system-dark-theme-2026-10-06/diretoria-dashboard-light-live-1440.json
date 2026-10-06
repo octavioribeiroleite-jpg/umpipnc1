@@ -1,0 +1,1110 @@
+{
+  "bodyBackground": "rgb(244, 248, 242)",
+  "colorScheme": "light",
+  "edgeBackground": "#f4f8f2",
+  "htmlClass": "",
+  "logos": [
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Home",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Reuniões",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Calendário",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Tarefas",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Tesouraria da igreja",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Finanças",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Camisas",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Plenárias",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Dízimos",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Comunicados",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Estudos",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Secretaria EBD",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Aniversariantes",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Arquivos",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Configurações",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Eleições",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-nav-item__label",
+      "contrast": 1.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Usuários",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-sidebar__profile-name",
+      "contrast": 1.33,
+      "disabled": false,
+      "effectiveBackground": [
+        208,
+        216,
+        212
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Maria Oliveira — Revisão fictícia",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "diretoria-sidebar__profile-email",
+      "contrast": 1.16,
+      "disabled": false,
+      "effectiveBackground": [
+        208,
+        216,
+        212
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(182, 205, 194)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "revisao@example.test",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(244, 250, 241)",
+      "class": "ui-button inline-flex items-center justify-center whitespace-normal break-words rounded-lg text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border min-h-12 px-4 py-2 w-full border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-semibold h-12 gap-2 diretoria-sidebar__update-button",
+      "contrast": 11.83,
+      "disabled": false,
+      "effectiveBackground": [
+        244,
+        250,
+        241
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(7, 59, 45)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Atualizar para última versão",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 1.33,
+      "disabled": false,
+      "effectiveBackground": [
+        208,
+        216,
+        212
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(240, 247, 241)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Sair",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-[10px] text-muted-foreground/70 text-center leading-tight select-none diretoria-sidebar__build-stamp",
+      "contrast": 1.16,
+      "disabled": false,
+      "effectiveBackground": [
+        208,
+        216,
+        212
+      ],
+      "fontSize": "10px",
+      "foreground": "rgb(182, 205, 194)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Atualizado em 06/10/2026 às 00h00",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 4.9,
+      "disabled": false,
+      "effectiveBackground": [
+        244,
+        248,
+        242
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Puxe para atualizar",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "dashboard-motto",
+      "contrast": 4.13,
+      "disabled": false,
+      "effectiveBackground": [
+        244,
+        248,
+        242
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(101, 125, 115)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Juntos por uma igreja viva,servindo a Cristo.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "dashboard-avatar",
+      "contrast": 1.07,
+      "disabled": false,
+      "effectiveBackground": [
+        244,
+        248,
+        242
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "MO",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 13.1,
+      "disabled": false,
+      "effectiveBackground": [
+        244,
+        248,
+        242
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": true,
+      "tag": "STRONG",
+      "text": "Maria Oliveira — Revisão fictícia",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 4.44,
+      "disabled": false,
+      "effectiveBackground": [
+        244,
+        248,
+        242
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(99, 119, 112)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Administração — UMP",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "dashboard-date",
+      "contrast": 11.5,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(241, 248, 239)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Terça-feira, 6 de outubro",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.44,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "48px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "H1",
+      "text": "Boa tarde, Maria!",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 8.83,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "48px",
+      "foreground": "rgb(243, 214, 155)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Maria!",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "dashboard-society",
+      "contrast": 11.42,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(238, 248, 236)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "UMP IPNC • 1 membro ativo",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 12.44,
+      "disabled": false,
+      "effectiveBackground": [
+        3,
+        60,
+        45
+      ],
+      "fontSize": "19px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "“Mas tu, ó homem de Deus,avança...”",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "font-semibold text-base",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "1 nova sugestão do Pastor",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm text-muted-foreground",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Clique para ver e responder",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(28, 128, 83)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 min-h-12 rounded-lg px-3 py-2 text-sm",
+      "contrast": 4.93,
+      "disabled": false,
+      "effectiveBackground": [
+        28,
+        128,
+        83
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Ver sugestões",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 whitespace-normal break-words text-sm font-semibold text-foreground sm:text-base",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Comprovantes pendentes",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "mt-0.5 line-clamp-2 text-xs leading-snug text-muted-foreground sm:text-sm",
+      "contrast": 5.22,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "1 comprovante aguardando aprovação",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "summary-label whitespace-normal break-words font-medium text-muted-foreground text-sm leading-snug",
+      "contrast": 12.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(20, 59, 48)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Eventos",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "summary-label whitespace-normal break-words font-medium text-muted-foreground text-sm leading-snug",
+      "contrast": 12.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(20, 59, 48)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Membros",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "summary-label whitespace-normal break-words font-medium text-muted-foreground text-sm leading-snug",
+      "contrast": 12.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(20, 59, 48)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Tarefas",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "summary-label whitespace-normal break-words font-medium text-muted-foreground text-sm leading-snug",
+      "contrast": 12.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(20, 59, 48)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Finanças",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-[0.62em] font-bold tracking-normal opacity-70",
+      "contrast": 4.6,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "14.88px",
+      "foreground": "rgb(168, 101, 0)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "R$",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 [overflow-wrap:anywhere]",
+      "contrast": 4.6,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "24px",
+      "foreground": "rgb(168, 101, 0)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "12.345,67",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-section-title min-w-0 whitespace-normal break-words text-foreground",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Próximos eventos",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-h-12 px-2 text-sm font-semibold text-primary hover:underline",
+      "contrast": 4.89,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(28, 128, 83)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Ver calendário",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-base font-bold leading-none sm:text-lg",
+      "contrast": 7.29,
+      "disabled": false,
+      "effectiveBackground": [
+        236,
+        253,
+        245
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(6, 95, 70)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "06",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-[9px] font-bold uppercase sm:text-[10px]",
+      "contrast": 7.29,
+      "disabled": false,
+      "effectiveBackground": [
+        236,
+        253,
+        245
+      ],
+      "fontSize": "10px",
+      "foreground": "rgb(6, 95, 70)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "out",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 whitespace-normal break-words text-sm font-semibold text-foreground sm:text-base",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Encontro das famílias e planejamento da sociedade",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 whitespace-normal break-words text-xs text-muted-foreground sm:text-sm",
+      "contrast": 5.22,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "18:00 • Salão principal",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-section-title min-w-0 whitespace-normal break-words text-foreground",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Acesso rápido",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground",
+      "contrast": 13.25,
+      "disabled": false,
+      "effectiveBackground": [
+        242,
+        250,
+        245
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Reunião",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground",
+      "contrast": 13.25,
+      "disabled": false,
+      "effectiveBackground": [
+        242,
+        250,
+        245
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Evento",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground",
+      "contrast": 13.53,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        250,
+        240
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Tarefa",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground",
+      "contrast": 13.53,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        250,
+        240
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Finanças",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "font-semibold text-base",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H3",
+      "text": "Aniversariantes",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground rounded-lg px-3 py-2 min-h-11 text-sm",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Ver todos",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "shrink-0 font-medium text-muted-foreground w-12 text-xs",
+      "contrast": 5.22,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "06/10",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 whitespace-normal break-words flex-1",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Mariana de Oliveira — exemplo",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-xs font-medium text-emerald-600 dark:text-emerald-400",
+      "contrast": 3.74,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(5, 150, 105)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "🎉 Hoje!",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 flex-1 text-lg font-semibold text-center",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H3",
+      "text": "Outubro 2026",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 rounded-lg px-3 py-2 h-12 text-xs",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Hoje",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-base font-semibold text-foreground",
+      "contrast": 13.95,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Programações de 06/10",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-xs text-muted-foreground",
+      "contrast": 5.22,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        254,
+        251
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Toque em um dia no calendário para filtrar",
+      "weight": "400"
+    }
+  ],
+  "scheme": "light",
+  "theme": "light",
+  "themeColor": "#f4f8f2",
+  "url": "http://127.0.0.1:8086/?role=admin",
+  "viewport": {
+    "clientWidth": 1440,
+    "height": 1000,
+    "scrollWidth": 1440,
+    "width": 1440
+  }
+}

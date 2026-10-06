@@ -44,3 +44,79 @@
 @keyframes ipnc-pin-dot-in { from { transform: scale(0); } to { transform: scale(1); } }
 @keyframes ipnc-pin-shake { 25%, 75% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
 @media (prefers-reduced-motion: reduce) { .ipnc-pin-card .ui-button { transition: none; } .ipnc-pin-shaking, .ipnc-pin-dot { animation: none; } }
+
+html.dark .ipnc-pin-slot { border-color: hsl(var(--input)); background: hsl(var(--card)); }
+html.dark .ipnc-pin-slot-current, html.dark .ipnc-pin-slot-filled { border-color: var(--pin-green); background: hsl(var(--secondary)); }
+html.dark .ipnc-pin-card .ui-button.ipnc-pin-key { border-color: hsl(var(--input)); background: hsl(var(--card)); color: var(--pin-ink); }
+html.dark .ipnc-pin-card .ui-button.ipnc-pin-key:hover { border-color: var(--pin-green); background: hsl(var(--secondary)); }
+html.dark .ipnc-pin-card .ui-button.ipnc-pin-utility { color: var(--pin-muted); background: hsl(var(--muted)); }
+html.dark .ipnc-pin-card .ui-button.ipnc-pin-confirm { background: var(--pin-green); color: hsl(var(--primary-foreground)); }
+html.dark .ipnc-pin-card .ui-button.ipnc-pin-confirm:hover { background: color-mix(in srgb, var(--pin-green) 90%, hsl(var(--foreground))); }
+html.dark .ipnc-pin-error { color: color-mix(in srgb, hsl(var(--destructive)) 45%, hsl(var(--foreground))); }
+html.dark .ipnc-pin-shaking .ipnc-pin-slot-filled { border-color: color-mix(in srgb, hsl(var(--destructive)) 65%, hsl(var(--foreground))); background: hsl(var(--destructive) / .14); }
+
+/* The same access composition, scaled within the EBD renewal dialog. */
+.ebd-theme [role='dialog'].ebd-reauth[data-dialog-size='access'] {
+  width: calc(100% - var(--safe-left, 0px) - var(--safe-right, 0px) - 2rem);
+  max-width: 400px;
+  padding: 12px;
+  gap: 8px;
+}
+.ebd-reauth > div:first-child > h2 { font-size: 1.125rem; padding-right: 2.5rem; }
+.ebd-reauth > div:first-child > p { font-size: .8125rem; line-height: 1.4; }
+.ebd-reauth .ipnc-pin-surface[data-presentation='compact'] { min-height: 0; padding: 8px; }
+.ebd-reauth .ebd-access__navigation { flex-wrap: nowrap; gap: 8px; }
+.ebd-reauth .ebd-access__navigation .ebd-access__back { min-height: 44px; height: auto; padding: 4px; gap: 8px; font-size: .875rem; }
+.ebd-reauth .ebd-access__navigation .ebd-access__back svg { width: 20px; height: 20px; }
+.ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__content { padding: 6px 0 0; }
+.ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__logo { width: 56px; margin-bottom: 6px; }
+.ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__lock { width: 28px; height: 28px; margin-bottom: 6px; border-radius: 8px; }
+.ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__lock svg { width: 18px; height: 18px; }
+.ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__eyebrow { font-size: .625rem; margin-bottom: 4px; letter-spacing: .16em; }
+.ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__heading h2 { font-size: 1.0625rem; line-height: 1.2; padding-right: 0; }
+.ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__intro { font-size: .8125rem; line-height: 1.4; margin-top: 4px; }
+.ebd-reauth .ipnc-pin-card[data-presentation='compact'] .ipnc-pin-slots { gap: 6px; margin: 10px auto; }
+.ebd-reauth .ipnc-pin-card[data-presentation='compact'] .ipnc-pin-slot { height: 36px; border-radius: 8px; }
+.ebd-reauth .ipnc-pin-slot-current::after { height: 20px; }
+.ebd-reauth .ipnc-pin-keypad { gap: 6px; }
+.ebd-reauth .ipnc-pin-card[data-presentation='compact'] .ui-button.ipnc-pin-key { min-height: 44px; padding: 6px 4px; font-size: 1.25rem; border-radius: 9px; }
+.ebd-reauth .ipnc-pin-card[data-presentation='compact'] .ui-button.ipnc-pin-utility { font-size: .8125rem; }
+.ebd-reauth .ipnc-pin-card .ui-button.ipnc-pin-delete svg { width: 24px; height: 24px; }
+.ebd-reauth .ipnc-pin-card .ui-button.ipnc-pin-confirm { min-height: 44px; margin-top: 8px; padding: 8px; font-size: .9375rem; }
+.ebd-reauth .ipnc-pin-error { margin-bottom: 8px; font-size: .8125rem; line-height: 1.4; }
+@media (max-width: 479px) and (max-height: 800px) {
+  .ebd-reauth .ipnc-pin-surface[data-presentation='compact'] { padding: 4px; }
+  .ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__content { padding-top: 2px; }
+  .ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__logo { width: 44px; margin-bottom: 4px; }
+  .ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__lock { width: 24px; height: 24px; margin-bottom: 4px; }
+  .ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__lock svg { width: 16px; height: 16px; }
+  .ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__eyebrow { margin-bottom: 2px; }
+  .ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__heading h2 { font-size: 1rem; }
+  .ebd-reauth .ipnc-pin-surface[data-presentation='compact'] .ebd-access__intro { font-size: .75rem; margin-top: 2px; }
+  .ebd-reauth .ipnc-pin-card[data-presentation='compact'] .ipnc-pin-slots { margin: 6px auto; }
+  .ebd-reauth .ipnc-pin-card[data-presentation='compact'] .ipnc-pin-slot { height: 32px; }
+  .ebd-reauth .ipnc-pin-keypad { gap: 4px; }
+  .ebd-reauth .ipnc-pin-card .ui-button.ipnc-pin-confirm { margin-top: 6px; }
+}
+
+/* EBD entry uses the same keypad without pushing confirmation below the phone. */
+@media (max-width: 479px) and (max-height: 900px) {
+  .ebd-theme .ipnc-pin-page { padding-top: max(8px, var(--safe-top, 0px)); padding-bottom: max(12px, var(--safe-bottom, 0px)); }
+  .ebd-theme .ipnc-pin-page .ebd-access__content { padding-top: 0; padding-bottom: 0; }
+  .ebd-theme .ipnc-pin-page .ebd-access__navigation .ebd-access__back { min-height: 44px; padding: 4px; gap: 8px; font-size: .875rem; }
+  .ebd-theme .ipnc-pin-page .ebd-access__navigation .ebd-access__back svg { width: 20px; height: 20px; }
+  .ebd-theme .ipnc-pin-page .ebd-access__logo { width: 88px; margin-bottom: 8px; }
+  .ebd-theme .ipnc-pin-page .ebd-access__lock { width: 32px; height: 32px; margin-bottom: 8px; border-radius: 10px; }
+  .ebd-theme .ipnc-pin-page .ebd-access__lock svg { width: 20px; height: 20px; }
+  .ebd-theme .ipnc-pin-page .ebd-access__eyebrow { margin-bottom: 4px; }
+  .ebd-theme .ipnc-pin-page .ebd-access__heading h1 { font-size: 1.5rem; }
+  .ebd-theme .ipnc-pin-page .ebd-access__intro { font-size: .875rem; line-height: 1.4; margin-top: 6px; }
+  .ebd-theme .ipnc-pin-page .ipnc-pin-slots { margin: 14px auto; }
+  .ebd-theme .ipnc-pin-page .ipnc-pin-slot { height: 40px; }
+  .ebd-theme .ipnc-pin-page .ipnc-pin-keypad { gap: 8px; }
+  .ebd-theme .ipnc-pin-page .ui-button.ipnc-pin-key { min-height: 44px; padding: 6px 4px; font-size: 1.25rem; }
+  .ebd-theme .ipnc-pin-page .ui-button.ipnc-pin-utility { font-size: .875rem; }
+  .ebd-theme .ipnc-pin-page .ui-button.ipnc-pin-delete svg { width: 24px; height: 24px; }
+  .ebd-theme .ipnc-pin-page .ui-button.ipnc-pin-confirm { min-height: 44px; padding: 8px; margin-top: 12px; font-size: .9375rem; }
+  .ebd-theme .ipnc-pin-page .ipnc-pin-help { margin-top: 12px; font-size: .8125rem; line-height: 1.4; }
+}

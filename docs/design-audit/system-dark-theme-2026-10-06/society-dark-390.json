@@ -1,0 +1,214 @@
+{
+  "bodyBackground": "rgb(13, 18, 16)",
+  "colorScheme": "dark",
+  "edgeBackground": "#0d1210",
+  "htmlClass": "dark",
+  "logos": [
+    {
+      "alt": "IPNC",
+      "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__eyebrow",
+      "contrast": 10.69,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "11px",
+      "foreground": "rgb(113, 214, 167)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Acesso restrito",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 17.03,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "32px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": true,
+      "tag": "H1",
+      "text": "Selecione a sociedade",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__intro",
+      "contrast": 10.13,
+      "disabled": false,
+      "effectiveBackground": [
+        13,
+        18,
+        16
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Escolha a sociedade que deseja acessar.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-title",
+      "contrast": 11.93,
+      "disabled": false,
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "SAF",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-description",
+      "contrast": 7.09,
+      "disabled": false,
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Sociedade Auxiliadora Feminina",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-title",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "UCP",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-description",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "União de Crianças Presbiterianas",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-title",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "UMP",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-description",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "União de Mocidade Presbiteriana",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-title",
+      "contrast": 15.45,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(240, 244, 242)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "UPA",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__profile-description",
+      "contrast": 9.19,
+      "disabled": false,
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(179, 193, 186)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "União Presbiteriana de Adolescentes",
+      "weight": "400"
+    }
+  ],
+  "scheme": "dark",
+  "theme": "dark",
+  "themeColor": "#0d1210",
+  "url": "http://127.0.0.1:8086/auth?role=anonymous&controls=0",
+  "viewport": {
+    "clientWidth": 375,
+    "height": 844,
+    "scrollWidth": 375,
+    "width": 390
+  }
+}

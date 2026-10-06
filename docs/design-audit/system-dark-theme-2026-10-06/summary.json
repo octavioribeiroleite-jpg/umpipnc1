@@ -1,0 +1,3156 @@
+{
+  "date": "2026-10-06",
+  "fixturePort": 8086,
+  "installedPwaPhysicallyTested": false,
+  "nativeSplashPhysicallyTested": false,
+  "systemPreferenceEmulatedBy": "documented CDP Emulation.setEmulatedMedia; OS setting unchanged",
+  "viewportEmulatedBy": "documented CDP Emulation.setDeviceMetricsOverride",
+  "contrastMethod": "sRGB WCAG ratio from computed text color and ancestor-composited backgrounds; gradient contexts and disabled controls excluded from pass claim; 350 ms settling after CSS theme transitions",
+  "captures": [
+    {
+      "name": "account-dark-focus-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 8,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "account-light-live-preserved-390",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#f8fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 8,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "diretoria-alert-dialog-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 68,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "diretoria-dashboard-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "themeColor": "#0d211a",
+      "horizontalOverflow": 0,
+      "sampleCount": 63,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "diretoria-dashboard-dark-768",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 768,
+        "height": 1024,
+        "scrollWidth": 768,
+        "width": 768
+      },
+      "themeColor": "#0d211a",
+      "horizontalOverflow": 0,
+      "sampleCount": 32,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "diretoria-dashboard-light-live-1440",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "themeColor": "#f4f8f2",
+      "horizontalOverflow": 0,
+      "sampleCount": 63,
+      "plainTextBelow4_5": [
+        {
+          "text": "🎉 Hoje!",
+          "contrast": 3.74
+        }
+      ],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-admin-pin-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 18,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-dialog-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 26,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-dialog-dark-768",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 768,
+        "height": 1024,
+        "scrollWidth": 768,
+        "width": 768
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 16,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-entry-before-filled-dark-375x740-safe",
+      "phase": "finding-before-correction",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 360,
+        "height": 740,
+        "scrollWidth": 360,
+        "width": 375
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 17,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-entry-before-filled-dark-390x844-safe",
+      "phase": "finding-before-correction",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 18,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-entry-empty-dark-375x740-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 18,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-entry-filled-dark-375x740-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-entry-filled-dark-390x844-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-entry-filled-light-375x740-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#f8fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-entry-filled-light-390x844-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#f8fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-home-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#161d1a",
+      "horizontalOverflow": 0,
+      "sampleCount": 21,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-menu-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 21,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-professor-entry-filled-dark-375x740-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-professor-entry-filled-dark-390x844-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-professor-entry-filled-light-375x740-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#f8fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-professor-entry-filled-light-390x844-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#f8fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-professor-home-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#161d1a",
+      "horizontalOverflow": 0,
+      "sampleCount": 21,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-professor-name-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 7,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-professor-pin-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 18,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-professor-return-home-light-390",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#f7fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 9,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-profile-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 9,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-after-filled-dark-360",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 360,
+        "height": 780,
+        "scrollWidth": 360,
+        "width": 360
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 40,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-before-dark-390",
+      "phase": "finding-before-correction",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 41,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-empty-dark-375x740-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 38,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-empty-dark-390x844-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 40,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-empty-light-375x740-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 38,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-empty-light-390x844-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 40,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-error-dark-375x740-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 40,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-error-dark-390x844-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 42,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-error-light-375x740-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 40,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-error-light-390x844-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 42,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-filled-dark-375x740-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 39,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-filled-dark-390x844-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 41,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-filled-light-375x740-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 39,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-filled-light-390x844-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 41,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-loading-dark-375x740-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 39,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-loading-dark-390x844-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 41,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-loading-light-375x740-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 39,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-loading-light-390x844-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 41,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-return-home-dark-375",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 360,
+        "height": 740,
+        "scrollWidth": 360,
+        "width": 375
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 7,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-stress-three-lines-filled-dark-375x740-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 22,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-stress-three-lines-filled-dark-390x844-safe",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 22,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-stress-three-lines-filled-light-375x740-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 22,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-reauth-stress-three-lines-filled-light-390x844-safe",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#6f7170",
+      "horizontalOverflow": 0,
+      "sampleCount": 22,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-students-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1425,
+        "height": 900,
+        "scrollWidth": 1425,
+        "width": 1440
+      },
+      "themeColor": "#0a0f0d",
+      "horizontalOverflow": 0,
+      "sampleCount": 32,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-students-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#161d1a",
+      "horizontalOverflow": 0,
+      "sampleCount": 17,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "ebd-students-light-1440",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 1425,
+        "height": 900,
+        "scrollWidth": 1425,
+        "width": 1440
+      },
+      "themeColor": "#12372a",
+      "horizontalOverflow": 0,
+      "sampleCount": 32,
+      "plainTextBelow4_5": [
+        {
+          "text": "Nome",
+          "contrast": 4.47
+        },
+        {
+          "text": "Status",
+          "contrast": 4.47
+        },
+        {
+          "text": "Origem",
+          "contrast": 4.47
+        },
+        {
+          "text": "Cadastro",
+          "contrast": 4.47
+        },
+        {
+          "text": "Ações",
+          "contrast": 4.47
+        }
+      ],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-auth-context-pending-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 9,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-dark-1024",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "width": 1024
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 22,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 22,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 9,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-dark-768",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 768,
+        "height": 1024,
+        "scrollWidth": 768,
+        "width": 768
+      },
+      "themeColor": "#161d1a",
+      "horizontalOverflow": 0,
+      "sampleCount": 15,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-dark-live-375",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 360,
+        "height": 812,
+        "scrollWidth": 360,
+        "width": 375
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 9,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-dark-restart-375",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 360,
+        "height": 812,
+        "scrollWidth": 360,
+        "width": 375
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 9,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-light-375",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 360,
+        "height": 812,
+        "scrollWidth": 360,
+        "width": 375
+      },
+      "themeColor": "#f7fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 9,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "home-light-live-390",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#f7fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 9,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "opening-pending-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 2,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "opening-pending-light-live-390",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#f7fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 2,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "pastor-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1425,
+        "height": 1000,
+        "scrollWidth": 1425,
+        "width": 1440
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 66,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "pastor-dark-768",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 753,
+        "height": 1024,
+        "scrollWidth": 753,
+        "width": 768
+      },
+      "themeColor": "#0a0f0d",
+      "horizontalOverflow": 0,
+      "sampleCount": 50,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "pastor-light-live-1440",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 1425,
+        "height": 1000,
+        "scrollWidth": 1425,
+        "width": 1440
+      },
+      "themeColor": "#12372a",
+      "horizontalOverflow": 0,
+      "sampleCount": 66,
+      "plainTextBelow4_5": [
+        {
+          "text": "Atualizado em 06/10/2026 às 00h00",
+          "contrast": 2.48
+        }
+      ],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "pin-diretoria-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 18,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "pin-diretoria-error-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 19,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "pin-diretoria-light-live-preserved-390",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#f8fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 18,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "portal-content-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "themeColor": "#161d1a",
+      "horizontalOverflow": 0,
+      "sampleCount": 24,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "portal-content-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#161d1a",
+      "horizontalOverflow": 0,
+      "sampleCount": 21,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "portal-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 6,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "portal-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 6,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "portal-dark-768",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 768,
+        "height": 1024,
+        "scrollWidth": 768,
+        "width": 768
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 6,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "portal-light-live-390",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#f7fbf8",
+      "horizontalOverflow": 0,
+      "sampleCount": 6,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "society-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 11,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-access-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 18,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-account-dialog-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 15,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-bank-table-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1425,
+        "height": 1000,
+        "scrollWidth": 1425,
+        "width": 1440
+      },
+      "themeColor": "#0a0f0d",
+      "horizontalOverflow": 0,
+      "sampleCount": 49,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-bank-table-light-live-1440",
+      "phase": "verified",
+      "scheme": "light",
+      "theme": "light",
+      "viewport": {
+        "clientWidth": 1425,
+        "height": 1000,
+        "scrollWidth": 1425,
+        "width": 1440
+      },
+      "themeColor": "#12372a",
+      "horizontalOverflow": 0,
+      "sampleCount": 49,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1425,
+        "height": 1000,
+        "scrollWidth": 1425,
+        "width": 1440
+      },
+      "themeColor": "#0a0f0d",
+      "horizontalOverflow": 0,
+      "sampleCount": 56,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#161d1a",
+      "horizontalOverflow": 0,
+      "sampleCount": 22,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-dark-768",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 753,
+        "height": 1024,
+        "scrollWidth": 753,
+        "width": 768
+      },
+      "themeColor": "#0a0f0d",
+      "horizontalOverflow": 0,
+      "sampleCount": 35,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-entry-dialog-dark-1440",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 77,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-entry-dialog-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 38,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-pin-dialog-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "themeColor": "#060807",
+      "horizontalOverflow": 0,
+      "sampleCount": 25,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "IPNC",
+          "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    },
+    {
+      "name": "treasury-workflow-dark-390",
+      "phase": "verified",
+      "scheme": "dark",
+      "theme": "dark",
+      "viewport": {
+        "clientWidth": 375,
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 390
+      },
+      "themeColor": "#0d1210",
+      "horizontalOverflow": 0,
+      "sampleCount": 14,
+      "plainTextBelow4_5": [],
+      "logos": [
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        },
+        {
+          "alt": "Marca IPNC",
+          "filter": "none",
+          "naturalWidth": 1254,
+          "src": "/src/assets/logo-ipnc.png"
+        }
+      ]
+    }
+  ],
+  "behavior": {
+    "liveSchemeSwitch": true,
+    "pinDigitsPreservedAcrossSwitch": 2,
+    "accountUsernamePreservedAcrossSwitch": "admin-ficticio (synthetic)",
+    "sameRouteAndDataPreservedAcrossSwitch": true,
+    "darkHomeAfterReload": true,
+    "pendingBoot": {
+      "route": "/?role=anonymous&state=loading",
+      "darkBackground": "rgb(13, 18, 16)",
+      "rootInert": true,
+      "pendingMarker": true,
+      "bootState": "loading",
+      "ariaHidden": null
+    },
+    "modalThemeColorStableAcrossFocusAndScroll": "#060807",
+    "modalThemeColorAfterClose": "#161d1a",
+    "ebdProfessorFullHomeButtonReturnsActualHome": true,
+    "ebdReauthFullHomeButtonReturnsActualHome": true,
+    "ebdNormalFilledAdminAndProfessorWithoutVerticalScroll": true,
+    "ebdReauthEmptyFilledLoadingWrongPinWithoutInternalScroll": true,
+    "ebdSyntheticPersistentThreeLineErrorWithSixDigits": {
+      "text": "Não foi possível confirmar o acesso. Confira seu PIN e tente novamente para continuar com segurança.",
+      "errorHeight": 54.5859375,
+      "lineHeight": 18.2,
+      "measuredLineCount": 2.9992273351648353,
+      "usesRealPinPadAndDialog": true,
+      "syntheticOnlyErrorText": true,
+      "notRealHandlerError": true
+    }
+  },
+  "correctedFindings": {
+    "directoryDesktopChromeBefore": "#f9faf3",
+    "directoryDesktopChromeAfter": "#0d211a",
+    "pastorActiveContrastBefore": 1.5,
+    "pastorActiveContrastAfter": 10.7,
+    "ebdNormalFilledBefore": {
+      "375x740DocumentHeight": 926,
+      "390x844DocumentHeight": 926,
+      "confirmBottom": 848.3,
+      "safeBottom375": 706,
+      "safeBottom390": 810
+    },
+    "ebdNormalFilledAfter": {
+      "375x740DocumentHeight": 740,
+      "390x844DocumentHeight": 844,
+      "safeAreaControlsOutside": [],
+      "directorDefaultScaleUntouched": true
+    }
+  },
+  "ebdPinGeometry": [
+    {
+      "name": "ebd-entry-filled-dark-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 740,
+      "clientHeight": 740,
+      "scrollHeight": 740,
+      "documentHeight": 740,
+      "controlsOutsideSafeArea": [],
+      "slotCount": null,
+      "keyCount": null,
+      "headings": []
+    },
+    {
+      "name": "ebd-entry-filled-dark-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 844,
+      "clientHeight": 844,
+      "scrollHeight": 844,
+      "documentHeight": 844,
+      "controlsOutsideSafeArea": [],
+      "slotCount": null,
+      "keyCount": null,
+      "headings": []
+    },
+    {
+      "name": "ebd-entry-filled-light-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 740,
+      "clientHeight": 740,
+      "scrollHeight": 740,
+      "documentHeight": 740,
+      "controlsOutsideSafeArea": [],
+      "slotCount": null,
+      "keyCount": null,
+      "headings": []
+    },
+    {
+      "name": "ebd-entry-filled-light-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 844,
+      "clientHeight": 844,
+      "scrollHeight": 844,
+      "documentHeight": 844,
+      "controlsOutsideSafeArea": [],
+      "slotCount": null,
+      "keyCount": null,
+      "headings": []
+    },
+    {
+      "name": "ebd-professor-entry-filled-dark-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 740,
+      "clientHeight": 740,
+      "scrollHeight": 740,
+      "documentHeight": 740,
+      "controlsOutsideSafeArea": [],
+      "slotCount": null,
+      "keyCount": null,
+      "headings": []
+    },
+    {
+      "name": "ebd-professor-entry-filled-dark-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 844,
+      "clientHeight": 844,
+      "scrollHeight": 844,
+      "documentHeight": 844,
+      "controlsOutsideSafeArea": [],
+      "slotCount": null,
+      "keyCount": null,
+      "headings": []
+    },
+    {
+      "name": "ebd-professor-entry-filled-light-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 740,
+      "clientHeight": 740,
+      "scrollHeight": 740,
+      "documentHeight": 740,
+      "controlsOutsideSafeArea": [],
+      "slotCount": null,
+      "keyCount": null,
+      "headings": []
+    },
+    {
+      "name": "ebd-professor-entry-filled-light-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 844,
+      "clientHeight": 844,
+      "scrollHeight": 844,
+      "documentHeight": 844,
+      "controlsOutsideSafeArea": [],
+      "slotCount": null,
+      "keyCount": null,
+      "headings": []
+    },
+    {
+      "name": "ebd-reauth-empty-dark-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 516.578125,
+      "clientHeight": 515,
+      "scrollHeight": 515,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-empty-dark-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 573.1796875,
+      "clientHeight": 571,
+      "scrollHeight": 571,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-empty-light-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 516.578125,
+      "clientHeight": 515,
+      "scrollHeight": 515,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-empty-light-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 573.1796875,
+      "clientHeight": 571,
+      "scrollHeight": 571,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-error-dark-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 592.7734375,
+      "clientHeight": 591,
+      "scrollHeight": 591,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-error-dark-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 651.375,
+      "clientHeight": 649,
+      "scrollHeight": 649,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-error-light-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 592.7734375,
+      "clientHeight": 591,
+      "scrollHeight": 591,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-error-light-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 651.375,
+      "clientHeight": 649,
+      "scrollHeight": 649,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-filled-dark-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 566.578125,
+      "clientHeight": 565,
+      "scrollHeight": 565,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-filled-dark-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 625.1796875,
+      "clientHeight": 623,
+      "scrollHeight": 623,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-filled-light-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 566.578125,
+      "clientHeight": 565,
+      "scrollHeight": 565,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-filled-light-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 625.1796875,
+      "clientHeight": 623,
+      "scrollHeight": 623,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-loading-dark-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 566.578125,
+      "clientHeight": 565,
+      "scrollHeight": 565,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-loading-dark-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 625.1796875,
+      "clientHeight": 623,
+      "scrollHeight": 623,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-loading-light-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 566.578125,
+      "clientHeight": 565,
+      "scrollHeight": 565,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-loading-light-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 625.1796875,
+      "clientHeight": 623,
+      "scrollHeight": 623,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD"
+      ]
+    },
+    {
+      "name": "ebd-reauth-stress-three-lines-filled-dark-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 629.1640625,
+      "clientHeight": 627,
+      "scrollHeight": 627,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD · Professor"
+      ]
+    },
+    {
+      "name": "ebd-reauth-stress-three-lines-filled-dark-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 687.765625,
+      "clientHeight": 686,
+      "scrollHeight": 686,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD · Professor"
+      ]
+    },
+    {
+      "name": "ebd-reauth-stress-three-lines-filled-light-375x740-safe",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 629.1640625,
+      "clientHeight": 627,
+      "scrollHeight": 627,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD · Professor"
+      ]
+    },
+    {
+      "name": "ebd-reauth-stress-three-lines-filled-light-390x844-safe",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "syntheticSafeInsets": {
+        "top": 44,
+        "bottom": 34,
+        "left": 18,
+        "right": 18
+      },
+      "surfaceHeight": 687.765625,
+      "clientHeight": 686,
+      "scrollHeight": 686,
+      "documentHeight": null,
+      "controlsOutsideSafeArea": [],
+      "slotCount": 6,
+      "keyCount": 12,
+      "headings": [
+        "Confirmar acesso",
+        "Secretaria EBD · Professor"
+      ]
+    }
+  ],
+  "captureCount": 88,
+  "verifiedCaptureCount": 85,
+  "geometryCount": 28
+}

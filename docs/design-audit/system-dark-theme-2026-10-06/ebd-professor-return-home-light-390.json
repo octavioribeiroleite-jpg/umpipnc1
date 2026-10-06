@@ -1,0 +1,186 @@
+{
+  "bodyBackground": "rgb(247, 251, 248)",
+  "colorScheme": "light",
+  "edgeBackground": "#f7fbf8",
+  "htmlClass": "",
+  "logos": [
+    {
+      "alt": "IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-eyebrow",
+      "contrast": 5.43,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "11px",
+      "foreground": "rgb(36, 116, 84)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Bem-vindo à IPNC",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-heading-mobile",
+      "contrast": 14.11,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "31.2px",
+      "foreground": "rgb(8, 46, 35)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Escolha como acessar",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "auth-intro",
+      "contrast": 5.13,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(88, 111, 112)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Escolha sua área para continuar.",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 11.36,
+      "disabled": false,
+      "effectiveBackground": [
+        254,
+        255,
+        255
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(10, 66, 53)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Diretoria",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.34,
+      "disabled": false,
+      "effectiveBackground": [
+        254,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(88, 111, 112)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Reuniões, tarefas e organização",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 11.36,
+      "disabled": false,
+      "effectiveBackground": [
+        254,
+        255,
+        255
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(10, 66, 53)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Secretaria EBD",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.34,
+      "disabled": false,
+      "effectiveBackground": [
+        254,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(88, 111, 112)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Turmas, chamada e histórico",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 11.36,
+      "disabled": false,
+      "effectiveBackground": [
+        254,
+        255,
+        255
+      ],
+      "fontSize": "17px",
+      "foreground": "rgb(10, 66, 53)",
+      "gradientContext": false,
+      "tag": "STRONG",
+      "text": "Finanças",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 5.34,
+      "disabled": false,
+      "effectiveBackground": [
+        254,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(88, 111, 112)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Acesso privado por sociedade",
+      "weight": "400"
+    }
+  ],
+  "scheme": "light",
+  "theme": "light",
+  "themeColor": "#f7fbf8",
+  "url": "http://127.0.0.1:8086/auth?home=1",
+  "viewport": {
+    "clientWidth": 375,
+    "height": 844,
+    "scrollWidth": 375,
+    "width": 390
+  }
+}

@@ -121,6 +121,15 @@
 .dark .diretoria-theme .diretoria-dashboard .dashboard-metric--blue .summary-value, .dark.diretoria-theme .diretoria-dashboard .dashboard-metric--blue .summary-value { color: #a7c4fd; }
 .dark .diretoria-theme .diretoria-dashboard .dashboard-metric--gold .summary-value, .dark.diretoria-theme .diretoria-dashboard .dashboard-metric--gold .summary-value { color: #efcf83; }
 .dark .diretoria-dashboard-shell .diretoria-mobile-header--home { background: #142c23; }
+html.dark .dashboard-quick-action:hover { background: #294b38; border-color: #87b99a; }
+html.dark .dashboard-quick-action--gold:hover { background: #514124; border-color: #ddbe78; }
+html.dark .dashboard-metric::after { background: hsl(var(--success) / .08); }
+html.dark .dashboard-metric--blue::after { background: hsl(var(--info) / .08); }
+html.dark .dashboard-metric--gold::after { background: hsl(var(--warning) / .08); }
+html.dark .diretoria-theme .diretoria-dashboard .dashboard-metric > div:first-child:not(.summary-card-content) { background: hsl(var(--success) / .12); color: hsl(var(--success)); }
+html.dark .diretoria-theme .diretoria-dashboard .dashboard-metric--blue > div:first-child:not(.summary-card-content) { background: hsl(var(--info) / .12); color: hsl(var(--info)); }
+html.dark .diretoria-theme .diretoria-dashboard .dashboard-metric--gold > div:first-child:not(.summary-card-content) { background: hsl(var(--warning) / .12); color: hsl(var(--warning)); }
+html.dark .dashboard-section-heading > div:first-child > div:first-child { color: hsl(var(--primary)); }
 @media (min-width: 700px) {
   .dashboard-topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin: -6px 0 14px; min-height: 50px; }
 }

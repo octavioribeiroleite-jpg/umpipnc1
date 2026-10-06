@@ -51,3 +51,6 @@ td, th { font-variant-numeric: tabular-nums; }
 
 .ipnc-page-header { container-type: inline-size; container-name: page-header; }
 @container page-header (max-width: 14rem) { .ipnc-page-icon { display: none; } }
+
+/* Pastoral selection uses the dark accent surface, rather than a filled CTA. */
+html.dark .ipnc-pastor-sidebar [aria-current='page'] { color: hsl(var(--sidebar-accent-foreground)); }

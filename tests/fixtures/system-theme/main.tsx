@@ -1,0 +1,26 @@
+import { createRoot } from 'react-dom/client';
+import App from '@/App';
+import AppShell from '@/components/layout/AppShell';
+import SocietyScreenEnhancer from '@/components/auth/SocietyScreenEnhancer';
+import IdentityConfirmationEnhancer from '@/components/auth/IdentityConfirmationEnhancer';
+import { startAppOpening } from '@/lib/app-opening';
+import { startSystemTheme } from '@/lib/system-theme';
+import EbdPinStressFixture from './ebd-pin-stress';
+import { applyFixtureSafeAreas } from '../mobile-safe-area';
+import '../../../src/index.css';
+import '../../../src/responsive-foundation.css';
+import '../../../src/auth-readability.css';
+import '../../../src/society-selector.css';
+import '../../../src/identity-confirmation.css';
+import '../../../src/interface-system.css';
+import '../../../src/mobile-app-shell.css';
+import '../../../src/opening.css';
+
+applyFixtureSafeAreas(new URLSearchParams(location.search));
+const theme = startSystemTheme();
+const root = document.getElementById('root')!;
+const splash = document.getElementById('ipnc-opening');
+const opening = splash ? startAppOpening({ root, splash }) : null;
+const stress = new URLSearchParams(location.search).get('pinStress') === '1';
+createRoot(root).render(<AppShell>{stress ? <EbdPinStressFixture /> : <App />}<SocietyScreenEnhancer /><IdentityConfirmationEnhancer /></AppShell>);
+if (import.meta.hot) import.meta.hot.dispose(() => { theme(); opening?.stop(); });

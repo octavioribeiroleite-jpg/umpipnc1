@@ -1,0 +1,172 @@
+{
+  "controls": [
+    {
+      "rect": {
+        "bottom": 92,
+        "height": 48,
+        "top": 44,
+        "width": 85.2109375
+      },
+      "text": "Voltar"
+    },
+    {
+      "rect": {
+        "bottom": 92,
+        "height": 48,
+        "top": 44,
+        "width": 161.2265625
+      },
+      "text": "Voltar para a Home"
+    },
+    {
+      "rect": {
+        "bottom": 270,
+        "height": 174,
+        "top": 96,
+        "width": 174
+      },
+      "text": "IPNC"
+    },
+    {
+      "rect": {
+        "bottom": 520.3359375,
+        "height": 46,
+        "top": 474.3359375,
+        "width": 339
+      },
+      "text": "PIN de 6 dígitos"
+    },
+    {
+      "rect": {
+        "bottom": 596.3359375,
+        "height": 54,
+        "top": 542.3359375,
+        "width": 107.6640625
+      },
+      "text": "1"
+    },
+    {
+      "rect": {
+        "bottom": 596.3359375,
+        "height": 54,
+        "top": 542.3359375,
+        "width": 107.6640625
+      },
+      "text": "2"
+    },
+    {
+      "rect": {
+        "bottom": 596.3359375,
+        "height": 54,
+        "top": 542.3359375,
+        "width": 107.6640625
+      },
+      "text": "3"
+    },
+    {
+      "rect": {
+        "bottom": 658.3359375,
+        "height": 54,
+        "top": 604.3359375,
+        "width": 107.6640625
+      },
+      "text": "4"
+    },
+    {
+      "rect": {
+        "bottom": 658.3359375,
+        "height": 54,
+        "top": 604.3359375,
+        "width": 107.6640625
+      },
+      "text": "5"
+    },
+    {
+      "rect": {
+        "bottom": 658.3359375,
+        "height": 54,
+        "top": 604.3359375,
+        "width": 107.6640625
+      },
+      "text": "6"
+    },
+    {
+      "rect": {
+        "bottom": 720.3359375,
+        "height": 54,
+        "top": 666.3359375,
+        "width": 107.6640625
+      },
+      "text": "7"
+    },
+    {
+      "rect": {
+        "bottom": 720.3359375,
+        "height": 54,
+        "top": 666.3359375,
+        "width": 107.6640625
+      },
+      "text": "8"
+    },
+    {
+      "rect": {
+        "bottom": 720.3359375,
+        "height": 54,
+        "top": 666.3359375,
+        "width": 107.6640625
+      },
+      "text": "9"
+    },
+    {
+      "rect": {
+        "bottom": 782.3359375,
+        "height": 54,
+        "top": 728.3359375,
+        "width": 107.6640625
+      },
+      "text": "Limpar"
+    },
+    {
+      "rect": {
+        "bottom": 782.3359375,
+        "height": 54,
+        "top": 728.3359375,
+        "width": 107.6640625
+      },
+      "text": "0"
+    },
+    {
+      "rect": {
+        "bottom": 782.3359375,
+        "height": 54,
+        "top": 728.3359375,
+        "width": 107.6640625
+      },
+      "text": "Apagar último dígito"
+    },
+    {
+      "rect": {
+        "bottom": 848.3359375,
+        "height": 48,
+        "top": 800.3359375,
+        "width": 339
+      },
+      "text": "Confirmar e entrar"
+    }
+  ],
+  "documentHeight": 926,
+  "page": {
+    "clientHeight": 926,
+    "rect": {
+      "bottom": 925.8359375,
+      "height": 925.8359375,
+      "top": 0,
+      "width": 375
+    },
+    "scrollHeight": 926
+  },
+  "viewport": {
+    "height": 844,
+    "width": 390
+  }
+}

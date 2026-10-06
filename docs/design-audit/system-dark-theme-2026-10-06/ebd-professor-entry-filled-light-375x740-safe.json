@@ -1,0 +1,350 @@
+{
+  "bodyBackground": "rgb(247, 251, 248)",
+  "colorScheme": "light",
+  "edgeBackground": "#f8fbf8",
+  "htmlClass": "",
+  "logos": [
+    {
+      "alt": "IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 11.99,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(7, 59, 50)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "Voltar",
+      "weight": "650"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ui-button inline-flex items-center justify-center break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground px-4 h-auto min-h-11 whitespace-normal gap-2 py-2 text-left leading-snug ebd-access__back ebd-access__home",
+      "contrast": 11.99,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(7, 59, 50)",
+      "gradientContext": true,
+      "tag": "BUTTON",
+      "text": "Voltar para a Home",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__eyebrow",
+      "contrast": 5.06,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "11px",
+      "foreground": "rgb(8, 123, 86)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Acesso restrito",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "",
+      "contrast": 11.99,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "24px",
+      "foreground": "rgb(7, 59, 50)",
+      "gradientContext": true,
+      "tag": "H1",
+      "text": "Secretaria EBD · Professor",
+      "weight": "750"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ebd-access__intro",
+      "contrast": 5.23,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(84, 110, 114)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Digite seu PIN de 6 dígitos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "sr-only",
+      "contrast": 11.99,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(7, 59, 50)",
+      "gradientContext": true,
+      "tag": "SPAN",
+      "text": "6 de 6 dígitos preenchidos",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "1",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "2",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "3",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "4",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "5",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "6",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "7",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "8",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "9",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(240, 244, 241)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground min-h-12 px-4 py-2 ipnc-pin-key ipnc-pin-utility",
+      "contrast": 4.91,
+      "disabled": false,
+      "effectiveBackground": [
+        240,
+        244,
+        241
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(84, 110, 114)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Limpar",
+      "weight": "500"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 px-4 py-2 ipnc-pin-key",
+      "contrast": 14.07,
+      "disabled": true,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "20px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "0",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(8, 123, 86)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 min-h-12 px-4 py-2 ipnc-pin-confirm",
+      "contrast": 5.28,
+      "disabled": false,
+      "effectiveBackground": [
+        8,
+        123,
+        86
+      ],
+      "fontSize": "15px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Confirmar e entrar",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ipnc-pin-help",
+      "contrast": 5.23,
+      "disabled": false,
+      "effectiveBackground": [
+        248,
+        251,
+        248
+      ],
+      "fontSize": "13px",
+      "foreground": "rgb(84, 110, 114)",
+      "gradientContext": true,
+      "tag": "P",
+      "text": "Use o teclado numérico ou clique nos botões",
+      "weight": "400"
+    }
+  ],
+  "scheme": "light",
+  "theme": "light",
+  "themeColor": "#f8fbf8",
+  "url": "http://127.0.0.1:8086/secretaria?role=anonymous&edge=20&auth=20&read=20&realtime=20&safe=1",
+  "viewport": {
+    "clientWidth": 375,
+    "height": 740,
+    "scrollWidth": 375,
+    "width": 375
+  }
+}

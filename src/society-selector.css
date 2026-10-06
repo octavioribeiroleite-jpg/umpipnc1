@@ -269,3 +269,18 @@
     font-size: 13px;
   }
 }
+
+html.dark .society-selector-header > button { border-color: hsl(var(--border)) !important; background: hsl(var(--card)) !important; color: hsl(var(--foreground)) !important; }
+html.dark .society-selector-header h2 { color: hsl(var(--foreground)) !important; text-shadow: none; }
+html.dark .society-selector-subtitle { color: hsl(var(--muted-foreground)) !important; text-shadow: none; }
+html.dark .society-selector-card { border-color: hsl(var(--border)) !important; background: hsl(var(--card)) !important; box-shadow: 0 16px 42px #00000040 !important; }
+html.dark .society-selector-card:hover { border-color: hsl(var(--primary) / .7) !important; background: hsl(var(--secondary)) !important; box-shadow: 0 20px 52px #00000060 !important; }
+html.dark .society-selector-title { color: hsl(var(--foreground)) !important; }
+html.dark .society-selector-description { color: hsl(var(--muted-foreground)); }
+html.dark .society-selector-chevron { color: hsl(var(--primary)); }
+html.dark .society-selector-card[data-society="saf"] .society-selector-chevron { color: color-mix(in srgb, #ec4899 65%, hsl(var(--foreground))); }
+html.dark .society-selector-card[data-society="ucp"] .society-selector-chevron { color: color-mix(in srgb, #8b5cf6 65%, hsl(var(--foreground))); }
+html.dark .society-selector-card[data-society="upa"] .society-selector-chevron { color: color-mix(in srgb, #f97316 65%, hsl(var(--foreground))); }
+html.dark .society-selector-card[data-society="ump"] .society-selector-chevron { color: color-mix(in srgb, #3b82f6 65%, hsl(var(--foreground))); }
+html.dark .society-selector-card[data-society="uph"] .society-selector-chevron { color: color-mix(in srgb, #10b981 65%, hsl(var(--foreground))); }
+html.dark .society-selector-card[data-society="pastor"] .society-selector-chevron { color: color-mix(in srgb, #173a63 45%, hsl(var(--foreground))); }

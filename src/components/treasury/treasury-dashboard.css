@@ -42,6 +42,16 @@
 .tr-sidebar-note > svg { margin-bottom: 12px; }
 .tr-sidebar-note strong { display: block; font-size: 0.875rem; font-weight: 600; }
 .tr-sidebar-note p { margin-top: 8px; font-size: 0.75rem; line-height: 1.6; color: #d7efe2; opacity: 1; }
+html.dark .tr-sidebar { color: hsl(var(--sidebar-foreground)); }
+html.dark .tr-brand small,
+html.dark .tr-sidebar-label,
+html.dark .tr-sidebar-note p { color: hsl(var(--sidebar-muted)); }
+html.dark .tr-nav:hover:not(:disabled) { background: hsl(var(--sidebar-accent)); }
+html.dark .tr-nav.active,
+html.dark .tr-nav.active:hover { background: hsl(var(--sidebar-accent)); color: hsl(var(--sidebar-accent-foreground)); box-shadow: inset 3px 0 hsl(var(--sidebar-primary)); }
+html.dark .tr-nav .tr-dot,
+html.dark .tr-nav.active .tr-dot { box-shadow: 0 0 0 2px hsl(var(--sidebar-foreground)); }
+html.dark .tr-sidebar-note { border-color: hsl(var(--sidebar-border)); background: hsl(var(--sidebar-accent)); }
 .tr-return { display: flex; align-items: center; gap: 8px; margin-top: 16px; min-height: 48px; font-size: 0.75rem; }
 .tr-main { min-width: 0; flex: 1; }
 .tr-topbar { min-height: 72px; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: calc(var(--tr-topbar-padding) + var(--safe-top)) max(var(--tr-page-padding), var(--safe-right)) var(--tr-topbar-padding) max(var(--tr-page-padding), var(--safe-left)); background: hsl(var(--card)); border-bottom: 1px solid var(--tr-line); }
@@ -96,6 +106,7 @@
 .tr-fund-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .tr-fund-title > svg { color: var(--tr-muted); }
 .tr-fund-badge { display: inline-flex; align-items: center; min-height: 32px; padding: 5px 10px; background: color-mix(in srgb, var(--fund-color) 10%, hsl(var(--card))); border-radius: 8px; font-size: 0.875rem; font-weight: 700; color: var(--fund-color); overflow-wrap: anywhere; }
+html.dark .tr-fund-badge { color: color-mix(in srgb, var(--fund-color) 45%, hsl(var(--foreground))); }
 .tr-fund-card h3 { font-size: 0.8125rem; line-height: 1.5; color: var(--tr-muted); font-weight: 400; margin-bottom: 16px; overflow-wrap: anywhere; }
 .tr-fund-label { font-size: 0.75rem; color: var(--tr-muted); }
 .tr-fund-card > strong { display: block; font-size: 1.625rem; letter-spacing: -.025em; font-weight: 700; margin: 4px 0 16px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }

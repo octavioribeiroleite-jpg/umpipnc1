@@ -20,3 +20,11 @@
 .treasury-locked button { min-height: 48px; padding: 12px 24px; border-radius: 12px; background: #245b43; color: white; }
 .treasury-locked a { text-decoration: underline; min-height: 48px; padding: 12px; }
 .treasury-access-dialog .ta-form label { display: grid; gap: 8px; }
+
+html.dark .treasury-access-dialog { background: hsl(var(--card)) !important; color: hsl(var(--foreground)) !important; border-color: hsl(var(--border)) !important; }
+html.dark .treasury-access-dialog .ebd-access { background: transparent; }
+html.dark .treasury-access-dialog .ta-submit { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+html.dark .treasury-access-dialog .ta-submit:hover { background: color-mix(in srgb, hsl(var(--primary)) 90%, hsl(var(--foreground))); }
+html.dark .ta-error { background: hsl(var(--destructive) / .14); border-color: hsl(var(--destructive) / .55); color: color-mix(in srgb, hsl(var(--destructive)) 45%, hsl(var(--foreground))); }
+html.dark .treasury-locked { background: hsl(var(--background)); color: hsl(var(--foreground)); }
+html.dark .treasury-locked button { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }

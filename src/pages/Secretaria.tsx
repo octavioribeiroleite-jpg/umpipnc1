@@ -583,15 +583,14 @@ export default function Secretaria() {
   };
   const reauthDialog = (
 <Dialog open={aiReauthOpen} onOpenChange={setAiReauthOpen}>
-            <DialogContent className="ebd-reauth">
+            <DialogContent className="ebd-reauth" size="access">
               <DialogHeader>
                 <DialogTitle>Confirmar acesso</DialogTitle>
                 <DialogDescription>Digite novamente o PIN do seu acesso. Seus dados preenchidos continuam na tela.</DialogDescription>
               </DialogHeader>
               <PinPad
-                embedded
                 presentation="compact"
-                profileLabel={accessLevel === 'admin' ? 'Administrador' : 'Senha da sala'}
+                profileLabel={accessLevel === 'admin' ? 'Secretaria EBD' : 'Secretaria EBD · Professor'}
                 onBack={() => setAiReauthOpen(false)}
                 onHome={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })}
                 onComplete={refreshBirthdaySession}
@@ -646,7 +645,7 @@ export default function Secretaria() {
 
     return (
       <PinPad
-        profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Senha da sala'}
+        profileLabel={selectedProfile === 'admin' ? 'Secretaria EBD' : 'Secretaria EBD · Professor'}
         onBack={handleBack}
         onHome={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })}
         onComplete={handlePinComplete}

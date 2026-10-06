@@ -10,6 +10,22 @@
     <meta name="description" content="Sistema de gestão - Igreja Presbiteriana de Nova Carapina" />
     <meta name="author" content="IPNC" />
     <meta name="theme-color" content="#f7fbf8" />
+    <meta name="color-scheme" content="light dark" />
+    <script id="ipnc-system-theme-boot">
+      // Apply before styles/modules load, so dark devices never paint a white opening.
+      (() => {
+        const dark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
+        const mode = dark ? 'dark' : 'light';
+        const color = dark ? '#0d1210' : '#f7fbf8';
+        const root = document.documentElement;
+        root.classList.toggle('dark', dark);
+        root.dataset.ipncTheme = mode;
+        root.style.colorScheme = mode;
+        root.style.setProperty('--ipnc-boot-background', color);
+        root.style.setProperty('--app-edge-background', color);
+        document.querySelector('meta[name="theme-color"]').content = color;
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -33,7 +49,8 @@
     <meta name="twitter:image" content="https://renovo-ipnc.octavioribeiroleite.chatgpt.site/icons/ipnc-social-v4.png" />
     <meta name="twitter:image:alt" content="Logo oficial IPNC" />
     <style>
-      html,body{margin:0;min-height:100%;background:#f7fbf8}
+      html,body{margin:0;min-height:100%;background:var(--ipnc-boot-background,#f7fbf8)}
+      @media(prefers-color-scheme:dark){:root{--ipnc-boot-background:#0d1210}}
     </style>
   </head>
 

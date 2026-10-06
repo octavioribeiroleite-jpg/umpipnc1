@@ -3,10 +3,23 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
+import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
 const { build } = createRequire(require.resolve('vite'))('esbuild');
 const root = path.resolve(import.meta.dirname, '..');
+const secretaria = ts.createSourceFile('Secretaria.tsx', readFileSync(path.join(root, 'src/pages/Secretaria.tsx'), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+let reauthExpression, entryExpression;
+function findReauth(node) {
+  if (ts.isVariableDeclaration(node) && node.name.getText(secretaria) === 'reauthDialog') reauthExpression = node.initializer.getText(secretaria);
+  if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(secretaria) === 'PinPad'
+    && node.attributes.properties.some(attribute => ts.isJsxAttribute(attribute) && attribute.name.getText(secretaria) === 'profileLabel' && attribute.initializer?.getText(secretaria).includes('selectedProfile'))) entryExpression = node.getText(secretaria);
+  ts.forEachChild(node, findReauth);
+}
+findReauth(secretaria);
+assert.ok(reauthExpression, 'Render the actual Secretaria renewal integration');
+assert.ok(entryExpression, 'Render the actual Secretaria entry integration');
 const bundled = await build({
   absWorkingDir: root,
   stdin: {
@@ -20,7 +33,20 @@ const bundled = await build({
       export function shells() { return renderToStaticMarkup(React.createElement(React.Fragment, null, React.createElement(AccessShell, {title:'Primeiro'}, null), React.createElement(AccessShell, {title:'Segundo', presentation:'dialog'}, null))); }
       export function profiles() { return renderToStaticMarkup(React.createElement(ProfileSelect, {onBack:noop, onSelect:noop})); }
       export function societies() { return renderToStaticMarkup(React.createElement(SocietySelector, {societies:['uph','upa','ump','ucp','saf'].map(slug=>({id:slug,slug,name:'Sociedade fictícia '+slug,color:'#277463'})), onBack:noop, onSelect:noop, onSelectPastor:noop})); }
-      export function pin(presentation='access', embedded=false) { return renderToStaticMarkup(React.createElement(PinPad, {profileLabel:'Perfil fictício', presentation, embedded, onBack:noop, onHome:noop, onComplete:noop})); }`,
+      export function pin(presentation='access', embedded=false) { return renderToStaticMarkup(React.createElement(PinPad, {profileLabel:'Perfil fictício', presentation, embedded, onBack:noop, onHome:noop, onComplete:noop})); }
+      export function reauth(accessLevel, loading=false) {
+        const aiReauthOpen=true, pinError=false, setAiReauthOpen=noop, navigate=noop, refreshBirthdaySession=noop, APP_HOME_PATH='/auth?home=1';
+        const Dialog=({children})=>children;
+        const DialogContent=({children, className, size})=><div role="dialog" className={className} data-dialog-size={size}>{children}</div>;
+        const DialogHeader=({children})=><header>{children}</header>;
+        const DialogTitle=({children})=><h2>{children}</h2>;
+        const DialogDescription=({children})=><p>{children}</p>;
+        return renderToStaticMarkup(${reauthExpression});
+      }
+      export function ebdEntry(selectedProfile, loading=false) {
+        const handleBack=noop, navigate=noop, handlePinComplete=noop, pinError=false, APP_HOME_PATH='/auth?home=1';
+        return renderToStaticMarkup(${entryExpression});
+      }`,
     resolveDir: root, sourcefile: 'access-shell-test.tsx', loader: 'tsx',
   },
   bundle: true, write: false, platform: 'node', format: 'esm', jsx: 'automatic', mainFields: ['module', 'main'],
@@ -82,3 +108,34 @@ test('embedded and standalone PIN pages use the same interface, with all numeric
     assert.equal((html.match(/class="ebd-access__logo"/g) || []).length, 1);
   }
 });
+
+for (const accessLevel of ['admin', 'professor']) {
+  test(`actual EBD renewal for ${accessLevel} renders the compact shared PIN with contextual title and written Home navigation`, () => {
+    const html = render.reauth(accessLevel);
+    assert.match(html, /role="dialog" class="ebd-reauth" data-dialog-size="access"/);
+    assert.match(html, /data-presentation="compact"/);
+    assert.doesNotMatch(html, /<main|ipnc-pin-page|Acesso administrativo|Senha da sala/);
+    assert.match(html, accessLevel === 'admin' ? />Secretaria EBD<\/h2>/ : />Secretaria EBD · Professor<\/h2>/);
+    assert.match(html, />Voltar<\/span>/);
+    assert.match(html, />Voltar para a Home<\/button>/);
+    assert.match(html, /Seus dados preenchidos continuam na tela/);
+    assert.equal((html.match(/class="ebd-access__logo"/g) || []).length, 1);
+    assert.equal((html.match(/class="ipnc-pin-slot(?: ipnc-pin-slot-current)?"/g) || []).length, 6);
+    assert.equal((html.match(/>[0-9]<\/button>/g) || []).length, 10);
+    assert.match(html, /Apagar último dígito/);
+    assert.match(html, /Limpar/);
+    const busy = render.reauth(accessLevel, true);
+    assert.equal((busy.match(/disabled=""/g) || []).length, 14, 'All twelve keys and both navigation actions respect the pending request');
+  });
+  test(`actual EBD entry for ${accessLevel} keeps the shared page PIN and its own title`, () => {
+    const html = render.ebdEntry(accessLevel);
+    assert.match(html, /<main class="ebd-access ipnc-access-shell ipnc-safe-managed ipnc-pin-page" data-presentation="page"/);
+    assert.match(html, accessLevel === 'admin' ? />Secretaria EBD<\/h1>/ : />Secretaria EBD · Professor<\/h1>/);
+    assert.doesNotMatch(html, /Acesso administrativo|Senha da sala/);
+    assert.match(html, /Voltar para a Home/);
+    assert.equal((html.match(/class="ebd-access__logo"/g) || []).length, 1);
+    assert.equal((html.match(/>[0-9]<\/button>/g) || []).length, 10);
+    assert.match(html, /Apagar último dígito/);
+    assert.match(html, /Limpar/);
+  });
+}

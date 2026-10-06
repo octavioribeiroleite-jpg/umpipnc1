@@ -1,0 +1,1155 @@
+{
+  "bodyBackground": "rgb(18, 55, 42)",
+  "colorScheme": "light",
+  "edgeBackground": "#12372a",
+  "htmlClass": "",
+  "logos": [
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    },
+    {
+      "alt": "Marca IPNC",
+      "filter": "none",
+      "naturalWidth": 1254,
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "overflow": [],
+  "samples": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "font-bold text-sm",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(245, 247, 246)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Painel do Pastor",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "break-words text-xs text-sidebar-muted",
+      "contrast": 8.57,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(194, 214, 202)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Maria Oliveira — Revisão fictícia",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 8.64,
+      "disabled": false,
+      "effectiveBackground": [
+        38,
+        84,
+        66
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Visão Geral",
+      "weight": "500"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Calendário",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Comunicados",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Sugestões",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Eleições",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Dízimos",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "Visitantes",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "px-3 text-xs uppercase tracking-wider text-sidebar-muted font-semibold mb-2",
+      "contrast": 8.57,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(194, 214, 202)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Sociedades",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "União de Jovens — Exemplo",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "SAF",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "UPA",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "UPH",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "pastor-nav-label",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.8)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "UCP",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "ui-button inline-flex items-center gap-2 whitespace-normal break-words rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 min-h-12 px-4 py-2 w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+      "contrast": 12.16,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "14px",
+      "foreground": "rgba(245, 247, 246, 0.6)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Sair",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-[10px] text-muted-foreground/70 text-center leading-tight select-none mt-3",
+      "contrast": 2.48,
+      "disabled": false,
+      "effectiveBackground": [
+        18,
+        55,
+        42
+      ],
+      "fontSize": "10px",
+      "foreground": "rgba(94, 112, 103, 0.7)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Atualizado em 06/10/2026 às 00h00",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "mb-1 text-xs font-semibold uppercase tracking-wider text-primary",
+      "contrast": 4.93,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(28, 128, 83)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Painel pastoral",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "break-words font-display text-page-title font-bold leading-tight tracking-tight",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "28px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H1",
+      "text": "Boa tarde, Maria",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "mt-1 max-w-3xl text-base leading-relaxed text-muted-foreground",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "terça-feira, 06 de outubro",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center whitespace-normal break-words font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 rounded-lg px-3 py-2 text-sm gap-1.5",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Resumo IA",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-2xl font-bold leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "24px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "1",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm text-muted-foreground",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Hoje",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-2xl font-bold leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "24px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "1",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm text-muted-foreground",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Semana",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-2xl font-bold leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "24px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "0",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm text-muted-foreground",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Aguardando",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "min-w-0 flex-1 text-lg font-semibold text-center",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "18px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H3",
+      "text": "Outubro 2026",
+      "weight": "600"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "ui-button inline-flex items-center justify-center gap-2 whitespace-normal break-words font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:gap-2 sm:rounded-xl [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-card text-foreground hover:bg-accent min-h-12 rounded-lg px-3 py-2 h-12 text-xs",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Hoje",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "1",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "2",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "3",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "4",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "5",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 4.93,
+      "disabled": false,
+      "effectiveBackground": [
+        28,
+        128,
+        83
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(255, 255, 255)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "6",
+      "weight": "700"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "7",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "8",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "9",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "10",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "11",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "12",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "13",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "14",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "15",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "16",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "17",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "18",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "19",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "20",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "21",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "22",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "23",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "24",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "25",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "26",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "27",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "28",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "29",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "30",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-sm leading-none",
+      "contrast": 14.07,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "SPAN",
+      "text": "31",
+      "weight": "400"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-base font-semibold text-foreground",
+      "contrast": 13.48,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "16px",
+      "foreground": "rgb(24, 48, 40)",
+      "gradientContext": false,
+      "tag": "H2",
+      "text": "Programações de 06/10",
+      "weight": "600"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "text-xs text-muted-foreground",
+      "contrast": 5.04,
+      "disabled": false,
+      "effectiveBackground": [
+        247,
+        251,
+        248
+      ],
+      "fontSize": "12px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "P",
+      "text": "Toque em um dia no calendário para filtrar",
+      "weight": "400"
+    },
+    {
+      "background": "rgb(24, 48, 40)",
+      "class": "min-h-12 px-3 py-2 rounded-xl text-sm font-medium transition-all border bg-foreground text-background border-foreground",
+      "contrast": 13.48,
+      "disabled": false,
+      "effectiveBackground": [
+        24,
+        48,
+        40
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(247, 251, 248)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Todas (1)",
+      "weight": "500"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "min-h-12 px-3 py-2 rounded-xl text-sm font-medium transition-all border bg-card text-muted-foreground border-border/60 hover:bg-muted",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Aguardando (1)",
+      "weight": "500"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "min-h-12 px-3 py-2 rounded-xl text-sm font-medium transition-all border bg-card text-muted-foreground border-border/60 hover:bg-muted",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Concluídas (0)",
+      "weight": "500"
+    },
+    {
+      "background": "rgb(255, 255, 255)",
+      "class": "min-h-12 px-3 py-2 rounded-xl text-sm font-medium transition-all border bg-card text-muted-foreground border-border/60 hover:bg-muted",
+      "contrast": 5.26,
+      "disabled": false,
+      "effectiveBackground": [
+        255,
+        255,
+        255
+      ],
+      "fontSize": "14px",
+      "foreground": "rgb(94, 112, 103)",
+      "gradientContext": false,
+      "tag": "BUTTON",
+      "text": "Canceladas (0)",
+      "weight": "500"
+    }
+  ],
+  "scheme": "light",
+  "theme": "light",
+  "themeColor": "#12372a",
+  "url": "http://127.0.0.1:8086/pastor?role=pastor",
+  "viewport": {
+    "clientWidth": 1425,
+    "height": 1000,
+    "scrollWidth": 1425,
+    "width": 1440
+  }
+}

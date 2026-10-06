@@ -1,0 +1,243 @@
+{
+  "controls": [
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 195.00390625,
+        "height": 44,
+        "left": 51,
+        "right": 128.2109375,
+        "top": 151.00390625,
+        "width": 77.2109375
+      },
+      "text": "Voltar"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 195.00390625,
+        "height": 44,
+        "left": 158.7734375,
+        "right": 324,
+        "top": 151.00390625,
+        "width": 165.2265625
+      },
+      "text": "Voltar para a Home"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 241.00390625,
+        "height": 44,
+        "left": 165.5,
+        "right": 209.5,
+        "top": 197.00390625,
+        "width": 44
+      },
+      "text": "IPNC"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 365.99609375,
+        "height": 32,
+        "left": 51,
+        "right": 324,
+        "top": 333.99609375,
+        "width": 273
+      },
+      "text": "PIN de 6 dígitos"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 478.58203125,
+        "height": 44,
+        "left": 51,
+        "right": 139.328125,
+        "top": 434.58203125,
+        "width": 88.328125
+      },
+      "text": "1"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 478.58203125,
+        "height": 44,
+        "left": 143.328125,
+        "right": 231.6640625,
+        "top": 434.58203125,
+        "width": 88.3359375
+      },
+      "text": "2"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 478.58203125,
+        "height": 44,
+        "left": 235.6640625,
+        "right": 324,
+        "top": 434.58203125,
+        "width": 88.3359375
+      },
+      "text": "3"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 526.58203125,
+        "height": 44,
+        "left": 51,
+        "right": 139.328125,
+        "top": 482.58203125,
+        "width": 88.328125
+      },
+      "text": "4"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 526.58203125,
+        "height": 44,
+        "left": 143.328125,
+        "right": 231.6640625,
+        "top": 482.58203125,
+        "width": 88.3359375
+      },
+      "text": "5"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 526.58203125,
+        "height": 44,
+        "left": 235.6640625,
+        "right": 324,
+        "top": 482.58203125,
+        "width": 88.3359375
+      },
+      "text": "6"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 574.58203125,
+        "height": 44,
+        "left": 51,
+        "right": 139.328125,
+        "top": 530.58203125,
+        "width": 88.328125
+      },
+      "text": "7"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 574.58203125,
+        "height": 44,
+        "left": 143.328125,
+        "right": 231.6640625,
+        "top": 530.58203125,
+        "width": 88.3359375
+      },
+      "text": "8"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 574.58203125,
+        "height": 44,
+        "left": 235.6640625,
+        "right": 324,
+        "top": 530.58203125,
+        "width": 88.3359375
+      },
+      "text": "9"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 622.58203125,
+        "height": 44,
+        "left": 51,
+        "right": 139.328125,
+        "top": 578.58203125,
+        "width": 88.328125
+      },
+      "text": "Limpar"
+    },
+    {
+      "disabled": true,
+      "rect": {
+        "bottom": 622.58203125,
+        "height": 44,
+        "left": 143.328125,
+        "right": 231.6640625,
+        "top": 578.58203125,
+        "width": 88.3359375
+      },
+      "text": "0"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 622.58203125,
+        "height": 44,
+        "left": 235.6640625,
+        "right": 324,
+        "top": 578.58203125,
+        "width": 88.3359375
+      },
+      "text": "Apagar último dígito"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 672.58203125,
+        "height": 44,
+        "left": 51,
+        "right": 324,
+        "top": 628.58203125,
+        "width": 273
+      },
+      "text": "Confirmar e entrar"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 113.41796875,
+        "height": 44,
+        "left": 284,
+        "right": 332,
+        "top": 69.41796875,
+        "width": 48
+      },
+      "text": "Fechar"
+    }
+  ],
+  "dialog": {
+    "clientHeight": 627,
+    "overflowY": "auto",
+    "rect": {
+      "bottom": 689.58203125,
+      "height": 629.1640625,
+      "left": 34,
+      "right": 341,
+      "top": 60.41796875,
+      "width": 307
+    },
+    "scrollHeight": 627
+  },
+  "headings": [
+    "Confirmar acesso",
+    "Secretaria EBD · Professor"
+  ],
+  "keyCount": 12,
+  "slotCount": 6,
+  "viewport": {
+    "height": 740,
+    "width": 375
+  }
+}

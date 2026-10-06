@@ -1,0 +1,16 @@
+{
+  "bodyBackground": "rgb(247, 251, 248)",
+  "buttons": [
+    {
+      "background": "rgba(255, 255, 255, 0.93)",
+      "color": "rgb(16, 47, 38)"
+    }
+  ],
+  "htmlClass": "",
+  "logo": "/src/assets/logo-ipnc.png",
+  "mediaDark": true,
+  "scrollWidth": 375,
+  "themeColor": "#f7fbf8",
+  "url": "http://127.0.0.1:8086/__diretoria/auth?role=anonymous&controls=0",
+  "width": 390
+}

@@ -19,6 +19,17 @@
 .ipnc-loading-indicator::before { content: ''; display: block; height: 3px; margin-bottom: 12px; border-radius: 3px; background: linear-gradient(90deg, #dceee4, #2e7d5b, #dceee4); background-size: 200% 100%; animation: ipnc-opening-progress 1200ms ease-in-out infinite alternate; }
 .ipnc-loading-indicator p { margin: 0; font-size: .875rem; line-height: 1.4; }
 .auth-page .ipnc-opening-backdrop { display: none; }
+/* Also serves the blocking HTML opening before the React theme listener starts. */
+html.dark .ipnc-opening-surface { background: #0d1210; color: #e4eee8; }
+html.dark .ipnc-opening-backdrop { background: radial-gradient(ellipse at 50% 70%, #18392b66, transparent 68%); }
+html.dark .ipnc-opening-backdrop img { opacity: .24; }
+html.dark .ipnc-loading-splash { color: #c9ded1; }
+html.dark .ipnc-loading-splash-content { background: radial-gradient(ellipse, #dfece39e 0%, #dfece334 45%, transparent 70%); }
+html.dark .ipnc-loading-indicator::before { background-image: linear-gradient(90deg, #244838, #71d6a7, #244838); }
+@media (prefers-color-scheme: dark) {
+  html:not([data-ipnc-theme]) .ipnc-opening-surface { background: #0d1210; color: #e4eee8; }
+  html:not([data-ipnc-theme]) .ipnc-opening-backdrop img { opacity: .24; }
+}
 @keyframes ipnc-opening-logo-enter { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
 @keyframes ipnc-opening-exit { to { opacity: 0; } }
 @keyframes ipnc-opening-reveal { from { opacity: 0; } to { opacity: 1; } }

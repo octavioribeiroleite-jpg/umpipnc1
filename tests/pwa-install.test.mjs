@@ -180,7 +180,7 @@ test('HTML has one covering viewport, a matching system theme and the versioned 
   const manifest = JSON.parse(readFileSync(new URL('../public/manifest.json', import.meta.url)));
   assert.equal((html.match(/name="viewport"/g) || []).length, 1);
   assert.match(html, /name="viewport"[^>]*viewport-fit=cover/);
-  assert.equal((html.match(/name="theme-color"/g) || []).length, 1);
+  assert.equal((html.match(/<meta\s+name="theme-color"/g) || []).length, 1);
   assert.ok(html.includes(`name="theme-color" content="${manifest.theme_color}"`));
   assert.match(html, /apple-mobile-web-app-status-bar-style" content="black-translucent"/);
   assert.match(html, /rel="manifest" href="\/manifest\.json\?v=ipnc-access-v6"/);
@@ -199,11 +199,11 @@ test('service worker only removes old app caches and never intercepts login, API
   vm.runInNewContext(worker, {
     URL,
     self: { location: { origin: 'https://renovo.test' }, addEventListener: (name, fn) => { handlers[name] = fn; }, clients: { claim: async () => { claimed = true; } }, skipWaiting: () => { skipped = true; } },
-    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'ump-cache-v16', 'ump-cache-v17', 'ump-cache-v18', 'ump-cache-v19', 'ump-cache-v20', 'ump-cache-v21', 'another-app'], delete: async key => { deleted.push(key); } },
+    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'ump-cache-v16', 'ump-cache-v17', 'ump-cache-v18', 'ump-cache-v19', 'ump-cache-v20', 'ump-cache-v21', 'ump-cache-v22', 'another-app'], delete: async key => { deleted.push(key); } },
   });
   let activated;
   handlers.activate({ waitUntil: promise => { activated = promise; } }); await activated;
-  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'ump-cache-v16', 'ump-cache-v17', 'ump-cache-v18', 'ump-cache-v19', 'ump-cache-v20']); assert.equal(claimed, true);
+  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'ump-cache-v16', 'ump-cache-v17', 'ump-cache-v18', 'ump-cache-v19', 'ump-cache-v20', 'ump-cache-v21']); assert.equal(claimed, true);
   handlers.message({ data: { type: 'SKIP_WAITING' } }); assert.equal(skipped, true);
   for (const [url, mode, method] of [
     ['https://renovo.test/auth','navigate','GET'],
