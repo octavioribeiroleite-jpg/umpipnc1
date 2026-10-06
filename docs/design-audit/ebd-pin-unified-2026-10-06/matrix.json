@@ -1,0 +1,1766 @@
+[
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 302,
+        "width": 284,
+        "x": 18,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 738,
+      "width": 320
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 200,
+        "width": 80,
+        "x": 120,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 95.2109375,
+          "width": 77.2109375,
+          "x": 18,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 302,
+          "width": 167.2265625,
+          "x": 134.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 320
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 726.1640625,
+        "height": 44,
+        "right": 372,
+        "width": 354,
+        "x": 18,
+        "y": 682.1640625
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 942,
+      "width": 390
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 261.7890625,
+        "height": 118.15625,
+        "right": 254.078125,
+        "width": 118.15625,
+        "x": 135.921875,
+        "y": 143.6328125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 95.2109375,
+          "width": 77.2109375,
+          "x": 18,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 372,
+          "width": 167.2265625,
+          "x": 204.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 372,
+        "width": 354,
+        "x": 18,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 738,
+      "width": 390
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 235,
+        "width": 80,
+        "x": 155,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 95.2109375,
+          "width": 77.2109375,
+          "x": 18,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 372,
+          "width": 167.2265625,
+          "x": 204.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 390
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 929.3359375,
+        "height": 48,
+        "right": 624,
+        "width": 480,
+        "x": 144,
+        "y": 881.3359375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 1024,
+      "width": 768
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 290,
+        "height": 190,
+        "right": 479,
+        "width": 190,
+        "x": 289,
+        "y": 100
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 127.09375,
+          "width": 103.09375,
+          "x": 24,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 744,
+          "width": 187.2265625,
+          "x": 556.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 1024,
+      "width": 768
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 624,
+        "width": 480,
+        "x": 144,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 640,
+      "width": 768
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 424,
+        "width": 80,
+        "x": 344,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 101.2109375,
+          "width": 77.2109375,
+          "x": 24,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 744,
+          "width": 167.2265625,
+          "x": 576.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 768
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 686.609375,
+        "height": 44,
+        "right": 752,
+        "width": 480,
+        "x": 272,
+        "y": 642.609375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 768,
+      "width": 1024
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 214.7109375,
+        "height": 107.515625,
+        "right": 565.7578125,
+        "width": 107.515625,
+        "x": 458.2421875,
+        "y": 107.1953125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 109.2109375,
+          "width": 77.2109375,
+          "x": 32,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 992,
+          "width": 167.2265625,
+          "x": 824.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 768,
+      "width": 1024
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 752,
+        "width": 480,
+        "x": 272,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 640,
+      "width": 1024
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 552,
+        "width": 80,
+        "x": 472,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 109.2109375,
+          "width": 77.2109375,
+          "x": 32,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 992,
+          "width": 167.2265625,
+          "x": 824.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 1024
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 762.5703125,
+        "height": 44,
+        "right": 960,
+        "width": 480,
+        "x": 480,
+        "y": 718.5703125
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 900,
+      "width": 1440
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 289.234375,
+        "height": 126,
+        "right": 783,
+        "width": 126,
+        "x": 657,
+        "y": 163.234375
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 109.2109375,
+          "width": 77.2109375,
+          "x": 32,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 1408,
+          "width": 167.2265625,
+          "x": 1240.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(248, 251, 248)",
+      "confirm": {
+        "background": "rgb(8, 123, 86)",
+        "text": "rgb(255, 255, 255)"
+      },
+      "key": {
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(7, 59, 50)"
+      },
+      "text": "rgb(7, 59, 50)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 960,
+        "width": 480,
+        "x": 480,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": false,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 640,
+      "width": 1440
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 760,
+        "width": 80,
+        "x": 680,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 109.2109375,
+          "width": 77.2109375,
+          "x": 32,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 1408,
+          "width": 167.2265625,
+          "x": 1240.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#f8fbf8",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 1440
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 302,
+        "width": 284,
+        "x": 18,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 738,
+      "width": 320
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 200,
+        "width": 80,
+        "x": 120,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 95.2109375,
+          "width": 77.2109375,
+          "x": 18,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 302,
+          "width": 167.2265625,
+          "x": 134.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 320
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 726.1640625,
+        "height": 44,
+        "right": 372,
+        "width": 354,
+        "x": 18,
+        "y": 682.1640625
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 942,
+      "width": 390
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 261.7890625,
+        "height": 118.15625,
+        "right": 254.078125,
+        "width": 118.15625,
+        "x": 135.921875,
+        "y": 143.6328125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 95.2109375,
+          "width": 77.2109375,
+          "x": 18,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 372,
+          "width": 167.2265625,
+          "x": 204.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 372,
+        "width": 354,
+        "x": 18,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 738,
+      "width": 390
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 235,
+        "width": 80,
+        "x": 155,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 95.2109375,
+          "width": 77.2109375,
+          "x": 18,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 372,
+          "width": 167.2265625,
+          "x": 204.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 390
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 929.3359375,
+        "height": 48,
+        "right": 624,
+        "width": 480,
+        "x": 144,
+        "y": 881.3359375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 1024,
+      "width": 768
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 290,
+        "height": 190,
+        "right": 479,
+        "width": 190,
+        "x": 289,
+        "y": 100
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 127.09375,
+          "width": 103.09375,
+          "x": 24,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 744,
+          "width": 187.2265625,
+          "x": 556.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 1024,
+      "width": 768
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 624,
+        "width": 480,
+        "x": 144,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 640,
+      "width": 768
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 424,
+        "width": 80,
+        "x": 344,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 101.2109375,
+          "width": 77.2109375,
+          "x": 24,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 744,
+          "width": 167.2265625,
+          "x": 576.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 768
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 686.609375,
+        "height": 44,
+        "right": 752,
+        "width": 480,
+        "x": 272,
+        "y": 642.609375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 768,
+      "width": 1024
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 214.7109375,
+        "height": 107.515625,
+        "right": 565.7578125,
+        "width": 107.515625,
+        "x": 458.2421875,
+        "y": 107.1953125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 109.2109375,
+          "width": 77.2109375,
+          "x": 32,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 992,
+          "width": 167.2265625,
+          "x": 824.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 768,
+      "width": 1024
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 752,
+        "width": 480,
+        "x": 272,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 640,
+      "width": 1024
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 552,
+        "width": 80,
+        "x": 472,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 109.2109375,
+          "width": 77.2109375,
+          "x": 32,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 992,
+          "width": 167.2265625,
+          "x": 824.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 1024
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 762.5703125,
+        "height": 44,
+        "right": 960,
+        "width": 480,
+        "x": 480,
+        "y": 718.5703125
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 900,
+      "width": 1440
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 289.234375,
+        "height": 126,
+        "right": 783,
+        "width": 126,
+        "x": 657,
+        "y": 163.234375
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 109.2109375,
+          "width": 77.2109375,
+          "x": 32,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 1408,
+          "width": 167.2265625,
+          "x": 1240.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "activeElementWithinPin": false,
+    "colors": {
+      "background": "rgb(13, 18, 16)",
+      "confirm": {
+        "background": "rgb(113, 214, 167)",
+        "text": "rgb(15, 26, 21)"
+      },
+      "key": {
+        "background": "rgb(22, 29, 26)",
+        "text": "rgb(240, 244, 242)"
+      },
+      "text": "rgb(240, 244, 242)"
+    },
+    "confirm": {
+      "disabled": false,
+      "rect": {
+        "bottom": 563.109375,
+        "height": 44,
+        "right": 960,
+        "width": 480,
+        "x": 480,
+        "y": 519.109375
+      },
+      "text": "Confirmar e entrar"
+    },
+    "controlsWithinSafeArea": true,
+    "dark": true,
+    "dialogOverflow": {
+      "horizontal": 0,
+      "vertical": 0
+    },
+    "dialogs": 1,
+    "document": {
+      "height": 640,
+      "width": 1440
+    },
+    "filledSlots": 6,
+    "horizontalOverflow": false,
+    "keys": 12,
+    "logo": {
+      "naturalHeight": 1254,
+      "naturalWidth": 1254,
+      "rect": {
+        "bottom": 210.8828125,
+        "height": 80,
+        "right": 760,
+        "width": 80,
+        "x": 680,
+        "y": 130.8828125
+      },
+      "source": "/src/assets/logo-ipnc.png"
+    },
+    "minimumControlHeight": 44,
+    "navigation": [
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 109.2109375,
+          "width": 77.2109375,
+          "x": 32,
+          "y": 44
+        },
+        "text": "Voltar"
+      },
+      {
+        "disabled": false,
+        "rect": {
+          "bottom": 88,
+          "height": 44,
+          "right": 1408,
+          "width": 167.2265625,
+          "x": 1240.7734375,
+          "y": 44
+        },
+        "text": "Voltar para a Home"
+      }
+    ],
+    "pinPages": 1,
+    "safe": {
+      "bottom": 34,
+      "left": 18,
+      "right": 18,
+      "top": 44
+    },
+    "slots": 6,
+    "themeColor": "#0d1210",
+    "titles": [
+      "Secretaria EBD"
+    ],
+    "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+    "viewport": {
+      "height": 640,
+      "width": 1440
+    }
+  }
+]

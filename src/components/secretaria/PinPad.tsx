@@ -24,9 +24,12 @@ export default function PinPad({ profileLabel, onBack, onHome, onComplete, loadi
 
   // Keep the access navigation visible while enabling keyboard input.
   useEffect(() => {
-    if (presentation === 'access') window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    else containerRef.current?.closest('[role="dialog"]')?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    containerRef.current?.focus({ preventScroll: true });
+    const dialog = containerRef.current?.closest('[role="dialog"]');
+    if (dialog) dialog.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      containerRef.current?.focus({ preventScroll: true });
+    }
   }, [presentation]);
 
   // Reset pin and shake on external error
@@ -89,6 +92,7 @@ export default function PinPad({ profileLabel, onBack, onHome, onComplete, loadi
       contentClassName="ipnc-pin-content"
     >
       <div ref={containerRef} tabIndex={0}
+        data-dialog-initial-focus
         data-presentation={presentation}
         className="ipnc-pin-card"
       >

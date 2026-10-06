@@ -1,0 +1,84 @@
+{
+  "activeElementWithinPin": true,
+  "colors": {
+    "background": "rgb(13, 18, 16)",
+    "confirm": null,
+    "key": {
+      "background": "rgb(22, 29, 26)",
+      "text": "rgb(240, 244, 242)"
+    },
+    "text": "rgb(240, 244, 242)"
+  },
+  "confirm": null,
+  "controlsWithinSafeArea": true,
+  "dark": true,
+  "dialogOverflow": {
+    "horizontal": 0,
+    "vertical": 0
+  },
+  "dialogs": 1,
+  "document": {
+    "height": 942,
+    "width": 390
+  },
+  "filledSlots": 0,
+  "horizontalOverflow": false,
+  "keys": 12,
+  "logo": {
+    "naturalHeight": 1254,
+    "naturalWidth": 1254,
+    "rect": {
+      "bottom": 288.7890625,
+      "height": 118.15625,
+      "right": 254.078125,
+      "width": 118.15625,
+      "x": 135.921875,
+      "y": 170.6328125
+    },
+    "source": "/src/assets/logo-ipnc.png"
+  },
+  "minimumControlHeight": 44,
+  "navigation": [
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 88,
+        "height": 44,
+        "right": 95.2109375,
+        "width": 77.2109375,
+        "x": 18,
+        "y": 44
+      },
+      "text": "Voltar"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 88,
+        "height": 44,
+        "right": 372,
+        "width": 167.2265625,
+        "x": 204.7734375,
+        "y": 44
+      },
+      "text": "Voltar para a Home"
+    }
+  ],
+  "pinPages": 1,
+  "safe": {
+    "bottom": 34,
+    "left": 18,
+    "right": 18,
+    "top": 44
+  },
+  "slots": 6,
+  "themeColor": "#0d1210",
+  "titles": [
+    "Secretaria EBD"
+  ],
+  "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+  "viewport": {
+    "height": 844,
+    "width": 390
+  }
+}

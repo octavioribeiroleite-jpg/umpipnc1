@@ -1,0 +1,27 @@
+{
+  "createdAt": "2026-10-06T20:43:30.419999+00:00",
+  "baseRevision": "90aa3529774205a85fd87b80755104ef173bd93a",
+  "status": "validated working tree before root commit",
+  "files": {
+    "src/pages/Secretaria.tsx": "127c7fd2502324bea53ec045cf1c59471ec45f8aa3f495a715d14c6e530d38a3",
+    "src/pages/secretaria-theme.css": "05f1f0c2cd81964bd26d339dc7daf9fd22ad49f1446d7d9836a846a1f7536cd7",
+    "src/components/secretaria/PinPad.tsx": "d08f625b40c4d3505d6e62a432f3d72b7ed2d51f2eb4ea4c43495dd3a564f658",
+    "src/components/secretaria/PinPad.css": "9bc41c1fd62d10508ef19dfd3c1ea61e231e81f16f9dd1071cbd44f8b9e6ea3a",
+    "src/components/secretaria/secretaria-workspace.css": "a30c18374105f1a09aefa7f7added3c4fe7099835d8d39dd469d2b3fe87ff32e",
+    "src/components/ui/dialog.tsx": "8f2a1050d9da4df93cdd0b63f3fde861d34afd927961f5b708beff06cb4ced03",
+    "src/components/auth/AccessShell.tsx": "e9267516b9a462ebdb371e7b7d717d60a25eb1d2f09d36fcbb8499c5e461f792",
+    "src/components/auth/AccessShell.css": "a095a61469deb3acefcc21dfe969b4ea3321589c1e1561a8ce1ecc9e279040de",
+    "src/components/auth/PublicHomeButton.tsx": "0069130b18f9c269064cc2832eb33466037525935e7983071cfd553cb9083eb0",
+    "src/interface-system.css": "429c9f1f8b556074da35f208e1ab94ecaa2710598362fec983e0670764bcbeb8",
+    "src/lib/ebd-navigation.ts": "08a9f9b14e5a240440b5ee2b2e827be7cb30dd3b0848f1d83eb7b31d4799a781",
+    "src/lib/registerSW.ts": "367db351306136f98642e4715b8a60d2bdea814ce0091264c157cf3f61a541cd",
+    "public/sw.js": "4d05d6e56cf2e10c5e2c43f1426796d1263975d3dad6707d9f06417192448f8c",
+    "src/assets/logo-ipnc.png": "2df611f147250f6df0caeb189051cea1cd0748c05ed90bb752501125021f7081",
+    "tests/vite.system-theme.config.ts": "d72ba38c588a29e4bd245c72fe62acdf5f3a53f0d9f9bef37ade049f87db0126",
+    "tests/fixtures/system-theme/bootstrap.ts": "0040c0f5151ef6e6a7031473d0c94c04747853c12a8d486ba76c5b4c4ca34f2b",
+    "tests/fixtures/system-theme/main.tsx": "fbe25bfda619aedce5cc6b640df501e38139a35e94651de0d53deeed50c066e1",
+    "tests/fixtures/ebd-login/bootstrap.ts": "4b2d9078684ddbb8a6c094fc17849b79084870c8d172f9f260a31dd6d250ec03",
+    "tests/fixtures/ebd-login/backend.ts": "3d195f38e0f7fca3edce45f4307908e03224ef384f4cb82e5384e8c18fe966b6"
+  },
+  "logoUnchangedFromBase": true
+}

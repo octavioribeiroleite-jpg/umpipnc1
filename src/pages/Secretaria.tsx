@@ -301,7 +301,11 @@ export default function Secretaria() {
   const [signingOut, setSigningOut] = useState(false);
   const navigation = useSecretariaNavigation(accessLevel ? `${accessLevel}:${professorClassId || ''}` : null,
     () => setShowExitConfirm(true),
-    () => { if (showExitConfirm) { if (!signingOut) setShowExitConfirm(false); return true; } if (aiReauthOpen) return true; return false; });
+    () => {
+      if (showExitConfirm) { if (!signingOut) setShowExitConfirm(false); return true; }
+      if (aiReauthOpen) { if (!loading) setAiReauthOpen(false); return true; }
+      return false;
+    });
   const currentView = navigation.screen.view;
   useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); }, [navigation.screen]);
   const setCurrentView = (view: CurrentView) => navigation.open({ view });
@@ -582,23 +586,20 @@ export default function Secretaria() {
     toast.success('Dia reaberto!');
   };
   const reauthDialog = (
-<Dialog open={aiReauthOpen} onOpenChange={setAiReauthOpen}>
-            <DialogContent className="ebd-reauth" size="access">
-              <DialogHeader>
-                <DialogTitle>Confirmar acesso</DialogTitle>
-                <DialogDescription>Digite novamente o PIN do seu acesso. Seus dados preenchidos continuam na tela.</DialogDescription>
-              </DialogHeader>
-              <PinPad
-                presentation="compact"
-                profileLabel={accessLevel === 'admin' ? 'Secretaria EBD' : 'Secretaria EBD · Professor'}
-                onBack={() => setAiReauthOpen(false)}
-                onHome={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })}
-                onComplete={refreshBirthdaySession}
-                loading={loading}
-                error={pinError}
-              />
-            </DialogContent>
-          </Dialog>
+    <Dialog open={aiReauthOpen} onOpenChange={(open) => { if (!loading) setAiReauthOpen(open); }}>
+      <DialogContent className="ebd-reauth" size="screen" showCloseButton={false}>
+        <DialogTitle className="sr-only">Confirmar acesso à Secretaria EBD</DialogTitle>
+        <DialogDescription className="sr-only">Digite novamente o PIN do seu acesso. Seus dados preenchidos continuam na tela.</DialogDescription>
+        <PinPad
+          profileLabel={accessLevel === 'admin' ? 'Secretaria EBD' : 'Secretaria EBD · Professor'}
+          onBack={() => setAiReauthOpen(false)}
+          onHome={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })}
+          onComplete={refreshBirthdaySession}
+          loading={loading}
+          error={pinError}
+        />
+      </DialogContent>
+    </Dialog>
   );
 
   const syncNotice = (

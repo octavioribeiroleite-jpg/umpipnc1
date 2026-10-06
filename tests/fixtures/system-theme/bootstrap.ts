@@ -23,12 +23,14 @@ navigator.sendBeacon = () => false;
 const params = new URLSearchParams(location.search);
 if (params.get('portal') === 'return') localStorage.setItem('portal_visitor', JSON.stringify({ fullName: 'Visitante Fictício', societyId: null, isVisitor: true, deviceId: 'fixture-visitor' }));
 if (params.get('portal') === 'new') localStorage.removeItem('portal_visitor');
-if (params.get('reauth') === '1') {
+if (params.get('reauth') === '1' || params.has('reauthAfter')) {
   // Initialize only the synthetic EBD module, then expire its own UI token.
   // This exercises the real expiration timer without events or private state.
   await import('../ebd-login/backend');
   const seeded = localStorage.getItem('ebd_session');
   if (!seeded) throw new Error('Fixture reauth requires mode=stored-admin or stored-professor');
-  localStorage.setItem('ebd_session', JSON.stringify({ ...JSON.parse(seeded), birthdayAiExpiresAt: new Date(Date.now() - 1000).toISOString() }));
+  const delay = params.has('reauthAfter') ? Number(params.get('reauthAfter')) : -1000;
+  if (params.has('reauthAfter') && (!Number.isFinite(delay) || delay < 0 || delay > 60000)) throw new Error('Fixture reauthAfter must be between 0 and 60000 ms');
+  localStorage.setItem('ebd_session', JSON.stringify({ ...JSON.parse(seeded), birthdayAiExpiresAt: new Date(Date.now() + delay).toISOString() }));
 }
 await import('./main');

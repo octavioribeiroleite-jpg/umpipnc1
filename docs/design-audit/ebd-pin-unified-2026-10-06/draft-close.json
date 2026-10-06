@@ -1,0 +1,12 @@
+{
+  "before": {
+    "active": true,
+    "value": "Rascunho fictício após Voltar"
+  },
+  "after": {
+    "active": true,
+    "value": "Rascunho fictício após Voltar"
+  },
+  "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+  "preserved": true
+}

@@ -1,0 +1,51 @@
+{
+  "before": {
+    "theme": "light",
+    "enabled": true,
+    "foreground": [
+      7,
+      59,
+      50
+    ],
+    "background": "transparent over SVG",
+    "sampleBackground": [
+      50,
+      118,
+      97
+    ],
+    "ratio": 2.32,
+    "method": "JPEG background pixel adjacent to label at365,52 in390x844; approximate"
+  },
+  "after": {
+    "light": {
+      "enabled": true,
+      "foreground": [
+        7,
+        59,
+        50
+      ],
+      "background": [
+        248,
+        251,
+        248
+      ],
+      "ratio": 11.99
+    },
+    "dark": {
+      "enabled": true,
+      "foreground": [
+        240,
+        244,
+        242
+      ],
+      "background": [
+        22,
+        29,
+        26
+      ],
+      "ratio": 15.45
+    },
+    "method": "WCAG relative luminance calculated from settled computed styles of enabled Home button",
+    "minimum": 4.5
+  }
+}

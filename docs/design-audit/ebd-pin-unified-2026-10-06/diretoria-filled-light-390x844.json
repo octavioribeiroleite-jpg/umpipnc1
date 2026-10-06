@@ -1,0 +1,95 @@
+{
+  "activeElementWithinPin": false,
+  "colors": {
+    "background": "rgb(248, 251, 248)",
+    "confirm": {
+      "background": "rgb(8, 123, 86)",
+      "text": "rgb(255, 255, 255)"
+    },
+    "key": {
+      "background": "rgb(255, 255, 255)",
+      "text": "rgb(7, 59, 50)"
+    },
+    "text": "rgb(7, 59, 50)"
+  },
+  "confirm": {
+    "disabled": false,
+    "rect": {
+      "bottom": 726.1640625,
+      "height": 44,
+      "right": 372,
+      "width": 354,
+      "x": 18,
+      "y": 682.1640625
+    },
+    "text": "Confirmar e entrar"
+  },
+  "controlsWithinSafeArea": true,
+  "dark": false,
+  "dialogOverflow": null,
+  "dialogs": 0,
+  "document": {
+    "height": 844,
+    "width": 390
+  },
+  "filledSlots": 6,
+  "horizontalOverflow": false,
+  "keys": 12,
+  "logo": {
+    "naturalHeight": 1254,
+    "naturalWidth": 1254,
+    "rect": {
+      "bottom": 261.7890625,
+      "height": 118.15625,
+      "right": 254.078125,
+      "width": 118.15625,
+      "x": 135.921875,
+      "y": 143.6328125
+    },
+    "source": "/src/assets/logo-ipnc.png"
+  },
+  "minimumControlHeight": 44,
+  "navigation": [
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 88,
+        "height": 44,
+        "right": 95.2109375,
+        "width": 77.2109375,
+        "x": 18,
+        "y": 44
+      },
+      "text": "Voltar"
+    },
+    {
+      "disabled": false,
+      "rect": {
+        "bottom": 88,
+        "height": 44,
+        "right": 372,
+        "width": 167.2265625,
+        "x": 204.7734375,
+        "y": 44
+      },
+      "text": "Voltar para a Home"
+    }
+  ],
+  "pinPages": 1,
+  "safe": {
+    "bottom": 34,
+    "left": 18,
+    "right": 18,
+    "top": 44
+  },
+  "slots": 6,
+  "themeColor": "#f8fbf8",
+  "titles": [
+    "Diretoria · UMP"
+  ],
+  "url": "http://127.0.0.1:8086/auth?home=1",
+  "viewport": {
+    "height": 844,
+    "width": 390
+  }
+}

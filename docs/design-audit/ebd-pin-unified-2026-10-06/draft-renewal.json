@@ -1,0 +1,25 @@
+{
+  "before": {
+    "active": true,
+    "value": "Rascunho fictício preservado"
+  },
+  "initialFocus": {
+    "card": true,
+    "tag": "DIV",
+    "withinPin": true
+  },
+  "hardwareSequentialSlots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "after": {
+    "active": true,
+    "value": "Rascunho fictício preservado"
+  },
+  "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+  "preserved": true
+}

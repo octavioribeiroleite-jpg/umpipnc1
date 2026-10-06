@@ -1,0 +1,42 @@
+[
+  {
+    "text": "Limpar",
+    "withinDialog": true,
+    "withinPin": true
+  },
+  {
+    "text": "",
+    "withinDialog": true,
+    "withinPin": true
+  },
+  {
+    "text": "Confirmar e entrar",
+    "withinDialog": true,
+    "withinPin": true
+  },
+  {
+    "text": "Voltar",
+    "withinDialog": true,
+    "withinPin": true
+  },
+  {
+    "text": "Voltar para a Home",
+    "withinDialog": true,
+    "withinPin": true
+  },
+  {
+    "text": "6 de 6 dígitos preenchidos123456789Limpar0Confirmar e entrarUse o teclado numérico ou clique nos botões",
+    "withinDialog": true,
+    "withinPin": true
+  },
+  {
+    "text": "Limpar",
+    "withinDialog": true,
+    "withinPin": true
+  },
+  {
+    "text": "",
+    "withinDialog": true,
+    "withinPin": true
+  }
+]

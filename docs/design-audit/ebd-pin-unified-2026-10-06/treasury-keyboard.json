@@ -1,0 +1,23 @@
+{
+  "initial": {
+    "card": false,
+    "dialog": true,
+    "label": null,
+    "tag": "DIV"
+  },
+  "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "enterAccepted": true,
+  "url": "http://127.0.0.1:8086/tesouraria?sociedade=00000000-0000-4000-8000-000000000078",
+  "dialogs": 0,
+  "close": {
+    "activeLabel": "Acessar tesouraria",
+    "dialogs": 0
+  }
+}

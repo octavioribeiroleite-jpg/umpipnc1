@@ -1,0 +1,79 @@
+{
+  "result": "PASS",
+  "baseRevision": "90aa3529774205a85fd87b80755104ef173bd93a",
+  "viewportThemeCases": 18,
+  "states": [
+    "empty",
+    "six digits",
+    "loading",
+    "wrong PIN",
+    "professor normal",
+    "professor renewal"
+  ],
+  "focusTrap": "8 native Tabs remained inside PIN/dialog",
+  "draftRenewal": {
+    "preserved": true,
+    "focusRestored": true,
+    "hardwareEnter": true,
+    "dataWrite": false
+  },
+  "draftClose": {
+    "preserved": true,
+    "focusRestored": true
+  },
+  "navigation": {
+    "home": "/auth?home=1",
+    "nativeBack": "closed renewal and kept Secretaria"
+  },
+  "treasuryKeyboard": "PASS: six keys plus Enter; close returns focus to access button",
+  "logoUnchangedFromBase": true,
+  "homeContrast": {
+    "light": {
+      "enabled": true,
+      "foreground": [
+        7,
+        59,
+        50
+      ],
+      "background": [
+        248,
+        251,
+        248
+      ],
+      "ratio": 11.99
+    },
+    "dark": {
+      "enabled": true,
+      "foreground": [
+        240,
+        244,
+        242
+      ],
+      "background": [
+        22,
+        29,
+        26
+      ],
+      "ratio": 15.45
+    },
+    "method": "WCAG relative luminance calculated from settled computed styles of enabled Home button",
+    "minimum": 4.5
+  },
+  "rootChecks": {
+    "tests": {
+      "passed": 429,
+      "total": 429
+    },
+    "types": "PASS",
+    "build": "PASS, existing chunk/sonner warnings",
+    "changedLint": "PASS except 13 pre-existing no-explicit-any in Secretaria, unchanged from 90aa352",
+    "diffCheck": "PASS",
+    "pwaVersion": 24
+  },
+  "limits": [
+    "Synthetic safe-area padding and browser media emulation; no physical PWA/OS claim",
+    "No real Supabase/Auth/PINs/financial or other writes",
+    "Existing transient toast may overlap Confirmar during 500ms error shake",
+    "Full document scrollHeight includes hidden mounted workspace; screen dialog overflow itself is 0"
+  ]
+}

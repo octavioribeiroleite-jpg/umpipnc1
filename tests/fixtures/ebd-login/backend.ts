@@ -28,6 +28,13 @@ const classes = [
 ];
 const students = Array.from({ length: 9 }, (_, i) => ({ id: `fixture-student-${i}`, name: `Aluno Fictício ${i + 1}`, class_id: i < 5 ? classes[0].id : classes[1].id, active: i !== 8, created_at: '2026-01-01T12:00:00Z' }));
 const now = new Date();
+// Optional read-only seed exposes the real visitor draft without initiating a
+// class or allowing a fixture write. Match Secretaria's local accounting date.
+const callStatuses = params.get('callStarted') === '1' ? [{
+  class_id: classes[0].id,
+  date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+  status: 'aberta',
+}] : [];
 const birthdays = [{ id: 'fixture-birthday', nome: 'Pessoa Fictícia', dia: now.getDate(), mes: now.getMonth() + 1, ano_nascimento: 2000, departamento: 'EBD', observacao: null, ativo: true, pendente_revisao: false, created_at: now.toISOString(), updated_at: now.toISOString() }];
 const success = (data: unknown): Result => ({ data, error: null, status: 200 });
 const denied = (): Result => ({ data: null, error: { code: '42501', message: 'Synthetic fixture access required' }, status: 403 });
@@ -82,7 +89,7 @@ export const supabase = {
       then(resolve: (value: Result) => unknown, reject?: (reason: unknown) => unknown) {
         return request(`read.${table}`, fixture.readMs, () => {
           if (!fixture.authenticated || !fixture.valid) return denied();
-          const rows = table === 'ebd_classes' ? classes : table === 'ebd_students' ? students : [];
+          const rows = table === 'ebd_classes' ? classes : table === 'ebd_students' ? students : table === 'ebd_call_status' ? callStatuses : [];
           return success(rows.filter(row => Object.entries(filters).every(([key, value]) => (row as Row)[key] === value)));
         }, { ...filters }).then(resolve, reject);
       },

@@ -9,7 +9,7 @@ body { font-family: Inter, system-ui, sans-serif; font-size: 1rem; line-height: 
 input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']), select, button[role='combobox'] { min-height: 3rem; }
 input:not([type='checkbox']):not([type='radio']), textarea, select, button[role='combobox'] { border-radius: .75rem; font-family: inherit; }
 label { font-size: .875rem; line-height: 1.5; }
-[role='dialog']:not([data-vaul-drawer]), [role='alertdialog'] { border-radius: 1.25rem; }
+[role='dialog']:not([data-vaul-drawer]):where(:not([data-dialog-size='screen'])), [role='alertdialog'] { border-radius: 1.25rem; }
 .app-dialog-content { width: calc(100vw - 2rem); max-height: calc(100dvh - 2rem); }
 [role='menuitem'], [role='option'], [role='tab'] { min-height: 3rem; }
 :is(button, a, input, textarea, select, [role='button']):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }

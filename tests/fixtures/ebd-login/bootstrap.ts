@@ -22,4 +22,15 @@ const source = await (await fetch('/__ebd-benchmark-source.json')).json();
 document.body.dataset.benchmarkRevision = source.revision;
 document.body.dataset.benchmarkSourceHash = source.sourceHash;
 document.body.dataset.benchmarkSourceStatus = source.sourceStatus;
+const reauthAfter = new URLSearchParams(location.search).get('reauthAfter');
+if (reauthAfter !== null) {
+  const delay = Number(reauthAfter);
+  if (!Number.isFinite(delay) || delay < 0 || delay > 60000) throw new Error('Fixture reauthAfter must be between 0 and 60000 ms');
+  // Seed only the isolated backend, then let Secretaria's real timer open the
+  // renewal screen after a draft has been entered. No event/state override.
+  await import('./backend');
+  const seeded = localStorage.getItem('ebd_session');
+  if (!seeded) throw new Error('Fixture reauthAfter requires a stored access mode');
+  localStorage.setItem('ebd_session', JSON.stringify({ ...JSON.parse(seeded), birthdayAiExpiresAt: new Date(Date.now() + delay).toISOString() }));
+}
 await import('./main');
