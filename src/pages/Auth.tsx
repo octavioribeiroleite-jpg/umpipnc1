@@ -1,6 +1,6 @@
 import { loadStoredEbdSession } from '@/lib/ebd-session-storage';
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDiretoriaSession } from '@/contexts/DiretoriaSessionContext';
 import { useMembroSession } from '@/contexts/MembroSessionContext';
@@ -16,6 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import SocietySelector from '@/components/auth/SocietySelector';
 import IdentityConfirmation from '@/components/auth/IdentityConfirmation';
+import PublicHomeButton from '@/components/auth/PublicHomeButton';
+import { APP_HOME_PATH, requestsPublicHome } from '@/lib/app-home';
 import { InstallButton } from '@/components/layout/InstallButton';
 import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 import { TreasuryAccessDialog } from '@/components/treasury/TreasuryAccessDialog';
@@ -76,9 +78,11 @@ export default function Auth() {
   const { setSession: setDiretoriaSession } = useDiretoriaSession();
   const { setSession: setMembroSession } = useMembroSession();
   const navigate = useNavigate();
+  const location = useLocation();
+  const explicitHome = requestsPublicHome(location.search);
   useEffect(() => {
-    if (loadStoredEbdSession()) navigate('/secretaria', { replace: true });
-  }, [navigate]);
+    if (!explicitHome && loadStoredEbdSession()) navigate('/secretaria', { replace: true });
+  }, [navigate, explicitHome]);
   const { toast } = useToast();
 
   // Exit transition helper
@@ -107,6 +111,23 @@ export default function Auth() {
   }, []);
 
   // ========== HANDLERS ==========
+
+  const handleReturnHome = useCallback(() => {
+    setStep('select');
+    setDiretoriaStep('pin');
+    setGeneralPin(null);
+    setPinError(false);
+    setPassword('');
+    setLoginError('');
+    setTreasuryOpen(false);
+    setIsExiting(false);
+    navigate(APP_HOME_PATH, { replace: true });
+  }, [navigate]);
+
+  // A popup can return to this route while the PIN form remains mounted.
+  useEffect(() => {
+    if (explicitHome) handleReturnHome();
+  }, [explicitHome, handleReturnHome]);
 
   const handleBack = () => {
     if (step === 'diretoria') {
@@ -547,6 +568,7 @@ export default function Auth() {
           <PinPad
             profileLabel="Diretoria"
             onBack={handleBack}
+            onHome={handleReturnHome}
             onComplete={handlePinComplete}
             loading={pinLoading}
             error={pinError}
@@ -564,7 +586,7 @@ export default function Auth() {
           <SocietySelector societies={societies} onBack={handleBack} onSelect={handleSelectMembroSociety} />
         ) : (
           <div className="animate-fade-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
-            <Button variant="ghost" onClick={handleBack} className="mb-3"><ArrowLeft className="h-4 w-4" />Voltar</Button>
+            <PublicHomeButton onClick={handleReturnHome} disabled={isLoading} className="mb-3" />
             <Card className="border-white/20 shadow-2xl bg-card/90 dark:bg-card/95 backdrop-blur-md">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">

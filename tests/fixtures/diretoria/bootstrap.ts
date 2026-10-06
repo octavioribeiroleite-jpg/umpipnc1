@@ -40,4 +40,7 @@ if (fixtureParams.get('identity') === 'return') {
   localStorage.setItem('diretoria_function_ump', 'Secretário(a)');
 }
 if (fixtureParams.get('font') === '200') document.documentElement.style.fontSize = '200%';
+if (fixtureParams.get('ebd-session') === '1') {
+  localStorage.setItem('ebd_session', JSON.stringify({ accessLevel: 'professor', professorNome: 'Professor fictício', professorClassId: 'fixture-class' }));
+} else if (fixtureParams.get('ebd-session') === '0') localStorage.removeItem('ebd_session');
 await import('./main');

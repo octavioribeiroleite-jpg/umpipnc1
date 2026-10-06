@@ -35,6 +35,8 @@ import ConfiguracoesEbdTab from '@/components/secretaria/ConfiguracoesEbdTab';
 import AcessosEbdTab from '@/components/secretaria/AcessosEbdTab';
 import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
+import PublicHomeButton from '@/components/auth/PublicHomeButton';
+import { APP_HOME_PATH } from '@/lib/app-home';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import './secretaria-home.css';
 import './secretaria-theme.css';
@@ -567,6 +569,7 @@ export default function Secretaria() {
                 embedded
                 profileLabel={accessLevel === 'admin' ? 'Administrador' : 'Senha da sala'}
                 onBack={() => setAiReauthOpen(false)}
+                onHome={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })}
                 onComplete={refreshBirthdaySession}
                 loading={loading}
                 error={pinError}
@@ -587,7 +590,7 @@ export default function Secretaria() {
   // Login screens
   if (!accessLevel) {
     if (loginStep === 'profile') {
-      return <ProfileSelect onSelect={handleProfileSelect} onBack={() => navigate('/auth', { replace: true, state: { skipSplash: true } })} />;
+      return <ProfileSelect onSelect={handleProfileSelect} onBack={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })} />;
     }
 
     if (loginStep === 'name') {
@@ -606,6 +609,7 @@ export default function Secretaria() {
                 <p className="text-sm text-muted-foreground">Para registrar quem entrou na sala</p>
               </div>
             </div>
+            <PublicHomeButton disabled={loading} className="w-full justify-center rounded-xl text-primary" />
             <label className="block space-y-2 text-sm font-medium">Seu nome
             <input
               autoFocus
@@ -632,6 +636,7 @@ export default function Secretaria() {
       <PinPad
         profileLabel={selectedProfile === 'admin' ? 'Administrador' : 'Senha da sala'}
         onBack={handleBack}
+        onHome={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })}
         onComplete={handlePinComplete}
         loading={loading}
         error={pinError}

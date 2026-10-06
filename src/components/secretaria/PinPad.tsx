@@ -2,17 +2,19 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Delete, LogIn, Loader2, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import PublicHomeButton from '@/components/auth/PublicHomeButton';
 
 interface PinPadProps {
   profileLabel: string;
   onBack: () => void;
+  onHome?: () => void;
   onComplete: (pin: string) => void;
   loading?: boolean;
   error?: boolean;
   embedded?: boolean;
 }
 
-export default function PinPad({ profileLabel, onBack, onComplete, loading, error: externalError, embedded }: PinPadProps) {
+export default function PinPad({ profileLabel, onBack, onHome, onComplete, loading, error: externalError, embedded }: PinPadProps) {
   const [pin, setPin] = useState('');
   const [shaking, setShaking] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +52,8 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (loading || shaking) return;
+      // Let Enter activate the focused control instead of submitting the PIN too.
+      if (e.key === 'Enter' && e.target instanceof HTMLElement && e.target.closest('button')) return;
 
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
@@ -81,7 +85,7 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
       {/* Header */}
       {!embedded && (
         <div className="flex flex-col items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} className="self-start shrink-0" aria-label="Voltar à seleção de perfil">
+          <Button variant="ghost" size="icon" onClick={onBack} disabled={loading} className="self-start shrink-0" aria-label="Voltar à seleção de perfil">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -95,19 +99,21 @@ export default function PinPad({ profileLabel, onBack, onComplete, loading, erro
       )}
 
       {embedded && (
-        <div className="flex items-center gap-3 mb-1">
-          <Button variant="ghost" size="icon" aria-label="Voltar" className="pin-pad-utility h-11 w-11 rounded-2xl text-muted-foreground hover:bg-primary/10 hover:text-primary" onClick={onBack}>
+        <div className="flex flex-wrap items-center gap-3 mb-1">
+          <Button variant="ghost" size="icon" aria-label="Voltar" className="pin-pad-utility h-[44px] w-[44px] shrink-0 rounded-2xl text-muted-foreground hover:bg-primary/10 hover:text-primary" onClick={onBack} disabled={loading}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">
+          <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">
             <Lock className="h-6 w-6" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 basis-[8rem]">
             <h2 className="text-lg font-bold leading-tight text-foreground">{profileLabel}</h2>
             <p className="text-sm font-medium text-muted-foreground">Informe o PIN de 6 dígitos</p>
           </div>
         </div>
       )}
+
+      <PublicHomeButton onClick={onHome} disabled={loading} className="w-full justify-center rounded-xl text-primary" />
 
       {/* PIN Slots */}
       <div className={cn(

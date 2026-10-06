@@ -35,6 +35,8 @@ Os parâmetros são capturados uma vez na inicialização; a navegação interna
 | `voted=1` | Simula já ter votado. |
 | `controls=0` | Oculta o painel QA para inspeção/captura sem sobreposição. Com controles visíveis, Leitura normal/Simular falha alteram só o mock; Disparar refetch local emite callbacks registrados na página, sem recarga. |
 | `font=200` | Emulação por CSS de fonte base a 200%; não representa zoom nativo do browser. |
+| `ebd-session=1` / `ebd-session=0` | Semeia ou remove somente a sessão EBD fictícia da origem local para conferir o redirecionamento de Auth. Nenhuma sessão real é emitida. |
+| `home=1` | Solicita a entrada pública, mesmo com sessão EBD fictícia salva. O aplicativo normaliza a URL durante a navegação; as flags da fixture já foram capturadas na inicialização. |
 
 Não informe credenciais reais. Toda identidade, chave PIX, token e imagem desta fixture é fictícia. As mutações existentes alteram somente objetos em memória, perdidos no reload. O stub de banco não aplica todas as operações de filtro/ordenação, joins, unicidade ou autorização. O endpoint de voto permite observar seleção/confirmação/sucesso; sua deduplicação em memória não comprova voto único no banco.
 

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, KeyRound } from 'lucide-react';
 import logo from '@/assets/logo-ipnc.png';
+import PublicHomeButton from '@/components/auth/PublicHomeButton';
 
 export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +53,7 @@ export default function ResetPassword() {
   return <main className="min-h-dvh flex items-center justify-center bg-background p-4">
     <div className="w-full max-w-[400px] space-y-6">
       <img src={logo} alt="Marca IPNC" className="mx-auto h-24 w-24 rounded-2xl bg-white p-1 object-contain" />
+      <PublicHomeButton disabled={isLoading} className="rounded-xl text-primary" />
       <Card>
         <CardHeader>
           <KeyRound className="h-10 w-10 text-primary" aria-hidden="true" />
@@ -65,7 +67,7 @@ export default function ResetPassword() {
               <div className="space-y-2"><Label htmlFor="confirm-password">Confirmar senha</Label><Input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={event => {setConfirmPassword(event.target.value);setErrorMessage('');}} required disabled={isLoading} aria-describedby="reset-error" /></div>
               <p id="reset-error" role={errorMessage ? 'alert' : undefined} className="min-h-6 text-sm text-destructive">{errorMessage}</p>
               <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? 'Salvando…' : 'Salvar nova senha'}</Button>
-            </form> : <div className="space-y-3">{sessionState === 'error' && <Button className="w-full" onClick={() => window.location.reload()}>Tentar novamente</Button>}<Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>Voltar à entrada</Button></div>}
+            </form> : sessionState === 'error' ? <Button className="w-full" onClick={() => window.location.reload()}>Tentar novamente</Button> : null}
         </CardContent>
       </Card>
     </div>

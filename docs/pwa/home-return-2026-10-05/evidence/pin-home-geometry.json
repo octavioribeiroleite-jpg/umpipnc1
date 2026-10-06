@@ -1,0 +1,127 @@
+[
+  {
+    "font": "16px",
+    "header": {
+      "bottom": 395.15625,
+      "height": 22.5,
+      "left": 37,
+      "right": 283,
+      "top": 372.65625,
+      "width": 246,
+      "x": 37,
+      "y": 372.65625
+    },
+    "home": {
+      "bottom": 487.15625,
+      "height": 48,
+      "left": 37,
+      "right": 283,
+      "top": 439.15625,
+      "width": 246,
+      "x": 37,
+      "y": 439.15625
+    },
+    "overflow": false,
+    "width": 320
+  },
+  {
+    "font": "16px",
+    "header": {
+      "bottom": 368.75,
+      "height": 22.5,
+      "left": 157,
+      "right": 353,
+      "top": 346.25,
+      "width": 196,
+      "x": 157,
+      "y": 346.25
+    },
+    "home": {
+      "bottom": 463.5,
+      "height": 48,
+      "left": 37,
+      "right": 353,
+      "top": 415.5,
+      "width": 316,
+      "x": 37,
+      "y": 415.5
+    },
+    "overflow": false,
+    "width": 390
+  },
+  {
+    "font": "16px",
+    "header": {
+      "bottom": 336.75,
+      "height": 22.5,
+      "left": 325,
+      "right": 563,
+      "top": 314.25,
+      "width": 238,
+      "x": 325,
+      "y": 314.25
+    },
+    "home": {
+      "bottom": 431.5,
+      "height": 48,
+      "left": 205,
+      "right": 563,
+      "top": 383.5,
+      "width": 358,
+      "x": 205,
+      "y": 383.5
+    },
+    "overflow": false,
+    "width": 768
+  },
+  {
+    "font": "16px",
+    "header": {
+      "bottom": 250.25,
+      "height": 22.5,
+      "left": 616.8359375,
+      "right": 854.8359375,
+      "top": 227.75,
+      "width": 238,
+      "x": 616.8359375,
+      "y": 227.75
+    },
+    "home": {
+      "bottom": 345,
+      "height": 48,
+      "left": 496.8359375,
+      "right": 854.8359375,
+      "top": 297,
+      "width": 358,
+      "x": 496.8359375,
+      "y": 297
+    },
+    "overflow": false,
+    "width": 1024
+  },
+  {
+    "font": "16px",
+    "header": {
+      "bottom": 250.25,
+      "height": 22.5,
+      "left": 891.3984375,
+      "right": 1129.3984375,
+      "top": 227.75,
+      "width": 238,
+      "x": 891.3984375,
+      "y": 227.75
+    },
+    "home": {
+      "bottom": 345,
+      "height": 48,
+      "left": 771.3984375,
+      "right": 1129.3984375,
+      "top": 297,
+      "width": 358,
+      "x": 771.3984375,
+      "y": 297
+    },
+    "overflow": false,
+    "width": 1440
+  }
+]
