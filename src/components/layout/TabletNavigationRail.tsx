@@ -6,6 +6,7 @@ import logoIpnc from '@/assets/logo-ipnc.png';
 import { UpdateAppButton } from '@/components/UpdateAppButton';
 import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 import { getAppNavigationItems, isNavigationPathActive } from './appNavigation';
+import './diretoria-navigation.css';
 
 export function TabletNavigationRail() {
   const location = useLocation();
@@ -20,21 +21,21 @@ export function TabletNavigationRail() {
   };
 
   return (
-    <aside className="sticky top-0 flex h-screen w-[76px] flex-shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[8px_0_28px_rgba(3,35,29,0.12)]">
+    <aside className="diretoria-nav-shell diretoria-rail">
       <button
         type="button"
         onClick={() => navigate('/')}
         aria-label="Ir para a página inicial"
         title="Home"
-        className="mx-auto mt-3 flex h-[48px] w-[48px] items-center justify-center rounded-2xl border border-white/10 bg-white shadow-sm transition-colors hover:bg-emerald-50"
+        className="diretoria-rail__brand"
       >
-        <img src={logoIpnc} alt="Marca IPNC" className="h-[36px] w-[36px] object-contain" />
+        <img src={logoIpnc} alt="Marca IPNC" />
       </button>
 
-      <div className="mx-3 my-3 h-px bg-sidebar-border" />
+      <div className="diretoria-rail__divider" />
 
-      <nav className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-2 scrollbar-thin" aria-label="Navegação principal do tablet">
-        <ul className="space-y-1.5">
+      <nav className="diretoria-rail__nav scrollbar-thin" aria-label="Navegação principal do tablet">
+        <ul className="diretoria-rail__list">
           {items.map((item) => {
             const active = isNavigationPathActive(location.pathname, item.path);
             return (
@@ -46,16 +47,11 @@ export function TabletNavigationRail() {
                   aria-current={active ? 'page' : undefined}
                   title={item.label}
                   className={cn(
-                    'relative flex h-12 w-full items-center justify-center rounded-2xl transition-all duration-200',
-                    active
-                      ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
-                      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                    'diretoria-nav-item',
+                    active && 'diretoria-nav-item--active',
                   )}
                 >
-                  <item.icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.4 : 2} />
-                  {active && (
-                    <span className="absolute -right-2 h-6 w-1 rounded-l-full bg-emerald-200" aria-hidden="true" />
-                  )}
+                  <item.icon aria-hidden="true" className="diretoria-nav-item__icon" strokeWidth={active ? 2.4 : 2} />
                 </button>
               </li>
             );
@@ -63,19 +59,19 @@ export function TabletNavigationRail() {
         </ul>
       </nav>
 
-      <div className="space-y-2 border-t border-sidebar-border p-2">
+      <div className="diretoria-rail__footer">
         <UpdateAppButton
           variant="icon"
-          className="!h-12 !w-full rounded-2xl !text-sidebar-foreground hover:!bg-sidebar-accent hover:!text-sidebar-accent-foreground"
+          className="diretoria-rail__update"
         />
         <button
           type="button"
           onClick={requestExit}
           aria-label="Sair"
           title="Sair"
-          className="flex h-12 w-full items-center justify-center rounded-2xl text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="diretoria-rail__exit"
         >
-          <LogOut className="h-[20px] w-[20px]" />
+          <LogOut aria-hidden="true" className="diretoria-nav-item__icon" />
         </button>
       </div>
 

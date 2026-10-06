@@ -1,0 +1,170 @@
+/* Home composition; shared forms and the pastoral/treasury themes stay intact. */
+.diretoria-dashboard-shell {
+  --dashboard-surface: #fffefb;
+  --dashboard-line: #dfeae4;
+  --dashboard-ink: #143b30;
+  --dashboard-muted: #637770;
+}
+.diretoria-theme .diretoria-dashboard-shell main {
+  background: radial-gradient(ellipse at 75% 0, #e5f1e9 0, transparent 42%), #f4f8f2;
+}
+.diretoria-dashboard { min-width: 0; }
+.dashboard-topbar { display: none; }
+.dashboard-motto { color: #657d73; font: italic .875rem/1.5 Georgia, serif; }
+.dashboard-topbar-actions { display: flex; align-items: center; gap: 18px; min-width: 0; max-width: 100%; }
+.dashboard-notifications, .dashboard-welcome-notifications { position: relative; display: flex; width: 48px; min-height: 48px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 50%; }
+.dashboard-notifications { color: #123e30; }
+.dashboard-notifications:hover { background: #e1eee4; }
+.dashboard-notifications svg { width: 24px; height: 24px; }
+.dashboard-notification-dot { position: absolute; width: 8px; height: 8px; top: 10px; right: 11px; border-radius: 50%; background: #d83d36; box-shadow: 0 0 0 2px var(--dashboard-surface); }
+.dashboard-account { display: flex; min-width: 0; min-height: 48px; align-items: center; gap: 12px; padding: 4px 6px; border-radius: 12px; text-align: left; }
+.dashboard-account:hover { background: #e5eee5; }
+.dashboard-avatar { display: flex; width: 42px; height: 42px; flex: 0 0 42px; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(145deg, #386d53, #063d2d); color: #fff; font-size: .875rem; font-weight: 600; }
+.dashboard-account-copy { display: flex; flex-direction: column; min-width: 0; max-width: 20rem; line-height: 1.4; }
+.dashboard-account-copy strong { font-size: .9375rem; font-weight: 600; overflow-wrap: anywhere; }
+.dashboard-account-copy > span { color: var(--dashboard-muted); font-size: .8125rem; }
+.dashboard-account-chevron { width: 18px; height: 18px; flex-shrink: 0; margin-left: 10px; }
+.dashboard-welcome { position: relative; isolation: isolate; display: flex; align-items: center; gap: 20px; min-height: 200px; padding: 28px 30px; margin-bottom: 14px; overflow: hidden; border-radius: 14px; background: #033c2d; color: #fff; }
+.dashboard-welcome-image { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.dashboard-welcome::before { position: absolute; z-index: -1; inset: 0; content: ''; background: linear-gradient(90deg, #033426d9 0, #02382ba6 45%, #002e231f 100%); }
+.dashboard-welcome-copy { min-width: 0; width: 58%; }
+.dashboard-date { font-size: .875rem; line-height: 1.5; color: #f1f8ef; }
+.diretoria-theme .diretoria-dashboard .dashboard-welcome h1 { margin: 4px 0 8px; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 700; line-height: 1.13; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.dashboard-welcome h1 span { color: #f3d69b; }
+.dashboard-society { font-size: .9375rem; line-height: 1.5; color: #eef8ec; overflow-wrap: anywhere; }
+.dashboard-verse { position: relative; width: 30%; align-self: flex-start; margin: 10px 0 0; }
+.dashboard-verse p { font: italic 1.1875rem/1.35 Georgia, 'Times New Roman', serif; }
+.dashboard-verse cite { display: block; margin-top: 9px; font-size: .8125rem; font-style: normal; color: #d9eddd; }
+.dashboard-welcome-notifications { display: none; }
+.diretoria-theme .diretoria-dashboard .dashboard-central { min-height: 76px; padding: 12px 18px; margin-bottom: 14px; background: var(--dashboard-surface); border-color: var(--dashboard-line); box-shadow: 0 3px 12px #10392a06; }
+.diretoria-theme .diretoria-dashboard .dashboard-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.diretoria-theme .diretoria-dashboard .dashboard-metric { position: relative; isolation: isolate; display: flex; flex-flow: row wrap; align-content: flex-start; gap: 12px; padding: 16px; min-height: 112px; overflow: hidden; background: var(--dashboard-surface); border-color: var(--dashboard-line); border-radius: 14px; box-shadow: 0 3px 12px #10392a06; }
+.dashboard-metric::after { position: absolute; z-index: -1; width: 180px; height: 85px; right: -45px; bottom: -12px; border-radius: 90% 0 60% 0; transform: rotate(-18deg); content: ''; background: #d8ebe045; }
+.dashboard-metric--blue::after { background: #d8e9fd52; }
+.dashboard-metric--gold::after { background: #f7e9c96b; }
+.diretoria-theme .diretoria-dashboard .dashboard-metric > div:first-child:not(.summary-card-content) { width: 44px; height: 44px; border-radius: 14px; background: #dcf3e7; color: #067b43; }
+.diretoria-theme .diretoria-dashboard .dashboard-metric svg { width: 23px; height: 23px; }
+.diretoria-theme .diretoria-dashboard .dashboard-metric--blue > div:first-child:not(.summary-card-content) { background: #e1ecff; color: #1856cb; }
+.diretoria-theme .diretoria-dashboard .dashboard-metric--gold > div:first-child:not(.summary-card-content) { background: #fbefd1; color: #a96805; }
+.diretoria-dashboard .dashboard-metric .summary-card-content { flex: 1 1 90px; width: auto; }
+.diretoria-theme .diretoria-dashboard .summary-label { color: var(--dashboard-ink); font-size: .875rem; font-weight: 500; }
+.diretoria-theme .diretoria-dashboard .summary-value { font: 700 clamp(1.5rem, 10cqi, 2rem)/1.2 Georgia, 'Times New Roman', serif; color: #094b39; margin-top: 3px; }
+.diretoria-theme .diretoria-dashboard .dashboard-metric--blue .summary-value { color: #174dd0; }
+.diretoria-theme .diretoria-dashboard .dashboard-metric--gold .summary-value { color: #a86500; }
+.diretoria-theme .diretoria-dashboard .summary-meta { margin-top: 3px; color: var(--dashboard-muted); font-size: .8125rem; font-weight: 400; line-height: 1.45; }
+.dashboard-primary-grid, .dashboard-calendar-grid { display: grid; min-width: 0; gap: 16px; }
+.dashboard-calendar-grid { margin-top: 16px; align-items: start; }
+.dashboard-side-stack { display: flex; min-width: 0; flex-direction: column; gap: 16px; }
+.dashboard-events, .dashboard-calendar, .dashboard-day-programs { min-width: 0; }
+.diretoria-theme .diretoria-dashboard .dashboard-panel, .diretoria-theme .diretoria-dashboard .dashboard-birthday-card, .diretoria-theme .diretoria-dashboard .dashboard-calendar > div { border: 1px solid var(--dashboard-line); border-radius: 14px; background: var(--dashboard-surface); box-shadow: 0 3px 14px #10392a06; }
+.dashboard-events .dashboard-panel { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.dashboard-section-heading { display: flex; flex-wrap: wrap; flex-direction: row; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 9px 16px; border-bottom: 1px solid var(--dashboard-line); }
+.dashboard-section-heading > div:first-child { gap: 10px; }
+.dashboard-section-heading > div:first-child > div:first-child { width: 24px; height: 32px; border-radius: 0; background: transparent; color: #0c6544; }
+.dashboard-section-heading > div:first-child > div:first-child svg { width: 22px; height: 22px; }
+.dashboard-section-heading > div:last-child:not(:first-child) { width: auto; }
+.diretoria-theme .diretoria-dashboard .dashboard-section-heading h2 { font-size: 1rem; font-weight: 600; }
+.dashboard-section-heading button { min-height: 44px; font-size: .8125rem; font-weight: 500; padding: 4px; }
+.dashboard-events-body { flex: 1; }
+.dashboard-events-body > button { gap: 12px; }
+.dashboard-events-body > button > div:first-child { width: 48px; height: 48px; }
+.dashboard-events-body > button > svg { width: 16px; height: 16px; }
+.dashboard-central > div:first-child > div:first-child { width: 44px; height: 44px; }
+.dashboard-central p:last-child { display: block; -webkit-line-clamp: unset; }
+.dashboard-events-empty { display: flex; min-height: 230px; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 32px 20px; text-align: center; }
+.dashboard-events-empty > svg { width: 54px; height: 54px; color: #b3c2ba; stroke-width: 1.6; margin-bottom: 12px; }
+.dashboard-events-empty p { color: var(--dashboard-ink); font-size: .9375rem; }
+.dashboard-events-empty span { color: var(--dashboard-muted); font-size: .875rem; }
+.dashboard-quick-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 12px; gap: 8px; }
+.dashboard-quick-action { display: flex; min-width: 0; min-height: 82px; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 10px 4px; border: 1px solid var(--dashboard-line); border-radius: 12px; background: #f2faf5; color: #154a37; transition: background .15s, border-color .15s; }
+.dashboard-quick-action--gold { background: #fffaf0; color: #855615; }
+.dashboard-quick-action:hover { background: #e7f4eb; border-color: #87b99a; }
+.dashboard-quick-action--gold:hover { background: #fcf1d9; border-color: #ddbe78; }
+.dashboard-quick-icon { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
+.dashboard-quick-icon svg { width: 25px; height: 25px; }
+.dashboard-quick-action span { font-size: .8125rem; }
+.diretoria-theme .diretoria-dashboard .dashboard-birthday-card { padding: 0; overflow: hidden; }
+.dashboard-birthdays > [role='alert'] { margin-bottom: 12px; }
+.dashboard-birthday-heading { padding: 7px 16px; margin: 0; border-bottom: 1px solid var(--dashboard-line); }
+.dashboard-birthday-heading h3 { font-size: 1rem; }
+.dashboard-birthday-heading svg { width: 20px; height: 20px; }
+.diretoria-theme .diretoria-dashboard .dashboard-birthday-heading button { min-height: 44px; font-size: .8125rem; font-weight: 500; }
+.dashboard-birthday-list { padding: 0 16px 10px; }
+.dashboard-birthday-list > div { border-bottom: 1px solid var(--dashboard-line); min-height: 44px; padding: 6px 0; font-size: .875rem; }
+.dashboard-birthday-list > div:last-child { border-bottom: 0; }
+.dashboard-birthday-list > div > span:first-child { width: 44px; font-size: .8125rem; }
+.dashboard-birthday-empty { padding: 18px 0; }
+.dashboard-calendar button[aria-pressed], .dashboard-calendar .grid-cols-7 > div:empty { height: 48px; }
+.dashboard-calendar > div { container-type: inline-size; container-name: dashboard-calendar; }
+.dashboard-calendar > div > div > div:first-child > div:first-child { flex: 1 1 18rem; min-width: min(100%, 18rem); }
+.dashboard-calendar h3 { overflow-wrap: anywhere; }
+.dashboard-calendar button[aria-label='Mês anterior'], .dashboard-calendar button[aria-label='Próximo mês'] { width: 44px; height: 44px; }
+.dashboard-calendar .grid-cols-7 > div:not(:empty) { font-size: clamp(.625rem, 3.5cqi, .75rem); overflow-wrap: anywhere; }
+.dashboard-calendar button[aria-pressed='true'] { border-radius: 50%; max-width: 48px; margin-inline: auto; width: 100%; background: #0b6542; }
+.diretoria-theme .diretoria-dashboard .dashboard-calendar button[data-size='icon'] { border: 1px solid var(--dashboard-line); border-radius: 10px; }
+.dashboard-day-programs .dashboard-panel { padding: 16px; }
+.dashboard-day-programs [aria-pressed] { font-size: .8125rem; min-height: 44px; }
+.dashboard-day-programs [aria-pressed='true'] { background: #0b6542; border-color: #0b6542; color: #fff; }
+.dashboard-day-programs .dashboard-panel > section > div:last-child { margin-bottom: 0; }
+.dashboard-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 20px; padding: 24px 4px 8px; color: var(--dashboard-muted); font-size: .8125rem; }
+.dashboard-footer p { font-family: Georgia, serif; font-style: italic; }
+.diretoria-dashboard-shell .diretoria-mobile-header--home { background: #f7faf4; border-color: var(--dashboard-line); }
+.diretoria-dashboard-shell .dashboard-mobile-brand img { height: 48px; width: 52px; }
+.dark .diretoria-dashboard-shell { --dashboard-surface: #142c23; --dashboard-line: #30493d; --dashboard-ink: #edf4ed; --dashboard-muted: #acbeb2; }
+.dark .diretoria-theme .diretoria-dashboard-shell main, .dark.diretoria-theme .diretoria-dashboard-shell main { background: #0d211a; }
+.dark .dashboard-account:hover, .dark .dashboard-notifications:hover { background: #243f30; }
+.dark .dashboard-notifications { color: #d5eadc; }
+.dark .dashboard-motto { color: #acbeb2; }
+.dark .diretoria-theme .diretoria-dashboard .summary-value, .dark.diretoria-theme .diretoria-dashboard .summary-value { color: #c8e6cf; }
+.dark .dashboard-quick-action { background: #1d382a; color: #b6dfc4; }
+.dark .dashboard-quick-action--gold { background: #3b311d; color: #e9c687; }
+.dark .diretoria-theme .diretoria-dashboard .dashboard-metric--blue .summary-value, .dark.diretoria-theme .diretoria-dashboard .dashboard-metric--blue .summary-value { color: #a7c4fd; }
+.dark .diretoria-theme .diretoria-dashboard .dashboard-metric--gold .summary-value, .dark.diretoria-theme .diretoria-dashboard .dashboard-metric--gold .summary-value { color: #efcf83; }
+.dark .diretoria-dashboard-shell .diretoria-mobile-header--home { background: #142c23; }
+@media (min-width: 700px) {
+  .dashboard-topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin: -6px 0 14px; min-height: 50px; }
+}
+@media (min-width: 1200px) {
+  .diretoria-theme .diretoria-dashboard .dashboard-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+  .dashboard-primary-grid, .dashboard-calendar-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+}
+@media (max-width: 699px) {
+  .dashboard-welcome { padding: 24px 20px; min-height: 224px; }
+  .dashboard-welcome-image { object-position: 64% center; opacity: .8; }
+  .dashboard-welcome::before { background: linear-gradient(90deg, #04392ef2, #023d2bc9 60%, #04372b42); }
+  .dashboard-welcome-copy { width: 100%; padding-right: 20px; }
+  .dashboard-date { font-size: .8125rem; padding-right: 20px; }
+  .diretoria-theme .diretoria-dashboard .dashboard-welcome h1 { font-size: 2rem; margin-top: 8px; max-width: 16rem; }
+  .dashboard-society { margin-top: 10px; font-size: .8125rem; }
+  .dashboard-verse { display: none; }
+  .dashboard-welcome-notifications { display: flex; position: absolute; right: 10px; top: 10px; background: #ffffff14; color: #fff; }
+  .dashboard-welcome-notifications:hover { background: #ffffff28; }
+  .diretoria-theme .diretoria-dashboard .dashboard-central { padding: 12px; }
+  .diretoria-theme .diretoria-dashboard .dashboard-metrics { gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, max(8rem, calc((100% - 10px) / 2))), 1fr)); }
+  .diretoria-theme .diretoria-dashboard .dashboard-metric { display: grid; grid-template-columns: 36px minmax(0, 1fr); padding: 12px; gap: 5px 9px; min-height: 128px; }
+  .diretoria-theme .diretoria-dashboard .dashboard-metric > div:first-child:not(.summary-card-content) { width: 36px; height: 36px; border-radius: 11px; }
+  .diretoria-dashboard .dashboard-metric .summary-card-content { display: contents; }
+  .diretoria-theme .diretoria-dashboard .summary-label { align-self: center; grid-column: 2; }
+  .diretoria-theme .diretoria-dashboard .summary-value { grid-column: 1 / -1; margin-top: 0; font-size: clamp(1.25rem, 9cqi, 1.5rem); }
+  .diretoria-theme .diretoria-dashboard .summary-meta { grid-column: 1 / -1; }
+  .diretoria-theme .diretoria-dashboard .summary-meta { font-size: .75rem; }
+  .dashboard-section-heading { padding: 8px 12px; }
+  .dashboard-events-empty { min-height: 200px; padding: 24px 16px; }
+  .dashboard-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .dashboard-quick-action { min-height: 76px; }
+  .dashboard-calendar button[aria-pressed] { max-width: 100%; }
+  .dashboard-calendar > div > div { padding: 12px; }
+  .dashboard-birthday-heading { padding: 6px 12px; }
+  .dashboard-birthday-list { padding-inline: 12px; }
+  .dashboard-birthday-list > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }
+  .dashboard-birthday-list > div > span:first-child { grid-column: 1; grid-row: 2; width: auto; }
+  .dashboard-birthday-list > div > span:nth-child(2) { grid-column: 1 / -1; grid-row: 1; }
+  .dashboard-birthday-list > div > span:nth-child(3) { grid-column: 2; grid-row: 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-quick-action { transition: none; }
+}
+@media (max-width: 359px) {
+  .diretoria-theme .diretoria-dashboard .summary-value { font-size: 1.125rem; }
+  .dashboard-metric .summary-value > span { column-gap: 2px; }
+}

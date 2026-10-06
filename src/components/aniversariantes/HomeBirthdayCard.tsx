@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { QueryErrorState } from '@/components/ui/query-error-state';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export function HomeBirthdayCard() {
+export function HomeBirthdayCard({ variant = 'default' }: { variant?: 'default' | 'dashboard' }) {
   const navigate = useNavigate();
   const { todayBirthdays, weekBirthdays, isError, isFetching, refetch } = useBirthdays();
   const queryClient = useQueryClient();
@@ -20,22 +20,23 @@ export function HomeBirthdayCard() {
     ...weekBirthdays,
   ].slice(0, 5);
 
-  if (allUpcoming.length === 0 && !isError) return null;
+  if (allUpcoming.length === 0 && !isError && variant !== 'dashboard') return null;
 
   return (
-    <section className="space-y-3 mb-4">
+    <section className={variant === 'dashboard' ? 'dashboard-birthdays' : 'space-y-3 mb-4'}>
     {isError && <QueryErrorState message="Não foi possível consultar os aniversariantes." onRetry={() => void refetch()} retrying={isFetching} hasPreviousData={hasSnapshot} />}
-    {hasSnapshot && allUpcoming.length > 0 && <AppCard>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+    {hasSnapshot && (allUpcoming.length > 0 || variant === 'dashboard') && <AppCard className={variant === 'dashboard' ? 'dashboard-birthday-card' : undefined}>
+      <div className={`${variant === 'dashboard' ? 'dashboard-birthday-heading ' : ''}flex flex-wrap items-center justify-between gap-2 mb-3`}>
         <div className="flex items-center gap-2">
           <Cake className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold text-base">Aniversários da semana</h3>
+          <h3 className="font-semibold text-base">{variant === 'dashboard' ? 'Aniversariantes' : 'Aniversários da semana'}</h3>
         </div>
         <Button variant="ghost" size="sm" className="min-h-11 text-sm" onClick={() => navigate('/aniversariantes')}>
           Ver todos <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
         </Button>
       </div>
-      <div className="space-y-1.5">
+      <div className={`${variant === 'dashboard' ? 'dashboard-birthday-list ' : ''}space-y-1.5`}>
+        {allUpcoming.length === 0 && <p className="dashboard-birthday-empty text-sm text-muted-foreground">Nenhum aniversário nos próximos dias.</p>}
         {allUpcoming.map(b => {
           const dateStr = `${String(b.dia).padStart(2, '0')}/${String(b.mes).padStart(2, '0')}`;
           return (

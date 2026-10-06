@@ -10,6 +10,7 @@ import { UpdateAppButton } from '@/components/UpdateAppButton';
 import { useScrollIndicators } from '@/hooks/useScrollIndicators';
 import { ExitConfirmDialog, useExitConfirm } from '@/components/layout/ExitConfirmDialog';
 import { getAppNavigationItems, isNavigationPathActive } from './appNavigation';
+import './diretoria-navigation.css';
 
 export function AppSidebar() {
   const location = useLocation();
@@ -28,48 +29,44 @@ export function AppSidebar() {
 
   return (
     <aside
-      className={cn(
-        'sticky top-0 flex h-screen flex-shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-300',
-        collapsed ? 'w-16' : 'w-56',
-      )}
+      className="diretoria-nav-shell diretoria-sidebar"
+      data-collapsed={collapsed}
     >
-      <div className="flex items-center justify-between border-b border-sidebar-border p-2">
-        {!collapsed && (
-          <button type="button" onClick={() => navigate('/')} className="flex items-center gap-2 text-left">
-            <div className="flex items-center justify-center rounded-lg bg-white p-1">
-              <img src={logoIpnc} alt="Marca IPNC" className="h-9 w-9 object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display text-sm font-bold text-sidebar-foreground">Renovo</span>
-              <span className="text-xs text-sidebar-muted">IPNC</span>
-            </div>
-          </button>
-        )}
+      <div className="diretoria-sidebar__header">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          aria-label="Ir para a página inicial"
+          title="Home"
+          className="diretoria-sidebar__brand"
+        >
+          <img src={logoIpnc} alt="Marca IPNC" />
+        </button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-          className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="diretoria-sidebar__collapse"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
 
-      <div className="relative min-h-0 flex-1">
+      <div className="diretoria-sidebar__body">
         {canScrollUp && !collapsed && (
           <button
             type="button"
             onClick={scrollUp}
             aria-label="Ver itens acima"
-            className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-full border border-sidebar-border bg-sidebar/95 p-1 text-sidebar-foreground shadow-md"
+            className="diretoria-sidebar__scroll diretoria-sidebar__scroll--up"
           >
             <ChevronUp className="h-4 w-4" />
           </button>
         )}
 
-        <nav ref={navRef} className="h-full overflow-y-auto py-4 scrollbar-thin" aria-label="Navegação principal">
-          <ul className="space-y-1 px-2">
+        <nav ref={navRef} className="diretoria-sidebar__nav scrollbar-thin" aria-label="Navegação principal">
+          <ul className="diretoria-sidebar__list">
             {menuItems.map((item) => {
               const active = isNavigationPathActive(location.pathname, item.path);
               return (
@@ -77,18 +74,16 @@ export function AppSidebar() {
                   <button
                     type="button"
                     onClick={() => navigate(item.path)}
+                    aria-label={item.label}
                     aria-current={active ? 'page' : undefined}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      'flex min-h-12 w-full items-center rounded-lg px-3 py-2.5 transition-all duration-200',
-                      'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                      active
-                        ? 'bg-sidebar-accent text-sidebar-primary-foreground shadow-[inset_3px_0_0_#c2d6ca]'
-                        : 'text-sidebar-foreground',
+                      'diretoria-nav-item',
+                      active && 'diretoria-nav-item--active',
                     )}
                   >
-                    <item.icon className={cn('h-5 w-5 flex-shrink-0', collapsed ? 'mx-auto' : 'mr-3')} />
-                    {!collapsed && <span className="min-w-0 break-words text-left text-sm font-medium">{item.label}</span>}
+                    <item.icon aria-hidden="true" className="diretoria-nav-item__icon" />
+                    {!collapsed && <span className="diretoria-nav-item__label">{item.label}</span>}
                   </button>
                 </li>
               );
@@ -101,39 +96,38 @@ export function AppSidebar() {
             type="button"
             onClick={scrollDown}
             aria-label="Ver mais itens"
-            className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full border border-sidebar-border bg-sidebar/95 p-1 text-sidebar-foreground shadow-md"
+            className="diretoria-sidebar__scroll diretoria-sidebar__scroll--down"
           >
             <ChevronDown className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      <div className="border-t border-sidebar-border p-2">
+      <div className="diretoria-sidebar__footer">
         {!collapsed && profile && (
-          <div className="mb-3 px-2">
-            <p className="break-words text-sm font-medium">{profile.full_name}</p>
-            <p className="break-all text-xs text-sidebar-muted">{profile.email}</p>
+          <div className="diretoria-sidebar__profile">
+            <p className="diretoria-sidebar__profile-name">{profile.full_name}</p>
+            <p className="diretoria-sidebar__profile-email">{profile.email}</p>
           </div>
         )}
 
-        <div className={cn('mb-2', collapsed && 'flex justify-center')}>
-          {collapsed ? <UpdateAppButton variant="icon" /> : <UpdateAppButton variant="full" />}
+        <div className="diretoria-sidebar__update">
+          <UpdateAppButton variant={collapsed ? 'icon' : 'full'} className="diretoria-sidebar__update-button" />
         </div>
 
         <Button
           variant="ghost"
           onClick={requestExit}
-          className={cn(
-            'w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-            collapsed && 'justify-center',
-          )}
+          className="diretoria-sidebar__exit"
+          aria-label="Sair"
+          title={collapsed ? 'Sair' : undefined}
         >
-          <LogOut className={cn('h-5 w-5', collapsed ? '' : 'mr-3')} />
+          <LogOut aria-hidden="true" className="diretoria-nav-item__icon" />
           {!collapsed && <span>Sair</span>}
         </Button>
 
         <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={handleSignOut} />
-        {!collapsed && <BuildStamp className="mt-3" />}
+        {!collapsed && <BuildStamp className="diretoria-sidebar__build-stamp" />}
       </div>
     </aside>
   );

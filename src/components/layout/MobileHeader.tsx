@@ -55,7 +55,7 @@ export function MobileHeader() {
   };
 
   return (
-    <header ref={headerRef} className="diretoria-mobile-header safe-top fixed inset-x-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-sidebar text-white shadow-[0_8px_24px_rgba(3,35,29,0.18)] min-[700px]:hidden">
+    <header ref={headerRef} className={`diretoria-mobile-header${isHome ? ' diretoria-mobile-header--home' : ''} safe-top fixed inset-x-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-sidebar text-white shadow-[0_8px_24px_rgba(3,35,29,0.18)] min-[700px]:hidden`}>
       <div className="relative flex min-h-[64px] py-2 items-center justify-between gap-2 px-page-x">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           {!isHome && (
@@ -69,8 +69,8 @@ export function MobileHeader() {
             </button>
           )}
 
-          {isHome && (<div className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white shadow-[0_6px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
-            <img src={logoIpnc} alt="Marca IPNC" className="h-[28px] w-[28px] object-contain" />
+          {isHome && (<div className="dashboard-mobile-brand flex flex-shrink-0 items-center justify-center">
+            <img src={logoIpnc} alt="Marca IPNC" className="h-[48px] w-[52px] object-contain" />
           </div> )}
 
           <div className="min-w-0">

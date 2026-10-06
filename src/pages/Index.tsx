@@ -7,11 +7,9 @@ import {
   Bell,
   Calendar,
   CheckSquare,
+  Coins,
   ChevronRight,
-  DollarSign,
-  Gift,
   Megaphone,
-  Plus,
   Receipt,
   Sparkles,
   Users,
@@ -20,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents, type EventStatus } from '@/hooks/useEvents';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { MetricGrid } from '@/components/layout/ResponsivePrimitives';
 import { AppCard } from '@/components/ui/app-card';
@@ -32,6 +31,8 @@ import { PastorNotificationBanner } from '@/components/pastor/PastorNotification
 import { PastorLoginNotification } from '@/components/pastor/PastorLoginNotification';
 import { PastorCalendarWidget } from '@/components/pastor/PastorCalendarWidget';
 import { PastorDayEventList } from '@/components/pastor/PastorDayEventList';
+import dashboardChurch from '@/assets/dashboard-church-v1.webp';
+import './dashboard.css';
 
 type DashboardStats = {
   activeMembers: number;
@@ -43,24 +44,26 @@ type DashboardStats = {
 };
 
 const currency = (value: number) =>
-  `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
+  `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 function QuickAction({
   label,
   icon: Icon,
   onClick,
+  tone = 'green',
 }: {
   label: string;
   icon: LucideIcon;
   onClick: () => void;
+  tone?: 'green' | 'gold';
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[66px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-[16px] border border-border bg-card px-1.5 py-2 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] dark:border-border dark:bg-card/95 sm:min-h-[78px] sm:gap-2 sm:px-2"
+      className={`dashboard-quick-action dashboard-quick-action--${tone}`}
     >
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 sm:h-9 sm:w-9">
+      <div className="dashboard-quick-icon">
         <Icon className="h-4 w-4" />
       </div>
       <span className="w-full min-w-0 whitespace-normal break-words text-sm font-semibold leading-snug text-foreground">
@@ -80,6 +83,7 @@ export default function Index() {
     isAdmin,
     isManagement,
     roles,
+    society,
     effectiveSocietyId: societyId,
   } = useAuth();
   const navigate = useNavigate();
@@ -296,7 +300,7 @@ export default function Index() {
 
   if (loading || !rolesLoaded) {
     return (
-      <AppLayout>
+      <AppLayout width="wide" variant="dashboard">
         <div className="app-stack py-2">
           <Skeleton className="h-32 w-full rounded-hero md:h-40" />
           <Skeleton className="h-20 w-full rounded-card" />
@@ -324,34 +328,25 @@ export default function Index() {
   const firstName = profile?.full_name?.split(' ')[0] || '';
   const todayFormatted = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
   const capitalizedDate = todayFormatted.charAt(0).toUpperCase() + todayFormatted.slice(1);
+  const societyLabel = society?.slug?.toUpperCase() || 'IPNC';
 
   return (
-    <AppLayout>
+    <AppLayout width="wide" variant="dashboard">
+      <div className="diretoria-dashboard">
       <PastorLoginNotification />
-
-      <section className="diretoria-welcome relative mb-section-gap overflow-hidden rounded-hero bg-sidebar px-4 py-5 text-white shadow-card sm:px-5 lg:px-6 lg:py-6">
-        <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-white/10 lg:h-52 lg:w-52" />
-        <div className="pointer-events-none absolute bottom-2 right-4 text-[58px] font-black leading-none text-white/[0.05] sm:text-[72px] lg:right-8 lg:text-[100px]">
-          IPNC
+      <DashboardHeader hasNotifications={dashboardRead.hasSnapshot && (pendingSubmissions > 0 || dashboardStats.announcements > 0)} />
+      <section className="dashboard-welcome" aria-labelledby="dashboard-greeting">
+        <img className="dashboard-welcome-image" src={dashboardChurch} alt="" aria-hidden="true" />
+        <div className="dashboard-welcome-copy">
+          <p className="dashboard-date">{capitalizedDate}</p>
+          <h1 id="dashboard-greeting">{greeting}, <span>{firstName || 'Diretoria'}!</span></h1>
+          <p className="dashboard-society">{societyLabel}{societyLabel !== 'IPNC' ? ' IPNC' : ''} • {dashboardRead.hasSnapshot ? `${dashboardStats.activeMembers} membro${dashboardStats.activeMembers === 1 ? '' : 's'} ativo${dashboardStats.activeMembers === 1 ? '' : 's'}` : 'Diretoria'}</p>
         </div>
-
-        <div className="relative flex min-w-0 items-start justify-between gap-3 lg:items-center">
-          <div className="min-w-0">
-            <p className="min-w-0 whitespace-normal break-words text-xs font-medium text-emerald-100 sm:text-sm">
-              {capitalizedDate}
-            </p>
-            <h1 className="mt-1.5 break-words text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
-              {greeting}, {firstName || 'Diretoria'}
-            </h1>
-            <p className="mt-1 text-xs leading-snug text-emerald-50/90 sm:text-sm lg:text-base">
-              {dashboardRead.hasSnapshot ? `UMP IPNC • ${dashboardStats.activeMembers} membro${dashboardStats.activeMembers === 1 ? '' : 's'} ativo${dashboardStats.activeMembers === 1 ? '' : 's'}` : 'UMP IPNC • Diretoria'}
-            </p>
-          </div>
-
+        <blockquote className="dashboard-verse"><p>“Mas tu, ó homem de Deus,<br />avança...”</p><cite>1 Timóteo 6:11</cite></blockquote>
           <button
             type="button"
             onClick={() => navigate('/comunicados')}
-            className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/25 sm:h-11 sm:w-11"
+            className="dashboard-welcome-notifications"
             aria-label="Abrir comunicados"
           >
             <Bell className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
@@ -359,7 +354,6 @@ export default function Index() {
               <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-emerald-900" />
             )}
           </button>
-        </div>
       </section>
 
       <PastorNotificationBanner />
@@ -368,7 +362,7 @@ export default function Index() {
 
       <AppCard
         variant="interactive"
-        className="mb-section-gap flex min-h-[74px] items-center justify-between gap-3 rounded-card p-3 sm:min-h-[82px] sm:p-4"
+        className="dashboard-central flex items-center justify-between gap-3"
         role="link"
         tabIndex={0}
         onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate(dashboardRead.hasSnapshot && pendingSubmissions > 0 ? '/financas?tab=comprovantes' : '/comunicados'); } }}
@@ -389,20 +383,21 @@ export default function Index() {
             <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-muted-foreground sm:text-sm">
               {!dashboardRead.hasSnapshot ? (dashboardRead.error ? 'Consulta indisponível' : 'Consultando comunicados e comprovantes…') : pendingSubmissions > 0
                 ? `${pendingSubmissions} comprovante${pendingSubmissions > 1 ? 's' : ''} aguardando aprovação`
-                : `${dashboardStats.announcements} comunicado${dashboardStats.announcements === 1 ? '' : 's'} disponível${dashboardStats.announcements === 1 ? '' : 'is'} para acompanhamento`}
+                : `${dashboardStats.announcements} comunicado${dashboardStats.announcements === 1 ? '' : 's'} ${dashboardStats.announcements === 1 ? 'disponível' : 'disponíveis'} para acompanhamento`}
             </p>
           </div>
         </div>
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
       </AppCard>
 
-      <MetricGrid className="mb-section-gap">
+      <MetricGrid className="dashboard-metrics">
         <MetricCard
           title="Eventos"
           value={summaryEventsRead.hasEventsSnapshot ? weekCount : '—'}
           description={summaryEventsRead.hasEventsSnapshot ? `${todayCount} hoje • próximos 7 dias` : 'Consultando agenda'}
           icon={Calendar}
           tone="success"
+          className="dashboard-metric dashboard-metric--green"
           onClick={() => navigate('/calendario')}
         />
         <MetricCard
@@ -411,6 +406,7 @@ export default function Index() {
           description="ativos na sociedade"
           icon={Users}
           tone="info"
+          className="dashboard-metric dashboard-metric--blue"
           onClick={() => navigate('/usuarios')}
         />
         <MetricCard
@@ -419,20 +415,23 @@ export default function Index() {
           description={dashboardRead.hasSnapshot ? `${dashboardStats.overdueTasks} vencida${dashboardStats.overdueTasks === 1 ? '' : 's'}` : 'Consultando tarefas'}
           icon={CheckSquare}
           tone={dashboardStats.overdueTasks > 0 ? 'warning' : 'default'}
+          className={`dashboard-metric dashboard-metric--${dashboardStats.overdueTasks > 0 ? 'gold' : 'green'}`}
           onClick={() => navigate('/tarefas')}
         />
         <MetricCard
           title="Finanças"
           value={dashboardRead.hasSnapshot ? currency(dashboardStats.monthlyRevenue) : '—'}
-          description={dashboardRead.hasSnapshot ? `${dashboardStats.pendingCharges} cobrança${dashboardStats.pendingCharges === 1 ? '' : 's'} pendente${dashboardStats.pendingCharges === 1 ? '' : 's'}` : 'Consultando finanças'}
-          icon={DollarSign}
+          description={dashboardRead.hasSnapshot ? `Entradas no mês • ${dashboardStats.pendingCharges} cobrança${dashboardStats.pendingCharges === 1 ? '' : 's'} pendente${dashboardStats.pendingCharges === 1 ? '' : 's'}` : 'Consultando finanças'}
+          icon={Coins}
           tone="warning"
+          className="dashboard-metric dashboard-metric--gold"
           onClick={() => navigate('/financas')}
         />
       </MetricGrid>
 
-      <div className="grid min-w-0 gap-section-gap min-[1200px]:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <section className="min-w-0">
+      <div className="dashboard-primary-grid">
+        <section className="dashboard-events">
+          <AppCard noPadding className="dashboard-panel">
           <SectionHeader
             title="Próximos eventos"
             icon={<Calendar />}
@@ -445,10 +444,10 @@ export default function Index() {
                 Ver calendário
               </button>
             )}
-            className="mb-2.5"
+            className="dashboard-section-heading"
           />
 
-          <AppCard className="divide-y divide-border/60 overflow-hidden rounded-panel p-0">
+          <div className="dashboard-events-body divide-y divide-border/60">
             {!summaryEventsRead.hasEventsSnapshot && !summaryEventsRead.isError ? (
               <div className="space-y-2.5 p-3 sm:p-4">
                 <Skeleton className="h-11 w-full" />
@@ -484,31 +483,28 @@ export default function Index() {
                 );
               })
             ) : (
-              <div className="p-4 text-sm text-muted-foreground">Nenhum evento próximo encontrado.</div>
+              <div className="dashboard-events-empty"><Calendar aria-hidden="true" /><p>Nenhum evento próximo encontrado.</p><span>Os próximos encontros aparecerão aqui.</span></div>
             )}
+          </div>
           </AppCard>
         </section>
 
-        <div className="app-stack min-w-0">
-          <section className="min-w-0">
-            <SectionHeader title="Acesso rápido" icon={<Sparkles />} className="mb-2.5" />
-            <div className="grid grid-cols-4 gap-2">
+        <div className="dashboard-side-stack">
+          <AppCard noPadding className="dashboard-panel dashboard-quick-panel">
+            <SectionHeader title="Acesso rápido" icon={<Sparkles />} className="dashboard-section-heading" />
+            <div className="dashboard-quick-grid">
               <QuickAction label="Reunião" icon={Users} onClick={() => navigate('/reunioes')} />
               <QuickAction label="Evento" icon={Calendar} onClick={() => navigate('/calendario')} />
-              <QuickAction label="Tarefa" icon={Plus} onClick={() => navigate('/tarefas')} />
-              <QuickAction label="Finanças" icon={DollarSign} onClick={() => navigate('/financas')} />
+              <QuickAction label="Tarefa" icon={CheckSquare} tone="gold" onClick={() => navigate('/tarefas')} />
+              <QuickAction label="Finanças" icon={Coins} tone="gold" onClick={() => navigate('/financas')} />
             </div>
-          </section>
-
-          <section className="min-w-0">
-            <SectionHeader title="Aniversariantes" icon={<Gift />} className="mb-2.5" />
-            <HomeBirthdayCard />
-          </section>
+          </AppCard>
+          <HomeBirthdayCard variant="dashboard" />
         </div>
       </div>
 
-      <div className="mt-section-gap grid min-w-0 gap-section-gap xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-        <section className="min-w-0">
+      <div className="dashboard-calendar-grid">
+        <section className="dashboard-calendar">
           <PastorCalendarWidget
             events={events}
             selectedDate={selectedDate}
@@ -523,20 +519,18 @@ export default function Index() {
           />
         </section>
 
-        <section className="min-w-0">
-          {hasEventsSnapshot && <PastorDayEventList
+        <section className="dashboard-day-programs">
+          {hasEventsSnapshot && <AppCard className="dashboard-panel"><PastorDayEventList
             selectedDate={selectedDate}
             events={events}
             onUpdateStatus={isManagement || isAdmin ? handleUpdateStatus : undefined}
             isUpdating={updateEvent.isPending}
-          />}
+          /></AppCard>}
         </section>
       </div>
 
-      <AppCard className="mt-section-gap mb-2 rounded-panel bg-gradient-to-br from-emerald-900 to-emerald-700 px-4 py-4 text-center text-white sm:px-5 sm:py-5">
-        <p className="text-sm font-semibold sm:text-base">&quot;Tu, porém, renova-te em Cristo.&quot;</p>
-        <p className="mt-1 text-xs text-emerald-100 sm:text-sm">Tema da UMP IPNC 2026</p>
-      </AppCard>
+      <footer className="dashboard-footer"><p>“Tu, porém, renova-te em Cristo.”</p><span>Tema da UMP IPNC 2026</span></footer>
+      </div>
     </AppLayout>
   );
 }

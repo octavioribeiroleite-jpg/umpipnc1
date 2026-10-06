@@ -22,9 +22,10 @@ import {
 interface AppLayoutProps {
   children: ReactNode;
   width?: 'standard' | 'wide' | 'reading';
+  variant?: 'default' | 'dashboard';
 }
 
-export function AppLayout({ children, width = 'standard' }: AppLayoutProps) {
+export function AppLayout({ children, width = 'standard', variant = 'default' }: AppLayoutProps) {
   const { isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,7 +60,7 @@ export function AppLayout({ children, width = 'standard' }: AppLayoutProps) {
   ];
 
   return (
-    <div className="app-page min-h-screen">
+    <div className={`app-page min-h-screen${variant === 'dashboard' ? ' diretoria-dashboard-shell' : ''}`}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3 focus:text-primary focus:shadow-lg">Pular para o conteúdo</a>
       <ExitConfirmDialog open={exitOpen} onOpenChange={setExitOpen} onConfirm={async () => { await signOut(); navigate('/auth'); }} />
       {/* Keep one content tree: CSS-hidden copies still mount effects and channels. */}
