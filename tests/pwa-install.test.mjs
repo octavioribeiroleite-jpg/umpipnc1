@@ -124,11 +124,11 @@ test('service worker only removes old app caches and never intercepts login, API
   vm.runInNewContext(worker, {
     URL,
     self: { location: { origin: 'https://renovo.test' }, addEventListener: (name, fn) => { handlers[name] = fn; }, clients: { claim: async () => { claimed = true; } }, skipWaiting: () => { skipped = true; } },
-    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'another-app'], delete: async key => { deleted.push(key); } },
+    caches: { keys: async () => ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14', 'ump-cache-v15', 'another-app'], delete: async key => { deleted.push(key); } },
   });
   let activated;
   handlers.activate({ waitUntil: promise => { activated = promise; } }); await activated;
-  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13']); assert.equal(claimed, true);
+  assert.deepEqual(deleted, ['ump-cache-v8', 'ump-cache-v9', 'ump-cache-v10', 'ump-cache-v11', 'ump-cache-v12', 'ump-cache-v13', 'ump-cache-v14']); assert.equal(claimed, true);
   handlers.message({ data: { type: 'SKIP_WAITING' } }); assert.equal(skipped, true);
   for (const [url, mode, method] of [
     ['https://renovo.test/auth','navigate','GET'],
