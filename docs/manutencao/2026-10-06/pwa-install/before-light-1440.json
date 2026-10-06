@@ -1,0 +1,44 @@
+{
+  "buttons": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgb(71, 85, 105)",
+      "label": "Fechar instalação",
+      "text": ""
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgb(71, 85, 105)",
+      "label": null,
+      "text": "Agora não"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgb(15, 23, 42)",
+      "label": null,
+      "text": "Fechar"
+    }
+  ],
+  "dialog": {
+    "bottom": 825.59375,
+    "client": 649,
+    "height": 651.1875,
+    "scroll": 649,
+    "top": 174.40625
+  },
+  "dialogBackground": "rgb(255, 255, 255)",
+  "dialogForeground": "rgb(15, 23, 42)",
+  "headingColor": "rgb(15, 23, 42)",
+  "logo": [
+    {
+      "filter": "none",
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "rootTheme": "",
+  "themeColor": "#6f7170",
+  "viewport": {
+    "height": 1000,
+    "width": 1440
+  }
+}

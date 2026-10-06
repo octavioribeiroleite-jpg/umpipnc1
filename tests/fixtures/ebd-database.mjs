@@ -10,6 +10,8 @@ export async function initializeEbdFixture(db) {
   create schema auth; create schema ipnc_private; create schema extensions;
   create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
   create function auth.uid() returns uuid language sql stable as $$ select nullif(auth.jwt()->>'sub','')::uuid $$;
+  -- Auth owns these synthetic sessions. Client roles receive no table grants.
+  create table auth.sessions(id uuid primary key,user_id uuid not null,created_at timestamptz);
   -- Native SHA-256 supplies the same digest needed by portal_valid. This
   -- does not test bcrypt/PIN verification, token signing or the Auth HTTP service.
   create function extensions.digest(value text,algorithm text) returns bytea language sql as $$ select sha256(convert_to(value,'UTF8')) $$;
@@ -49,6 +51,10 @@ export async function initializeEbdFixture(db) {
   const secret = 'synthetic-pin-hash-a', adminSecret = 'synthetic-admin-pin-hash';
   const fingerprint = value => createHash('sha256').update(`IPNC:PIN:v1:${value}`).digest('hex');
   await db.query('insert into profiles(user_id,active) values($1,true),($2,true),($3,false)', [ids.teacher, ids.admin, ids.inactive]);
+  const sessionIds = Object.fromEntries(['teacher','admin','inactive'].map(key => [key, randomUUID()]));
+  for (const key of Object.keys(sessionIds)) {
+    await db.query('insert into auth.sessions(id,user_id,created_at) values($1,$2,now())', [sessionIds[key], ids[key]]);
+  }
   await db.query("insert into settings values('secretaria_admin_password',$1)", [adminSecret]);
   await db.query("insert into ebd_classes(id,name) values($1,'Turma sintética A'),($2,'Turma sintética B')", [ids.a, ids.b]);
   await db.query('insert into ebd_class_passwords(class_id,pin_hash) values($1,$3),($2,$3)', [ids.a, ids.b, secret]);
@@ -56,12 +62,13 @@ export async function initializeEbdFixture(db) {
   const today = (await db.query("select (now() at time zone 'America/Sao_Paulo')::date::text as value")).rows[0].value;
   const past = (await db.query("select ((now() at time zone 'America/Sao_Paulo')::date-7)::text as value")).rows[0].value;
   function claims(overrides = {}) {
-    return { sub: ids.teacher, role: 'authenticated', app_metadata: { ipnc_portal: {
+    const actor = Object.keys(sessionIds).find(key => ids[key] === (overrides.sub ?? ids.teacher));
+    return { sub: ids.teacher, role: 'authenticated', session_id: sessionIds[actor], app_metadata: { ipnc_portal: {
       namespace: 'ebd', id: ids.a, issued_at: Math.floor(Date.now()/1000), fingerprint: fingerprint(secret),
     } }, ...overrides };
   }
   const adminClaims = () => claims({ sub: ids.admin, app_metadata: { ipnc_portal: {
     namespace: 'ebd', id: 'admin', issued_at: Math.floor(Date.now()/1000), fingerprint: fingerprint(adminSecret),
   } } });
-  return { ids, secret, adminSecret, fingerprint, today, past, claims, adminClaims, migration };
+  return { ids, sessionIds, secret, adminSecret, fingerprint, today, past, claims, adminClaims, migration };
 }

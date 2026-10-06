@@ -34,7 +34,8 @@ export async function portalSession(input: {
     if (error || data.user?.email !== email || data.user.app_metadata?.ipnc_portal?.namespace !== input.namespace || data.user.app_metadata?.ipnc_portal?.id !== input.id) throw Error('Conta reservada indisponível.');
     const sameEbdCredential = optimizeEbd && data.user.app_metadata.ipnc_portal.fingerprint === fingerprint
       && data.user.app_metadata.ipnc_portal.account_version === accountVersion;
-    // Always refresh issued_at: EBD authorization still expires after 15 minutes.
+    // Refresh account metadata for the new login. EBD's 15-minute authorization
+    // is bound to that Auth session's created_at, not this shared timestamp.
     const updated = await admin.auth.admin.updateUserById(userId, {
       ...(!sameEbdCredential ? { password } : {}), app_metadata: { ipnc_portal: claims },
     });

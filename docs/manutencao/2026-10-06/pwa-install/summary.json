@@ -1,0 +1,264 @@
+{
+  "baseRevision": "113f1ab3dafad5f68808b6671a00040f232a6239",
+  "changedProductionFile": "src/components/PWAInstallPrompt.tsx",
+  "changedFileSha256": "147903db53608513198010d66e5a958e30ce75fa356ee145c41ef1c4ad9aa6c7",
+  "lightSourceAndHandlersIdenticalAfterRemovingAddedDarkClasses": true,
+  "controllerReal": true,
+  "onlyControllerAdapters": "display-mode queries forced false; optional synthetic beforeinstallprompt with dismissed userChoice",
+  "noRealBackendOrServiceWorker": true,
+  "osThemeChanged": false,
+  "physicalPwaInstallTested": false,
+  "contrastMethod": "WCAG sRGB from calculated foreground and ancestor-composited backgrounds; opacity/gradient/image validation excluded",
+  "captures": [
+    {
+      "name": "after-cancelled-bottom-dark-375-safe",
+      "rootTheme": "dark",
+      "background": "rgb(22, 29, 26)",
+      "foreground": "rgb(240, 244, 242)",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "dialog": {
+        "bottom": 690,
+        "client": 628,
+        "height": 630,
+        "scroll": 935,
+        "top": 60
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": 7.09
+    },
+    {
+      "name": "after-cancelled-bottom-light-375-safe",
+      "rootTheme": "",
+      "background": "rgb(255, 255, 255)",
+      "foreground": "rgb(15, 23, 42)",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "dialog": {
+        "bottom": 690,
+        "client": 628,
+        "height": 630,
+        "scroll": 935,
+        "top": 60
+      },
+      "themeColor": "#6f7170",
+      "minEnabledTextContrast": 7.58
+    },
+    {
+      "name": "after-cancelled-dark-375-safe",
+      "rootTheme": "dark",
+      "background": "rgb(22, 29, 26)",
+      "foreground": "rgb(240, 244, 242)",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "dialog": {
+        "bottom": 690,
+        "client": 628,
+        "height": 630,
+        "scroll": 935,
+        "top": 60
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": 7.09
+    },
+    {
+      "name": "after-dark-1440",
+      "rootTheme": "dark",
+      "background": "rgb(22, 29, 26)",
+      "foreground": "rgb(240, 244, 242)",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "dialog": {
+        "bottom": 825.59375,
+        "client": 649,
+        "height": 651.1875,
+        "scroll": 649,
+        "top": 174.40625
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": 7.09
+    },
+    {
+      "name": "after-dark-390",
+      "rootTheme": "dark",
+      "background": "rgb(22, 29, 26)",
+      "foreground": "rgb(240, 244, 242)",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "dialog": {
+        "bottom": 808.59375,
+        "client": 771,
+        "height": 773.1875,
+        "scroll": 771,
+        "top": 35.40625
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": 7.09
+    },
+    {
+      "name": "after-dark-768",
+      "rootTheme": "dark",
+      "background": "rgb(22, 29, 26)",
+      "foreground": "rgb(240, 244, 242)",
+      "viewport": {
+        "height": 1024,
+        "width": 768
+      },
+      "dialog": {
+        "bottom": 837.59375,
+        "client": 649,
+        "height": 651.1875,
+        "scroll": 649,
+        "top": 186.40625
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": 7.09
+    },
+    {
+      "name": "after-light-1440",
+      "rootTheme": "",
+      "background": "rgb(255, 255, 255)",
+      "foreground": "rgb(15, 23, 42)",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "dialog": {
+        "bottom": 825.59375,
+        "client": 649,
+        "height": 651.1875,
+        "scroll": 649,
+        "top": 174.40625
+      },
+      "themeColor": "#6f7170",
+      "minEnabledTextContrast": 7.58
+    },
+    {
+      "name": "after-native-ready-dark-1440",
+      "rootTheme": "dark",
+      "background": "rgb(22, 29, 26)",
+      "foreground": "rgb(240, 244, 242)",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "dialog": {
+        "bottom": 708.59375,
+        "client": 405,
+        "height": 407.1875,
+        "scroll": 405,
+        "top": 301.40625
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": 9.19
+    },
+    {
+      "name": "after-native-ready-dark-375-safe",
+      "rootTheme": "dark",
+      "background": "rgb(22, 29, 26)",
+      "foreground": "rgb(240, 244, 242)",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "dialog": {
+        "bottom": 600.59375,
+        "client": 449,
+        "height": 451.1875,
+        "scroll": 449,
+        "top": 149.40625
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": 9.19
+    },
+    {
+      "name": "after-native-ready-light-375-safe",
+      "rootTheme": "",
+      "background": "rgb(255, 255, 255)",
+      "foreground": "rgb(15, 23, 42)",
+      "viewport": {
+        "height": 740,
+        "width": 375
+      },
+      "dialog": {
+        "bottom": 600.59375,
+        "client": 449,
+        "height": 451.1875,
+        "scroll": 449,
+        "top": 149.40625
+      },
+      "themeColor": "#6f7170",
+      "minEnabledTextContrast": 7.58
+    },
+    {
+      "name": "before-dark-1440",
+      "rootTheme": "dark",
+      "background": "rgb(255, 255, 255)",
+      "foreground": "rgb(15, 23, 42)",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "dialog": {
+        "bottom": 825.59375,
+        "client": 649,
+        "height": 651.1875,
+        "scroll": 649,
+        "top": 174.40625
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": null
+    },
+    {
+      "name": "before-dark-390",
+      "rootTheme": "dark",
+      "background": "rgb(255, 255, 255)",
+      "foreground": "rgb(15, 23, 42)",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      },
+      "dialog": {
+        "bottom": 808.59375,
+        "client": 771,
+        "height": 773.1875,
+        "scroll": 771,
+        "top": 35.40625
+      },
+      "themeColor": "#060807",
+      "minEnabledTextContrast": null
+    },
+    {
+      "name": "before-light-1440",
+      "rootTheme": "",
+      "background": "rgb(255, 255, 255)",
+      "foreground": "rgb(15, 23, 42)",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      },
+      "dialog": {
+        "bottom": 825.59375,
+        "client": 649,
+        "height": 651.1875,
+        "scroll": 649,
+        "top": 174.40625
+      },
+      "themeColor": "#6f7170",
+      "minEnabledTextContrast": null
+    }
+  ],
+  "closeFocusRestoredTo": "Instalar aplicativo",
+  "dailyReviewFocusedTests": 90,
+  "dailyReviewFocusedTestsFailed": 0
+}

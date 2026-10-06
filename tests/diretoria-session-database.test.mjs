@@ -13,6 +13,7 @@ create role anon; create role authenticated; create role service_role bypassrls;
 create schema auth; create schema ipnc_private; create schema extensions;
 create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
 create function auth.uid() returns uuid language sql stable as $$ select nullif(auth.jwt()->>'sub','')::uuid $$;
+create table auth.sessions(id uuid primary key,user_id uuid not null,created_at timestamptz);
 create function extensions.digest(value text,algorithm text) returns bytea language sql as $$ select sha256(convert_to(value,'UTF8')) $$;
 create type public.app_role as enum('admin','diretoria','pastor','visualizador');
 create table profiles(user_id uuid primary key,active boolean not null,society_id uuid);
@@ -49,7 +50,9 @@ await db.exec(`insert into settings values('diretoria_pin_a','100001'),('diretor
 await db.query('insert into ebd_classes values($1,true)', [ids.ebdClass]);
 await db.query("insert into ebd_class_passwords values($1,'synthetic-class-hash',true)", [ids.ebdClass]);
 const fingerprint = value => createHash('sha256').update(`IPNC:PIN:v1:${value}`).digest('hex');
-const claims = (userId, id, credential, namespace = 'diretoria') => ({ sub: userId, role: 'authenticated', app_metadata: { ipnc_portal: { namespace, id, fingerprint: fingerprint(credential), issued_at: Math.floor(Date.now()/1000) } } });
+const sessionIds = Object.fromEntries([ids.admin,ids.teacher].map(id => [id,randomUUID()]));
+for (const [userId,sessionId] of Object.entries(sessionIds)) await db.query('insert into auth.sessions values($1,$2,now())',[sessionId,userId]);
+const claims = (userId, id, credential, namespace = 'diretoria') => ({ sub: userId, role: 'authenticated', session_id: sessionIds[userId], app_metadata: { ipnc_portal: { namespace, id, fingerprint: fingerprint(credential), issued_at: Math.floor(Date.now()/1000) } } });
 const regular = userId => ({ sub: userId, role: 'authenticated', app_metadata: {} });
 const as = async (jwt, work) => {
   await db.exec(`begin; set local role ${jwt ? 'authenticated' : 'anon'};`);
@@ -62,6 +65,7 @@ const metadata = async () => (await db.query("select oid,proowner,proacl,prosecd
 const beforeMetadata = await metadata();
 const actorBefore = (await db.query("select pg_get_functiondef('ipnc_private.actor_active()'::regprocedure) value")).rows[0].value;
 await db.exec(migration('20261006135357_diretoria_society_pin_validation.sql'));
+await db.exec(migration('20261006162230_ebd_auth_session_expiry.sql'));
 
 test('the replacement keeps function identity, privileges, ownership and the EBD/Treasury actor boundary unchanged', async () => {
   assert.deepEqual(await metadata(), beforeMetadata);
@@ -106,10 +110,32 @@ test('EBD administrator, class credentials, expiry and Treasury separation retai
     assert.equal(result.actor, false);
   }
   const expired = claims(ids.teacher,ids.ebdClass,'synthetic-class-hash','ebd');
-  expired.app_metadata.ipnc_portal.issued_at -= 1000;
-  assert.equal((await ebdValid(expired)).rows[0].value, false);
+  await db.query("update auth.sessions set created_at=now()-interval '1000 seconds' where id=$1", [expired.session_id]);
+  try { assert.equal((await ebdValid(expired)).rows[0].value, false); }
+  finally { await db.query('update auth.sessions set created_at=now() where id=$1', [expired.session_id]); }
   const treasury = claims(ids.admin,randomUUID(),'synthetic-treasury-version','treasury');
   assert.equal((await as(treasury, () => db.query('select ipnc_private.actor_active() value'))).rows[0].value, false);
+});
+
+test('EBD session expiry preserves the prior Diretoria/Pastor policy for old, future and absent metadata timestamps', async () => {
+  const cases = [];
+  for (const issuedAt of [1, Math.floor(Date.now()/1000)+31, undefined]) {
+    for (const jwt of [claims(ids.a,'a','100001'), claims(ids.pastor,'pastor','100003')]) {
+      jwt.app_metadata.ipnc_portal.issued_at = issuedAt;
+      cases.push(jwt);
+    }
+  }
+  const actual = [];
+  for (const jwt of cases) actual.push(await valid(jwt));
+  // Compare with the actual previous definition, rather than inventing a new
+  // 15-minute renewal policy for Diretoria, which has no such existing guard.
+  await db.exec(migration('20261006135357_diretoria_society_pin_validation.sql'));
+  try {
+    const baseline = [];
+    for (const jwt of cases) baseline.push(await valid(jwt));
+    assert.deepEqual(actual, baseline);
+    assert.ok(actual.every(Boolean));
+  } finally { await db.exec(migration('20261006162230_ebd_auth_session_expiry.sql')); }
 });
 
 test('settings RLS reveals PINs only to an active administrator and keeps anonymous Pix settings public', async () => {

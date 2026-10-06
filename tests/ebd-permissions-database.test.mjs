@@ -8,7 +8,9 @@ import { PGlite } from '@electric-sql/pglite';
 // Isolated PostgreSQL only. Auth claims below emulate the trusted gateway; no
 // network, credentials, production data or migration-history writes are used.
 const db = new PGlite();
-const { ids, secret, fingerprint, today, past, claims, adminClaims, migration } = await initializeEbdFixture(db);
+const { ids, sessionIds, secret, fingerprint, today, past, claims, adminClaims, migration } = await initializeEbdFixture(db);
+await db.exec(migration('20261006135357_diretoria_society_pin_validation.sql'));
+await db.exec(migration('20261006162230_ebd_auth_session_expiry.sql'));
 const session = async (jwt, work) => {
   await db.exec(`begin; set local role ${jwt ? 'authenticated' : 'anon'};`);
   await db.query("select set_config('request.jwt.claims',$1,true)", [JSON.stringify(jwt || {})]);
@@ -42,7 +44,6 @@ test('expired, mismatched, revoked, inactive and wrong-namespace sessions cannot
   const baseline = claims();
   const portal = baseline.app_metadata.ipnc_portal;
   for (const replacement of [
-    { ...portal, issued_at: portal.issued_at - 1000 },
     { ...portal, fingerprint: fingerprint('wrong-synthetic-pin-hash') },
     { ...portal, namespace: 'diretoria' },
     { ...portal, id: ids.b },
@@ -50,6 +51,9 @@ test('expired, mismatched, revoked, inactive and wrong-namespace sessions cannot
     const jwt = claims({ app_metadata: { ipnc_portal: replacement } });
     await denied(() => session(jwt, () => write(ids.two)));
   }
+  await db.query("update auth.sessions set created_at=now()-interval '1000 seconds' where id=$1", [sessionIds.teacher]);
+  try { await denied(() => session(baseline, () => write(ids.two))); }
+  finally { await db.query('update auth.sessions set created_at=now() where id=$1', [sessionIds.teacher]); }
   await denied(() => session(claims({ sub: ids.inactive }), () => write(ids.two)));
   const noSession = claims({ app_metadata: {}, user_metadata: { ipnc_portal: portal } });
   await denied(() => session(noSession, () => write(ids.two)));

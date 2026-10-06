@@ -49,19 +49,21 @@ Deno.serve(async (req) => {
 
     const { data: row, error } = await adminClient
       .from('ebd_class_passwords')
-      .select('class_id, active, ebd_classes(name)')
+      .select('class_id, active, ebd_classes!inner(name, active)')
       .eq('pin_hash', pinHash)
       .eq('active', true)
+      .eq('ebd_classes.active', true)
       .maybeSingle()
 
-    if (error || !row) {
+    const ebdClass = row?.ebd_classes as { name?: string | null; active?: boolean } | null
+    if (error || !row || ebdClass?.active !== true) {
       return new Response(JSON.stringify({ error: 'Senha incorreta' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const className = (row as any).ebd_classes?.name ?? null
+    const className = ebdClass.name ?? null
     const session = await portalSession({ namespace: 'ebd', id: row.class_id, name: `EBD ${className ?? ''}`, credential: pinHash })
     const capability = await createEbdBirthdayTokens({
       issuer: supabaseUrl,

@@ -124,22 +124,24 @@ test('synthetic operation cost drops on warm EBD entry without skipping Auth ide
   // This is the fixture's cost model. No production speed claim follows from it.
 });
 
-test('warm helper claims pass the unchanged SQL guard and still expire after 15 minutes', async () => {
+test('warm helper claims pass the session-bound SQL guard and still expire after 15 minutes', async () => {
   const db = new PGlite();
   try {
-    const { ids, secret, migration } = await initializeEbdFixture(db);
+    const { ids, sessionIds, secret, migration } = await initializeEbdFixture(db);
     await db.exec(migration('20261006135357_diretoria_society_pin_validation.sql'));
+    await db.exec(migration('20261006162230_ebd_auth_session_expiry.sql'));
     const p = portalFixture({ id: ids.a, credential: secret, userId: ids.teacher, now: Math.floor(Date.now() / 1000) - 1000 });
     await p.run(); p.reset(); p.state.now = Math.floor(Date.now() / 1000); await p.run();
     assert.equal('password' in update(p), false);
-    const jwt = { sub: ids.teacher, role: 'authenticated', app_metadata: p.state.user.app_metadata };
+    const jwt = { sub: ids.teacher, role: 'authenticated', session_id: sessionIds.teacher, app_metadata: p.state.user.app_metadata };
     const valid = async claims => {
       await db.query("select set_config('request.jwt.claims',$1,false)", [JSON.stringify(claims)]);
       return (await db.query("select ipnc_private.portal_valid('ebd') valid")).rows[0].valid;
     };
     assert.equal(await valid(jwt), true);
-    const expired = structuredClone(jwt); expired.app_metadata.ipnc_portal.issued_at -= 901;
-    assert.equal(await valid(expired), false);
+    await db.query("update auth.sessions set created_at=now()-interval '901 seconds' where id=$1", [sessionIds.teacher]);
+    assert.equal(await valid(jwt), false);
+    await db.query('update auth.sessions set created_at=now() where id=$1', [sessionIds.teacher]);
     const wrongNamespace = structuredClone(jwt); wrongNamespace.app_metadata.ipnc_portal.namespace = 'treasury';
     assert.equal(await valid(wrongNamespace), false);
   } finally { await db.close(); }

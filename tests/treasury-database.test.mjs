@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { createSocietyReceipt } from '../src/lib/treasury-receipt.ts';
+import { reportTotals } from '../src/lib/treasury-report.ts';
 
 const db = new PGlite();
 await db.exec(`
@@ -37,6 +38,10 @@ await db.exec(readFileSync(new URL('../supabase/migrations/20261005140755_treasu
 await db.exec(readFileSync(new URL('../supabase/migrations/20261005140907_treasury_public_read_policy.sql', import.meta.url),'utf8'));
 await db.exec(readFileSync(new URL('../supabase/migrations/20261005142735_treasury_society_pin_access.sql', import.meta.url),'utf8'));
 await db.exec(readFileSync(new URL('../supabase/migrations/20261005143113_treasury_directory_binding.sql', import.meta.url),'utf8'));
+const guardMetadata = () => db.query("select oid,proowner,proacl::text,prosecdef,proconfig from pg_proc where oid='ipnc_private.treasury_entry_guard()'::regprocedure");
+const originalGuardMetadata = (await guardMetadata()).rows;
+const timelineMigration = readFileSync(new URL('../supabase/migrations/20261006162227_treasury_reserve_timeline.sql', import.meta.url),'utf8');
+await db.exec(timelineMigration);
 const ids = Object.fromEntries(['admin','treasurer','outsider','inactive','fund','other','bank','income','expense','pending'].map(k=>[k,crypto.randomUUID()]));
 await db.query(`insert into auth.users select unnest($1::uuid[])`,[[ids.admin,ids.treasurer,ids.outsider,ids.inactive]]);
 await db.query(`insert into profiles select id,'Test','test',id<>$1 from auth.users`,[ids.inactive]);
@@ -211,4 +216,103 @@ test('society PIN login is narrow, rotated/revoked server-side, and cannot reach
  await as(ids.admin,()=>db.query('select treasury_set_pin($1,null,false)',[ids.fund]));
  assert.equal((await db.query('select treasury_verify_pin($1,$2) data',[ids.fund,'654321'])).rows[0].data,null);
 });
+const reserveFund = async label => {
+ const id=crypto.randomUUID();
+ await as(ids.admin,()=>db.query('insert into treasury_funds(id,name,abbreviation) values($1,$2,$3)',[id,`Fixture ${label}`,id.slice(0,8)]));
+ return id;
+};
+const reserveEntry = (fund,day,kind,capita,{amount=capita,status='confirmed'}={}) => as(ids.admin,()=>db.query(`insert into treasury_entries(id,fund_id,kind,amount_cents,occurred_on,person_name,description,status,payment_method,per_capita_cents,review_note) values($1,$2,$3,$4,$5,'Fixture only','Reserve timeline fixture',$6,'cash',$7,'Fixture verified') returning *`,[crypto.randomUUID(),fund,kind,amount,day,status,capita])).then(result=>result.rows[0]);
+const editReserve = (entry,changes) => {
+ const next={...entry,...changes};
+ return as(ids.admin,()=>db.query(`update treasury_entries set fund_id=$1,occurred_on=$2,kind=$3,status=$4,per_capita_cents=$5,description=$6,revision=$7 where id=$8 and revision=$9 returning *`,[next.fund_id,next.occurred_on,next.kind,next.status,next.per_capita_cents,next.description,entry.revision+1,entry.id,entry.revision]));
+};
+const temporalDenial = work => assert.rejects(work,error=>error.code==='23514' && /data do histórico/.test(error.message));
+
+test('temporal reserve migration preserves function identity, owner, ACL and security settings',async()=>{
+ assert.deepEqual((await guardMetadata()).rows,originalGuardMetadata);
+});
+
+test('later-year reserve income cannot cover a backdated withdrawal or pending confirmation',async()=>{
+ const fund=await reserveFund('year boundary');
+ await reserveEntry(fund,'2025-01-01','income',0,{amount:10000});
+ await reserveEntry(fund,'2026-01-01','income',1000);
+ await temporalDenial(()=>reserveEntry(fund,'2025-06-01','expense',1000));
+ const pending=await reserveEntry(fund,'2025-06-01','expense',1000,{status:'pending'});
+ await temporalDenial(()=>editReserve(pending,{status:'confirmed'}));
+ const report=(await as(ids.admin,()=>db.query('select treasury_report(2025,$1) data',[fund]))).rows[0].data;
+ assert.equal(report.reserved_cents,0);
+ assert.deepEqual(reportTotals(report),{income:10000,expense:0,closing:10000,available:10000});
+ assert.equal(report.pending_count,1);
+ assert.equal(report.entries.length,1);
+});
+
+test('credit date, amount, rejection and society changes cannot borrow from later reserve income',async()=>{
+ const fund=await reserveFund('credit edits'),other=await reserveFund('credit destination');
+ const credit=await reserveEntry(fund,'2025-04-01','income',1000);
+ const withdrawal=await reserveEntry(fund,'2025-05-01','expense',1000);
+ await reserveEntry(fund,'2025-06-01','income',1000);
+ for(const change of [{occurred_on:'2025-07-01'},{per_capita_cents:500},{status:'rejected'},{status:'pending'},{fund_id:other}]) {
+  await temporalDenial(()=>editReserve(credit,change));
+ }
+ await temporalDenial(()=>editReserve(withdrawal,{occurred_on:'2025-03-01'}));
+ const persisted=(await as(ids.admin,()=>db.query('select revision,occurred_on::text,status,per_capita_cents,fund_id from treasury_entries where id=$1',[credit.id]))).rows[0];
+ assert.deepEqual(persisted,{revision:1,occurred_on:'2025-04-01',status:'confirmed',per_capita_cents:1000,fund_id:fund});
+ assert.equal((await as(ids.admin,()=>db.query('select count(*)::int count from treasury_entry_audit where entry_id=$1',[credit.id]))).rows[0].count,1);
+});
+
+test('moving a withdrawal validates the destination timeline as well as the old society',async()=>{
+ const origin=await reserveFund('withdrawal origin'),destination=await reserveFund('withdrawal destination');
+ await reserveEntry(origin,'2025-04-01','income',1000);
+ const withdrawal=await reserveEntry(origin,'2025-05-01','expense',1000);
+ await reserveEntry(destination,'2025-06-01','income',1000);
+ await temporalDenial(()=>editReserve(withdrawal,{fund_id:destination}));
+ const row=(await as(ids.admin,()=>db.query('select fund_id,revision from treasury_entries where id=$1',[withdrawal.id]))).rows[0];
+ assert.deepEqual(row,{fund_id:origin,revision:1});
+});
+
+test('same-day reserve receipts and payments use accounting date without artificial creation order',async()=>{
+ const fund=await reserveFund('same day');
+ const withdrawal=await reserveEntry(fund,'2025-03-15','expense',1000,{status:'pending'});
+ await reserveEntry(fund,'2025-03-15','income',1000);
+ const confirmation=await editReserve(withdrawal,{status:'confirmed'});
+ assert.equal(confirmation.rows[0].revision,2);
+ const report=(await as(ids.admin,()=>db.query('select treasury_report(2025,$1) data',[fund]))).rows[0].data;
+ assert.equal(report.reserved_cents,0);
+ assert.deepEqual(reportTotals(report),{income:1000,expense:1000,closing:0,available:0});
+});
+
+test('prior-year reserve carries forward and valid credit corrections do not rewrite historical reports',async()=>{
+ const fund=await reserveFund('carry forward');
+ const credit=await reserveEntry(fund,'2024-12-31','income',2000,{amount:10000});
+ await reserveEntry(fund,'2025-03-15','expense',600);
+ await reserveEntry(fund,'2026-01-01','income',1000);
+ const correction=await editReserve(credit,{per_capita_cents:1500});
+ assert.equal(correction.rows[0].revision,2);
+ const report=(await as(ids.admin,()=>db.query('select treasury_report(2025,$1) data',[fund]))).rows[0].data;
+ assert.equal(report.opening_cents,10000);
+ assert.equal(report.reserved_cents,900);
+ assert.deepEqual(reportTotals(report),{income:0,expense:600,closing:9400,available:8500});
+});
+
+test('legacy history stays intact and unrelated edits or unreserved receipts remain available',async()=>{
+ const baseline=readFileSync(new URL('../supabase/migrations/20261005142735_treasury_society_pin_access.sql',import.meta.url),'utf8');
+ const oldGuard=baseline.slice(baseline.indexOf('create or replace function ipnc_private.treasury_entry_guard()'),baseline.indexOf('notify pgrst'));
+ await db.exec(oldGuard);
+ const fund=await reserveFund('legacy preservation');
+ await reserveEntry(fund,'2026-01-01','income',1000);
+ const withdrawal=await reserveEntry(fund,'2025-06-01','expense',1000);
+ const before=(await as(ids.admin,()=>db.query('select treasury_report(2025,$1) data',[fund]))).rows[0].data;
+ await db.exec(timelineMigration);
+ const after=(await as(ids.admin,()=>db.query('select treasury_report(2025,$1) data',[fund]))).rows[0].data;
+ assert.deepEqual(after,before);
+ assert.equal(after.reserved_cents,-1000);
+ const correction=await editReserve(withdrawal,{description:'Corrected fixture description'});
+ assert.equal(correction.rows[0].revision,2);
+ const receipt=await reserveEntry(fund,'2025-07-01','income',0,{amount:100,status:'pending'});
+ assert.equal(receipt.status,'pending');
+ const unreserved=await reserveEntry(fund,'2025-07-01','income',0,{amount:100});
+ assert.equal(unreserved.status,'confirmed');
+ assert.deepEqual((await guardMetadata()).rows,originalGuardMetadata);
+});
+
 test.after(async()=>{await db.close();});

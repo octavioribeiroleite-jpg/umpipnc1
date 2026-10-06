@@ -1,0 +1,256 @@
+{
+  "buttons": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgb(179, 193, 186)",
+      "label": "Fechar instalação",
+      "text": ""
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgb(179, 193, 186)",
+      "label": null,
+      "text": "Agora não"
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgb(240, 244, 242)",
+      "label": null,
+      "text": "Fechar"
+    }
+  ],
+  "dialog": {
+    "bottom": 690,
+    "client": 628,
+    "height": 630,
+    "scroll": 935,
+    "top": 60
+  },
+  "dialogBackground": "rgb(22, 29, 26)",
+  "dialogForeground": "rgb(240, 244, 242)",
+  "headingColor": "rgb(240, 244, 242)",
+  "logo": [
+    {
+      "filter": "drop-shadow(rgba(240, 244, 242, 0.42) 0px 0px 1px)",
+      "src": "/src/assets/logo-ipnc.png"
+    }
+  ],
+  "rootTheme": "dark",
+  "themeColor": "#060807",
+  "viewport": {
+    "height": 740,
+    "width": 375
+  },
+  "samples": [
+    {
+      "text": "",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "disabled": false,
+      "contrast": 9.19,
+      "top": -234.5,
+      "bottom": -190.5,
+      "height": 44
+    },
+    {
+      "text": "Tenha o Renovo na sua tela inicial",
+      "color": "rgb(240, 244, 242)",
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "disabled": false,
+      "contrast": 15.45,
+      "top": -106.5,
+      "bottom": -39.3125,
+      "height": 67.1875
+    },
+    {
+      "text": "Abra o aplicativo pelo ícone no seu aparelho e acesse sua igreja com facilidade.",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "disabled": false,
+      "contrast": 9.19,
+      "top": -27.3125,
+      "bottom": 50.6875,
+      "height": 78
+    },
+    {
+      "text": "Instalação cancelada. Você pode instalar depois pelo menu do navegador.",
+      "color": "rgb(240, 244, 242)",
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "disabled": false,
+      "contrast": 11.93,
+      "top": 70.6875,
+      "bottom": 162.9375,
+      "height": 92.25
+    },
+    {
+      "text": "Como instalar",
+      "color": "rgb(240, 244, 242)",
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "disabled": false,
+      "contrast": 11.93,
+      "top": 199.9375,
+      "bottom": 223.9375,
+      "height": 24
+    },
+    {
+      "text": "1Abra este site no Chrome ou no Edge.",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "disabled": false,
+      "contrast": 7.09,
+      "top": 239.9375,
+      "bottom": 291.9375,
+      "height": 52
+    },
+    {
+      "text": "1",
+      "color": "rgb(15, 26, 21)",
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "disabled": false,
+      "contrast": 10.08,
+      "top": 239.9375,
+      "bottom": 263.9375,
+      "height": 24
+    },
+    {
+      "text": "Abra este site no Chrome ou no Edge.",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "disabled": false,
+      "contrast": 7.09,
+      "top": 239.9375,
+      "bottom": 291.9375,
+      "height": 52
+    },
+    {
+      "text": "2Procure o ícone de instalação na barra de endereço ou a opção de instalar no menu do navegador.",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "disabled": false,
+      "contrast": 7.09,
+      "top": 307.9375,
+      "bottom": 437.9375,
+      "height": 130
+    },
+    {
+      "text": "2",
+      "color": "rgb(15, 26, 21)",
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "disabled": false,
+      "contrast": 10.08,
+      "top": 307.9375,
+      "bottom": 331.9375,
+      "height": 24
+    },
+    {
+      "text": "Procure o ícone de instalação na barra de endereço ou a opção de instalar no menu do navegador.",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "disabled": false,
+      "contrast": 7.09,
+      "top": 307.9375,
+      "bottom": 437.9375,
+      "height": 130
+    },
+    {
+      "text": "3Confirme a instalação. Se a opção não aparecer, tente novamente em um navegador atualizado.",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "disabled": false,
+      "contrast": 7.09,
+      "top": 453.9375,
+      "bottom": 583.9375,
+      "height": 130
+    },
+    {
+      "text": "3",
+      "color": "rgb(15, 26, 21)",
+      "effectiveBackground": [
+        113,
+        214,
+        167
+      ],
+      "disabled": false,
+      "contrast": 10.08,
+      "top": 453.9375,
+      "bottom": 477.9375,
+      "height": 24
+    },
+    {
+      "text": "Confirme a instalação. Se a opção não aparecer, tente novamente em um navegador atualizado.",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        36,
+        51,
+        45
+      ],
+      "disabled": false,
+      "contrast": 7.09,
+      "top": 453.9375,
+      "bottom": 583.9375,
+      "height": 130
+    },
+    {
+      "text": "Agora não",
+      "color": "rgb(179, 193, 186)",
+      "effectiveBackground": [
+        22,
+        29,
+        26
+      ],
+      "disabled": false,
+      "contrast": 9.19,
+      "top": 620.9375,
+      "bottom": 664.9375,
+      "height": 44
+    }
+  ]
+}

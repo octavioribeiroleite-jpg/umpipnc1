@@ -29,7 +29,7 @@ function fixture(slug, options = {}) {
         if (write) return { data: null, error: null };
         if (table === 'settings') return { data: { value: options.setting ?? adminPin }, error: options.settingError ?? null };
         if (table === 'ebd_class_passwords') return { data: filters.pin_hash === hash(classPin) && !options.invalidClass
-          ? { class_id: classId, active: true, ebd_classes: { name: 'Synthetic class' } } : null, error: null };
+          ? { class_id: classId, active: true, ebd_classes: { name: 'Synthetic class', active: options.classActive ?? true } } : null, error: null };
         if (table === 'profiles') return { data: { active: options.profileActive ?? true, society_id: null }, error: null };
         if (table === 'user_roles') return { data: (options.roles ?? ['admin']).map(role => ({ role })), error: null };
         throw Error(`Unexpected synthetic table ${table}`);
@@ -165,6 +165,16 @@ test('Professor login retains the server limiter, valid class selection, trimmed
   assert.deepEqual(data.teacher, { name: 'Synthetic Teacher', class_id: classId, class_name: 'Synthetic class' });
   assert.equal(data.success, true);
   assert.equal(p.portal.state.user.app_metadata.ipnc_portal.id, classId);
+});
+
+test('an inactive EBD class with a still-active password cannot create a session, capability or access audit', async () => {
+  const p = fixture('ebd-class-login', { classActive: false });
+  const response = await p.request({ pin: classPin, name: 'Synthetic Teacher' });
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: 'Senha incorreta' });
+  assert.equal(p.calls.includes('portal'), false);
+  assert.equal(p.calls.some(call => call?.audit), false);
+  assert.equal(p.portal.calls.length, 0);
 });
 
 test('Professor warm entry reduces account work while keeping the audit; invalid PIN and rate denial never mint a session', async () => {

@@ -29,9 +29,10 @@ serve(async (req) => {
           .eq('key', 'secretaria_admin_password').maybeSingle();
         return !error && data?.value ? data.value : null;
       }
-      const { data, error } = await admin.from('ebd_class_passwords').select('pin_hash')
-        .eq('class_id', principal.id).eq('active', true).maybeSingle();
-      return !error && data?.pin_hash ? data.pin_hash : null;
+      const { data, error } = await admin.from('ebd_class_passwords').select('pin_hash,ebd_classes!inner(active)')
+        .eq('class_id', principal.id).eq('active', true).eq('ebd_classes.active', true).maybeSingle();
+      const current = data as { pin_hash?: string; ebd_classes?: { active?: boolean } } | null;
+      return !error && current?.ebd_classes?.active === true && current.pin_hash ? current.pin_hash : null;
     });
     if (!claims) {
       return Response.json({ error: 'Confirme seu PIN para gerar a mensagem.', code: 'ebd_ai_session_expired_or_invalid' },
