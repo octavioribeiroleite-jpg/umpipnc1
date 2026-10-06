@@ -18,7 +18,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32-v4.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=ipnc-v4" />
     <link rel="manifest" href="/manifest.json?v=ipnc-mobile-v5" />
-    <link rel="preload" as="image" href="/icons/icon-512x512-v5.png" fetchpriority="high" />
+    <link rel="preload" as="image" href="/src/assets/logo-ipnc.png" fetchpriority="high" />
+    <link rel="stylesheet" href="/src/opening.css" />
 
     <meta property="og:title" content="Renovo IPNC" />
     <meta property="og:description" content="Sistema de gestão - Igreja Presbiteriana de Nova Carapina" />
@@ -33,13 +34,18 @@
     <meta name="twitter:image:alt" content="Logo oficial IPNC" />
     <style>
       html,body{margin:0;min-height:100%;background:#f7fbf8}
-      .ipnc-boot{min-height:100vh;min-height:100dvh;display:grid;place-items:center;background:radial-gradient(ellipse at 100% 0,#deeee4 0,transparent 55%),#f7fbf8}
-      .ipnc-boot img{display:block;width:min(200px,55vw);height:auto;object-fit:contain}
     </style>
   </head>
 
   <body>
-    <div id="root"><div class="ipnc-boot" role="status" aria-label="Carregando IPNC"><img src="/icons/icon-512x512-v5.png" alt="IPNC" width="200" height="200" /></div></div>
+    <div id="root"></div>
+    <div id="ipnc-opening" class="ipnc-opening-surface" data-opening-state="loading" role="status" aria-label="Carregando IPNC">
+      <div class="ipnc-opening-backdrop" aria-hidden="true">
+        <img class="ipnc-opening-canopy" src="/opening-canopy-v1.svg" alt="" />
+        <img class="ipnc-opening-floor" src="/opening-floor-v1.svg" alt="" />
+      </div>
+      <div class="ipnc-opening-center"><div class="ipnc-loading-splash-content"><img data-opening-logo src="/src/assets/logo-ipnc.png" alt="IPNC" width="200" height="200" fetchpriority="high" /><div class="ipnc-loading-indicator" aria-hidden="true"><p>Carregando…</p></div></div></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

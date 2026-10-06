@@ -1,0 +1,27 @@
+/* Shared by the blocking HTML stylesheet and React: one opening composition. */
+.ipnc-opening-surface { position: relative; isolation: isolate; background: #f7fbf8; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.ipnc-opening-backdrop { position: absolute; inset: 0; z-index: -1; overflow: clip; pointer-events: none; background: radial-gradient(ellipse at 50% 70%, #eaf3ed66, transparent 68%); }
+.ipnc-opening-backdrop img { display: block; position: absolute; width: 100%; }
+.ipnc-opening-canopy { top: 0; height: 240px; }
+.ipnc-opening-floor { bottom: 0; height: 260px; }
+.ipnc-opening-center { display: grid; place-items: center; width: 100%; min-height: 100vh; min-height: 100dvh; }
+.ipnc-opening-center > img, .ipnc-loading-splash-content > img { display: block; width: min(200px, 55vw); height: auto; object-fit: contain; }
+#ipnc-opening { position: fixed; inset: 0; z-index: 9999; overflow: clip; }
+#ipnc-opening .ipnc-opening-center { box-sizing: border-box; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); }
+#ipnc-opening [data-opening-logo] { transition: transform 300ms ease-in-out; }
+#ipnc-opening[data-opening-state='leaving'] { animation: ipnc-opening-exit 300ms ease-in-out both; }
+[data-opening-transition='revealing'] .auth-main { animation: ipnc-opening-reveal 300ms ease-out both; }
+.ipnc-loading-splash { display: grid; place-items: center; width: 100%; min-height: 100vh; min-height: var(--app-viewport-height, 100dvh); color: #34594a; overflow: clip; }
+.ipnc-loading-splash-content { position: relative; display: grid; place-items: center; padding: max(2rem, var(--safe-top, 0px)) max(1.5rem, var(--safe-right, 0px)) max(2rem, var(--safe-bottom, 0px)) max(1.5rem, var(--safe-left, 0px)); }
+.ipnc-loading-splash-content { animation: ipnc-opening-logo-enter 300ms ease-out; }
+#ipnc-opening[data-opening-state='leaving'] .ipnc-loading-splash-content { animation: none; }
+.ipnc-loading-indicator { position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); width: 112px; text-align: center; }
+.ipnc-loading-indicator::before { content: ''; display: block; height: 3px; margin-bottom: 12px; border-radius: 3px; background: linear-gradient(90deg, #dceee4, #2e7d5b, #dceee4); background-size: 200% 100%; animation: ipnc-opening-progress 1200ms ease-in-out infinite alternate; }
+.ipnc-loading-indicator p { margin: 0; font-size: .875rem; line-height: 1.4; }
+.auth-page .ipnc-opening-backdrop { display: none; }
+@keyframes ipnc-opening-logo-enter { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+@keyframes ipnc-opening-exit { to { opacity: 0; } }
+@keyframes ipnc-opening-reveal { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ipnc-opening-progress { from { background-position: 0 0; } to { background-position: 100% 0; } }
+@media (max-width: 767px) { .auth-page:is(.auth-page-home, .auth-page-account) .ipnc-opening-backdrop { display: block; } }
+@media (prefers-reduced-motion: reduce) { #ipnc-opening, #ipnc-opening [data-opening-logo], .ipnc-loading-splash-content, .ipnc-loading-indicator::before, [data-opening-transition] .auth-main { animation: none; transition: none; } }

@@ -1,0 +1,22 @@
+{
+  "initial": {
+    "boot": "loading",
+    "entry": false,
+    "rootInert": false,
+    "theme": "#f7fbf8"
+  },
+  "during": {
+    "boot": "leaving",
+    "entry": true,
+    "opacity": "0.975441",
+    "rootInert": false,
+    "theme": "#f7fbf8"
+  },
+  "after": {
+    "boot": false,
+    "entry": true,
+    "pending": false,
+    "rootInert": false,
+    "theme": "#f7fbf8"
+  }
+}

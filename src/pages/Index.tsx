@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents, type EventStatus } from '@/hooks/useEvents';
 import { AppLayout } from '@/components/layout/AppLayout';
+import AppLoadingSplash from '@/components/layout/AppLoadingSplash';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { MetricGrid } from '@/components/layout/ResponsivePrimitives';
@@ -299,24 +300,10 @@ export default function Index() {
   };
 
   if (loading || !rolesLoaded) {
-    return (
-      <AppLayout width="wide" variant="dashboard">
-        <div className="app-stack py-2">
-          <Skeleton className="h-32 w-full rounded-hero md:h-40" />
-          <Skeleton className="h-20 w-full rounded-card" />
-          <div className="metric-grid">
-            <Skeleton className="h-20 rounded-card md:h-28" />
-            <Skeleton className="h-20 rounded-card md:h-28" />
-            <Skeleton className="h-20 rounded-card md:h-28" />
-            <Skeleton className="h-20 rounded-card md:h-28" />
-          </div>
-          <Skeleton className="h-56 w-full rounded-panel" />
-        </div>
-      </AppLayout>
-    );
+    return <AppLoadingSplash />;
   }
 
-  if (!user) return null;
+  if (!user) return <AppLoadingSplash />;
 
   const greeting = (() => {
     const hour = new Date().getHours();

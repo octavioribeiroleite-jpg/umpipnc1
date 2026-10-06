@@ -1,0 +1,362 @@
+[
+  {
+    "bodyColor": "rgb(247, 251, 248)",
+    "choices": [
+      {
+        "height": 106.5390625,
+        "right": 342,
+        "text": "Diretoria\nReuniões, tarefas e organização",
+        "x": 18
+      },
+      {
+        "height": 106.5390625,
+        "right": 342,
+        "text": "Secretaria EBD\nTurmas, chamada e histórico",
+        "x": 18
+      },
+      {
+        "height": 106.5390625,
+        "right": 342,
+        "text": "Finanças\nAcesso privado por sociedade",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 342,
+        "text": "Portal da igreja\nProgramação e avisos",
+        "x": 18
+      }
+    ],
+    "font": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+    "height": 800,
+    "logo": [
+      {
+        "complete": true,
+        "naturalWidth": 1254,
+        "width": 180
+      }
+    ],
+    "overflow": 360,
+    "safe": {
+      "bottom": "34px",
+      "top": "44px"
+    },
+    "theme": "#f7fbf8",
+    "width": 360
+  },
+  {
+    "bodyColor": "rgb(247, 251, 248)",
+    "choices": [
+      {
+        "height": 106,
+        "right": 372,
+        "text": "Diretoria\nReuniões, tarefas e organização",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 372,
+        "text": "Secretaria EBD\nTurmas, chamada e histórico",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 372,
+        "text": "Finanças\nAcesso privado por sociedade",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 372,
+        "text": "Portal da igreja\nProgramação e avisos",
+        "x": 18
+      }
+    ],
+    "font": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+    "height": 844,
+    "logo": [
+      {
+        "complete": true,
+        "naturalWidth": 1254,
+        "width": 180
+      }
+    ],
+    "overflow": 390,
+    "safe": {
+      "bottom": "34px",
+      "top": "44px"
+    },
+    "theme": "#f7fbf8",
+    "width": 390
+  },
+  {
+    "bodyColor": "rgb(247, 251, 248)",
+    "choices": [
+      {
+        "height": 106,
+        "right": 394,
+        "text": "Diretoria\nReuniões, tarefas e organização",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 394,
+        "text": "Secretaria EBD\nTurmas, chamada e histórico",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 394,
+        "text": "Finanças\nAcesso privado por sociedade",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 394,
+        "text": "Portal da igreja\nProgramação e avisos",
+        "x": 18
+      }
+    ],
+    "font": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+    "height": 915,
+    "logo": [
+      {
+        "complete": true,
+        "naturalWidth": 1254,
+        "width": 180
+      }
+    ],
+    "overflow": 412,
+    "safe": {
+      "bottom": "34px",
+      "top": "44px"
+    },
+    "theme": "#f7fbf8",
+    "width": 412
+  },
+  {
+    "bodyColor": "rgb(247, 251, 248)",
+    "choices": [
+      {
+        "height": 106,
+        "right": 412,
+        "text": "Diretoria\nReuniões, tarefas e organização",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 412,
+        "text": "Secretaria EBD\nTurmas, chamada e histórico",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 412,
+        "text": "Finanças\nAcesso privado por sociedade",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 412,
+        "text": "Portal da igreja\nProgramação e avisos",
+        "x": 18
+      }
+    ],
+    "font": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+    "height": 932,
+    "logo": [
+      {
+        "complete": true,
+        "naturalWidth": 1254,
+        "width": 180
+      }
+    ],
+    "overflow": 430,
+    "safe": {
+      "bottom": "34px",
+      "top": "44px"
+    },
+    "theme": "#f7fbf8",
+    "width": 430
+  },
+  {
+    "bodyColor": "rgb(247, 251, 248)",
+    "choices": [
+      {
+        "height": 106.5390625,
+        "right": 357,
+        "text": "Diretoria\nReuniões, tarefas e organização",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 357,
+        "text": "Secretaria EBD\nTurmas, chamada e histórico",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 357,
+        "text": "Finanças\nAcesso privado por sociedade",
+        "x": 18
+      },
+      {
+        "height": 106,
+        "right": 357,
+        "text": "Portal da igreja\nProgramação e avisos",
+        "x": 18
+      }
+    ],
+    "font": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+    "height": 812,
+    "logo": [
+      {
+        "complete": true,
+        "naturalWidth": 1254,
+        "width": 180
+      }
+    ],
+    "overflow": 375,
+    "safe": {
+      "bottom": "34px",
+      "top": "44px"
+    },
+    "theme": "#f7fbf8",
+    "width": 375
+  },
+  {
+    "bodyColor": "rgb(246, 248, 245)",
+    "choices": [
+      {
+        "height": 88,
+        "right": 694,
+        "text": "Diretoria\nReuniões, tarefas e organização",
+        "x": 74
+      },
+      {
+        "height": 88,
+        "right": 694,
+        "text": "Secretaria EBD\nTurmas, chamada e histórico",
+        "x": 74
+      },
+      {
+        "height": 88,
+        "right": 694,
+        "text": "Finanças\nAcesso privado por sociedade",
+        "x": 74
+      },
+      {
+        "height": 88,
+        "right": 694,
+        "text": "Portal da igreja\nProgramação e avisos",
+        "x": 74
+      }
+    ],
+    "font": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+    "height": 1024,
+    "logo": [
+      {
+        "complete": true,
+        "naturalWidth": 1254,
+        "width": 0
+      }
+    ],
+    "overflow": 768,
+    "safe": {
+      "bottom": "34px",
+      "top": "44px"
+    },
+    "theme": "#f6f8f5",
+    "width": 768
+  },
+  {
+    "bodyColor": "rgb(247, 251, 248)",
+    "choices": [
+      {
+        "height": 94,
+        "right": 968.046875,
+        "text": "Diretoria\nReuniões, tarefas e organização",
+        "x": 363.828125
+      },
+      {
+        "height": 94,
+        "right": 968.046875,
+        "text": "Secretaria EBD\nTurmas, chamada e histórico",
+        "x": 363.828125
+      },
+      {
+        "height": 94,
+        "right": 968.046875,
+        "text": "Finanças\nAcesso privado por sociedade",
+        "x": 363.828125
+      },
+      {
+        "height": 94,
+        "right": 968.046875,
+        "text": "Portal da igreja\nProgramação e avisos",
+        "x": 363.828125
+      }
+    ],
+    "font": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+    "height": 768,
+    "logo": [
+      {
+        "complete": true,
+        "naturalWidth": 1254,
+        "width": 0
+      }
+    ],
+    "overflow": 1009,
+    "safe": {
+      "bottom": "34px",
+      "top": "44px"
+    },
+    "theme": "#f7fbf8",
+    "width": 1024
+  },
+  {
+    "bodyColor": "rgb(247, 251, 248)",
+    "choices": [
+      {
+        "height": 94,
+        "right": 1260.3984375,
+        "text": "Diretoria\nReuniões, tarefas e organização",
+        "x": 640.3984375
+      },
+      {
+        "height": 94,
+        "right": 1260.3984375,
+        "text": "Secretaria EBD\nTurmas, chamada e histórico",
+        "x": 640.3984375
+      },
+      {
+        "height": 94,
+        "right": 1260.3984375,
+        "text": "Finanças\nAcesso privado por sociedade",
+        "x": 640.3984375
+      },
+      {
+        "height": 94,
+        "right": 1260.3984375,
+        "text": "Portal da igreja\nProgramação e avisos",
+        "x": 640.3984375
+      }
+    ],
+    "font": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+    "height": 900,
+    "logo": [
+      {
+        "complete": true,
+        "naturalWidth": 1254,
+        "width": 0
+      }
+    ],
+    "overflow": 1440,
+    "safe": {
+      "bottom": "34px",
+      "top": "44px"
+    },
+    "theme": "#f7fbf8",
+    "width": 1440
+  }
+]

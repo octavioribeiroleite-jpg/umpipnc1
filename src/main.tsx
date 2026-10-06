@@ -10,14 +10,19 @@ import "./society-selector.css";
 import "./identity-confirmation.css";
 import "./interface-system.css";
 import "./mobile-app-shell.css";
+import "./opening.css";
 import { registerServiceWorker } from "./lib/registerSW";
 import { startAppResumeHome } from "./lib/app-resume-navigation";
+import { startAppOpening } from "./lib/app-opening";
 
 // registerSW restores any update route during module initialization. Returning
 // after a long absence must take precedence before the app renders that route.
 const resumeHome = startAppResumeHome(window, navigator);
+const root = document.getElementById("root")!;
+const splash = document.getElementById("ipnc-opening");
+const opening = splash ? startAppOpening({ root, splash }) : null;
 
-createRoot(document.getElementById("root")!).render(
+createRoot(root).render(
   <AppShell>
     <App />
     <SocietyScreenEnhancer />
@@ -25,6 +30,6 @@ createRoot(document.getElementById("root")!).render(
   </AppShell>,
 );
 resumeHome.markMounted();
-if (import.meta.hot) import.meta.hot.dispose(() => resumeHome.stop());
+if (import.meta.hot) import.meta.hot.dispose(() => { resumeHome.stop(); opening?.stop(); });
 
 registerServiceWorker();

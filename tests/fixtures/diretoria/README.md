@@ -14,6 +14,8 @@ Abrir `http://127.0.0.1:8083/__diretoria/`. `strictPort` evita mudar a porta sil
 
 `bootstrap.ts` instala o bloqueio de transportes **antes** de importar as páginas. A configuração troca todos os três clientes Supabase por `backend.ts`, inclui CSP que bloqueia origens externas e responde 403 para REST/Auth/Functions/Storage e `sw.js`. O bootstrap recusa fetch/XHR externo, escritas de rede, WebSocket/EventSource externo e beacon. Só requisições GET/HEAD de assets locais e HMR da porta 8083 alcançam os transportes nativos. Imagens eleitorais são um SVG local explicitamente fictício.
 
+O HTML servido pela fixture vem do `index.html` atual do aplicativo por `transformIndexHtml`. Apenas o título e o módulo de inicialização são substituídos; o boot, o CSS crítico e o preload da logo permanecem iguais aos de produção. O controlador visual real `startAppOpening` inicia antes da montagem React e é encerrado pelo HMR. A configuração de build tem como entrada somente o HTML da fixture; essa saída é exclusivamente para QA.
+
 ## Papéis e cenários
 
 Os parâmetros são capturados uma vez na inicialização; a navegação interna preserva o papel e cenário até um reload. O painel QA permite trocá-los com recarga. `controls=0` remove o painel da captura para não cobrir controles da aplicação; o título do documento continua identificando TESTE LOCAL.
@@ -21,8 +23,8 @@ Os parâmetros são capturados uma vez na inicialização; a navegação interna
 | Parâmetro | Valores e efeito |
 | --- | --- |
 | `role` | `admin` (padrão), `pastor`, `diretoria`, `unauthorized` (visualizador sem gestão), `anonymous` (sem usuário). Apenas o contexto React é simulado. |
-| `state` | `normal`, `empty`, `error`, `long`, `loading`. Empty conserva diretórios/identidade/settings/eleição, mas esvazia listas operacionais. Error retorna falha fictícia nas consultas/funções. Loading mantém consultas pendentes e o contexto em loading. Long amplia conteúdo e a lista/fotos eleitorais. |
-| `delay` | Espera artificial de 0 a 10.000 ms por consulta/mutação simulada. Não representa medição de produção. |
+| `state` | `normal`, `empty`, `error`, `long`, `loading`, `opening`. Empty conserva diretórios/identidade/settings/eleição, mas esvazia listas operacionais. Error retorna falha fictícia nas consultas/funções. Loading mantém consultas pendentes e o contexto em loading. Opening inicia o contexto em loading e o conclui depois de `delay`, sem criar usuário. Long amplia conteúdo e a lista/fotos eleitorais. |
+| `delay` | Espera artificial de 0 a 10.000 ms por consulta/mutação simulada e pela inicialização sintética de `state=opening`. Não representa medição de produção. |
 | `processed=1` | Pré-preenche reunião processada, ata, WhatsApp, contribuição revelada e sete categorias de resumo. `state=long` também ativa esse estado com textos longos. Não executa IA. |
 | `recovery=invalid` | `ResetPassword` recebe sessão nula. Com `role=anonymous`, sessão também é nula. |
 | `auth=deny` | Falha deliberada nas funções de login. Sem a flag, qualquer PIN sintático é aceito pelo stub da diretoria: não é teste de PIN correto. |
@@ -45,6 +47,7 @@ Não informe credenciais reais. Toda identidade, chave PIX, token e imagem desta
 Todos os exemplos começam em `http://127.0.0.1:8083`:
 
 - `/__diretoria/auth?role=anonymous` — entrada real, incluindo CSS e enhancers de identificação/sociedade.
+- `/__diretoria/?role=anonymous&state=opening&delay=700&controls=0&ebd-session=0` — boot real, carregamento sintético que termina em 700 ms e navegação existente para a entrada, sem sessão EBD fictícia salva. Use `delay=0` para a abertura rápida; `state=loading` continua permanente.
 - `/__diretoria/auth?role=anonymous&identity=return` — após PIN e sociedade, confirmação de identidade sintética.
 - `/__diretoria/__identity?role=anonymous&controls=0` — componente de confirmação isolado; callbacks apenas mostram qual ação foi recebida, sem autenticar. `state=long&font=200` exercita nome muito extenso e fonte ampliada; `identity-role=member&identity-loading=1` mostra a espera com ações desabilitadas.
 - `/__diretoria/reset-password?role=admin` e `&recovery=invalid` — formulário ou link inválido.

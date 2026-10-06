@@ -20,7 +20,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
-  background: #fafbf8;
+  background: #f7fbf8;
   color: #102f26;
 }
 .auth-brand-panel {
@@ -153,7 +153,7 @@
     position: relative;
     isolation: isolate;
     overflow: clip;
-    background: radial-gradient(ellipse at 50% 70%, #eaf3ed66, transparent 68%), #f8fbf8;
+    background: #f7fbf8;
   }
   .auth-page:is(.auth-page-home, .auth-page-account) .auth-mobile-art { display: block; position: absolute; z-index: -1; width: 100%; pointer-events: none; }
   .auth-mobile-canopy { top: 0; height: 240px; }

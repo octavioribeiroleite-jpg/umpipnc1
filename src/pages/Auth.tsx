@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, ShieldCheck, Users, UserCircle, Church, ArrowRight, UserCheck, Search, Lock, BookOpen, Wallet } from 'lucide-react';
 import logoIpnc from '@/assets/logo-ipnc.png';
+import OpeningBackdrop from '@/components/layout/OpeningBackdrop';
 import { supabase } from '@/integrations/supabase/client';
 import PinPad from '@/components/secretaria/PinPad';
 import SocietySelector from '@/components/auth/SocietySelector';
@@ -656,19 +657,8 @@ export default function Auth() {
   const isAccountEntry = !isEnteringApp && step === 'login';
 
   return (
-    <div className={`auth-page ipnc-safe-managed ${isHomeEntry ? 'auth-page-home' : ''} ${isAccountEntry ? 'auth-page-account' : ''} ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''} ${isPinEntry ? 'auth-page-pin' : ''}`}>
-      {(isHomeEntry || isAccountEntry) && <>
-        <svg className="auth-mobile-art auth-mobile-canopy" viewBox="0 0 390 240" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <defs><linearGradient id="auth-mobile-canopy" x1="0" y1="1" x2="1" y2="0"><stop stopColor="#b7d8c8" /><stop offset="1" stopColor="#07513e" /></linearGradient></defs>
-          <path d="M130 0H390V234C339 162 260 140 212 87C176 48 154 19 130 0Z" fill="url(#auth-mobile-canopy)" />
-          <g fill="#c0e2d0" fillOpacity=".2"><path d="M329 170C261 156 256 96 260 43C308 67 337 109 329 170Z" /><path d="M338 171C325 113 344 65 388 37C389 102 376 145 338 171Z" /></g>
-          <path d="M260 43L329 170M388 37L338 171" stroke="#d9eee2" strokeOpacity=".12" fill="none" />
-        </svg>
-        <svg className="auth-mobile-art auth-mobile-floor" viewBox="0 0 390 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <path d="M0 50C80 96 143 110 236 177C299 222 356 237 390 260H0Z" fill="#dfeee5" fillOpacity=".5" />
-          <g fill="#96c6ac" fillOpacity=".22"><path d="M5 260C-6 189 12 147 57 119C62 187 38 235 5 260Z" /><path d="M17 260C31 208 60 187 105 188C83 233 53 254 17 260Z" /></g>
-        </svg>
-      </>}
+    <div className={`auth-page ipnc-safe-managed ${isHomeEntry || isAccountEntry ? 'ipnc-opening-surface' : ''} ${isHomeEntry ? 'auth-page-home' : ''} ${isAccountEntry ? 'auth-page-account' : ''} ${isSocietySelection ? 'auth-page-society' : ''} ${isIdentityConfirmation ? 'auth-page-identity' : ''} ${isPinEntry ? 'auth-page-pin' : ''}`}>
+      {(isHomeEntry || isAccountEntry) && <OpeningBackdrop />}
       <TreasuryAccessDialog open={treasuryOpen} onOpenChange={setTreasuryOpen} onEntered={id => { setTreasuryOpen(false); navigate(`/tesouraria${id ? `?sociedade=${id}` : ''}`); }} />
       <aside className="auth-brand-panel">
         <div className="auth-brand-content">

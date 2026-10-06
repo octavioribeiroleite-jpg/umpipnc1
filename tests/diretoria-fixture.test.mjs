@@ -57,6 +57,95 @@ function loadFixtureBackend(params = '') {
   return exports;
 }
 
+function loadFixtureIdentity(state, delay = 700) {
+  const source = readFileSync(new URL('./fixtures/diretoria/auth.tsx', import.meta.url), 'utf8');
+  const compiled = ts.transpileModule(source, { compilerOptions: {
+    target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX,
+  } }).outputText;
+  const exports = {};
+  const states = [];
+  const effects = [];
+  const cleanups = [];
+  const timers = new Map();
+  let cursor = 0;
+  let mounted = false;
+  let timerId = 0;
+  vm.runInNewContext(compiled, { exports,
+    window: {
+      setTimeout(callback, milliseconds) { const id = ++timerId; timers.set(id, { callback, milliseconds }); return id; },
+      clearTimeout(id) { timers.delete(id); },
+      addEventListener() {}, removeEventListener() {},
+    },
+    require(name) {
+      if (name === './options') return { fixtureRole:'anonymous', fixtureState:state, fixtureDelay:delay, fixturePause:async () => {} };
+      if (name === 'react/jsx-runtime') return { jsx:(_type, props) => props };
+      if (name === 'react') return {
+        useState(initial) {
+          const index = cursor++;
+          if (!(index in states)) states[index] = initial;
+          return [states[index], value => { states[index] = value; }];
+        },
+        useEffect(effect) { if (!mounted) effects.push(effect); },
+        createContext:() => ({ Provider:'fixture-provider' }),
+        useContext:() => null,
+      };
+      throw new Error('Unexpected fixture identity import');
+    },
+  });
+  return {
+    timers,
+    render() {
+      cursor = 0;
+      const { value } = exports.AuthProvider({ children:null });
+      if (!mounted) {
+        mounted = true;
+        for (const effect of effects) { const cleanup = effect(); if (cleanup) cleanups.push(cleanup); }
+      }
+      return value;
+    },
+    completeOpening() {
+      const pending = [...timers.values()]; timers.clear();
+      for (const { callback } of pending) callback();
+    },
+    unmount() { for (const cleanup of cleanups) cleanup(); },
+  };
+}
+
+test('isolated opening becomes ready after its configured delay without issuing an identity', () => {
+  const fixture = loadFixtureIdentity('opening', 700);
+  const initial = fixture.render();
+  assert.equal(initial.loading, true);
+  assert.equal(initial.rolesLoaded, false);
+  assert.equal(initial.user, null);
+  assert.equal(fixture.timers.size, 1);
+  assert.equal([...fixture.timers.values()][0].milliseconds, 700);
+  fixture.completeOpening();
+  const ready = fixture.render();
+  assert.equal(ready.loading, false);
+  assert.equal(ready.rolesLoaded, true);
+  assert.equal(ready.user, null);
+  assert.deepEqual([...ready.roles], []);
+  fixture.unmount();
+});
+
+test('opening cleanup cancels its timer and existing loading remains permanent', () => {
+  const opening = loadFixtureIdentity('opening');
+  opening.render(); opening.unmount();
+  assert.equal(opening.timers.size, 0);
+  const permanent = loadFixtureIdentity('loading');
+  assert.equal(permanent.render().loading, true);
+  assert.equal(permanent.timers.size, 0);
+  permanent.completeOpening();
+  assert.equal(permanent.render().loading, true);
+  assert.equal(permanent.render().rolesLoaded, false);
+  permanent.unmount();
+  const fast = loadFixtureIdentity('opening', 0);
+  fast.render();
+  assert.equal(fast.timers.size, 0);
+  assert.equal(fast.render().loading, false);
+  fast.unmount();
+});
+
 test('fixture read-failure toggle preserves seeded data and emits only subscribed local realtime callbacks', async () => {
   const { supabase, setFixtureReadFailure, emitFixtureRealtime } = loadFixtureBackend();
   const before = await supabase.from('transactions').select('*');

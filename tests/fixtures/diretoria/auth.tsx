@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
-import { fixtureRole, fixtureState, fixturePause } from './options';
+import { fixtureRole, fixtureState, fixtureDelay, fixturePause } from './options';
 export const testUserId = '00000000-0000-0000-0000-000000000001';
 export const testSocietyId = '00000000-0000-0000-0000-000000000002';
 const society = { id:testSocietyId, name:'União de Jovens — Exemplo fictício', slug:'ump', color:'#1c8053' };
@@ -8,10 +8,22 @@ const syntheticProfile = { id:'profile', user_id:testUserId, full_name:'Maria Ol
 function useFixtureIdentity() {
   const [selectedSocietyId, setSelectedSocietyId] = useState<string | null>(null);
   const [user, setUser] = useState(fixtureRole === 'anonymous' ? null : syntheticUser);
+  const [openingLoading, setOpeningLoading] = useState(fixtureState === 'opening');
+  // This delay belongs only to the isolated QA scenario, never the real app.
+  useEffect(() => {
+    if (fixtureState !== 'opening') return;
+    if (fixtureDelay === 0) {
+      setOpeningLoading(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setOpeningLoading(false), fixtureDelay);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const loading = fixtureState === 'loading' || openingLoading;
   const role = fixtureRole === 'unauthorized' ? 'visualizador' : fixtureRole === 'anonymous' ? 'diretoria' : fixtureRole;
   useEffect(() => { const enter=()=>setUser(syntheticUser); window.addEventListener('fixture-signed-in',enter); return ()=>window.removeEventListener('fixture-signed-in',enter); }, []);
   return { user, session:null, profile:user ? syntheticProfile : null, roles:user ? [role] : [],
-    loading:fixtureState === 'loading', rolesLoaded:fixtureState !== 'loading',
+    loading, rolesLoaded:!loading,
     isAdmin:Boolean(user && role === 'admin'), isManagement:Boolean(user && ['admin','diretoria'].includes(role)),
     isPastor:Boolean(user && role === 'pastor'), society, selectedSocietyId, setSelectedSocietyId,
     effectiveSocietyId:['admin','pastor'].includes(role) ? selectedSocietyId : testSocietyId,
