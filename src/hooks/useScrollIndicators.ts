@@ -34,5 +34,5 @@ export function useScrollIndicators(ref: RefObject<HTMLElement>) {
   const scrollUp = () => ref.current?.scrollBy({ top: -220, behavior: 'smooth' });
   const scrollDown = () => ref.current?.scrollBy({ top: 220, behavior: 'smooth' });
 
-  return { canScrollUp, canScrollDown, scrollUp, scrollDown };
+  return { canScrollUp, canScrollDown, scrollUp, scrollDown, updateIndicators: update };
 }

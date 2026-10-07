@@ -4,11 +4,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { silentUpdateCheck } from '@/lib/registerSW';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { DashboardHeader } from './DashboardHeader';
+import { useWorkspaceTheme } from '@/hooks/useWorkspaceTheme';
+import '@/pages/dashboard.css';
 import './diretoria-theme.css';
 import { ExitConfirmDialog } from './ExitConfirmDialog';
 import { AppSidebar } from './AppSidebar';
 import { BottomNav, type BottomNavItem } from './BottomNav';
-import { MobileHeader } from './MobileHeader';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { PullToRefresh } from './PullToRefresh';
 import { TabletNavigationRail } from './TabletNavigationRail';
 import {
@@ -23,13 +26,16 @@ interface AppLayoutProps {
   children: ReactNode;
   width?: 'standard' | 'wide' | 'reading';
   variant?: 'default' | 'dashboard';
+  header?: ReactNode;
 }
 
-export function AppLayout({ children, width = 'standard', variant = 'default' }: AppLayoutProps) {
+export function AppLayout({ children, width = 'standard', variant = 'default', header }: AppLayoutProps) {
   const { isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [exitOpen, setExitOpen] = useState(false);
+  useWorkspaceTheme();
+  useSwipeBack();
   useEffect(() => {
     document.body.classList.add('diretoria-theme');
     return () => document.body.classList.remove('diretoria-theme');
@@ -60,18 +66,18 @@ export function AppLayout({ children, width = 'standard', variant = 'default' }:
   ];
 
   return (
-    <div className={`app-page ipnc-navigation-layout ipnc-safe-managed min-h-[var(--app-viewport-height)]${variant === 'dashboard' ? ' diretoria-dashboard-shell' : ''}`}>
+    <div className={`app-page ipnc-navigation-layout ipnc-safe-managed min-h-[var(--app-viewport-height)]${variant === 'dashboard' ? ' diretoria-dashboard-shell ipnc-dashboard-shell' : ''}`}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3 focus:text-primary focus:shadow-lg">Pular para o conteúdo</a>
       <ExitConfirmDialog open={exitOpen} onOpenChange={setExitOpen} onConfirm={async () => { await signOut(); navigate('/auth'); }} />
       {/* Keep one content tree: CSS-hidden copies still mount effects and channels. */}
       <div className="min-h-[var(--app-viewport-height)] min-w-0 min-[700px]:flex min-[700px]:h-[var(--app-viewport-height)] min-[700px]:overflow-hidden">
-        <div className="min-[700px]:hidden"><MobileHeader /></div>
         <div className="hidden min-[700px]:flex min-[1100px]:hidden"><TabletNavigationRail /></div>
         <div className="hidden min-[1100px]:flex"><AppSidebar /></div>
-        <main id="main-content" tabIndex={-1} className="safe-bottom-content ipnc-safe-page-x min-w-0 flex-1 bg-background pt-mobile-header min-[700px]:overflow-y-auto min-[700px]:pb-0 min-[700px]:pt-0">
+        <main id="main-content" tabIndex={-1} className="safe-bottom-content ipnc-safe-page-x min-w-0 flex-1 bg-background min-[700px]:overflow-y-auto min-[700px]:pb-0 min-[700px]:pt-0">
           <OfflineBanner />
           <PullToRefresh>
-            <div className="mx-auto w-full min-w-0 py-4 min-[700px]:py-6" style={{ maxWidth: width === 'wide' ? '85rem' : width === 'reading' ? '48rem' : 'var(--content-max-width)' }}>
+            <div className="ipnc-workspace-main mx-auto w-full min-w-0 py-4 min-[700px]:py-6" style={{ maxWidth: width === 'wide' ? '85rem' : width === 'reading' ? '48rem' : 'var(--content-max-width)' }}>
+              {header === undefined ? <DashboardHeader hasNotifications={false} /> : header}
               {children}
             </div>
           </PullToRefresh>

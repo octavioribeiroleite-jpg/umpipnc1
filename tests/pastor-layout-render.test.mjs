@@ -19,6 +19,7 @@ const mockedModules = {
   './PastorMobileHeader': `export const PastorMobileHeader = () => null;`,
   './PastorMobileNav': `export const PastorMobileNav = () => null;`,
   '@/components/OfflineBanner': `export const OfflineBanner = () => null;`,
+  '@/components/layout/DashboardHeader': `import React from 'react'; export const DashboardHeader = () => React.createElement('header',{'data-workspace-header':'pastor'});`,
 };
 const built = await build({
   absWorkingDir: root,
@@ -31,7 +32,7 @@ const built = await build({
     resolveDir: root, loader: 'tsx', sourcefile: 'pastor-layout-test.tsx',
   },
   bundle: true, write: false, format: 'esm', platform: 'node', jsx: 'automatic', mainFields: ['module', 'main'],
-  alias: { '@': path.join(root, 'src') }, loader: { '.png': 'dataurl' },
+  alias: { '@': path.join(root, 'src') }, loader: { '.png': 'dataurl', '.css': 'empty' },
   plugins: [{ name: 'auth-navigation-test-boundary', setup(builder) {
     builder.onResolve({filter: /.*/}, args => mockedModules[args.path] ? {path: args.path, namespace: 'test-boundary'} : undefined);
     builder.onLoad({filter: /.*/, namespace: 'test-boundary'}, args => ({contents: mockedModules[args.path], loader: 'js'}));
@@ -48,6 +49,8 @@ for (const role of ['isPastor', 'isAdmin']) {
     assert.equal((html.match(/id="unique-page-field"/g) || []).length, 1);
     assert.match(html, /id="pastor-content"/);
     assert.match(html, /href="#pastor-content"/);
+    assert.equal((html.match(/data-workspace-header="pastor"/g) || []).length, 1);
+    assert.match(html, /min-\[700px\]:overflow-y-auto/);
     assert.doesNotMatch(html, /overflow-x-hidden/);
   });
 }

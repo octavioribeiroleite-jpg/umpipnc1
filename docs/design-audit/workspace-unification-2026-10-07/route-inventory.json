@@ -1,0 +1,242 @@
+[
+  {
+    "route": "/",
+    "component": "Index",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/auth",
+    "component": "Auth",
+    "shared_scope": []
+  },
+  {
+    "route": "/reset-password",
+    "component": "ResetPassword",
+    "shared_scope": []
+  },
+  {
+    "route": "/reunioes",
+    "component": "Reunioes",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/reunioes/nova",
+    "component": "NovaReuniao",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/reunioes/:id",
+    "component": "ReuniaoDetalhe",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/tarefas",
+    "component": "Tarefas",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/calendario",
+    "component": "Calendario",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/financas",
+    "component": "Financas",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/tesouraria",
+    "component": "Tesouraria",
+    "shared_scope": [
+      "TreasuryDashboard"
+    ]
+  },
+  {
+    "route": "/camisas",
+    "component": "Camisas",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/arquivos",
+    "component": "Arquivos",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/configuracoes",
+    "component": "Configuracoes",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/usuarios",
+    "component": "Usuarios",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/plenarias",
+    "component": "Plenarias",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/plenarias/:id",
+    "component": "PlenariaDetalhe",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/pastor",
+    "component": "PainelPastor",
+    "shared_scope": [
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/pastor/sociedade/:slug",
+    "component": "PastorSociedade",
+    "shared_scope": [
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/pastor/calendario",
+    "component": "PastorCalendario",
+    "shared_scope": [
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/pastor/comunicados",
+    "component": "PastorComunicados",
+    "shared_scope": [
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/pastor/sugestoes",
+    "component": "PastorSugestoes",
+    "shared_scope": [
+      "AppLayout",
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/pastor-sugestoes",
+    "component": "PastorSugestoes",
+    "shared_scope": [
+      "AppLayout",
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/sugestoes",
+    "component": "PastorSugestoes",
+    "shared_scope": [
+      "AppLayout",
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/comunicados",
+    "component": "DiretoriaComunicados",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/eleicoes",
+    "component": "Eleicoes",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/eleicoes/:id",
+    "component": "EleicaoDetalhe",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/vote/:electionId",
+    "component": "VotePublic",
+    "shared_scope": []
+  },
+  {
+    "route": "/eleicao/:id/apresentar",
+    "component": "EleicaoApresentar",
+    "shared_scope": []
+  },
+  {
+    "route": "/dizimos",
+    "component": "Dizimos",
+    "shared_scope": [
+      "AppLayout",
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/igreja",
+    "component": "PortalIgreja",
+    "shared_scope": [
+      "PortalIgreja"
+    ]
+  },
+  {
+    "route": "/visitantes",
+    "component": "Visitantes",
+    "shared_scope": [
+      "AppLayout",
+      "PastorLayout"
+    ]
+  },
+  {
+    "route": "/estudos",
+    "component": "Estudos",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "/secretaria",
+    "component": "Secretaria",
+    "shared_scope": [
+      "EBD"
+    ]
+  },
+  {
+    "route": "/aniversariantes",
+    "component": "Aniversariantes",
+    "shared_scope": [
+      "AppLayout"
+    ]
+  },
+  {
+    "route": "*",
+    "component": "NotFound",
+    "shared_scope": []
+  }
+]

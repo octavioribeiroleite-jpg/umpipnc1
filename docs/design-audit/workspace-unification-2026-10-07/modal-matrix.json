@@ -1,0 +1,498 @@
+{
+  "modals": [
+    {
+      "family": "diretoria",
+      "view": "editar-tarefa",
+      "width": 390,
+      "theme": "light",
+      "dialogs": [
+        {
+          "label": "radix-:rm:",
+          "x": 16,
+          "y": 16,
+          "width": 358,
+          "height": 812,
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "clientWidth": 356,
+          "scrollWidth": 356,
+          "scrollHeight": 834,
+          "clientHeight": 810,
+          "focus": ":rv:-form-item",
+          "shortControls": []
+        }
+      ]
+    },
+    {
+      "family": "diretoria",
+      "view": "editar-tarefa",
+      "width": 390,
+      "theme": "dark",
+      "dialogs": [
+        {
+          "label": "radix-:rm:",
+          "x": 16,
+          "y": 16,
+          "width": 358,
+          "height": 812,
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "clientWidth": 356,
+          "scrollWidth": 356,
+          "scrollHeight": 834,
+          "clientHeight": 810,
+          "focus": ":rv:-form-item",
+          "shortControls": []
+        }
+      ]
+    },
+    {
+      "family": "diretoria",
+      "view": "editar-tarefa",
+      "width": 1440,
+      "theme": "light",
+      "dialogs": [
+        {
+          "label": "radix-:rm:",
+          "x": 480,
+          "y": 122.80859375,
+          "width": 480,
+          "height": 654.3828125,
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "clientWidth": 478,
+          "scrollWidth": 478,
+          "scrollHeight": 652,
+          "clientHeight": 652,
+          "focus": ":rv:-form-item",
+          "shortControls": []
+        }
+      ]
+    },
+    {
+      "family": "diretoria",
+      "view": "editar-tarefa",
+      "width": 1440,
+      "theme": "dark",
+      "dialogs": [
+        {
+          "label": "radix-:rm:",
+          "x": 480,
+          "y": 122.80859375,
+          "width": 480,
+          "height": 654.3828125,
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "clientWidth": 478,
+          "scrollWidth": 478,
+          "scrollHeight": 652,
+          "clientHeight": 652,
+          "focus": ":rv:-form-item",
+          "shortControls": []
+        }
+      ]
+    },
+    {
+      "family": "ebd",
+      "view": "editar-turma",
+      "width": 390,
+      "theme": "light",
+      "dialogs": [
+        {
+          "label": "radix-:r18:",
+          "x": 16,
+          "y": 130.90234375,
+          "width": 358,
+          "height": 582.1953125,
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "clientWidth": 356,
+          "scrollWidth": 356,
+          "scrollHeight": 580,
+          "clientHeight": 580,
+          "focus": "",
+          "shortControls": []
+        }
+      ]
+    },
+    {
+      "family": "ebd",
+      "view": "editar-turma",
+      "width": 390,
+      "theme": "dark",
+      "dialogs": [
+        {
+          "label": "radix-:r18:",
+          "x": 16,
+          "y": 130.90234375,
+          "width": 358,
+          "height": 582.1953125,
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "clientWidth": 356,
+          "scrollWidth": 356,
+          "scrollHeight": 580,
+          "clientHeight": 580,
+          "focus": "",
+          "shortControls": []
+        }
+      ]
+    },
+    {
+      "family": "ebd",
+      "view": "editar-turma",
+      "width": 1440,
+      "theme": "light",
+      "dialogs": [
+        {
+          "label": "radix-:r18:",
+          "x": 400,
+          "y": 202.40234375,
+          "width": 640,
+          "height": 495.1953125,
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "clientWidth": 638,
+          "scrollWidth": 638,
+          "scrollHeight": 493,
+          "clientHeight": 493,
+          "focus": "",
+          "shortControls": []
+        }
+      ]
+    },
+    {
+      "family": "ebd",
+      "view": "editar-turma",
+      "width": 1440,
+      "theme": "dark",
+      "dialogs": [
+        {
+          "label": "radix-:r18:",
+          "x": 400,
+          "y": 202.40234375,
+          "width": 640,
+          "height": 495.1953125,
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "clientWidth": 638,
+          "scrollWidth": 638,
+          "scrollHeight": 493,
+          "clientHeight": 493,
+          "focus": "",
+          "shortControls": []
+        }
+      ]
+    }
+  ],
+  "inline": [
+    {
+      "family": "ebd",
+      "view": "editar-nascimento-inline",
+      "width": 390,
+      "requestedTheme": "light",
+      "url": "http://127.0.0.1:8086/secretaria?view=turmas&group=fixture-class-a",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "dpr": 1
+      },
+      "theme": "",
+      "pageWidth": 390,
+      "scrollWidth": 390,
+      "pageOverflow": false,
+      "headings": [
+        {
+          "tag": "H1",
+          "label": "Turmas",
+          "x": 64,
+          "y": 29.6015625,
+          "width": 84.8203125,
+          "height": 28.796875,
+          "color": "rgb(24, 48, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "24px"
+        }
+      ],
+      "headers": [
+        {
+          "tag": "HEADER",
+          "label": "TurmasAAdministradorAdministrador · EBD",
+          "x": 16,
+          "y": 12,
+          "width": 358,
+          "height": 64,
+          "color": "rgb(24, 48, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "16px"
+        }
+      ],
+      "navs": [
+        {
+          "tag": "NAV",
+          "label": "Navegação principal",
+          "x": 0,
+          "y": 779,
+          "width": 390,
+          "height": 65,
+          "color": "rgb(24, 48, 40)",
+          "background": "rgba(255, 255, 255, 0.95)",
+          "fontSize": "16px"
+        }
+      ],
+      "complementary": [],
+      "main": [
+        {
+          "tag": "MAIN",
+          "label": "Dados atualizados às 10:24:48Turma Esperança fictíciaFaixa não configurada · 5 a",
+          "x": 0,
+          "y": 88,
+          "width": 390,
+          "height": 1199.3984375,
+          "color": "rgb(24, 48, 40)",
+          "background": "rgb(244, 248, 242)",
+          "fontSize": "16px"
+        }
+      ],
+      "shortControls": [],
+      "outside": []
+    },
+    {
+      "family": "ebd",
+      "view": "editar-nascimento-inline",
+      "width": 390,
+      "requestedTheme": "dark",
+      "url": "http://127.0.0.1:8086/secretaria?view=turmas&group=fixture-class-a",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "dpr": 1
+      },
+      "theme": "dark",
+      "pageWidth": 390,
+      "scrollWidth": 390,
+      "pageOverflow": false,
+      "headings": [
+        {
+          "tag": "H1",
+          "label": "Turmas",
+          "x": 64,
+          "y": 29.6015625,
+          "width": 84.8203125,
+          "height": 28.796875,
+          "color": "rgb(240, 244, 242)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "24px"
+        }
+      ],
+      "headers": [
+        {
+          "tag": "HEADER",
+          "label": "TurmasAAdministradorAdministrador · EBD",
+          "x": 16,
+          "y": 12,
+          "width": 358,
+          "height": 64,
+          "color": "rgb(240, 244, 242)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "16px"
+        }
+      ],
+      "navs": [
+        {
+          "tag": "NAV",
+          "label": "Navegação principal",
+          "x": 0,
+          "y": 779,
+          "width": 390,
+          "height": 65,
+          "color": "rgb(240, 244, 242)",
+          "background": "rgba(22, 29, 26, 0.95)",
+          "fontSize": "16px"
+        }
+      ],
+      "complementary": [],
+      "main": [
+        {
+          "tag": "MAIN",
+          "label": "Dados atualizados às 10:24:48Turma Esperança fictíciaFaixa não configurada · 5 a",
+          "x": 0,
+          "y": 88,
+          "width": 390,
+          "height": 1199.3984375,
+          "color": "rgb(240, 244, 242)",
+          "background": "rgb(13, 33, 26)",
+          "fontSize": "16px"
+        }
+      ],
+      "shortControls": [],
+      "outside": []
+    },
+    {
+      "family": "ebd",
+      "view": "editar-nascimento-inline",
+      "width": 1440,
+      "requestedTheme": "light",
+      "url": "http://127.0.0.1:8086/secretaria?view=turmas&group=fixture-class-a",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 1
+      },
+      "theme": "",
+      "pageWidth": 1440,
+      "scrollWidth": 1440,
+      "pageOverflow": false,
+      "headings": [
+        {
+          "tag": "H1",
+          "label": "Turmas",
+          "x": 360,
+          "y": 28.203125,
+          "width": 98.9609375,
+          "height": 33.59375,
+          "color": "rgb(24, 48, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "28px"
+        }
+      ],
+      "headers": [
+        {
+          "tag": "HEADER",
+          "label": "TurmasAAdministradorAdministrador · EBD",
+          "x": 304,
+          "y": 16,
+          "width": 1072,
+          "height": 58,
+          "color": "rgb(24, 48, 40)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "16px"
+        }
+      ],
+      "navs": [
+        {
+          "tag": "NAV",
+          "label": "Secretaria EBD",
+          "x": 0,
+          "y": 144,
+          "width": 239,
+          "height": 549.3125,
+          "color": "rgb(240, 247, 241)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "16px"
+        }
+      ],
+      "complementary": [
+        {
+          "tag": "ASIDE",
+          "label": "InícioChamadaHistóricoTurmasAniversariantesAlunosSenhas das salasAcessosAdminist",
+          "x": 0,
+          "y": 0,
+          "width": 240,
+          "height": 900,
+          "color": "rgb(240, 247, 241)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "16px"
+        }
+      ],
+      "main": [
+        {
+          "tag": "MAIN",
+          "label": "Dados atualizados às 10:24:48Turma Esperança fictíciaFaixa não configurada · 5 a",
+          "x": 280,
+          "y": 90,
+          "width": 1120,
+          "height": 768.3984375,
+          "color": "rgb(24, 48, 40)",
+          "background": "rgb(244, 248, 242)",
+          "fontSize": "16px"
+        }
+      ],
+      "shortControls": [],
+      "outside": []
+    },
+    {
+      "family": "ebd",
+      "view": "editar-nascimento-inline",
+      "width": 1440,
+      "requestedTheme": "dark",
+      "url": "http://127.0.0.1:8086/secretaria?view=turmas&group=fixture-class-a",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 1
+      },
+      "theme": "dark",
+      "pageWidth": 1440,
+      "scrollWidth": 1440,
+      "pageOverflow": false,
+      "headings": [
+        {
+          "tag": "H1",
+          "label": "Turmas",
+          "x": 360,
+          "y": 28.203125,
+          "width": 98.9609375,
+          "height": 33.59375,
+          "color": "rgb(240, 244, 242)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "28px"
+        }
+      ],
+      "headers": [
+        {
+          "tag": "HEADER",
+          "label": "TurmasAAdministradorAdministrador · EBD",
+          "x": 304,
+          "y": 16,
+          "width": 1072,
+          "height": 58,
+          "color": "rgb(240, 244, 242)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "16px"
+        }
+      ],
+      "navs": [
+        {
+          "tag": "NAV",
+          "label": "Secretaria EBD",
+          "x": 0,
+          "y": 144,
+          "width": 239,
+          "height": 549.3125,
+          "color": "rgb(240, 247, 241)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "16px"
+        }
+      ],
+      "complementary": [
+        {
+          "tag": "ASIDE",
+          "label": "InícioChamadaHistóricoTurmasAniversariantesAlunosSenhas das salasAcessosAdminist",
+          "x": 0,
+          "y": 0,
+          "width": 240,
+          "height": 900,
+          "color": "rgb(240, 247, 241)",
+          "background": "rgba(0, 0, 0, 0)",
+          "fontSize": "16px"
+        }
+      ],
+      "main": [
+        {
+          "tag": "MAIN",
+          "label": "Dados atualizados às 10:24:48Turma Esperança fictíciaFaixa não configurada · 5 a",
+          "x": 280,
+          "y": 90,
+          "width": 1120,
+          "height": 768.3984375,
+          "color": "rgb(240, 244, 242)",
+          "background": "rgb(13, 33, 26)",
+          "fontSize": "16px"
+        }
+      ],
+      "shortControls": [],
+      "outside": []
+    }
+  ]
+}

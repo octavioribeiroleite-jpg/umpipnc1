@@ -28,11 +28,22 @@ const classes = [
 ];
 const students = Array.from({ length: 9 }, (_, i) => ({ id: `fixture-student-${i}`, name: `Aluno Fictício ${i + 1}`, class_id: i < 5 ? classes[0].id : classes[1].id, active: i !== 8, created_at: '2026-01-01T12:00:00Z' }));
 const now = new Date();
+const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+// Optional read-only visual seeds. They never change the backend under test.
+const populatedVisual = params.get('visual') === 'populated';
+const visualAttendance = populatedVisual ? students.filter(student => student.active).map((student, index) => ({
+  id: `fixture-attendance-${index}`, student_id: student.id, class_id: student.class_id,
+  date: localDate, present: index % 2 === 0, marked_by: 'Professor Fictício',
+})) : [];
+const visualLogins = populatedVisual ? classes.map((classroom, index) => ({
+  id: `fixture-login-${index}`, class_id: classroom.id, teacher_name: `Professor Fictício ${index + 1}`,
+  date: localDate, created_at: now.toISOString(),
+})) : [];
 // Optional read-only seed exposes the real visitor draft without initiating a
 // class or allowing a fixture write. Match Secretaria's local accounting date.
 const callStatuses = params.get('callStarted') === '1' ? [{
   class_id: classes[0].id,
-  date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+  date: localDate,
   status: 'aberta',
 }] : [];
 const birthdays = [{ id: 'fixture-birthday', nome: 'Pessoa Fictícia', dia: now.getDate(), mes: now.getMonth() + 1, ano_nascimento: 2000, departamento: 'EBD', observacao: null, ativo: true, pendente_revisao: false, created_at: now.toISOString(), updated_at: now.toISOString() }];
@@ -64,6 +75,17 @@ export const supabase = {
     onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } }; },
   },
   functions: { async invoke(name: string, options: { body: Row }) {
+    if (name === 'manage-ebd-class-password' && options.body.action === 'list') {
+      return request('edge.manage-ebd-class-password/list', fixture.edgeMs, () => {
+        if (!fixture.authenticated || !fixture.valid) return denied();
+        return success({ class_ids: classes.map(classroom => classroom.id), passwords: {
+          'fixture-class-a': '123456', 'fixture-class-b': '654321',
+        } });
+      });
+    }
+    if (name === 'manage-ebd-class-password' && ['set', 'clear'].includes(String(options.body.action))) {
+      throw new Error('Benchmark disallows credential writes');
+    }
     operation(fixture.authenticated ? 'pin-renewal' : name === 'ebd-class-login' ? 'professor-login' : 'admin-login');
     return request(`edge.${name}`, fixture.edgeMs, () => {
       if ((options.body.admin_pin || options.body.pin) !== '123456') return success({ success: false, error: 'PIN fictício incorreto' });
@@ -89,7 +111,7 @@ export const supabase = {
       then(resolve: (value: Result) => unknown, reject?: (reason: unknown) => unknown) {
         return request(`read.${table}`, fixture.readMs, () => {
           if (!fixture.authenticated || !fixture.valid) return denied();
-          const rows = table === 'ebd_classes' ? classes : table === 'ebd_students' ? students : table === 'ebd_call_status' ? callStatuses : [];
+          const rows = table === 'ebd_classes' ? classes : table === 'ebd_students' ? students : table === 'ebd_call_status' ? callStatuses : table === 'ebd_attendance' ? visualAttendance : table === 'ebd_class_logins' ? visualLogins : [];
           return success(rows.filter(row => Object.entries(filters).every(([key, value]) => (row as Row)[key] === value)));
         }, { ...filters }).then(resolve, reject);
       },

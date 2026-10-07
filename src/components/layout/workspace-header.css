@@ -1,0 +1,34 @@
+.ipnc-workspace-header { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; min-height: 58px; margin: 0 0 16px; color: hsl(var(--foreground)); }
+.ipnc-workspace-header .dashboard-motto { color: hsl(var(--muted-foreground)); font: italic .875rem/1.5 Georgia, serif; }
+.ipnc-workspace-header .dashboard-topbar-actions { display: flex; align-items: center; gap: 18px; min-width: 0; max-width: 100%; }
+.ipnc-workspace-header .dashboard-notifications { position: relative; display: flex; width: 48px; min-height: 48px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 50%; color: hsl(var(--primary)); }
+.ipnc-workspace-header .dashboard-notifications:hover, .ipnc-workspace-header .dashboard-account:hover { background: hsl(var(--accent)); }
+.ipnc-workspace-header .dashboard-notifications svg { width: 24px; height: 24px; }
+.ipnc-workspace-header .dashboard-notification-dot { position: absolute; width: 8px; height: 8px; top: 10px; right: 11px; border-radius: 50%; background: hsl(var(--destructive)); box-shadow: 0 0 0 2px hsl(var(--background)); }
+.ipnc-workspace-header .dashboard-account { display: flex; min-width: 0; min-height: 48px; align-items: center; gap: 12px; padding: 4px 6px; border-radius: 12px; text-align: left; }
+.ipnc-workspace-header .dashboard-avatar { display: flex; width: 42px; height: 42px; flex: 0 0 42px; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(145deg, #386d53, #063d2d); color: #fff; font-size: .875rem; font-weight: 600; }
+.ipnc-workspace-header .dashboard-account-copy { display: flex; flex-direction: column; min-width: 0; max-width: 20rem; line-height: 1.4; }
+.ipnc-workspace-header .dashboard-account-copy strong { font-size: .9375rem; font-weight: 600; overflow-wrap: anywhere; }
+.ipnc-workspace-header .dashboard-account-copy > span { color: hsl(var(--muted-foreground)); font-size: .8125rem; }
+.ipnc-workspace-header .dashboard-account-chevron { width: 18px; height: 18px; flex-shrink: 0; margin-left: 10px; }
+.ipnc-workspace-header__heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ipnc-workspace-header__title { font-size: var(--font-page-title, 1.5rem); font-weight: 700; line-height: 1.2; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.ipnc-workspace-header__mobile-title { display: none; }
+.ipnc-workspace-header__back { display: grid; place-items: center; width: 44px; min-height: 44px; flex-shrink: 0; border-radius: 12px; color: hsl(var(--primary)); }
+.ipnc-workspace-header__back:hover { background: hsl(var(--primary) / .08); }
+@media (max-width: 699px) {
+  .ipnc-workspace-header { gap: 8px; min-height: 64px; margin-bottom: 12px; }
+  .ipnc-workspace-header__heading { gap: 4px; flex: 1; }
+  .ipnc-workspace-header__heading:has(.ipnc-workspace-header__mobile-title) .dashboard-motto { display: none; }
+  .ipnc-workspace-header__mobile-title { display: block; font-size: 1.125rem; font-weight: 700; overflow-wrap: anywhere; }
+  .ipnc-workspace-header .dashboard-topbar-actions { gap: 4px; }
+  .ipnc-workspace-header .dashboard-account { padding: 0; gap: 0; }
+  .ipnc-workspace-header .dashboard-account-copy, .ipnc-workspace-header .dashboard-account-chevron { display: none; }
+  .ipnc-workspace-header .dashboard-avatar { width: 40px; height: 40px; flex-basis: 40px; }
+}
+@media (min-width: 700px) {
+  .ipnc-workspace-header .dashboard-account { max-width: min(40vw, 24rem); }
+}
+
+.ipnc-workspace-main { padding-top: max(16px, var(--safe-top, 0px)); }
+@media (min-width: 700px) { .ipnc-workspace-main { padding-top: max(24px, var(--safe-top, 0px)); } }

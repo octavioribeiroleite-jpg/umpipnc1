@@ -530,6 +530,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                         variant="ghost"
                         size="sm"
                         className="h-9"
+                        aria-label="Cancelar edição de nascimento"
                         onClick={() => {
                           setEditingBirthDateId(null);
                           setEditingBirthDate('');

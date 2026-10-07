@@ -1,0 +1,30 @@
+[
+  {
+    "file": "src/pages/PortalIgreja.tsx",
+    "baseline_errors": 9,
+    "current_errors": 9,
+    "baseline_warnings": 0,
+    "current_warnings": 0,
+    "same_rule_and_message_multiset": true
+  },
+  {
+    "file": "src/pages/Secretaria.tsx",
+    "baseline_errors": 13,
+    "current_errors": 13,
+    "baseline_warnings": 0,
+    "current_warnings": 0,
+    "same_rule_and_message_multiset": true
+  },
+  {
+    "file": "src/components/secretaria/PlanilhaAlunosTab.tsx",
+    "baseline_errors": 2,
+    "current_errors": 2,
+    "same_rule_and_message_multiset": true
+  },
+  {
+    "file": "src/components/secretaria/TurmasTab.tsx",
+    "baseline_errors": 4,
+    "current_errors": 4,
+    "same_rule_and_message_multiset": true
+  }
+]

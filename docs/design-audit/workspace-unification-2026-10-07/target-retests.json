@@ -1,0 +1,320 @@
+[
+  {
+    "width": 390,
+    "theme": "light",
+    "targets": [
+      {
+        "label": "Selecionar Aluno Fictício 1",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 1",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 2",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 2",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 3",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 3",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 4",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 4",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 5",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 5",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "targets": [
+      {
+        "label": "Selecionar Aluno Fictício 1",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 1",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 2",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 2",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 3",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 3",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 4",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 4",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 5",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 5",
+        "width": 216,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "theme": "light",
+    "targets": [
+      {
+        "label": "Selecionar todos os alunos filtrados",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 1",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 1",
+        "width": 98.9765625,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 2",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 2",
+        "width": 101.8203125,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 3",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 3",
+        "width": 101.9296875,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 4",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 4",
+        "width": 102.3203125,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 5",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 5",
+        "width": 101.5859375,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "theme": "dark",
+    "targets": [
+      {
+        "label": "Selecionar todos os alunos filtrados",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 1",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 1",
+        "width": 98.9765625,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 2",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 2",
+        "width": 101.8203125,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 3",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 3",
+        "width": 101.9296875,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 4",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 4",
+        "width": 102.3203125,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      },
+      {
+        "label": "Selecionar Aluno Fictício 5",
+        "width": 44,
+        "height": 44,
+        "checked": "false",
+        "box": "16px"
+      },
+      {
+        "label": "Aluno Fictício 5",
+        "width": 101.5859375,
+        "height": 44,
+        "checked": null,
+        "box": "auto"
+      }
+    ]
+  }
+]

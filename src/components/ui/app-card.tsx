@@ -30,7 +30,7 @@ const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(
           }
         }}
         className={cn(
-          'min-w-0 rounded-2xl border border-border bg-card text-card-foreground shadow-sm',
+          'ui-app-card min-w-0 rounded-2xl border border-border bg-card text-card-foreground shadow-sm',
           variantClasses[variant],
           !noPadding && !colorStripe && padding,
           className,

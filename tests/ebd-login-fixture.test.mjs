@@ -5,11 +5,11 @@ function fakeStorage() {
   const values = new Map();
   return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, String(value)), removeItem: key => values.delete(key) };
 }
-async function withFixture(run) {
+async function withFixture(run, search = '?edge=0&auth=0&read=0&authfail=1') {
   const names = ['location', 'document', 'localStorage', 'sessionStorage'];
   const previous = Object.fromEntries(names.map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   Object.defineProperties(globalThis, {
-    location: { configurable: true, value: { search: '?edge=0&auth=0&read=0&authfail=1' } },
+    location: { configurable: true, value: { search } },
     document: { configurable: true, value: { body: { dataset: { benchmarkRevision: 'fixture-unit', benchmarkSourceHash: 'synthetic' } } } },
     localStorage: { configurable: true, value: fakeStorage() },
     sessionStorage: { configurable: true, value: fakeStorage() },
@@ -41,4 +41,18 @@ test('isolated login transport rejects unauthenticated reads, wrong PIN and fail
     assert.ok(fixture.requests.every(request => request.ended >= request.started));
     for (const method of ['insert', 'update', 'delete', 'upsert']) assert.throws(() => supabase.from('ebd_students')[method]({}), /disallows data writes/);
   });
+});
+
+test('visual EBD fixture supplies only synthetic populated reads and refuses credential mutations', async () => {
+  await withFixture(async ({ supabase }) => {
+    const passwords = await supabase.functions.invoke('manage-ebd-class-password', { body: { action: 'list' } });
+    assert.deepEqual(passwords.data.class_ids, ['fixture-class-a', 'fixture-class-b']);
+    assert.equal(passwords.data.passwords['fixture-class-a'], '123456');
+    assert.equal((await supabase.from('ebd_attendance').select('*')).data.length, 8);
+    assert.equal((await supabase.from('ebd_class_logins').select('*')).data.length, 2);
+    for (const action of ['set', 'clear']) await assert.rejects(
+      supabase.functions.invoke('manage-ebd-class-password', { body: { action, admin_pin: '123456' } }),
+      /disallows credential writes/,
+    );
+  }, '?mode=stored-admin&visual=populated&edge=0&auth=0&read=0');
 });

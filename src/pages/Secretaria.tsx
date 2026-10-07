@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import {
   Download,
-  ArrowLeft,
   ArrowRight,
   UserRound,
   ShieldCheck,
@@ -37,7 +36,11 @@ import ProfileSelect from '@/components/secretaria/ProfileSelect';
 import PinPad from '@/components/secretaria/PinPad';
 import { AccessShell } from '@/components/auth/AccessShell';
 import { APP_HOME_PATH } from '@/lib/app-home';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { WorkspaceHeader } from '@/components/layout/WorkspaceHeader';
+import { DashboardWelcome } from '@/components/layout/DashboardWelcome';
+import { MetricCard } from '@/components/ui/metric-card';
+import { useWorkspaceTheme } from '@/hooks/useWorkspaceTheme';
 import './secretaria-home.css';
 import './secretaria-theme.css';
 import { Button } from '@/components/ui/button';
@@ -115,7 +118,7 @@ function SecretariaMenuCard({ title, description, icon: Icon, onClick }: {
   onClick: () => void;
 }) {
   return (
-    <button type="button" className="ebd-menu-card" onClick={onClick}>
+    <button type="button" className="ebd-menu-card dashboard-quick-action" onClick={onClick}>
       <span className="ebd-icon"><Icon aria-hidden="true" /></span>
       <span className="ebd-menu-copy"><strong>{title}</strong><span>{description}</span></span>
     </button>
@@ -275,6 +278,7 @@ export default function Secretaria() {
   }, []);
   const [storedSession] = useState(loadStoredEbdSession);
   const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(storedSession?.accessLevel ?? null);
+  useWorkspaceTheme(Boolean(accessLevel));
   const [loginStep, setLoginStep] = useState<LoginStep>('profile');
   const [selectedProfile, setSelectedProfile] = useState<'admin' | 'professor' | null>(storedSession?.accessLevel ?? null);
   const [loading, setLoading] = useState(false);
@@ -726,53 +730,37 @@ export default function Secretaria() {
   };
 
   const pageHeader = (
-        <header className="ebd-header safe-top">
-          <div className="ebd-header-inner">
-            <button type="button" onClick={navigation.back} aria-label="Voltar" className="ebd-back">
-              <ArrowLeft aria-hidden="true" />
-            </button>
-            <div className="ebd-heading">
-              <h1>{viewTitles[currentView]}</h1>
-              <p>{profileLabel} · EBD</p>
-            </div>
-            <HeaderActions showInstall={false} showVersion={false} />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button type="button" ref={profileButtonRef} aria-label="Menu do usuário" className="ebd-profile"><UserRound aria-hidden="true" /></button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-52">
-                <DropdownMenuLabel>{profileLabel}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleBackToHome} className="min-h-11 gap-2"><Home className="h-4 w-4" />Menu da Secretaria</DropdownMenuItem>
-                {!isInstalled && <DropdownMenuItem onSelect={() => openInstall(profileButtonRef.current ?? undefined)} className="min-h-11 gap-2"><Download className="h-4 w-4" />Instalar aplicativo</DropdownMenuItem>}
-                <DropdownMenuItem onSelect={handleExitApp} className="min-h-11 gap-2"><LogOut className="h-4 w-4" />Sair da Secretaria</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
+    <WorkspaceHeader title={currentView === 'home' ? undefined : viewTitles[currentView]} mobileTitle="Secretaria EBD" titleAsHeading={currentView !== 'home'} accountName={professorNome || profileLabel} accountRole={`${profileLabel} · EBD`} accountButtonRef={profileButtonRef} onBack={currentView === 'home' ? undefined : navigation.back} actions={<HeaderActions showInstall={false} showVersion={false} />} menu={<>
+      <DropdownMenuItem onSelect={handleBackToHome} className="gap-2"><Home className="h-4 w-4" />Menu da Secretaria</DropdownMenuItem>
+      {!isInstalled && <DropdownMenuItem onSelect={() => openInstall(profileButtonRef.current ?? undefined)} className="gap-2"><Download className="h-4 w-4" />Instalar aplicativo</DropdownMenuItem>}
+      <DropdownMenuItem onSelect={handleExitApp} className="gap-2"><LogOut className="h-4 w-4" />Sair da Secretaria</DropdownMenuItem>
+    </>} />
   );
 
   // Home view with cards
   if (currentView === 'home') {
     return (
-      <EbdNavigationContext.Provider value={navigation}><SecretariaNavigation admin={isAdmin} currentView={currentView} onView={setCurrentView} onExit={handleExitApp}><PullToRefresh>
-      <div className="ebd-home ebd-app">
+      <EbdNavigationContext.Provider value={navigation}><SecretariaNavigation admin={isAdmin} currentView={currentView} onView={setCurrentView} onExit={handleExitApp} profileLabel={professorNome || profileLabel} profileDescription="Secretaria EBD"><PullToRefresh>
+      <div className="ebd-home ebd-app ipnc-dashboard ipnc-dashboard-shell">
         {pageHeader}
 
         <main id="ebd-main" tabIndex={-1} className="ebd-content">
+          <DashboardWelcome id="ebd-welcome-title" date={format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR }).replace(/^./, first => first.toUpperCase())} title={<>Secretaria <span>EBD</span></>} description={lastSynced ? `${profileLabel} • ${totalCount} aluno${totalCount === 1 ? '' : 's'} ativo${totalCount === 1 ? '' : 's'}` : `${profileLabel} • Escola Bíblica Dominical`} />
           <div className={`ebd-sync ${lastSynced && !syncError && !aiReauthOpen ? 'ebd-sync-ok' : ''}`}>{syncNotice}</div>
+          <div className="dashboard-metrics" aria-label="Indicadores da EBD">
+            <MetricCard title="Presentes" value={lastSynced ? presentCount : '—'} description={lastSynced ? `de ${totalCount} alunos` : 'Aguardando dados'} icon={UserCheck} tone="success" className="dashboard-metric" />
+            <MetricCard title="Visitantes" value={lastSynced ? visitorCount : '—'} description="Neste encontro" icon={Users} tone="info" className="dashboard-metric dashboard-metric--blue" />
+            <MetricCard title="Alunos ativos" value={lastSynced ? totalCount : '—'} description="Cadastros ativos" icon={UserRound} tone="info" className="dashboard-metric dashboard-metric--blue" />
+            <MetricCard title="Turmas" value={lastSynced ? visibleClasses.length : '—'} description="Escola Bíblica Dominical" icon={CalendarDays} tone="success" className="dashboard-metric" />
+          </div>
+          <div className="ebd-home-grid">
           <div className="ebd-overview">
-          <section className="ebd-summary ebd-surface" aria-labelledby="ebd-summary-title" aria-busy={!lastSynced && syncing}>
-            <div className="ebd-summary-heading">
+          <section className="ebd-summary ebd-surface dashboard-panel" aria-labelledby="ebd-summary-title" aria-busy={!lastSynced && syncing}>
+            <div className="ebd-summary-heading ebd-panel-heading">
               <h2 id="ebd-summary-title">Resumo do encontro</h2>
               <span className={`ebd-status ${dayIsClosed ? 'ebd-status-closed' : ''}`}>{!lastSynced ? (syncError ? 'Indisponível' : 'Carregando') : dayIsClosed ? 'Encerrado' : 'Em aberto'}</span>
             </div>
             <p className="ebd-date"><CalendarDays aria-hidden="true" /><span>{format(new Date(`${sundayDate}T12:00:00`), "EEEE, dd 'de' MMM 'de' yyyy", { locale: ptBR })}</span></p>
-            <dl className="ebd-metrics">
-              <div><dt>Presentes</dt><dd>{lastSynced ? presentCount : '—'}</dd><span>{lastSynced ? `de ${totalCount} alunos` : 'Aguardando dados'}</span></div>
-              <div><dt>Visitantes</dt><dd>{lastSynced ? visitorCount : '—'}</dd></div>
-              <div><dt>Alunos ativos</dt><dd>{lastSynced ? totalCount : '—'}</dd><span>{lastSynced ? `${visibleClasses.length} turma${visibleClasses.length === 1 ? '' : 's'}` : 'Aguardando dados'}</span></div>
-            </dl>
             <p className="ebd-summary-note">{!lastSynced ? 'Aguardando atualização dos dados' : dayIsClosed ? 'Chamada encerrada para este encontro' : 'Encontro aberto para registro de presenças'}</p>
           </section>
 
@@ -780,8 +768,8 @@ export default function Secretaria() {
           </div>
 
           {isAdmin && (
-            <section className="ebd-section" aria-labelledby="ebd-management-title">
-              <h2 id="ebd-management-title">Gestão da EBD</h2>
+            <section className="ebd-section ebd-surface dashboard-panel" aria-labelledby="ebd-management-title">
+              <div className="ebd-panel-heading"><h2 id="ebd-management-title">Acesso rápido</h2></div>
               <div className="ebd-menu-grid">
                 <SecretariaMenuCard title="Turmas" description="Classes e professores" icon={Users} onClick={() => setCurrentView('turmas')} />
                 <SecretariaMenuCard title="Alunos" description="Base de cadastros" icon={UserRound} onClick={() => setCurrentView('planilha')} />
@@ -803,14 +791,15 @@ export default function Secretaria() {
           {reauthDialog}
 
           {isAdmin && (
-            <section className="ebd-section ebd-administration" aria-labelledby="ebd-admin-title">
-              <h2 id="ebd-admin-title">Administração</h2>
-              <div className="ebd-surface">
+            <section className="ebd-section ebd-administration ebd-surface dashboard-panel" aria-labelledby="ebd-admin-title">
+              <div className="ebd-panel-heading"><h2 id="ebd-admin-title">Administração</h2></div>
+              <div className="ebd-admin-actions">
                 <button type="button" onClick={() => setCurrentView('configuracoes')}><Settings2 aria-hidden="true" /><span>Configurações</span><ChevronRight aria-hidden="true" /></button>
                 <button type="button" onClick={() => setCurrentView('acessos')}><ShieldCheck aria-hidden="true" /><span>Acessos</span><ChevronRight aria-hidden="true" /></button>
               </div>
             </section>
           )}
+          </div>
         </main>
 
         <AlertDialog open={showExitConfirm} onOpenChange={open => { if (!signingOut) setShowExitConfirm(open); }}>
@@ -834,8 +823,8 @@ export default function Secretaria() {
 
 
   return (
-    <EbdNavigationContext.Provider value={navigation}><SecretariaNavigation admin={isAdmin} currentView={currentView} onView={setCurrentView} onExit={handleExitApp}><PullToRefresh>
-    <SecretariaWorkspace title={viewTitles[currentView]} profileLabel={profileLabel} onBack={navigation.back} onHome={handleBackToHome} onExit={handleExitApp} syncNotice={syncNotice}>
+    <EbdNavigationContext.Provider value={navigation}><SecretariaNavigation admin={isAdmin} currentView={currentView} onView={setCurrentView} onExit={handleExitApp} profileLabel={professorNome || profileLabel} profileDescription="Secretaria EBD"><PullToRefresh>
+    <SecretariaWorkspace title={viewTitles[currentView]} profileLabel={profileLabel} onBack={navigation.back} onHome={handleBackToHome} onExit={handleExitApp} syncNotice={syncNotice} header={pageHeader}>
       {reauthDialog}
       <div className={`ebd-view ebd-view-${currentView}`}>
         {currentView === 'chamada' && (

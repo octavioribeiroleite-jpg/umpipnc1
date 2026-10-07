@@ -1,6 +1,9 @@
+import { useWorkspaceTheme } from '@/hooks/useWorkspaceTheme';
 import type { CSSProperties, ReactNode } from 'react';
-import { ArrowDownLeft, ArrowLeft, ArrowRight, ArrowUpRight, ChartNoAxesCombined, CircleHelp, Eye, Landmark, LayoutDashboard, LockKeyhole, LogOut, Plus, RefreshCw, Search, Share2, Wallet, Pencil, ReceiptText } from 'lucide-react';
-import logoIpnc from '@/assets/logo-ipnc.png';
+import { ArrowDownLeft, ArrowLeft, ArrowRight, ArrowUpRight, ChartNoAxesCombined, CircleHelp, Eye, LayoutDashboard, LockKeyhole, LogOut, Plus, RefreshCw, Search, Share2, Wallet, Pencil, ReceiptText } from 'lucide-react';
+import { NavigationSidebar, NavigationRail } from '@/components/layout/WorkspaceNavigation';
+import { WorkspaceHeader } from '@/components/layout/WorkspaceHeader';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { formatCents, type TreasuryEntry, type TreasuryFund } from '@/lib/treasury';
 import './treasury-dashboard.css';
 
@@ -56,6 +59,7 @@ function EmptyChart({ children }: { children: ReactNode }) {
 }
 
 export function TreasuryDashboard(props: Props) {
+  useWorkspaceTheme();
   const { data, admin, selectedFundId, filters, loading, error } = props;
   const selected = data?.funds.find(fund => fund.id === selectedFundId);
   const currentMonth = data?.months[data.months.length - 1];
@@ -70,20 +74,31 @@ export function TreasuryDashboard(props: Props) {
   const pages = Math.max(1, Math.ceil(props.totalCount / 20));
   const filter = (key: keyof TreasuryFilters, value: string) => props.onFilter({ ...filters, [key]: value });
 
-  return <div className="treasury-workspace">
-    <a className="tr-skip" href="#treasury-content">Pular para o conteúdo</a>
-    <aside className="tr-sidebar" aria-label="Navegação da tesouraria">
-      <a className="tr-brand" href="/tesouraria"><span className="tr-brand-icon"><img src={logoIpnc} alt="Marca IPNC" /></span><span>IPNC<small>TESOURARIA</small></span></a>
-      <p className="tr-sidebar-label">GESTÃO FINANCEIRA</p>
-      <button className={`tr-nav ${!selectedFundId ? 'active' : ''}`} onClick={() => props.onFund()} aria-label="Visão geral" title="Visão geral"><LayoutDashboard size={18} /><span className="tr-nav-copy">Visão geral</span></button>
-      <p className="tr-sidebar-label">SOCIEDADES</p>
-      {(funds.length ? funds : defaultFunds).map(fund => <button key={fund.id} disabled={!data} onClick={() => props.onFund(fund.id)} className={`tr-nav tr-fund-nav ${fund.id === selectedFundId ? 'active' : ''}`} aria-label={`Caixa da ${fund.abbreviation}`} title={fund.name}><span className="tr-dot" style={{ backgroundColor: fund.color }} /><span>{fund.abbreviation}</span><ArrowRight size={14} /></button>)}
-      {admin && <button className="tr-nav tr-add-fund" disabled={!data} onClick={props.onNewFund} aria-label="Nova sociedade" title="Nova sociedade"><Plus size={17} /><span className="tr-nav-copy">Nova sociedade</span></button>}
-      <div className="tr-sidebar-bottom"><div className="tr-sidebar-note"><Landmark size={20} /><strong>Uma conta. Cada caixa organizado.</strong><p>Acompanhe os valores de cada sociedade da nossa igreja.</p></div><a href="/" className="tr-return" aria-label="Voltar ao Aplicativo IPNC" title="Voltar ao Aplicativo IPNC"><ArrowLeft size={15} /><span>Voltar ao Aplicativo IPNC</span></a></div>
-    </aside>
+  const accessLabel = admin ? 'Acesso administrativo' : props.treasurer ? 'Acesso do tesoureiro' : 'Acesso necessário';
+  const navigation = {
+    items: [{ key: 'overview', label: 'Visão geral', icon: LayoutDashboard, active: !selectedFundId, onClick: () => props.onFund() }],
+    groups: [{ key: 'societies', label: 'Sociedades', items: [
+      ...(funds.length ? funds : defaultFunds).map(fund => ({ key: fund.id, label: `Caixa da ${fund.abbreviation}`, icon: Wallet, active: fund.id === selectedFundId, disabled: !data, onClick: () => props.onFund(fund.id), iconStyle: { color: fund.color } })),
+      ...(admin ? [{ key: 'new', label: 'Nova sociedade', icon: Plus, active: false, disabled: !data, onClick: props.onNewFund }] : []),
+    ] }],
+    onHome: () => props.onFund(),
+    homeLabel: 'Visão geral da tesouraria',
+    navigationLabel: 'Navegação da tesouraria',
+    onExit: () => window.location.assign('/'),
+    exitLabel: 'Voltar ao Aplicativo IPNC',
+  };
 
+  return <div className="treasury-workspace ipnc-navigation-layout ipnc-safe-managed">
+    <a className="tr-skip" href="#treasury-content">Pular para o conteúdo</a>
+    <div className="hidden min-[1100px]:flex"><NavigationSidebar {...navigation} profile={{ name: 'Tesouraria da igreja', description: accessLabel }} /></div>
+    <div className="hidden min-[700px]:flex min-[1100px]:hidden"><NavigationRail {...navigation} /></div>
     <div className="tr-main">
-      <header className="tr-topbar"><a href="/tesouraria" className="tr-mobile-brand"><img src={logoIpnc} alt="Marca IPNC" />IPNC <span>Tesouraria</span></a><span className="tr-church-name">Igreja Presbiteriana de Nova Carapina</span><div className="tr-top-actions"><span className="tr-access"><span />{admin ? 'Acesso administrativo' : props.treasurer ? 'Acesso do tesoureiro' : 'Acesso necessário'}</span>{admin || props.treasurer ? <button className="tr-icon-button" onClick={props.onLogout} aria-label={admin ? "Sair do acesso administrativo" : "Sair da tesouraria"}><LogOut size={18} /></button> : <button className="tr-button tr-button-small" onClick={props.onLogin}><LockKeyhole size={15} /><span>Acesso do tesoureiro</span></button>}</div></header>
+      <div className="tr-workspace-header"><WorkspaceHeader mobileTitle="Tesouraria" accountName={admin ? 'Administração' : props.treasurer ? 'Tesoureiro' : 'IPNC'} accountRole={accessLabel} onBack={() => window.location.assign('/')} actions={
+        admin || props.treasurer ? <button className="tr-icon-button" onClick={props.onLogout} aria-label={admin ? "Sair do acesso administrativo" : "Sair da tesouraria"}><LogOut size={18} /></button> : <button className="tr-button tr-button-small" onClick={props.onLogin}><LockKeyhole size={15} /><span>Acesso do tesoureiro</span></button>
+      } menu={<>
+        <DropdownMenuItem onSelect={() => window.location.assign('/')}><ArrowLeft className="mr-2 h-4 w-4" />Voltar ao Aplicativo IPNC</DropdownMenuItem>
+        <DropdownMenuItem onSelect={admin || props.treasurer ? props.onLogout : props.onLogin}><LockKeyhole className="mr-2 h-4 w-4" />{admin || props.treasurer ? 'Sair da tesouraria' : 'Acesso do tesoureiro'}</DropdownMenuItem>
+      </>} /></div>
       <main id="treasury-content" className="tr-content">
         <div className="tr-title-row"><div>{selected ? <button className="tr-back" onClick={() => props.onFund()}><ArrowLeft size={14} />Visão geral</button> : <p className="tr-eyebrow">TRANSPARÊNCIA & CUIDADO</p>}<h1>{selected ? `Caixa da ${selected.abbreviation}` : 'Dashboard financeiro'}</h1><p>{selected ? selected.name : 'Os recursos de cada sociedade, em um só lugar.'}</p></div><div className="tr-heading-actions"><button className="tr-button" onClick={props.onShare}><Share2 size={16} />Compartilhar</button>{(admin || props.treasurer) && <button className="tr-button tr-primary" onClick={props.onNewEntry} disabled={!data}><Plus size={18} />{admin ? 'Novo lançamento' : 'Registrar recebimento'}</button>}</div></div>
         {admin && <nav className="tr-admin-navigation" aria-label="Ferramentas administrativas da tesouraria">{[
@@ -124,7 +139,7 @@ export function TreasuryDashboard(props: Props) {
             <div className="tr-pagination"><p>Página {props.page + 1} de {pages}</p><div><button className="tr-button tr-button-small" disabled={props.page === 0} onClick={() => props.onPage(props.page - 1)}><ArrowLeft size={15} />Anterior</button><button className="tr-button tr-button-small" disabled={props.page + 1 >= pages} onClick={() => props.onPage(props.page + 1)}>Próxima<ArrowRight size={15} /></button></div></div><p className="tr-statement-note">O saldo de cada linha considera todo o histórico da sociedade até aquele lançamento, inclusive os registros fora do filtro.</p>
           </>}
         </section>
-        <footer className="tr-footer"><span><Eye size={14} />{admin ? 'Acesso administrativo · todas as sociedades' : props.treasurer ? 'Acesso protegido · somente sua sociedade' : 'Entre para consultar a tesouraria'}</span><button disabled={props.refreshing} onClick={props.onRefresh}><RefreshCw size={13} className={props.refreshing ? 'tr-spin' : ''} />{props.refreshing ? 'Atualizando…' : props.updatedAt ? `Atualizado às ${props.updatedAt}` : 'Atualizar consulta'}</button><a href="/">Aplicativo IPNC <ArrowUpRight size={12} /></a></footer>
+        <footer className="tr-footer"><span><Eye size={14} />{admin ? 'Acesso administrativo · todas as sociedades' : props.treasurer ? 'Acesso protegido · somente sua sociedade' : 'Entre para consultar a tesouraria'}</span><button disabled={props.refreshing} onClick={props.onRefresh}><RefreshCw size={13} className={props.refreshing ? 'tr-spin' : ''} />{props.refreshing ? 'Atualizando…' : props.updatedAt ? `Atualizado às ${props.updatedAt}` : 'Atualizar consulta'}</button><a href="/" title="Igreja Presbiteriana de Nova Carapina">Aplicativo IPNC <ArrowUpRight size={12} /></a></footer>
       </main>
     </div>
   </div>;

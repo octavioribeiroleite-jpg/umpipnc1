@@ -1,0 +1,172 @@
+{
+  "pinSmoke": [
+    {
+      "requestedTheme": "light",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "viewportHeight": 844,
+      "dialogs": 0,
+      "workspace": false,
+      "theme": "",
+      "keys": [
+        {
+          "key": "1",
+          "x": 16,
+          "y": 476.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "2",
+          "x": 138,
+          "y": 476.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "3",
+          "x": 260,
+          "y": 476.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "4",
+          "x": 16,
+          "y": 532.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "5",
+          "x": 138,
+          "y": 532.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "6",
+          "x": 260,
+          "y": 532.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "7",
+          "x": 16,
+          "y": 588.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "8",
+          "x": 138,
+          "y": 588.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "9",
+          "x": 260,
+          "y": 588.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "0",
+          "x": 138,
+          "y": 644.1640625,
+          "width": 114,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "requestedTheme": "dark",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "viewportHeight": 844,
+      "dialogs": 0,
+      "workspace": false,
+      "theme": "dark",
+      "keys": [
+        {
+          "key": "1",
+          "x": 16,
+          "y": 476.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "2",
+          "x": 138,
+          "y": 476.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "3",
+          "x": 260,
+          "y": 476.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "4",
+          "x": 16,
+          "y": 532.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "5",
+          "x": 138,
+          "y": 532.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "6",
+          "x": 260,
+          "y": 532.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "7",
+          "x": 16,
+          "y": 588.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "8",
+          "x": 138,
+          "y": 588.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "9",
+          "x": 260,
+          "y": 588.1640625,
+          "width": 114,
+          "height": 48
+        },
+        {
+          "key": "0",
+          "x": 138,
+          "y": 644.1640625,
+          "width": 114,
+          "height": 48
+        }
+      ]
+    }
+  ],
+  "afterBack": "- region \"Notifications (F8)\":\n  - list\n- region \"Notifications alt+T\"\n- main \"Secretaria EBD\":\n  - navigation \"Navegação do acesso\":\n    - button \"Voltar à Igreja\":\n      - generic: Voltar à Igreja\n  - img \"IPNC\"\n  - paragraph: Acesso restrito\n  - heading \"Secretaria EBD\" [level=1]\n  - paragraph: Escolha seu perfil para continuar com segurança.\n  - button \"Administrador Acesso completo à chamada, histórico, turmas e configurações.\":\n    - generic: Administrador\n    - generic: Acesso completo à chamada, histórico, turmas e configurações.\n  - button \"Professor Acesso rápido para registrar chamada e acompanhar sua turma.\":\n    - generic: Professor\n    - generic: Acesso rápido para registrar chamada e acompanhar sua turma.\n  - paragraph: Ensinar também é servir\n  - text: 2 Timóteo 2:15",
+  "url": "http://127.0.0.1:8086/secretaria?role=anonymous&controls=0&edge=0&read=0&auth=0"
+}

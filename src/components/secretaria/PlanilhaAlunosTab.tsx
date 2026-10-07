@@ -530,7 +530,7 @@ export default function PlanilhaAlunosTab({
 
   // ---- Render ----
   return (
-    <div className="space-y-4">
+    <div className="ebd-students space-y-4">
       {/* Top controls */}
       <Card data-ebd-card>
         <CardContent data-ebd-content className="p-4 space-y-3">
@@ -707,7 +707,7 @@ export default function PlanilhaAlunosTab({
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">
-                      <Checkbox
+                      <Checkbox className="ebd-student-select"
                         aria-label="Selecionar todos os alunos filtrados"
                         checked={allFilteredSelected}
                         onCheckedChange={toggleSelectAll}
@@ -727,7 +727,7 @@ export default function PlanilhaAlunosTab({
                   {filteredStudents.map((s) => (
                     <TableRow key={s.id}>
                       <TableCell>
-                        <Checkbox
+                        <Checkbox className="ebd-student-select"
                           aria-label={`Selecionar ${s.name}`} checked={selectedIds.has(s.id)}
                           onCheckedChange={() => toggleSelectOne(s.id)}
                         />
@@ -768,7 +768,7 @@ export default function PlanilhaAlunosTab({
                         ) : (
                           <button
                             onClick={() => startEdit(s)}
-                            className={`text-left hover:underline ${
+                            className={`ebd-student-name text-left hover:underline ${
                               !s.active
                                 ? 'line-through text-muted-foreground'
                                 : ''
@@ -829,7 +829,7 @@ export default function PlanilhaAlunosTab({
               <Card data-ebd-card key={s.id}>
                 <CardContent data-ebd-content className="p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <Checkbox
+                    <Checkbox className="ebd-student-select"
                       aria-label={`Selecionar ${s.name}`} checked={selectedIds.has(s.id)}
                       onCheckedChange={() => toggleSelectOne(s.id)}
                     />
@@ -868,7 +868,7 @@ export default function PlanilhaAlunosTab({
                     ) : (
                       <button
                         onClick={() => startEdit(s)}
-                        className={`font-semibold text-left flex-1 ${
+                        className={`ebd-student-name font-semibold text-left flex-1 ${
                           !s.active
                             ? 'line-through text-muted-foreground'
                             : ''

@@ -8,7 +8,10 @@ test('responsive layout mounts the page only once at every breakpoint', () => {
   const layout = read('src/components/layout/AppLayout.tsx');
   assert.equal((layout.match(/\{children\}/g) || []).length, 1);
   assert.equal((layout.match(/<main\b/g) || []).length, 1);
-  assert.match(layout, /<MobileHeader/);
+  assert.equal((layout.match(/<DashboardHeader\b/g) || []).length, 1);
+  assert.match(layout, /header === undefined \? <DashboardHeader/);
+  assert.match(layout, /useSwipeBack\(\)/);
+  assert.doesNotMatch(layout, /<MobileHeader\b|pt-mobile-header/);
   assert.match(layout, /<TabletNavigationRail/);
   assert.match(layout, /<AppSidebar/);
 });

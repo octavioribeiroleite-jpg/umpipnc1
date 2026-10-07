@@ -162,6 +162,48 @@
   list-style: none;
 }
 
+.diretoria-nav-group {
+  padding-top: 14px;
+  margin-top: 12px;
+  border-top: 1px solid var(--diretoria-nav-line);
+}
+
+.diretoria-nav-group__title {
+  margin: 0 12px 8px;
+  color: var(--diretoria-nav-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.diretoria-nav-group__loading {
+  padding: 8px 12px;
+  color: var(--diretoria-nav-muted);
+  font-size: 0.75rem;
+}
+
+.diretoria-nav-group__error {
+  margin: 8px 0;
+  color: var(--diretoria-nav-text);
+  font-size: 0.75rem;
+}
+
+.diretoria-nav-group__error .text-muted-foreground {
+  color: var(--diretoria-nav-muted);
+}
+
+.diretoria-nav-group__error button {
+  width: 100%;
+  white-space: normal;
+}
+
+.diretoria-nav-group__retry {
+  min-height: 48px;
+  width: 100%;
+  color: var(--diretoria-nav-text);
+}
+
 .diretoria-nav-item {
   display: flex;
   width: 100%;
@@ -180,6 +222,11 @@
 .diretoria-nav-item:hover {
   border-color: rgba(160, 206, 176, 0.13);
   background: rgba(136, 206, 163, 0.09);
+}
+
+.diretoria-nav-item:disabled {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 .diretoria-nav-item--active {
@@ -278,6 +325,7 @@
 }
 
 .diretoria-nav-shell.diretoria-sidebar .diretoria-sidebar__update-button {
+  flex-wrap: nowrap;
   width: 100%;
   height: auto;
   min-height: 52px;
@@ -298,6 +346,7 @@
 }
 
 .diretoria-sidebar .diretoria-sidebar__exit {
+  flex-wrap: nowrap;
   width: 100%;
   min-height: 44px;
   justify-content: flex-start;
@@ -308,6 +357,8 @@
   font-size: 0.875rem;
   font-weight: 500;
 }
+
+.diretoria-sidebar__exit > span { min-width: 0; text-align: left; }
 
 .diretoria-sidebar .diretoria-sidebar__exit:hover {
   color: #fff;
@@ -426,6 +477,13 @@ html.dark .diretoria-nav-shell.diretoria-sidebar:not([data-collapsed='true']) .d
 html.dark .diretoria-nav-shell.diretoria-sidebar:not([data-collapsed='true']) .diretoria-sidebar__update-button:hover {
   color: hsl(var(--sidebar-accent-foreground));
   background: color-mix(in srgb, hsl(var(--sidebar-accent)) 80%, hsl(var(--sidebar-foreground)));
+}
+
+@media (min-width: 700px) {
+  .ipnc-pastor-layout.ipnc-dashboard-shell.ipnc-navigation-layout #pastor-content {
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
 }
 
 @media (max-height: 650px) {

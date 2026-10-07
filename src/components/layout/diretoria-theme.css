@@ -1,73 +1,89 @@
-/* Only contextual layouts belong here; typography comes from the shared system. */
-.diretoria-theme { --content-max-width: 70rem; --font-page-title: 1.5rem; --font-section-title: 1.125rem; --font-card-title: 1.125rem; --font-body-responsive: 1rem; }
-.diretoria-theme .app-page { background: hsl(var(--background)); }
-.diretoria-theme .app-page main { background: hsl(var(--background)); backdrop-filter: none; }
-.diretoria-theme main h1 { font-size: var(--font-page-title); line-height: 1.2; font-weight: 700; letter-spacing: -.025em; }
-.diretoria-theme main h2, .diretoria-theme .ui-card-title { font-size: 18px; line-height: 1.35; }
-.diretoria-theme .diretoria-page-header { background: hsl(var(--card)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 14px; margin-bottom: 16px; box-shadow: none; }
-.diretoria-theme .page-header-decoration { display: none; }
-.diretoria-theme .diretoria-page-header h1 { color: hsl(var(--foreground)); text-shadow: none; filter: none; }
-.diretoria-theme .diretoria-page-header p { color: hsl(var(--muted-foreground)); font-size: .875rem; }
-.diretoria-theme .page-header-icon { width: 36px; height: 36px; border-radius: 12px; background: hsl(var(--primary)/.08); color: hsl(var(--primary)); box-shadow: none; }
-.diretoria-theme .page-header-icon svg { width: 20px; height: 20px; }
-.diretoria-theme .page-header-actions button { color: hsl(var(--primary-foreground)); background: hsl(var(--primary)); border-color: transparent; backdrop-filter: none; }
-.diretoria-theme .page-header-actions button:hover { background: hsl(var(--primary)/.9); }
-.diretoria-theme .diretoria-mobile-header { background: hsl(var(--card)); color: hsl(var(--foreground)); border-color: hsl(var(--border)); box-shadow: none; }
-.diretoria-theme .diretoria-mobile-header > .pointer-events-none { display: none; }
-.diretoria-theme .diretoria-mobile-header p { color: hsl(var(--foreground)); }
-.diretoria-theme .diretoria-mobile-header p + p { color: hsl(var(--muted-foreground)); font-size: .8125rem; }
-.diretoria-theme .diretoria-mobile-header button { color: hsl(var(--primary)) !important; background: transparent; box-shadow: none; border-color: transparent; min-width: 48px; min-height: 48px; }
-.diretoria-theme .diretoria-welcome { padding: 16px; box-shadow: none; }
-.diretoria-theme .ui-card, .diretoria-theme .ui-app-card, .diretoria-theme .summary-card { border: 1px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card)); box-shadow: none; backdrop-filter: none; }
-.diretoria-theme .ui-card-header { padding: 16px; }
-.diretoria-theme .ui-card-content { padding: 16px; }
-.diretoria-theme .ui-card-header + .ui-card-content { padding-top: 0; }
-.diretoria-theme .ui-card-content.p-0 { padding: 0; }
-.diretoria-theme .summary-card { padding: 16px; min-height: 0; gap: 8px; }
-.diretoria-theme .summary-card > div:first-child:not(.summary-card-content) { width: 30px; height: 30px; border-radius: 9px; }
-.diretoria-theme .summary-card svg { width: 16px; height: 16px; }
-.diretoria-theme .summary-label { font-size: .875rem; line-height: 1.4; }
-.diretoria-theme .summary-meta { font-size: .8125rem; line-height: 1.4; }
-.diretoria-theme .ui-button { min-height: 48px; height: auto; font-size: .875rem; line-height: 1.35; white-space: normal; border-radius: 12px; box-shadow: none; backdrop-filter: none; }
-.diretoria-theme .ui-button[data-size='icon'] { min-width: 48px; width: 48px; flex-shrink: 0; }
-.diretoria-theme .ui-button[data-variant='outline'], .diretoria-theme .ui-button[data-variant='secondary'] { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); }
-.diretoria-theme .ui-badge { line-height: 1.35; height: auto; min-height: 20px; font-size: .8125rem; }
-.diretoria-theme :is(input:not([type='checkbox']):not([type='radio']), textarea, [role='combobox']) { min-width: 0; max-width: 100%; border-radius: 12px; }
-.diretoria-theme input:not([type='checkbox']):not([type='radio']) { min-height: 48px; }
-.diretoria-theme .ui-dialog, .diretoria-theme [role='alertdialog'] { grid-template-columns: minmax(0, 1fr); width: calc(100vw - 32px); max-width: min(640px, calc(100vw - 32px)); border-radius: 20px; padding: 20px; background: hsl(var(--card)); }
-.diretoria-theme .ui-dialog > *, .diretoria-theme [role='alertdialog'] > * { min-width: 0; }
-.diretoria-theme .ui-dialog h2, .diretoria-theme [role='alertdialog'] h2 { font-size: 18px; }
-.diretoria-theme [role='tablist'] { gap: 4px; }
-.diretoria-theme [role='tab'] { font-size: .8125rem; min-height: 48px; }
-.diretoria-theme [role='menuitem'], .diretoria-theme [role='option'] { min-height: 48px; }
-.diretoria-theme :is(button, a, input, textarea, [role='button']):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+/* Shared workspace primitives. Each shell keeps its content and access rules. */
+.ipnc-workspace-theme {
+  --content-max-width: 70rem;
+  --font-page-title: 1.5rem;
+  --font-section-title: 1.125rem;
+  --font-card-title: 1.125rem;
+  --font-body-responsive: 1rem;
+  --workspace-surface: hsl(var(--card));
+  --workspace-line: hsl(var(--border));
+  --workspace-background: radial-gradient(ellipse at 75% 0, #e5f1e9 0, transparent 42%), #f4f8f2;
+  color: hsl(var(--foreground));
+}
+html.dark .ipnc-workspace-theme { --workspace-background: #0d211a; }
+.ipnc-workspace-theme :is(.app-page, .ebd-workspace, .ipnc-pastor-layout, .ipnc-portal) { background: var(--workspace-background); }
+.ipnc-workspace-theme .app-page main { background: var(--workspace-background); backdrop-filter: none; }
+.ipnc-workspace-theme main h1 { font-size: var(--font-page-title); line-height: 1.2; font-weight: 700; letter-spacing: -.025em; }
+.ipnc-workspace-theme main h2, .ipnc-workspace-theme .ui-card-title { font-size: 18px; line-height: 1.35; }
+.ipnc-workspace-theme :is(.ipnc-page-header, .diretoria-page-header) { background: var(--workspace-surface); color: hsl(var(--foreground)); border: 1px solid var(--workspace-line); border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: none; }
+.ipnc-workspace-theme .page-header-decoration { display: none; }
+.ipnc-workspace-theme :is(.ipnc-page-header, .diretoria-page-header) h1 { color: hsl(var(--foreground)); text-shadow: none; filter: none; }
+.ipnc-workspace-theme :is(.ipnc-page-header, .diretoria-page-header) p { color: hsl(var(--muted-foreground)); font-size: .875rem; }
+.ipnc-workspace-theme .page-header-icon { width: 36px; height: 36px; border-radius: 12px; background: hsl(var(--primary)/.08); color: hsl(var(--primary)); box-shadow: none; }
+.ipnc-workspace-theme .page-header-icon svg { width: 20px; height: 20px; }
+.ipnc-workspace-theme .page-header-actions button { color: hsl(var(--primary-foreground)); background: hsl(var(--primary)); border-color: transparent; backdrop-filter: none; }
+.ipnc-workspace-theme .page-header-actions button:hover { background: hsl(var(--primary)/.9); }
+.ipnc-workspace-theme .diretoria-mobile-header { background: var(--workspace-surface); color: hsl(var(--foreground)); border-color: var(--workspace-line); box-shadow: none; }
+.ipnc-workspace-theme .diretoria-mobile-header > .pointer-events-none { display: none; }
+.ipnc-workspace-theme .diretoria-mobile-header p { color: hsl(var(--foreground)); }
+.ipnc-workspace-theme .diretoria-mobile-header p + p { color: hsl(var(--muted-foreground)); font-size: .8125rem; }
+.ipnc-workspace-theme .diretoria-mobile-header button { color: hsl(var(--primary)) !important; background: transparent; box-shadow: none; border-color: transparent; min-width: 48px; min-height: 48px; }
+.ipnc-workspace-theme .diretoria-welcome { padding: 16px; box-shadow: none; }
+.ipnc-workspace-theme :is(.ui-card, .ui-app-card, .summary-card) { min-width: 0; border: 1px solid var(--workspace-line); border-radius: 16px; background: var(--workspace-surface); box-shadow: none; backdrop-filter: none; }
+.ipnc-workspace-theme .ui-card-header, .ipnc-workspace-theme .ui-card-content { padding: 16px; }
+.ipnc-workspace-theme .ui-card-header + .ui-card-content { padding-top: 0; }
+.ipnc-workspace-theme .ui-card-content.p-0 { padding: 0; }
+.ipnc-workspace-theme .summary-card { padding: 16px; min-height: 0; gap: 8px; }
+.ipnc-workspace-theme .summary-card > div:first-child:not(.summary-card-content) { width: 30px; height: 30px; border-radius: 9px; }
+.ipnc-workspace-theme .summary-card svg { width: 16px; height: 16px; }
+.ipnc-workspace-theme .summary-label { font-size: .875rem; line-height: 1.4; }
+.ipnc-workspace-theme .summary-meta { font-size: .8125rem; line-height: 1.4; }
+/* Full-screen PIN entry owns its compact keypad and must never inherit forms. */
+.ipnc-workspace-theme .ui-button:where(:not(.ipnc-pin-key, .ipnc-pin-confirm, .ebd-access__home)) { min-height: 48px; height: auto; font-size: .875rem; line-height: 1.35; white-space: normal; border-radius: 12px; box-shadow: none; backdrop-filter: none; }
+.ipnc-workspace-theme .ui-button:where(:not(.ipnc-pin-key, .ipnc-pin-confirm, .ebd-access__home))[data-size='icon'] { min-width: 48px; width: 48px; flex-shrink: 0; }
+.ipnc-workspace-theme .ui-button:where(:not(.ipnc-pin-key, .ipnc-pin-confirm, .ebd-access__home)):is([data-variant='outline'], [data-variant='secondary']) { background: var(--workspace-surface); border: 1px solid var(--workspace-line); color: hsl(var(--foreground)); }
+.ipnc-workspace-theme .ui-button:where(:not(.ipnc-pin-key, .ipnc-pin-confirm, .ebd-access__home)):is([data-variant='outline'], [data-variant='secondary']):hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.ipnc-workspace-theme .ui-badge { line-height: 1.35; height: auto; min-height: 20px; font-size: .8125rem; }
+.ipnc-workspace-theme :is(input:not([type='checkbox']):not([type='radio']), textarea, select, [role='combobox']) { min-width: 0; max-width: 100%; border-radius: 12px; background-color: var(--workspace-surface); color: hsl(var(--foreground)); }
+.ipnc-workspace-theme :is(input:not([type='checkbox']):not([type='radio']), select, [role='combobox']) { min-height: 48px; }
+.ipnc-workspace-theme :is(.app-dialog-content, [role='alertdialog']):where(:not([data-dialog-size='screen'])) { grid-template-columns: minmax(0, 1fr); width: calc(100vw - max(16px, var(--safe-left, 0px)) - max(16px, var(--safe-right, 0px))); max-width: min(480px, calc(100vw - 32px)); border: 1px solid var(--workspace-line); border-radius: 20px; padding: 20px; background: var(--workspace-surface); color: hsl(var(--foreground)); }
+.ipnc-workspace-theme .app-dialog-content[data-dialog-size='access'] { max-width: min(400px, calc(100vw - 32px)); }
+.ipnc-workspace-theme .app-dialog-content[data-dialog-size='form'] { max-width: min(640px, calc(100vw - 32px)); }
+.ipnc-workspace-theme .app-dialog-content[data-dialog-size='wide'] { max-width: min(880px, calc(100vw - 32px)); }
+.ipnc-workspace-theme :is(.app-dialog-content, [role='alertdialog']):where(:not([data-dialog-size='screen'])) > * { min-width: 0; }
+.ipnc-workspace-theme :is(.app-dialog-content, [role='alertdialog']):where(:not([data-dialog-size='screen'])) h2 { font-size: 18px; }
+.ipnc-workspace-theme :is([role='menu'], [role='listbox']) { border-color: var(--workspace-line); border-radius: 12px; background: hsl(var(--popover)); color: hsl(var(--popover-foreground)); }
+.ipnc-workspace-theme [role='tablist'] { gap: 4px; }
+.ipnc-workspace-theme [role='tab'] { font-size: .8125rem; min-height: 48px; }
+.ipnc-workspace-theme :is([role='menuitem'], [role='option']) { min-height: 48px; }
+.ipnc-workspace-theme :is(button, a, input, select, textarea, [role='button']):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
 @media (max-width: 767px) {
-  .diretoria-theme main h1 { font-size: var(--font-page-title); line-height: 1.2; font-weight: 700; letter-spacing: -.025em; }
-  .diretoria-theme :is(input:not([type='checkbox']):not([type='radio']), textarea, [role='combobox']) { font-size: 16px; }
+  .ipnc-workspace-theme :is(input:not([type='checkbox']):not([type='radio']), textarea, select, [role='combobox']) { font-size: 16px; }
 }
 @media (min-width: 768px) {
-  .diretoria-theme .ui-card-header, .diretoria-theme .ui-card-content { padding: 20px; }
-  .diretoria-theme .ui-card-header + .ui-card-content { padding-top: 0; }
-  .diretoria-theme .ui-card-content.p-0 { padding: 0; }
-  .diretoria-theme .metric-grid { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+  .ipnc-workspace-theme :is(.ipnc-page-header, .diretoria-page-header), .ipnc-workspace-theme .ui-card-header, .ipnc-workspace-theme .ui-card-content { padding: 20px; }
+  .ipnc-workspace-theme .ui-card-header + .ui-card-content { padding-top: 0; }
+  .ipnc-workspace-theme .ui-card-content.p-0 { padding: 0; }
+  .ipnc-workspace-theme .metric-grid { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
 }
-/* Keep every shirt section discoverable without a hidden horizontal menu. */
-.diretoria-theme .finance-tab-panel .shirt-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; height: auto; overflow: visible; }
-.diretoria-theme .finance-tab-panel .shirt-tabs [role='tab'] { min-width: 0; min-height: 48px; font-size: .8125rem; line-height: 1.35; padding-inline: 6px; }
-.diretoria-theme .ui-dialog > button:last-child { min-width: 48px; min-height: 48px; display: flex; align-items: center; justify-content: center; top: 4px; right: 4px; }
-.diretoria-theme .ui-dialog h2 { padding-right: 28px; }
+/* Content-specific controls preserve labels and established financial flows. */
+.ipnc-workspace-theme .finance-tab-panel .shirt-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; height: auto; overflow: visible; }
+.ipnc-workspace-theme .finance-tab-panel .shirt-tabs [role='tab'] { min-width: 0; min-height: 48px; font-size: .8125rem; line-height: 1.35; padding-inline: 6px; }
+.ipnc-workspace-theme .app-dialog-content:where(:not([data-dialog-size='screen'])) > button:last-child { min-width: 48px; min-height: 48px; display: flex; align-items: center; justify-content: center; top: 4px; right: 4px; }
+.ipnc-workspace-theme .app-dialog-content:where(:not([data-dialog-size='screen'])) h2 { padding-right: 28px; }
 @media (min-width: 768px) {
-  .diretoria-theme .finance-tab-panel .shirt-tabs { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .ipnc-workspace-theme .finance-tab-panel .shirt-tabs { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 @media (max-width: 767px) {
-  .diretoria-theme .suggestion-layout { flex-wrap: wrap; }
-  .diretoria-theme .suggestion-actions { flex-basis: 100%; justify-content: flex-end; border-top: 1px solid hsl(var(--border)); padding-top: 4px; }
+  .ipnc-workspace-theme .suggestion-layout { flex-wrap: wrap; }
+  .ipnc-workspace-theme .suggestion-actions { flex-basis: 100%; justify-content: flex-end; border-top: 1px solid var(--workspace-line); padding-top: 4px; }
+  .ipnc-workspace-theme .finance-primary-tabs { width: 100%; grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-columns: auto; }
 }
-@media (max-width: 767px) {
-  .diretoria-theme .finance-primary-tabs { width: 100%; grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-columns: auto; }
-}
-.diretoria-theme .user-card-actions button { min-width: 48px; min-height: 48px; }
-
-@media (min-width: 700px) { .diretoria-theme { --font-page-title: 1.75rem; } }
-
-.diretoria-theme [role="alertdialog"] { max-width:min(480px,calc(100vw - 32px)); }
+.ipnc-workspace-theme .user-card-actions button { min-width: 48px; min-height: 48px; }
+@media (min-width: 700px) { .ipnc-workspace-theme { --font-page-title: 1.75rem; } }
+/* Task completion is a labelled 44px control with its familiar 20px mark. */
+.ipnc-workspace-theme .task-card [role='checkbox'][aria-label] { position: relative; display: inline-grid; place-items: center; width: 44px; min-width: 44px; height: 44px; min-height: 44px; margin-top: -4px; padding: 0; border: 0; background: transparent; }
+.ipnc-workspace-theme .task-card [role='checkbox'][aria-label]::before { content: ''; position: absolute; inset: 12px; border: 1px solid hsl(var(--primary)); border-radius: 3px; background: hsl(var(--card)); pointer-events: none; }
+.ipnc-workspace-theme .task-card [role='checkbox'][aria-label][data-state='checked']::before { background: hsl(var(--primary)); }
+.ipnc-workspace-theme .task-card [role='checkbox'][aria-label]::after { display: none; }
+.ipnc-workspace-theme .task-card [role='checkbox'][aria-label] > span { position: relative; z-index: 1; width: 16px; height: 16px; pointer-events: none; }

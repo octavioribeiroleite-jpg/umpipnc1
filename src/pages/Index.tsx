@@ -32,7 +32,7 @@ import { PastorNotificationBanner } from '@/components/pastor/PastorNotification
 import { PastorLoginNotification } from '@/components/pastor/PastorLoginNotification';
 import { PastorCalendarWidget } from '@/components/pastor/PastorCalendarWidget';
 import { PastorDayEventList } from '@/components/pastor/PastorDayEventList';
-import dashboardChurch from '@/assets/dashboard-church-v1.webp';
+import { DashboardWelcome } from '@/components/layout/DashboardWelcome';
 import './dashboard.css';
 
 type DashboardStats = {
@@ -318,30 +318,11 @@ export default function Index() {
   const societyLabel = society?.slug?.toUpperCase() || 'IPNC';
 
   return (
-    <AppLayout width="wide" variant="dashboard">
-      <div className="diretoria-dashboard">
+    <AppLayout width="wide" variant="dashboard" header={<DashboardHeader hasNotifications={dashboardRead.hasSnapshot && (pendingSubmissions > 0 || dashboardStats.announcements > 0)} />}>
+      <div className="diretoria-dashboard ipnc-dashboard">
       <PastorLoginNotification />
-      <DashboardHeader hasNotifications={dashboardRead.hasSnapshot && (pendingSubmissions > 0 || dashboardStats.announcements > 0)} />
-      <section className="dashboard-welcome" aria-labelledby="dashboard-greeting">
-        <img className="dashboard-welcome-image" src={dashboardChurch} alt="" aria-hidden="true" />
-        <div className="dashboard-welcome-copy">
-          <p className="dashboard-date">{capitalizedDate}</p>
-          <h1 id="dashboard-greeting">{greeting}, <span>{firstName || 'Diretoria'}!</span></h1>
-          <p className="dashboard-society">{societyLabel}{societyLabel !== 'IPNC' ? ' IPNC' : ''} • {dashboardRead.hasSnapshot ? `${dashboardStats.activeMembers} membro${dashboardStats.activeMembers === 1 ? '' : 's'} ativo${dashboardStats.activeMembers === 1 ? '' : 's'}` : 'Diretoria'}</p>
-        </div>
-        <blockquote className="dashboard-verse"><p>“Mas tu, ó homem de Deus,<br />avança...”</p><cite>1 Timóteo 6:11</cite></blockquote>
-          <button
-            type="button"
-            onClick={() => navigate('/comunicados')}
-            className="dashboard-welcome-notifications"
-            aria-label="Abrir comunicados"
-          >
-            <Bell className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
-            {dashboardRead.hasSnapshot && (pendingSubmissions > 0 || dashboardStats.announcements > 0) && (
-              <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-emerald-900" />
-            )}
-          </button>
-      </section>
+      <DashboardWelcome id="dashboard-greeting" date={capitalizedDate} title={<>{greeting}, <span>{firstName || 'Diretoria'}!</span></>} description={`${societyLabel}${societyLabel !== 'IPNC' ? ' IPNC' : ''} • ${dashboardRead.hasSnapshot ? `${dashboardStats.activeMembers} membro${dashboardStats.activeMembers === 1 ? '' : 's'} ativo${dashboardStats.activeMembers === 1 ? '' : 's'}` : 'Diretoria'}`}>
+      </DashboardWelcome>
 
       <PastorNotificationBanner />
       {dashboardRead.error && <div className="mb-section-gap"><QueryErrorState message="Não foi possível consultar os indicadores da diretoria." onRetry={() => void fetchDashboardData()} retrying={dashboardRead.loading} hasPreviousData={dashboardRead.hasSnapshot} /></div>}

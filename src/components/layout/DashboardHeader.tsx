@@ -1,41 +1,38 @@
-import { Bell, ChevronDown, LogOut, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Bell, Download, LogOut, RefreshCw, Settings } from 'lucide-react';
+import { useRef } from 'react';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { applyUpdateNow } from '@/lib/registerSW';
+import { toast } from 'sonner';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ExitConfirmDialog, useExitConfirm } from './ExitConfirmDialog';
+import { WorkspaceHeader } from './WorkspaceHeader';
 
-export function DashboardHeader({ hasNotifications }: { hasNotifications: boolean }) {
+export function DashboardHeader({ hasNotifications, workspace = 'diretoria' }: { hasNotifications: boolean; workspace?: 'diretoria' | 'pastor' }) {
   const { profile, society, isAdmin, isPastor, signOut } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const accountRef = useRef<HTMLButtonElement>(null);
+  const { isInstalled, open: openInstall } = usePWAInstall();
   const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
   const name = profile?.full_name || 'Diretoria IPNC';
-  const initials = name.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
   const role = isAdmin ? 'Administração' : isPastor ? 'Área pastoral' : 'Diretoria';
   const scope = society?.slug?.toUpperCase();
+  const pastoral = workspace === 'pastor' || (isPastor && !isAdmin);
 
-  return <header className="dashboard-topbar">
-    <p className="dashboard-motto">Juntos por uma igreja viva,<br />servindo a Cristo.</p>
-    <div className="dashboard-topbar-actions">
-      <button type="button" className="dashboard-notifications" aria-label="Abrir comunicados" onClick={() => navigate('/comunicados')}>
+  return <>
+    <WorkspaceHeader className="ipnc-workspace-header--diretoria" mobileTitle={pastoral ? 'Painel pastoral' : 'Diretoria IPNC'} accountButtonRef={accountRef} onBack={pathname !== '/' && pathname !== '/pastor' ? () => navigate(-1) : undefined} accountName={name} accountRole={`${role}${scope ? ` — ${scope}` : ''}`} actions={
+      <button type="button" className="dashboard-notifications" aria-label="Abrir comunicados" onClick={() => navigate(pastoral ? '/pastor/comunicados' : '/comunicados')}>
         <Bell aria-hidden="true" />
         {hasNotifications && <span className="dashboard-notification-dot" aria-label="Há pendências ou comunicados" />}
       </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button type="button" className="dashboard-account" aria-label={`Abrir menu da conta de ${name}`}>
-            <span className="dashboard-avatar" aria-hidden="true">{initials}</span>
-            <span className="dashboard-account-copy"><strong>{name}</strong><span>{role}{scope ? ` — ${scope}` : ''}</span></span>
-            <ChevronDown className="dashboard-account-chevron" aria-hidden="true" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{name}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
+    } menu={<>
           <DropdownMenuItem onSelect={() => navigate('/configuracoes')}><Settings className="mr-2 h-4 w-4" />Configurações</DropdownMenuItem>
+          {!isInstalled && <DropdownMenuItem onSelect={() => openInstall(accountRef.current ?? undefined)}><Download className="mr-2 h-4 w-4" />Instalar aplicativo</DropdownMenuItem>}
+          <DropdownMenuItem onSelect={() => void applyUpdateNow().catch(error => toast.error(error instanceof Error ? error.message : 'Não foi possível atualizar. Tente novamente.'))}><RefreshCw className="mr-2 h-4 w-4" />Atualizar para última versão</DropdownMenuItem>
           <DropdownMenuItem onSelect={requestExit}><LogOut className="mr-2 h-4 w-4" />Sair</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    </>} />
     <ExitConfirmDialog open={showConfirm} onOpenChange={setShowConfirm} onConfirm={async () => { await signOut(); navigate('/auth'); }} />
-  </header>;
+  </>;
 }

@@ -36,6 +36,9 @@ export async function getTreasuryRenderer() {
         plugins: [{
           name: 'reuse-installed-react',
           setup(build) {
+            // The disconnected static preview has no service-worker runtime.
+            build.onResolve({filter: /\/UpdateAppButton$/}, () => ({path: 'update-button', namespace: 'static-preview'}));
+            build.onLoad({filter: /.*/, namespace: 'static-preview'}, () => ({contents: `import React from 'react'; export const UpdateAppButton=({className})=>React.createElement('button',{type:'button',className,disabled:true,'aria-label':'Atualizar aplicativo'},'Atualizar aplicativo');`, loader: 'js'}));
             build.onResolve({ filter: /^react(?:-dom)?(?:\/|$)/ }, args => ({ path: pathToFileURL(require.resolve(args.path)).href, external: true }));
           },
         }],
@@ -55,7 +58,8 @@ export async function renderTreasuryPreview() {
   const sources = [
     'src/responsive-foundation.css', 'src/auth-readability.css', 'src/society-selector.css',
     'src/identity-confirmation.css', 'src/camisas-separation.css',
-    'src/components/treasury/treasury-dashboard.css',
+    'src/components/layout/diretoria-theme.css', 'src/components/layout/diretoria-navigation.css',
+    'src/components/layout/workspace-header.css', 'src/components/treasury/treasury-dashboard.css',
   ];
   const css = [compiled.css, ...await Promise.all(sources.map(source => readFile(path.join(root, source), 'utf8')))].join('\n');
   const notice = 'Prévia estática · sem conexão com banco · controles ilustrativos';
@@ -65,7 +69,7 @@ export async function renderTreasuryPreview() {
 <title>Prévia estática — Tesouraria IPNC</title>
 <style>${css}</style>
 <style>.preview-notice{padding:12px 20px;background:#fff4d9;color:#634d22;border-bottom:1px solid #e4c887;font:13px/1.6 system-ui,sans-serif}.preview-notice strong{display:block;font-weight:700}.preview-notice p{margin:3px 0 0;font-size:12px}</style>
-</head><body><div id="preview-notice" class="preview-notice" role="note"><strong>${notice}</strong><p>Esta é uma apresentação do layout real do aplicativo. Nenhum saldo ou lançamento foi carregado. Os valores aparecem como “—”; os botões não cadastram, consultam nem compartilham dados. Abra este arquivo diretamente no navegador, sem iniciar um servidor.</p></div><div id="root">${markup}</div></body></html>\n`;
+</head><body class="ipnc-workspace-theme"><div id="preview-notice" class="preview-notice" role="note"><strong>${notice}</strong><p>Esta é uma apresentação do layout real do aplicativo. Nenhum saldo ou lançamento foi carregado. Os valores aparecem como “—”; os botões não cadastram, consultam nem compartilham dados. Abra este arquivo diretamente no navegador, sem iniciar um servidor.</p></div><div id="root">${markup}</div></body></html>\n`;
   const destination = path.join(root, 'docs/treasury/preview.html');
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, html, 'utf8');

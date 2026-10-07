@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-07",
+  "environment": "Chrome temporary tab, isolated Vite fixture on 127.0.0.1:8086",
+  "matrixCases": 400,
+  "counts": {
+    "ebd-admin": 80,
+    "diretoria": 160,
+    "ebd-professor": 30,
+    "pastor": 50,
+    "tesouraria": 20,
+    "portal": 40,
+    "diretoria-header-final": 20
+  },
+  "widths": [
+    375,
+    390,
+    768,
+    1024,
+    1440
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "horizontalOverflowCases": 0,
+  "finalRenderErrors": 0,
+  "initialSmallTargetCases": 16,
+  "resolvedFindings": [
+    {
+      "issue": "NavigationSidebar updateIndicators TypeError blocked AppLayout routes during source iteration",
+      "retest": "All15 internal Diretoria areas ×10 cases rendered after fix"
+    },
+    {
+      "issue": "Planilha student name heights20/24 and checkbox16",
+      "retest": "390/768 light/dark namesheight44 and checkbox44×44; drawing16; local checked state passed"
+    },
+    {
+      "issue": "Tarefas checkbox20",
+      "retest": "390/768/1440 light/dark target44×44 drawing20, no completion action"
+    },
+    {
+      "issue": "Mobile Diretoria old header and duplicate hero notification",
+      "retest": "Home/Tarefas20 final cases, one visible header and one notification control375/390"
+    },
+    {
+      "issue": "EBD cancel birthdate X unnamed",
+      "retest": "Accessible name Cancelar edição de nascimento appears and cancellation removes inline form"
+    },
+    {
+      "issue": "Treasury footer exit icon wrapped onto separate line",
+      "retest": "1440 nowrap confirmed, final sidebar screenshot"
+    }
+  ],
+  "additionalChecks": {
+    "professor": "Home/list Chamada/class Chamada30 cases, only permitted professor UI routes observed",
+    "modals": "Edit task and edit class8 cases390/1440 light/dark, focus initial field, all targetheight≥44; cancel without saving; horizontal content fits. Task mobile modal uses its own24px vertical scroll.",
+    "inline": "Birthdate form4 cases390/1440 light/dark, no horizontal overflow or short control.",
+    "menus": "Diretoria/Pastor account Settings/Install/Update/Exit; EBD account Menu/Install/Exit and notification popover Verificar atualização. All three More menus opened and closed. No actions executed.",
+    "sidebar": "EBD collapse and expand preserved semantic labels and readable content.",
+    "pin": "EBD admin PIN390×844 both themes; pageHeight844/pageWidth390, no dialog/nested workspace, keypad48px, partial1 followed nativeBack returns public profile choice."
+  },
+  "acceptedObservations": [
+    "Tablet rail notification and header notification/update remain in their separate contexts; parent explicitly accepted"
+  ],
+  "fixtureEdits": [
+    "tests/fixtures/ebd-login/backend.ts",
+    "tests/ebd-login-fixture.test.mjs",
+    "tests/fixtures/system-theme/README.md"
+  ],
+  "fixtureTests": "3 targeted fixture tests pass; root reports458 global tests/types/build pass separately",
+  "limits": [
+    "All data fictitious and backend adapters replaced; real backend permissions/RLS, production protected routes, writes, payments/votes/messages not exercised.",
+    "Physical Android/iOS gesture, installed PWA/service worker/install/update not exercised. Chrome native historyBack is a browser equivalent smoke check.",
+    "Geometry and accessible state were inspected in400 width/theme cases; selected representative screenshots were visually inspected. Final representative screenshots await finite CSS animations. Earlier raw captures can include transient theme frames.",
+    "Initial small-target cases remain in raw matrix as historical evidence; targeted final measurements supersede them."
+  ],
+  "finalScreenshots": [
+    "ebd-admin-home-1440-light.png",
+    "ebd-admin-home-1440-dark.png",
+    "ebd-admin-home-390-light.png",
+    "ebd-admin-home-390-dark.png",
+    "diretoria-header-final-home-390-light.png",
+    "diretoria-header-final-tarefas-390-dark.png",
+    "pastor-pastor-375-light.png",
+    "tesouraria-sidebar-final-1440-light.png",
+    "portal-Início-1440-light.png",
+    "ebd-pin-390-dark.png"
+  ],
+  "artifacts": [
+    "matrix.json",
+    "modal-matrix.json",
+    "target-retests.json",
+    "task-target-retests.json",
+    "pin-smoke.json",
+    "ebd-final-home.json",
+    "sidebar-footer-final.json"
+  ]
+}

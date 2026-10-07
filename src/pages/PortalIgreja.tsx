@@ -1,3 +1,4 @@
+import { useWorkspaceTheme } from '@/hooks/useWorkspaceTheme';
 import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useCallback, useState, useEffect, useRef } from 'react';
@@ -21,6 +22,10 @@ import { ptBR } from 'date-fns/locale';
 import logoIpnc from '@/assets/logo-ipnc.png';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { HeaderActions } from '@/components/layout/HeaderActions';
+import { WorkspaceHeader } from '@/components/layout/WorkspaceHeader';
+import { NavigationSidebar, NavigationRail } from '@/components/layout/WorkspaceNavigation';
+import { DashboardWelcome } from '@/components/layout/DashboardWelcome';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 // ---------- Types ----------
 
@@ -200,6 +205,7 @@ function ReturnVisitorConfirm({
 // ---------- Main Component ----------
 
 export default function PortalIgreja() {
+  useWorkspaceTheme();
   const [visitor, setVisitor] = useState<VisitorData | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -428,41 +434,37 @@ function Portal({ visitor }: { visitor: VisitorData }) {
     </button>)}
   </nav>;
 
-  return <div ref={shellRef} className="ipnc-portal ipnc-safe-managed min-h-[var(--app-viewport-height)] min-w-0 bg-background min-[700px]:flex">
-    <aside aria-label="Portal da igreja" className="sticky top-0 hidden h-[var(--app-viewport-height)] w-[calc(76px+var(--safe-left))] shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar text-sidebar-foreground p-[8px] pl-[calc(8px+var(--safe-left))] min-[700px]:flex min-[1100px]:w-[calc(224px+var(--safe-left))] min-[1100px]:p-[16px] min-[1100px]:pl-[calc(16px+var(--safe-left))]">
-      <div className="safe-top">
-      <div className="flex min-h-[64px] items-center gap-3 min-[1100px]:px-2">
-        <img src={logoIpnc} alt="Marca IPNC" className="h-[44px] w-[44px] shrink-0 rounded-xl bg-white p-1 object-contain" />
-        <span className="hidden min-w-0 text-base font-semibold min-[1100px]:block">Portal da igreja</span>
-      </div>
-      </div>
-      {renderMenu(true)}
-      <div className="safe-bottom border-t border-border pt-4">
-        <p className="hidden [overflow-wrap:anywhere] text-base min-[1100px]:block">{visitor.fullName}</p>
-        <Button variant="ghost" className="mt-2 w-full min-w-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground min-[1100px]:justify-start" onClick={() => navigate('/auth')} aria-label="Acessar como responsável" title="Acessar como responsável">
-          <LogIn className="h-[20px] w-[20px] shrink-0" /><span className="hidden min-[1100px]:inline">Acesso responsável</span>
-        </Button>
-      </div>
-    </aside>
+  const navigation = {
+    items: tabs.map(item => ({ ...item, active: activeTab === item.key, onClick: () => handleTabChange(item.key) })),
+    onHome: () => handleTabChange('inicio'),
+    homeLabel: 'Início do portal da igreja',
+    navigationLabel: 'Seções do portal',
+    onExit: () => navigate('/auth'),
+    exitLabel: 'Acesso responsável',
+  };
+
+  return <div ref={shellRef} className="ipnc-portal ipnc-navigation-layout ipnc-dashboard-shell ipnc-safe-managed min-h-[var(--app-viewport-height)] min-w-0 bg-background min-[700px]:flex">
+    <div className="hidden min-[1100px]:flex"><NavigationSidebar {...navigation} profile={{ name: visitor.fullName, description: 'Portal da igreja' }} /></div>
+    <div className="hidden min-[700px]:flex min-[1100px]:hidden"><NavigationRail {...navigation} /></div>
     <div className="flex min-w-0 flex-1 flex-col">
       <a href="#portal-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-card focus:p-3">Ir para o conteúdo</a>
-      <header className="ipnc-safe-page-x sticky top-0 z-40 border-b border-border bg-card safe-top">
-        <div className="mx-auto flex max-w-[1120px] min-w-0 flex-wrap items-center justify-between gap-3 py-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild><Button variant="ghost" size="icon" className="shrink-0 min-[700px]:hidden" aria-label="Abrir navegação da igreja"><Menu className="h-5 w-5" /></Button></SheetTrigger>
-              <SheetContent side="left" className="flex w-[280px] max-w-[85vw] flex-col gap-5 bg-card p-[16px]">
-                <SheetTitle>Portal da igreja</SheetTitle>{renderMenu()}
-                <div className="border-t border-border pt-4"><p className="[overflow-wrap:anywhere] text-base font-medium">{visitor.fullName}</p><p className="text-sm text-muted-foreground">{visitor.isVisitor ? 'Visitante' : 'Membro'}</p></div>
-                <Button variant="outline" onClick={() => { setMenuOpen(false); navigate('/auth'); }}><LogIn className="mr-2 h-4 w-4" />Acesso responsável</Button>
-              </SheetContent>
-            </Sheet>
-            <div className="min-w-0"><p className="[overflow-wrap:anywhere] text-base font-semibold">Portal da igreja</p><p title={visitor.fullName} className="[overflow-wrap:anywhere] text-sm text-muted-foreground">Olá, {visitor.fullName.split(' ')[0]}!</p></div>
-          </div>
+      <div className="ipnc-safe-page-x mx-auto w-full max-w-[1120px] min-w-0 pt-[max(16px,var(--safe-top))]">
+        <WorkspaceHeader mobileTitle="Portal da igreja" accountName={visitor.fullName} accountRole={visitor.isVisitor ? 'Visitante · IPNC' : 'Membro · IPNC'} actions={<>
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild><Button variant="ghost" size="icon" className="shrink-0 min-[700px]:hidden" aria-label="Abrir navegação da igreja"><Menu className="h-5 w-5" /></Button></SheetTrigger>
+            <SheetContent side="left" className="flex w-[280px] max-w-[85vw] flex-col gap-5 bg-card p-[16px]">
+              <SheetTitle>Portal da igreja</SheetTitle>{renderMenu()}
+              <div className="border-t border-border pt-4"><p className="[overflow-wrap:anywhere] text-base font-medium">{visitor.fullName}</p><p className="text-sm text-muted-foreground">{visitor.isVisitor ? 'Visitante' : 'Membro'}</p></div>
+              <Button variant="outline" onClick={() => { setMenuOpen(false); navigate('/auth'); }}><LogIn className="mr-2 h-4 w-4" />Acesso responsável</Button>
+            </SheetContent>
+          </Sheet>
           <HeaderActions showInstall={false} showVersion={false} />
-        </div>
-      </header>
-      <main id="portal-content" tabIndex={-1} className="ipnc-safe-page-x mx-auto w-full max-w-[1120px] min-w-0 flex-1 py-[20px] pb-[calc(var(--portal-nav-height,64px)+20px)] min-[700px]:pb-[calc(24px+var(--safe-bottom))]">
+        </>} menu={<>
+          <DropdownMenuItem onSelect={() => handleTabChange('inicio')}><Home className="mr-2 h-4 w-4" />Início do portal</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => navigate('/auth')}><LogIn className="mr-2 h-4 w-4" />Acesso responsável</DropdownMenuItem>
+        </>} />
+      </div>
+      <main id="portal-content" tabIndex={-1} className="ipnc-dashboard ipnc-safe-page-x mx-auto w-full max-w-[1120px] min-w-0 flex-1 pt-0 pb-[calc(var(--portal-nav-height,64px)+20px)] min-[700px]:pb-[calc(24px+var(--safe-bottom))]">
         {activeTab !== 'inicio' && <PageHeader title={tabs.find(tab => tab.key === activeTab)?.label || 'Portal da igreja'} description="Igreja Presbiteriana de Nova Carapina" />}
         {activeTab === 'inicio' && <InicioTab visitor={visitor} onTabChange={handleTabChange} />}
         {activeTab === 'programacoes' && <ProgramacoesTab />}
@@ -509,13 +511,8 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
 
   return (
     <div className="space-y-4">
-      {/* Saudação bonita */}
-      <section className="rounded-2xl bg-sidebar p-[20px] text-sidebar-foreground min-[700px]:p-[24px]">
-        <p className="mb-2 text-sm font-medium text-sidebar-foreground/80">Igreja Presbiteriana de Nova Carapina</p>
-        <h1 className="[overflow-wrap:anywhere] text-[1.625rem] font-bold leading-tight min-[700px]:text-[2rem]">Bem-vindo à nossa comunidade, {firstName}!</h1>
-        <p className="mt-3 text-base leading-relaxed text-sidebar-foreground/90">Programações e avisos da igreja em um só lugar.</p>
-        <Button variant="secondary" className="mt-4 min-h-[48px]" onClick={() => onTabChange('programacoes')}>Ver programações <ChevronRight className="ml-2 h-4 w-4" /></Button>
-      </section>
+      <DashboardWelcome id="portal-welcome-title" date="Igreja Presbiteriana de Nova Carapina" title={<>Bem-vindo, <span>{firstName}!</span></>} description="Programações e avisos da igreja em um só lugar." />
+      <Button variant="outline" className="min-h-[48px]" onClick={() => onTabChange('programacoes')}>Ver programações <ChevronRight className="ml-2 h-4 w-4" /></Button>
       {readFailure}
 
       {/* Próximo Evento */}
