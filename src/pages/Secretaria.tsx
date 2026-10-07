@@ -285,7 +285,8 @@ export default function Secretaria() {
   const [adminPin, setAdminPin] = useState('');
   const [birthdayAiToken, setBirthdayAiToken] = useState(storedSession?.birthdayAiToken ?? '');
   const [birthdayAiExpiresAt, setBirthdayAiExpiresAt] = useState(storedSession?.birthdayAiExpiresAt ?? '');
-  const [aiReauthOpen, setAiReauthOpen] = useState(false);
+  const [aiReauthOpen, setAiReauthOpen] = useState(() => Boolean(storedSession &&
+    (!storedSession.birthdayAiExpiresAt || !(Date.parse(storedSession.birthdayAiExpiresAt) > Date.now()))));
   const [classes, setClasses] = useState<EbdClass[]>([]);
   const [activeStudents, setActiveStudents] = useState<EbdStudent[]>([]);
   const [allStudents, setAllStudents] = useState<EbdStudent[]>([]);
@@ -303,7 +304,7 @@ export default function Secretaria() {
     () => setShowExitConfirm(true),
     () => {
       if (showExitConfirm) { if (!signingOut) setShowExitConfirm(false); return true; }
-      if (aiReauthOpen) { if (!loading) setAiReauthOpen(false); return true; }
+      if (aiReauthOpen) { handleCancelReauth(); return true; }
       return false;
     });
   const currentView = navigation.screen.view;
@@ -453,6 +454,7 @@ export default function Secretaria() {
   };
 
   const handleBack = () => {
+    if (entryRequestRef.current) return false;
     setLoginStep('profile');
     setSelectedProfile(null);
     setPinError(false);
@@ -585,15 +587,27 @@ export default function Secretaria() {
     await fetchData();
     toast.success('Dia reaberto!');
   };
+  const handleCancelReauth = () => {
+    if (loading || entryRequestRef.current) return false;
+    // Abandon the expired local access before removing its covering PIN.
+    // Successful renewal still keeps the mounted draft and restores focus.
+    navigation.clear();
+    clearStoredEbdSession();
+    setAccessLevel(null);
+    setAiReauthOpen(false);
+    handleBack();
+    navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } });
+  };
   const reauthDialog = (
-    <Dialog open={aiReauthOpen} onOpenChange={(open) => { if (!loading) setAiReauthOpen(open); }}>
+    <Dialog open={aiReauthOpen} onOpenChange={(open) => { if (!open) handleCancelReauth(); }}>
       <DialogContent className="ebd-reauth" size="screen" showCloseButton={false}>
         <DialogTitle className="sr-only">Confirmar acesso à Secretaria EBD</DialogTitle>
         <DialogDescription className="sr-only">Digite novamente o PIN do seu acesso. Seus dados preenchidos continuam na tela.</DialogDescription>
         <PinPad
           profileLabel={accessLevel === 'admin' ? 'Secretaria EBD' : 'Secretaria EBD · Professor'}
-          onBack={() => setAiReauthOpen(false)}
-          onHome={() => navigate(APP_HOME_PATH, { replace: true, state: { skipSplash: true } })}
+          reuseEbdHistory
+          onBack={handleCancelReauth}
+          onHome={handleCancelReauth}
           onComplete={refreshBirthdaySession}
           loading={loading}
           error={pinError}

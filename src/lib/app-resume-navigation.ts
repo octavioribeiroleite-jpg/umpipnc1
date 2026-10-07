@@ -32,10 +32,10 @@ export function startAppResumeHome(browser: Window, device: Navigator) {
     }
   };
 
-  // Every installed document starts at home, even when a recent stamp, restored
+  // Every new site/PWA document starts at home, even when a recent stamp, restored
   // session or service-worker update has restored a private URL. Deliberately
   // opened recovery and public-election links still keep their destination.
-  if (installed && !hasDirectEntryIntent(browser.location)) returnHome();
+  if (!hasDirectEntryIntent(browser.location)) returnHome();
 
   const isFileInput = (event: Event) => {
     const target = event.target as HTMLInputElement | null;
@@ -99,7 +99,7 @@ export function startAppResumeHome(browser: Window, device: Navigator) {
     timeoutMs: installed ? 0 : undefined,
     shouldPreserveBackground: () => installed && filePickerPending,
     onReturnHome: ({ reason }) => {
-      if (reason === 'cold-start' && (installed || hasDirectEntryIntent(browser.location))) return;
+      if (reason === 'cold-start') return; // Boot already chose Home or a direct public/recovery link.
       returnHome();
     },
   });

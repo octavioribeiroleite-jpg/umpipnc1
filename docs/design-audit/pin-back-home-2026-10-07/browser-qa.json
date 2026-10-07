@@ -1,0 +1,1231 @@
+{
+  "date": "2026-10-07",
+  "source": "worktree ipnc-visual-completo, final guard reuseEbdHistory",
+  "browser": "Chrome tab2064820860, CDP metrics scoped to tab only",
+  "cases": [
+    {
+      "case": "diretoria-ump-native-partial",
+      "pass": true
+    },
+    {
+      "case": "Acessar SAF — SAF-visible-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "Acessar UCP — UCP-visible-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "UMP-native-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "Acessar UPA — UPA-visible-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "Acessar UPH — UPH-visible-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "Acesso pastoral-visible-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "Acessar SAF — SAF-native-partial",
+      "pass": true
+    },
+    {
+      "case": "Acessar UCP — UCP-native-partial",
+      "pass": true
+    },
+    {
+      "case": "Acessar UMP — União de Jovens — Exemplo-native-partial",
+      "pass": true
+    },
+    {
+      "case": "Acessar UPA — UPA-native-partial",
+      "pass": true
+    },
+    {
+      "case": "Acessar UPH — UPH-native-partial",
+      "pass": true
+    },
+    {
+      "case": "Acesso pastoral-native-partial",
+      "pass": true
+    },
+    {
+      "case": "ebd-initial-Administrador Acesso completo à chamada, histórico, turmas e configurações.-native-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "ebd-initial-Administrador Acesso completo à chamada, histórico, turmas e configurações.-visible-partial",
+      "pass": true
+    },
+    {
+      "case": "ebd-initial-Professor Acesso rápido para registrar chamada e acompanhar sua turma.-native-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "ebd-initial-Professor Acesso rápido para registrar chamada e acompanhar sua turma.-visible-partial",
+      "pass": true
+    },
+    {
+      "case": "ebd-renewal-admin-native-complete-unsent",
+      "pass": true,
+      "storage": {
+        "result": {
+          "type": "string",
+          "value": "{\"url\":\"http://127.0.0.1:8086/auth?home=1\",\"session\":null,\"auth\":null,\"localTrail\":null,\"sessionTrail\":null,\"gate\":false}"
+        }
+      }
+    },
+    {
+      "case": "ebd-renewal-admin-repeated-native-after-cancel",
+      "pass": true
+    },
+    {
+      "case": "ebd-renewal-professor-visible-partial",
+      "pass": true
+    },
+    {
+      "case": "ebd-renewal-admin-escape-empty",
+      "pass": true
+    },
+    {
+      "case": "ebd-renewal-professor-native-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "treasury-UMP União de Mocidade Presbiteriana — fictícia-native-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "treasury-UMP União de Mocidade Presbiteriana — fictícia-visible-partial",
+      "pass": true
+    },
+    {
+      "case": "treasury-SAF Sociedade Auxiliadora Feminina — fictícia-native-complete-unsent",
+      "pass": true
+    },
+    {
+      "case": "treasury-SAF Sociedade Auxiliadora Feminina — fictícia-visible-partial",
+      "pass": true
+    },
+    {
+      "case": "ebd-renewal-pending-repeated-native",
+      "pass": true,
+      "note": "Dois Back não abandonaram validação; conclusão exibiu workspace somente após PIN fictício válido."
+    },
+    {
+      "case": "ebd-renewal-pending-native-repeated-escape",
+      "pass": true
+    },
+    {
+      "case": "renewal-success-preserves-draft-focus",
+      "pass": true,
+      "before": {
+        "draft": [
+          {
+            "placeholder": "Nome do visitante (opcional)",
+            "value": "Rascunho QA isolado — não salvar"
+          }
+        ],
+        "focused": "INPUT",
+        "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a"
+      },
+      "during": {
+        "draft": [
+          {
+            "placeholder": "Nome do visitante (opcional)",
+            "value": "Rascunho QA isolado — não salvar"
+          }
+        ],
+        "focus": "ipnc-pin-card",
+        "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a"
+      },
+      "after": {
+        "draft": [
+          {
+            "placeholder": "Nome do visitante (opcional)",
+            "value": "Rascunho QA isolado — não salvar"
+          }
+        ],
+        "focus": "INPUT",
+        "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a"
+      }
+    },
+    {
+      "case": "ebd-initial-wrong-pin-native",
+      "pass": true
+    },
+    {
+      "case": "ebd-initial-pending-repeated-native",
+      "pass": true
+    },
+    {
+      "case": "ebd-initial-pending-error-native-recovery",
+      "pass": true,
+      "note": "Erro transitório já terminou antes da inspeção; PIN resetado para0, Back retorna perfis."
+    },
+    {
+      "case": "diretoria-pending-repeated-native",
+      "pass": true
+    },
+    {
+      "case": "diretoria-error-remount-native",
+      "pass": true
+    },
+    {
+      "case": "treasury-error-remount-native",
+      "pass": true
+    },
+    {
+      "case": "final-cold-expired-native-fallback",
+      "pass": true,
+      "before": {
+        "result": {
+          "type": "string",
+          "value": "{\"state\":{\"idx\":3,\"ebdFloor\":false,\"ebdTrail\":{\"owner\":\"admin:\",\"id\":\"63aec7e7-44d5-4564-a7f4-a330511fdd2d\",\"screens\":[{\"view\":\"home\"},{\"view\":\"chamada\"},{\"view\":\"chamada\",\"classId\":\"fixture-class-a\"}]},\"ipncPinBack\":\"f4fe739a-22bb-4f2f-83ef-df057c2f4998\"},\"url\":\"http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a\"}"
+        }
+      }
+    },
+    {
+      "case": "final-successful-renewal-draft-native-back-trail",
+      "pass": true,
+      "pre": {
+        "result": {
+          "type": "string",
+          "value": "{\"state\":{\"idx\":3,\"ebdFloor\":false,\"ebdTrail\":{\"owner\":\"admin:\",\"id\":\"f9c1fabb-dee2-4764-b066-3cd28e5ba38c\",\"screens\":[{\"view\":\"home\"},{\"view\":\"chamada\"},{\"view\":\"chamada\",\"classId\":\"fixture-class-a\"}]},\"ipncPinBack\":\"5ca31ff6-fd3d-453b-b6f1-edb1e936c140\"},\"url\":\"http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a\",\"length\":50}"
+        }
+      },
+      "draft": {
+        "focus": "INPUT",
+        "url": "http://127.0.0.1:8086/secretaria?view=chamada&class=fixture-class-a",
+        "value": "Rascunho final QA — não salvar"
+      },
+      "firstUrl": "http://127.0.0.1:8086/secretaria?view=chamada"
+    },
+    {
+      "case": "final-renewal-preserves-forward-and-first-back",
+      "pass": true,
+      "forwardUrl": "http://127.0.0.1:8086/secretaria?view=chamada"
+    },
+    {
+      "case": "final-reused-ebd-history-professor-busy-native-escape",
+      "pass": true
+    },
+    {
+      "case": "final-reused-error-professor-visible-cancel",
+      "pass": true,
+      "cleared": {
+        "result": {
+          "type": "string",
+          "value": "{\"session\":null,\"trail\":null,\"url\":\"http://127.0.0.1:8086/auth?home=1\"}"
+        }
+      }
+    }
+  ],
+  "viewportMatrix": [
+    {
+      "dimensions": [
+        320,
+        640
+      ],
+      "geometry": {
+        "controls": [
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 77.2109375,
+              "x": 18,
+              "y": 44
+            },
+            "text": "Voltar"
+          },
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 167.2265625,
+              "x": 134.7734375,
+              "y": 44
+            },
+            "text": "Voltar para a Home"
+          },
+          {
+            "rect": {
+              "bottom": 361.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 18,
+              "y": 317.109375
+            },
+            "text": "1"
+          },
+          {
+            "rect": {
+              "bottom": 361.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 114.6640625,
+              "y": 317.109375
+            },
+            "text": "2"
+          },
+          {
+            "rect": {
+              "bottom": 361.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 211.328125,
+              "y": 317.109375
+            },
+            "text": "3"
+          },
+          {
+            "rect": {
+              "bottom": 411.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 18,
+              "y": 367.109375
+            },
+            "text": "4"
+          },
+          {
+            "rect": {
+              "bottom": 411.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 114.6640625,
+              "y": 367.109375
+            },
+            "text": "5"
+          },
+          {
+            "rect": {
+              "bottom": 411.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 211.328125,
+              "y": 367.109375
+            },
+            "text": "6"
+          },
+          {
+            "rect": {
+              "bottom": 461.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 18,
+              "y": 417.109375
+            },
+            "text": "7"
+          },
+          {
+            "rect": {
+              "bottom": 461.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 114.6640625,
+              "y": 417.109375
+            },
+            "text": "8"
+          },
+          {
+            "rect": {
+              "bottom": 461.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 211.328125,
+              "y": 417.109375
+            },
+            "text": "9"
+          },
+          {
+            "rect": {
+              "bottom": 511.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 18,
+              "y": 467.109375
+            },
+            "text": "Limpar"
+          },
+          {
+            "rect": {
+              "bottom": 511.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 114.6640625,
+              "y": 467.109375
+            },
+            "text": "0"
+          },
+          {
+            "rect": {
+              "bottom": 511.109375,
+              "height": 44,
+              "width": 90.6640625,
+              "x": 211.328125,
+              "y": 467.109375
+            },
+            "text": ""
+          },
+          {
+            "rect": {
+              "bottom": 563.109375,
+              "height": 44,
+              "width": 284,
+              "x": 18,
+              "y": 519.109375
+            },
+            "text": "Confirmar e entrar"
+          }
+        ],
+        "height": 640,
+        "scrollHeight": 640,
+        "scrollWidth": 320,
+        "width": 320
+      },
+      "pass": true
+    },
+    {
+      "dimensions": [
+        375,
+        740
+      ],
+      "geometry": {
+        "controls": [
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 77.2109375,
+              "x": 18,
+              "y": 44
+            },
+            "text": "Voltar"
+          },
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 167.2265625,
+              "x": 189.7734375,
+              "y": 44
+            },
+            "text": "Voltar para a Home"
+          },
+          {
+            "rect": {
+              "bottom": 411.109375,
+              "height": 44,
+              "width": 109,
+              "x": 18,
+              "y": 367.109375
+            },
+            "text": "1"
+          },
+          {
+            "rect": {
+              "bottom": 411.109375,
+              "height": 44,
+              "width": 109,
+              "x": 133,
+              "y": 367.109375
+            },
+            "text": "2"
+          },
+          {
+            "rect": {
+              "bottom": 411.109375,
+              "height": 44,
+              "width": 109,
+              "x": 248,
+              "y": 367.109375
+            },
+            "text": "3"
+          },
+          {
+            "rect": {
+              "bottom": 461.109375,
+              "height": 44,
+              "width": 109,
+              "x": 18,
+              "y": 417.109375
+            },
+            "text": "4"
+          },
+          {
+            "rect": {
+              "bottom": 461.109375,
+              "height": 44,
+              "width": 109,
+              "x": 133,
+              "y": 417.109375
+            },
+            "text": "5"
+          },
+          {
+            "rect": {
+              "bottom": 461.109375,
+              "height": 44,
+              "width": 109,
+              "x": 248,
+              "y": 417.109375
+            },
+            "text": "6"
+          },
+          {
+            "rect": {
+              "bottom": 511.109375,
+              "height": 44,
+              "width": 109,
+              "x": 18,
+              "y": 467.109375
+            },
+            "text": "7"
+          },
+          {
+            "rect": {
+              "bottom": 511.109375,
+              "height": 44,
+              "width": 109,
+              "x": 133,
+              "y": 467.109375
+            },
+            "text": "8"
+          },
+          {
+            "rect": {
+              "bottom": 511.109375,
+              "height": 44,
+              "width": 109,
+              "x": 248,
+              "y": 467.109375
+            },
+            "text": "9"
+          },
+          {
+            "rect": {
+              "bottom": 561.109375,
+              "height": 44,
+              "width": 109,
+              "x": 18,
+              "y": 517.109375
+            },
+            "text": "Limpar"
+          },
+          {
+            "rect": {
+              "bottom": 561.109375,
+              "height": 44,
+              "width": 109,
+              "x": 133,
+              "y": 517.109375
+            },
+            "text": "0"
+          },
+          {
+            "rect": {
+              "bottom": 561.109375,
+              "height": 44,
+              "width": 109,
+              "x": 248,
+              "y": 517.109375
+            },
+            "text": ""
+          },
+          {
+            "rect": {
+              "bottom": 613.109375,
+              "height": 44,
+              "width": 339,
+              "x": 18,
+              "y": 569.109375
+            },
+            "text": "Confirmar e entrar"
+          }
+        ],
+        "height": 740,
+        "scrollHeight": 740,
+        "scrollWidth": 375,
+        "width": 375
+      },
+      "pass": true
+    },
+    {
+      "dimensions": [
+        390,
+        844
+      ],
+      "geometry": {
+        "controls": [
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 77.2109375,
+              "x": 18,
+              "y": 44
+            },
+            "text": "Voltar"
+          },
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 167.2265625,
+              "x": 204.7734375,
+              "y": 44
+            },
+            "text": "Voltar para a Home"
+          },
+          {
+            "rect": {
+              "bottom": 504.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 18,
+              "y": 456.1640625
+            },
+            "text": "1"
+          },
+          {
+            "rect": {
+              "bottom": 504.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 138.6640625,
+              "y": 456.1640625
+            },
+            "text": "2"
+          },
+          {
+            "rect": {
+              "bottom": 504.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 259.328125,
+              "y": 456.1640625
+            },
+            "text": "3"
+          },
+          {
+            "rect": {
+              "bottom": 560.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 18,
+              "y": 512.1640625
+            },
+            "text": "4"
+          },
+          {
+            "rect": {
+              "bottom": 560.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 138.6640625,
+              "y": 512.1640625
+            },
+            "text": "5"
+          },
+          {
+            "rect": {
+              "bottom": 560.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 259.328125,
+              "y": 512.1640625
+            },
+            "text": "6"
+          },
+          {
+            "rect": {
+              "bottom": 616.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 18,
+              "y": 568.1640625
+            },
+            "text": "7"
+          },
+          {
+            "rect": {
+              "bottom": 616.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 138.6640625,
+              "y": 568.1640625
+            },
+            "text": "8"
+          },
+          {
+            "rect": {
+              "bottom": 616.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 259.328125,
+              "y": 568.1640625
+            },
+            "text": "9"
+          },
+          {
+            "rect": {
+              "bottom": 672.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 18,
+              "y": 624.1640625
+            },
+            "text": "Limpar"
+          },
+          {
+            "rect": {
+              "bottom": 672.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 138.6640625,
+              "y": 624.1640625
+            },
+            "text": "0"
+          },
+          {
+            "rect": {
+              "bottom": 672.1640625,
+              "height": 48,
+              "width": 112.6640625,
+              "x": 259.328125,
+              "y": 624.1640625
+            },
+            "text": ""
+          },
+          {
+            "rect": {
+              "bottom": 726.1640625,
+              "height": 44,
+              "width": 354,
+              "x": 18,
+              "y": 682.1640625
+            },
+            "text": "Confirmar e entrar"
+          }
+        ],
+        "height": 844,
+        "scrollHeight": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "pass": true
+    },
+    {
+      "dimensions": [
+        768,
+        1024
+      ],
+      "geometry": {
+        "controls": [
+          {
+            "rect": {
+              "bottom": 92,
+              "height": 48,
+              "width": 103.09375,
+              "x": 24,
+              "y": 44
+            },
+            "text": "Voltar"
+          },
+          {
+            "rect": {
+              "bottom": 92,
+              "height": 48,
+              "width": 187.2265625,
+              "x": 556.7734375,
+              "y": 44
+            },
+            "text": "Voltar para a Home"
+          },
+          {
+            "rect": {
+              "bottom": 663.3359375,
+              "height": 58,
+              "width": 153.328125,
+              "x": 144,
+              "y": 605.3359375
+            },
+            "text": "1"
+          },
+          {
+            "rect": {
+              "bottom": 663.3359375,
+              "height": 58,
+              "width": 153.3359375,
+              "x": 307.328125,
+              "y": 605.3359375
+            },
+            "text": "2"
+          },
+          {
+            "rect": {
+              "bottom": 663.3359375,
+              "height": 58,
+              "width": 153.328125,
+              "x": 470.6640625,
+              "y": 605.3359375
+            },
+            "text": "3"
+          },
+          {
+            "rect": {
+              "bottom": 731.3359375,
+              "height": 58,
+              "width": 153.328125,
+              "x": 144,
+              "y": 673.3359375
+            },
+            "text": "4"
+          },
+          {
+            "rect": {
+              "bottom": 731.3359375,
+              "height": 58,
+              "width": 153.3359375,
+              "x": 307.328125,
+              "y": 673.3359375
+            },
+            "text": "5"
+          },
+          {
+            "rect": {
+              "bottom": 731.3359375,
+              "height": 58,
+              "width": 153.328125,
+              "x": 470.6640625,
+              "y": 673.3359375
+            },
+            "text": "6"
+          },
+          {
+            "rect": {
+              "bottom": 799.3359375,
+              "height": 58,
+              "width": 153.328125,
+              "x": 144,
+              "y": 741.3359375
+            },
+            "text": "7"
+          },
+          {
+            "rect": {
+              "bottom": 799.3359375,
+              "height": 58,
+              "width": 153.3359375,
+              "x": 307.328125,
+              "y": 741.3359375
+            },
+            "text": "8"
+          },
+          {
+            "rect": {
+              "bottom": 799.3359375,
+              "height": 58,
+              "width": 153.328125,
+              "x": 470.6640625,
+              "y": 741.3359375
+            },
+            "text": "9"
+          },
+          {
+            "rect": {
+              "bottom": 867.3359375,
+              "height": 58,
+              "width": 153.328125,
+              "x": 144,
+              "y": 809.3359375
+            },
+            "text": "Limpar"
+          },
+          {
+            "rect": {
+              "bottom": 867.3359375,
+              "height": 58,
+              "width": 153.3359375,
+              "x": 307.328125,
+              "y": 809.3359375
+            },
+            "text": "0"
+          },
+          {
+            "rect": {
+              "bottom": 867.3359375,
+              "height": 58,
+              "width": 153.328125,
+              "x": 470.6640625,
+              "y": 809.3359375
+            },
+            "text": ""
+          },
+          {
+            "rect": {
+              "bottom": 933.3359375,
+              "height": 48,
+              "width": 480,
+              "x": 144,
+              "y": 885.3359375
+            },
+            "text": "Confirmar e entrar"
+          }
+        ],
+        "height": 1024,
+        "scrollHeight": 1028,
+        "scrollWidth": 768,
+        "width": 768
+      },
+      "pass": false
+    },
+    {
+      "dimensions": [
+        1024,
+        768
+      ],
+      "geometry": {
+        "controls": [
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 77.2109375,
+              "x": 32,
+              "y": 44
+            },
+            "text": "Voltar"
+          },
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 167.2265625,
+              "x": 824.7734375,
+              "y": 44
+            },
+            "text": "Voltar para a Home"
+          },
+          {
+            "rect": {
+              "bottom": 464.609375,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 272,
+              "y": 416.609375
+            },
+            "text": "1"
+          },
+          {
+            "rect": {
+              "bottom": 464.609375,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 434.6640625,
+              "y": 416.609375
+            },
+            "text": "2"
+          },
+          {
+            "rect": {
+              "bottom": 464.609375,
+              "height": 48,
+              "width": 154.671875,
+              "x": 597.328125,
+              "y": 416.609375
+            },
+            "text": "3"
+          },
+          {
+            "rect": {
+              "bottom": 520.609375,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 272,
+              "y": 472.609375
+            },
+            "text": "4"
+          },
+          {
+            "rect": {
+              "bottom": 520.609375,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 434.6640625,
+              "y": 472.609375
+            },
+            "text": "5"
+          },
+          {
+            "rect": {
+              "bottom": 520.609375,
+              "height": 48,
+              "width": 154.671875,
+              "x": 597.328125,
+              "y": 472.609375
+            },
+            "text": "6"
+          },
+          {
+            "rect": {
+              "bottom": 576.609375,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 272,
+              "y": 528.609375
+            },
+            "text": "7"
+          },
+          {
+            "rect": {
+              "bottom": 576.609375,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 434.6640625,
+              "y": 528.609375
+            },
+            "text": "8"
+          },
+          {
+            "rect": {
+              "bottom": 576.609375,
+              "height": 48,
+              "width": 154.671875,
+              "x": 597.328125,
+              "y": 528.609375
+            },
+            "text": "9"
+          },
+          {
+            "rect": {
+              "bottom": 632.609375,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 272,
+              "y": 584.609375
+            },
+            "text": "Limpar"
+          },
+          {
+            "rect": {
+              "bottom": 632.609375,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 434.6640625,
+              "y": 584.609375
+            },
+            "text": "0"
+          },
+          {
+            "rect": {
+              "bottom": 632.609375,
+              "height": 48,
+              "width": 154.671875,
+              "x": 597.328125,
+              "y": 584.609375
+            },
+            "text": ""
+          },
+          {
+            "rect": {
+              "bottom": 686.609375,
+              "height": 44,
+              "width": 480,
+              "x": 272,
+              "y": 642.609375
+            },
+            "text": "Confirmar e entrar"
+          }
+        ],
+        "height": 768,
+        "scrollHeight": 768,
+        "scrollWidth": 1024,
+        "width": 1024
+      },
+      "pass": true
+    },
+    {
+      "dimensions": [
+        1440,
+        900
+      ],
+      "geometry": {
+        "controls": [
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 77.2109375,
+              "x": 32,
+              "y": 44
+            },
+            "text": "Voltar"
+          },
+          {
+            "rect": {
+              "bottom": 88,
+              "height": 44,
+              "width": 167.2265625,
+              "x": 1240.7734375,
+              "y": 44
+            },
+            "text": "Voltar para a Home"
+          },
+          {
+            "rect": {
+              "bottom": 540.5703125,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 480,
+              "y": 492.5703125
+            },
+            "text": "1"
+          },
+          {
+            "rect": {
+              "bottom": 540.5703125,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 642.6640625,
+              "y": 492.5703125
+            },
+            "text": "2"
+          },
+          {
+            "rect": {
+              "bottom": 540.5703125,
+              "height": 48,
+              "width": 154.671875,
+              "x": 805.328125,
+              "y": 492.5703125
+            },
+            "text": "3"
+          },
+          {
+            "rect": {
+              "bottom": 596.5703125,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 480,
+              "y": 548.5703125
+            },
+            "text": "4"
+          },
+          {
+            "rect": {
+              "bottom": 596.5703125,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 642.6640625,
+              "y": 548.5703125
+            },
+            "text": "5"
+          },
+          {
+            "rect": {
+              "bottom": 596.5703125,
+              "height": 48,
+              "width": 154.671875,
+              "x": 805.328125,
+              "y": 548.5703125
+            },
+            "text": "6"
+          },
+          {
+            "rect": {
+              "bottom": 652.5703125,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 480,
+              "y": 604.5703125
+            },
+            "text": "7"
+          },
+          {
+            "rect": {
+              "bottom": 652.5703125,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 642.6640625,
+              "y": 604.5703125
+            },
+            "text": "8"
+          },
+          {
+            "rect": {
+              "bottom": 652.5703125,
+              "height": 48,
+              "width": 154.671875,
+              "x": 805.328125,
+              "y": 604.5703125
+            },
+            "text": "9"
+          },
+          {
+            "rect": {
+              "bottom": 708.5703125,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 480,
+              "y": 660.5703125
+            },
+            "text": "Limpar"
+          },
+          {
+            "rect": {
+              "bottom": 708.5703125,
+              "height": 48,
+              "width": 154.6640625,
+              "x": 642.6640625,
+              "y": 660.5703125
+            },
+            "text": "0"
+          },
+          {
+            "rect": {
+              "bottom": 708.5703125,
+              "height": 48,
+              "width": 154.671875,
+              "x": 805.328125,
+              "y": 660.5703125
+            },
+            "text": ""
+          },
+          {
+            "rect": {
+              "bottom": 762.5703125,
+              "height": 44,
+              "width": 480,
+              "x": 480,
+              "y": 718.5703125
+            },
+            "text": "Confirmar e entrar"
+          }
+        ],
+        "height": 900,
+        "scrollHeight": 900,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "pass": true
+    }
+  ],
+  "limitations": [
+    "Android/iOS gesture animation and installed physical PWA not exercised. tab.back() uses real browser history/popstate.",
+    "Treasury visual backend validates synchronously, so no browser pending Treasury state was simulated.",
+    "768x1024 safe-area fixture scrollHeight1028 (4px decoration overflow), all controls visible within safe area; CSS unchanged by this patch."
+  ],
+  "resolvedDuringQa": [
+    "Duplicate Back step after successful EBD renewal reproduced initially; final source reuses EBD history entry and passes first Back plus preserved Forward test."
+  ],
+  "safety": "Only synthetic backend. Network fetch/XHR writes blocked, real Supabase connections blocked. No fake attendance save or financial operation performed."
+}

@@ -1,4 +1,3 @@
-import { loadStoredEbdSession } from '@/lib/ebd-session-storage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -86,9 +85,6 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const explicitHome = requestsPublicHome(location.search);
-  useEffect(() => {
-    if (!explicitHome && loadStoredEbdSession()) navigate('/secretaria', { replace: true });
-  }, [navigate, explicitHome]);
   const { toast } = useToast();
 
   // Exit transition helper
@@ -141,6 +137,7 @@ export default function Auth() {
   }, [explicitHome, handleReturnHome]);
 
   const handleBack = () => {
+    if (pinSubmitting.current || isLoading || pinLoading || memberLoginLoading) return false;
     if (step === 'diretoria') {
       if (diretoriaStep === 'pin' || diretoriaStep === 'name-confirm' || diretoriaStep === 'name-input') {
         setDiretoriaStep('societies');

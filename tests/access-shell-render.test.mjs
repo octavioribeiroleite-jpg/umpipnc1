@@ -37,7 +37,7 @@ const bundled = await build({
       export function societies() { return renderToStaticMarkup(React.createElement(SocietySelector, {societies:['uph','upa','ump','ucp','saf'].map(slug=>({id:slug,slug,name:'Sociedade fictícia '+slug,color:'#277463'})), onBack:noop, onSelect:noop, onSelectPastor:noop})); }
       export function pin(presentation='access', embedded=false) { return renderToStaticMarkup(React.createElement(PinPad, {profileLabel:'Perfil fictício', presentation, embedded, onBack:noop, onHome:noop, onComplete:noop})); }
       export function reauth(accessLevel, loading=false) {
-        const aiReauthOpen=true, pinError=false, setAiReauthOpen=noop, navigate=noop, refreshBirthdaySession=noop, APP_HOME_PATH='/auth?home=1';
+        const aiReauthOpen=true, pinError=false, handleCancelReauth=noop, navigate=noop, refreshBirthdaySession=noop, APP_HOME_PATH='/auth?home=1';
         return renderToStaticMarkup(${reauthExpression});
       }
       export function ebdEntry(selectedProfile, loading=false) {
@@ -84,7 +84,7 @@ const render = await import(`data:text/javascript;base64,${Buffer.from(bundled.o
 const pinSource = ts.createSourceFile('PinPad.tsx', readFileSync(path.join(root, 'src/components/secretaria/PinPad.tsx'), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 let firstEffect;
 function findPinEffect(node) {
-  if (!firstEffect && ts.isCallExpression(node) && node.expression.getText(pinSource) === 'useEffect') firstEffect = node.arguments[0].getText(pinSource);
+  if (!firstEffect && ts.isCallExpression(node) && node.expression.getText(pinSource) === 'useEffect' && node.arguments[0].getText(pinSource).includes("closest('[role=\"dialog\"]')")) firstEffect = node.arguments[0].getText(pinSource);
   ts.forEachChild(node, findPinEffect);
 }
 findPinEffect(pinSource);

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { validTrail } from '../src/lib/ebd-navigation.ts';
 
 // Execute the component's actual keydown effect. The JSX tree and React hooks
 // stay isolated: this never mounts a router, requests an API, or validates a PIN.
@@ -43,6 +44,8 @@ function harness({ pin = '123456', loading = false, errorMessage } = {}) {
     '@/assets/logo-ipnc.png': { default: 'fixture-logo.png' },
     './PinPad.css': {},
     '@/lib/utils': { cn: (...values) => values.filter(Boolean).join(' ') },
+    '@/lib/ebd-navigation': { validTrail },
+    '@/lib/pin-back-navigation': { createPinBackGuard: (_window, callbacks) => ({ start() {}, stop() {}, back() { if (!callbacks.isBusy()) callbacks.onBack(); } }) },
     'lucide-react': { ArrowLeft: component, Delete: component, LogIn: component, Loader2: component, Lock: component },
   };
   const module = { exports: {} };
@@ -51,6 +54,7 @@ function harness({ pin = '123456', loading = false, errorMessage } = {}) {
     require(name) { assert.ok(name in imports, `Unexpected component dependency: ${name}`); return imports[name]; },
     HTMLElement: Element,
     window: {
+      history: { state: null },
       scrollTo() {},
       addEventListener(name, listener) { assert.equal(listeners.has(name), false); listeners.set(name, listener); },
       removeEventListener(name, listener) { assert.equal(listeners.get(name), listener); listeners.delete(name); },

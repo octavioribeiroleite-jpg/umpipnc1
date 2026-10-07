@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Delete, LogIn, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AccessShell } from '@/components/auth/AccessShell';
+import { createPinBackGuard } from '@/lib/pin-back-navigation';
+import { validTrail } from '@/lib/ebd-navigation';
 import './PinPad.css';
 
 interface PinPadProps {
   profileLabel: string;
-  onBack: () => void;
+  onBack: () => void | boolean;
   onHome?: () => void;
   onComplete: (pin: string) => void;
   loading?: boolean;
@@ -15,12 +17,28 @@ interface PinPadProps {
   errorMessage?: string;
   embedded?: boolean;
   presentation?: 'access' | 'compact' | 'dialog';
+  reuseEbdHistory?: boolean;
 }
 
-export default function PinPad({ profileLabel, onBack, onHome, onComplete, loading, error: externalError, errorMessage, presentation = 'access' }: PinPadProps) {
+export default function PinPad({ profileLabel, onBack, onHome, onComplete, loading, error: externalError, errorMessage, presentation = 'access', reuseEbdHistory = false }: PinPadProps) {
   const [pin, setPin] = useState('');
   const [shaking, setShaking] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const latestBack = useRef({ onBack, loading });
+  latestBack.current = { onBack, loading };
+  const backGuard = useRef<ReturnType<typeof createPinBackGuard> | null>(null);
+
+  useEffect(() => {
+    const state = window.history.state;
+    const trail = state?.ebdTrail;
+    const guard = createPinBackGuard(window, {
+      onBack: () => latestBack.current.onBack(),
+      isBusy: () => Boolean(latestBack.current.loading),
+    }, { reuseCurrentEntry: reuseEbdHistory && typeof trail?.owner === 'string' && validTrail(trail, trail.owner) && !state.ebdFloor });
+    backGuard.current = guard;
+    guard.start();
+    return () => { guard.stop(); backGuard.current = null; };
+  }, [reuseEbdHistory]);
 
   // Keep the access navigation visible while enabling keyboard input.
   useEffect(() => {
@@ -83,7 +101,7 @@ export default function PinPad({ profileLabel, onBack, onHome, onComplete, loadi
     <AccessShell
       title={profileLabel === 'Administrador' ? 'Acesso administrativo' : profileLabel}
       description="Digite seu PIN de 6 dígitos"
-      onBack={onBack}
+      onBack={() => backGuard.current?.back()}
       onHome={onHome}
       showHome
       disabled={loading}

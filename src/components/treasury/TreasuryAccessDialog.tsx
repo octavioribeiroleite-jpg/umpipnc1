@@ -24,7 +24,7 @@ export function TreasuryAccessDialog({ open, onOpenChange, onEntered }: { open: 
   const directory = useQuery({ queryKey: ['treasury-directory'], enabled: open, retry: false,
     queryFn: async () => { const result = await treasuryClient.rpc('treasury_directory'); if (result.error) throw new Error('Não foi possível carregar as sociedades.'); return result.data as Society[]; } });
   useEffect(() => { if (open) { setChoice(null); setError(''); setPinReset(0); setPassword(''); } }, [open]);
-  const back = () => { setChoice(null); setError(''); setPinReset(0); setPassword(''); };
+  const back = () => { if (submitting.current) return false; setChoice(null); setError(''); setPinReset(0); setPassword(''); };
   const goHome = () => {
     if (busy) return;
     back();

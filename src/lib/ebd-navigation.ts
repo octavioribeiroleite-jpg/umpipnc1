@@ -35,7 +35,7 @@ export function createEbdNavigation(host: NavigationHost, stores: StorageLike[],
   const push = () => host.history.pushState({ ...host.history.state, idx: Number(host.history.state?.idx || 0) + 1, ebdFloor: false, ebdTrail: trail }, '', url(current()));
   const pop = (event: { state: Record<string, unknown> | null }) => {
     if (!active) return;
-    if (callbacks.intercept?.()) { push(); publish(); return; }
+    if (callbacks.intercept?.()) { if (active) { push(); publish(); } return; }
     const next = event.state?.ebdTrail;
     if (!event.state?.ebdFloor && validTrail(next, owner) && next.id === trail.id) {
       trail = next; publish();

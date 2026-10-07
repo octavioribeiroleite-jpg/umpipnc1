@@ -62,10 +62,11 @@ function setup({ installed = false, mode = 'standalone', ios = false, path = '/t
   };
 }
 
-test('every cold installed launch starts home before mounting any restored Diretoria route or session', () => {
+test('every new site or installed launch starts home before mounting any restored private route or session', () => {
+  for (const installed of [false, true]) {
   for (const age of [0, 1_000, 5 * 60_000, 31 * 60_000]) {
-    for (const path of ['/', '/reunioes', '/configuracoes', '/tesouraria?sociedade=fixture', '/auth']) {
-      const p = setup({ installed: true, age, path });
+    for (const path of ['/', '/reunioes', '/configuracoes', '/tesouraria?sociedade=fixture', '/auth', '/secretaria?view=chamada']) {
+      const p = setup({ installed, age, path });
       assert.deepEqual(p.historyChanges, ['/auth?home=1'], `${path}, age ${age}`);
       assert.equal(p.location.pathname, '/auth');
       assert.equal(p.location.search, '?home=1');
@@ -77,18 +78,19 @@ test('every cold installed launch starts home before mounting any restored Diret
       p.navigation.stop(); assert.equal(p.timers.size, 0);
     }
   }
+  }
 });
 
-test('first installed launch and iOS standalone start at home; browser deep routes keep their destination', () => {
+test('first browser, installed and iOS standalone openings all start at home', () => {
   assert.deepEqual(setup({ installed: true, record: false }).historyChanges, ['/auth?home=1']);
   assert.deepEqual(setup({ ios: true, record: false }).historyChanges, ['/auth?home=1']);
-  assert.deepEqual(setup({ record: false }).historyChanges, []);
+  assert.deepEqual(setup({ record: false }).historyChanges, ['/auth?home=1']);
 });
 
-test('brief reload preserves the current route and uses browser-tab storage separately from PWA', () => {
+test('new browser document opens Home even with a recent stamp and keeps tab storage separate from PWA', () => {
   const p = setup({ age: 5 * 60_000 });
-  assert.deepEqual(p.historyChanges, []);
-  assert.equal(p.location.pathname, '/tesouraria');
+  assert.deepEqual(p.historyChanges, ['/auth?home=1']);
+  assert.equal(p.location.pathname, '/auth');
   assert.equal(p.localStorage.getItem(p.lifecycle.APP_LIFECYCLE_STORAGE_KEY), null);
   assert.ok(p.sessionStorage.getItem(p.lifecycle.APP_LIFECYCLE_STORAGE_KEY));
 });
@@ -105,10 +107,12 @@ test('live long resume refreshes public entry, also when already on a PIN at the
 });
 
 test('fresh recovery and public election links keep their destination after an old app stamp', () => {
+  for (const installed of [false, true]) {
   for (const path of ['/reset-password#access_token=fixture', '/auth?code=fixture', '/auth#access_token=fixture', '/vote/fixture', '/eleicao/fixture/apresentar']) {
-    const p = setup({ installed: true, age: 60 * 60_000, path });
+    const p = setup({ installed, age: 60 * 60_000, path });
     assert.deepEqual(p.historyChanges, [], path);
     assert.deepEqual(p.reloads, [], path);
+  }
   }
 });
 
