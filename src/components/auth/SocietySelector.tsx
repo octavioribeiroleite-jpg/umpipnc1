@@ -1,12 +1,8 @@
 import { Loader2 } from 'lucide-react';
 import { AccessShell } from './AccessShell';
 import { AccessOption } from './AccessOption';
-import safIcon from '@/assets/societies/saf.png';
-import ucpIcon from '@/assets/societies/ucp.png';
-import umpIcon from '@/assets/societies/ump.png';
-import upaIcon from '@/assets/societies/upa.png';
-import uphIcon from '@/assets/societies/uph.png';
-import pastorIcon from '@/assets/societies/pastor.png';
+import { SOCIETY_ICONS } from '@/lib/society-icons';
+import type { ResponsiveImage } from '@/lib/preload-images';
 
 interface SocietyOption {
   id: string;
@@ -25,12 +21,12 @@ interface SocietySelectorProps {
   onSelectPastor?: () => void;
 }
 
-const SOCIETY_META: Record<string, { image: string; description: string; color: string; order: number }> = {
-  saf: { image: safIcon, description: 'Sociedade Auxiliadora Feminina', color: '#cc176e', order: 1 },
-  ucp: { image: ucpIcon, description: 'União de Crianças Presbiterianas', color: '#7833d7', order: 2 },
-  ump: { image: umpIcon, description: 'União de Mocidade Presbiteriana', color: '#1465dc', order: 3 },
-  upa: { image: upaIcon, description: 'União Presbiteriana de Adolescentes', color: '#c95b0b', order: 4 },
-  uph: { image: uphIcon, description: 'União Presbiteriana de Homens', color: '#138262', order: 5 },
+const SOCIETY_META: Record<string, { image: ResponsiveImage; description: string; color: string; order: number }> = {
+  saf: { image: SOCIETY_ICONS.saf, description: 'Sociedade Auxiliadora Feminina', color: '#cc176e', order: 1 },
+  ucp: { image: SOCIETY_ICONS.ucp, description: 'União de Crianças Presbiterianas', color: '#7833d7', order: 2 },
+  ump: { image: SOCIETY_ICONS.ump, description: 'União de Mocidade Presbiteriana', color: '#1465dc', order: 3 },
+  upa: { image: SOCIETY_ICONS.upa, description: 'União Presbiteriana de Adolescentes', color: '#c95b0b', order: 4 },
+  uph: { image: SOCIETY_ICONS.uph, description: 'União Presbiteriana de Homens', color: '#138262', order: 5 },
 };
 
 export default function SocietySelector({ societies, loading = false, error = false, onRetry, onBack, onSelect, onSelectPastor }: SocietySelectorProps) {
@@ -62,7 +58,7 @@ export default function SocietySelector({ societies, loading = false, error = fa
             />
           ))}
           {onSelectPastor && (
-            <AccessOption title="Pastor" description="Área pastoral" ariaLabel="Acesso pastoral" color="#1465dc" image={pastorIcon} onClick={onSelectPastor} />
+            <AccessOption title="Pastor" description="Área pastoral" ariaLabel="Acesso pastoral" color="#1465dc" image={SOCIETY_ICONS.pastor} onClick={onSelectPastor} />
           )}
         </div>
       )}

@@ -22,6 +22,7 @@ import { APP_HOME_PATH, requestsPublicHome } from '@/lib/app-home';
 import { InstallButton } from '@/components/layout/InstallButton';
 import { UpdateAvailableBanner } from '@/components/UpdateAvailableBanner';
 import { TreasuryAccessDialog } from '@/components/treasury/TreasuryAccessDialog';
+import { warmSocietyIcons } from '@/lib/society-icons';
 
 interface Society {
   id: string;
@@ -115,6 +116,7 @@ export default function Auth() {
     finally { setSocietiesLoading(false); }
   }, []);
   useEffect(() => { void fetchSocieties(); }, [fetchSocieties]);
+  useEffect(() => { warmSocietyIcons(); }, []);
 
   // ========== HANDLERS ==========
 

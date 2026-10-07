@@ -1,0 +1,64 @@
+{
+  "desktop": {
+    "bytes": 838622,
+    "count": 6,
+    "observedCompleteMs": 348.09999999403954,
+    "lastResponseSpanMs": 20.470000003115274
+  },
+  "mobile": {
+    "bytes": 838622,
+    "count": 6,
+    "observedCompleteMs": 330.59999999403954,
+    "lastResponseSpanMs": 7.756000006338581,
+    "currentSrc": [
+      {
+        "src": "/src/assets/societies/saf.png",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/saf.png",
+        "complete": true,
+        "naturalWidth": 384,
+        "naturalHeight": 384,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/ucp.png",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/ucp.png",
+        "complete": true,
+        "naturalWidth": 384,
+        "naturalHeight": 384,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/ump.png",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/ump.png",
+        "complete": true,
+        "naturalWidth": 384,
+        "naturalHeight": 384,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/upa.png",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/upa.png",
+        "complete": true,
+        "naturalWidth": 384,
+        "naturalHeight": 384,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/uph.png",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/uph.png",
+        "complete": true,
+        "naturalWidth": 384,
+        "naturalHeight": 384,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/pastor.png",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/pastor.png",
+        "complete": true,
+        "naturalWidth": 384,
+        "naturalHeight": 384,
+        "width": 56
+      }
+    ]
+  }
+}

@@ -73,7 +73,7 @@ const bundled = await build({
     `, loader: 'js' }));
     builder.onResolve({ filter: /\.css$/ }, args => ({ path: args.path, namespace: 'access-css' }));
     builder.onLoad({ filter: /.*/, namespace: 'access-css' }, () => ({ contents: '', loader: 'js' }));
-    builder.onLoad({ filter: /\.png$/ }, args => ({ contents: `export default ${JSON.stringify(args.path)};`, loader: 'js' }));
+    builder.onLoad({ filter: /\.(png|webp)$/ }, args => ({ contents: `export default ${JSON.stringify(args.path)};`, loader: 'js' }));
   } }],
 });
 const render = await import(`data:text/javascript;base64,${Buffer.from(bundled.outputFiles[0].text).toString('base64')}`).catch(error => { throw new Error(error.message); });
@@ -209,6 +209,8 @@ test('society cards retain their order, official images, accessible names and pa
   assert.deepEqual(names, ['SAF', 'UCP', 'UMP', 'UPA', 'UPH']);
   assert.equal((html.match(/ipnc-access-option/g) || []).length, 6);
   assert.equal((html.match(/alt="" width="384" height="384"/g) || []).length, 6);
+  assert.equal((html.match(/srcSet="[^"]+96w, [^"]+192w, [^"]+256w, [^"]+384w"/g) || []).length, 6);
+  assert.equal((html.match(/loading="eager" decoding="async"/g) || []).length, 6);
   assert.match(html, /aria-label="Acesso pastoral"/);
 });
 

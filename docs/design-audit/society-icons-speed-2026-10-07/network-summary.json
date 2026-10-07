@@ -1,0 +1,241 @@
+{
+  "method": "Chrome CDP Network, own tab cacheDisabled:true, localhost isolated fixture; encodedDataLength includes HTTP overhead",
+  "baseline": {
+    "desktop": {
+      "bytes": 838622,
+      "count": 6,
+      "observedCompleteMs": 348.09999999403954,
+      "lastResponseSpanMs": 20.470000003115274,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/saf.png",
+          "bytes": 134508
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/ucp.png",
+          "bytes": 148294
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/ump.png",
+          "bytes": 133930
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/upa.png",
+          "bytes": 158107
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/uph.png",
+          "bytes": 146648
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/pastor.png",
+          "bytes": 117135
+        }
+      ]
+    },
+    "mobileDpr3": {
+      "bytes": 838622,
+      "count": 6,
+      "observedCompleteMs": 330.59999999403954,
+      "lastResponseSpanMs": 7.756000006338581,
+      "currentSrc": [
+        {
+          "src": "/src/assets/societies/saf.png",
+          "currentSrc": "http://127.0.0.1:8086/src/assets/societies/saf.png",
+          "complete": true,
+          "naturalWidth": 384,
+          "naturalHeight": 384,
+          "width": 56
+        },
+        {
+          "src": "/src/assets/societies/ucp.png",
+          "currentSrc": "http://127.0.0.1:8086/src/assets/societies/ucp.png",
+          "complete": true,
+          "naturalWidth": 384,
+          "naturalHeight": 384,
+          "width": 56
+        },
+        {
+          "src": "/src/assets/societies/ump.png",
+          "currentSrc": "http://127.0.0.1:8086/src/assets/societies/ump.png",
+          "complete": true,
+          "naturalWidth": 384,
+          "naturalHeight": 384,
+          "width": 56
+        },
+        {
+          "src": "/src/assets/societies/upa.png",
+          "currentSrc": "http://127.0.0.1:8086/src/assets/societies/upa.png",
+          "complete": true,
+          "naturalWidth": 384,
+          "naturalHeight": 384,
+          "width": 56
+        },
+        {
+          "src": "/src/assets/societies/uph.png",
+          "currentSrc": "http://127.0.0.1:8086/src/assets/societies/uph.png",
+          "complete": true,
+          "naturalWidth": 384,
+          "naturalHeight": 384,
+          "width": 56
+        },
+        {
+          "src": "/src/assets/societies/pastor.png",
+          "currentSrc": "http://127.0.0.1:8086/src/assets/societies/pastor.png",
+          "complete": true,
+          "naturalWidth": 384,
+          "naturalHeight": 384,
+          "width": 56
+        }
+      ],
+      "requests": [
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/saf.png",
+          "bytes": 134508
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/ucp.png",
+          "bytes": 148294
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/ump.png",
+          "bytes": 133930
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/upa.png",
+          "bytes": 158107
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/uph.png",
+          "bytes": 146648
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/pastor.png",
+          "bytes": 117135
+        }
+      ]
+    }
+  },
+  "after": {
+    "desktop": {
+      "requests": [
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/saf-96.webp",
+          "requestId": "47999.1768",
+          "requestSequence": 9630,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 11232,
+          "durationMs": 29.32100000907667
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/ucp-96.webp",
+          "requestId": "47999.1769",
+          "requestSequence": 9631,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 11928,
+          "durationMs": 29.680999999982305
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/ump-96.webp",
+          "requestId": "47999.1770",
+          "requestSequence": 9632,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 11062,
+          "durationMs": 30.42500000447035
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/upa-96.webp",
+          "requestId": "47999.1771",
+          "requestSequence": 9633,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 12866,
+          "durationMs": 26.687000005040318
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/uph-96.webp",
+          "requestId": "47999.1772",
+          "requestSequence": 9634,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 12460,
+          "durationMs": 31.000000002677552
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/pastor-96.webp",
+          "requestId": "47999.1773",
+          "requestSequence": 9635,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 9642,
+          "durationMs": 27.027000003727153
+        }
+      ],
+      "totalBytes": 69190,
+      "extraAfterClick": 0
+    },
+    "mobileDpr3": {
+      "requests": [
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/saf-192.webp",
+          "requestId": "47999.2232",
+          "requestSequence": 12839,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 32570,
+          "durationMs": 31.5930000069784
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/ucp-192.webp",
+          "requestId": "47999.2233",
+          "requestSequence": 12840,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 34324,
+          "durationMs": 32.8460000018822
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/ump-192.webp",
+          "requestId": "47999.2234",
+          "requestSequence": 12841,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 31648,
+          "durationMs": 31.780000004800968
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/upa-192.webp",
+          "requestId": "47999.2235",
+          "requestSequence": 12842,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 37956,
+          "durationMs": 31.853000007686205
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/uph-192.webp",
+          "requestId": "47999.2236",
+          "requestSequence": 12843,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 36576,
+          "durationMs": 32.678999996278435
+        },
+        {
+          "url": "http://127.0.0.1:8086/src/assets/societies/optimized/pastor-192.webp",
+          "requestId": "47999.2237",
+          "requestSequence": 12844,
+          "startedOnHome": true,
+          "finishedOnHome": true,
+          "bytes": 27514,
+          "durationMs": 32.879000005777925
+        }
+      ],
+      "totalBytes": 200588,
+      "extraAfterClick": 0
+    }
+  }
+}

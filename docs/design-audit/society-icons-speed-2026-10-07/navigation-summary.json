@@ -1,0 +1,35 @@
+{
+  "cases": [
+    {
+      "choice": "Acessar SAF — SAF",
+      "access": "- region \"Notifications (F8)\":\n  - list\n- region \"Notifications alt+T\"\n- main \"Diretoria · SAF\":\n  - navigation \"Navegação do acesso\":\n    - button \"Voltar\":\n      - generic: Voltar\n    - button \"Voltar para a Home\":\n      - text: Voltar para a Home\n  - img \"IPNC\"\n  - paragraph: Acesso restrito\n  - heading \"Diretoria · SAF\" [level=1]\n  - paragraph: Digite seu PIN de 6 dígitos\n  - generic \"PIN de 6 dígitos\"\n  - status: 0 de 6 dígitos preenchidos\n  - button \"1\"\n  - button \"2\"\n  - button \"3\"\n  - button \"4\"\n  - button \"5\"\n  - button \"6\"\n  - button \"7\"\n  - button \"8\"\n  - button \"9\"\n  - button \"Limpar\" [disabled]\n  - button \"0\"\n  - button \"Apagar último dígito\" [disabled]:\n  - paragraph: Use o teclado numérico ou clique nos botões",
+      "returnedToSelection": true
+    },
+    {
+      "choice": "Acessar UCP — UCP",
+      "access": "- region \"Notifications (F8)\":\n  - list\n- region \"Notifications alt+T\"\n- main \"Diretoria · UCP\":\n  - navigation \"Navegação do acesso\":\n    - button \"Voltar\":\n      - generic: Voltar\n    - button \"Voltar para a Home\":\n      - text: Voltar para a Home\n  - img \"IPNC\"\n  - paragraph: Acesso restrito\n  - heading \"Diretoria · UCP\" [level=1]\n  - paragraph: Digite seu PIN de 6 dígitos\n  - generic \"PIN de 6 dígitos\"\n  - status: 0 de 6 dígitos preenchidos\n  - button \"1\"\n  - button \"2\"\n  - button \"3\"\n  - button \"4\"\n  - button \"5\"\n  - button \"6\"\n  - button \"7\"\n  - button \"8\"\n  - button \"9\"\n  - button \"Limpar\" [disabled]\n  - button \"0\"\n  - button \"Apagar último dígito\" [disabled]:\n  - paragraph: Use o teclado numérico ou clique nos botões",
+      "returnedToSelection": true
+    },
+    {
+      "choice": "Acessar UMP — União de Jovens — Exemplo",
+      "access": "- region \"Notifications (F8)\":\n  - list\n- region \"Notifications alt+T\"\n- main \"Diretoria · UMP\":\n  - navigation \"Navegação do acesso\":\n    - button \"Voltar\":\n      - generic: Voltar\n    - button \"Voltar para a Home\":\n      - text: Voltar para a Home\n  - img \"IPNC\"\n  - paragraph: Acesso restrito\n  - heading \"Diretoria · UMP\" [level=1]\n  - paragraph: Digite seu PIN de 6 dígitos\n  - generic \"PIN de 6 dígitos\"\n  - status: 0 de 6 dígitos preenchidos\n  - button \"1\"\n  - button \"2\"\n  - button \"3\"\n  - button \"4\"\n  - button \"5\"\n  - button \"6\"\n  - button \"7\"\n  - button \"8\"\n  - button \"9\"\n  - button \"Limpar\" [disabled]\n  - button \"0\"\n  - button \"Apagar último dígito\" [disabled]:\n  - paragraph: Use o teclado numérico ou clique nos botões",
+      "returnedToSelection": true
+    },
+    {
+      "choice": "Acessar UPA — UPA",
+      "access": "- region \"Notifications (F8)\":\n  - list\n- region \"Notifications alt+T\"\n- main \"Diretoria · UPA\":\n  - navigation \"Navegação do acesso\":\n    - button \"Voltar\":\n      - generic: Voltar\n    - button \"Voltar para a Home\":\n      - text: Voltar para a Home\n  - img \"IPNC\"\n  - paragraph: Acesso restrito\n  - heading \"Diretoria · UPA\" [level=1]\n  - paragraph: Digite seu PIN de 6 dígitos\n  - generic \"PIN de 6 dígitos\"\n  - status: 0 de 6 dígitos preenchidos\n  - button \"1\"\n  - button \"2\"\n  - button \"3\"\n  - button \"4\"\n  - button \"5\"\n  - button \"6\"\n  - button \"7\"\n  - button \"8\"\n  - button \"9\"\n  - button \"Limpar\" [disabled]\n  - button \"0\"\n  - button \"Apagar último dígito\" [disabled]:\n  - paragraph: Use o teclado numérico ou clique nos botões",
+      "returnedToSelection": true
+    },
+    {
+      "choice": "Acessar UPH — UPH",
+      "access": "- region \"Notifications (F8)\":\n  - list\n- region \"Notifications alt+T\"\n- main \"Diretoria · UPH\":\n  - navigation \"Navegação do acesso\":\n    - button \"Voltar\":\n      - generic: Voltar\n    - button \"Voltar para a Home\":\n      - text: Voltar para a Home\n  - img \"IPNC\"\n  - paragraph: Acesso restrito\n  - heading \"Diretoria · UPH\" [level=1]\n  - paragraph: Digite seu PIN de 6 dígitos\n  - generic \"PIN de 6 dígitos\"\n  - status: 0 de 6 dígitos preenchidos\n  - button \"1\"\n  - button \"2\"\n  - button \"3\"\n  - button \"4\"\n  - button \"5\"\n  - button \"6\"\n  - button \"7\"\n  - button \"8\"\n  - button \"9\"\n  - button \"Limpar\" [disabled]\n  - button \"0\"\n  - button \"Apagar último dígito\" [disabled]:\n  - paragraph: Use o teclado numérico ou clique nos botões",
+      "returnedToSelection": true
+    },
+    {
+      "choice": "Acesso pastoral",
+      "access": "- region \"Notifications (F8)\":\n  - list\n- region \"Notifications alt+T\"\n- main \"Diretoria · PASTOR\":\n  - navigation \"Navegação do acesso\":\n    - button \"Voltar\":\n      - generic: Voltar\n    - button \"Voltar para a Home\":\n      - text: Voltar para a Home\n  - img \"IPNC\"\n  - paragraph: Acesso restrito\n  - heading \"Diretoria · PASTOR\" [level=1]\n  - paragraph: Digite seu PIN de 6 dígitos\n  - generic \"PIN de 6 dígitos\"\n  - status: 0 de 6 dígitos preenchidos\n  - button \"1\"\n  - button \"2\"\n  - button \"3\"\n  - button \"4\"\n  - button \"5\"\n  - button \"6\"\n  - button \"7\"\n  - button \"8\"\n  - button \"9\"\n  - button \"Limpar\" [disabled]\n  - button \"0\"\n  - button \"Apagar último dígito\" [disabled]:\n  - paragraph: Use o teclado numérico ou clique nos botões",
+      "returnedToSelection": true
+    }
+  ],
+  "extraSocietyImageRequests": []
+}

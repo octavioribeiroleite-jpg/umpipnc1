@@ -1,0 +1,186 @@
+{
+  "encoding": "lossless WebP, method=6, exact=True",
+  "resampling": "proportional Lanczos reduction only",
+  "icons": {
+    "saf": {
+      "master_sha256": "5f3e2213d2bd3261fa20edd0cd5c4ee00f6edf80b43cb0672b83363e19639ab3",
+      "master_bytes": 133911,
+      "copies": {
+        "96": {
+          "file": "saf-96.webp",
+          "bytes": 10636,
+          "sha256": "14356437404ffe345f7500059e3dea1ba7235013aaf607f1b0e3c5b923fb8fe1",
+          "rgba_exact": true
+        },
+        "192": {
+          "file": "saf-192.webp",
+          "bytes": 31974,
+          "sha256": "e8e9f69499ff5a96873715f76fd5e1472e3638e5ccfc3b197d5596e4c017e324",
+          "rgba_exact": true
+        },
+        "256": {
+          "file": "saf-256.webp",
+          "bytes": 49820,
+          "sha256": "b829ba32e7098974964e72d060dbb17583a5e45502817a9d9a02392b76b7ba0e",
+          "rgba_exact": true
+        },
+        "384": {
+          "file": "saf-384.webp",
+          "bytes": 91178,
+          "sha256": "a51f2dcd8b738ba7f1fd63e72fb15a4923d72e0221f8ba187281dea794e3e7de",
+          "rgba_exact": true
+        }
+      }
+    },
+    "ucp": {
+      "master_sha256": "c93384918d539ee94ce78f8316693df65b097ed022565729360558d3b8e99f77",
+      "master_bytes": 147697,
+      "copies": {
+        "96": {
+          "file": "ucp-96.webp",
+          "bytes": 11332,
+          "sha256": "c982bc7522509c3e3207478840de5e8a5d9b04780f9f756590aab37e396b807a",
+          "rgba_exact": true
+        },
+        "192": {
+          "file": "ucp-192.webp",
+          "bytes": 33728,
+          "sha256": "79d3137fccf81589a8713feb6686544a0de8c6a15104cb4aa1ef4ab39fe89a7d",
+          "rgba_exact": true
+        },
+        "256": {
+          "file": "ucp-256.webp",
+          "bytes": 53670,
+          "sha256": "0956544a8beb6b842f6974651b94ece77ea7e3288256587d88ad14a096ae8d35",
+          "rgba_exact": true
+        },
+        "384": {
+          "file": "ucp-384.webp",
+          "bytes": 97976,
+          "sha256": "2cc74929ae25a9a3f3f1973042a865a0490ae879f565808becefaff6581957ff",
+          "rgba_exact": true
+        }
+      }
+    },
+    "ump": {
+      "master_sha256": "28bf2a80d33ca3b8b6bbd8bad25e38f6acb76d415ecc8caae8c59beb657c6ef3",
+      "master_bytes": 133333,
+      "copies": {
+        "96": {
+          "file": "ump-96.webp",
+          "bytes": 10466,
+          "sha256": "5f4813f3702fc2ddece73a36afa3a17c1f676167a7203cc57179abdd6a78528f",
+          "rgba_exact": true
+        },
+        "192": {
+          "file": "ump-192.webp",
+          "bytes": 31052,
+          "sha256": "071bf4ce8c1a9425e3557dcc51581a159f5f084096a0b517514aeb886cb32166",
+          "rgba_exact": true
+        },
+        "256": {
+          "file": "ump-256.webp",
+          "bytes": 48924,
+          "sha256": "4f67b0c0aa520b62fe9467506e8c4345a40d66bd59b8fd2f551c567b88d3e986",
+          "rgba_exact": true
+        },
+        "384": {
+          "file": "ump-384.webp",
+          "bytes": 91382,
+          "sha256": "dfe95d25516df5ddb183a001b3de2ebfde3a133f65126963a4813dbe230fe1e8",
+          "rgba_exact": true
+        }
+      }
+    },
+    "upa": {
+      "master_sha256": "fc50ad68c786e47b9a15687f10cc44cad5f7d87e1b0d2ca5113c7268a15c39d7",
+      "master_bytes": 157510,
+      "copies": {
+        "96": {
+          "file": "upa-96.webp",
+          "bytes": 12270,
+          "sha256": "317c67f2e012b265bba0a314b2e59a553849b768e569d47f4d01964ced327e37",
+          "rgba_exact": true
+        },
+        "192": {
+          "file": "upa-192.webp",
+          "bytes": 37360,
+          "sha256": "e7b345b0c2ba1c02dacc42adcf1ee354426e5771d97276468f24f6bc72a6d266",
+          "rgba_exact": true
+        },
+        "256": {
+          "file": "upa-256.webp",
+          "bytes": 59084,
+          "sha256": "033bfdd9a032ceafed7af1d7a4480fdff6ec9e92cc26399ef45593d0861547d1",
+          "rgba_exact": true
+        },
+        "384": {
+          "file": "upa-384.webp",
+          "bytes": 108160,
+          "sha256": "e16fb132e0db14e00920e478f056d90815e679b6b520ae8e0bf4e2a1cf939474",
+          "rgba_exact": true
+        }
+      }
+    },
+    "uph": {
+      "master_sha256": "ffef3ec7506146f7ce65b65b8e32ee88d17fd385d48a0ac7ce22ddd17803ca40",
+      "master_bytes": 146051,
+      "copies": {
+        "96": {
+          "file": "uph-96.webp",
+          "bytes": 11864,
+          "sha256": "6d897c4190cd8e4e8679f6c80c6a149edc383088952db4212d1e8301416bbad8",
+          "rgba_exact": true
+        },
+        "192": {
+          "file": "uph-192.webp",
+          "bytes": 35980,
+          "sha256": "fac69210bfaca701fc5ac8765beeeda8acaafb67da3a7c33e73a2f787efff0b8",
+          "rgba_exact": true
+        },
+        "256": {
+          "file": "uph-256.webp",
+          "bytes": 56560,
+          "sha256": "98b6ecfc8a4f497cca76eab8defde70d29616d893418a9f0ef8a4cb5a6938197",
+          "rgba_exact": true
+        },
+        "384": {
+          "file": "uph-384.webp",
+          "bytes": 102700,
+          "sha256": "4a1793f94a7efe4cca1a19fe24a5f1c04f03df750404c67ebd064f2267f04248",
+          "rgba_exact": true
+        }
+      }
+    },
+    "pastor": {
+      "master_sha256": "82bb389c990fb25d33db09da6fe2ca516a1ae8b7dcb8042970376bb0c44fa8df",
+      "master_bytes": 116538,
+      "copies": {
+        "96": {
+          "file": "pastor-96.webp",
+          "bytes": 9048,
+          "sha256": "5c89321b1731d7da17428acda6e3262f109b7492654e62b8982d626525dffd39",
+          "rgba_exact": true
+        },
+        "192": {
+          "file": "pastor-192.webp",
+          "bytes": 26918,
+          "sha256": "249a111e01a8f42aed36564fc562211521ac9e93cb8386fde9f8ebcb7d9f0730",
+          "rgba_exact": true
+        },
+        "256": {
+          "file": "pastor-256.webp",
+          "bytes": 42990,
+          "sha256": "4dce1a2378287dbd0a6152564d4f74190b53ca574771e5b1a4398d44acc98c18",
+          "rgba_exact": true
+        },
+        "384": {
+          "file": "pastor-384.webp",
+          "bytes": 81770,
+          "sha256": "a71e14737e98a07c70b930a44ff2741018501982c7771bf69d73e85e76076f29",
+          "rgba_exact": true
+        }
+      }
+    }
+  }
+}

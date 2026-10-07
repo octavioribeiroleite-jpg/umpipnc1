@@ -1,0 +1,131 @@
+{
+  "desktop": {
+    "viewport": [
+      1440,
+      900
+    ],
+    "dpr": 1,
+    "imagesAtFirstRead": [
+      {
+        "src": "/src/assets/societies/optimized/saf-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/saf-96.webp",
+        "complete": true,
+        "naturalWidth": 76,
+        "naturalHeight": 76,
+        "width": 76
+      },
+      {
+        "src": "/src/assets/societies/optimized/ucp-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/ucp-96.webp",
+        "complete": true,
+        "naturalWidth": 76,
+        "naturalHeight": 76,
+        "width": 76
+      },
+      {
+        "src": "/src/assets/societies/optimized/ump-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/ump-96.webp",
+        "complete": true,
+        "naturalWidth": 76,
+        "naturalHeight": 76,
+        "width": 76
+      },
+      {
+        "src": "/src/assets/societies/optimized/upa-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/upa-96.webp",
+        "complete": true,
+        "naturalWidth": 76,
+        "naturalHeight": 76,
+        "width": 76
+      },
+      {
+        "src": "/src/assets/societies/optimized/uph-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/uph-96.webp",
+        "complete": true,
+        "naturalWidth": 76,
+        "naturalHeight": 76,
+        "width": 76
+      },
+      {
+        "src": "/src/assets/societies/optimized/pastor-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/pastor-96.webp",
+        "complete": true,
+        "naturalWidth": 76,
+        "naturalHeight": 76,
+        "width": 76
+      }
+    ],
+    "allFinishedOnHome": true,
+    "allCompleteAtFirstRead": true,
+    "extraDownloadsOpeningSelection": 0,
+    "bytes": 69190,
+    "reductionPercent": 91.74956058868
+  },
+  "mobileDpr3": {
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "dpr": 3
+    },
+    "imagesAtFirstRead": [
+      {
+        "src": "/src/assets/societies/optimized/saf-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/saf-192.webp",
+        "complete": true,
+        "naturalWidth": 56,
+        "naturalHeight": 56,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/optimized/ucp-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/ucp-192.webp",
+        "complete": true,
+        "naturalWidth": 56,
+        "naturalHeight": 56,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/optimized/ump-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/ump-192.webp",
+        "complete": true,
+        "naturalWidth": 56,
+        "naturalHeight": 56,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/optimized/upa-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/upa-192.webp",
+        "complete": true,
+        "naturalWidth": 56,
+        "naturalHeight": 56,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/optimized/uph-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/uph-192.webp",
+        "complete": true,
+        "naturalWidth": 56,
+        "naturalHeight": 56,
+        "width": 56
+      },
+      {
+        "src": "/src/assets/societies/optimized/pastor-192.webp",
+        "currentSrc": "http://127.0.0.1:8086/src/assets/societies/optimized/pastor-192.webp",
+        "complete": true,
+        "naturalWidth": 56,
+        "naturalHeight": 56,
+        "width": 56
+      }
+    ],
+    "allFinishedOnHome": true,
+    "allCompleteAtFirstRead": true,
+    "extraDownloadsOpeningSelection": 0,
+    "bytes": 200588,
+    "reductionPercent": 76.08123803096032
+  },
+  "limitations": [
+    "Measurements from localhost; no production or physical Android/iOS timing assertion.",
+    "nativeWidth for srcset width descriptors is density corrected; chosen variant pixel dimensions come from currentSrc filenames.",
+    "No backend authentication or credential changes."
+  ]
+}
