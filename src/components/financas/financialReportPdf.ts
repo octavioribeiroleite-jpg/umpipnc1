@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 
 export interface ChargeStats {
   total: number;
@@ -420,26 +420,14 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
   const addReceiptPage = async (tx: TransactionWithReceipt, index: number) => {
     addPage();
     const start = sectionTitle(`Anexo ${index + 1}: comprovante`, 'Cada anexo fica em sua propria caixa para facilitar a conferencia.');
-    try {
-      await receiptCard(tx, index);
-      if (tx.receipt_url) {
-        const signedUrl = await getSignedUrl(tx.receipt_url);
-        if (tx.receipt_url.toLowerCase().includes('.pdf')) {
-          addPdfPlaceholder(signedUrl);
-        } else {
-          await addReceiptImage(signedUrl);
-        }
+    await receiptCard(tx, index);
+    if (tx.receipt_url) {
+      const signedUrl = await getSignedUrl(tx.receipt_url);
+      if (tx.receipt_url.toLowerCase().includes('.pdf')) {
+        addPdfPlaceholder(signedUrl);
+      } else {
+        await addReceiptImage(signedUrl);
       }
-    } catch (error) {
-      console.error('Erro ao inserir comprovante:', error);
-      setFill(PDF_COLORS.soft);
-      setDraw(PDF_COLORS.border);
-      pdf.roundedRect(margin + 5, y, contentWidth - 10, 30, 2, 2, 'FD');
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      setColor(PDF_COLORS.red);
-      pdf.text('Nao foi possivel carregar este comprovante durante a exportacao.', margin + 10, y + 13, { maxWidth: contentWidth - 20 });
-      y += 38;
     }
     panelEnd(start);
   };
@@ -565,17 +553,17 @@ export async function generateFinancialReportPdf(input: ReportPdfInput) {
   table('Gastos detalhados', ['Data', 'Descricao', 'Categoria', 'Valor'], despesasTransactions.map(tx => [formatDate(tx.date), tx.description, tx.category_name, formatCurrency(tx.amount)]), [contentWidth * 0.15, contentWidth * 0.41, contentWidth * 0.20, contentWidth * 0.18], { total: `Total de gastos: ${formatCurrency(totalDespesas)}`, accent: PDF_COLORS.red });
 
   if (despesasComComprovante.length > 0) {
-    start = sectionTitle('Comprovantes', 'Arquivos organizados um abaixo do outro. Use o botao ao lado para abrir cada comprovante.');
-    for (let i = 0; i < despesasComComprovante.length; i += 1) {
-      try {
+    try {
+      start = sectionTitle('Comprovantes', 'Arquivos organizados um abaixo do outro. Use o botao ao lado para abrir cada comprovante.');
+      for (let i = 0; i < despesasComComprovante.length; i += 1) {
         await receiptCard(despesasComComprovante[i], i);
-      } catch (error) {
-        console.error('Erro ao preparar link do comprovante:', error);
       }
-    }
-    panelEnd(start);
-    for (let i = 0; i < despesasComComprovante.length; i += 1) {
-      await addReceiptPage(despesasComComprovante[i], i);
+      panelEnd(start);
+      for (let i = 0; i < despesasComComprovante.length; i += 1) {
+        await addReceiptPage(despesasComComprovante[i], i);
+      }
+    } catch {
+      throw new Error('Não foi possível carregar um comprovante. O PDF não foi baixado. Confira os arquivos e tente novamente.');
     }
   } else {
     start = sectionTitle('Comprovantes');

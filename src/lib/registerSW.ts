@@ -1,7 +1,7 @@
 import { refreshSite } from './refresh-site';
 
-const SW_SCRIPT_URL = "/sw.js?v=2026-10-07-workspace-unification-v19";
-const CURRENT_CACHE = "ump-cache-v27";
+const SW_SCRIPT_URL = "/sw.js?v=2026-10-07-maintenance-v20";
+const CURRENT_CACHE = "ump-cache-v28";
 let manualRefresh: Promise<void> | null = null;
 const PREVIEW_RELOAD_KEY = "__preview_sw_cleanup_reloaded__";
 const ROUTE_RESTORE_KEY = "__sw_restore_path__";

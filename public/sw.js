@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ump-cache-v27';
+const CACHE_NAME = 'ump-cache-v28';
 const STATIC_ASSETS = [
   '/icons/icon-192x192-v5.png',
   '/icons/icon-512x512-v5.png',

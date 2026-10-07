@@ -1,0 +1,74 @@
+{
+  "audit_id": "IPNC-AI-PRIVACY-20261007",
+  "base_commit": "41642b51e304cd7532bd281e6dd9dd3cc8830b97",
+  "project_id": "xhhfgnkpgtnzlvpvqjpl",
+  "function_slug": "auto-process-meeting",
+  "entrypoint_path": "auto-process-meeting/index.ts",
+  "verify_jwt": true,
+  "import_map": null,
+  "source_root": "supabase/functions",
+  "source_policy": "Use exactly the reviewed local repository modules listed here; no untracked remote source vendoring.",
+  "remote_baseline": {
+    "version": 5,
+    "status": "ACTIVE",
+    "entrypoint_sha256": "f844949a7527fbfee4dd92e6782ec296af41aec5fa3d454dc3813de523b9f4bd"
+  },
+  "files": [
+    {
+      "name": "auto-process-meeting/index.ts",
+      "sha256": "13f1325538bb0e01292e5aa4895144cf06ac5f4dd0037b5746dbf1af9b8b6171",
+      "change": "Minimized profile loading and allowlist validation of model assignees."
+    },
+    {
+      "name": "_shared/meeting-ai-profiles.ts",
+      "sha256": "8f4646a72ed0cc459b79b4dd4a05f343a2892b0a5d222a50c6d567ab7f0c2566",
+      "change": "New helper, covered by isolated real-handler regression tests."
+    },
+    {
+      "name": "_shared/ai-chat.ts",
+      "sha256": "fd6c8cc14d8e6103d5836676f6a13517e164ebe09e9a2aec0cb9deb7a9e25188",
+      "remote_baseline_equal": true
+    },
+    {
+      "name": "_shared/openai-chat.ts",
+      "sha256": "43b1c4968f1e2338c8c6fa160ae8b475a170baf02848da946224a82d92ceb4ac",
+      "remote_baseline_equal": true
+    },
+    {
+      "name": "_shared/server-limiter.ts",
+      "sha256": "fd8a4f085d2112d6ad16da45d419f33894d22ba9212760ee07cc38fb67f24471",
+      "remote_baseline_equal": true
+    },
+    {
+      "name": "_shared/rate-limit.ts",
+      "sha256": "d22601bc87c79d31aa113239805e20950d91f7e8d51e2d6ff4c040dae8057a20",
+      "remote_baseline_equal": true
+    },
+    {
+      "name": "_shared/ai-actor.ts",
+      "sha256": "09cc21ee18f11d24e1284cfb23fd560a39ae224c14cf82deff5771ab56a711c6",
+      "remote_baseline_sha256": "603f2aba27088eff9e2616cb58c6b3f03954c59d20d42fe2661da7a4119ed51f",
+      "remote_baseline_equal": false,
+      "expected_difference": "Existing local optional verifiedUser parameter; this endpoint supplies two arguments and continues auth.getUser verification. The same seven resolver cases pass against local and remote baseline."
+    },
+    {
+      "name": "_shared/ai-auth-policy.ts",
+      "sha256": "e1c60b9c3c107699efc0b002f35107156fdd0aabb98c548a73215698df41ae17",
+      "remote_baseline_equal": true
+    }
+  ],
+  "excluded_from_deploy": [
+    "tests/meeting-ai-privacy.test.mjs",
+    "docs/manutencao/2026-10-07/ai",
+    "/tmp/ipnc-auto-process-remote-v5"
+  ],
+  "validation": {
+    "isolated_handler_after": { "passed": 7, "failed": 0 },
+    "isolated_handler_remote_before": { "passed": 1, "expected_failed": 6 },
+    "focal_tests": { "passed": 21, "failed": 0 },
+    "resolver_two_argument_parity": { "local_passed": 7, "remote_v5_passed": 7, "cases_repeated_from_focal_tests": true },
+    "eslint_changed_files": "clean",
+    "git_diff_check": "clean",
+    "full_suite_types_build": "Coordinator owns final aggregate checks."
+  }
+}

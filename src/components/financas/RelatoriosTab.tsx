@@ -319,7 +319,7 @@ export function RelatoriosTab() {
       toast.success('PDF completo gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      toast.error('Erro ao gerar PDF completo');
+      toast.error('Não foi possível gerar o PDF completo. Confira os comprovantes e tente novamente.');
     } finally {
       setExporting(false);
     }

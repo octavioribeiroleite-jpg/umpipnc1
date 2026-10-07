@@ -2,6 +2,7 @@ import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
 import { serverLimiter } from "../_shared/server-limiter.ts";
 import { resolveAiActor } from "../_shared/ai-actor.ts";
 import { canSummarizeStudy } from "../_shared/ai-auth-policy.ts";
+import { loadMeetingAiProfiles, resolveMeetingTaskAssigneeId } from "../_shared/meeting-ai-profiles.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -84,18 +85,26 @@ serve(async (req) => {
       .eq('meeting_id', meetingId)
       .order('order_index');
 
-    // Fetch profiles for names
-    const { data: profiles } = await supabaseAdmin
-      .from('profiles')
-      .select('user_id, full_name');
-
-    const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
-
     // Fetch participants
-    const { data: participants } = await supabaseAdmin
+    const { data: participants, error: participantsError } = await supabaseAdmin
       .from('meeting_participants')
       .select('user_id')
       .eq('meeting_id', meetingId);
+    if (participantsError) throw new Error('Não foi possível carregar os participantes da reunião.');
+
+    // Historic authors keep their names even if their current profile is
+    // inactive or has moved. Only actual meeting links enter this lookup.
+    let contributions: Array<{ user_id: string | null; content: string }> = [];
+    if (!meeting.meeting_notes?.trim()) {
+      const result = await supabaseAdmin.from('contributions').select('user_id,content')
+        .eq('meeting_id', meetingId).eq('status', 'revealed');
+      if (result.error) throw new Error('Não foi possível carregar as contribuições da reunião.');
+      contributions = result.data ?? [];
+    }
+    const { nameByUserId: profileMap, assigneeProfiles: activeProfiles } = await loadMeetingAiProfiles(supabaseAdmin, {
+      actor, societyId: meeting.society_id,
+      namedUserIds: [meeting.moderator_id, ...(participants ?? []).map(p => p.user_id), ...contributions.map(c => c.user_id)],
+    });
 
     const participantNames = (participants || [])
       .map(p => profileMap.get(p.user_id))
@@ -112,14 +121,8 @@ serve(async (req) => {
       console.log('Using meeting_notes for processing');
     } else {
       // Old flow: use contributions
-      const { data: contributions } = await supabaseAdmin
-        .from('contributions')
-        .select('*')
-        .eq('meeting_id', meetingId)
-        .eq('status', 'revealed');
-
       contentToProcess = (contributions || []).map(c => {
-        const name = profileMap.get(c.user_id) || 'Anônimo';
+        const name = profileMap.get(c.user_id ?? '') || 'Anônimo';
         return `[${name}]: ${c.content}`;
       }).join('\n');
       console.log(`Using ${contributions?.length || 0} contributions for processing`);
@@ -559,7 +562,6 @@ Você DEVE responder APENAS com a chamada da função extract_events.`;
     console.log('Extracting tasks from meeting content...');
 
     // Build a list of available assignees for the AI
-    const activeProfiles = profiles?.filter(p => p.full_name) || [];
     const assigneeList = activeProfiles.map(p => `- "${p.full_name}" (ID: ${p.user_id})`).join('\n');
 
     const tasksSystemPrompt = `Você é um assistente que extrai tarefas e encaminhamentos de atas de reunião.
@@ -645,16 +647,8 @@ Você DEVE responder APENAS com a chamada da função extract_tasks.`;
           } else {
             for (const task of extractedTasks) {
               // Validate assignee_id if provided
-              let validAssigneeId = null;
-              if (task.assignee_id) {
-                const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(task.assignee_id);
-                const assigneeExists = activeProfiles.some(p => p.user_id === task.assignee_id);
-                if (isValidUUID && assigneeExists) {
-                  validAssigneeId = task.assignee_id;
-                } else {
-                  console.log(`Invalid assignee_id for task "${task.title}", setting to null. Mentioned: ${task.assignee_name || 'unknown'}`);
-                }
-              }
+              const validAssigneeId = resolveMeetingTaskAssigneeId(task.assignee_id, activeProfiles);
+              if (task.assignee_id && !validAssigneeId) console.log('Task assignee outside the active meeting roster; leaving unassigned.');
 
               // Validate due_date if provided
               let validDueDate = null;
