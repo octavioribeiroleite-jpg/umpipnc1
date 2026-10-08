@@ -22,7 +22,7 @@
   .ipnc-workspace-header__heading:has(.ipnc-workspace-header__mobile-title) .dashboard-motto { display: none; }
   .ipnc-workspace-header__mobile-title { display: block; font-size: 1.125rem; font-weight: 700; overflow-wrap: anywhere; }
   .ipnc-workspace-header .dashboard-topbar-actions { gap: 4px; }
-  .ipnc-workspace-header .dashboard-account { padding: 0; gap: 0; }
+  .ipnc-workspace-header .dashboard-account { min-width: 48px; flex-shrink: 0; justify-content: center; padding: 0; gap: 0; }
   .ipnc-workspace-header .dashboard-account-copy, .ipnc-workspace-header .dashboard-account-chevron { display: none; }
   .ipnc-workspace-header .dashboard-avatar { width: 40px; height: 40px; flex-basis: 40px; }
 }

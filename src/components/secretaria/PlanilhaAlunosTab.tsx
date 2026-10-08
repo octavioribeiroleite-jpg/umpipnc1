@@ -737,6 +737,7 @@ export default function PlanilhaAlunosTab({
                           <div className="flex items-center gap-1">
                             <Input
                               autoFocus
+                              aria-label="Nome do aluno"
                               value={editingName}
                               onChange={(e) => setEditingName(e.target.value)}
                               onKeyDown={(e) => {
@@ -837,6 +838,7 @@ export default function PlanilhaAlunosTab({
                       <div className="flex items-center gap-1 flex-1">
                         <Input
                           autoFocus
+                          aria-label="Nome do aluno"
                           value={editingName}
                           onChange={(e) => setEditingName(e.target.value)}
                           onKeyDown={(e) => {
