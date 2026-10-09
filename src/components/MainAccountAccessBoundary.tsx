@@ -1,17 +1,26 @@
 import type { ReactNode } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import AppLoadingSplash from '@/components/layout/AppLoadingSplash';
 import { usesIndependentAccess } from '@/lib/auth-access-scope';
+import { APP_HOME_PATH } from '@/lib/app-home';
 
-export function MainAccountAccessBoundary({ failed, onSignOut, children }: {
+export function MainAccountAccessBoundary({ authenticated, loading, failed, onSignOut, children }: {
+  authenticated: boolean;
+  loading: boolean;
   failed: boolean;
   onSignOut: () => Promise<void>;
   children: ReactNode;
 }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  if (!failed || usesIndependentAccess(pathname)) return children;
+  if (usesIndependentAccess(pathname)) return children;
+  if (!failed) {
+    if (loading) return <AppLoadingSplash label="Confirmando seu acesso…" />;
+    if (!authenticated) return <Navigate to={APP_HOME_PATH} replace />;
+    return children;
+  }
 
   return (
     <main className="min-h-dvh flex items-center justify-center p-4">

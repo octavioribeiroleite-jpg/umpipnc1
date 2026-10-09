@@ -11,8 +11,9 @@ const root = path.resolve(import.meta.dirname, '..');
 const built = await build({
   absWorkingDir: root,
   stdin: { contents: `import React from 'react'; import {renderToStaticMarkup} from 'react-dom/server'; import {StaticRouter} from 'react-router-dom/server'; import {MainAccountAccessBoundary} from './src/components/MainAccountAccessBoundary';
-    export function render(path, failed) { let mounts=0; function Content(){mounts++;return <form id="own-access-guard"><input aria-label="PIN do acesso independente" /></form>;} return {html:renderToStaticMarkup(<StaticRouter location={path}><MainAccountAccessBoundary failed={failed} onSignOut={async()=>{}}><Content/></MainAccountAccessBoundary></StaticRouter>),mounts}; }`, resolveDir: root, loader: 'tsx' },
+    export function render(path, failed) { let mounts=0; function Content(){mounts++;return <form id="own-access-guard"><input aria-label="PIN do acesso independente" /></form>;} return {html:renderToStaticMarkup(<StaticRouter location={path}><MainAccountAccessBoundary authenticated={true} loading={false} failed={failed} onSignOut={async()=>{}}><Content/></MainAccountAccessBoundary></StaticRouter>),mounts}; }`, resolveDir: root, loader: 'tsx' },
   bundle: true, write: false, format: 'esm', platform: 'node', jsx: 'automatic', mainFields: ['module', 'main'],
+  loader: { '.png': 'dataurl' },
   alias: { '@': path.join(root, 'src') },
   plugins: [{ name: 'react-runtime', setup(builder) {
     builder.onResolve({filter: /^(?:react|react-dom|react-router|react-router-dom)(?:\/|$)/}, args => ({path: pathToFileURL(require.resolve(args.path)).href, external: true}));

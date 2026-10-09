@@ -264,8 +264,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (nextUser) {
+        // Uma identidade nova precisa confirmar perfil e papéis antes de montar as áreas privadas.
+        const scheduledHydrationId = ++hydrationRef.current;
+        setLoading(true);
+        setRolesLoaded(false);
         setTimeout(() => {
-          if (isMounted) void fetchProfileAndRoles(nextUser.id);
+          if (isMounted && scheduledHydrationId === hydrationRef.current) {
+            void fetchProfileAndRoles(nextUser.id);
+          }
         }, 0);
       } else {
         resetAuthData();
@@ -389,7 +395,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         effectiveSocietyId,
       }}
     >
-      <MainAccountAccessBoundary failed={authError} onSignOut={signOut}>
+      <MainAccountAccessBoundary authenticated={Boolean(user)} loading={loading} failed={authError} onSignOut={signOut}>
         {children}
       </MainAccountAccessBoundary>
     </AuthContext.Provider>
