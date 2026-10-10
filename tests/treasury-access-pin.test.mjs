@@ -66,7 +66,7 @@ function harness(options = {}) {
   return {
     calls, entered, navigation, opened, render,
     pin: () => find(node => node.type === PinPad),
-    error: () => find(node => node.props?.className === 'ta-error')?.props.children,
+    error: () => find(node => node.type === PinPad)?.props.errorMessage ?? find(node => node.props?.className === 'ta-error')?.props.children,
     chooseSociety: () => find(node => node.props?.className === 'ta-option').props.onClick(),
     chooseAdmin: () => find(node => node.props?.className === 'ta-option ta-admin').props.onClick(),
     adminFields: () => nodes(render()).filter(node => node.type === 'input'),
@@ -76,7 +76,7 @@ function harness(options = {}) {
 
 test('society PIN keypad forwards exactly the completed value, with financial cache and access checks preserved', async () => {
   const h = harness(); h.chooseSociety();
-  assert.equal(h.pin().props.presentation, 'dialog');
+  assert.equal(h.pin().props.presentation, 'access');
   assert.equal(h.pin().props.embedded, true);
   h.pin().props.onComplete('654321'); await settle();
   assert.deepEqual(h.calls, ['cancel', 'remove', { name: 'treasury-pin-login', body: { fund_id: fund.id, pin: '654321' } }, 'setSession', 'access', 'invalidate']);

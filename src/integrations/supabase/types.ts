@@ -2271,6 +2271,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      financial_charge_operation: {
+        Args: { p_request_id: string; p_charge_id: string; p_operation: string; p_expected: Json; p_payload?: Json }
+        Returns: Json
+      }
       ebd_close_day: { Args: { p_date: string }; Returns: Json }
       ebd_reopen_day: { Args: { p_date: string; p_closure_id: string }; Returns: boolean }
       add_shirt_campaign_lot: {

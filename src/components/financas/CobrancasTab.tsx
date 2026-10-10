@@ -1,6 +1,6 @@
 import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { QueryErrorState } from '@/components/ui/query-error-state';
-import { useId, useState, useEffect } from 'react';
+import { useId, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -20,6 +20,7 @@ import { Check, MoreHorizontal, Receipt, Loader2, Undo2, Trash2, Eye, Search, Cl
 import { cn } from '@/lib/utils';
 import { ReceiptLink } from '@/components/ReceiptLink';
 import { receiptReference } from '@/lib/receipt-path';
+import { createChargeOperation, executeChargeOperation, chargeOperationError, chargePaymentDateInput, type ChargeOperationRequest } from '@/lib/charge-operation';
 
 const ANNUAL_CHARGE_TYPE = 'annual_contribution';
 
@@ -31,6 +32,8 @@ interface Member {
 interface Charge {
   id: string;
   member_id: string;
+  society_id: string | null;
+  updated_at: string;
   type: string;
   amount: number;
   paid_amount: number | null;
@@ -71,11 +74,16 @@ export function CobrancasTab() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [selectedCharge, setSelectedCharge] = useState<Charge | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 16));
+  const [paymentDate, setPaymentDate] = useState(chargePaymentDateInput);
   const [paymentMethod, setPaymentMethod] = useState('pix');
   const [paymentNotes, setPaymentNotes] = useState('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const operationBusy = useRef(false);
+  const paymentAttempt = useRef<{ fingerprint: string; file: File | null; request: ChargeOperationRequest; receiptUploaded: boolean } | null>(null);
+  const confirmationAttempt = useRef<{ fingerprint: string; request: ChargeOperationRequest } | null>(null);
+  const [paymentError, setPaymentError] = useState('');
+  const [confirmationError, setConfirmationError] = useState('');
 
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [viewingCharge, setViewingCharge] = useState<Charge | null>(null);
@@ -170,10 +178,11 @@ export function CobrancasTab() {
     setSelectedMember(member);
     setSelectedCharge(charge);
     setPaymentAmount(remaining.toFixed(2));
-    setPaymentDate(new Date().toISOString().slice(0, 16));
+    setPaymentDate(chargePaymentDateInput());
     setPaymentMethod('pix');
     setPaymentNotes('');
     setReceiptFile(null);
+    setPaymentError('');
     setDialogOpen(true);
   };
 
@@ -184,11 +193,11 @@ export function CobrancasTab() {
   };
 
   const handlePayment = async () => {
-    if (!selectedMember || !selectedCharge || !user) return;
+    if (!selectedMember || !selectedCharge || !user || operationBusy.current) return;
 
     const enteredAmount = parseMoney(paymentAmount);
     const remainingAmount = getRemainingAmount(selectedCharge);
-    if (enteredAmount <= 0) {
+    if (!Number.isFinite(enteredAmount) || enteredAmount <= 0 || Math.abs(enteredAmount * 100 - Math.round(enteredAmount * 100)) > 0.000001) {
       toast.error('Informe um valor recebido válido');
       return;
     }
@@ -196,25 +205,34 @@ export function CobrancasTab() {
       toast.error(`O valor recebido não pode passar de ${formatCurrency(remainingAmount)}`);
       return;
     }
-
+    const paymentInstant = new Date(paymentDate);
+    if (!Number.isFinite(paymentInstant.getTime())) {
+      toast.error('Informe uma data de pagamento válida');
+      return;
+    }
+    operationBusy.current = true;
     setSubmitting(true);
-    const paidAt = new Date(paymentDate).toISOString();
+    setPaymentError('');
+    const paidAt = paymentInstant.toISOString();
     const newTotalPaid = getPaidAmount(selectedCharge) + enteredAmount;
     const isFullyPaid = newTotalPaid >= Number(selectedCharge.amount || 0);
     const receiptPrefix = isFullyPaid ? 'Quitação' : 'Pagamento parcial';
 
-    setCharges(prev => prev.map(c => (
-      c.id === selectedCharge.id
-        ? { ...c, status: 'pago', paid_at: paidAt, payment_method: paymentMethod, paid_amount: newTotalPaid }
-        : c
-    )));
-    setDialogOpen(false);
-    toast.success(isFullyPaid ? 'Cobrança anual quitada!' : 'Baixa parcial registrada!');
-
     try {
-      let receiptUrl: string | null = null;
-
-      if (receiptFile) {
+      const partialNote = `${receiptPrefix}: ${formatCurrency(enteredAmount)} de ${formatCurrency(selectedCharge.amount)}. Composição: contribuição ${formatCurrency(contributionAmount)} + per capita ${formatCurrency(perCapitaAmount)}.`;
+      const payload = {
+        amount: enteredAmount,
+        paid_at: paidAt,
+        payment_method: paymentMethod,
+        receipt_url: null,
+        notes: paymentNotes ? `${paymentNotes}\n${partialNote}` : partialNote,
+      };
+      const fingerprint = JSON.stringify([user.id, selectedCharge, payload]);
+      if (paymentAttempt.current?.fingerprint !== fingerprint || paymentAttempt.current.file !== receiptFile) {
+        paymentAttempt.current = { fingerprint, file: receiptFile, request: createChargeOperation(selectedCharge, 'payment', payload), receiptUploaded: false };
+      }
+      const attempt = paymentAttempt.current;
+      if (receiptFile && !attempt.receiptUploaded) {
         const fileExt = receiptFile.name.split('.').pop();
         if (!societyId) throw new Error('Selecione a sociedade.');
         const fileName = `${societyId}/${currentYear}/cobrancas/${crypto.randomUUID()}.${fileExt}`;
@@ -222,115 +240,59 @@ export function CobrancasTab() {
           .from('receipts')
           .upload(fileName, receiptFile);
 
-        if (!uploadError) {
-          receiptUrl = receiptReference(fileName);
-        }
+        if (uploadError) throw uploadError;
+        attempt.request.p_payload.receipt_url = receiptReference(fileName);
+        attempt.receiptUploaded = true;
       }
-
-      const partialNote = `${receiptPrefix}: ${formatCurrency(enteredAmount)} de ${formatCurrency(selectedCharge.amount)}. Composição: contribuição ${formatCurrency(contributionAmount)} + per capita ${formatCurrency(perCapitaAmount)}.`;
-
-      const { data: transaction } = await supabase
-        .from('transactions')
-        .insert({
-          description: `Contribuição anual - ${selectedMember.name} - ${selectedYear}`,
-          amount: enteredAmount,
-          type: 'entrada',
-          date: paidAt.split('T')[0],
-          created_by: user.id,
-          origin: 'automatic',
-          reference_type: 'charge',
-          reference_id: selectedCharge.id,
-          member_id: selectedMember.id,
-          receipt_url: receiptUrl,
-          society_id: societyId || null,
-        })
-        .select('id')
-        .single();
-
-      await supabase
-        .from('charges')
-        .update({
-          status: 'pago',
-          paid_at: paidAt,
-          payment_method: paymentMethod,
-          receipt_url: receiptUrl || selectedCharge.receipt_url,
-          notes: paymentNotes ? `${paymentNotes}\n${partialNote}` : partialNote,
-          transaction_id: transaction?.id,
-          paid_amount: newTotalPaid,
-        })
-        .eq('id', selectedCharge.id);
-    } catch (error: any) {
-      fetchData();
-      toast.error('Erro ao processar: ' + error.message);
+      const result = await executeChargeOperation(args => supabase.rpc('financial_charge_operation', args), attempt.request);
+      setCharges(prev => result.charge
+        ? prev.map(c => c.id === selectedCharge.id ? result.charge as unknown as Charge : c)
+        : prev.filter(c => c.id !== selectedCharge.id));
+      void fetchData();
+      paymentAttempt.current = null;
+      setDialogOpen(false);
+      if (result.replayed) toast.info('Esta tentativa de pagamento já foi processada.');
+      else toast.success(isFullyPaid ? 'Cobrança anual quitada!' : 'Baixa parcial registrada!');
+    } catch (error: unknown) {
+      const message = chargeOperationError(error);
+      setPaymentError(message);
+      toast.error('Erro ao processar: ' + message);
+      void fetchData();
     } finally {
+      operationBusy.current = false;
       setSubmitting(false);
     }
   };
 
-  const handleRevertPayment = async (charge: Charge) => {
-    setCharges(prev => prev.map(c =>
-      c.id === charge.id
-        ? { ...c, status: 'pendente', paid_at: null, payment_method: null, receipt_url: null, notes: null, transaction_id: null, paid_amount: null }
-        : c
-    ));
-    toast.success('Cobrança voltou para pendente!');
-
+  const confirmActionHandler = async () => {
+    if (!confirmAction || operationBusy.current) return;
+    operationBusy.current = true;
+    setSubmitting(true);
+    setConfirmationError('');
+    const { type, charge } = confirmAction;
     try {
-      await supabase
-        .from('transactions')
-        .delete()
-        .eq('reference_type', 'charge')
-        .eq('reference_id', charge.id);
-
-      if (charge.transaction_id) {
-        await supabase.from('transactions').delete().eq('id', charge.transaction_id);
+      const payload = type === 'revert' ? { notes: `Contribuição: ${formatCurrency(contributionAmount)} | Per capita: ${formatCurrency(perCapitaAmount)}` } : {};
+      const fingerprint = JSON.stringify([user?.id, type, charge, payload]);
+      if (confirmationAttempt.current?.fingerprint !== fingerprint) {
+        confirmationAttempt.current = { fingerprint, request: createChargeOperation(charge, type, payload) };
       }
-
-      await supabase
-        .from('charges')
-        .update({
-          status: 'pendente',
-          paid_at: null,
-          payment_method: null,
-          receipt_url: null,
-          notes: `Contribuição: ${formatCurrency(contributionAmount)} | Per capita: ${formatCurrency(perCapitaAmount)}`,
-          transaction_id: null,
-          paid_amount: null,
-        })
-        .eq('id', charge.id);
-    } catch (error: any) {
-      fetchData();
-      toast.error('Erro: ' + error.message);
+      const result = await executeChargeOperation(args => supabase.rpc('financial_charge_operation', args), confirmationAttempt.current.request);
+      setCharges(prev => result.charge ? prev.map(c => c.id === charge.id ? result.charge as unknown as Charge : c) : prev.filter(c => c.id !== charge.id));
+      void fetchData();
+      confirmationAttempt.current = null;
+      setConfirmDialogOpen(false);
+      setConfirmAction(null);
+      if (result.replayed) toast.info('Esta tentativa já foi processada.');
+      else toast.success(type === 'revert' ? 'Cobrança voltou para pendente!' : 'Cobrança excluída!');
+    } catch (error: unknown) {
+      const message = chargeOperationError(error);
+      setConfirmationError(message);
+      toast.error('Erro: ' + message);
+      void fetchData();
+    } finally {
+      operationBusy.current = false;
+      setSubmitting(false);
     }
-  };
-
-  const handleDeleteCharge = async (charge: Charge) => {
-    setCharges(prev => prev.filter(c => c.id !== charge.id));
-    toast.success('Cobrança excluída!');
-
-    try {
-      await supabase
-        .from('transactions')
-        .delete()
-        .eq('reference_type', 'charge')
-        .eq('reference_id', charge.id);
-
-      if (charge.transaction_id) {
-        await supabase.from('transactions').delete().eq('id', charge.transaction_id);
-      }
-      await supabase.from('charges').delete().eq('id', charge.id);
-    } catch (error: any) {
-      fetchData();
-      toast.error('Erro: ' + error.message);
-    }
-  };
-
-  const confirmActionHandler = () => {
-    if (!confirmAction) return;
-    if (confirmAction.type === 'revert') handleRevertPayment(confirmAction.charge);
-    else handleDeleteCharge(confirmAction.charge);
-    setConfirmDialogOpen(false);
-    setConfirmAction(null);
   };
 
   const chargeMembers = members.filter(member => getAnnualCharge(member.id));
@@ -540,7 +502,7 @@ export function CobrancasTab() {
                           )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm"><MoreHorizontal className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="sm" aria-label={`Opções da cobrança de ${member.name}`}><MoreHorizontal className="h-4 w-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => openDetailsDialog(member, charge)}>
@@ -637,13 +599,14 @@ export function CobrancasTab() {
         )}
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={open => { if (!operationBusy.current) setDialogOpen(open); }}>
         <DialogContent size="form" className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Dar baixa - {selectedMember?.name}</DialogTitle>
+            <DialogDescription className="sr-only">Informe o valor recebido e os dados do pagamento da cobrança anual.</DialogDescription>
           </DialogHeader>
           {selectedCharge && (
-            <div className="space-y-4">
+            <fieldset disabled={submitting} className="space-y-4 min-w-0">
               <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Contribuição</span><span className="font-medium">{formatCurrency(contributionAmount)}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Per capita</span><span className="font-medium">{formatCurrency(perCapitaAmount)}</span></div>
@@ -676,7 +639,7 @@ export function CobrancasTab() {
 
               <div className="space-y-2">
                 <Label htmlFor={`${formId}-payment-method`}>Método de Pagamento</Label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod} disabled={submitting}>
                   <SelectTrigger id={`${formId}-payment-method`}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pix">PIX</SelectItem>
@@ -701,7 +664,8 @@ export function CobrancasTab() {
                 {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Receipt className="h-4 w-4 mr-2" />}
                 {submitting ? 'Processando...' : 'Confirmar baixa'}
               </Button>
-            </div>
+              {paymentError && <p role="alert" className="text-sm text-destructive">{paymentError}</p>}
+            </fieldset>
           )}
         </DialogContent>
       </Dialog>
@@ -710,6 +674,7 @@ export function CobrancasTab() {
         <DialogContent size="form" className="finance-dialog">
           <DialogHeader>
             <DialogTitle>Detalhes - {viewingMember?.name}</DialogTitle>
+            <DialogDescription className="sr-only">Valores, recebimentos e comprovante da cobrança anual de {selectedYear}.</DialogDescription>
           </DialogHeader>
           {viewingCharge && (
             <div className="space-y-4">
@@ -766,7 +731,12 @@ export function CobrancasTab() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+      <AlertDialog open={confirmDialogOpen} onOpenChange={open => {
+        if (!operationBusy.current) {
+          setConfirmDialogOpen(open);
+          if (open) setConfirmationError('');
+        }
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -778,10 +748,11 @@ export function CobrancasTab() {
                 : 'A cobrança anual será excluída permanentemente junto com receitas vinculadas.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {confirmationError && <p role="alert" className="text-sm text-destructive">{confirmationError}</p>}
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmActionHandler}>
-              {confirmAction?.type === 'revert' ? 'Reverter' : 'Excluir'}
+            <AlertDialogCancel disabled={submitting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction disabled={submitting} onClick={event => { event.preventDefault(); void confirmActionHandler(); }}>
+              {submitting ? 'Processando...' : confirmAction?.type === 'revert' ? 'Reverter' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

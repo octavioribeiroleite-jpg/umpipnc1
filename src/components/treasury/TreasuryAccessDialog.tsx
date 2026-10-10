@@ -59,11 +59,14 @@ export function TreasuryAccessDialog({ open, onOpenChange, onEntered }: { open: 
     finally { submitting.current = false; setBusy(false); }
   };
   const societyChoice = choice && choice !== 'admin' ? choice : null;
-  return <Dialog open={open} onOpenChange={value => { if (!busy) onOpenChange(value); }}><DialogContent className={`treasury-access-dialog${societyChoice ? ' treasury-access-dialog-pin' : ''}`} onInteractOutside={e => { if (busy) e.preventDefault(); }} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }}>
+  return <Dialog open={open} onOpenChange={value => { if (!busy) onOpenChange(value); }}><DialogContent
+    size={societyChoice ? 'screen' : 'standard'} showCloseButton={!societyChoice}
+    className={societyChoice ? 'treasury-access-screen' : 'treasury-access-dialog'}
+    onInteractOutside={e => { if (busy) e.preventDefault(); }} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }}>
     {societyChoice ? <>
       <DialogTitle className="sr-only">Tesouraria · {societyChoice.abbreviation}</DialogTitle>
       <DialogDescription className="sr-only">Informe o PIN da {societyChoice.abbreviation}, definido pelo administrador.</DialogDescription>
-      <PinPad key={`${societyChoice.id}:${pinReset}`} embedded presentation="dialog" profileLabel={`Acesso da ${societyChoice.abbreviation}`} onBack={back} onHome={goHome} onComplete={enteredPin => void login(enteredPin)} loading={busy} />
+      <PinPad key={`${societyChoice.id}:${pinReset}`} embedded presentation="access" profileLabel={`Acesso da ${societyChoice.abbreviation}`} onBack={back} onHome={goHome} onComplete={enteredPin => void login(enteredPin)} loading={busy} errorMessage={error || undefined} />
     </> : <>
       <DialogTitle className="sr-only">{choice ? 'Acesso administrativo à tesouraria' : 'Tesouraria'}</DialogTitle>
       <DialogDescription className="sr-only">{choice ? 'Entre com sua conta de administrador.' : 'Escolha sua sociedade ou o acesso administrativo.'}</DialogDescription>
@@ -87,6 +90,6 @@ export function TreasuryAccessDialog({ open, onOpenChange, onEntered }: { open: 
         </form>}
       </AccessShell>
     </>}
-    {error && <p className="ta-error" role="alert">{error}</p>}
+    {error && !societyChoice && <p className="ta-error" role="alert">{error}</p>}
   </DialogContent></Dialog>;
 }
