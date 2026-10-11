@@ -23,9 +23,9 @@ function actualFunction(name, scope) {
   return new Function(...Object.keys(scope), js)(...Object.values(scope));
 }
 
-function entryFixture({ profile = 'admin', accessLevel = null } = {}) {
+function entryFixture({ profile = 'admin', accessLevel = null, holdEdge = false } = {}) {
   const state = { loading: false, accessLevel, loginStep: 'pin', pendingPin: '123456', pinError: false, saved: null, professorNome: 'Pessoa fictícia', professorClassId: 'fixture-class', aiReauthOpen: true };
-  const requests = [], accepting = [], messages = [];
+  const requests = [], accepting = [], resolvingEdge = [], messages = [];
   const ref = { current: false };
   let edgeFailure = null, authFailure = null;
   const response = {
@@ -43,6 +43,7 @@ function entryFixture({ profile = 'admin', accessLevel = null } = {}) {
     supabase: {
       functions: { async invoke(name, options) {
         requests.push({ kind: 'edge', name, options });
+        if (holdEdge) await new Promise(resolve => resolvingEdge.push(resolve));
         if (edgeFailure) throw edgeFailure;
         return { data: response, error: null };
       } },
@@ -58,6 +59,7 @@ function entryFixture({ profile = 'admin', accessLevel = null } = {}) {
   return {
     state, requests, messages, ref, response,
     handler: name => actualFunction(name, scope),
+    resolveEdge() { assert.ok(resolvingEdge.length); resolvingEdge.shift()(); },
     accept() { assert.ok(accepting.length); accepting.shift()(); },
     failEdge(error) { edgeFailure = error; },
     failAuth(error) { authFailure = error; },
@@ -96,6 +98,85 @@ test('professor PIN advances to name immediately without an unnecessary validati
   assert.equal(fixture.state.pendingPin, '123456');
   assert.equal(fixture.state.loading, false);
   assert.equal(fixture.ref.current, false);
+  assert.deepEqual(fixture.requests, []);
+});
+
+test('name screen Back shares loading with Home and uses the guarded return callback', () => {
+  let attributes;
+  const visit = node => {
+    if (ts.isJsxOpeningElement(node) && node.tagName.getText(page) === 'AccessShell') {
+      const title = node.attributes.properties.find(prop => ts.isJsxAttribute(prop) && prop.name.getText(page) === 'title');
+      if (title?.initializer?.getText(page) === '"Qual é o seu nome?"') attributes = node.attributes.properties;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(page);
+  assert.ok(attributes);
+  const prop = name => attributes.find(attribute => ts.isJsxAttribute(attribute) && attribute.name.getText(page) === name);
+  assert.equal(prop('onBack')?.initializer?.expression?.getText(page), 'handleNameBack');
+  assert.equal(prop('disabled')?.initializer?.expression?.getText(page), 'loading');
+  assert.equal(prop('backDisabled'), undefined, 'Back must not override the shared busy state');
+  assert.ok(prop('showHome'));
+});
+
+for (const stage of ['edge', 'sdk']) test('teacher name Back cannot abandon an entry pending at ' + stage, async () => {
+  const fixture = entryFixture({ profile: 'professor', holdEdge: stage === 'edge' });
+  fixture.state.loginStep = 'name';
+  const back = fixture.handler('handleNameBack');
+  const pending = fixture.handler('handleNameSubmit')();
+  // Call immediately: the ref must protect the interval before loading renders.
+  assert.equal(back(), false);
+  assert.equal(fixture.state.loginStep, 'name');
+  assert.equal(fixture.state.pendingPin, '123456');
+  assert.equal(fixture.state.saved, null);
+  await tick();
+  assert.equal(fixture.state.loading, true);
+  assert.equal(back(), false);
+  assert.equal(fixture.state.accessLevel, null);
+  if (stage === 'edge') {
+    assert.equal(fixture.requests.filter(request => request.kind === 'auth').length, 0);
+    fixture.resolveEdge(); await tick();
+    assert.equal(back(), false, 'Back remains guarded while SDK accepts the server session');
+  }
+  fixture.accept(); await pending;
+  assert.equal(fixture.state.loading, false);
+  assert.equal(fixture.ref.current, false);
+  assert.equal(fixture.state.accessLevel, 'professor');
+  assert.equal(fixture.state.saved.accessLevel, 'professor');
+});
+
+for (const stage of ['edge', 'sdk']) test('teacher name Back is released after ' + stage + ' failure without granting access', async () => {
+  const fixture = entryFixture({ profile: 'professor', holdEdge: stage === 'edge' });
+  fixture.state.loginStep = 'name';
+  const back = fixture.handler('handleNameBack');
+  const pending = fixture.handler('handleNameSubmit')();
+  assert.equal(back(), false);
+  await tick();
+  if (stage === 'edge') {
+    fixture.failEdge(new Error('Synthetic delayed transport failure'));
+    fixture.resolveEdge();
+  } else {
+    fixture.failAuth(new Error('Synthetic session rejection'));
+    fixture.accept();
+  }
+  await pending;
+  assert.equal(fixture.state.loading, false);
+  assert.equal(fixture.ref.current, false);
+  assert.equal(fixture.state.accessLevel, null);
+  assert.equal(fixture.state.saved, null);
+  assert.notEqual(back(), false);
+  assert.equal(fixture.state.loginStep, 'pin');
+  assert.equal(fixture.state.pendingPin, '');
+  assert.equal(fixture.requests.filter(request => request.kind === 'edge').length, 1);
+});
+
+test('idle teacher name Back returns to PIN and clears the pending PIN without a request', () => {
+  const fixture = entryFixture({ profile: 'professor' });
+  fixture.state.loginStep = 'name';
+  assert.notEqual(fixture.handler('handleNameBack')(), false);
+  assert.equal(fixture.state.loginStep, 'pin');
+  assert.equal(fixture.state.pendingPin, '');
+  assert.equal(fixture.state.accessLevel, null);
   assert.deepEqual(fixture.requests, []);
 });
 

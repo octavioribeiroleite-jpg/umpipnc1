@@ -1,0 +1,15 @@
+# Manutenção diária — 11/10/2026
+
+Foi reproduzido um defeito na entrada do professor da EBD: durante o envio do nome, o botão Voltar ao PIN permanecia ativo. O retorno mudava a tela, mas a resposta pendente podia concluir a entrada e abrir a Secretaria. A reprodução usou callbacks reais com transporte e credenciais fictícios. Não é um desvio da validação do PIN.
+
+A etapa do nome agora compartilha o bloqueio de navegação dos demais acessos enquanto a requisição está pendente. Uma guarda síncrona também protege o retorno antes da atualização da interface. Após falha, Voltar e Home ficam disponíveis novamente. Não foram alterados os payloads, sessões, permissões ou validações de autenticação.
+
+Validação: tipos, 542/542 testes isolados e build de produção passaram. Seis novas regressões cobrem retorno imediato, resposta Edge pendente, aceitação da sessão pelo SDK, sucesso, falhas e retorno ocioso. Revisão independente aprovada. Em navegador a 390×844, a fixture real de login, isolada de rede externa e banco de produção, confirmou Back/Home bloqueados durante o envio e retorno ao PIN sem acesso após rejeição sintética da sessão. O PIN público da Diretoria também retornou à seleção pelo histórico do navegador. Não foi exercitado gesto de aparelho físico na etapa do nome.
+
+A revisão diária comparou a main do GitHub e a fonte do Sites, verificou rotas públicas, manifest, service worker, entrega estática, dependências e logs disponíveis. Não houve nova alteração nas 33 entradas de advisories comparadas pelo serviço oficial npm. O npm/npx não está disponível neste host; TypeScript e Vite locais foram executados diretamente com Node 24.19.0, preservando package-lock.json. O build conserva os avisos conhecidos de tamanho de chunk e importação de Sonner.
+
+No Supabase, os 14 avisos de segurança e 115 de performance são iguais aos de 10/10. As 57 tabelas públicas mantêm RLS e não há constraints inválidas. Funções, grants, triggers e bucket privado da Tesouraria conferidos com a fonte. Invariantes agregadas da Tesouraria e cobranças legadas não revelaram novas inconsistências; grupos coincidentes conhecidos não demonstram duplicação. Logs disponíveis não mostraram HTTP 5xx ou PostgreSQL ERROR/FATAL. A atualização PostgreSQL 17.6 e os demais avisos conhecidos continuam documentados no relatório de 10/10, sem alteração operacional nesta revisão.
+
+A auditoria da chamada publicada anteriormente em 11/10 permanece registrada em docs/design-audit. Esta manutenção acrescenta somente a correção do retorno no formulário de nome. Não foram criadas presenças, movimentações financeiras, mensagens ou credenciais reais para teste. Contas protegidas reais, concorrência PostgreSQL, instalação/offline do PWA físico, backup/restauração e certificação integral de segurança permanecem fora da cobertura.
+
+Evidências sanitizadas e proveniência final da publicação ficam no pacote externo reports/security-reports/2026-10-11_c21f878 da automação revis-o-di-ria-do-renovo-ipnc; o nome indica a revisão inicial da manutenção.

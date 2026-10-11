@@ -474,6 +474,12 @@ export default function Secretaria() {
     setNameInput('');
   };
 
+  const handleNameBack = () => {
+    if (entryRequestRef.current) return false;
+    setLoginStep('pin');
+    setPendingPin('');
+  };
+
   const readData = useCallback(async (onSnapshotStart?: () => void) => {
     const snapshotVersion = captureEbdSnapshot();
     const scope = dataScopeRef.current;
@@ -704,7 +710,7 @@ export default function Secretaria() {
     if (loginStep === 'name') {
       return (
         <AccessShell title="Qual é o seu nome?" description="Para registrar quem entrou na sala" headingIcon={UserCheck}
-          onBack={() => { setLoginStep('pin'); setPendingPin(''); }} backLabel="Voltar ao PIN" showHome disabled={loading} backDisabled={false}>
+          onBack={handleNameBack} backLabel="Voltar ao PIN" showHome disabled={loading}>
           <div className="ipnc-access-form">
             <label className="block space-y-2 text-sm font-medium">Seu nome
             <input
