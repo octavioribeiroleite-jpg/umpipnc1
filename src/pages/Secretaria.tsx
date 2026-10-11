@@ -3,6 +3,7 @@ import { assertEbdSnapshotCurrent, captureEbdSnapshot } from '@/lib/ebd-attendan
 import { EbdNavigationContext, useSecretariaNavigation } from '@/hooks/useEbdNavigation';
 import { loadStoredEbdSession, saveStoredEbdSession, clearStoredEbdSession } from '@/lib/ebd-session-storage';
 import { closeEbdDay, reopenEbdDay, setEbdCallStatus } from '@/lib/ebd-day';
+import { buildDayRoster, buildDayClasses, normalizeDayClosure, type DayClosureSummary } from '@/lib/ebd-roster';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/ebd-client';
@@ -80,6 +81,7 @@ interface EbdClass {
   id: string;
   name: string;
   order_index: number;
+  active?: boolean;
 }
 
 interface EbdStudent {
@@ -87,6 +89,7 @@ interface EbdStudent {
   class_id: string;
   name: string;
   active: boolean;
+  created_at?: string;
 }
 
 interface AttendanceRecord {
@@ -105,6 +108,7 @@ export interface VisitorEntry {
   id: string;
   name: string | null;
 }
+interface SavedVisitorEntry extends VisitorEntry { class_id: string; date: string }
 
 function getTodayDate(): string {
   const today = new Date();
@@ -300,6 +304,7 @@ export default function Secretaria() {
   const [professorClassId, setProfessorClassId] = useState<string | null>(storedSession?.professorClassId ?? null);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
+  const [closureSummary, setClosureSummary] = useState<DayClosureSummary | null>(null);
   const [visitorCount, setVisitorCount] = useState(0);
   const [classVisitors, setClassVisitors] = useState<Record<string, VisitorEntry[]>>({});
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -326,6 +331,9 @@ export default function Secretaria() {
   const dataScope = `${accessLevel}-${professorClassId}-${birthdayAiExpiresAt}-${sundayDate}`;
   const dataScopeRef = useRef(dataScope);
   dataScopeRef.current = dataScope;
+  const visitorMutationRef = useRef(false);
+  const dayMutationRef = useRef(false);
+  const visitorAttemptRef = useRef<{ key: string; id: string; classId: string; date: string; name: string | null; markedBy: string } | null>(null);
   const { queue: attendanceQueue } = useEbdAttendanceQueue(dataScope, setAttendance);
   const formattedDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
@@ -479,7 +487,7 @@ export default function Secretaria() {
     }
     onSnapshotStart?.();
     const [classesRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes] = await Promise.all([
-      supabase.from('ebd_classes').select('*').eq('active', true).order('order_index'),
+      supabase.from('ebd_classes').select('*').order('order_index'),
       supabase.from('ebd_students').select('*').order('name'),
       supabase.from('ebd_attendance').select('*').eq('date', sundayDate),
       supabase.rpc('ebd_closure' as any, { p_date: sundayDate }),
@@ -491,6 +499,7 @@ export default function Secretaria() {
     const readError = [classesRes, allStudentsRes, attendanceRes, closureRes, visitorEntriesRes, statusRes].find(result => result.error)?.error;
     if (readError) throw readError;
     assertEbdSnapshotCurrent(snapshotVersion);
+    const dayClosureSummary = normalizeDayClosure(closureRes.data);
     const activeStudentRows = (allStudentsRes.data || []).filter(student => student.active);
     setCallStatuses(Object.fromEntries((statusRes.data || []).map((row: any) => [row.class_id, row.status])));
 
@@ -510,10 +519,12 @@ export default function Secretaria() {
     if (closureRes.data) {
       setDayIsClosed(true);
       setClosureId(closureRes.data.id);
+      setClosureSummary(dayClosureSummary);
       setVisitorCount((closureRes.data as any).visitor_count ?? 0);
     } else {
       setDayIsClosed(false);
       setClosureId(null);
+      setClosureSummary(null);
       setVisitorCount(totalV);
     }
     return { classes: classesRes.data || [], activeStudents: activeStudentRows, attendance: attendanceRes.data || [], classVisitors: cvMap };
@@ -540,56 +551,111 @@ export default function Secretaria() {
   }, [accessLevel, birthdayAiExpiresAt]);
 
   const handleAddClassVisitor = useCallback(async (classId: string, name: string | null) => {
+    if (visitorMutationRef.current || dayMutationRef.current) throw new Error('Aguarde a operação da chamada terminar.');
+    visitorMutationRef.current = true;
+    const scope = dataScopeRef.current;
     const cleanName = name?.trim() || null;
-    const { data, error } = await (supabase.from('ebd_class_visitor_entries' as any)
-      .insert({ class_id: classId, date: sundayDate, name: cleanName, marked_by: professorNome || 'Administrador' })
-      .select('id, class_id, name')
-      .single() as any);
-    if (error || !data) {
-      await reportEbdWriteError(error, 'Erro ao adicionar visitante');
-      throw new Error('Visitante não foi salvo.');
-    }
-    notifyEbdChange();
-    setClassVisitors(prev => {
-      const list = prev[classId] ? [...prev[classId]] : [];
-      list.push({ id: data.id, name: data.name ?? null });
-      const next = { ...prev, [classId]: list };
-      setVisitorCount(Object.values(next).reduce((s, l) => s + l.length, 0));
-      return next;
-    });
+    const markedBy = professorNome || 'Administrador';
+    const key = JSON.stringify([classId, sundayDate, cleanName, markedBy]);
+    const attempt = visitorAttemptRef.current?.key === key ? visitorAttemptRef.current : {
+      key, id: crypto.randomUUID(), classId, date: sundayDate, name: cleanName, markedBy,
+    };
+    visitorAttemptRef.current = attempt;
+    try {
+      await ensureEbdSession();
+      if (scope !== dataScopeRef.current) throw new Error('Acesso alterado durante a gravação.');
+      let data: SavedVisitorEntry | null = null;
+      let saveError: unknown;
+      try {
+        const result = await supabase.from('ebd_class_visitor_entries')
+          .insert({ id: attempt.id, class_id: attempt.classId, date: attempt.date, name: attempt.name, marked_by: attempt.markedBy })
+          .select('id, class_id, date, name').single();
+        data = result.data;
+        saveError = result.error;
+      } catch (error) { saveError = error; }
+      if (scope !== dataScopeRef.current) throw new Error('Acesso alterado durante a gravação.');
+      if (saveError || !data) {
+        // A lost response does not mean that the insert failed. Reusing this ID
+        // makes a retry unique; only an authorized read can confirm the result.
+        const confirmed = await supabase.from('ebd_class_visitor_entries')
+          .select('id, class_id, date, name').eq('id', attempt.id).eq('class_id', attempt.classId).eq('date', attempt.date).maybeSingle();
+        if (confirmed.error || !confirmed.data) throw saveError || confirmed.error || new Error('A confirmação do visitante não foi recebida.');
+        data = confirmed.data;
+      }
+      if (scope !== dataScopeRef.current) throw new Error('Acesso alterado durante a gravação.');
+      if (data.id !== attempt.id || data.class_id !== attempt.classId || data.date !== attempt.date || (data.name ?? null) !== attempt.name) {
+        throw new Error('O visitante não foi confirmado. Confira a chamada antes de tentar novamente.');
+      }
+      notifyEbdChange();
+      setClassVisitors(prev => {
+        const list = (prev[classId] || []).filter(visitor => visitor.id !== data.id);
+        const next = { ...prev, [classId]: [...list, { id: data.id, name: data.name ?? null }] };
+        setVisitorCount(Object.values(next).reduce((sum, visitors) => sum + visitors.length, 0));
+        return next;
+      });
+      visitorAttemptRef.current = null;
+    } catch (error) {
+      if (scope === dataScopeRef.current) await reportEbdWriteError(error, 'Erro ao adicionar visitante');
+      throw error;
+    } finally { visitorMutationRef.current = false; }
   }, [sundayDate, professorNome]);
 
   const handleRemoveClassVisitor = useCallback(async (classId: string, entryId: string) => {
-    const { data, error } = await (supabase.from('ebd_class_visitor_entries' as any).delete().eq('id', entryId).select('id').single() as any);
-    if (error || !data) {
-      await reportEbdWriteError(error, 'Erro ao remover visitante');
-      return;
-    }
-    notifyEbdChange();
-    setClassVisitors(prev => {
-      const list = (prev[classId] || []).filter(v => v.id !== entryId);
-      const next = { ...prev, [classId]: list };
-      setVisitorCount(Object.values(next).reduce((s, l) => s + l.length, 0));
-      return next;
-    });
-  }, []);
+    if (visitorMutationRef.current || dayMutationRef.current) return;
+    visitorMutationRef.current = true;
+    const scope = dataScopeRef.current;
+    try {
+      await ensureEbdSession();
+      if (scope !== dataScopeRef.current) return;
+      const { data, error } = await supabase.from('ebd_class_visitor_entries')
+        .delete().eq('id', entryId).eq('class_id', classId).eq('date', sundayDate).select('id').single();
+      if (scope !== dataScopeRef.current) return;
+      if (error || !data) throw error || new Error('A remoção do visitante não foi confirmada.');
+      notifyEbdChange();
+      setClassVisitors(prev => {
+        const next = { ...prev, [classId]: (prev[classId] || []).filter(visitor => visitor.id !== entryId) };
+        setVisitorCount(Object.values(next).reduce((sum, visitors) => sum + visitors.length, 0));
+        return next;
+      });
+    } catch (error) {
+      if (scope === dataScopeRef.current) await reportEbdWriteError(error, 'Erro ao remover visitante');
+    } finally { visitorMutationRef.current = false; }
+  }, [sundayDate]);
 
   const handleCloseDay = async () => {
-    await closeEbdDay(sundayDate);
-    await fetchData();
-    toast.success('Dia fechado com sucesso!');
+    if (dayMutationRef.current || visitorMutationRef.current) throw new Error('Aguarde a operação da chamada terminar antes de fechar o dia.');
+    dayMutationRef.current = true;
+    const scope = dataScopeRef.current;
+    try {
+      await closeEbdDay(sundayDate);
+      if (scope !== dataScopeRef.current) return;
+      await fetchData();
+      if (scope === dataScopeRef.current) toast.success('Dia fechado com sucesso!');
+    } finally { dayMutationRef.current = false; }
   };
 
   const handleCallStatusChange = async (classId: string, status: 'aberta' | 'finalizada') => {
-    await setEbdCallStatus(sundayDate, classId, status, professorNome || 'Administrador');
-    setCallStatuses(previous => ({ ...previous, [classId]: status }));
+    if (dayMutationRef.current || visitorMutationRef.current) throw new Error('Aguarde a operação da chamada terminar.');
+    dayMutationRef.current = true;
+    const scope = dataScopeRef.current;
+    try {
+      await setEbdCallStatus(sundayDate, classId, status, professorNome || 'Administrador');
+      if (scope !== dataScopeRef.current) return;
+      setCallStatuses(previous => ({ ...previous, [classId]: status }));
+    } finally { dayMutationRef.current = false; }
   };
 
   const handleReopenDay = async () => {
     if (!closureId) return;
-    await reopenEbdDay(sundayDate, closureId);
-    await fetchData();
-    toast.success('Dia reaberto!');
+    if (dayMutationRef.current || visitorMutationRef.current) throw new Error('Aguarde a operação da chamada terminar antes de reabrir o dia.');
+    dayMutationRef.current = true;
+    const scope = dataScopeRef.current;
+    try {
+      await reopenEbdDay(sundayDate, closureId);
+      if (scope !== dataScopeRef.current) return;
+      await fetchData();
+      if (scope === dataScopeRef.current) toast.success('Dia reaberto!');
+    } finally { dayMutationRef.current = false; }
   };
   const handleCancelReauth = () => {
     if (loading || entryRequestRef.current) return false;
@@ -679,11 +745,19 @@ export default function Secretaria() {
 
   // Professor só enxerga a própria sala; admin vê todas
   const visibleClasses = isAdmin
-    ? classes
-    : classes.filter(c => c.id === professorClassId);
+    ? classes.filter(group => group.active !== false)
+    : classes.filter(group => group.active !== false && group.id === professorClassId);
   const visibleActiveStudents = isAdmin
     ? activeStudents
     : activeStudents.filter(s => s.class_id === professorClassId);
+  // Attendance retains the class saved for this day and already marked inactive
+  // pupils. Enrollment management continues to use the current active roster.
+  const dayRoster = buildDayRoster(allStudents, attendance, sundayDate);
+  const dayClasses = buildDayClasses(classes, dayRoster, [
+    ...Object.keys(callStatuses), ...Object.keys(classVisitors), ...(closureSummary?.class_summary || []).map(group => group.classId),
+  ]);
+  const visibleAttendanceStudents = isAdmin ? dayRoster : dayRoster.filter(student => student.class_id === professorClassId);
+  const visibleAttendanceClasses = isAdmin ? dayClasses : dayClasses.filter(group => group.id === professorClassId);
 
   const handleExitApp = () => {
     setShowExitConfirm(true);
@@ -697,6 +771,8 @@ export default function Secretaria() {
     finally { clearStoredEbdSession(); navigation.clear(); }
     setSigningOut(false);
     setClasses([]); setActiveStudents([]); setAllStudents([]); setAttendance([]); setClassVisitors({}); setCallStatuses({});
+    setClosureSummary(null);
+    visitorAttemptRef.current = null;
     setShowExitConfirm(false);
     setAccessLevel(null);
     setLoginStep('profile');
@@ -715,7 +791,9 @@ export default function Secretaria() {
   };
 
   // Calculate stats for home cards
-  const presentCount = attendance.filter(a => a.present && a.date === sundayDate).length;
+  const closedClassSummary = closureSummary?.class_summary.filter(group => isAdmin || group.classId === professorClassId);
+  const presentCount = closedClassSummary ? closedClassSummary.reduce((sum, group) => sum + group.present, 0) : attendance.filter(a => a.present && a.date === sundayDate).length;
+  const attendanceTotalCount = closedClassSummary ? closedClassSummary.reduce((sum, group) => sum + group.total, 0) : visibleAttendanceStudents.length;
   const totalCount = visibleActiveStudents.length;
 
   const viewTitles: Record<CurrentView, string> = {
@@ -748,7 +826,7 @@ export default function Secretaria() {
           <DashboardWelcome id="ebd-welcome-title" date={format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR }).replace(/^./, first => first.toUpperCase())} title={<>Secretaria <span>EBD</span></>} description={lastSynced ? `${profileLabel} • ${totalCount} aluno${totalCount === 1 ? '' : 's'} ativo${totalCount === 1 ? '' : 's'}` : `${profileLabel} • Escola Bíblica Dominical`} />
           <div className={`ebd-sync ${lastSynced && !syncError && !aiReauthOpen ? 'ebd-sync-ok' : ''}`}>{syncNotice}</div>
           <div className="dashboard-metrics" aria-label="Indicadores da EBD">
-            <MetricCard title="Presentes" value={lastSynced ? presentCount : '—'} description={lastSynced ? `de ${totalCount} alunos` : 'Aguardando dados'} icon={UserCheck} tone="success" className="dashboard-metric" />
+            <MetricCard title="Presentes" value={lastSynced ? presentCount : '—'} description={lastSynced ? `de ${attendanceTotalCount} alunos no encontro` : 'Aguardando dados'} icon={UserCheck} tone="success" className="dashboard-metric" />
             <MetricCard title="Visitantes" value={lastSynced ? visitorCount : '—'} description="Neste encontro" icon={Users} tone="info" className="dashboard-metric dashboard-metric--blue" />
             <MetricCard title="Alunos ativos" value={lastSynced ? totalCount : '—'} description="Cadastros ativos" icon={UserRound} tone="info" className="dashboard-metric dashboard-metric--blue" />
             <MetricCard title="Turmas" value={lastSynced ? visibleClasses.length : '—'} description="Escola Bíblica Dominical" icon={CalendarDays} tone="success" className="dashboard-metric" />
@@ -829,8 +907,8 @@ export default function Secretaria() {
       <div className={`ebd-view ebd-view-${currentView}`}>
         {currentView === 'chamada' && (
           <ChamadaTab
-            classes={visibleClasses}
-            students={visibleActiveStudents}
+            classes={visibleAttendanceClasses}
+            students={visibleAttendanceStudents}
             attendance={attendance}
             attendanceQueue={attendanceQueue}
             setAttendance={setAttendance}
@@ -841,6 +919,7 @@ export default function Secretaria() {
             initialProfessorName={professorNome || undefined}
             accessLevel={accessLevel!}
             dayIsClosed={dayIsClosed}
+            closureSummary={closureSummary}
             onCloseDay={handleCloseDay}
             onReopenDay={handleReopenDay}
             classVisitors={classVisitors}
@@ -855,7 +934,7 @@ export default function Secretaria() {
 
         {currentView === 'turmas' && isAdmin && (
           <TurmasTab
-            classes={classes}
+            classes={visibleClasses}
             allStudents={allStudents}
             onRefresh={fetchData}
           />
@@ -867,7 +946,7 @@ export default function Secretaria() {
 
         {currentView === 'planilha' && isAdmin && (
           <PlanilhaAlunosTab
-            classes={classes}
+            classes={visibleClasses}
             allStudents={allStudents}
             onRefresh={fetchData}
             accessLevel={accessLevel!}
@@ -875,11 +954,11 @@ export default function Secretaria() {
         )}
 
         {currentView === 'configuracoes' && isAdmin && (
-          <ConfiguracoesEbdTab classes={classes} adminPin={adminPin} />
+          <ConfiguracoesEbdTab classes={visibleClasses} adminPin={adminPin} />
         )}
 
         {currentView === 'acessos' && isAdmin && (
-          <AcessosEbdTab classes={classes} date={sundayDate} formattedDate={formattedDate} />
+          <AcessosEbdTab classes={visibleClasses} date={sundayDate} formattedDate={formattedDate} />
         )}
       </div>
 

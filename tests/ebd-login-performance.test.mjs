@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { createRefreshQueue } from '../src/lib/refresh-queue.ts';
+import { normalizeDayClosure } from '../src/lib/ebd-roster.ts';
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const pageText = readFileSync(new URL('../src/pages/Secretaria.tsx', import.meta.url), 'utf8');
@@ -150,6 +151,7 @@ test('one authorized student read supplies both the full and active snapshots', 
     sundayDate: '2026-10-06', dataScopeRef: { current: 'synthetic-access' },
     attendanceQueue: { readVersion: () => 1, reconcile: rows => rows },
     captureEbdSnapshot: () => 1, assertEbdSnapshotCurrent() {},
+    normalizeDayClosure,
     supabase: {
       rpc: async name => { requests.push(name); return { data: name === 'ebd_session_valid' ? true : null, error: null }; },
       from(table) {
@@ -162,7 +164,7 @@ test('one authorized student read supplies both the full and active snapshots', 
       },
     },
   };
-  for (const name of ['CallStatuses', 'Classes', 'ActiveStudents', 'AllStudents', 'Attendance', 'ClassVisitors', 'DayIsClosed', 'ClosureId', 'VisitorCount', 'AiReauthOpen']) {
+  for (const name of ['CallStatuses', 'Classes', 'ActiveStudents', 'AllStudents', 'Attendance', 'ClassVisitors', 'DayIsClosed', 'ClosureId', 'ClosureSummary', 'VisitorCount', 'AiReauthOpen']) {
     scope['set' + name] = value => { state[name] = value; };
   }
   const read = actualFunction('readData', scope);

@@ -23,6 +23,7 @@ import {
   ResponsiveDialogContent,
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
 } from '@/components/ui/responsive-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -124,7 +125,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
   const [classFilterId, setClassFilterId] = useState('all');
   const [period, setPeriod] = useState<PeriodFilter>(navigation?.screen.day ? 'all' : '4weeks');
   const [allAttendance, setAllAttendance] = useState<{ student_id: string; class_id: string; date: string; present: boolean; marked_by: string | null }[]>([]);
-  const [closures, setClosures] = useState<{ id: string; date: string; closed_by: string; total_students: number; present_students: number; class_summary: ClassSummaryItem[] }[]>([]);
+  const [closures, setClosures] = useState<{ id: string; date: string; closed_by: string; total_students: number; present_students: number; visitor_count: number; class_summary: ClassSummaryItem[] }[]>([]);
   const [loading, setLoading] = useState(true);
   const [localSelectedDate, setLocalSelectedDate] = useState<string | null>(null);
   const selectedDate = navigation ? navigation.screen.day || null : localSelectedDate;
@@ -196,9 +197,9 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
     setHistoryVisitors(visits as { date: string; class_id: string; name: string | null }[]);
     setHistoryError(false);
     setAllAttendance(attData || []);
-    setClosures((closureData || []).map((c: any) => ({
+    setClosures((closureData || []).map(c => ({
       ...c,
-      class_summary: (c.class_summary || []) as ClassSummaryItem[],
+      class_summary: (c.class_summary || []) as unknown as ClassSummaryItem[],
     })));
     } catch {
       if (request === requestId.current && isReportScopeCurrent(scope)) setHistoryError(true);
@@ -232,7 +233,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
           presentStudents: closure.present_students,
           classSummary: closure.class_summary,
           markedByNames: closure.closed_by ? [closure.closed_by, ...markedByNames.filter(n => n !== closure.closed_by)] : markedByNames,
-          visitorCount: (closure as any).visitor_count ?? 0,
+          visitorCount: closure.visitor_count ?? 0,
         };
       }
 
@@ -263,9 +264,9 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
   const totalMembers = historyStats.length;
 
   const getPercentColor = (pct: number) => {
-    if (pct > 70) return 'text-green-600';
-    if (pct >= 40) return 'text-yellow-600';
-    return 'text-red-600';
+    if (pct > 70) return 'text-success';
+    if (pct >= 40) return 'text-warning';
+    return 'text-destructive';
   };
 
   const handleDownloadPDF = async (record: DayRecord) => {
@@ -273,7 +274,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
     try {
       const day = await readEbdDay(record.date);
       if (!isReportScopeCurrent(scope)) return;
-      generateEbdAttendancePDF({ snapshotVersion: day.snapshotVersion, classes: day.classes.filter(group => classFilterId === 'all' || group.id === classFilterId), students: day.students.filter(pupil => classFilterId === 'all' || pupil.class_id === classFilterId), attendance: day.attendance.filter(row => classFilterId === 'all' || row.class_id === classFilterId), date: record.date, formattedDate: format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) });
+      generateEbdAttendancePDF({ snapshotVersion: day.snapshotVersion, classes: day.classes.filter(group => classFilterId === 'all' || group.id === classFilterId), students: day.students.filter(pupil => classFilterId === 'all' || pupil.class_id === classFilterId), attendance: day.attendance.filter(row => classFilterId === 'all' || row.class_id === classFilterId), date: record.date, formattedDate: format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }), closedSummary: day.closure });
     } catch (error) { if (isReportScopeCurrent(scope)) await reportEbdWriteError(error, 'Não foi possível gerar o PDF.'); }
   };
 
@@ -452,7 +453,9 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
   const studentStats = useMemo(() => selectedClassId ? historyStudentStats(historyStudents, allAttendance, filteredDayRecords, selectedClassId) : [], [selectedClassId, historyStudents, allAttendance, filteredDayRecords]);
   const selectedClass = classOptions.find(group => group.id === selectedClassId);
 
-  const filterControls = <div className="grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-2">
+  const filterControls = <Card data-ebd-card>
+    <CardHeader className="ebd-card-heading"><CardTitle>Consultar histórico</CardTitle></CardHeader>
+    <CardContent className="grid gap-4 pt-4 sm:grid-cols-2">
     <div className="space-y-2"><Label htmlFor="history-period">Período</Label>
       <select id="history-period" value={period} disabled={Boolean(selectedDate)} onChange={event => { setLoading(true); setPeriod(event.target.value as PeriodFilter); }} className="min-h-12 w-full rounded-xl border border-input bg-background px-3 text-base">
         <option value="4weeks">Últimas 4 semanas</option><option value="3months">Últimos 3 meses</option><option value="all">Todo o período</option>
@@ -464,10 +467,11 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
       </select>
     </div>
     <p className="text-sm text-muted-foreground sm:col-span-2">{selectedDate ? 'Filtros desta consulta. Volte ao histórico para alterá-los.' : 'Os indicadores e relatórios seguem o período e a turma selecionados.'}</p>
-  </div>;
+    </CardContent>
+  </Card>;
 
   if (loading) {
-    return <div className="space-y-4">{filterControls}<p role="status" className="py-12 text-center text-muted-foreground">Carregando histórico…</p></div>;
+    return <div className="space-y-4">{filterControls}<Card data-ebd-card><CardContent className="pt-5"><p role="status" className="py-8 text-center text-muted-foreground">Carregando histórico…</p></CardContent></Card></div>;
   }
 
   if (editingDate && accessLevel === 'admin') return <div className="space-y-4"><div className="rounded-xl border border-warning/40 bg-warning/10 p-4"><p className="font-semibold">Edição administrativa · {format(new Date(editingDate + 'T12:00:00'), 'dd/MM/yyyy')}</p><p className="text-sm">Você está corrigindo a chamada desta data. Confira o dia antes de registrar alterações.</p></div><HistoricalChamada key={`${sessionScope}:${editingDate}`} sessionScope={sessionScope} date={editingDate} onBack={() => { setEditingDate(null); void fetchHistory(); void onRefreshParent?.(); }} /></div>;
@@ -483,24 +487,23 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
       <div className="mx-auto max-w-[1120px] space-y-4 animate-in fade-in slide-in-from-right-4 duration-200">
         {historyError && <div role="alert" className="rounded-xl border border-destructive/40 p-4 space-y-2"><p className="text-sm text-destructive">Não foi possível atualizar o histórico. Os dados exibidos podem estar desatualizados.</p><Button variant="outline" onClick={() => void fetchHistory()}>Tentar novamente</Button></div>}
         {/* Back button */}
-        <Button variant="ghost" size="sm" onClick={() => setSelectedDay(null)} className="text-xs -ml-2 scroll-mt-24">
-          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Voltar ao histórico
+        <Button variant="ghost" onClick={() => setSelectedDay(null)} className="-ml-2 scroll-mt-24">
+          <ArrowLeft className="h-4 w-4" /> Voltar ao histórico
         </Button>
 
-        {filterControls}
         {/* Date header */}
-        <div className="space-y-2">
+        <div className="ebd-attendance-heading space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Consulta do histórico · {filterClassName}</p>
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold first-letter:uppercase">{dateFormatted}</h2>
           </div>
           <div className="flex items-center gap-2">
             {freshRecord.isClosed ? (
-              <Badge variant="outline" className="text-xs border-green-500/40 text-green-700 bg-green-500/10">
+              <Badge variant="outline" className="ebd-status-badge ebd-status-badge--success">
                 <Lock className="h-3 w-3 mr-1" /> Fechado
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-xs border-blue-500/40 text-blue-700 bg-blue-500/10">
+              <Badge variant="outline" className="ebd-status-badge ebd-status-badge--info">
                 <CircleDot className="h-3 w-3 mr-1" /> Em aberto
               </Badge>
             )}
@@ -518,6 +521,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
         </AlertDialog>
         {/* Stats card */}
         <Card data-ebd-card>
+          <CardHeader className="ebd-card-heading"><CardTitle>Resumo do encontro</CardTitle></CardHeader>
           <CardContent data-ebd-content className="pt-5 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -564,12 +568,12 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
         {/* Class breakdown */}
         {freshRecord.classSummary.length > 0 && (
           <Card data-ebd-card>
-            <CardHeader data-ebd-card-header className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
+            <CardHeader data-ebd-card-header className="ebd-card-heading">
+              <CardTitle className="flex items-center gap-2">
                 <Users className="h-4 w-4" /> Presença por turma
               </CardTitle>
             </CardHeader>
-            <CardContent data-ebd-content className="space-y-3">
+            <CardContent data-ebd-content className="pt-4 space-y-3">
               {[...freshRecord.classSummary].sort((a, b) => b.percentage - a.percentage).map((cs, i) => (
                 <div key={cs.classId || i} className="space-y-1">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -598,8 +602,9 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
           </Card>
         )}
 
-        <section className="space-y-3 rounded-xl border p-4">
-          <h3 className="font-semibold">Exportar consulta</h3>
+        <Card data-ebd-card>
+          <CardHeader className="ebd-card-heading"><CardTitle>Exportar consulta</CardTitle></CardHeader>
+          <CardContent className="pt-4 space-y-3">
           <p className="text-sm text-muted-foreground">PDF da chamada confirmada de {format(new Date(freshRecord.date + 'T12:00:00'), 'dd/MM/yyyy')} · {filterClassName}</p>
         {/* Actions */}
         <div className="flex gap-2">
@@ -607,22 +612,23 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
             <Download className="h-4 w-4 mr-2" /> Baixar PDF
           </Button>
         </div>
-        </section>
-        {accessLevel === 'admin' && <section className="rounded-xl border p-4 space-y-3"><h3 className="font-semibold">Edição administrativa</h3><p className="text-sm text-muted-foreground">As ações abaixo se aplicam ao dia inteiro, incluindo todas as turmas.</p>
-        {accessLevel === 'admin' && <Button className="w-full min-h-11" disabled={closingDay || historyError} onClick={() => freshRecord.isClosed ? setConfirmAction('reopen') : setEditingDate(freshRecord.date)}>
+          </CardContent>
+        </Card>
+        {accessLevel === 'admin' && <Card data-ebd-card><CardHeader className="ebd-card-heading"><CardTitle>Edição administrativa</CardTitle></CardHeader><CardContent className="pt-4 space-y-3"><p className="text-sm text-muted-foreground">As ações abaixo se aplicam ao dia inteiro, incluindo todas as turmas.</p>
+        <div className="ebd-history-admin-actions"><Button disabled={closingDay || historyError} onClick={() => freshRecord.isClosed ? setConfirmAction('reopen') : setEditingDate(freshRecord.date)}>
           {freshRecord.isClosed ? <LockOpen className="h-4 w-4 mr-2" /> : <Pencil className="h-4 w-4 mr-2" />}
           {freshRecord.isClosed ? 'Reabrir para corrigir' : 'Editar chamadas'}
-        </Button>}
+        </Button>
           {!freshRecord.isClosed && (
             <Button
-              className="flex-1"
+              variant="outline"
               disabled={closingDay || historyError}
               onClick={() => setConfirmAction('close')}
             >
               <Lock className="h-4 w-4 mr-2" /> {closingDay ? 'Fechando...' : 'Fechar dia'}
             </Button>
           )}
-        </section>}
+        </div></CardContent></Card>}
       </div>
     );
   }
@@ -633,14 +639,16 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
       {selectedDate && <Button variant="outline" onClick={() => setSelectedDay(null)}><ArrowLeft className="mr-2 h-4 w-4" />Voltar ao histórico</Button>}
       {historyError && <div role="alert" className="rounded-xl border border-destructive/40 p-4 space-y-2"><p className="text-sm text-destructive">Não foi possível atualizar o histórico. Os dados exibidos podem estar desatualizados.</p><Button variant="outline" onClick={() => void fetchHistory()}>Tentar novamente</Button></div>}
       {filterControls}
-      <section className="space-y-3 rounded-2xl border bg-card p-4">
-        <h2 className="text-lg font-semibold">Exportar relatórios</h2>
+      <Card data-ebd-card>
+        <CardHeader className="ebd-card-heading"><CardTitle>Exportar relatórios</CardTitle></CardHeader>
+        <CardContent className="pt-4 space-y-3">
         <p className="text-sm text-muted-foreground">{periodLabel}</p>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Button variant="outline" onClick={handleDownloadPeriodPDF} disabled={historyError || filteredDayRecords.length === 0}><Download className="mr-2 h-4 w-4" />Resumo do período</Button>
           <Button variant="outline" onClick={handleDownloadQuarterlyPDF} disabled={historyError || filteredDayRecords.length === 0 || generatingQuarterly}><Download className="mr-2 h-4 w-4" />{generatingQuarterly ? 'Gerando…' : 'Relatório completo'}</Button>
         </div>
-      </section>
+        </CardContent>
+      </Card>
       <h2 className="text-lg font-semibold">Consultar encontros</h2>
       {/* Compact day cards */}
       {filteredDayRecords.length > 0 && (
@@ -674,17 +682,17 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
                     <p className="text-sm font-medium capitalize min-w-0 whitespace-normal break-words">{dayName} · {format(dateObj, 'dd/MM/yyyy')}</p>
                     <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                       {record.isClosed ? (
-                        <Badge variant="outline" className="text-xs px-2 py-1 border-green-500/40 text-green-700 bg-green-500/10">
+                        <Badge variant="outline" className="ebd-status-badge ebd-status-badge--success">
                           Fechado
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-xs px-2 py-1 border-blue-500/40 text-blue-700 bg-blue-500/10">
+                        <Badge variant="outline" className="ebd-status-badge ebd-status-badge--info">
                           Em aberto
                         </Badge>
                       )}
                       <span className="text-xs text-muted-foreground">
-                        {record.presentStudents}/{record.totalStudents}
-                        {record.visitorCount > 0 && ` +${record.visitorCount}v`}
+                        {record.presentStudents}/{record.totalStudents} presentes
+                        {record.visitorCount > 0 && ` · ${record.visitorCount} visitantes`}
                       </span>
                     </div>
                   </div>
@@ -701,12 +709,12 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
 
       {/* Resumo Geral */}
       <Card data-ebd-card className="border-primary/20 bg-primary/5">
-        <CardHeader data-ebd-card-header className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
+        <CardHeader data-ebd-card-header className="ebd-card-heading">
+          <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" /> Resumo do período
           </CardTitle>
         </CardHeader>
-        <CardContent data-ebd-content className="space-y-4">
+        <CardContent data-ebd-content className="pt-4 space-y-4">
           <div className="ebd-stat-grid text-center">
             <div>
               <p className="text-2xl font-bold text-primary">{metrics.totalSundays}</p>
@@ -806,6 +814,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
               {openDialog === 'lowFreq' && 'Alunos com frequência baixa (<30%)'}
               {openDialog === 'absent' && 'Alunos sem presença no período'}
             </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>{periodLabel}. Frequência calculada nos domingos registrados.</ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
           <ScrollArea className="h-[min(60dvh,30rem)] pr-1">
@@ -832,6 +841,7 @@ export default function HistoricoTab({ sessionScope = 'historical', classes, stu
               <Users className="h-5 w-5" />
               Alunos da turma: {selectedClass?.name}
             </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>{periodLabel}. Presenças e frequência dos alunos desta turma.</ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
           <ScrollArea className="h-[min(60dvh,30rem)] pr-1">

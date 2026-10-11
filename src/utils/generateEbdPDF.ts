@@ -4,6 +4,15 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import logoBase64 from '@/assets/logo-ipnc.png';
 import { drawPdfBrandLogo } from './drawPdfBrandLogo';
+import type { DayClosureSummary } from '@/lib/ebd-roster';
+
+const ebdPdfPalette = {
+  dark: [15, 61, 46],
+  primary: [28, 128, 82],
+  cream: [246, 250, 247],
+  border: [221, 235, 225],
+  onDarkMuted: [221, 238, 223],
+} as const;
 
 interface EbdClass {
   id: string;
@@ -15,6 +24,7 @@ interface EbdStudent {
   id: string;
   class_id: string;
   name: string;
+  nameUnavailable?: boolean;
 }
 
 interface AttendanceRecord {
@@ -32,6 +42,7 @@ interface GenerateEbdPDFParams {
   date: string;
   formattedDate: string;
   professorName?: string;
+  closedSummary?: DayClosureSummary | null;
 }
 
 interface ClassStats {
@@ -76,7 +87,7 @@ function getClassStats(cls: EbdClass, students: EbdStudent[], attendance: Attend
 export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
   assertAttendanceConfirmed(params.date);
   assertEbdSnapshotCurrent(params.snapshotVersion);
-  const { classes, students, attendance, date, formattedDate, professorName } = params;
+  const { classes, students, attendance, date, formattedDate, professorName, closedSummary } = params;
 
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -114,7 +125,7 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
   };
 
   // === HEADER ===
-  doc.setFillColor(30, 58, 95);
+  doc.setFillColor(...ebdPdfPalette.dark);
   doc.rect(0, 0, pageWidth, 42, 'F');
 
   try {
@@ -132,38 +143,47 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
 
   if (professorName) {
     doc.setFontSize(9);
-    doc.setTextColor(180, 200, 220);
+    doc.setTextColor(...ebdPdfPalette.onDarkMuted);
     doc.text(`Responsável: ${professorName}`, textX, 29);
   }
 
   doc.setFontSize(8);
-  doc.setTextColor(180, 200, 220);
+  doc.setTextColor(...ebdPdfPalette.onDarkMuted);
   doc.text('Igreja Presbiteriana de Nova Carapina', textX, professorName ? 35 : 29);
 
   // Decorative line
-  doc.setDrawColor(52, 152, 219);
+  doc.setDrawColor(...ebdPdfPalette.primary);
   doc.setLineWidth(1);
   doc.line(margin, 45, pageWidth - margin, 45);
   y = 50;
 
   // === COMPUTE STATS ===
   const allStats = classes
-    .map(cls => getClassStats(cls, students, attendance, date))
+    .flatMap(cls => {
+      const current = getClassStats(cls, students, attendance, date);
+      if (!closedSummary) return [current];
+      const saved = closedSummary.class_summary.find(group => group.classId === cls.id);
+      // A later active class is not part of the already closed encounter.
+      return saved ? [{ ...current, cls: { ...cls, name: saved.className }, total: saved.total,
+        present: saved.present, absent: saved.total - saved.present, percentage: saved.percentage }] : [];
+    })
     .sort((a, b) => b.percentage - a.percentage);
 
-  const totalStudents = students.length;
-  const totalPresent = attendance.filter(a => a.present && a.date === date).length;
+  const totalStudents = closedSummary ? allStats.reduce((sum, group) => sum + group.total, 0) : students.length;
+  const totalPresent = closedSummary ? allStats.reduce((sum, group) => sum + group.present, 0) : attendance.filter(a => a.present && a.date === date).length;
   const totalAbsent = totalStudents - totalPresent;
   const totalPct = totalStudents > 0 ? Math.round((totalPresent / totalStudents) * 100) : 0;
+  const nominalDiffers = !!closedSummary && allStats.some(group =>
+    group.presentStudents.length !== group.present || group.presentStudents.length + group.absentStudents.length !== group.total);
 
   // === RESUMO GERAL ===
-  doc.setFillColor(240, 245, 250);
+  doc.setFillColor(...ebdPdfPalette.cream);
   doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'F');
-  doc.setDrawColor(200, 210, 220);
+  doc.setDrawColor(...ebdPdfPalette.border);
   doc.setLineWidth(0.3);
   doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'S');
 
-  doc.setTextColor(30, 58, 95);
+  doc.setTextColor(...ebdPdfPalette.dark);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text('Resumo Geral', margin + 6, y + 8);
@@ -185,7 +205,7 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
 
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 58, 95);
+  doc.setTextColor(...ebdPdfPalette.dark);
   doc.text(`${totalStudents}`, col1, statsY + 8);
   doc.setTextColor(34, 139, 34);
   doc.text(`${totalPresent}`, col2, statsY + 8);
@@ -211,10 +231,25 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
 
   y += 34;
 
+  if (closedSummary || students.some(student => student.nameUnavailable)) {
+    const notes: string[] = [];
+    if (closedSummary) notes.push(nominalDiffers
+      ? 'Totais preservados do fechamento. O cadastro consultado nesta emissão difere do resumo salvo; a lista nominal abaixo pode não coincidir com esses totais.'
+      : 'Totais preservados do fechamento. A lista nominal reflete o cadastro consultado nesta emissão.');
+    if (students.some(student => student.nameUnavailable)) notes.push('Alguns nomes não estão disponíveis para este acesso. Os registros autorizados continuam incluídos nos totais.');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    const lines = doc.splitTextToSize(notes.join(' '), contentWidth);
+    checkPage(lines.length * 4 + 7);
+    doc.setTextColor(100, 100, 100);
+    doc.text(lines, margin, y);
+    y += lines.length * 4 + 7;
+  }
+
   // === RANKING DE TURMAS ===
   checkPage(12 + allStats.length * 10);
 
-  doc.setFillColor(30, 58, 95);
+  doc.setFillColor(...ebdPdfPalette.dark);
   doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
@@ -232,7 +267,7 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
   doc.text('Total', margin + 115, y);
   doc.text('%', margin + 135, y);
   y += 2;
-  doc.setDrawColor(200, 210, 220);
+  doc.setDrawColor(...ebdPdfPalette.border);
   doc.setLineWidth(0.2);
   doc.line(margin, y, pageWidth - margin, y);
   y += 4;
@@ -242,15 +277,8 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
 
     // Zebra
     if (i % 2 === 0) {
-      doc.setFillColor(248, 249, 252);
+      doc.setFillColor(...ebdPdfPalette.cream);
       doc.rect(margin, y - 4, contentWidth, 8, 'F');
-    }
-
-    // Trophy for first
-    if (i === 0 && stat.present > 0) {
-      doc.setFontSize(8);
-      doc.setTextColor(200, 160, 0);
-      doc.text('🏆', margin + 1, y);
     }
 
     // Position
@@ -305,7 +333,7 @@ export function generateEbdAttendancePDF(params: GenerateEbdPDFParams) {
     checkPage(headerHeight + Math.min(listHeight, 60));
 
     // Class header
-    doc.setFillColor(30, 58, 95);
+    doc.setFillColor(...ebdPdfPalette.dark);
     doc.roundedRect(margin, y, contentWidth, 9, 2, 2, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
@@ -445,7 +473,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
     pct > 70 ? [34, 139, 34] : pct >= 40 ? [200, 160, 0] : [200, 50, 50];
 
   // === HEADER ===
-  doc.setFillColor(30, 58, 95);
+  doc.setFillColor(...ebdPdfPalette.dark);
   doc.rect(0, 0, pageWidth, 42, 'F');
   try { drawPdfBrandLogo(doc, logoBase64, margin, 5, 20); } catch { /* skip */ }
   const textX = margin + 26;
@@ -457,9 +485,9 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
   doc.setFont('helvetica', 'normal');
   doc.text(periodLabel, textX, 22);
   doc.setFontSize(8);
-  doc.setTextColor(180, 200, 220);
+  doc.setTextColor(...ebdPdfPalette.onDarkMuted);
   doc.text('Igreja Presbiteriana de Nova Carapina', textX, 29);
-  doc.setDrawColor(52, 152, 219);
+  doc.setDrawColor(...ebdPdfPalette.primary);
   doc.setLineWidth(1);
   doc.line(margin, 45, pageWidth - margin, 45);
   y = 50;
@@ -471,12 +499,12 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
   const avgPresent = totalDays > 0 ? Math.round(sumPresent / totalDays) : 0;
   const avgPct = totalDays > 0 ? Math.round(days.reduce((s, d) => s + d.percentage, 0) / totalDays) : 0;
 
-  doc.setFillColor(240, 245, 250);
+  doc.setFillColor(...ebdPdfPalette.cream);
   doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'F');
-  doc.setDrawColor(200, 210, 220);
+  doc.setDrawColor(...ebdPdfPalette.border);
   doc.setLineWidth(0.3);
   doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'S');
-  doc.setTextColor(30, 58, 95);
+  doc.setTextColor(...ebdPdfPalette.dark);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text('Resumo do Período', margin + 6, y + 8);
@@ -493,11 +521,11 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
 
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 58, 95);
+  doc.setTextColor(...ebdPdfPalette.dark);
   doc.text(`${totalDays}`, cols[0], statsY + 8);
   doc.setTextColor(34, 139, 34);
   doc.text(`${avgPresent}`, cols[1], statsY + 8);
-  doc.setTextColor(46, 92, 170);
+  doc.setTextColor(...ebdPdfPalette.primary);
   doc.text(`${sumVisitors}`, cols[2], statsY + 8);
   const ac = pctColorOf(avgPct);
   doc.setTextColor(ac[0], ac[1], ac[2]);
@@ -506,7 +534,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
 
   // === FREQUÊNCIA POR DOMINGO ===
   checkPage(20);
-  doc.setFillColor(30, 58, 95);
+  doc.setFillColor(...ebdPdfPalette.dark);
   doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
@@ -523,7 +551,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
   doc.text('Visit.', margin + 122, y);
   doc.text('%', margin + 145, y);
   y += 2;
-  doc.setDrawColor(200, 210, 220);
+  doc.setDrawColor(...ebdPdfPalette.border);
   doc.setLineWidth(0.2);
   doc.line(margin, y, pageWidth - margin, y);
   y += 4;
@@ -531,7 +559,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
   [...days].sort((a, b) => a.date.localeCompare(b.date)).forEach((d, i) => {
     checkPage(9);
     if (i % 2 === 0) {
-      doc.setFillColor(248, 249, 252);
+      doc.setFillColor(...ebdPdfPalette.cream);
       doc.rect(margin, y - 4, contentWidth, 8, 'F');
     }
     const dObj = new Date(d.date + 'T12:00:00');
@@ -545,7 +573,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
     doc.setTextColor(80, 80, 80);
     doc.setFont('helvetica', 'normal');
     doc.text(`${d.total}`, margin + 103, y);
-    doc.setTextColor(46, 92, 170);
+    doc.setTextColor(...ebdPdfPalette.primary);
     doc.text(`${d.visitorCount}`, margin + 125, y);
     const c = pctColorOf(d.percentage);
     doc.setTextColor(c[0], c[1], c[2]);
@@ -558,7 +586,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
   // === MÉDIA POR TURMA ===
   if (classes.length > 0) {
     checkPage(20);
-    doc.setFillColor(30, 58, 95);
+    doc.setFillColor(...ebdPdfPalette.dark);
     doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
@@ -573,7 +601,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
     doc.text('Presenças (total)', margin + 100, y);
     doc.text('Freq. média', margin + 150, y);
     y += 2;
-    doc.setDrawColor(200, 210, 220);
+    doc.setDrawColor(...ebdPdfPalette.border);
     doc.setLineWidth(0.2);
     doc.line(margin, y, pageWidth - margin, y);
     y += 4;
@@ -581,7 +609,7 @@ export function generateEbdPeriodPDF(params: GenerateEbdPeriodPDFParams) {
     [...classes].sort((a, b) => b.avgPercentage - a.avgPercentage).forEach((c, i) => {
       checkPage(9);
       if (i % 2 === 0) {
-        doc.setFillColor(248, 249, 252);
+        doc.setFillColor(...ebdPdfPalette.cream);
         doc.rect(margin, y - 4, contentWidth, 8, 'F');
       }
       doc.setFontSize(8.5);
@@ -683,7 +711,7 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
 
   const sectionBar = (title: string) => {
     checkPage(14);
-    doc.setFillColor(30, 58, 95);
+    doc.setFillColor(...ebdPdfPalette.dark);
     doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
@@ -695,7 +723,7 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
   const fmtDate = (d: string) => format(new Date(d + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR });
 
   // === HEADER ===
-  doc.setFillColor(30, 58, 95);
+  doc.setFillColor(...ebdPdfPalette.dark);
   doc.rect(0, 0, pageWidth, 42, 'F');
   try { drawPdfBrandLogo(doc, logoBase64, margin, 5, 20); } catch { /* skip */ }
   const textX = margin + 26;
@@ -707,9 +735,9 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
   doc.setFont('helvetica', 'normal');
   doc.text(periodLabel, textX, 22);
   doc.setFontSize(8);
-  doc.setTextColor(180, 200, 220);
+  doc.setTextColor(...ebdPdfPalette.onDarkMuted);
   doc.text('Igreja Presbiteriana de Nova Carapina', textX, 29);
-  doc.setDrawColor(52, 152, 219);
+  doc.setDrawColor(...ebdPdfPalette.primary);
   doc.setLineWidth(1);
   doc.line(margin, 45, pageWidth - margin, 45);
   y = 50;
@@ -721,12 +749,12 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
   const avgPresent = totalDays > 0 ? Math.round(sumPresent / totalDays) : 0;
   const avgPct = totalDays > 0 ? Math.round(days.reduce((s, d) => s + d.percentage, 0) / totalDays) : 0;
 
-  doc.setFillColor(240, 245, 250);
+  doc.setFillColor(...ebdPdfPalette.cream);
   doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'F');
-  doc.setDrawColor(200, 210, 220);
+  doc.setDrawColor(...ebdPdfPalette.border);
   doc.setLineWidth(0.3);
   doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'S');
-  doc.setTextColor(30, 58, 95);
+  doc.setTextColor(...ebdPdfPalette.dark);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text('Resumo do Período', margin + 6, y + 8);
@@ -742,11 +770,11 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
   doc.text('Frequência média', cols[3], sY);
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 58, 95);
+  doc.setTextColor(...ebdPdfPalette.dark);
   doc.text(`${totalDays}`, cols[0], sY + 8);
   doc.setTextColor(34, 139, 34);
   doc.text(`${avgPresent}`, cols[1], sY + 8);
-  doc.setTextColor(46, 92, 170);
+  doc.setTextColor(...ebdPdfPalette.primary);
   doc.text(`${sumVisitors}`, cols[2], sY + 8);
   const ac = pctColorOf(avgPct);
   doc.setTextColor(ac[0], ac[1], ac[2]);
@@ -764,14 +792,14 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
   doc.text('Visit.', margin + 122, y);
   doc.text('%', margin + 145, y);
   y += 2;
-  doc.setDrawColor(200, 210, 220);
+  doc.setDrawColor(...ebdPdfPalette.border);
   doc.setLineWidth(0.2);
   doc.line(margin, y, pageWidth - margin, y);
   y += 4;
   [...days].sort((a, b) => a.date.localeCompare(b.date)).forEach((d, i) => {
     checkPage(9);
     if (i % 2 === 0) {
-      doc.setFillColor(248, 249, 252);
+      doc.setFillColor(...ebdPdfPalette.cream);
       doc.rect(margin, y - 4, contentWidth, 8, 'F');
     }
     doc.setFontSize(8.5);
@@ -784,7 +812,7 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
     doc.setTextColor(80, 80, 80);
     doc.setFont('helvetica', 'normal');
     doc.text(`${d.total}`, margin + 103, y);
-    doc.setTextColor(46, 92, 170);
+    doc.setTextColor(...ebdPdfPalette.primary);
     doc.text(`${d.visitorCount}`, margin + 125, y);
     const c = pctColorOf(d.percentage);
     doc.setTextColor(c[0], c[1], c[2]);
@@ -800,7 +828,7 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
     .forEach(cls => {
       checkPage(24);
       // Class header band
-      doc.setFillColor(30, 58, 95);
+      doc.setFillColor(...ebdPdfPalette.dark);
       doc.roundedRect(margin, y, contentWidth, 10, 2, 2, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(11);
@@ -828,14 +856,14 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
       doc.text('Visit.', margin + 115, y);
       doc.text('%', margin + 145, y);
       y += 2;
-      doc.setDrawColor(200, 210, 220);
+      doc.setDrawColor(...ebdPdfPalette.border);
       doc.setLineWidth(0.2);
       doc.line(margin, y, pageWidth - margin, y);
       y += 4;
       [...cls.days].sort((a, b) => a.date.localeCompare(b.date)).forEach((d, i) => {
         checkPage(8);
         if (i % 2 === 0) {
-          doc.setFillColor(248, 249, 252);
+          doc.setFillColor(...ebdPdfPalette.cream);
           doc.rect(margin, y - 4, contentWidth, 8, 'F');
         }
         doc.setFontSize(8.5);
@@ -844,7 +872,7 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
         doc.text(fmtDate(d.date), margin + 3, y);
         doc.setTextColor(40, 40, 40);
         doc.text(`${d.present}/${d.total}`, margin + 75, y);
-        doc.setTextColor(46, 92, 170);
+        doc.setTextColor(...ebdPdfPalette.primary);
         doc.text(`${d.visitorCount}`, margin + 118, y);
         const c = pctColorOf(d.percentage);
         doc.setTextColor(c[0], c[1], c[2]);
@@ -877,14 +905,14 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
         doc.text('Presenças', margin + 120, y);
         doc.text('%', margin + 155, y);
         y += 2;
-        doc.setDrawColor(200, 210, 220);
+        doc.setDrawColor(...ebdPdfPalette.border);
         doc.setLineWidth(0.2);
         doc.line(margin, y, pageWidth - margin, y);
         y += 4;
         [...cls.students].sort((a, b) => a.percentage - b.percentage).forEach((st, i) => {
           checkPage(7);
           if (i % 2 === 0) {
-            doc.setFillColor(248, 249, 252);
+            doc.setFillColor(...ebdPdfPalette.cream);
             doc.rect(margin, y - 3.5, contentWidth, 6.5, 'F');
           }
           doc.setFontSize(8.5);
@@ -905,7 +933,7 @@ export function generateEbdQuarterlyPDF(params: GenerateEbdQuarterlyPDFParams) {
       // Visitors block
       const visitorDays = cls.days.filter(d => d.visitorCount > 0 || d.visitorNames.length > 0);
       checkPage(14);
-      doc.setFillColor(46, 92, 170);
+      doc.setFillColor(...ebdPdfPalette.primary);
       doc.roundedRect(margin, y, contentWidth, 7, 1.5, 1.5, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);

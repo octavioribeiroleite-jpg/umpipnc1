@@ -67,7 +67,7 @@ for(const kind of ['day','period','quarter']) {
 
 // Execute the actual upstream read/handler bodies with controlled database reads.
 // React rendering is outside this test; calculations and PDF functions are real.
-import { buildDayRoster, buildDayClasses } from '../src/lib/ebd-roster.ts';
+import { buildDayRoster, buildDayClasses, normalizeDayClosure } from '../src/lib/ebd-roster.ts';
 import { subWeeks, subMonths } from 'date-fns';
 const sourceHistory=readFileSync(new URL('../src/components/secretaria/HistoricoTab.tsx',import.meta.url),'utf8');
 function historyFunction(name,scope,memo=false) {
@@ -125,9 +125,9 @@ function historyHarness(backend) {
 
 test('actual readEbdDay attaches the version from before its parallel reads and stale day PDF is rejected',async t=>{
  const backend=readBackend();backend.state.heldTable='ebd_classes';backend.state.hold=deferred();
- globalThis.__readDaySnapshot={supabase:backend.supabase,ensureEbdSession:async()=>{},captureEbdSnapshot:queueDomain.captureEbdSnapshot,buildDayRoster,buildDayClasses};
+ globalThis.__readDaySnapshot={supabase:backend.supabase,ensureEbdSession:async()=>{},captureEbdSnapshot:queueDomain.captureEbdSnapshot,buildDayRoster,buildDayClasses,normalizeDayClosure};
  const source=readFileSync(new URL('../src/lib/ebd-day.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'');
- const compiled=ts.transpileModule('const {supabase,ensureEbdSession,captureEbdSnapshot,buildDayRoster,buildDayClasses}=globalThis.__readDaySnapshot;\n'+source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+ const compiled=ts.transpileModule('const {supabase,ensureEbdSession,captureEbdSnapshot,buildDayRoster,buildDayClasses,normalizeDayClosure}=globalThis.__readDaySnapshot;\n'+source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
  const {readEbdDay}=await import('data:text/javascript;base64,'+Buffer.from(compiled).toString('base64'));
  const oldRead=readEbdDay(date);await tick();
  const h=harness(t);h.queue.submit(pupil,date,true);backend.state.attendance=[row(true)];await h.confirm();

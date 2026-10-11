@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { ensureEbdSession, notifyEbdChange } from '@/lib/ebd-mutations';
 import { assertAttendanceConfirmed, verifyUnconfirmedAttendance, captureEbdSnapshot } from '@/lib/ebd-attendance-queue';
-import { buildDayRoster, buildDayClasses, type DayAttendance } from '@/lib/ebd-roster';
+import { buildDayRoster, buildDayClasses, normalizeDayClosure, type DayAttendance } from '@/lib/ebd-roster';
 
 export interface DayVisitor { id: string; class_id: string; name: string | null }
 export interface DayCallStatus { class_id: string; status: 'aberta' | 'finalizada' }
@@ -19,14 +19,18 @@ export async function readEbdDay(date: string) {
   ]);
   for (const result of results) if (result.error) throw result.error;
   const [classes, students, attendance, closure, statuses, visitors] = results;
+  const dayClosure = normalizeDayClosure(closure.data);
   const rows = (attendance.data || []) as DayAttendance[];
   const roster = buildDayRoster(students.data || [], rows, date);
   const calls = (statuses.data || []) as DayCallStatus[];
   const entries = (visitors.data || []) as DayVisitor[];
   return {
     date, snapshotVersion, attendance: rows, students: roster,
-    classes: buildDayClasses(classes.data || [], roster, [...calls, ...entries].map(row => row.class_id)),
-    closure: closure.data,
+    classes: buildDayClasses(classes.data || [], roster, [
+      ...[...calls, ...entries].map(row => row.class_id),
+      ...(dayClosure?.class_summary || []).map(group => group.classId),
+    ]),
+    closure: dayClosure,
     callStatuses: Object.fromEntries(calls.map(row => [row.class_id, row.status])),
     classVisitors: entries.reduce<Record<string, DayVisitor[]>>((map, row) => { (map[row.class_id] ||= []).push(row); return map; }, {}),
   };

@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import ChamadaTab from './ChamadaTab';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { readEbdDay, closeEbdDay, reopenEbdDay, setEbdCallStatus } from '@/lib/ebd-day';
 import { useEbdSync } from '@/hooks/useEbdSync';
 
@@ -29,12 +30,11 @@ export default function HistoricalChamada({ sessionScope = 'historical', date, o
 
   return <div className="space-y-4">
     <Button variant="ghost" onClick={onBack} className="-ml-2 scroll-mt-24"><ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao encontro</Button>
-    <div><h2 className="text-lg font-semibold">Editar chamadas</h2><p className="text-sm text-muted-foreground">{formattedDate} · Administrador</p></div>
-    {syncError && <div role="alert" className="rounded-lg border p-3 text-sm">Não foi possível atualizar as chamadas. <Button variant="link" onClick={() => void refresh()}>Tentar novamente</Button></div>}
-    {!day ? <p role="status">Carregando chamadas…</p> : <ChamadaTab
+    {syncError && <div role="alert" className="rounded-2xl border border-destructive/40 bg-card p-4 space-y-2"><p className="text-sm text-destructive">Não foi possível atualizar as chamadas.</p><Button variant="outline" onClick={() => void refresh()}>Tentar novamente</Button></div>}
+    {!day ? <Card data-ebd-card><CardContent className="pt-5"><p role="status" className="py-8 text-center text-muted-foreground">Carregando chamadas de {formattedDate}…</p></CardContent></Card> : <ChamadaTab
       classes={day.classes} students={day.students} attendance={day.attendance} attendanceQueue={attendanceQueue}
       attendanceDate={date} formattedDate={formattedDate} accessLevel="admin"
-      dayIsClosed={!!day.closure} callStatuses={day.callStatuses} classVisitors={day.classVisitors}
+      dayIsClosed={!!day.closure} closureSummary={day.closure} callStatuses={day.callStatuses} classVisitors={day.classVisitors}
       setAttendance={action => { revision.current++; setDay(current => current ? { ...current, attendance: typeof action === 'function' ? action(current.attendance) : action } : current); }}
       onCallStatusChange={async (classId, status) => { await setEbdCallStatus(date, classId, status); revision.current++; await read(); }}
       onCloseDay={async () => { await closeEbdDay(date); revision.current++; await read(); toast.success('Dia fechado com as presenças atualizadas.'); }}
