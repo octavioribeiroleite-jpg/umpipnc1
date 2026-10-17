@@ -20,8 +20,9 @@ export function PWAInstallPrompt() {
   return (
     <Dialog open={pwa.isOpen && !pwa.isInstalled} onOpenChange={open => { if (!open) pwa.close(); }}>
       <DialogContent
+        showCloseButton={false}
         style={{ maxWidth: 'min(28rem, calc(100vw - 1.5rem))', borderRadius: '1.5rem' }}
-        className="max-w-md gap-5 rounded-3xl border-emerald-200/70 bg-white p-6 text-slate-900 shadow-2xl dark:border-border dark:bg-card dark:text-foreground sm:rounded-3xl [&>button:last-child]:hidden"
+        className="max-w-md gap-5 rounded-3xl border-emerald-200/70 bg-white p-6 text-slate-900 shadow-2xl dark:border-border dark:bg-card dark:text-foreground sm:rounded-3xl"
         onCloseAutoFocus={event => { event.preventDefault(); pwaInstall.restoreFocus(); }}
       >
         <DialogClose asChild>

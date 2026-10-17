@@ -163,6 +163,7 @@ export function TreasuryEntryDialog({
   return (
     <Dialog open={open} onOpenChange={close}>
       <DialogContent
+        showCloseButton={false}
         className={`treasury-dialog ${admin ? 'treasury-admin-entry-dialog' : 'treasury-receipt-dialog'}`}
         onOpenAutoFocus={event => {
           if (!admin) {

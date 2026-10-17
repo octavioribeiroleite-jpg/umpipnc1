@@ -77,6 +77,7 @@ export function TreasuryFundDialog({ open, onOpenChange, onSaved }: TreasuryFund
   return (
     <Dialog open={open} onOpenChange={close}>
       <DialogContent
+        showCloseButton={false}
         className="treasury-dialog treasury-fund-dialog"
         onEscapeKeyDown={event => { if (pending) event.preventDefault(); }}
         onInteractOutside={event => { if (pending) event.preventDefault(); }}
