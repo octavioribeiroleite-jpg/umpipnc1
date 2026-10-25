@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { createRefreshQueue } from '../src/lib/refresh-queue.ts';
 import { normalizeDayClosure } from '../src/lib/ebd-roster.ts';
+import { EbdSnapshotChangedError } from '../src/lib/ebd-attendance-queue.ts';
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const pageText = readFileSync(new URL('../src/pages/Secretaria.tsx', import.meta.url), 'utf8');
@@ -294,6 +295,7 @@ function syncFixture({ coalesceBeforeSnapshot = true, reportSnapshotStart = true
   let now = 0, timerId = 0, subscribed, active = 0, maximum = 0, invalidations = 0;
   const timeouts = new Map(), intervals = new Map(), windowEvents = new Map(), documentEvents = new Map();
   const reads = [], snapshots = [], validations = [], releases = [], changes = [], cleanups = [];
+  const states = [];
   const fakeTimeout = (callback, ms) => { const id = ++timerId; timeouts.set(id, { callback, at: now + ms }); return id; };
   const channel = {
     on(_event, _filter, callback) { changes.push(callback); return channel; },
@@ -302,8 +304,11 @@ function syncFixture({ coalesceBeforeSnapshot = true, reportSnapshotStart = true
   const document = { visibilityState: 'visible', addEventListener: (name, callback) => documentEvents.set(name, callback), removeEventListener: name => documentEvents.delete(name) };
   const scope = {
     useEffect: effect => { const cleanup = effect(); if (cleanup) cleanups.push(cleanup); },
-    useMemo: factory => factory(), useRef: current => ({ current }), useState: value => [value, () => {}],
-    createRefreshQueue, markEbdDataChanged: () => { invalidations++; },
+    useMemo: factory => factory(), useRef: current => ({ current }), useState: value => {
+      const index = states.push(value) - 1;
+      return [value, next => { states[index] = next; }];
+    },
+    createRefreshQueue, EbdSnapshotChangedError, markEbdDataChanged: () => { invalidations++; },
     supabase: { channel: () => channel, removeChannel: async () => {} },
     crypto: { randomUUID: () => 'fixture' }, document,
     setTimeout: fakeTimeout, clearTimeout: id => timeouts.delete(id),
@@ -324,7 +329,7 @@ function syncFixture({ coalesceBeforeSnapshot = true, reportSnapshotStart = true
       await new Promise((resolve, reject) => validations.push({ resolve, reject }));
       if (reportSnapshotStart) onSnapshotStart?.();
       snapshots.push(now);
-      await new Promise(resolve => releases.push(resolve));
+      await new Promise((resolve, reject) => releases.push({ resolve, reject }));
     } finally { active--; }
   }, defaultOptions ? undefined : { coalesceBeforeSnapshot });
   return {
@@ -333,6 +338,7 @@ function syncFixture({ coalesceBeforeSnapshot = true, reportSnapshotStart = true
     change: () => changes[0](),
     refresh: result.refresh,
     maximum: () => maximum, invalidations: () => invalidations,
+    syncState: () => ({ lastSynced: states[0], error: states[1], syncing: states[2] }),
     advance(milliseconds) {
       now += milliseconds;
       for (const [id, timer] of [...timeouts]) if (timer.at <= now) { timeouts.delete(id); timer.callback(); }
@@ -348,10 +354,63 @@ function syncFixture({ coalesceBeforeSnapshot = true, reportSnapshotStart = true
       validations.shift().reject(new Error('Synthetic authorization transport failure'));
       await tick();
     },
-    async finish() { assert.ok(releases.length); releases.shift()(); await tick(); },
+    async finish(error) {
+      assert.ok(releases.length);
+      const pending = releases.shift();
+      if (error) pending.reject(error); else pending.resolve();
+      await tick();
+    },
     stop() { cleanups.forEach(cleanup => cleanup()); },
   };
 }
+
+test('a superseded attendance snapshot retries serially without reporting a connection failure', async () => {
+  const fixture = syncFixture();
+  fixture.status('SUBSCRIBED'); await fixture.validate(); await fixture.finish();
+  const confirmedAt = fixture.syncState().lastSynced;
+  const refreshing = fixture.refresh();
+  await fixture.validate(); await fixture.finish(new EbdSnapshotChangedError());
+  assert.equal(fixture.syncState().error, false, 'Concurrent presence confirmation is not a network failure');
+  assert.equal(fixture.syncState().lastSynced, confirmedAt, 'Discarded data must not advance the confirmed timestamp');
+  assert.equal(fixture.reads.length, 3, 'Read the new snapshot without waiting for the ten-second poll');
+  await fixture.validate(); await fixture.finish(); await refreshing;
+  assert.equal(fixture.maximum(), 1);
+  assert.equal(fixture.syncState().error, false);
+  fixture.stop();
+});
+
+test('a real read failure remains visible through discarded snapshots until a fresh read succeeds', async () => {
+  const fixture = syncFixture();
+  fixture.status('SUBSCRIBED'); await fixture.validate(); await fixture.finish();
+  const confirmedAt = fixture.syncState().lastSynced;
+  void fixture.refresh(); await fixture.validate(); await fixture.finish(new Error('Synthetic offline read'));
+  assert.equal(fixture.syncState().error, true);
+  assert.equal(fixture.reads.length, 2, 'A persistent transport failure must not create a hot retry loop');
+  const refreshing = fixture.refresh(); await fixture.validate(); await fixture.finish(new EbdSnapshotChangedError());
+  assert.equal(fixture.syncState().error, true, 'Discarding stale data does not prove the connection recovered');
+  assert.equal(fixture.syncState().lastSynced, confirmedAt);
+  assert.equal(fixture.reads.length, 4);
+  await fixture.validate(); await fixture.finish(); await refreshing;
+  assert.equal(fixture.syncState().error, false);
+  assert.equal(fixture.maximum(), 1);
+  fixture.stop();
+});
+
+test('discarded snapshots cannot restart a disposed access or refresh a hidden page', async () => {
+  for (const reason of ['disposed', 'hidden']) {
+    const fixture = syncFixture();
+    await fixture.validate();
+    if (reason === 'disposed') fixture.stop(); else fixture.document.visibilityState = 'hidden';
+    await fixture.finish(new EbdSnapshotChangedError());
+    assert.equal(fixture.reads.length, 1);
+    assert.equal(fixture.syncState().error, false);
+    if (reason === 'hidden') {
+      fixture.document.visibilityState = 'visible';
+      fixture.documentEvents.get('visibilitychange')();
+      await fixture.validate(); await fixture.finish(); fixture.stop();
+    }
+  }
+});
 
 test('data validation starts immediately without waiting for Realtime, and no subscription still produces a snapshot', async () => {
   const fixture = syncFixture();

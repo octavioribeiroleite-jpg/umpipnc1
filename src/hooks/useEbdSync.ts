@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/ebd-client';
 import { createRefreshQueue } from '@/lib/refresh-queue';
-import { markEbdDataChanged } from '@/lib/ebd-attendance-queue';
+import { EbdSnapshotChangedError, markEbdDataChanged } from '@/lib/ebd-attendance-queue';
 
 type SnapshotRead = (onSnapshotStart?: () => void) => Promise<unknown>;
 
@@ -33,9 +33,15 @@ export function useEbdSync(
         });
         setLastSynced(new Date());
         setSyncError(false);
-      } catch {
-        setSyncError(true);
-        if (initialRead && startup.coalescedSubscription) {
+      } catch (error) {
+        if (error instanceof EbdSnapshotChangedError) {
+          // A presence changed while reading. Keep the last confirmed data and
+          // retry serially; this is not evidence of a broken connection.
+          if (document.visibilityState === 'visible') void queue.request();
+        } else {
+          setSyncError(true);
+        }
+        if (!(error instanceof EbdSnapshotChangedError) && initialRead && startup.coalescedSubscription) {
           // Preserve the subscription's follow-up if its initial read failed.
           // Request without awaiting the queue that is currently running us.
           startup.coalescedSubscription = false;
