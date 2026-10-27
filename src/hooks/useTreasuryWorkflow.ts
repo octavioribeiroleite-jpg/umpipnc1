@@ -17,26 +17,30 @@ type Database = { public: { Tables: { treasury_bank_transactions: Table<BankMove
   treasury_review_queue: { Args: { p_fund_id: string | null; p_offset: number; p_limit: number }; Returns: { entries: Json[]; total_count: number } };
   treasury_report: { Args: { p_year: number; p_fund_id: string | null }; Returns: Json };
 }; Enums: Record<never, never>; CompositeTypes: Record<never, never> } };
-const client = supabase as unknown as SupabaseClient<Database>;
 export const RECEIPT_BUCKET = 'treasury-receipts';
 
 export function useTreasuryAccess() { return useTreasuryIdentity().access; }
 export function useTreasuryQueue(fundId?: string, page = 0, enabled = false) {
-  const { user } = useTreasuryIdentity();
+  const { user, client: transport } = useTreasuryIdentity();
+  const client = transport as unknown as SupabaseClient<Database>;
   return useQuery({ queryKey: ['treasury', 'review', user?.id, fundId, page], enabled: Boolean(user) && enabled, retry: false, staleTime: 0, refetchInterval: 30_000,
     queryFn: async ({ signal }) => { const result = await client.rpc('treasury_review_queue', { p_fund_id: fundId || null, p_offset: page * 20, p_limit: 20 }).abortSignal(signal); if (result.error) throw treasuryError(result.error); return { entries: result.data.entries.map(entry => decodeTreasuryEntry(entry, false)), total_count: safeCents(result.data.total_count) }; } });
 }
 export function useTreasuryBank(enabled: boolean) {
-  const { user } = useTreasuryIdentity();
+  const { user, client: transport } = useTreasuryIdentity();
+  const client = transport as unknown as SupabaseClient<Database>;
   return useQuery({ queryKey: ['treasury', 'bank', user?.id], enabled: Boolean(user) && enabled, retry: false, staleTime: 0,
     queryFn: async ({ signal }) => { const result = await client.rpc('treasury_bank_reconciliation').abortSignal(signal); if (result.error) throw treasuryError(result.error); return result.data.map(row => ({ ...row, amount_cents: safeCents(row.amount_cents), allocated_cents: safeCents(row.allocated_cents), remaining_cents: safeCents(row.remaining_cents) })); } });
 }
 export function useTreasuryAdministration(enabled: boolean) {
-  const { user } = useTreasuryIdentity();
+  const { user, client: transport } = useTreasuryIdentity();
+  const client = transport as unknown as SupabaseClient<Database>;
   return useQuery({ queryKey: ['treasury', 'administration', user?.id], enabled: Boolean(user) && enabled, retry: false,
     queryFn: async () => { const [accounts, managers] = await Promise.all([client.rpc('treasury_admin_accounts'), client.from('treasury_managers').select('*')]); if (accounts.error || managers.error) throw treasuryError(accounts.error || managers.error); return { accounts: accounts.data, managers: managers.data }; } });
 }
 export function useTreasuryWorkflowMutations() {
+  const { client: transport } = useTreasuryIdentity();
+  const client = transport as unknown as SupabaseClient<Database>;
   const cache = useQueryClient();
   const refresh = () => cache.invalidateQueries({ queryKey: ['treasury'] });
   const createBank = useMutation({ retry: false, mutationFn: async (input: Pick<BankMovement, 'id' | 'reference' | 'occurred_on' | 'kind' | 'amount_cents'> & { revision?: number }) => {
@@ -68,14 +72,15 @@ export function useTreasuryWorkflowMutations() {
   return { createBank, assign };
 }
 
-export async function attachTreasuryReceipt(entryId: string, file: File, attachmentId: string) {
+export async function attachTreasuryReceipt(entryId: string, file: File, attachmentId: string, transport = supabase) {
+  const client = transport as unknown as SupabaseClient<Database>;
   const extension = { 'application/pdf': 'pdf', 'image/png': 'png', 'image/jpeg': 'jpg' }[file.type];
   if (!extension || !file.size || file.size > 10 * 1024 * 1024) throw new Error('Selecione PDF, PNG ou JPG de até 10 MB.');
   const path = `${entryId}/${attachmentId}.${extension}`;
-  const upload = await supabase.storage.from(RECEIPT_BUCKET).upload(path, file, { upsert: false, contentType: file.type });
+  const upload = await transport.storage.from(RECEIPT_BUCKET).upload(path, file, { upsert: false, contentType: file.type });
   if (upload.error) {
     // A lost upload response can be retried only when the stored bytes are identical.
-    const old = await supabase.storage.from(RECEIPT_BUCKET).download(path);
+    const old = await transport.storage.from(RECEIPT_BUCKET).download(path);
     if (old.error || !old.data) throw new Error('Não foi possível anexar o comprovante. Tente novamente.');
     const [a, b] = await Promise.all([file.arrayBuffer(), old.data.arrayBuffer()]);
     const [ha, hb] = await Promise.all([crypto.subtle.digest('SHA-256', a), crypto.subtle.digest('SHA-256', b)]);
@@ -86,16 +91,18 @@ export async function attachTreasuryReceipt(entryId: string, file: File, attachm
   if (result.error && result.error.code !== '23505') throw treasuryError(result.error);
 }
 export function useTreasuryAttachments(entryId?: string, enabled = false) {
-  const { user } = useTreasuryIdentity();
+  const { user, client: transport } = useTreasuryIdentity();
+  const client = transport as unknown as SupabaseClient<Database>;
   return useQuery({ queryKey: ['treasury', 'attachments', user?.id, entryId], enabled: Boolean(user && entryId && enabled), retry: false,
     queryFn: async () => { const result = await client.from('treasury_attachments').select('*').eq('entry_id', entryId); if (result.error) throw treasuryError(result.error); return result.data; } });
 }
-export async function downloadTreasuryReceipt(attachment: TreasuryAttachment): Promise<Uint8Array> {
-  const result = await supabase.storage.from(RECEIPT_BUCKET).download(attachment.path);
+export async function downloadTreasuryReceipt(attachment: TreasuryAttachment, transport = supabase): Promise<Uint8Array> {
+  const result = await transport.storage.from(RECEIPT_BUCKET).download(attachment.path);
   if (result.error || !result.data) throw new Error(`Não foi possível incluir o comprovante “${attachment.filename}”. O relatório não foi finalizado.`);
   return new Uint8Array(await result.data.arrayBuffer());
 }
-export async function fetchTreasuryReport(year: number, fundId?: string): Promise<TreasuryReport> {
+export async function fetchTreasuryReport(year: number, fundId?: string, transport = supabase): Promise<TreasuryReport> {
+  const client = transport as unknown as SupabaseClient<Database>;
   const { data, error } = await client.rpc('treasury_report', { p_year: year, p_fund_id: fundId || null });
   if (error) throw treasuryError(error);
   const raw = data as unknown as TreasuryReport;
@@ -103,7 +110,8 @@ export async function fetchTreasuryReport(year: number, fundId?: string): Promis
   return { ...raw, opening_cents: safeCents(raw.opening_cents), reserved_cents: safeCents(raw.reserved_cents), pending_count: safeCents(raw.pending_count), entries: raw.entries.map(entry => decodeTreasuryEntry(entry)) };
 }
 
-export async function setTreasuryAttachmentActive(id: string, active: boolean) {
+export async function setTreasuryAttachmentActive(id: string, active: boolean, transport = supabase) {
+  const client = transport as unknown as SupabaseClient<Database>;
   const result = await client.from('treasury_attachments').update({ active }).eq('id', id).select('id').maybeSingle();
   if (result.error) throw treasuryError(result.error);
   if (!result.data) throw new Error('O comprovante não foi atualizado. Confira seu acesso.');

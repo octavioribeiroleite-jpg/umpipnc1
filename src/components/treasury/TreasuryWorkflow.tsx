@@ -1,3 +1,4 @@
+import { useTreasuryIdentity } from '@/hooks/useTreasuryIdentity';
 import { useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { useTreasuryQueue, useTreasuryBank, useTreasuryWorkflowMutations, fetchTreasuryReport, downloadTreasuryReceipt } from '@/hooks/useTreasuryWorkflow';
@@ -22,15 +23,16 @@ export function TreasuryWorkflow({ admin, managedFunds, funds, fundId, onEdit }:
 }
 
 function TreasuryReports({ funds, admin, selectedFund }: { funds: TreasuryFund[]; admin: boolean; selectedFund?: string }) {
+  const { client } = useTreasuryIdentity();
   const [year, setYear] = useState(new Date().getFullYear());
   const [choice, setChoice] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const effective = choice || (funds.some(f => f.id === selectedFund) ? selectedFund : undefined) || (!admin ? funds[0]?.id : undefined);
   const download = async (annual: boolean) => { if (busy) return; setBusy(true); setError(''); try {
-    const report = await fetchTreasuryReport(year, effective === 'all' ? undefined : effective);
+    const report = await fetchTreasuryReport(year, effective === 'all' ? undefined : effective, client);
     const { generateTreasuryReport } = await import('@/lib/treasury-report');
-    const bytes = await generateTreasuryReport(report, { annual, loadAttachment: downloadTreasuryReceipt });
+    const bytes = await generateTreasuryReport(report, { annual, loadAttachment: attachment => downloadTreasuryReceipt(attachment, client) });
     savePdfFile(bytes, `${annual ? 'Prestacao_Anual' : 'Relatorio'}_IPNC_${year}_${report.funds.map(f => f.abbreviation).join('-')}.pdf`);
     toast.success('PDF gerado com os valores confirmados.');
   } catch (error) { setError((error as Error).message); } finally { setBusy(false); } };

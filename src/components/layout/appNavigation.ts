@@ -35,7 +35,7 @@ export const primaryNavigationItems: AppNavigationItem[] = [
 ];
 
 export const secondaryNavigationItems: AppNavigationItem[] = [
-  { key: 'tesouraria', icon: Landmark, label: 'Tesouraria da igreja', path: '/tesouraria' },
+  { key: 'tesouraria', icon: Landmark, label: 'Tesouraria da igreja', path: '/tesouraria?origem=diretoria' },
   { key: 'financas', icon: DollarSign, label: 'Finanças', path: '/financas' },
   { key: 'camisas', icon: Shirt, label: 'Camisas', path: '/camisas' },
   { key: 'plenarias', icon: ClipboardCheck, label: 'Plenárias', path: '/plenarias' },
@@ -63,6 +63,7 @@ export function getAppNavigationItems(isAdmin: boolean) {
 }
 
 export function isNavigationPathActive(currentPath: string, itemPath: string) {
+  itemPath = itemPath.split('?')[0];
   if (itemPath === '/') return currentPath === '/';
   return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`);
 }

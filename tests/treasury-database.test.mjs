@@ -38,6 +38,11 @@ await db.exec(readFileSync(new URL('../supabase/migrations/20261005140755_treasu
 await db.exec(readFileSync(new URL('../supabase/migrations/20261005140907_treasury_public_read_policy.sql', import.meta.url),'utf8'));
 await db.exec(readFileSync(new URL('../supabase/migrations/20261005142735_treasury_society_pin_access.sql', import.meta.url),'utf8'));
 await db.exec(readFileSync(new URL('../supabase/migrations/20261005143113_treasury_directory_binding.sql', import.meta.url),'utf8'));
+await db.exec(`alter table public.profiles add column society_id uuid;
+create table public.societies(id uuid primary key,slug text,active boolean);
+create table public.settings(key text primary key,value text);`);
+await db.exec(readFileSync(new URL('../supabase/migrations/20261006135357_diretoria_society_pin_validation.sql', import.meta.url),'utf8'));
+await db.exec(readFileSync(new URL('../supabase/migrations/20261026154905_treasury_directory_society_access.sql', import.meta.url),'utf8'));
 const guardMetadata = () => db.query("select oid,proowner,proacl::text,prosecdef,proconfig from pg_proc where oid='ipnc_private.treasury_entry_guard()'::regprocedure");
 const originalGuardMetadata = (await guardMetadata()).rows;
 const timelineMigration = readFileSync(new URL('../supabase/migrations/20261006162227_treasury_reserve_timeline.sql', import.meta.url),'utf8');
@@ -316,3 +321,40 @@ test('legacy history stays intact and unrelated edits or unreserved receipts rem
 });
 
 test.after(async()=>{await db.close();});
+
+
+test('Diretoria login opens only its own society treasury; rotation and deactivation revoke it', async () => {
+ const uid=crypto.randomUUID(), society=crypto.randomUUID();
+ const fund=(await db.query("select id from treasury_funds where abbreviation='UMP'")).rows[0].id;
+ await db.query('insert into auth.users values($1)',[uid]);
+ await db.query("insert into societies values($1,'ump',true)",[society]);
+ await db.query("insert into profiles(user_id,full_name,username,active,society_id) values($1,'Fixture','portal-diretoria-ump',true,$2)",[uid,society]);
+ await db.query("insert into user_roles values($1,'diretoria')",[uid]);
+ await db.query("insert into settings values('diretoria_pin_ump','654321')");
+ const fingerprint=(await db.query("select encode(extensions.digest('IPNC:PIN:v1:654321','sha256'),'hex') value")).rows[0].value;
+ const claims={app_metadata:{ipnc_portal:{namespace:'diretoria',id:'ump',fingerprint}}};
+ const access=async jwt=>(await as(uid,()=>db.query('select treasury_access() data'),jwt)).rows[0].data;
+ assert.deepEqual((await access(claims)).fund_ids,[fund]);
+ assert.equal((await access(claims)).directory_fund_id,fund);
+ assert.equal((await access(claims)).admin,false);
+ await as(uid,()=>insert(crypto.randomUUID(),fund),claims);
+ await denied(()=>as(uid,()=>insert(crypto.randomUUID(),ids.other),claims));
+ await denied(()=>as(uid,()=>insert(crypto.randomUUID(),fund,10,{kind:'expense'}),claims));
+ await denied(()=>as(uid,()=>insert(crypto.randomUUID(),fund,10,{status:'confirmed'}),claims));
+ assert.equal((await as(uid,()=>db.query('select * from treasury_funds where id=$1',[ids.other]),claims)).rows.length,0);
+ for (const jwt of [
+  {app_metadata:{ipnc_portal:{namespace:'ebd',id:'ump',fingerprint}}},
+  {app_metadata:{ipnc_portal:{namespace:'diretoria',id:'saf',fingerprint}}},
+  {app_metadata:{ipnc_portal:{namespace:'diretoria',id:'ump',fingerprint:'wrong'}}},
+  {app_metadata:{ipnc_portal:{namespace:'treasury',id:fund,fingerprint}}},
+  {user_metadata:claims.app_metadata,app_metadata:{ipnc_portal:{namespace:'ebd',id:'admin'}}},
+ ]) assert.deepEqual((await access(jwt)).fund_ids,[]);
+ await db.query("update settings set value='123456' where key='diretoria_pin_ump'");
+ assert.deepEqual((await access(claims)).fund_ids,[]);
+ await db.query("update settings set value='654321' where key='diretoria_pin_ump'");
+ await db.query('update societies set active=false where id=$1',[society]);
+ assert.deepEqual((await access(claims)).fund_ids,[]);
+ await db.query('update societies set active=true where id=$1',[society]);
+ await db.query('update profiles set active=false where user_id=$1',[uid]);
+ assert.deepEqual((await access(claims)).fund_ids,[]);
+});

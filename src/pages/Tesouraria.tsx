@@ -1,5 +1,10 @@
+import { useAuth } from '@/contexts/AuthContext';
+import { TreasuryConnectionContext } from '@/contexts/TreasuryConnectionContext';
+import { supabase } from '@/integrations/supabase/client';
+import { treasuryClient } from '@/integrations/supabase/treasury-client';
+import { APP_HOME_PATH } from '@/lib/app-home';
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTreasuryIdentity } from '@/hooks/useTreasuryIdentity';
 import { TreasuryAccessDialog } from '@/components/treasury/TreasuryAccessDialog';
@@ -15,10 +20,24 @@ import { clampTreasuryPage, type TreasuryEntry, type TreasuryKind } from '@/lib/
 const emptyFilters: TreasuryFilters = { search: '', kind: '', start: '', end: '' };
 
 export default function Tesouraria() {
+  const main = useAuth();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  if (params.get('origem') !== 'diretoria') return <TreasuryEntry />;
+  return <TreasuryConnectionContext.Provider value={{
+    client: supabase as unknown as typeof treasuryClient,
+    session: main.session,
+    loading: main.loading || !main.rolesLoaded,
+    signOut: async () => { await main.signOut(); navigate(APP_HOME_PATH, { replace: true }); },
+  }}><TreasuryEntry /></TreasuryConnectionContext.Provider>;
+}
+
+function TreasuryEntry() {
   const auth = useTreasuryIdentity();
   const [open, setOpen] = useState(true);
   const [, setParams] = useSearchParams();
   if (auth.loading) return <div className="treasury-locked" role="status">Validando acesso à tesouraria…</div>;
+  if (auth.directoryEntry && !auth.canAccess) return <div className="treasury-locked"><h1>Tesouraria da sociedade</h1><p>{auth.access.error ? 'Não foi possível confirmar o acesso. Tente novamente.' : 'Seu acesso à diretoria não está ativo ou esta sociedade não possui caixa vinculado.'}</p>{auth.access.error && <button onClick={() => void auth.access.refetch()}>Tentar novamente</button>}<a href={APP_HOME_PATH}>Voltar para a Home</a></div>;
   if (!auth.canAccess) return <div className="treasury-locked"><h1>Tesouraria IPNC</h1><p>Entre com o PIN da sua sociedade ou com a conta administrativa.</p><button onClick={() => setOpen(true)}>Acessar tesouraria</button><a href="/auth">Voltar ao início</a><TreasuryAccessDialog open={open} onOpenChange={setOpen} onEntered={id => { setParams(id ? { sociedade: id } : {}, { replace: true }); setOpen(false); }} /></div>;
   return <TreasuryContent key={auth.user?.id} />;
 }
@@ -27,7 +46,7 @@ function TreasuryContent() {
   const auth = useTreasuryIdentity();
   const cache = useQueryClient();
   const [params, setParams] = useSearchParams();
-  const fundId = auth.isAdmin ? params.get('sociedade') || undefined : auth.access.data?.fund_ids[0];
+  const fundId = auth.isAdmin ? params.get('sociedade') || undefined : auth.access.data?.directory_fund_id ?? auth.access.data?.fund_ids[0];
   const [filters, setFilters] = useState<TreasuryFilters>(emptyFilters);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
@@ -58,11 +77,11 @@ function TreasuryContent() {
   useEffect(() => { if (!canSubmit) setEntryOpen(false); if (!admin) setFundOpen(false); }, [admin, canSubmit]);
 
   useEffect(() => {
-    if (treasurer && !admin && !fundId && managedFunds.length === 1) setParams({ sociedade: managedFunds[0] }, { replace: true });
+    if (treasurer && !admin && !fundId && managedFunds.length === 1) setParams(previous => { const next = new URLSearchParams(previous); next.set('sociedade', managedFunds[0]); return next; }, { replace: true });
   }, [treasurer, admin, fundId, managedFunds, setParams]);
 
   const changeFund = (id?: string) => {
-    setParams(id ? { sociedade: id } : {});
+    setParams(previous => { const next = new URLSearchParams(previous); if (id) next.set('sociedade', id); else next.delete('sociedade'); return next; });
     setFilters(emptyFilters);
     setSearch('');
     setPage(0);

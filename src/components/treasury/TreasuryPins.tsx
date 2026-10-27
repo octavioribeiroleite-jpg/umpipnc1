@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { treasuryClient } from '@/integrations/supabase/treasury-client';
 import type { TreasuryFund } from '@/lib/treasury';
 import { useTreasuryIdentity } from '@/hooks/useTreasuryIdentity';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -9,7 +8,7 @@ import { ConfirmActionButton } from '@/components/ui/confirm-action-button';
 
 interface PinStatus { fund_id: string; configured: boolean; active: boolean; updated_at: string | null }
 export function TreasuryPins({ funds }: { funds: TreasuryFund[] }) {
-  const { user } = useTreasuryIdentity();
+  const { user, client: treasuryClient } = useTreasuryIdentity();
   const status = useQuery({ queryKey: ['treasury', 'pins', user?.id], retry: false, queryFn: async () => {
     const result = await treasuryClient.rpc('treasury_pin_status'); if (result.error) throw new Error('Não foi possível consultar os PINs.'); return result.data as PinStatus[];
   } });

@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { treasuryClient as supabase } from '@/integrations/supabase/treasury-client';
 import { useTreasuryAccess } from './useTreasuryWorkflow';
 import { useTreasuryIdentity } from '@/hooks/useTreasuryIdentity';
 import {
@@ -33,10 +32,10 @@ type TreasuryDatabase = {
 };
 
 // Keep the new schema contract local until generated project types are refreshed after deployment.
-const treasury = supabase as unknown as SupabaseClient<TreasuryDatabase>;
 
 export function useTreasuryDashboard() {
-  const { user, canAccess } = useTreasuryIdentity();
+  const { client, user, canAccess } = useTreasuryIdentity();
+  const treasury = client as unknown as SupabaseClient<TreasuryDatabase>;
   return useQuery({
     queryKey: ['treasury', 'dashboard', user?.id], enabled: canAccess,
     queryFn: async ({ signal }) => {
@@ -51,7 +50,8 @@ export function useTreasuryDashboard() {
 }
 
 export function useTreasuryStatement(filters: TreasuryStatementFilters = {}) {
-  const { user, canAccess } = useTreasuryIdentity();
+  const { client, user, canAccess } = useTreasuryIdentity();
+  const treasury = client as unknown as SupabaseClient<TreasuryDatabase>;
   return useQuery({
     queryKey: ['treasury', 'statement', user?.id, filters], enabled: canAccess,
     queryFn: async ({ signal }) => {
@@ -66,7 +66,8 @@ export function useTreasuryStatement(filters: TreasuryStatementFilters = {}) {
 }
 
 export function useTreasuryMutations() {
-  const { user, isAdmin, canAccess } = useTreasuryIdentity();
+  const { client, user, isAdmin, canAccess } = useTreasuryIdentity();
+  const treasury = client as unknown as SupabaseClient<TreasuryDatabase>;
   const queryClient = useQueryClient();
   const access = useTreasuryAccess();
   const requireAdmin = () => {
