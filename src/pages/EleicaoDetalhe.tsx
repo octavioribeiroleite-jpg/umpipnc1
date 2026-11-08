@@ -48,7 +48,7 @@ export default function EleicaoDetalhe() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const read = useSnapshotRead(id || 'missing');
-  const [activeStep, setActiveStep] = useState<string | null>('candidatos');
+  const [activeStep, setActiveStep] = useState<string | null>(null);
 
   const fetchAll = () => read.run(async () => {
     if (!id) throw new Error('Eleição indisponível');
@@ -74,7 +74,7 @@ export default function EleicaoDetalhe() {
     };
   });
 
-  useEffect(() => { fetchAll(); }, [id]);
+  useEffect(() => { setActiveStep(null); fetchAll(); }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -104,16 +104,16 @@ export default function EleicaoDetalhe() {
   const completion = useMemo(() => {
     return {
       candidatos: candidates.length > 0,
-      presenca: (election?.total_present || 0) > 0,
+      presenca: (election?.total_present || 0) > 0 && election?.total_present === attendance.filter(person => person.present).length,
       dispositivos: !showDevices || devices.length > 0,
       votacao: election?.status === 'open' || election?.status === 'finished',
     };
-  }, [candidates, election, devices, showDevices]);
+  }, [candidates, election, attendance, devices, showDevices]);
 
   const steps: StepDef[] = useMemo(() => {
     const s: StepDef[] = [
-      { key: 'candidatos', label: electionType === 'camisa' ? 'Modelos' : 'Candidatos' },
       { key: 'presenca', label: 'Presença' },
+      { key: 'candidatos', label: electionType === 'camisa' ? 'Modelos' : 'Candidatos' },
     ];
     if (showDevices) s.push({ key: 'dispositivos', label: 'Dispositivos' });
     s.push({ key: 'votacao', label: 'Iniciar' });
@@ -126,7 +126,9 @@ export default function EleicaoDetalhe() {
     return idx === -1 ? steps.length - 1 : idx;
   }, [steps, completion]);
 
-  const currentStepKey = activeStep ?? steps[autoCurrentIndex]?.key;
+  const selectedIndex = steps.findIndex(step => step.key === activeStep);
+  const currentStepKey = selectedIndex >= 0 && selectedIndex <= autoCurrentIndex
+    ? activeStep : steps[autoCurrentIndex]?.key;
   const currentIndex = steps.findIndex((s) => s.key === currentStepKey);
 
   if (!read.hasSnapshot || !election) {
@@ -173,7 +175,7 @@ export default function EleicaoDetalhe() {
             electionId={election.id}
             candidates={candidates}
             onRefresh={fetchAll}
-            disabled={!isDraft}
+            disabled={!isDraft || !completion.presenca}
             type={electionType as 'cargo' | 'camisa'}
           />
         );
@@ -214,7 +216,7 @@ export default function EleicaoDetalhe() {
   };
 
   const handleStepClick = (idx: number) => {
-    setActiveStep(steps[idx].key);
+    if (idx <= autoCurrentIndex) setActiveStep(steps[idx].key);
   };
 
   return (
@@ -246,6 +248,7 @@ export default function EleicaoDetalhe() {
             <ElectionStepper
               steps={steps}
               currentIndex={currentIndex >= 0 ? currentIndex : autoCurrentIndex}
+              maxAvailableIndex={autoCurrentIndex}
               completed={completion as any}
               onStepClick={handleStepClick}
             />
@@ -264,7 +267,7 @@ export default function EleicaoDetalhe() {
             const isActive = step.key === currentStepKey;
             const state: 'done' | 'active' | 'pending' = isActive ? 'active' : isDone ? 'done' : 'pending';
             const stepIdx = steps.findIndex((s) => s.key === step.key);
-            const canOpen = isDone || stepIdx <= autoCurrentIndex;
+            const canOpen = stepIdx <= autoCurrentIndex;
             const isLast = stepIdx === steps.length - 1;
             const nextStep = steps[stepIdx + 1];
 

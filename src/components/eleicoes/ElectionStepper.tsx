@@ -9,18 +9,19 @@ export interface StepDef {
 interface Props {
   steps: StepDef[];
   currentIndex: number;
+  maxAvailableIndex: number;
   completed: Record<string, boolean>;
   onStepClick?: (index: number) => void;
 }
 
-export function ElectionStepper({ steps, currentIndex, completed, onStepClick }: Props) {
+export function ElectionStepper({ steps, currentIndex, maxAvailableIndex, completed, onStepClick }: Props) {
   return (
     <div className="flex items-start w-full gap-1 py-2">
       {steps.map((step, idx) => {
         const isDone = completed[step.key];
         const isCurrent = idx === currentIndex;
         const isPending = !isDone && !isCurrent;
-        const clickable = !!onStepClick && (isDone || idx <= currentIndex);
+        const clickable = !!onStepClick && idx <= maxAvailableIndex;
 
         return (
           <div key={step.key} className="relative flex min-w-0 flex-1 items-center justify-center">
