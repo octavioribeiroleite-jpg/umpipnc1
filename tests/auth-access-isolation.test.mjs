@@ -11,7 +11,7 @@ const root = path.resolve(import.meta.dirname, '..');
 const built = await build({
   absWorkingDir: root,
   stdin: { contents: `import React from 'react'; import {renderToStaticMarkup} from 'react-dom/server'; import {StaticRouter} from 'react-router-dom/server'; import {MainAccountAccessBoundary} from './src/components/MainAccountAccessBoundary';
-    export function render(path, failed) { let mounts=0; function Content(){mounts++;return <form id="own-access-guard"><input aria-label="PIN do acesso independente" /></form>;} return {html:renderToStaticMarkup(<StaticRouter location={path}><MainAccountAccessBoundary authenticated={true} loading={false} failed={failed} onSignOut={async()=>{}}><Content/></MainAccountAccessBoundary></StaticRouter>),mounts}; }`, resolveDir: root, loader: 'tsx' },
+    export function render(path, failed, authenticated=true) { let mounts=0; function Content(){mounts++;return <form id="own-access-guard"><input aria-label="PIN do acesso independente" /></form>;} return {html:renderToStaticMarkup(<StaticRouter location={path}><MainAccountAccessBoundary authenticated={authenticated} loading={false} failed={failed} onSignOut={async()=>{}}><Content/></MainAccountAccessBoundary></StaticRouter>),mounts}; }`, resolveDir: root, loader: 'tsx' },
   bundle: true, write: false, format: 'esm', platform: 'node', jsx: 'automatic', mainFields: ['module', 'main'],
   loader: { '.png': 'dataurl' },
   alias: { '@': path.join(root, 'src') },
@@ -24,11 +24,18 @@ try { ({render} = await import(`data:text/javascript;base64,${Buffer.from(built.
 catch (error) { throw new Error(`Unable to load isolated access test: ${error.message}`); }
 
 test('a failed principal account cannot replace EBD, treasury or public entry guards', () => {
-  for (const route of ['/secretaria', '/tesouraria?sociedade=ump', '/auth', '/reset-password', '/igreja', '/vote/fixture', '/eleicao/fixture/apresentar']) {
+  for (const route of ['/secretaria', '/tesouraria?sociedade=ump', '/auth', '/reset-password', '/igreja', '/vote/fixture', '/vote/sala/fixture', '/vote/ensaio/fixture', '/eleicao/fixture/apresentar']) {
     const {html,mounts}=render(route,true);
     assert.equal(mounts,1,route);
     assert.match(html,/id="own-access-guard"/,route);
     assert.doesNotMatch(html,/Não foi possível confirmar/,route);
+  }
+});
+
+test('persistent room and capability console cold links mount their own server guard without a principal login', () => {
+  for (const route of ['/vote/sala/fixture', '/vote/ensaio/fixture']) {
+    assert.equal(render(route, false, false).mounts, 1, route);
+    assert.equal(render(route, true, false).mounts, 1, route);
   }
 });
 
@@ -44,7 +51,7 @@ test('main account failures still block protected surfaces and do not mount thei
 test('successful principal validation mounts one content tree; independent route matching is bounded', () => {
   assert.equal(render('/configuracoes',false).mounts,1);
   assert.equal(usesIndependentAccess('/SECRETARIA/'),true);
-  for (const route of ['/secretaria/administracao', '/tesouraria-privada', '/vote/fixture/admin', '/eleicao/fixture/apresentar/extra', '/unknown']) {
+  for (const route of ['/secretaria/administracao', '/tesouraria-privada', '/vote/fixture/admin', '/vote/sala/fixture/admin', '/vote/ensaio/fixture/extra', '/vote/unknown/fixture', '/eleicao/fixture/apresentar/extra', '/unknown']) {
     assert.equal(usesIndependentAccess(route),false,route);
   }
 });
