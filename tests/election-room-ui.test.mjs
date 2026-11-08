@@ -110,6 +110,8 @@ test('demo console only reads on load, keeps admin capability out of the partici
   assert.equal(calls.length, 1); assert.equal(calls[0].p_action, 'snapshot');
   assert.equal(tree.root.findAllByType('svg').find(node => node.props['data-qr-url']).props['data-qr-url'], 'https://example.test/vote/sala/test-public-only');
   assert.doesNotMatch(JSON.stringify(tree.toJSON()), /test-admin-only/);
+  assert.equal(tree.root.findByType('a').props.href, 'https://example.test/vote/sala/test-public-only?painel=1');
+  assert.match(JSON.stringify(tree.toJSON()), /Abrir painel de acompanhamento/);
   const start = tree.root.findAllByType('button').find(node => node.children.includes('Iniciar votação'));
   assert.equal(start.props.disabled, false);
   await act(async () => start.props.onClick());
@@ -119,6 +121,34 @@ test('demo console only reads on load, keeps admin capability out of the partici
   assert.match(JSON.stringify(tree.toJSON()), /Aberto/);
   const publish = tree.root.findAllByType('button').find(node => node.children.includes('Apurar e liberar resultado'));
   assert.equal(publish.props.disabled, true, 'inexact count remains blocked');
+  await act(async () => tree.unmount());
+});
+
+test('public panel only follows counts and released results; it never mounts a ballot or consumes a shared urn token', async () => {
+  let current = snapshot({ phase: 'voting', activeElection: { ...snapshot().activeElection, status: 'open', total_present: 15 }, count: { ballots: 1, present: 15, confirmed: 15, exact: false } });
+  let identityReads = 0, ballotMounts = 0; const timers = [];
+  const Page = load('src/pages/VoteRoomPublic.tsx', {
+    'react-router-dom': { useParams: () => ({ roomToken: 'public-panel' }), useSearchParams: () => [new URLSearchParams('painel=1&urna=must-not-be-used')] },
+    '@/lib/browser-vote-device': { getVoteDeviceId: () => { identityReads++; throw new Error('Storage blocked'); } },
+    '@/hooks/useElectionRoom': { useElectionRoom: (_, deviceId) => { assert.equal(deviceId, 'ephemeral-panel-id'); return { snapshot: current, error: '', refresh() {} }; } },
+    '@/components/ui/button': button,
+    './VotePublic': { default: () => { ballotMounts++; throw new Error('Panel must never mount voting controls'); } },
+  }, { crypto: { randomUUID: () => 'ephemeral-panel-id' }, window: { setTimeout: (fn, delay) => { timers.push({ fn, delay }); return timers.length; }, clearTimeout() {} } }).default;
+  let tree; await act(async () => { tree = TestRenderer.create(React.createElement(Page)); });
+  assert.equal(identityReads, 0); assert.equal(ballotMounts, 0);
+  assert.equal(tree.root.findByProps({ role: 'progressbar' }).props['aria-valuenow'], 1);
+  assert.equal(tree.root.findByProps({ role: 'progressbar' }).props['aria-valuemax'], 15);
+  assert.doesNotMatch(JSON.stringify(tree.toJSON()), /Votar em|CONFIRMAR|must-not-be-used/);
+  current = { ...current, phase: 'result', revision: '2', activeElection: { ...current.activeElection, show_result: true }, count: { ballots: 15, present: 15, confirmed: 15, exact: true }, published_result: { candidates: [candidate], rounds: [{ round: 1, totalBallots: 15, blankVotes: 0, rows: [{ candidate_id: candidate.id, count: 15 }], electedIds: [candidate.id], hasTie: false }] } };
+  await act(async () => tree.update(React.createElement(Page)));
+  assert.match(JSON.stringify(tree.toJSON()), /Alfa fictício/);
+  assert.equal(timers.some(timer => timer.delay === 10000), false, 'projection keeps the result visible until the mesário changes it');
+  current = { ...current, phase: 'nominations', revision: '3', activeElection: { ...current.activeElection, current_round: 2, nominations_open: true, show_result: false }, count: { ballots: 0, present: 15, confirmed: 15, exact: false }, published_result: null };
+  await act(async () => tree.update(React.createElement(Page)));
+  assert.equal(tree.root.findByProps({ role: 'progressbar' }).props['aria-valuenow'], 0);
+  assert.match(JSON.stringify(tree.toJSON()), /Aguardando as indicações/);
+  assert.doesNotMatch(JSON.stringify(tree.toJSON()), /Alfa fictício|Votar em|CONFIRMAR/);
+  assert.equal(ballotMounts, 0);
   await act(async () => tree.unmount());
 });
 
