@@ -55,8 +55,8 @@ export default function Eleicoes() {
   const [position, setPosition] = useState('');
   const [societyId, setSocietyId] = useState<string>('');
   const [electionType, setElectionType] = useState<'cargo' | 'camisa'>('cargo');
-  const [seatsCount, setSeatsCount] = useState(1);
-  const [maxChoices, setMaxChoices] = useState(1);
+  const [seatsCount, setSeatsCount] = useState('1');
+  const [maxChoices, setMaxChoices] = useState('1');
   const [creating, setCreating] = useState(false);
   const [activeTab, setActiveTab] = useState<'cargo' | 'camisa'>('cargo');
   const { toast } = useToast();
@@ -113,16 +113,17 @@ export default function Eleicoes() {
       toast({ title: 'Preencha nome e cargo', variant: 'destructive' });
       return;
     }
-    if (electionType === 'cargo' && seatsCount < 1) {
-      toast({ title: 'Quantidade de vagas deve ser pelo menos 1', variant: 'destructive' });
+    const seats = Number(seatsCount);
+    if (electionType === 'cargo' && (!Number.isSafeInteger(seats) || seats < 1)) {
+      toast({ title: 'Informe uma quantidade inteira de vagas, a partir de 1', variant: 'destructive' });
       return;
     }
     setCreating(true);
     const normalizedSocietyId = churchWide
       ? (societyId && societyId !== 'general' ? societyId : null)
       : ownSocietyId;
-    const normalizedSeats = electionType === 'cargo' ? Math.max(1, seatsCount) : 1;
-    const normalizedChoices = electionType === 'cargo' ? Math.min(Math.max(1, maxChoices), normalizedSeats) : 1;
+    const normalizedSeats = electionType === 'cargo' ? seats : 1;
+    const normalizedChoices = electionType === 'cargo' ? normalizedSeats : 1;
     const { error } = await supabase.from('elections' as any).insert({
       name: name.trim(),
       position: position.trim(),
@@ -139,7 +140,7 @@ export default function Eleicoes() {
     } else {
       toast({ title: 'Eleição criada!' });
       setDialogOpen(false);
-      setName(''); setPosition(''); setSocietyId(''); setElectionType('cargo'); setSeatsCount(1); setMaxChoices(1);
+      setName(''); setPosition(''); setSocietyId(''); setElectionType('cargo'); setSeatsCount('1'); setMaxChoices('1');
       fetchElections();
     }
     setCreating(false);
@@ -233,17 +234,15 @@ export default function Eleicoes() {
                   <Input
                     id={`${formId}-seats`}
                     type="number"
+                    inputMode="numeric"
                     min={1}
+                    step={1}
                     value={seatsCount}
-                    onChange={(e) => {
-                      const next = Math.max(1, Number(e.target.value) || 1);
-                      setSeatsCount(next);
-                      setMaxChoices((current) => Math.min(current, next));
-                    }}
+                    onChange={(e) => setSeatsCount(e.target.value)}
                   />
-                  {seatsCount > 1 && (
+                  {Number(seatsCount) > 1 && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      ℹ️ Cadastre pelo menos {seatsCount + 1} candidatos para garantir disputa real.
+                      ℹ️ Cadastre pelo menos {Number(seatsCount) + 1} candidatos para garantir disputa real.
                     </p>
                   )}
                 </div>
@@ -268,7 +267,7 @@ export default function Eleicoes() {
               <div className="flex flex-col gap-1">
                 <Label>Regra de maioria</Label>
                 <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-                  {seatsCount > 1
+                  {Number(seatsCount) > 1
                     ? '✅ Maioria Absoluta (>50% das cédulas) — obrigatório para múltiplas vagas'
                     : '✅ Maioria Absoluta (>50% das cédulas)'}
                 </div>
