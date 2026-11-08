@@ -5,8 +5,7 @@ import { calculateElectionRounds } from '@/lib/election-results';
 import { readElectionCount, requireElectionCount, type ElectionCountSnapshot } from '@/lib/election-completion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, CheckCircle, Loader2, Link as LinkIcon, Copy, Maximize2, X, Smartphone, Monitor, Check, Circle, ExternalLink, Eye, BarChart2, Medal, Pencil } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Loader2, Copy, Smartphone, Monitor, Check, Circle, ExternalLink, Eye, BarChart2, Medal, Pencil } from 'lucide-react';
 
 function ChecklistItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -21,9 +20,8 @@ function ChecklistItem({ done, label }: { done: boolean; label: string }) {
   );
 }
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { DeviceRegistration } from './DeviceRegistration';
+import { ElectionVoteAccess } from './ElectionVoteAccess';
 import { EditElectionDialog } from './EditElectionDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -63,8 +61,6 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const actionRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
-  const [qrExpanded, setQrExpanded] = useState(false);
-  const [expandedDeviceToken, setExpandedDeviceToken] = useState<string | null>(null);
   const [partialRows, setPartialRows] = useState<{ candidate_id: string; name: string; count: number; pct: number; elected: boolean }[]>([]);
   const [partialBlanks, setPartialBlanks] = useState(0);
   const [partialNeeded, setPartialNeeded] = useState(0);
@@ -79,7 +75,6 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
-  const [activeTab, setActiveTab] = useState<string>('celular');
   const countedPresent = countSnapshot?.present ?? totalPresent;
   const diff = countedPresent - voteCount;
   const seatsCount = election?.seats_count || 1;
@@ -542,7 +537,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
   if (status === 'draft') {
     return (
-      <div className="space-y-3">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]"><div className="space-y-4">
         <p className="text-xs text-muted-foreground">
           Configure a chamada e os candidatos antes de iniciar.
         </p>
@@ -612,6 +607,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             Iniciar Votação
           </Button>
         </div>
+      </div><aside className="min-w-0 lg:sticky lg:top-4"><ElectionVoteAccess electionId={electionId} electionName={electionName} mode={selectedMode} devices={devices} started={false} /></aside>
       </div>
     );
   }
@@ -620,7 +616,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
   return (
     <>
-      <div className="min-w-0 space-y-4">
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]"><div className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold">{currentRound}º escrutínio</p>
           <Badge variant="secondary">{selectedMode === 'individual' ? 'Voto individual' : selectedMode === 'both' ? 'Urna + celular' : 'Urna compartilhada'}</Badge>
@@ -835,6 +831,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         )}
 
+        </div>
+        <aside className="min-w-0 lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1 lg:row-span-2"><ElectionVoteAccess electionId={electionId} electionName={electionName} mode={selectedMode} devices={devices} started /></aside>
+        <div className="min-w-0 space-y-4 lg:col-start-1">
         {/* Ranking ao vivo dos candidatos */}
         {liveRankedCandidates.length > 0 && (
           <div className="mt-4 space-y-3">
@@ -913,8 +912,9 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         )}
 
-        <details className="group rounded-xl border border-border bg-muted/10">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted/40 motion-reduce:transition-none [&::-webkit-details-marker]:hidden">Configuração, urnas e links<span className="text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true">⌄</span></summary>
+        </div>
+        <details className="group rounded-xl lg:col-span-2 border border-border bg-muted/10">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted/40 motion-reduce:transition-none [&::-webkit-details-marker]:hidden">Configuração e opções<span className="text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true">⌄</span></summary>
           <div className="space-y-4 border-t border-border p-3 sm:p-4">
         {/* Mode label */}
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -966,109 +966,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         )}
 
-        {/* QR Code & Link */}
-        {selectedMode !== 'individual' ? (
-          <Tabs value={selectedMode === 'shared' ? 'urna' : activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className={`w-full grid ${selectedMode === 'both' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              {selectedMode === 'both' && <TabsTrigger value="celular" className="text-xs gap-1">
-                <Smartphone className="h-3.5 w-3.5" /> Celular
-              </TabsTrigger>}
-              <TabsTrigger value="urna" className="text-xs gap-1">
-                <Monitor className="h-3.5 w-3.5" /> Urna Fixa ({devices.length})
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="celular">
-              <div className="flex items-center gap-3 p-3 border border-border/60 bg-muted/40 rounded-lg">
-                <div className="relative cursor-pointer" onClick={() => { setExpandedDeviceToken(null); setQrExpanded(true); }}>
-                  <QRCodeSVG value={voteUrl} size={100} />
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
-                    <Maximize2 className="h-5 w-5 text-foreground" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <p className="text-xs font-medium flex items-center gap-1">
-                    <Smartphone className="h-3 w-3" /> Voto Individual
-                  </p>
-                  <code className="text-xs bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
-                  <div className="flex flex-wrap gap-1.5">
-                    <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { navigator.clipboard.writeText(voteUrl); toast({ title: 'Link copiado!' }); }}>
-                      <Copy className="h-3 w-3 mr-1" /> Copiar
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { setExpandedDeviceToken(null); setQrExpanded(true); }}>
-                      <Maximize2 className="h-3 w-3 mr-1" /> Expandir
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            <TabsContent value="urna">
-              <div className="space-y-2">
-                {devices.map((d) => {
-                  const deviceUrl = `${window.location.origin}/vote/${electionId}?mode=urna&token=${d.token}`;
-                  return (
-                    <div key={d.id} className="p-3 border border-border/60 bg-muted/40 rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-medium flex items-center gap-1.5">
-                          <Monitor className="h-3 w-3" /> {d.label}
-                        </p>
-                        {d.activated ? (
-                          <span className="text-xs text-success font-medium">✓ Ativada</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Aguardando</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="relative cursor-pointer" onClick={() => { setExpandedDeviceToken(d.token); setQrExpanded(true); }}>
-                          <QRCodeSVG value={deviceUrl} size={80} />
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
-                            <Maximize2 className="h-4 w-4 text-foreground" />
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0 space-y-1.5">
-                          <code className="text-xs bg-muted p-1.5 rounded block break-all leading-tight">{deviceUrl}</code>
-                          <div className="flex flex-wrap gap-1.5">
-                            <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { navigator.clipboard.writeText(deviceUrl); toast({ title: 'Link copiado!' }); }}>
-                              <Copy className="h-3 w-3 mr-1" /> Copiar
-                            </Button>
-                            <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => { setExpandedDeviceToken(d.token); setQrExpanded(true); }}>
-                              <Maximize2 className="h-3 w-3 mr-1" /> Expandir
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {devices.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-4">Nenhum dispositivo cadastrado.</p>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <div className="flex items-center gap-3 p-3 border border-border/60 bg-muted/40 rounded-lg">
-            <div className="relative cursor-pointer" onClick={() => setQrExpanded(true)}>
-              <QRCodeSVG value={voteUrl} size={100} />
-              <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 hover:opacity-100 transition-opacity rounded">
-                <Maximize2 className="h-5 w-5 text-foreground" />
-              </div>
-            </div>
-            <div className="flex-1 min-w-0 space-y-1.5">
-              <p className="text-xs font-medium flex items-center gap-1">
-                <LinkIcon className="h-3 w-3" /> Link de voto individual
-              </p>
-              <code className="text-xs bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
-              <div className="flex flex-wrap gap-1.5">
-                <Button variant="outline" size="sm" className="h-11 text-xs" onClick={copyLink}>
-                  <Copy className="h-3 w-3 mr-1" /> Copiar
-                </Button>
-                <Button variant="outline" size="sm" className="h-11 text-xs" onClick={() => setQrExpanded(true)}>
-                  <Maximize2 className="h-3 w-3 mr-1" /> Expandir
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}        {/* Botão Reiniciar separado, discreto */}
+        {/* Botão Reiniciar separado, discreto */}
         <div className="flex justify-end">
           <Button
             variant="ghost"
@@ -1083,35 +981,6 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         </details>
       </div>
-
-      {/* QR dialog fits short mobile viewports and remains scrollable. */}
-      <Dialog open={qrExpanded} onOpenChange={setQrExpanded}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg max-h-[90dvh] overflow-y-auto p-5 pt-14 bg-background">
-          <DialogTitle className="sr-only">QR Code da votação</DialogTitle>
-          <div className="flex min-w-0 flex-col items-center gap-4">
-            {electionName && (
-              <h2 className="text-xl font-bold text-center">{electionName}</h2>
-            )}
-            {expandedDeviceToken && (
-              <p className="text-sm text-muted-foreground">
-                {devices.find(d => d.token === expandedDeviceToken)?.label}
-              </p>
-            )}
-            <QRCodeSVG
-              value={expandedDeviceToken
-                ? `${window.location.origin}/vote/${electionId}?mode=urna&token=${expandedDeviceToken}`
-                : voteUrl}
-              size={320}
-              className="h-auto w-full max-w-[320px]"
-            />
-            <code className="text-sm bg-muted p-3 rounded-lg break-all text-center max-w-sm">
-              {expandedDeviceToken
-                ? `${window.location.origin}/vote/${electionId}?mode=urna&token=${expandedDeviceToken}`
-                : voteUrl}
-            </code>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
         <AlertDialogContent>
