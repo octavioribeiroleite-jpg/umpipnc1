@@ -97,7 +97,9 @@ function reloadShared() {
 }
 function persistShared() {
  if (!sharedKey) return;
- localStorage.setItem(sharedKey, JSON.stringify({kind:'ipnc-isolated-election-fixture-v1',tables:Object.fromEntries(sharedTables.map(table=>[table,data[table]]))}));
+ const serialized = JSON.stringify({kind:'ipnc-isolated-election-fixture-v1',tables:Object.fromEntries(sharedTables.map(table=>[table,data[table]]))});
+ if (localStorage.getItem(sharedKey) === serialized) return;
+ localStorage.setItem(sharedKey, serialized);
  void emitFixtureRealtime();
 }
 async function sharedOperation<T>(write:boolean, work:()=>T):Promise<T> {
