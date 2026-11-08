@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { readElectionCount } from '@/lib/election-completion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Download, Loader2, Trash2 } from 'lucide-react';
@@ -121,14 +122,19 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
   };
 
   const handleConfirmPresence = async () => {
+    if (saving || disabled) return;
     setSaving(true);
-    await supabase
-      .from('elections' as any)
-      .update({ total_present: presentCount } as any)
-      .eq('id', electionId);
-    toast({ title: `Presença confirmada: ${presentCount} presentes` });
-    setSaving(false);
-    onRefresh();
+    try {
+      const snapshot = await readElectionCount(supabase, electionId);
+      if (snapshot.election.status !== 'draft') throw new Error('A chamada só pode ser confirmada antes da votação.');
+      const { data, error } = await supabase.from('elections').update({ total_present: snapshot.present })
+        .eq('id', electionId).eq('status', 'draft').select('id').single();
+      if (error || !data) throw error || new Error('Não foi possível confirmar a chamada.');
+      toast({ title: `Presença confirmada: ${snapshot.present} presentes` });
+      onRefresh();
+    } catch (cause) {
+      toast({ title: 'Chamada não confirmada', description: cause instanceof Error ? cause.message : 'Confira a conexão e tente novamente.', variant: 'destructive' });
+    } finally { setSaving(false); }
   };
 
   return (

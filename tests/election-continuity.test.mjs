@@ -6,6 +6,7 @@ import ts from 'typescript';
 import { planNextElection, saveNextElection } from '../src/lib/next-election.ts';
 import { createUmpSequence, findElectionSequence, reserveSequenceAttendance, UMP_POSITIONS } from '../src/lib/election-sequence.ts';
 import { withBrowserBallotLock } from '../src/lib/browser-ballot-lock.ts';
+import { readElectionCount, requireElectionCount } from '../src/lib/election-completion.ts';
 import { isBallotConfirmed } from '../src/components/eleicoes/ballot-response.ts';
 
 function handler(file, name, context) {
@@ -26,15 +27,15 @@ function localDatabase(source = []) {
   const tables = { elections: structuredClone(source), election_attendance: [], election_votes: [{ id: 'old-vote', election_id: 'source' }], election_candidates: [{ id: 'old-candidate', election_id: 'source' }], election_devices: [] };
   const calls = []; let failure;
   return { tables, calls, fail: (table, operation, after = false) => { failure = { table, operation, after }; }, from(table) {
-    let operation = 'select', payload, single = false; const filters = [];
-    const query = { select() { return query; }, eq(key, value) { filters.push(row => row[key] === value); return query; }, maybeSingle() { single = true; return query; }, single() { single = true; return query; },
+    let operation = 'select', payload, single = false, offset = 0, limit = Infinity; const filters = [];
+    const query = { order() { return query; }, range(from, to) { offset = from; limit = to-from+1; return query; }, select() { return query; }, eq(key, value) { filters.push(row => row[key] === value); return query; }, maybeSingle() { single = true; return query; }, single() { single = true; return query; },
       insert(value) { operation = 'insert'; payload = value; return query; }, upsert(value) { operation = 'upsert'; payload = value; return query; }, update(value) { operation = 'update'; payload = value; return query; },
       async then(resolve, reject) {
         calls.push({ table, operation });
         const fail = failure?.table === table && failure.operation === operation ? failure : null;
         if (fail) failure = null;
         if (fail && !fail.after) return Promise.resolve({ data: null, error: new Error('isolated failure') }).then(resolve, reject);
-        let rows = tables[table].filter(row => filters.every(filter => filter(row)));
+        let rows = tables[table].filter(row => filters.every(filter => filter(row))).slice(offset, offset + limit);
         if (operation === 'insert' || operation === 'upsert') {
           rows = (Array.isArray(payload) ? payload : [payload]).map(row => structuredClone(row));
           for (const row of rows) { const old = tables[table].find(item => item.id === row.id); if (old && operation === 'upsert') Object.assign(old, row); else if (old) return resolve({ error: new Error('duplicate ID') }); else tables[table].push(row); }
@@ -45,7 +46,7 @@ function localDatabase(source = []) {
     return query;
   } };
 }
-const original = { id: 'source', society_id: 'society', status: 'finished', type: 'cargo', voting_mode: 'both', created_by: 'organizer', total_present: 2 };
+const original = { id: 'source', current_round: 1, society_id: 'society', status: 'finished', type: 'cargo', voting_mode: 'both', created_by: 'organizer', total_present: 2 };
 const people = [{ id: 'a', name: 'Pessoa fictícia A', present: true }, { id: 'b', name: 'Pessoa fictícia B', present: false }, { id: 'c', name: 'Pessoa fictícia C', present: true }];
 const input = { userId: 'organizer', name: 'Diretoria fictícia', position: 'Vice-presidente', seats: 1 };
 
@@ -181,9 +182,11 @@ test('five UMP cargos advance with the real handler, persist across reload/retry
     let attendance = structuredClone(people);
     for (let index = 0; index < 4; index++) {
       const source = db.tables.elections[index]; source.status = 'finished';
+      if (index === 0) db.tables.election_attendance = people.map(person => ({ ...person, election_id: source.id }));
+      db.tables.election_votes.push(...[1,2].map(n => ({id: `${source.id}-vote-${n}`, ballot_id: `${source.id}-ballot-${n}`, election_id: source.id, round_number: 1, is_blank: true, candidate_id: null})));
       const sourceBefore = structuredClone(source); const step = findElectionSequence('organizer', source.id);
       let destination, failure;
-      const context = { inFlight: { current: false }, user: { id: 'organizer' }, setBusy() {}, setError: value => { failure = value; },
+      const context = { readElectionCount, requireElectionCount, sourceIds: { current: [] }, setCount() {}, setCountError() {}, inFlight: { current: false }, user: { id: 'organizer' }, setBusy() {}, setError: value => { failure = value; },
         plan: { current: null }, planNextElection, election: source, attendance, name: sequence.name, position: UMP_POSITIONS[index + 1], seats: '1',
         withBrowserBallotLock, step, nextPosition: UMP_POSITIONS[index + 1], reserveSequenceAttendance, saveNextElection, supabase: db,
         navigate: value => { destination = value; },
@@ -192,7 +195,7 @@ test('five UMP cargos advance with the real handler, persist across reload/retry
       await handler('src/components/eleicoes/NextElectionDialog.tsx', 'create', context)();
       assert.ok(failure); assert.equal(destination, undefined);
       // A fresh ref simulates reloading the page after a response was lost.
-      context.plan = { current: null };
+      context.plan = { current: null }; context.sourceIds = { current: [] };
       await handler('src/components/eleicoes/NextElectionDialog.tsx', 'create', context)();
       assert.equal(destination, `/eleicoes/${sequence.electionIds[index + 1]}`);
       await handler('src/components/eleicoes/NextElectionDialog.tsx', 'create', { ...context, plan: { current: null } })();
@@ -213,7 +216,7 @@ test('start/finish report failures truthfully and never refresh the next step be
     if (failed) db.fail('elections', 'update');
     let refreshed = false; const messages = [];
     await handler('src/components/eleicoes/VotingPanel.tsx', name, {
-      actionRef: { current: false }, modeChangeRef: { current: false }, canStart: true, selectedMode: 'both', electionId: 'fixture', currentRound: 1,
+      checkCurrentCount: async () => ({ election: { total_present: 2 } }), actionRef: { current: false }, modeChangeRef: { current: false }, canStart: true, selectedMode: 'both', electionId: 'fixture', currentRound: 1,
       setLoading() {}, setConfirmAction() {}, supabase: db, onRefresh: () => { refreshed = true; }, toast: message => messages.push(message),
     })();
     assert.equal(refreshed, !failed); assert.equal(messages[0].variant === 'destructive', failed);
@@ -279,11 +282,12 @@ test('foreground snapshot retains same-round selection and resets a new round wh
 test('a one-seat runoff advances without deleting prior ballots, keeps tied cutoff candidates and fails closed on read/write errors', async () => {
   for (const failedOperation of [null, 'read', 'write']) {
     const db = localDatabase([{ id: 'fixture', status: 'open', current_round: 1, total_present: 3 }]);
-    db.tables.election_votes = ['a', 'b', 'c'].map(candidate_id => ({ election_id: 'fixture', candidate_id, ballot_id: `ballot-${candidate_id}`, round_number: 1, is_blank: false }));
+    db.tables.election_attendance = ['a','b','c'].map(id => ({ id, name: id, election_id: 'fixture', present: true }));
+    db.tables.election_votes = ['a', 'b', 'c'].map(candidate_id => ({ id: candidate_id, election_id: 'fixture', candidate_id, ballot_id: `ballot-${candidate_id}`, round_number: 1, is_blank: false }));
     const originalVotes = structuredClone(db.tables.election_votes); let refreshed = false; const messages = [];
     if (failedOperation) db.fail(failedOperation === 'read' ? 'election_votes' : 'elections', failedOperation === 'read' ? 'select' : 'update');
     await handler('src/components/eleicoes/VotingPanel.tsx', 'handleNextRound', {
-      actionRef: { current: false }, loading: false, status: 'open', currentRound: 1, electionId: 'fixture', seatsCount: 1, majorityRule: 'absolute_50',
+      checkCurrentCount: async () => requireElectionCount(await readElectionCount(db, 'fixture'), { status: 'open', round: 1 }), actionRef: { current: false }, loading: false, status: 'open', currentRound: 1, electionId: 'fixture', seatsCount: 1, majorityRule: 'absolute_50',
       candidates: ['a', 'b', 'c'].map(id => ({ id })), setLoading() {}, supabase: db, onRefresh: () => { refreshed = true; }, toast: message => messages.push(message),
     })();
     assert.equal(refreshed, !failedOperation); assert.equal(db.tables.elections[0].current_round, failedOperation ? 1 : 2);

@@ -60,7 +60,15 @@ data.elections[0] = {...data.elections[0],status:electionState,total_present:20,
 if(electionState==='missing')data.elections=[];
 const portrait='/tests/fixtures/diretoria/portrait.svg';
 data.election_candidates = Array.from({length:fixtureState==='long'?18:3},(_,index)=>({...data.election_candidates[0],id:`candidate-${index+1}`,name:`Candidato Fictício ${index+1}${fixtureState==='long'?' — Nome muito extenso para verificar quebra em várias linhas':''}`,photo_url:portrait,photo_urls:Array.from({length:fixtureState==='long'?8:2},(_,photo)=>`${portrait}?candidate=${index}&photo=${photo}`),display_order:index}));
-data.election_votes = electionState==='finished'?Array.from({length:8},(_,index)=>({id:`vote-${index}`,election_id:'election',candidate_id:`candidate-${index%3+1}`,round_number:1,is_blank:false})):[];
+data.election_votes = electionState==='finished'?Array.from({length:8},(_,index)=>({id:`vote-${index}`,election_id:'election',candidate_id:`candidate-${index%3+1}`,round_number:1,ballot_id:`ballot-${index}`,is_blank:false})):[];
+if (fixtureParams.has('ballot_count') || fixtureParams.has('attendance_present')) {
+ const present = Math.max(0, Math.min(2000, Number(fixtureParams.get('attendance_present') || '16')));
+ const ballotCount = Math.max(0, Math.min(2000, Number(fixtureParams.get('ballot_count') || '0')));
+ const choices = Math.max(1, Math.min(3, Number(fixtureParams.get('ballot_choices') || '1')));
+ data.elections[0] = {...data.elections[0], total_present:Number(fixtureParams.get('total_present') || present), max_choices_per_ballot:choices, seats_count:choices};
+ data.election_attendance=Array.from({length:present},(_,index)=>({id:`attendance-${String(index).padStart(5,'0')}`,election_id:'election',name:`Pessoa FICTÍCIA ${index+1}`,present:true}));
+ data.election_votes=Array.from({length:ballotCount},(_,ballot)=>Array.from({length:choices},(_,choice)=>({id:`vote-${String(ballot).padStart(5,'0')}-${choice}`,election_id:'election',candidate_id:`candidate-${choice+1}`,ballot_id:`ballot-${ballot}`,round_number:1,is_blank:false}))).flat();
+}
 const mode=fixtureState;
 let readsFail = mode === 'error';
 export function setFixtureReadFailure(failed:boolean) { readsFail = failed; }

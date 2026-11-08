@@ -1,6 +1,7 @@
 import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useCallback, useEffect, useState } from 'react';
+import { readElectionCount, type ElectionCountSnapshot } from '@/lib/election-completion';
 import { calculateElectionRounds, type ElectionRoundResult } from '@/lib/election-results';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,27 +21,30 @@ function getCandidatePhoto(candidate: { photo_url: string | null; photo_urls?: s
 }
 
 export function ResultPanel({ electionId, totalPresent, candidates, election, presentation = false }: ResultPanelProps) {
+  const [countSnapshot, setCountSnapshot] = useState<ElectionCountSnapshot | null>(null);
   const [roundResults, setRoundResults] = useState<ElectionRoundResult[]>([]);
 
   const { seats_count, current_round, majority_rule } = election || {};
   const scope = JSON.stringify([electionId, seats_count, current_round, majority_rule, candidates.map(candidate => [candidate.id, candidate.birth_date])]);
   const { loading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(scope);
   const fetchResults = useCallback(() => runRead(async () => {
-    const { data, error } = await supabase.from('election_votes').select('*').eq('election_id', electionId);
-    if (error) throw error;
-    const results = calculateElectionRounds(data || [], candidates, { seats_count, current_round, majority_rule });
-    return () => setRoundResults(results);
+    const snapshot = await readElectionCount(supabase, electionId);
+    const results = calculateElectionRounds(snapshot.votes, candidates, { seats_count, current_round, majority_rule });
+    return () => { setRoundResults(results); setCountSnapshot(snapshot); };
   }), [electionId, candidates, seats_count, current_round, majority_rule, runRead]);
 
   useEffect(() => {
     void fetchResults();
     const channel = supabase.channel(`result-${electionId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'election_votes', filter: `election_id=eq.${electionId}` }, fetchResults)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'election_attendance', filter: `election_id=eq.${electionId}` }, fetchResults)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'elections', filter: `id=eq.${electionId}` }, fetchResults)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [electionId, fetchResults]);
 
-  const allElected = roundResults.flatMap((r) => r.electedIds);
+  const countVerified = !!countSnapshot?.exact && !readError && !loading && countSnapshot.election.current_round === (current_round || 1) && countSnapshot.election.total_present === totalPresent;
+  const allElected = countVerified ? roundResults.flatMap((r) => r.electedIds) : [];
   const seatsCount = election?.seats_count || 1;
   const isValid = roundResults.length > 0 && allElected.length >= seatsCount;
 
@@ -50,6 +54,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election, pr
   return (
     <div className={presentation ? 'min-w-0 space-y-6 text-lg' : 'min-w-0 space-y-4'}>
       {readFailure}
+      {!countVerified && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{loading ? 'Conferindo chamada e votos…' : readError ? 'Contagem não conferida. O resultado aguarda uma leitura válida.' : countSnapshot?.issue || 'A votação mudou. Confira a sala antes de validar o resultado.'}</p>}
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
@@ -65,7 +70,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election, pr
               <CheckCircle className="h-3 w-3" /> Válido
             </Badge>
           ) : (
-            <Badge variant="destructive">Inválido</Badge>
+            <Badge variant="destructive">{countVerified ? 'Vagas pendentes' : 'Contagem não conferida'}</Badge>
           )}
         </div>
       </div>
@@ -187,7 +192,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election, pr
                   const pct = roundResult.totalBallots > 0
                     ? Math.round((r.count / roundResult.totalBallots) * 100)
                     : 0;
-                  const elected = roundResult.electedIds.includes(r.candidate_id);
+                  const elected = countVerified && roundResult.electedIds.includes(r.candidate_id);
                   const isLeading = i === 0;
                   return (
                     <div key={r.candidate_id} className="space-y-1">
@@ -277,7 +282,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election, pr
           </span>
         )}
         <span className={allElected.length >= seatsCount ? 'text-success font-medium' : 'text-warning font-medium'}>
-          {allElected.length >= seatsCount
+          {!countVerified ? 'Resultado aguardando conferência' : allElected.length >= seatsCount
             ? '✅ Todas as vagas preenchidas'
             : `⚠️ ${seatsCount - allElected.length} vaga(s) em aberto`}
         </span>
