@@ -14,7 +14,7 @@ function handler(file, name, context) {
   visit(source);
   assert.ok(declaration?.initializer, `${name} must remain a testable real handler`);
   const compiled = ts.transpileModule(`globalThis.handler = ${declaration.initializer.getText(source)};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  const sandbox = { ...context };
+  const sandbox = { actions: undefined, ...context };
   vm.runInNewContext(compiled, sandbox);
   return sandbox.handler;
 }
@@ -77,6 +77,7 @@ test('the real voting handler preserves selection and ballot UUID through return
     const ballotRequestRef = { current: null };
     const actual = handler('src/pages/VotePublic.tsx', 'handleVote', {
       roomSession: undefined,
+      election: { nominations_open: false },
       readError: '', loading: false, loadedRoundRef: {current: 'fixture-only:1'}, electionId: 'fixture-only', currentRound: 1, confirmBlank: false, isMultiSeat: false, maxChoices: 1, autoBlankSlots: 0,
       confirmCandidate: { id: 'candidate-fixture' }, selectedCandidates: [], voteInFlightRef: { current: false }, ballotRequestRef,
       crypto: { randomUUID: () => 'uuid-fixture-only' }, ensureAudioContext: async () => null, playUrnaSound: async () => true, isIndividual: false,
@@ -102,6 +103,19 @@ test('the real voting handler preserves selection and ballot UUID through return
     assert.deepEqual(calls[0].choices, calls[1].choices);
     assert.equal(ballotRequestRef.current, null);
   }
+});
+
+test('an old legacy confirmation cannot submit while the mesário has opened new indications', async () => {
+  let submitted = false, loadingStarted = false;
+  const voteInFlightRef = { current: false };
+  const actual = handler('src/pages/VotePublic.tsx', 'handleVote', {
+    readError: '', loading: false, election: { nominations_open: true }, confirmBlank: false,
+    isMultiSeat: false, maxChoices: 1, autoBlankSlots: 0, confirmCandidate: { id: 'old-candidate' }, selectedCandidates: [],
+    voteInFlightRef, setVoting() { loadingStarted = true; },
+    supabase: { functions: { invoke: async () => { submitted = true; return { data: { success: true }, error: null }; } } },
+  });
+  await actual();
+  assert.equal(submitted, false); assert.equal(loadingStarted, false); assert.equal(voteInFlightRef.current, false);
 });
 
 test('public identification stays on the entered identity when visit registration is rejected', async () => {

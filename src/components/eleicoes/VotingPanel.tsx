@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface Device { id: string; label: string; token: string; activated: boolean; }
-interface Candidate { id: string; name: string; birth_date?: string | null; photo_url?: string | null; photo_urls?: string[] | null; }
+interface Candidate { id: string; name: string; birth_date?: string | null; nomination_round?: number; photo_url?: string | null; photo_urls?: string[] | null; }
 
 function getCandidatePhoto(candidate: { photo_url?: string | null; photo_urls?: string[] | null }): string | null {
   if (Array.isArray(candidate.photo_urls) && candidate.photo_urls.length > 0) return candidate.photo_urls[0];
@@ -44,7 +44,7 @@ interface VotingPanelProps {
   votingMode: string;
   devices: Device[];
   candidates: Candidate[];
-  election?: { id?: string; name?: string; position?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; voting_mode?: string; round2_candidate_ids?: string[] | null };
+  election?: { id?: string; name?: string; position?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; voting_mode?: string; round2_candidate_ids?: string[] | null; nominations_open?: boolean };
   onRefresh: () => void;
 }
 
@@ -80,6 +80,10 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
   const majorityRule = election?.majority_rule || 'simple';
+  const nominationsOpen = !!election?.nominations_open;
+  const candidateScope = candidates.map(candidate => `${candidate.id}:${candidate.birth_date || ''}:${candidate.nomination_round ?? currentRound}`).join('|');
+  const currentCandidates = candidates.filter(candidate => (candidate.nomination_round ?? currentRound) === currentRound);
+  const historicalRounds = calculateElectionRounds(liveVotes, candidates, { seats_count: seatsCount, current_round: currentRound, majority_rule: majorityRule }).filter(round => round.round < currentRound);
   const isCargoElection = election?.type !== 'camisa';
 
   const showDevices = selectedMode === 'both' || selectedMode === 'shared';
@@ -87,8 +91,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const countCurrent = countSnapshot?.election.current_round === currentRound && countSnapshot?.election.status === status && countSnapshot?.election.total_present === totalPresent;
   const countDisplayExact = !!countSnapshot?.exact && countCurrent;
   const countExact = countDisplayExact && !countError;
-  const canProceed = countExact;
-  const canStart = candidates.length > 0 && !!countSnapshot?.attendanceConfirmed && countCurrent && !countError && !countSnapshot?.votes.length && !needsDevices;
+  const canProceed = countExact && !nominationsOpen;
+  const canStart = currentCandidates.length > 0 && !!countSnapshot?.attendanceConfirmed && countCurrent && !countError && (nominationsOpen ? countSnapshot?.ballots === 0 : !countSnapshot?.votes.length) && !needsDevices;
 
   const fetchVoteCount = async () => {
     if (actionRef.current) return;
@@ -276,14 +280,14 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       pendingRef.current = false;
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [electionId, currentRound, seatsCount, majorityRule, status]);
+  }, [electionId, currentRound, seatsCount, majorityRule, status, nominationsOpen, candidateScope]);
 
   useEffect(() => {
     const refresh = () => { if (document.visibilityState === 'visible') void fetchVoteCount(); };
     document.addEventListener('visibilitychange', refresh);
     window.addEventListener('pageshow', refresh);
     return () => { document.removeEventListener('visibilitychange', refresh); window.removeEventListener('pageshow', refresh); };
-  }, [electionId, currentRound, seatsCount, majorityRule, status]);
+  }, [electionId, currentRound, seatsCount, majorityRule, status, nominationsOpen, candidateScope]);
 
   useEffect(() => {
     if (countSnapshot && !countDisplayExact) setPhase('voting');
@@ -367,6 +371,10 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     try {
       const snapshot = await readElectionCount(supabase, electionId);
       setCountSnapshot(snapshot); setCountError(''); setVoteCount(snapshot.ballots); setLiveVotes(snapshot.votes);
+      if (action === 'start' && nominationsOpen) {
+        if (snapshot.election.status !== 'open' || snapshot.election.current_round !== currentRound || !snapshot.attendanceConfirmed || snapshot.ballots !== 0) throw new Error('Confira a chamada e as indicações antes de iniciar este escrutínio.');
+        return snapshot;
+      }
       return requireElectionCount(snapshot, { status, round: currentRound, action });
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : 'Não foi possível conferir a chamada e os votos.';
@@ -389,8 +397,10 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     setLoading(true);
     try {
       const verified = await checkCurrentCount('start');
-      const { data, error } = await supabase.from('elections').update({ status: 'open', voting_mode: selectedMode })
-        .eq('id', electionId).eq('status', 'draft').eq('total_present', verified.election.total_present).select('id').single();
+      const { data, error } = nominationsOpen
+        ? await supabase.rpc('election_start_nominated_round', { p_election_id: electionId, p_expected_round: currentRound })
+        : await supabase.from('elections').update({ status: 'open', voting_mode: selectedMode })
+          .eq('id', electionId).eq('status', 'draft').eq('total_present', verified.election.total_present).select('id').single();
       if (error || !data) throw error || new Error('A votação foi alterada');
       toast({ title: 'Votação iniciada!' });
       onRefresh();
@@ -400,19 +410,19 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   };
 
   const handleReset = async () => {
-    if (actionRef.current || loading || status !== 'open') return;
+    if (actionRef.current || loading || status !== 'open' || nominationsOpen) return;
     actionRef.current = true;
     setLoading(true);
     try {
       const before = await readElectionCount(supabase, electionId);
       if (before.election.status !== 'open' || before.election.current_round !== currentRound) throw new Error('A votação mudou. Atualize a sala antes de reiniciar.');
-      const { error } = await supabase.from('election_votes' as any).delete().eq('election_id', electionId);
+      const { error } = await supabase.from('election_votes' as any).delete().eq('election_id', electionId).eq('round_number', currentRound);
       if (error) throw error;
       const after = await readElectionCount(supabase, electionId);
-      if (after.votes.length > 0) throw new Error('Ainda há votos registrados. Confira a sala antes de tentar novamente.');
+      if (after.ballots > 0) throw new Error('Ainda há votos registrados. Confira a sala antes de tentar novamente.');
       setPhase('voting');
       setConfirmAction(null);
-      toast({ title: 'Votos apagados', description: `O ${currentRound}º escrutínio permanece aberto. Chamada, candidatos e urnas foram mantidos.` });
+      toast({ title: 'Votos deste escrutínio apagados', description: `O ${currentRound}º escrutínio permanece aberto. Chamada, candidatos e urnas foram mantidos.` });
     } catch (cause) {
       toast({ title: 'Não foi possível confirmar o reinício', description: cause instanceof Error ? cause.message : 'Confira a conexão e tente novamente.', variant: 'destructive' });
     } finally {
@@ -440,65 +450,19 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   };
 
   const handleNextRound = async () => {
-    if (actionRef.current || loading || currentRound >= 3 || status !== 'open') return;
+    if (actionRef.current || loading || currentRound >= 3 || status !== 'open' || nominationsOpen) return;
     actionRef.current = true;
     setLoading(true);
     try {
     const verified = await checkCurrentCount();
 
-    // Ao avançar do 1º para o 2º escrutínio, calcular e salvar os top 2
-    // candidatos não eleitos do 1º escrutínio para limitar quem aparece na urna.
-    const updatePayload: any = {
-      status: 'open',
-      current_round: currentRound + 1,
-    };
-
-    if (currentRound === 1) {
-      const votes = verified.votes;
-      const round1Votes = votes.filter((v) => (v.round_number || 1) === 1);
-      const totalBallots1 = new Set(round1Votes.map((v) => v.ballot_id)).size;
-      const needed1 = Math.floor(totalBallots1 / 2) + 1;
-
-      const counts: Record<string, number> = {};
-      round1Votes.forEach((v) => {
-        if (!v.is_blank && v.candidate_id) {
-          counts[v.candidate_id] = (counts[v.candidate_id] || 0) + 1;
-        }
-      });
-
-      // IDs dos eleitos do 1º escrutínio (mesma regra usada em fetchVoteCount)
-      const sortedR1 = Object.entries(counts).sort((a, b) => (b[1] as number) - (a[1] as number));
-      const aprovados = sortedR1.filter(([, c]) =>
-        majorityRule === 'absolute_50' ? (c as number) >= needed1 : true
-      );
-      const cutoffCount = aprovados[seatsCount - 1]?.[1];
-      const nextCount = aprovados[seatsCount]?.[1];
-      const tieAtCutoff = cutoffCount !== undefined && cutoffCount === nextCount;
-      const electedR1 = new Set<string>();
-      if (!tieAtCutoff) {
-        aprovados.slice(0, seatsCount).forEach(([id]) => electedR1.add(id));
-      } else {
-        aprovados
-          .filter(([, c]) => (c as number) > (cutoffCount as number))
-          .forEach(([id]) => electedR1.add(id));
-      }
-
-      // Top N+1 (= número de vagas restantes + 1; mínimo 2) não eleitos
-      const vagasRestantes = Math.max(0, seatsCount - electedR1.size);
-      const topCount = Math.max(2, vagasRestantes + 1);
-      const remaining = candidates.filter(candidate => !electedR1.has(candidate.id))
-        .map(candidate => [candidate.id, counts[candidate.id] || 0] as const)
-        .sort((a, b) => b[1] - a[1]);
-      const cutoff = remaining[topCount - 1]?.[1] ?? 0;
-      const top = remaining.filter(([, count], index) => index < topCount || count === cutoff).map(([id]) => id);
-
-      updatePayload.round2_candidate_ids = top;
-    }
+    // The database opens an empty nomination phase and keeps previous ballots.
+    const updatePayload = { status: 'open', current_round: currentRound + 1, nominations_open: true, show_result: false, round2_candidate_ids: [] as string[] };
 
     const { data, error } = await supabase.from('elections').update(updatePayload)
       .eq('id', electionId).eq('status', 'open').eq('current_round', currentRound).eq('total_present', verified.election.total_present).select('id').single();
     if (error || !data) throw error || new Error('A votação foi alterada');
-    toast({ title: `${currentRound + 1}º escrutínio iniciado` });
+    toast({ title: `Indicações abertas para o ${currentRound + 1}º escrutínio`, description: 'Os votos anteriores foram preservados. Cadastre as novas indicações antes de iniciar.' });
     onRefresh();
     } catch (cause) {
       toast({ title: 'Não foi possível iniciar o próximo escrutínio', description: cause instanceof Error ? cause.message : 'Confira a conexão e tente novamente.', variant: 'destructive' });
@@ -525,7 +489,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       return acc;
     }, {});
   const liveElectedIds = countExact ? new Set(calculateElectionRounds(liveVotes, candidates, { seats_count: seatsCount, current_round: currentRound, majority_rule: majorityRule }).flatMap(round => round.electedIds)) : new Set<string>();
-  const liveRankedCandidates = (candidates || [])
+  const liveRankedCandidates = currentCandidates
     .map(c => ({
       ...c,
       votes: liveVoteCounts[c.id] || 0,
@@ -535,16 +499,29 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     .sort((a, b) => b.votes - a.votes);
   const liveBlankCount = liveVotes.filter(v => (v.round_number || 1) === liveCurrentRound && v.is_blank).length;
 
-  if (status === 'draft') {
+  const history = currentRound > 1 && !!countSnapshot && <details className="group mt-4 min-w-0 rounded-xl border border-border bg-card lg:col-span-2">
+    <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">Histórico dos escrutínios anteriores<span aria-hidden="true" className="text-muted-foreground group-open:rotate-180">⌄</span></summary>
+    <div className="space-y-4 border-t border-border p-4">
+      <p className="text-xs text-muted-foreground">Votos e candidatos anteriores preservados. Este histórico não participa da contagem do escrutínio atual.</p>
+      {countError && <p role="alert" className="text-sm text-destructive">Não foi possível atualizar o histórico. Confira a conexão.</p>}
+      {historicalRounds.map(round => <section key={round.round} className="space-y-3 rounded-xl border border-border p-3" aria-label={`${round.round}º escrutínio anterior`}>
+        <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">{round.round}º escrutínio</h3><span className="text-xs text-muted-foreground">{round.totalBallots} cédulas</span></div>
+        {round.rows.map(row => <div key={row.candidate_id} className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="min-w-0 [overflow-wrap:anywhere]">{candidates.find(candidate => candidate.id === row.candidate_id)?.name || 'Candidato anterior'}{round.electedIds.includes(row.candidate_id) && <span className="ml-2 text-xs font-semibold text-success">Eleito</span>}</span><strong className="tabular-nums">{row.count} votos</strong></div>)}
+        {round.blankVotes > 0 && <p className="border-t border-border pt-2 text-xs text-muted-foreground">Branco / Nulo: {round.blankVotes}</p>}
+      </section>)}
+    </div>
+  </details>;
+
+  if (status === 'draft' || nominationsOpen) {
     return (
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]"><div className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          Configure a chamada e os candidatos antes de iniciar.
+          {nominationsOpen ? `Indicações do ${currentRound}º escrutínio. Os participantes aguardam o início pela mesa.` : 'Configure a chamada e os candidatos antes de iniciar.'}
         </p>
 
         {(countError || (!checkingCount && !countSnapshot?.attendanceConfirmed)) && <p role="alert" className="text-sm text-destructive">{countError || countSnapshot?.issue}</p>}
         {/* Voting mode selector */}
-        <div className="space-y-2">
+        {!nominationsOpen && <div className="space-y-2">
           <p className="text-xs font-medium">Modo de votação:</p>
           <div className="grid grid-cols-3 gap-2">
             <button
@@ -590,13 +567,14 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               <span className="text-xs text-muted-foreground text-center">Urna + Celular</span>
             </button>
           </div>
-        </div>
+        </div>}
 
+        {nominationsOpen && <p className="rounded-xl border border-border bg-muted/20 p-3 text-sm">Chamada mantida: <strong>{totalPresent} presentes</strong>. Modo: {selectedMode === 'individual' ? 'celulares' : selectedMode === 'both' ? 'urnas e celulares' : 'urnas fixas'}.</p>}
         {/* Checklist + start button */}
         <div className="space-y-2 pt-2 border-t border-border/50">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pré-requisitos</p>
           <div className="space-y-1">
-            <ChecklistItem done={candidates.length > 0} label={`Pelo menos 1 candidato (${candidates.length})`} />
+            <ChecklistItem done={currentCandidates.length > 0} label={`Pelo menos 1 indicado neste escrutínio (${currentCandidates.length})`} />
             <ChecklistItem done={totalPresent > 0} label={`Presença confirmada (${totalPresent})`} />
             {showDevices && (
               <ChecklistItem done={devices.length > 0} label={`Dispositivo fixo cadastrado (${devices.length})`} />
@@ -604,10 +582,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
           <Button size="sm" className="w-full mt-2" onClick={handleStartVoting} disabled={loading || !canStart}>
             {loading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
-            Iniciar Votação
+            {nominationsOpen ? `Iniciar ${currentRound}º escrutínio` : 'Iniciar Votação'}
           </Button>
         </div>
       </div><aside className="min-w-0 lg:sticky lg:top-4"><ElectionVoteAccess electionId={electionId} electionName={electionName} mode={selectedMode} devices={devices} started={false} /></aside>
+        {history}
       </div>
     );
   }
@@ -672,7 +651,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           {countDisplayExact && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound < 3 && (
             <Button onClick={handleNextRound} disabled={loading || !canProceed} className="bg-primary">
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {currentRound + 1}º escrutínio →
+              Abrir indicações · {currentRound + 1}º escrutínio
             </Button>
           )}
 
@@ -725,7 +704,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                 {currentRound === 1
                   ? majorityRule === 'absolute_50' ? `Maioria necessária: ${partialNeeded} votos (50%+1)` : '1º escrutínio — maioria simples'
                   : currentRound === 2
-                  ? `2º escrutínio — maioria simples entre os top ${Math.max(0, seatsCount - electedCount) + 1}`
+                  ? '2º escrutínio — maioria simples entre os indicados'
                   : `3º escrutínio final — empate desfeito pelo mais velho`}
               </span>
             </div>
@@ -826,7 +805,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <p className="text-xs font-semibold mb-2">
               {electedCount >= seatsCount
                 ? `✅ ${electedCount} vaga(s) preenchida(s). Pronto para concluir.`
-                : `⚠️ ${electedCount} de ${seatsCount} vaga(s) preenchida(s). Inicie o próximo escrutínio.`}
+                : `⚠️ ${electedCount} de ${seatsCount} vaga(s) preenchida(s). Abra as indicações do próximo escrutínio.`}
             </p>
           </div>
         )}
@@ -913,6 +892,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         )}
 
         </div>
+        {history}
         <details className="group rounded-xl lg:col-span-2 border border-border bg-muted/10">
           <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted/40 motion-reduce:transition-none [&::-webkit-details-marker]:hidden">Configuração e opções<span className="text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true">⌄</span></summary>
           <div className="space-y-4 border-t border-border p-3 sm:p-4">
@@ -986,11 +966,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmAction === 'reset' ? 'Apagar todos os votos desta eleição?' : confirmAction === 'personal' ? 'Habilitar voto individual?' : 'Concluir votação?'}
+              {confirmAction === 'reset' ? `Apagar os votos do ${currentRound}º escrutínio?` : confirmAction === 'personal' ? 'Habilitar voto individual?' : 'Concluir votação?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmAction === 'reset'
-                ? `Todos os votos desta eleição, inclusive os de escrutínios anteriores, serão apagados. O ${currentRound}º escrutínio continuará aberto para votar novamente. Presença, candidatos e urnas serão mantidos. Esta ação não pode ser desfeita.`
+                ? `Somente os votos do ${currentRound}º escrutínio serão apagados. Os escrutínios anteriores serão preservados. O ${currentRound}º escrutínio continuará aberto para votar novamente. Presença, candidatos e urnas serão mantidos. Esta ação não pode ser desfeita.`
                 : confirmAction === 'personal' ? 'O modo passa a Urna + Celular. As urnas continuam disponíveis e o link individual permite um voto por navegador em cada escrutínio. A chamada e o total de presentes permanecem os mesmos.'
                 : 'A votação será encerrada e o resultado será exibido.'}
             </AlertDialogDescription>

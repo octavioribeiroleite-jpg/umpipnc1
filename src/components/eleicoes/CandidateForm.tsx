@@ -22,9 +22,11 @@ interface CandidateFormProps {
   onRefresh: () => void;
   disabled?: boolean;
   type?: 'cargo' | 'camisa';
+  actions?: { add: (name: string) => Promise<void>; remove: (id: string) => Promise<void> };
+  allowPhotos?: boolean;
 }
 
-export function CandidateForm({ electionId, candidates, onRefresh, disabled, type = 'cargo' }: CandidateFormProps) {
+export function CandidateForm({ electionId, candidates, onRefresh, disabled, type = 'cargo', actions, allowPhotos = true }: CandidateFormProps) {
   const nameId = useId();
   const [name, setName] = useState('');
   const [adding, setAdding] = useState(false);
@@ -57,8 +59,11 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
     addInFlight.current = true;
     setAdding(true);
     try {
-      const { error } = await supabase.from('election_candidates' as any).insert({ election_id: electionId, name: name.trim(), display_order: candidates.length } as any);
-      if (error) throw error;
+      if (actions) await actions.add(name.trim());
+      else {
+        const { error } = await supabase.from('election_candidates' as any).insert({ election_id: electionId, name: name.trim(), display_order: candidates.length } as any);
+        if (error) throw error;
+      }
       setName('');
       onRefresh();
     } catch {
@@ -67,9 +72,13 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
   };
 
   const handleRemove = async (id: string) => {
+    if (disabled) return;
     try {
-      const { error } = await supabase.from('election_candidates' as any).delete().eq('id', id);
-      if (error) throw error;
+      if (actions) await actions.remove(id);
+      else {
+        const { error } = await supabase.from('election_candidates' as any).delete().eq('id', id);
+        if (error) throw error;
+      }
       onRefresh();
     } catch { toast({ title: `Não foi possível remover o ${label}`, description: 'Tente novamente.', variant: 'destructive' }); }
   };
@@ -178,7 +187,7 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
               
               {!disabled && (
                 <div className={`flex flex-wrap gap-1 ${isCamisa ? 'mt-auto justify-center' : 'ml-auto'}`}>
-                  <label className="cursor-pointer rounded-lg" role="button" aria-label={`Enviar foto de ${c.name}`} tabIndex={uploading === c.id ? -1 : 0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click(); } }}>
+                  {allowPhotos && <label className="cursor-pointer rounded-lg" role="button" aria-label={`Enviar foto de ${c.name}`} tabIndex={uploading === c.id ? -1 : 0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click(); } }}>
                     <input
                       type="file"
                       disabled={uploading === c.id}
@@ -196,7 +205,7 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
                     <Button variant="outline" size="icon" className="min-h-[48px] min-w-[48px]" aria-label={`Adicionar foto de ${c.name}`} asChild disabled={uploading === c.id}>
                       <span>{isCamisa ? <ImagePlus className="h-3 w-3" /> : <Upload className="h-3 w-3" />}</span>
                     </Button>
-                  </label>
+                  </label>}
                   <Button variant="ghost" size="icon" className="min-h-[48px] min-w-[48px] text-destructive" aria-label={`Remover ${c.name}`} onClick={() => handleRemove(c.id)}>
                     <Trash2 className="h-3 w-3" />
                   </Button>

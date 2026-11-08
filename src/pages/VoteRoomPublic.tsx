@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { getVoteDeviceId } from '@/lib/browser-vote-device';
 import { useElectionRoom } from '@/hooks/useElectionRoom';
 import VotePublic from './VotePublic';
+import { ElectionReportDownload } from '@/components/eleicoes/ElectionReportDownload';
 
 export default function VoteRoomPublic() {
   const { roomToken } = useParams<{ roomToken: string }>();
@@ -46,7 +47,8 @@ export default function VoteRoomPublic() {
           <Button variant="outline" className="w-full" onClick={() => setDismissedResult(resultKey)}>Continuar aguardando</Button><p className="text-center text-xs text-muted-foreground">A sala retorna à espera automaticamente.</p>
         </section>
           : receipt === scope && scope ? <section role="status" className="space-y-3 rounded-2xl border border-success/30 bg-card p-8 text-center"><CheckCircle className="mx-auto h-12 w-12 text-success" /><h2 className="text-2xl font-bold">VOTO CONFIRMADO</h2><p className="text-muted-foreground">Seu voto foi registrado com sucesso!</p></section>
-            : <section role="status" className="space-y-4 rounded-2xl border border-border bg-card p-6 text-center shadow-sm sm:p-8"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10"><Clock3 className="h-8 w-8 text-primary" /></div><h2 className="text-2xl font-bold">{snapshot?.phase === 'finished' ? 'Votações concluídas' : 'Aguardando o mesário'}</h2><p className="text-base leading-relaxed text-muted-foreground">{hasVoted ? 'Seu voto neste escrutínio já foi registrado. Aguarde a liberação do resultado ou da próxima votação.' : 'A próxima votação aparecerá aqui quando o mesário liberar.'}</p><p className="text-sm text-muted-foreground">Mantenha este link aberto. Você não precisa escanear o QR Code novamente.</p></section>}
+            : <section role="status" className="space-y-4 rounded-2xl border border-border bg-card p-6 text-center shadow-sm sm:p-8"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10"><Clock3 className="h-8 w-8 text-primary" /></div><h2 className="text-2xl font-bold">{snapshot?.phase === 'finished' ? 'Votações concluídas' : snapshot?.phase === 'nominations' ? 'Aguardando as indicações' : 'Aguardando o mesário'}</h2><p className="text-base leading-relaxed text-muted-foreground">{snapshot?.phase === 'nominations' ? 'O mesário está cadastrando os indicados desta rodada. Aguarde ele iniciar a votação.' : hasVoted ? 'Seu voto neste escrutínio já foi registrado. Aguarde a liberação do resultado ou da próxima votação.' : 'A próxima votação aparecerá aqui quando o mesário liberar.'}</p><p className="text-sm text-muted-foreground">Mantenha este link aberto. Você não precisa escanear o QR Code novamente.</p></section>}
+      {roomToken && <ElectionReportDownload roomToken={roomToken} revision={snapshot?.revision} className="w-full" />}
     </div>
   </main>;
 }

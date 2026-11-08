@@ -11,7 +11,14 @@ import { parseElectionRoomSnapshot } from '../src/lib/election-room.ts';
 const require = createRequire(import.meta.url);
 function load(file, mocks, globals = {}) {
   const exports = {};
-  vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../' + file, import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 } }).outputText, { exports, require: id => mocks[id] || require(id), ...globals });
+  const shared = {
+    '@/components/eleicoes/ElectionReportDownload': { ElectionReportDownload: () => null },
+    '@/components/eleicoes/ElectionStepCard': { ElectionStepCard: ({ title, children }) => React.createElement('section', null, React.createElement('h2', null, title), children) },
+    '@/components/eleicoes/AttendanceList': { AttendanceList: ({ attendance, actions }) => React.createElement('section', { 'aria-label': 'Chamada compartilhada' }, `${attendance.length} nomes`, React.createElement('button', { onClick: actions.confirm }, 'Confirmar Presença')) },
+    '@/components/eleicoes/CandidateForm': { CandidateForm: ({ candidates, actions }) => React.createElement('section', { 'aria-label': 'Indicações compartilhadas' }, candidates.length ? candidates.map(candidate => React.createElement('p', { key: candidate.id }, candidate.name)) : 'Nenhum candidato cadastrado.', React.createElement('button', { onClick: () => actions.add('Indicado de teste') }, 'Adicionar indicado de teste')) },
+    '@/lib/election-sequence': { UMP_POSITIONS: ['Presidente', 'Vice-presidente', '1º secretário', '2º secretário', 'Tesoureiro'] },
+  };
+  vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../' + file, import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 } }).outputText, { exports, require: id => mocks[id] || shared[id] || require(id), ...globals });
   return exports;
 }
 const candidate = { id: 'candidate-a', name: 'Alfa fictício', photo_url: null, photo_urls: [] };
@@ -94,7 +101,7 @@ test('demo console only reads on load, keeps admin capability out of the partici
   let current = snapshot();
   const Page = load('src/pages/ElectionDemoConsole.tsx', {
     'react-router-dom': { useParams: () => ({ adminToken: 'test-admin-only' }) },
-    '@/lib/election-room-client': { electionRoomRpc: async (_, args) => { calls.push(args); if (args.p_action === 'start') current = { ...current, revision: '2', phase: 'voting', activeElection: { ...current.activeElection, status: 'open' } }; return { data: { ...current, room_token: 'test-public-only', urn_token: 'test-shared-urn' }, error: null }; } },
+    '@/lib/election-room-client': { electionRoomRpc: async (_, args) => { calls.push(args); if (args.p_action === 'start') current = { ...current, revision: '2', phase: 'voting', activeElection: { ...current.activeElection, status: 'open' } }; return { data: { ...current, room_token: 'test-public-only', urn_token: 'test-shared-urn', attendance: [{ id: 'p1', name: 'Fictício', present: true }], attendance_confirmed: true, current_candidates: [candidate] }, error: null }; } },
     '@/lib/election-room': { parseElectionRoomSnapshot }, '@/components/ui/button': button,
     '@/components/ui/input': { Input: props => React.createElement('input', props) }, '@/components/ui/label': { Label: ({ children, ...props }) => React.createElement('label', props, children) },
     'qrcode.react': { QRCodeSVG: ({ value }) => React.createElement('svg', { 'data-qr-url': value }) },
@@ -139,4 +146,52 @@ test('demo console blocks on read/command failure and completes only through the
     }
     await act(async () => tree.unmount());
   }
+});
+
+test('empty console requires the mesário call and accepted indications; next round opens empty indications without starting', async () => {
+  const calls = [];
+  let current = snapshot({ activeElection: { ...snapshot().activeElection, total_present: 0 }, count: { ballots: 0, present: 0, confirmed: 0, exact: false } });
+  let attendance = [], candidates = [], attendanceConfirmed = false;
+  const Page = load('src/pages/ElectionDemoConsole.tsx', {
+    'react-router-dom': { useParams: () => ({ adminToken: 'admin-fixture' }) }, '@/components/ui/button': button,
+    '@/lib/election-room-client': { electionRoomRpc: async (_, args) => {
+      calls.push(args); const action = args.p_action;
+      if (action === 'attendance_bulk_add') { attendance = args.p_payload.names.map((name, index) => ({ id: `p${index}`, name, present: args.p_payload.present })); current = { ...current, count: { ...current.count, present: attendance.length } }; }
+      if (action === 'confirm_attendance') { attendanceConfirmed = true; current = { ...current, activeElection: { ...current.activeElection, total_present: attendance.length }, count: { ...current.count, confirmed: attendance.length } }; }
+      if (action === 'candidate_add') candidates.push({ ...candidate, name: args.p_payload.name, nomination_round: current.activeElection.current_round });
+      if (action === 'start') current = { ...current, phase: 'voting', activeElection: { ...current.activeElection, status: 'open', nominations_open: false } };
+      if (action === 'next_round') { current = { ...current, phase: 'nominations', activeElection: { ...current.activeElection, current_round: 2, nominations_open: true, show_result: false }, published_result: null, candidates: [], count: { ...current.count, ballots: 0, exact: false } }; candidates = []; }
+      if (action !== 'snapshot') current = { ...current, revision: String(Number(current.revision) + 1) };
+      return { data: { ...current, room_token: 'public-fixture', attendance, attendance_confirmed: attendanceConfirmed, current_candidates: [...candidates] }, error: null };
+    } },
+    '@/lib/election-room': { parseElectionRoomSnapshot },
+    '@/components/ui/input': { Input: props => React.createElement('input', props) }, '@/components/ui/label': { Label: ({ children }) => React.createElement('label', null, children) },
+    'qrcode.react': { QRCodeSVG: () => null },
+  }, { document: Object.assign(new EventTarget(), { visibilityState: 'visible' }), window: { location: { origin: 'https://example.test' }, setInterval: () => 1, clearInterval() {} } }).default;
+  let tree; await act(async () => { tree = TestRenderer.create(React.createElement(Page)); });
+  const find = text => tree.root.findAllByType('button').find(node => node.children.includes(text));
+  assert.equal(calls.length, 1); assert.equal(calls[0].p_action, 'snapshot');
+  assert.equal(find('2. Indicações').props.disabled, true);
+  await act(async () => find('Adicionar 150 presentes fictícios').props.onClick());
+  assert.equal(calls.at(-1).p_payload.names.length, 150); assert.equal(calls.at(-1).p_payload.present, true);
+  assert.equal(attendanceConfirmed, false);
+  await act(async () => find('Confirmar Presença').props.onClick());
+  assert.match(JSON.stringify(tree.toJSON()), /Chamada de Presença/);
+  await act(async () => find('Avançar: Indicações').props.onClick());
+  assert.equal(find('Iniciar votação').props.disabled, true);
+  await act(async () => find('Adicionar indicado de teste').props.onClick());
+  assert.equal(calls.at(-1).p_action, 'candidate_add');
+  assert.equal(find('Iniciar votação').props.disabled, false, 'adding the name accepts it without another approval stage');
+  await act(async () => find('Iniciar votação').props.onClick());
+  assert.equal(calls.at(-1).p_action, 'start');
+  current = { ...current, phase: 'result', activeElection: { ...current.activeElection, show_result: true }, count: { ballots: 150, present: 150, confirmed: 150, exact: true }, published_result: { candidates: [...candidates], rounds: [{ round: 1, totalBallots: 150, blankVotes: 150, rows: [], electedIds: [], hasTie: false }] } };
+  await act(async () => find('Atualizar').props.onClick());
+  assert.equal(find('Próximo escrutínio').props.disabled, false);
+  await act(async () => find('Próximo escrutínio').props.onClick());
+  assert.match(JSON.stringify(tree.toJSON()), /Indicações · 2º escrutínio/);
+  assert.match(JSON.stringify(tree.toJSON()), /Nenhum candidato cadastrado/);
+  assert.equal(find('Iniciar 2º escrutínio').props.disabled, true);
+  assert.equal(calls.at(-1).p_action, 'next_round');
+  assert.equal(attendance.length, 150); assert.equal(attendanceConfirmed, true);
+  await act(async () => tree.unmount());
 });

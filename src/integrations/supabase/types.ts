@@ -591,6 +591,7 @@ export type Database = {
           election_id: string
           id: string
           name: string
+          nomination_round: number
           photo_url: string | null
           photo_urls: Json
         }
@@ -601,6 +602,7 @@ export type Database = {
           id?: string
           name: string
           photo_url?: string | null
+          nomination_round?: number
           photo_urls?: Json
         }
         Update: {
@@ -610,6 +612,7 @@ export type Database = {
           id?: string
           name?: string
           photo_url?: string | null
+          nomination_round?: number
           photo_urls?: Json
         }
         Relationships: [
@@ -713,6 +716,7 @@ export type Database = {
           id: string
           majority_rule: string
           max_choices_per_ballot: number
+          nominations_open: boolean
           name: string
           position: string
           round2_candidate_ids: string[] | null
@@ -731,6 +735,7 @@ export type Database = {
           id?: string
           majority_rule?: string
           max_choices_per_ballot?: number
+          nominations_open?: boolean
           name: string
           position: string
           round2_candidate_ids?: string[] | null
@@ -749,6 +754,7 @@ export type Database = {
           id?: string
           majority_rule?: string
           max_choices_per_ballot?: number
+          nominations_open?: boolean
           name?: string
           position?: string
           round2_candidate_ids?: string[] | null
@@ -2271,6 +2277,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      election_start_nominated_round: { Args: { p_election_id: string; p_expected_round: number }; Returns: Json }
+      election_room_report: { Args: { p_room_token: string }; Returns: Json }
       election_public_count: { Args: { p_election_id: string }; Returns: Json }
       election_room_ensure: { Args: { p_election_id: string }; Returns: Json }
       election_room_attach: { Args: { p_room_token: string; p_source_election_id: string; p_target_election_id: string }; Returns: Json }

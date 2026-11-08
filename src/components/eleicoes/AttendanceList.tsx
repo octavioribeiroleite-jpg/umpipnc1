@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,14 +21,23 @@ interface AttendanceListProps {
   attendance: AttendanceItem[];
   onRefresh: () => void;
   disabled?: boolean;
+  actions?: {
+    add: (name: string) => Promise<void>;
+    remove: (id: string) => Promise<void>;
+    toggle: (id: string, present: boolean) => Promise<void>;
+    confirm: () => Promise<void>;
+    importMembers?: () => Promise<void>;
+  };
 }
 
-export function AttendanceList({ electionId, societyId, attendance, onRefresh, disabled }: AttendanceListProps) {
+export function AttendanceList({ electionId, societyId, attendance, onRefresh, disabled, actions }: AttendanceListProps) {
   const nameId = useId();
   const [newName, setNewName] = useState('');
   const [search, setSearch] = useState('');
   const [importing, setImporting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const addInFlight = useRef(false);
   const [optimisticOverrides, setOptimisticOverrides] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
@@ -57,16 +66,19 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
   const visibleAttendance = attendance.filter(person => person.name.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('pt-BR').includes(normalizedSearch));
 
   const handleToggle = async (id: string, present: boolean) => {
+    if (disabled) return;
     // 1. Optimistic update — UI atualiza instantaneamente
     setOptimisticOverrides((prev) => ({ ...prev, [id]: present }));
 
     // 2. Persiste no banco em segundo plano
-    const { error } = await supabase
-      .from('election_attendance' as any)
-      .update({ present } as any)
-      .eq('id', id);
-
-    if (error) {
+    try {
+      if (actions) await actions.toggle(id, present);
+      else {
+        const { error } = await supabase.from('election_attendance' as any).update({ present } as any).eq('id', id);
+        if (error) throw error;
+      }
+      onRefresh();
+    } catch {
       // Reverte se falhar
       setOptimisticOverrides((prev) => {
         const next = { ...prev };
@@ -74,29 +86,43 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
         return next;
       });
       toast({ title: 'Erro ao atualizar presença', variant: 'destructive' });
-    } else {
-      // Mantém o override até o useEffect detectar que o parent sincronizou.
-      onRefresh();
     }
   };
 
   const handleAdd = async () => {
-    if (!newName.trim()) return;
-    await supabase.from('election_attendance' as any).insert({
-      election_id: electionId,
-      name: newName.trim(),
-      present: false,
-    } as any);
-    setNewName('');
-    onRefresh();
+    if (disabled || addInFlight.current || !newName.trim()) return;
+    addInFlight.current = true;
+    setAdding(true);
+    try {
+      if (actions) await actions.add(newName.trim());
+      else {
+        const { error } = await supabase.from('election_attendance' as any).insert({ election_id: electionId, name: newName.trim(), present: false } as any);
+        if (error) throw error;
+      }
+      setNewName(''); onRefresh();
+    } catch { toast({ title: 'Não foi possível adicionar o nome', description: 'O nome foi mantido. Tente novamente.', variant: 'destructive' }); }
+    finally { addInFlight.current = false; setAdding(false); }
   };
 
   const handleRemove = async (id: string) => {
-    await supabase.from('election_attendance' as any).delete().eq('id', id);
-    onRefresh();
+    if (disabled) return;
+    try {
+      if (actions) await actions.remove(id);
+      else { const { error } = await supabase.from('election_attendance' as any).delete().eq('id', id); if (error) throw error; }
+      onRefresh();
+    } catch { toast({ title: 'Não foi possível remover o nome', variant: 'destructive' }); }
   };
 
   const handleImportMembers = async () => {
+    if (disabled || importing) return;
+    if (actions) {
+      if (!actions.importMembers) return;
+      setImporting(true);
+      try { await actions.importMembers(); onRefresh(); }
+      catch { toast({ title: 'Não foi possível importar os nomes', variant: 'destructive' }); }
+      finally { setImporting(false); }
+      return;
+    }
     setImporting(true);
     let query = supabase.from('members').select('name').eq('active', true);
     if (societyId) query = query.eq('society_id', societyId);
@@ -128,6 +154,7 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
     if (saving || disabled) return;
     setSaving(true);
     try {
+      if (actions) { await actions.confirm(); onRefresh(); return; }
       const snapshot = await readElectionCount(supabase, electionId);
       if (snapshot.election.status !== 'draft') throw new Error('A chamada só pode ser confirmada antes da votação.');
       const { data, error } = await supabase.from('elections').update({ total_present: snapshot.present })
@@ -153,13 +180,13 @@ export function AttendanceList({ electionId, societyId, attendance, onRefresh, d
           disabled={disabled}
           className="min-h-[48px] min-w-0 flex-1 basis-[180px] text-base"
         />
-        <Button size="icon" className="min-h-[48px] min-w-[48px] shrink-0" aria-label="Adicionar membro à presença" onClick={handleAdd} disabled={disabled}>
+        <Button size="icon" className="min-h-[48px] min-w-[48px] shrink-0" aria-label="Adicionar membro à presença" onClick={handleAdd} disabled={disabled || adding}>
           <Plus className="h-4 w-4" />
         </Button>
-        <Button variant="outline" className="min-h-12 w-full gap-2 sm:w-auto" aria-label="Importar membros" onClick={handleImportMembers} disabled={importing || disabled}>
+        {(!actions || actions.importMembers) && <Button variant="outline" className="min-h-12 w-full gap-2 sm:w-auto" aria-label="Importar membros" onClick={handleImportMembers} disabled={importing || disabled}>
           {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
           Importar membros
-        </Button>
+        </Button>}
       </div>
       </div>
 

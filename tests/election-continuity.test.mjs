@@ -6,7 +6,7 @@ import ts from 'typescript';
 import { planNextElection, saveNextElection } from '../src/lib/next-election.ts';
 import { createUmpSequence, findElectionSequence, reserveSequenceAttendance, UMP_POSITIONS } from '../src/lib/election-sequence.ts';
 import { withBrowserBallotLock } from '../src/lib/browser-ballot-lock.ts';
-import { readElectionCount, requireElectionCount } from '../src/lib/election-completion.ts';
+import { readElectionCount, requireElectionCount, reconcileElectionCount } from '../src/lib/election-completion.ts';
 import { isBallotConfirmed } from '../src/components/eleicoes/ballot-response.ts';
 
 function handler(file, name, context) {
@@ -216,7 +216,7 @@ test('start/finish report failures truthfully and never refresh the next step be
     if (failed) db.fail('elections', 'update');
     let refreshed = false; const messages = [];
     await handler('src/components/eleicoes/VotingPanel.tsx', name, {
-      checkCurrentCount: async () => ({ election: { total_present: 2 } }), actionRef: { current: false }, modeChangeRef: { current: false }, canStart: true, selectedMode: 'both', electionId: 'fixture', currentRound: 1,
+      checkCurrentCount: async () => ({ election: { total_present: 2 } }), actionRef: { current: false }, modeChangeRef: { current: false }, canStart: true, nominationsOpen: false, selectedMode: 'both', electionId: 'fixture', currentRound: 1,
       setLoading() {}, setConfirmAction() {}, supabase: db, onRefresh: () => { refreshed = true; }, toast: message => messages.push(message),
     })();
     assert.equal(refreshed, !failed); assert.equal(messages[0].variant === 'destructive', failed);
@@ -279,7 +279,7 @@ test('foreground snapshot retains same-round selection and resets a new round wh
   }
 });
 
-test('a one-seat runoff advances without deleting prior ballots, keeps tied cutoff candidates and fails closed on read/write errors', async () => {
+test('a one-seat runoff opens empty nominations without deleting prior ballots and fails closed on read/write errors', async () => {
   for (const failedOperation of [null, 'read', 'write']) {
     const db = localDatabase([{ id: 'fixture', status: 'open', current_round: 1, total_present: 3 }]);
     db.tables.election_attendance = ['a','b','c'].map(id => ({ id, name: id, election_id: 'fixture', present: true }));
@@ -287,12 +287,29 @@ test('a one-seat runoff advances without deleting prior ballots, keeps tied cuto
     const originalVotes = structuredClone(db.tables.election_votes); let refreshed = false; const messages = [];
     if (failedOperation) db.fail(failedOperation === 'read' ? 'election_votes' : 'elections', failedOperation === 'read' ? 'select' : 'update');
     await handler('src/components/eleicoes/VotingPanel.tsx', 'handleNextRound', {
-      checkCurrentCount: async () => requireElectionCount(await readElectionCount(db, 'fixture'), { status: 'open', round: 1 }), actionRef: { current: false }, loading: false, status: 'open', currentRound: 1, electionId: 'fixture', seatsCount: 1, majorityRule: 'absolute_50',
+      checkCurrentCount: async () => requireElectionCount(await readElectionCount(db, 'fixture'), { status: 'open', round: 1 }), actionRef: { current: false }, loading: false, nominationsOpen: false, status: 'open', currentRound: 1, electionId: 'fixture', seatsCount: 1, majorityRule: 'absolute_50',
       candidates: ['a', 'b', 'c'].map(id => ({ id })), setLoading() {}, supabase: db, onRefresh: () => { refreshed = true; }, toast: message => messages.push(message),
     })();
     assert.equal(refreshed, !failedOperation); assert.equal(db.tables.elections[0].current_round, failedOperation ? 1 : 2);
     assert.deepEqual(db.tables.election_votes, originalVotes); assert.equal(db.tables.elections[0].total_present, 3);
-    if (!failedOperation) assert.deepEqual(Array.from(db.tables.elections[0].round2_candidate_ids), ['a', 'b', 'c']);
+    if (!failedOperation) { assert.deepEqual(Array.from(db.tables.elections[0].round2_candidate_ids), []); assert.equal(db.tables.elections[0].nominations_open, true); assert.equal(db.tables.elections[0].show_result, false); }
     else assert.equal(messages[0].variant, 'destructive');
   }
+});
+
+
+test('resetting the current scrutiny preserves historical ballots and confirms only the current round is empty',async()=>{
+ const election={id:'fixture',status:'open',current_round:2,total_present:2,society_id:'society'};
+ const attendance=[1,2].map(id=>({id:`p${id}`,name:`Pessoa fictícia ${id}`,present:true}));
+ const historical=[1,2].map(id=>({id:`old${id}`,ballot_id:`oldb${id}`,round_number:1,candidate_id:'old-candidate',is_blank:false}));
+ let votes=[...historical,{id:'new',ballot_id:'newb',round_number:2,candidate_id:'new-candidate',is_blank:false}];
+ const filters=[];const messages=[];let phase='resultado',refreshed=0;
+ const query={delete(){return query;},eq(key,value){filters.push([key,value]);return query;},then(resolve){assert.deepEqual(filters,[['election_id','fixture'],['round_number',2]]);votes=votes.filter(vote=>vote.round_number!==2);return Promise.resolve({error:null}).then(resolve);}};
+ await handler('src/components/eleicoes/VotingPanel.tsx','handleReset',{
+  actionRef:{current:false},loading:false,status:'open',nominationsOpen:false,currentRound:2,electionId:'fixture',
+  setLoading(){},setConfirmAction(){},setPhase(value){phase=value;},toast:message=>messages.push(message),
+  readElectionCount:async()=>reconcileElectionCount(election,attendance,votes),supabase:{from:table=>{assert.equal(table,'election_votes');return query;}},fetchVoteCount(){refreshed++;},
+ })();
+ assert.deepEqual(votes,historical);assert.equal(phase,'voting');assert.equal(refreshed,1);
+ assert.equal(messages[0].variant,undefined);assert.match(messages[0].title,/deste escrutínio/);
 });

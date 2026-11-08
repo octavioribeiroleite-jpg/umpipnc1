@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { withBrowserBallotLock } from '@/lib/browser-ballot-lock';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight, Circle } from 'lucide-react';
+import { CheckCircle, Clock3, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight, Circle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ import { isBallotConfirmed } from '@/components/eleicoes/ballot-response';
 import { getVoteDeviceId as getDeviceId } from '@/lib/browser-vote-device';
 import type { ElectionRoomSnapshot } from '@/lib/election-room';
 
-interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; round2_candidate_ids?: string[] | null; }
+interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; round2_candidate_ids?: string[] | null; nominations_open?: boolean; }
 interface Candidate { id: string; name: string; photo_url: string | null; photo_urls?: string[]; display_order: number; birth_date?: string | null; }
 
 
@@ -580,7 +580,7 @@ export default function VotePublic({ roomSession }: { roomSession?: RoomVoteSess
   const handleVote = async () => {
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
     const blanksToRecord = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? autoBlankSlots : 0);
-    if (readError || loading || (isIndividual && election?.voting_mode !== 'individual' && election?.voting_mode !== 'both') || voteInFlightRef.current || (!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
+    if (readError || loading || election?.nominations_open || (isIndividual && election?.voting_mode !== 'individual' && election?.voting_mode !== 'both') || voteInFlightRef.current || (!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
     voteInFlightRef.current = true;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
@@ -664,6 +664,8 @@ export default function VotePublic({ roomSession }: { roomSession?: RoomVoteSess
       </div>
     );
   }
+
+  if (election?.nominations_open) return <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background p-6 text-center"><Clock3 className="h-12 w-12 text-primary" /><h1 className="text-2xl font-bold">Aguardando as indicações</h1><p className="max-w-md text-muted-foreground">O mesário está preparando o {currentRound}º escrutínio. A votação aparece aqui quando ele iniciar.</p></main>;
 
   if (!election || election.status !== 'open') {
     return (

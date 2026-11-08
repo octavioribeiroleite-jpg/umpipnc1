@@ -65,7 +65,7 @@ test('actual apuration, finish and runoff handlers recheck counts at click time 
     const checkCurrentCount=async()=>{if(result==='error')throw new Error('isolated read failure');return requireElectionCount(fresh,{status:'open',round:1});};
     const query={update(){writes++;return query;},eq(){return query;},select(){return query;},single:async()=>({data:{id:'fixture'},error:null})};
     await handler('src/components/eleicoes/VotingPanel.tsx',action,{
-      checkCurrentCount,actionRef:{current:false},loading:false,status:'open',currentRound:1,electionId:'fixture',seatsCount:1,majorityRule:'absolute_50',candidates:[{id:'c0'}],
+      checkCurrentCount,actionRef:{current:false},loading:false,nominationsOpen:false,status:'open',currentRound:1,electionId:'fixture',seatsCount:1,majorityRule:'absolute_50',candidates:[{id:'c0'}],
       setLoading(){},setPhase(){changedPhase=true;},setConfirmAction(){},supabase:{from:()=>query},onRefresh(){refreshed=true;},toast:message=>messages.push(message),
     })('apurando');
     if(result==='exact'){assert.equal(action==='handleCountedPhase'?changedPhase:refreshed,true);assert.equal(writes,action==='handleCountedPhase'?0:1);}

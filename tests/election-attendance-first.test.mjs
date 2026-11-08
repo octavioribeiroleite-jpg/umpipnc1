@@ -17,7 +17,7 @@ function visit(node){
 visit(source);
 function workflow(overrides={}){
   const context={useMemo:fn=>fn(),candidates:[],attendance:[],devices:[],showDevices:true,electionType:'cargo',election:{status:'draft',total_present:0},activeStep:null,...overrides};
-  const names=['completion','steps','autoCurrentIndex','selectedIndex','currentStepKey','currentIndex','handleStepClick'];
+  const names=['currentRound','nominationsOpen','currentCandidates','completion','steps','autoCurrentIndex','selectedIndex','currentStepKey','currentIndex','handleStepClick'];
   let selected=context.activeStep;
   context.setActiveStep=value=>{selected=value;};
   vm.runInNewContext(ts.transpileModule(names.map(name=>`var ${name}=${declarations.get(name)};`).join('\n'),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context);
@@ -61,4 +61,23 @@ test('rendered stepper disables later completed steps until attendance is confir
   const buttons=maxAvailableIndex=>Array.from(renderToStaticMarkup(exports.ElectionStepper({steps,currentIndex:0,maxAvailableIndex,completed:{presenca:false,candidatos:true,dispositivos:true},onStepClick(){}})).matchAll(/<button\b[^>]*>/g),match=>match[0].includes('disabled'));
   assert.deepEqual(buttons(0),[false,true,true,true]);
   assert.deepEqual(buttons(1),[false,false,true,true]);
+});
+
+
+test('a new scrutiny preserves confirmed attendance but requires fresh nominations and an explicit start',()=>{
+ const election={id:'same-election',status:'open',current_round:2,total_present:1,nominations_open:true};
+ const old={id:'old-nominee',nomination_round:1};
+ const preparing=workflow({election,attendance:present,candidates:[old],devices:[{id:'preserved-urn'}],activeStep:'votacao'});
+ assert.equal(preparing.completion.presenca,true,'the previously confirmed call remains valid');
+ assert.equal(preparing.currentCandidates.length,0,'historical nominees cannot satisfy the new nomination step');
+ assert.equal(preparing.completion.candidatos,false);assert.equal(preparing.completion.votacao,false);
+ assert.equal(preparing.currentStepKey,'candidatos','the open status must not bypass a nomination phase');
+ preparing.handleStepClick(3);assert.equal(preparing.selected(),'votacao','a premature start-step click cannot unlock nomination requirements');
+ const nominated=workflow({election,attendance:present,candidates:[old,{id:'new-nominee',nomination_round:2}],devices:[{id:'preserved-urn'}],activeStep:'candidatos'});
+ assert.equal(nominated.currentCandidates.length,1);assert.equal(nominated.completion.candidatos,true);
+ assert.equal(nominated.currentStepKey,'candidatos','saving the first nomination must not auto-advance or start voting');
+ assert.equal(nominated.completion.votacao,false);
+ nominated.handleStepClick(3);assert.equal(nominated.selected(),'votacao','the organizer may explicitly proceed after nominations');
+ const started=workflow({election:{...election,nominations_open:false},attendance:present,candidates:[old,{id:'new-nominee',nomination_round:2}],devices:[{id:'preserved-urn'}],activeStep:'votacao'});
+ assert.equal(started.completion.votacao,true);assert.equal(started.currentStepKey,'votacao');
 });

@@ -16,6 +16,7 @@ interface Election {
   status: string;
   total_present: number;
   show_result: boolean;
+  nominations_open?: boolean;
   seats_count?: number;
   current_round?: number;
   majority_rule?: string;
@@ -37,6 +38,7 @@ export default function EleicaoApresentar() {
 
   const showResult = !!election?.show_result;
   const finished = election?.status === 'finished';
+  const nominationsOpen = !!election?.nominations_open;
 
   const { displayedCount, totalPresent: countTotalPresent, hasSnapshot: hasCountSnapshot, isError: countError, loading: countLoading, retry: retryCount } = useBufferedVoteCount(
     id,
@@ -104,7 +106,7 @@ export default function EleicaoApresentar() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">{election.current_round || 1}º escrutínio</span>
-            <StatusBadge status={election.status} />
+            <StatusBadge status={election.status} nominationsOpen={nominationsOpen} />
           </div>
         </div>
       </header>
@@ -140,9 +142,9 @@ export default function EleicaoApresentar() {
               <div className="flex min-w-0 flex-col justify-center gap-6 p-5 sm:p-8 lg:gap-8 lg:p-10">
                 {hasCountSnapshot && <div>
                   <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${participationComplete ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{participationComplete ? <CheckCircle2 className="h-6 w-6" /> : <Users className="h-6 w-6" />}</div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{totalPresent === 0 ? 'Chamada pendente' : excess ? 'Conferência necessária' : finished ? 'Votação encerrada' : participationComplete ? 'Participação completa' : 'Aguardando participação'}</p>
-                  <p className="mt-2 text-[clamp(1.8rem,3vw,3.2rem)] font-bold leading-tight tabular-nums [overflow-wrap:anywhere]">{totalPresent === 0 ? 'Aguardando a chamada' : excess ? `${excess} ${excess === 1 ? 'voto excedente' : 'votos excedentes'}` : remaining === 0 ? 'Todos votaram' : `${remaining === 1 ? 'Falta' : 'Faltam'} ${remaining} ${remaining === 1 ? 'voto' : 'votos'}`}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">{totalPresent === 0 ? 'A mesa precisa confirmar os presentes para acompanhar a participação.' : finished ? 'Aguarde a liberação do resultado pela mesa.' : participationComplete ? 'A mesa pode conferir a contagem e conduzir a apuração.' : excess ? 'A mesa precisa conferir a chamada e as cédulas recebidas.' : 'A votação permanece aberta para quem ainda não participou.'}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{totalPresent === 0 ? 'Chamada pendente' : nominationsOpen ? 'Indicações abertas' : excess ? 'Conferência necessária' : finished ? 'Votação encerrada' : participationComplete ? 'Participação completa' : 'Aguardando participação'}</p>
+                  <p className="mt-2 text-[clamp(1.8rem,3vw,3.2rem)] font-bold leading-tight tabular-nums [overflow-wrap:anywhere]">{totalPresent === 0 ? 'Aguardando a chamada' : nominationsOpen ? 'Aguardando a mesa' : excess ? `${excess} ${excess === 1 ? 'voto excedente' : 'votos excedentes'}` : remaining === 0 ? 'Todos votaram' : `${remaining === 1 ? 'Falta' : 'Faltam'} ${remaining} ${remaining === 1 ? 'voto' : 'votos'}`}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">{totalPresent === 0 ? 'A mesa precisa confirmar os presentes para acompanhar a participação.' : nominationsOpen ? 'A lista de indicados está sendo preparada. Os votos ainda estão fechados. Aguarde o mesário iniciar este escrutínio.' : finished ? 'Aguarde a liberação do resultado pela mesa.' : participationComplete ? 'A mesa pode conferir a contagem e conduzir a apuração.' : excess ? 'A mesa precisa conferir a chamada e as cédulas recebidas.' : 'A votação permanece aberta para quem ainda não participou.'}</p>
                 </div>}
                 <div className="flex items-start gap-3 border-t border-border pt-5">
                   <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -157,7 +159,8 @@ export default function EleicaoApresentar() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, nominationsOpen = false }: { status: string; nominationsOpen?: boolean }) {
+  if (nominationsOpen) return <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-medium text-primary"><Users className="h-4 w-4" />Indicações abertas</span>;
   if (status === 'open') {
     return (
       <span className="inline-flex items-center gap-2 px-3 lg:px-4 py-1.5 lg:py-2 rounded-full bg-success/15 border border-success/40 text-success text-sm lg:text-base font-medium shrink-0">

@@ -10,6 +10,7 @@ import { AttendanceList } from '@/components/eleicoes/AttendanceList';
 import { CandidateForm } from '@/components/eleicoes/CandidateForm';
 import { VotingPanel } from '@/components/eleicoes/VotingPanel';
 import { ResultPanel } from '@/components/eleicoes/ResultPanel';
+import { ElectionReportDownload } from '@/components/eleicoes/ElectionReportDownload';
 import { DeviceRegistration } from '@/components/eleicoes/DeviceRegistration';
 import { StepDef } from '@/components/eleicoes/ElectionStepper';
 import { ElectionStepCard } from '@/components/eleicoes/ElectionStepCard';
@@ -33,10 +34,11 @@ interface Election {
   max_choices_per_ballot?: number;
   current_round?: number;
   majority_rule?: string;
+  nominations_open?: boolean;
 }
 
 interface AttendanceItem { id: string; name: string; present: boolean; }
-interface Candidate { id: string; name: string; photo_url: string | null; display_order: number; birth_date?: string | null; }
+interface Candidate { id: string; name: string; photo_url: string | null; display_order: number; birth_date?: string | null; nomination_round?: number; }
 interface Device { id: string; label: string; token: string; activated: boolean; }
 
 export default function EleicaoDetalhe() {
@@ -55,6 +57,7 @@ export default function EleicaoDetalhe() {
   const modeInFlight = useRef(false);
   const stepContentRef = useRef<HTMLDivElement>(null);
   const previousStepRef = useRef<string | null>(null);
+  const stageScopeRef = useRef<string | null>(null);
 
   const fetchAll = () => read.run(async () => {
     if (!id) throw new Error('Eleição indisponível');
@@ -94,6 +97,9 @@ export default function EleicaoDetalhe() {
       }, () => {
         void fetchAll();
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'elections', filter: `id=eq.${id}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'election_candidates', filter: `election_id=eq.${id}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'election_attendance', filter: `election_id=eq.${id}` }, () => void fetchAll())
       .subscribe();
 
     return () => {
@@ -107,14 +113,18 @@ export default function EleicaoDetalhe() {
   const showDevices = votingMode === 'both' || votingMode === 'shared';
   const electionType = ((election as any)?.type as string) || 'cargo';
 
+  const currentRound = election?.current_round || 1;
+  const nominationsOpen = !!election?.nominations_open;
+  const currentCandidates = useMemo(() => candidates.filter(candidate => (candidate.nomination_round ?? currentRound) === currentRound), [candidates, currentRound]);
+
   const completion = useMemo(() => {
     return {
-      candidatos: candidates.length > 0,
+      candidatos: currentCandidates.length > 0,
       presenca: (election?.total_present || 0) > 0 && election?.total_present === attendance.filter(person => person.present).length,
       dispositivos: !showDevices || devices.length > 0,
-      votacao: election?.status === 'open' || election?.status === 'finished',
+      votacao: (election?.status === 'open' && !nominationsOpen) || election?.status === 'finished',
     };
-  }, [candidates, election, attendance, devices, showDevices]);
+  }, [currentCandidates, election, attendance, devices, showDevices, nominationsOpen]);
 
   const steps: StepDef[] = useMemo(() => {
     const s: StepDef[] = [
@@ -136,11 +146,17 @@ export default function EleicaoDetalhe() {
   // not navigate away from a form where the organizer is adding more names.
   useEffect(() => {
     if (!read.hasSnapshot || !election?.id) return;
+    const scope = `${election.id}:${currentRound}:${nominationsOpen ? 'nominations' : 'voting'}`;
+    if (stageScopeRef.current !== scope) {
+      stageScopeRef.current = scope;
+      setActiveStep(nominationsOpen ? 'candidatos' : election.status === 'open' ? 'votacao' : steps[autoCurrentIndex]?.key || null);
+      return;
+    }
     setActiveStep(previous => {
       const index = steps.findIndex(step => step.key === previous);
       return index >= 0 && index <= autoCurrentIndex ? previous : steps[autoCurrentIndex]?.key || null;
     });
-  }, [id, read.hasSnapshot, election?.id, steps, autoCurrentIndex]);
+  }, [id, read.hasSnapshot, election?.id, election?.status, currentRound, nominationsOpen, steps, autoCurrentIndex]);
 
   const selectedIndex = steps.findIndex(step => step.key === activeStep);
   const currentStepKey = selectedIndex >= 0 && selectedIndex <= autoCurrentIndex
@@ -171,10 +187,10 @@ export default function EleicaoDetalhe() {
   const devicesLocked = election.status === 'finished';
 
   const summaries: Record<string, string> = {
-    candidatos: `${candidates.length} ${electionType === 'camisa' ? 'modelo(s)' : 'candidato(s)'} cadastrado(s)`,
+    candidatos: `${currentCandidates.length} ${electionType === 'camisa' ? 'modelo(s)' : 'candidato(s)'} cadastrado(s)`,
     presenca: `${attendance.filter(person => person.present).length} de ${attendance.length} presentes${completion.presenca ? ' · chamada confirmada' : ''}`,
     dispositivos: `${devices.length} dispositivo(s) cadastrado(s)`,
-    votacao: election.status === 'finished' ? 'Votação concluída' : election.status === 'open' ? 'Votação em andamento' : 'Confira tudo e abra a votação',
+    votacao: nominationsOpen ? 'Novas indicações · votos ainda fechados' : election.status === 'finished' ? 'Votação concluída' : election.status === 'open' ? 'Votação em andamento' : 'Confira tudo e abra a votação',
   };
 
   const stepIcons: Record<string, JSX.Element> = {
@@ -185,10 +201,10 @@ export default function EleicaoDetalhe() {
   };
 
   const stepTitles: Record<string, string> = {
-    candidatos: electionType === 'camisa' ? 'Modelos' : 'Candidatos',
+    candidatos: electionType === 'camisa' ? 'Modelos' : nominationsOpen ? `Indicações · ${currentRound}º escrutínio` : 'Candidatos',
     presenca: 'Chamada de Presença',
     dispositivos: 'Dispositivos Fixos',
-    votacao: election.status === 'open' ? 'Votação em andamento' : 'Iniciar Votação',
+    votacao: election.status === 'open' && !nominationsOpen ? 'Votação em andamento' : `Iniciar ${currentRound}º escrutínio`,
   };
 
   const handlePersonalDevices = async () => {
@@ -210,10 +226,11 @@ export default function EleicaoDetalhe() {
       case 'candidatos':
         return (
           <CandidateForm
+            key={`${election.id}:${currentRound}`}
             electionId={election.id}
-            candidates={candidates}
+            candidates={currentCandidates}
             onRefresh={fetchAll}
-            disabled={!isDraft || !completion.presenca}
+            disabled={(!isDraft && !nominationsOpen) || !completion.presenca}
             type={electionType as 'cargo' | 'camisa'}
           />
         );
@@ -265,23 +282,23 @@ export default function EleicaoDetalhe() {
     <AppLayout width="wide">
       {read.error && <QueryErrorState message="Não foi possível atualizar a eleição e suas etapas." onRetry={fetchAll} retrying={read.loading} hasPreviousData />}
       <header className="mb-4 space-y-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
-        <div className="flex items-start gap-3">
+        <div className="flex flex-wrap items-start gap-3">
           <Button variant="outline" size="icon" className="shrink-0" aria-label="Voltar às eleições" onClick={() => navigate('/eleicoes')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="min-w-0 flex-1 space-y-1">
+          <div className="min-w-0 flex-1 basis-[calc(100%_-_4rem)] space-y-1 sm:basis-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">{sequenceStep ? `Diretoria UMP · Cargo ${sequenceStep.index + 1} de ${UMP_POSITIONS.length}` : 'Sala de votação'}</p>
             <h1 className="break-words text-2xl font-bold leading-tight tracking-tight sm:text-3xl">{election.position}</h1>
           </div>
           <Badge variant={election.status === 'open' ? 'default' : 'secondary'} className="shrink-0 gap-1 self-start">
-            {election.status === 'draft' && <Pencil className="h-3 w-3" />}{statusLabel[election.status]}
+            {(election.status === 'draft' || nominationsOpen) && <Pencil className="h-3 w-3" />}{nominationsOpen ? 'Indicações abertas' : statusLabel[election.status]}
           </Badge>
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{election.name}</p>
 
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border pt-3">
           <p className="min-w-0 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-            {election.status === 'finished' ? 'Votação concluída' : election.status === 'open'
+            {nominationsOpen ? `${currentRound}º escrutínio · indicações abertas · votos fechados` : election.status === 'finished' ? 'Votação concluída' : election.status === 'open'
               ? `${election.current_round || 1}º escrutínio · ${election.total_present} presentes`
               : <><span className="font-semibold text-foreground">Etapa {(currentIndex >= 0 ? currentIndex : autoCurrentIndex) + 1} de {steps.length}</span> · {stepTitles[currentStepKey || '']}</>}
           </p>
@@ -317,6 +334,10 @@ export default function EleicaoDetalhe() {
         </div>
       </header>
 
+      {nominationsOpen && <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+        <p className="font-semibold">Novas indicações para o {currentRound}º escrutínio</p>
+        <p className="mt-1 leading-relaxed text-muted-foreground">Cadastre os indicados desta rodada e inicie os votos quando estiver pronto. A chamada, as urnas e o histórico anterior foram preservados.</p>
+      </div>}
       {election.status !== 'finished' && currentStepKey && (
         <div ref={stepContentRef} tabIndex={-1} aria-label={stepTitles[currentStepKey]} className="scroll-mt-4 focus:outline-none">
         <ElectionStepCard
@@ -381,6 +402,7 @@ export default function EleicaoDetalhe() {
               </Button>
             </div>
           </div>
+          <div className="mb-4"><ElectionReportDownload electionId={election.id} /></div>
           <ResultPanel
             electionId={election.id}
             totalPresent={election.total_present}

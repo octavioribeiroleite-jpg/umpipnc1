@@ -76,6 +76,14 @@ if (fixtureParams.get('majority_rule') === 'absolute_50' || fixtureParams.get('m
 }
 const requestedRound = Number(fixtureParams.get('current_round'));
 if (Number.isSafeInteger(requestedRound) && requestedRound >= 1 && requestedRound <= 3) data.elections[0].current_round = requestedRound;
+if(data.elections[0])data.elections[0].nominations_open = fixtureParams.get('nominations_open')==='1';
+data.election_candidates = data.election_candidates.map(candidate=>({...candidate,nomination_round:1}));
+if(fixtureParams.has('nomination_count')){
+ const count=Math.max(0,Math.min(100,Number(fixtureParams.get('nomination_count')||'0')));
+ const round=data.elections[0].current_round||1;
+ if(round===1)data.election_candidates=[];
+ data.election_candidates.push(...Array.from({length:count},(_,index)=>({id:`nominee-${round}-${index}`,election_id:'election',name:`Nova indicação fictícia ${index+1}`,photo_url:null,photo_urls:[],display_order:index,nomination_round:round})));
+}
 const requestedDistribution = fixtureParams.get('distribution');
 if (requestedDistribution && /^\d{1,4}(,\d{1,4}){0,17}$/.test(requestedDistribution)) {
  const distribution = requestedDistribution.split(',').map(Number);
@@ -248,7 +256,19 @@ export const supabase:any={from:query,channel:createChannel,removeChannel:async(
  rpc:async(name:string,args:Record<string,any>={})=>{
   await fixturePause();if(readsFail)return failure();
   if(name==='election_room_ensure')return {data:{room_id:'11111111-1111-4111-8111-111111111111',room_token:'22222222-2222-4222-8222-222222222222',title:data.elections[0]?.name||'Sala fictícia'},error:null};
+  if(name==='election_room_report'){
+   const elections=fixtureParams.get('report_fixture')==='1'?['Presidente','Vice-presidente','1º secretário','2º secretário','Tesoureiro'].map((position,index)=>{
+    const candidates=[{id:`report-${index}-a`,name:'Alfa fictício',nomination_round:1},{id:`report-${index}-b`,name:'Beta fictícia',nomination_round:1},{id:`report-${index}-c`,name:'Gama fictício',nomination_round:1},{id:`report-${index}-d`,name:'Débora fictícia',nomination_round:2},{id:`report-${index}-e`,name:'Érica fictícia',nomination_round:2}];
+    return {election:{id:`report-cargo-${index}`,name:'Diretoria UMP - dados fictícios',position,status:'finished',current_round:2,total_present:150,seats_count:1,majority_rule:'absolute_50'},candidates,rounds:[{round:1,totalBallots:150,blankVotes:0,rows:[{candidate_id:candidates[0].id,count:60},{candidate_id:candidates[1].id,count:55},{candidate_id:candidates[2].id,count:35}],electedIds:[],hasTie:false},{round:2,totalBallots:150,blankVotes:0,rows:[{candidate_id:candidates[3].id,count:90},{candidate_id:candidates[4].id,count:60}],electedIds:[candidates[3].id],hasTie:false}],electedIds:[candidates[3].id],count:{ballots:150,present:150,confirmed:150,exact:true}};
+   }):[];
+   return {data:{room_id:'11111111-1111-4111-8111-111111111111',title:'Ensaio fictício',generated_at:new Date().toISOString(),completed:fixtureParams.get('report_fixture')==='1',elections},error:null};
+  }
   if(name==='election_room_attach')return {data:{success:true},error:null};
+  if(name==='election_start_nominated_round')return sharedOperation(true,()=>{
+   const election=data.elections.find(row=>row.id===args.p_election_id);
+   if(!election||election.current_round!==args.p_expected_round||!election.nominations_open||!data.election_candidates.some(candidate=>candidate.election_id===election.id&&candidate.nomination_round===election.current_round))return failure();
+   election.nominations_open=false;return {data:{id:election.id,current_round:election.current_round,nominations_open:false},error:null};
+  });
   if((name==='election_room_snapshot'||name==='election_demo_command')&&fixtureParams.get('room_fixture')==='1'){
    // Explicit, read-only room UI fixture; never the imported cross-phone demo.
    if(name==='election_demo_command'&&args.p_action!=='snapshot')return failure();
@@ -257,10 +277,10 @@ export const supabase:any={from:query,channel:createChannel,removeChannel:async(
    const present=Number(fixtureParams.get('attendance_present')||'150');
    const ballots=phase==='result'||phase==='finished'?present:Number(fixtureParams.get('ballot_count')||'149');
    const candidates=data.election_candidates;
-   const election={...source,status:phase==='waiting'?'draft':phase==='result'||phase==='finished'?'finished':'open',total_present:present,show_result:phase==='result',voting_mode:'both'};
+   const election={...source,status:phase==='waiting'?'draft':phase==='result'||phase==='finished'?'finished':'open',total_present:present,show_result:phase==='result',voting_mode:'both',nominations_open:phase==='nominations'};
    const published_result=phase==='result'?{candidates,rounds:[{round:election.current_round||1,totalBallots:present,blankVotes:0,rows:candidates.slice(0,3).map((candidate,index)=>({candidate_id:candidate.id,count:index===0?Math.ceil(present*.6):index===1?Math.floor(present*.3):present-Math.ceil(present*.6)-Math.floor(present*.3)})),electedIds:[candidates[0]?.id],hasTie:false}]}:null;
-   const snapshot={kind:'demo',room_id:'11111111-1111-4111-8111-111111111111',title:'Ensaio fictício — interface da sala',revision:1,phase,activeElection:election,candidates:phase==='waiting'?[]:candidates,already_voted:phase==='voted',count:{ballots,present,confirmed:present,exact:ballots===present},eligible_candidate_ids:candidates.map(candidate=>candidate.id),elected_ids:[],max_choices:1,published_result};
-   return {data:name==='election_demo_command'?{...snapshot,room_token:'22222222-2222-4222-8222-222222222222',urn_token:'33333333-3333-4333-8333-333333333333'}:snapshot,error:null};
+   const snapshot={kind:'demo',room_id:'11111111-1111-4111-8111-111111111111',title:'Ensaio fictício — interface da sala',revision:1,phase,activeElection:election,candidates:phase==='waiting'||phase==='nominations'?[]:candidates,already_voted:phase==='voted',count:{ballots,present,confirmed:present,exact:present>0&&ballots===present},eligible_candidate_ids:phase==='nominations'?[]:candidates.map(candidate=>candidate.id),elected_ids:[],max_choices:1,published_result};
+   return {data:name==='election_demo_command'?{...snapshot,room_token:'22222222-2222-4222-8222-222222222222',urn_token:'33333333-3333-4333-8333-333333333333',attendance:data.election_attendance,attendance_confirmed:fixtureParams.get('attendance_confirmed')==='1'||(phase!=='waiting'),current_candidates:candidates.filter(candidate=>candidate.nomination_round===(election.current_round||1)),all_candidates:candidates}:snapshot,error:null};
   }
   if(name==='election_public_count')return sharedOperation(false,()=>{
    const election=data.elections.find(row=>row.id===args.p_election_id);
