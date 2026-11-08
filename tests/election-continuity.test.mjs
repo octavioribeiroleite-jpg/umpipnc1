@@ -14,7 +14,7 @@ function handler(file, name, context) {
   let declaration;
   const visit = node => { if (ts.isVariableDeclaration(node) && node.name.getText(source) === name) declaration = node; ts.forEachChild(node, visit); };
   visit(source); assert.ok(declaration?.initializer, name);
-  const sandbox = { ...context };
+  const sandbox = { roomSession: undefined, electionRoomRpc: async (name, args) => ({ data: name === 'election_room_ensure' ? { room_token: 'fixture-room' } : { success: true }, error: null }), ...context };
   vm.runInNewContext(ts.transpileModule(`globalThis.handler = ${declaration.initializer.getText(source)};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, sandbox);
   return sandbox.handler;
 }
@@ -230,7 +230,7 @@ function publicEffect(includes, context) {
   let effect;
   const visit = node => { if (ts.isCallExpression(node) && node.expression.getText(source) === 'useEffect' && node.arguments[0].getText(source).includes(includes)) effect = node.arguments[0]; ts.forEachChild(node, visit); };
   visit(source); assert.ok(effect);
-  const sandbox = { ...context };
+  const sandbox = { roomSession: undefined, electionRoomRpc: async (name, args) => ({ data: name === 'election_room_ensure' ? { room_token: 'fixture-room' } : { success: true }, error: null }), ...context };
   vm.runInNewContext(ts.transpileModule(`globalThis.effect = ${effect.getText(source)};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, sandbox);
   return sandbox.effect;
 }

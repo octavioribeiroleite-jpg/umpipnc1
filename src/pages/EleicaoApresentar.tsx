@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { Loader2, Radio } from 'lucide-react';
+import { Loader2, Radio, ShieldCheck, Users, CheckCircle2, Vote } from 'lucide-react';
 import { ResultPanel } from '@/components/eleicoes/ResultPanel';
 import { useBufferedVoteCount } from '@/hooks/useBufferedVoteCount';
 import logo from '@/assets/logo-ipnc.png';
@@ -38,10 +38,9 @@ export default function EleicaoApresentar() {
   const showResult = !!election?.show_result;
   const finished = election?.status === 'finished';
 
-  const { displayedCount, hasSnapshot: hasCountSnapshot, isError: countError, loading: countLoading, retry: retryCount } = useBufferedVoteCount(
+  const { displayedCount, totalPresent: countTotalPresent, hasSnapshot: hasCountSnapshot, isError: countError, loading: countLoading, retry: retryCount } = useBufferedVoteCount(
     id,
-    election?.total_present || 0,
-    finished, // ao terminar, libera contador real
+    election?.current_round || 1,
   );
 
   const fetchAll = useCallback(() => runRead(async () => {
@@ -84,104 +83,74 @@ export default function EleicaoApresentar() {
     );
   }
 
-  const totalPresent = election.total_present;
+  const totalPresent = countTotalPresent ?? election.total_present;
+  const remaining = Math.max(0, totalPresent - displayedCount);
+  const excess = Math.max(0, displayedCount - totalPresent);
   const pct = totalPresent > 0 ? Math.min(100, (displayedCount / totalPresent) * 100) : 0;
+  const percentage = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(pct);
+  const participationComplete = totalPresent > 0 && displayedCount === totalPresent;
 
   return (
-    <div className="min-h-dvh bg-muted/25 flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-[1600px] mx-auto px-[16px] min-[700px]:px-[32px] py-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3 lg:gap-4 min-w-0">
-            <img src={logo} alt="Marca IPNC" className="h-10 lg:h-14 w-auto shrink-0 rounded-lg bg-white p-1 object-contain" />
+    <div className="flex min-h-dvh flex-col bg-muted/25">
+      <header className="border-b border-border/70 bg-card">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-8 lg:py-5">
+          <div className="flex w-full min-w-0 items-center gap-3 sm:w-auto sm:flex-1 sm:gap-5">
+            <img src={logo} alt="Marca IPNC" className="h-10 w-auto shrink-0 object-contain sm:h-14" />
             <div className="min-w-0">
-              <h1 className="text-[clamp(1.5rem,3vw,2.75rem)] leading-tight font-bold min-w-0 whitespace-normal [overflow-wrap:anywhere]">{election.position}</h1>
-              <p className="text-sm sm:text-base text-muted-foreground min-w-0 whitespace-normal [overflow-wrap:anywhere]">
-                {election.name} · {election.current_round || 1}º escrutínio
-              </p>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary sm:text-sm">Acompanhamento da votação</p>
+              <h1 className="text-[clamp(1.6rem,3vw,3rem)] font-bold leading-tight [overflow-wrap:anywhere]">{election.position}</h1>
+              <p className="mt-1 text-sm text-muted-foreground [overflow-wrap:anywhere] sm:text-base">{election.name}</p>
             </div>
           </div>
-          <StatusBadge status={election.status} />
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">{election.current_round || 1}º escrutínio</span>
+            <StatusBadge status={election.status} />
+          </div>
         </div>
       </header>
 
-      {readFailure && <div className="mx-auto w-full max-w-6xl px-4 pt-4">{readFailure}</div>}
-
-      {/* Main */}
-      <main className="mx-auto w-full max-w-[1600px] flex-1 flex items-center justify-center p-[16px] min-[700px]:p-[32px]">
-        {showResult ? (
-          <div className="w-full min-w-0">
-            <ResultPanel
-              electionId={election.id}
-              totalPresent={election.total_present}
-              candidates={candidates}
-              election={election}
-              presentation
-            />
-          </div>
-        ) : (
-          /* PROGRESS VIEW (anonymous) */
-          <div className="w-full min-w-0">
-            <div className="rounded-2xl bg-sidebar text-sidebar-foreground border border-sidebar-border p-[24px] min-[700px]:p-[32px] min-h-[360px] flex flex-col justify-center text-center gap-8">
-              {countError && <QueryErrorState message="Não foi possível atualizar a contagem de votos." onRetry={retryCount} retrying={countLoading} hasPreviousData={hasCountSnapshot} />}
-              {!hasCountSnapshot ? <p role="status" className="text-lg text-sidebar-foreground/80">{countError ? 'Contagem indisponível' : 'Consultando contagem…'}</p> : <>
-              {/* Status amigável */}
-              <p className="text-base min-[700px]:text-xl font-medium text-sidebar-foreground tracking-wide">
-                {finished
-                  ? 'Votação encerrada'
-                  : displayedCount === 0
-                    ? 'Aguardando votos'
-                    : 'Votação em andamento'}
-              </p>
-
-              {/* Contador gigante */}
-              <div className="space-y-3">
-                <p
-                  key={displayedCount}
-                  className="font-bold tracking-tight tabular-nums leading-none text-sidebar-foreground animate-fade-up"
-                  style={{
-                    fontSize: 'clamp(4.5rem, 10vw, 6rem)', overflowWrap: 'anywhere',
-
-                  }}
-                >
-                  {displayedCount}
-                </p>
-                <p className="text-lg min-[700px]:text-2xl font-semibold text-sidebar-foreground/80 tabular-nums">
-                  de {totalPresent} votos esperados
-                </p>
-              </div>
-
-              {/* Barra de progresso */}
-              <div className="space-y-4">
-                <div className="w-full h-[12px] rounded-full bg-white/20 overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-200 rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${pct}%` }}
-                  />
+      {readFailure && <div className="mx-auto w-full max-w-[1600px] px-4 pt-4 sm:px-8">{readFailure}</div>}
+      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col justify-center px-4 py-6 sm:px-8 lg:py-10">
+        {showResult ? <ResultPanel electionId={election.id} totalPresent={election.total_present} candidates={candidates} election={election} presentation /> : (
+          <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm" aria-label="Participação anônima">
+            <div className="grid lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
+              <div className="relative flex min-w-0 flex-col justify-center bg-sidebar px-5 py-8 text-sidebar-foreground sm:px-10 sm:py-10 lg:min-h-[480px] lg:py-14">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                  <span className="flex items-center gap-2 text-sm font-medium text-sidebar-foreground/80 sm:text-base"><Vote className="h-5 w-5" /> Participação neste escrutínio</span>
+                  <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-medium text-sidebar-foreground/80">{countError ? 'Última contagem confirmada' : 'Contagem exata'}</span>
                 </div>
-
-                {/* Infos amigáveis */}
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-base sm:text-lg lg:text-2xl">
-                  <span className="font-semibold text-sidebar-foreground tabular-nums">
-                    {Math.round(pct)}% concluído
-                  </span>
-                  {!finished && totalPresent - displayedCount > 0 && (
-                    <>
-                      <span className="text-sidebar-foreground/60">•</span>
-                      <span className="text-sidebar-foreground/80 tabular-nums">
-                        {totalPresent - displayedCount}{' '}
-                        {totalPresent - displayedCount === 1
-                          ? 'voto restante'
-                          : 'votos restantes'}
-                      </span>
-                    </>
-                  )}
+                {countError && <div className="mb-5 rounded-xl bg-background p-3 text-foreground"><QueryErrorState message="Não foi possível atualizar a participação." onRetry={retryCount} retrying={countLoading} hasPreviousData={hasCountSnapshot} /></div>}
+                {!hasCountSnapshot ? <div className="flex min-h-52 flex-col items-center justify-center gap-4" role="status"><Loader2 className="h-8 w-8 animate-spin" /><p>{countError ? 'Contagem indisponível' : 'Consultando participação…'}</p></div> : <>
+                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1" aria-label={`${displayedCount} de ${totalPresent} votos recebidos`}>
+                    <p className="font-bold leading-none tracking-tighter tabular-nums [overflow-wrap:anywhere] text-[clamp(5.5rem,15vw,12rem)]">{displayedCount}</p>
+                    <p className="text-2xl font-medium text-sidebar-foreground/60 tabular-nums sm:text-4xl">/ {totalPresent}</p>
+                  </div>
+                  <p className="mt-3 text-base text-sidebar-foreground/80 sm:text-xl">{displayedCount === 1 ? 'voto recebido' : 'votos recebidos'}</p>
+                  <div className="mt-7 space-y-3 sm:mt-9">
+                    <div className="h-3 overflow-hidden rounded-full bg-white/15 sm:h-4" role="progressbar" aria-label="Participação" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-valuetext={`${displayedCount} de ${totalPresent} votos recebidos`}>
+                      <div className="h-full rounded-full bg-emerald-200 transition-[width] duration-500" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-sidebar-foreground/80 sm:text-lg">
+                      <span className="font-semibold tabular-nums">{percentage}% de participação</span>
+                      <span className="flex items-center gap-2"><Users className="h-4 w-4" />{totalPresent} presentes</span>
+                    </div>
+                  </div>
+                </>}
+              </div>
+              <div className="flex min-w-0 flex-col justify-center gap-6 p-5 sm:p-8 lg:gap-8 lg:p-10">
+                {hasCountSnapshot && <div>
+                  <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${participationComplete ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{participationComplete ? <CheckCircle2 className="h-6 w-6" /> : <Users className="h-6 w-6" />}</div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{totalPresent === 0 ? 'Chamada pendente' : excess ? 'Conferência necessária' : finished ? 'Votação encerrada' : participationComplete ? 'Participação completa' : 'Aguardando participação'}</p>
+                  <p className="mt-2 text-[clamp(1.8rem,3vw,3.2rem)] font-bold leading-tight tabular-nums [overflow-wrap:anywhere]">{totalPresent === 0 ? 'Aguardando a chamada' : excess ? `${excess} ${excess === 1 ? 'voto excedente' : 'votos excedentes'}` : remaining === 0 ? 'Todos votaram' : `${remaining === 1 ? 'Falta' : 'Faltam'} ${remaining} ${remaining === 1 ? 'voto' : 'votos'}`}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">{totalPresent === 0 ? 'A mesa precisa confirmar os presentes para acompanhar a participação.' : finished ? 'Aguarde a liberação do resultado pela mesa.' : participationComplete ? 'A mesa pode conferir a contagem e conduzir a apuração.' : excess ? 'A mesa precisa conferir a chamada e as cédulas recebidas.' : 'A votação permanece aberta para quem ainda não participou.'}</p>
+                </div>}
+                <div className="flex items-start gap-3 border-t border-border pt-5">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div><h2 className="text-sm font-semibold">O voto permanece sigiloso</h2><p className="mt-1 text-sm leading-relaxed text-muted-foreground">Esta tela mostra apenas a participação. Os resultados aparecem após a liberação autorizada.</p></div>
                 </div>
               </div>
-              <p className="text-base text-sidebar-foreground/80">Os resultados aparecem após a liberação autorizada.</p>
-              </>}
             </div>
-          </div>
+          </section>
         )}
       </main>
     </div>

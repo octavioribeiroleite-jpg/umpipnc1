@@ -76,6 +76,7 @@ test('the real voting handler preserves selection and ballot UUID through return
     let success = false, selectionCleared = false, error = '';
     const ballotRequestRef = { current: null };
     const actual = handler('src/pages/VotePublic.tsx', 'handleVote', {
+      roomSession: undefined,
       readError: '', loading: false, loadedRoundRef: {current: 'fixture-only:1'}, electionId: 'fixture-only', currentRound: 1, confirmBlank: false, isMultiSeat: false, maxChoices: 1, autoBlankSlots: 0,
       confirmCandidate: { id: 'candidate-fixture' }, selectedCandidates: [], voteInFlightRef: { current: false }, ballotRequestRef,
       crypto: { randomUUID: () => 'uuid-fixture-only' }, ensureAudioContext: async () => null, playUrnaSound: async () => true, isIndividual: false,

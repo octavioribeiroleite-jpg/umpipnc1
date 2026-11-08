@@ -37,6 +37,8 @@ import PastorCalendario from '@/pages/PastorCalendario';
 import PastorComunicados from '@/pages/PastorComunicados';
 import PortalIgreja from '@/pages/PortalIgreja';
 import VotePublic from '@/pages/VotePublic';
+import VoteRoomPublic from '@/pages/VoteRoomPublic';
+import ElectionDemoConsole from '@/pages/ElectionDemoConsole';
 import Index from '@/pages/Index';
 import Reunioes from '@/pages/Reunioes';
 import NovaReuniao from '@/pages/NovaReuniao';
@@ -136,6 +138,8 @@ createRoot(root).render(<AppShell><PageErrorBoundary><QueryClientProvider client
 <Route path="/pastor/sugestoes" element={<PastorSugestoes/>}/>
 <Route path="/pastor-sugestoes" element={<PastorSugestoes/>}/>
 <Route path="/igreja" element={<PortalIgreja/>}/>
+<Route path="/vote/ensaio/:adminToken" element={<ElectionDemoConsole/>}/>
+<Route path="/vote/sala/:roomToken" element={<VoteRoomPublic/>}/>
 <Route path="/vote/:electionId" element={<VotePublic/>}/>
 <Route path="/membro" element={<MemberAccessUnavailable/>}/>
 <Route path="/secretaria" element={<Secretaria/>}/><Route path="/tesouraria" element={unavailable}/>

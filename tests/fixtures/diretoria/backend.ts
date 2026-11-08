@@ -245,8 +245,30 @@ function createChannel() {
  return channel;
 }
 export const supabase:any={from:query,channel:createChannel,removeChannel:async(channel:ReturnType<typeof createChannel>)=>{await channel.unsubscribe();},
- rpc:async(name:string)=>{
+ rpc:async(name:string,args:Record<string,any>={})=>{
   await fixturePause();if(readsFail)return failure();
+  if(name==='election_room_ensure')return {data:{room_id:'11111111-1111-4111-8111-111111111111',room_token:'22222222-2222-4222-8222-222222222222',title:data.elections[0]?.name||'Sala fictícia'},error:null};
+  if(name==='election_room_attach')return {data:{success:true},error:null};
+  if((name==='election_room_snapshot'||name==='election_demo_command')&&fixtureParams.get('room_fixture')==='1'){
+   // Explicit, read-only room UI fixture; never the imported cross-phone demo.
+   if(name==='election_demo_command'&&args.p_action!=='snapshot')return failure();
+   const phase=fixtureParams.get('room_phase')||'voting';
+   const source=data.elections[0];
+   const present=Number(fixtureParams.get('attendance_present')||'150');
+   const ballots=phase==='result'||phase==='finished'?present:Number(fixtureParams.get('ballot_count')||'149');
+   const candidates=data.election_candidates;
+   const election={...source,status:phase==='waiting'?'draft':phase==='result'||phase==='finished'?'finished':'open',total_present:present,show_result:phase==='result',voting_mode:'both'};
+   const published_result=phase==='result'?{candidates,rounds:[{round:election.current_round||1,totalBallots:present,blankVotes:0,rows:candidates.slice(0,3).map((candidate,index)=>({candidate_id:candidate.id,count:index===0?Math.ceil(present*.6):index===1?Math.floor(present*.3):present-Math.ceil(present*.6)-Math.floor(present*.3)})),electedIds:[candidates[0]?.id],hasTie:false}]}:null;
+   const snapshot={kind:'demo',room_id:'11111111-1111-4111-8111-111111111111',title:'Ensaio fictício — interface da sala',revision:1,phase,activeElection:election,candidates:phase==='waiting'?[]:candidates,already_voted:phase==='voted',count:{ballots,present,confirmed:present,exact:ballots===present},eligible_candidate_ids:candidates.map(candidate=>candidate.id),elected_ids:[],max_choices:1,published_result};
+   return {data:name==='election_demo_command'?{...snapshot,room_token:'22222222-2222-4222-8222-222222222222',urn_token:'33333333-3333-4333-8333-333333333333'}:snapshot,error:null};
+  }
+  if(name==='election_public_count')return sharedOperation(false,()=>{
+   const election=data.elections.find(row=>row.id===args.p_election_id);
+   if(!election)return failure();
+   const round=election.current_round||1;
+   const ballots=election.status==='draft'?0:new Set(data.election_votes.filter(row=>row.election_id===election.id&&row.round_number===round&&row.ballot_id).map(row=>row.ballot_id)).size;
+   return {data:{election_id:election.id,current_round:round,total_present:election.total_present,ballots},error:null};
+  });
   if(name==='list_birthdays')return {data:mode==='empty'?[]:data.aniversariantes,error:null};
   if(name==='treasury_access')return {data:{admin:fixtureRole==='admin',fund_ids:data.societies.map(s=>s.id)},error:null};
   if(name==='treasury_directory')return {data:data.societies.map(s=>({id:s.id,name:s.name,abbreviation:s.slug.toUpperCase(),color:s.color})),error:null};

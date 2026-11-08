@@ -1,35 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-const BATCH_SIZE = 5;
-const initialCount = (electionId: string | undefined) => ({
-  electionId, realCount: 0, displayedCount: 0, lastReleased: 0,
-  hasSnapshot: false, isError: false, loading: Boolean(electionId),
+const initialCount = (electionId: string | undefined, round: number) => ({
+  electionId, round, realCount: 0, displayedCount: 0,
+  totalPresent: null as number | null, hasSnapshot: false, isError: false, loading: Boolean(electionId),
 });
 
-/** Releases the anonymous count in batches, at capacity, or when voting ends. */
-export function useBufferedVoteCount(
-  electionId: string | undefined,
-  totalPresent: number,
-  force: boolean = false,
-  batchSize: number = BATCH_SIZE,
-) {
-  const [count, setCount] = useState(() => initialCount(electionId));
+/** Exact anonymous participation: unique ballots in the current round.
+ * Uses the public aggregate RPC: no ballot identifiers, choices or voter identities.
+ * The historical hook name is retained for existing imports. */
+export function useBufferedVoteCount(electionId: string | undefined, currentRound = 1) {
+  const [count, setCount] = useState(() => initialCount(electionId, currentRound));
   const [retryVersion, setRetryVersion] = useState(0);
   const retry = useCallback(() => setRetryVersion(version => version + 1), []);
 
   useEffect(() => {
-    if (!electionId) {
-      setCount(initialCount(undefined));
+    if (!electionId || !Number.isSafeInteger(currentRound) || currentRound < 1) {
+      setCount(initialCount(electionId, currentRound));
       return;
     }
-    // Each subscription owns its queue. Cleanup cannot unlock another election's
-    // request, and a late response from the old election cannot publish its count.
     let active = true;
     let inFlight = false;
     let pending = false;
     let sequence = 0;
-    setCount(previous => previous.electionId === electionId ? previous : initialCount(electionId));
+    setCount(previous => previous.electionId === electionId && previous.round === currentRound ? previous : initialCount(electionId, currentRound));
 
     const fetchCount = async () => {
       if (!active) return;
@@ -38,12 +32,13 @@ export function useBufferedVoteCount(
       const request = ++sequence;
       setCount(previous => ({ ...previous, loading: true }));
       try {
-        const { count: total, error } = await supabase.from('election_votes')
-          .select('*', { count: 'exact', head: true }).eq('election_id', electionId);
-        if (error) throw error;
-        if (total === null) throw new Error('Contagem indisponível');
+        const { data, error } = await supabase.rpc('election_public_count', { p_election_id: electionId });
+        if (error || !data || typeof data !== 'object' || Array.isArray(data)) throw error || new Error('Contagem indisponível');
+        const result = data as { election_id?: string; ballots?: number; current_round?: number; total_present?: number };
+        if (result.election_id !== electionId || !Number.isSafeInteger(result.ballots) || result.ballots! < 0 || result.current_round !== currentRound || !Number.isSafeInteger(result.total_present) || result.total_present! < 0) throw new Error('Contagem não conferida');
         if (active && request === sequence) setCount(previous => ({
-          ...previous, realCount: total, hasSnapshot: true, isError: false, loading: false,
+          ...previous, realCount: result.ballots!, displayedCount: result.ballots!, totalPresent: result.total_present!,
+          hasSnapshot: true, isError: false, loading: false,
         }));
       } catch {
         if (active && request === sequence) setCount(previous => ({ ...previous, isError: true, loading: false }));
@@ -54,7 +49,7 @@ export function useBufferedVoteCount(
     };
 
     void fetchCount();
-    const channel = supabase.channel(`buffered-votes-${electionId}`)
+    const channel = supabase.channel(`participation-${electionId}-${currentRound}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'election_votes', filter: `election_id=eq.${electionId}` }, () => void fetchCount())
       .subscribe();
     const interval = setInterval(fetchCount, 3000);
@@ -65,25 +60,10 @@ export function useBufferedVoteCount(
       clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [electionId, retryVersion]);
+  }, [electionId, currentRound, retryVersion]);
 
-  // Preserve the existing release rules exactly: force, capacity, then batches.
-  useEffect(() => {
-    if (count.electionId !== electionId || !count.hasSnapshot) return;
-    setCount(previous => {
-      if (previous.electionId !== electionId || !previous.hasSnapshot) return previous;
-      if (force || (totalPresent > 0 && previous.realCount >= totalPresent)) {
-        if (previous.displayedCount === previous.realCount && previous.lastReleased === previous.realCount) return previous;
-        return { ...previous, displayedCount: previous.realCount, lastReleased: previous.realCount };
-      }
-      const fullBatches = Math.floor(previous.realCount / batchSize) * batchSize;
-      if (fullBatches > previous.lastReleased) return { ...previous, displayedCount: fullBatches, lastReleased: fullBatches };
-      return previous;
-    });
-  }, [count.electionId, count.hasSnapshot, count.realCount, electionId, totalPresent, force, batchSize]);
-
-  // Hide the old identity synchronously, before the new effect is committed.
-  const current = count.electionId === electionId ? count : initialCount(electionId);
-  return { displayedCount: current.displayedCount, realCount: current.realCount,
+  // Hide a previous election or round synchronously, before effects commit.
+  const current = count.electionId === electionId && count.round === currentRound ? count : initialCount(electionId, currentRound);
+  return { displayedCount: current.displayedCount, realCount: current.realCount, totalPresent: current.totalPresent,
     hasSnapshot: current.hasSnapshot, isError: current.isError, loading: current.loading, retry };
 }

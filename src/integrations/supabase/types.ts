@@ -2271,6 +2271,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      election_public_count: { Args: { p_election_id: string }; Returns: Json }
+      election_room_ensure: { Args: { p_election_id: string }; Returns: Json }
+      election_room_attach: { Args: { p_room_token: string; p_source_election_id: string; p_target_election_id: string }; Returns: Json }
+      election_room_snapshot: { Args: { p_room_token: string; p_device_id?: string | null }; Returns: Json }
+      election_demo_cast: { Args: { p_room_token: string; p_device_id: string; p_election_id: string; p_round: number; p_ballot_id: string; p_choices: string[]; p_blanks?: number }; Returns: Json }
+      election_demo_urn_cast: { Args: { p_urn_token: string; p_election_id: string; p_round: number; p_ballot_id: string; p_choices: string[]; p_blanks?: number }; Returns: Json }
+      election_demo_command: { Args: { p_admin_token: string; p_action: string; p_expected_revision: number; p_payload?: Json }; Returns: Json }
       financial_charge_operation: {
         Args: { p_request_id: string; p_charge_id: string; p_operation: string; p_expected: Json; p_payload?: Json }
         Returns: Json

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { electionRoomRpc } from '@/lib/election-room-client';
+import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Maximize2, Monitor, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,25 @@ export function ElectionVoteAccess({ electionId, electionName, mode, devices, st
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('celular');
   const [expanded, setExpanded] = useState<{ label: string; url: string } | null>(null);
-  const individualUrl = `${window.location.origin}/vote/${electionId}`;
+  const [room, setRoom] = useState<{ electionId: string; token?: string; error?: string } | null>(null);
+  const [retryVersion, setRetryVersion] = useState(0);
+  useEffect(() => {
+    if (mode === 'shared') return;
+    let active = true;
+    void (async () => {
+      try {
+        const { data, error } = await electionRoomRpc('election_room_ensure', { p_election_id: electionId });
+        if (error || !data || typeof data !== 'object' || !('room_token' in data) || typeof data.room_token !== 'string') throw error || new Error('Sala indisponível');
+        if (active) setRoom({ electionId, token: data.room_token });
+      } catch {
+        if (active) setRoom({ electionId, error: 'Não foi possível preparar o link permanente da sala.' });
+      }
+    })();
+    return () => { active = false; };
+  }, [electionId, mode, retryVersion]);
+  const roomToken = room?.electionId === electionId ? room.token : undefined;
+  const individualUrl = roomToken ? `${window.location.origin}/vote/sala/${roomToken}` : null;
+  const electionUrl = `${window.location.origin}/vote/${electionId}`;
   const copy = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -41,8 +60,8 @@ export function ElectionVoteAccess({ electionId, electionName, mode, devices, st
     </div>
     <code className="block select-all break-all rounded-lg bg-muted/50 p-2 text-xs leading-relaxed text-muted-foreground">{url}</code>
   </div>;
-  const individual = accessCard('Voto individual', individualUrl, false);
-  const urns = devices.length > 0 ? <div className="space-y-3">{devices.map(device => accessCard(device.label, `${individualUrl}?mode=urna&token=${device.token}`, true))}</div>
+  const individual = individualUrl ? <div className="space-y-2">{accessCard('Voto individual · sala permanente', individualUrl, false)}<p className="text-xs leading-relaxed text-muted-foreground">Escaneie uma vez e aguarde os próximos escrutínios e cargos nesta sala.</p></div> : <div role="status" className="space-y-3 rounded-xl border border-border bg-card p-4 text-sm"><p>{room?.electionId === electionId && room.error ? room.error : 'Preparando o QR Code permanente…'}</p>{room?.error && <Button variant="outline" onClick={() => setRetryVersion(version => version + 1)}>Tentar novamente</Button>}</div>;
+  const urns = devices.length > 0 ? <div className="space-y-3">{devices.map(device => accessCard(device.label, `${electionUrl}?mode=urna&token=${device.token}`, true))}</div>
     : <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Cadastre uma urna para gerar seu QR Code exclusivo.</p>;
 
   return <section aria-label="QR Code e acesso à votação" className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-3 sm:p-4">

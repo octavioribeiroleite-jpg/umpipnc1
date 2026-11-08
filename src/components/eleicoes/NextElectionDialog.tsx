@@ -1,3 +1,4 @@
+import { electionRoomRpc } from '@/lib/election-room-client';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -81,6 +82,10 @@ export function NextElectionDialog({ election, attendance }: {
         }
         return saveNextElection(supabase, plan.current!);
       });
+      const room = await electionRoomRpc('election_room_ensure', { p_election_id: election.id });
+      if (room.error || !room.data || typeof room.data !== 'object' || !('room_token' in room.data) || typeof room.data.room_token !== 'string') throw new Error('O rascunho foi preservado, mas não foi possível conferir a sala permanente. Tente continuar a criação.');
+      const attached = await electionRoomRpc('election_room_attach', { p_room_token: room.data.room_token, p_source_election_id: election.id, p_target_election_id: id });
+      if (attached.error) throw new Error('O rascunho foi preservado, mas ainda não foi vinculado à sala. Tente continuar a criação.');
       navigate(`/eleicoes/${id}`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Não foi possível concluir a nova votação. Tente novamente; o mesmo rascunho será utilizado.');

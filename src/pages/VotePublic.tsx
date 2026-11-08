@@ -9,19 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import voteConfirmSound from '@/assets/vote-confirm.mp3';
 import { isBallotConfirmed } from '@/components/eleicoes/ballot-response';
+import { getVoteDeviceId as getDeviceId } from '@/lib/browser-vote-device';
+import type { ElectionRoomSnapshot } from '@/lib/election-room';
 
 interface Election { id: string; name: string; position: string; status: string; voting_mode?: string; type?: string; seats_count?: number; max_choices_per_ballot?: number; current_round?: number; majority_rule?: string; round2_candidate_ids?: string[] | null; }
 interface Candidate { id: string; name: string; photo_url: string | null; photo_urls?: string[]; display_order: number; birth_date?: string | null; }
 
-function getDeviceId(): string {
-  const key = 'vote_device_id';
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(key, id);
-  }
-  return id;
-}
 
 function getPhotoUrls(c: Candidate): string[] {
   if (Array.isArray(c.photo_urls) && c.photo_urls.length > 0) return c.photo_urls;
@@ -255,11 +248,20 @@ function SuccessScreen({ autoReset, position, round }: { autoReset: boolean; pos
   );
 }
 
-export default function VotePublic() {
-  const { electionId } = useParams<{ electionId: string }>();
+export interface RoomVoteSession {
+  snapshot: ElectionRoomSnapshot;
+  roomToken: string;
+  deviceId: string;
+  onConfirmed: () => void;
+  urnaToken?: string;
+}
+
+export default function VotePublic({ roomSession }: { roomSession?: RoomVoteSession } = {}) {
+  const route = useParams<{ electionId: string }>();
+  const electionId = roomSession?.snapshot.activeElection?.id || route.electionId;
   const [searchParams] = useSearchParams();
-  const isUrnaMode = searchParams.get('mode') === 'urna';
-  const urnaToken = searchParams.get('token') || '';
+  const isUrnaMode = roomSession ? !!roomSession.urnaToken : searchParams.get('mode') === 'urna';
+  const urnaToken = roomSession?.urnaToken || searchParams.get('token') || '';
 
   const [election, setElection] = useState<Election | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -294,25 +296,27 @@ export default function VotePublic() {
   const loadedRoundRef = useRef<string | null>(null);
   const ballotRequestRef = useRef<string | null>(null);
   const readVotes = useCallback(async () => {
+    if (roomSession) return { data: [], error: null };
     const { data, error } = await supabase.functions.invoke('election-vote', { body: { action: 'history', election_id: electionId } });
     return { data: data?.votes, error: error || (!Array.isArray(data?.votes) ? new Error('Histórico indisponível') : null) };
-  }, [electionId]);
+  }, [electionId, roomSession]);
   const checkPreviousVote = useCallback(async (deviceId: string) => {
+    if (roomSession) return { count: roomSession.snapshot.already_voted ? 1 : 0, error: null };
     const { data, error } = await supabase.functions.invoke('election-vote', { body: { action: 'already', election_id: electionId, device_id: deviceId } });
     return { count: data?.count, error: error || (!Number.isInteger(data?.count) || data.count < 0 ? new Error('Conferência indisponível') : null) };
-  }, [electionId]);
+  }, [electionId, roomSession]);
   const isCamisa = election?.type === 'camisa';
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
   const [electedIds, setElectedIds] = useState<string[]>([]);
   const [allVotes, setAllVotes] = useState<any[]>([]);
   const remainingSeats = Math.max(1, seatsCount - electedIds.length);
-  const maxChoices = Math.max(
+  const maxChoices = roomSession ? Math.max(1, roomSession.snapshot.max_choices) : Math.max(
     1,
     Math.min(election?.max_choices_per_ballot || 1, remainingSeats),
   );
   const isMultiSeat = !isCamisa && maxChoices > 1;
-  const eligibleCandidates = isCamisa
+  const eligibleCandidates = roomSession ? candidates.filter(candidate => roomSession.snapshot.eligible_candidate_ids.includes(candidate.id)) : isCamisa
     ? candidates
     : currentRound <= 1
       ? candidates.filter((c) => !electedIds.includes(c.id))
@@ -349,7 +353,7 @@ export default function VotePublic() {
       // refresh. A different election still gets its initial loading screen.
       if (!loadedRoundRef.current?.startsWith(`${electionId}:`)) setLoading(true);
       try {
-        if (isUrnaMode) {
+        if (isUrnaMode && !roomSession) {
           if (!urnaToken) { if (active) setInvalidToken(true); return; }
           const { data: result, error: deviceError } = await supabase.functions.invoke('election-vote', { body: { action: 'device', election_id: electionId, token: urnaToken } });
           if (deviceError) {
@@ -363,7 +367,8 @@ export default function VotePublic() {
           setDeviceLabel(result.device.label || '');
           setUrnaAuthenticated(true);
         }
-        const [elRes, caRes] = await Promise.all([
+        if (roomSession?.urnaToken) { setUrnaAuthenticated(true); setInvalidToken(false); setDeviceLabel('Urna compartilhada do ensaio'); }
+        const [elRes, caRes] = roomSession ? [{ data: roomSession.snapshot.activeElection, error: null }, { data: roomSession.snapshot.candidates, error: null }] : await Promise.all([
           supabase.from('elections' as any).select('*').eq('id', electionId).single(),
           supabase.from('election_candidates' as any).select('*').eq('election_id', electionId).order('display_order' as any),
         ]);
@@ -397,7 +402,7 @@ export default function VotePublic() {
         setElection(elData);
         setCandidates(candidatesData);
         setAllVotes(voteRows);
-        setElectedIds(computeElectedIds(voteRows, elData.seats_count || 1, elData.current_round || 1, elData.majority_rule || 'simple', candidatesData));
+        setElectedIds(roomSession ? roomSession.snapshot.elected_ids : computeElectedIds(voteRows, elData.seats_count || 1, elData.current_round || 1, elData.majority_rule || 'simple', candidatesData));
         setAlreadyVoted(hasPreviousVote);
       } catch {
         if (active) setReadError('Não foi possível consultar a votação. Confira sua conexão e tente novamente.');
@@ -407,7 +412,7 @@ export default function VotePublic() {
     };
     void fetchData();
     return () => { active = false; };
-  }, [electionId, isUrnaMode, urnaToken, readRevision, readVotes, checkPreviousVote]);
+  }, [electionId, isUrnaMode, urnaToken, readRevision, readVotes, checkPreviousVote, roomSession]);
 
   // Mobile browsers may suspend Realtime while Chrome or another app is open.
   useEffect(() => {
@@ -433,7 +438,7 @@ export default function VotePublic() {
   // Realtime old records may contain only an ID, so never infer a new round
   // from payload.old or clear the browser's receipt from that payload.
   useEffect(() => {
-    if (!electionId) return;
+    if (!electionId || roomSession) return;
     const channel = supabase
       .channel(`vote-public-election-${electionId}`)
       .on('postgres_changes', {
@@ -441,7 +446,7 @@ export default function VotePublic() {
       }, () => setReadRevision(value => value + 1))
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
-  }, [electionId]);
+  }, [electionId, roomSession]);
 
   // (handleUrnaAuth removido — urna agora é ativada automaticamente pelo QR Code.)
 
@@ -583,13 +588,15 @@ export default function VotePublic() {
     const ballotId = ballotRequestRef.current ??= crypto.randomUUID();
     try {
       const submit = async () => {
-      const deviceId = isIndividual ? getDeviceId() : null;
+      const deviceId = isIndividual ? roomSession?.deviceId || getDeviceId() : null;
       if (isIndividual) {
         const { count, error } = await checkPreviousVote(deviceId!);
         if (error) throw error;
         if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); return; }
       }
-      const response = await supabase.functions.invoke('election-vote', { body: {
+      const response = roomSession?.snapshot.kind === 'demo' ? roomSession.urnaToken
+        ? await supabase.rpc('election_demo_urn_cast', { p_urn_token: roomSession.urnaToken, p_election_id: electionId, p_round: currentRound, p_ballot_id: ballotId, p_choices: choices.map(candidate => candidate.id), p_blanks: blanksToRecord })
+        : await supabase.rpc('election_demo_cast', { p_room_token: roomSession.roomToken, p_device_id: deviceId!, p_election_id: electionId, p_round: currentRound, p_ballot_id: ballotId, p_choices: choices.map(candidate => candidate.id), p_blanks: blanksToRecord }) : await supabase.functions.invoke('election-vote', { body: {
         action: 'cast', election_id: electionId, token: isUrnaMode ? urnaToken : null,
         device_id: deviceId, ballot_id: ballotId, round_number: currentRound,
         choices: choices.map(c => c.id), blanks: blanksToRecord,
@@ -606,6 +613,7 @@ export default function VotePublic() {
       setShowNullWarning(false);
       ballotRequestRef.current = null;
       setVoteSuccess(true);
+      roomSession?.onConfirmed();
       if (isSharedBehavior) {
         if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
         resetTimeoutRef.current = window.setTimeout(() => {

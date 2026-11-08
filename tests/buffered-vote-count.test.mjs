@@ -33,9 +33,7 @@ function harness(initialArgs) {
     },
   };
   const supabase = {
-    from() { return { select() { return this; }, eq(_key, electionId) {
-      return new Promise(resolve => reads.push({ electionId, resolve }));
-    } }; },
+    rpc(name, params) {return new Promise(resolve=>reads.push({name,electionId:params.p_election_id,round:args[1] || 1,resolve}));},
     channel() {
       const channel = { on(_type, _filter, callback) { this.callback = callback; return this; }, subscribe() { channels.add(this); return this; } };
       return channel;
@@ -62,57 +60,76 @@ function harness(initialArgs) {
   render();
   return { reads, timers, channels, render, settle, get value() { return output; },
     emit() { [...channels].forEach(channel => channel.callback()); },
-    async respond(i, count, error = null) { reads[i].resolve({ count, error }); return settle(); },
+    async respond(i, count, error = null) { reads[i].resolve({ data: count === null ? null : {election_id:reads[i].electionId,ballots:count,current_round:reads[i].round,total_present:150}, error }); return settle(); },
+    async respondRows(i, data, error = null) { reads[i].resolve({ data, error }); return settle(); },
     unmount() { mounted = false; slots.forEach(slot => slot?.cleanup?.()); },
   };
 }
 
-test('real buffered-count hook exposes initial failure, preserves confirmed counts on error and retains exact release rules', async () => {
-  const h = harness(['a', 20, false]);
+test('anonymous participation is exact at 149 of 150 and preserves the last verified count on error', async () => {
+  const h = harness(['a', 1]);
   assert.equal(h.value.hasSnapshot, false);
   await h.respond(0, null, { message: 'denied' });
   assert.equal(h.value.isError, true);
   assert.equal(h.value.hasSnapshot, false);
   h.value.retry(); await h.settle();
-  await h.respond(1, 7);
-  assert.equal(h.value.realCount, 7);
-  assert.equal(h.value.displayedCount, 5);
+  await h.respond(1, 149);
+  assert.equal(h.value.realCount, 149);
+  assert.equal(h.value.displayedCount, 149, 'participation must never be rounded down to 145');
+  assert.equal(h.reads[1].name, 'election_public_count', 'only request the public anonymous aggregate');
   h.emit(); await h.respond(2, null, { message: 'network' });
   assert.equal(h.value.isError, true);
-  assert.equal(h.value.realCount, 7);
-  assert.equal(h.value.displayedCount, 5);
-  h.emit(); await h.respond(3, 12);
-  assert.equal(h.value.displayedCount, 10);
-  h.render(['a', 20, true]); await h.settle();
-  assert.equal(h.value.displayedCount, 12, 'force releases the exact count');
-  h.render(['a', 20, false]); h.emit(); await h.respond(4, 8);
-  assert.equal(h.value.displayedCount, 12, 'an unforced lower batch does not retract a released count');
-  h.render(['a', 8, false]); await h.settle();
-  assert.equal(h.value.displayedCount, 8, 'capacity releases the exact count as before');
-  h.emit(); await h.respond(5, null);
+  assert.equal(h.value.displayedCount, 149);
+  h.emit(); await h.respond(3, 150);
+  assert.equal(h.value.displayedCount, 150);
+  h.emit(); await h.respond(4, null);
   assert.equal(h.value.isError, true, 'a missing count is unavailable, not a confirmed zero');
+  assert.equal(h.value.displayedCount, 150);
   h.unmount();
 });
 
-test('real hook isolates election switches, coalesces in-flight events and rejects responses after cleanup', async () => {
-  const h = harness(['a', 100, false]);
+test('real hook isolates election and round switches, coalesces in-flight events and rejects responses after cleanup', async () => {
+  const h = harness(['a', 1]);
   await h.respond(0, 25);
   assert.equal(h.value.displayedCount, 25);
-  h.emit(); // second A read stays pending
-  const switched = h.render(['b', 100, false]);
-  assert.equal(switched.hasSnapshot, false, 'the old election is hidden before effects commit');
+  h.emit();
+  const switched = h.render(['b', 1]);
+  assert.equal(switched.hasSnapshot, false);
   assert.equal(switched.displayedCount, 0);
-  h.emit(); h.emit(); h.emit(); // B must queue at most one reread
+  h.emit(); h.emit(); h.emit();
   await h.respond(1, 99);
   assert.equal(h.reads.length, 3, 'old completion must not release the new queue');
   assert.equal(h.value.hasSnapshot, false);
   await h.respond(2, 7);
-  assert.equal(h.value.displayedCount, 5, 'last released A batch cannot leak into B');
+  assert.equal(h.value.displayedCount, 7);
   assert.equal(h.reads.length, 4, 'three overlapping events become one reread');
   assert.equal(h.reads[3].electionId, 'b');
-  h.unmount();
-  await h.respond(3, 99);
-  assert.equal(h.value.displayedCount, 5);
+  const secondRound = h.render(['b', 2]);
+  assert.equal(secondRound.hasSnapshot, false, 'the first round count must disappear synchronously');
+  assert.equal(secondRound.displayedCount, 0);
+  await h.respond(3, 8);
+  assert.equal(h.value.hasSnapshot, false, 'a late first-round response cannot leak into the second round');
+  assert.equal(h.reads[4].round, 2);
+  await h.respond(4, 3);
+  assert.equal(h.value.displayedCount, 3);
+  h.emit();h.unmount();
+  await h.respond(5, 99);
+  assert.equal(h.value.displayedCount, 3);
   assert.equal(h.channels.size, 0);
   assert.equal(h.timers.size, 0);
+});
+
+test('public aggregate remains exact for multiple marks per ballot and rejects malformed or wrong-round responses',async()=>{
+ const h=harness(['multi',2]);
+ await h.respondRows(0,{election_id:'multi',ballots:400,current_round:2,total_present:400});
+ assert.equal(h.value.displayedCount,400,'aggregate counts ballots instead of candidate and blank marks');
+ h.emit();await h.respondRows(1,{election_id:'multi',ballots:1200,current_round:1,total_present:400});
+ assert.equal(h.value.isError,true);assert.equal(h.value.displayedCount,400,'a previous-round count cannot overwrite current participation');
+ h.emit();await h.respondRows(2,{election_id:'multi',ballots:-1,current_round:2,total_present:400});
+ assert.equal(h.value.isError,true);assert.equal(h.value.displayedCount,400);
+ h.emit();await h.respondRows(3,{election_id:'multi',ballots:1.5,current_round:2,total_present:400});
+ assert.equal(h.value.isError,true);
+ h.emit();await h.respondRows(4,{election_id:'multi',ballots:0,current_round:2,total_present:400});
+ assert.equal(h.value.isError,false);assert.equal(h.value.displayedCount,0);assert.equal(h.value.hasSnapshot,true);
+ h.unmount();
 });

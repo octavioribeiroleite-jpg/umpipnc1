@@ -33,6 +33,8 @@ import DiretoriaComunicados from "./pages/DiretoriaComunicados";
 import Eleicoes from "./pages/Eleicoes";
 import EleicaoDetalhe from "./pages/EleicaoDetalhe";
 import VotePublic from "./pages/VotePublic";
+import VoteRoomPublic from '@/pages/VoteRoomPublic';
+import ElectionDemoConsole from '@/pages/ElectionDemoConsole';
 import EleicaoApresentar from "./pages/EleicaoApresentar";
 import PortalIgreja from "./pages/PortalIgreja";
 import Dizimos from "./pages/Dizimos";
@@ -119,6 +121,8 @@ const App = () => (
                 <Route path="/membro" element={<MemberAccessUnavailable />} />
                 <Route path="/eleicoes" element={<Eleicoes />} />
                 <Route path="/eleicoes/:id" element={<EleicaoDetalhe />} />
+                <Route path="/vote/ensaio/:adminToken" element={<ElectionDemoConsole />} />
+                <Route path="/vote/sala/:roomToken" element={<VoteRoomPublic />} />
                 <Route path="/vote/:electionId" element={<VotePublic />} />
                 <Route path="/eleicao/:id/apresentar" element={<EleicaoApresentar />} />
                 <Route path="/dizimos" element={<Dizimos />} />
