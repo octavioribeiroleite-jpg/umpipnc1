@@ -74,7 +74,7 @@ test('diretoria creation binds the election to its society even with a foreign s
   let inserted;
   const noop = () => {};
   await handler('handleCreate', {
-    canCreate: true, name: 'Eleição fictícia', position: 'Cargo fictício', electionType: 'cargo', seatsCount: 1, maxChoices: 1,
+    template: 'single', creatingRef: { current: false }, canCreate: true, name: 'Eleição fictícia', position: 'Cargo fictício', electionType: 'cargo', seatsCount: 1, maxChoices: 1,
     churchWide: false, societyId: 'other-fixture', ownSocietyId: 'ump-fixture', user: { id: 'user-fixture' },
     setCreating: noop, setDialogOpen: noop, setName: noop, setPosition: noop, setSocietyId: noop,
     setElectionType: noop, setSeatsCount: noop, setMaxChoices: noop, fetchElections: noop, toast: noop,
@@ -111,7 +111,7 @@ test('creation rejects blank/invalid seats and persists a typed 2 as two numeric
     let inserted, notified = false;
     const noop = () => {};
     await handler('handleCreate', {
-      canCreate: true, name: 'Eleição fictícia', position: 'Cargo fictício', electionType: 'cargo', seatsCount, maxChoices: '1',
+      template: 'single', creatingRef: { current: false }, canCreate: true, name: 'Eleição fictícia', position: 'Cargo fictício', electionType: 'cargo', seatsCount, maxChoices: '1',
       churchWide: false, ownSocietyId: 'ump-fixture', user: { id: 'user-fixture' },
       setCreating: noop, setDialogOpen: noop, setName: noop, setPosition: noop, setSocietyId: noop,
       setElectionType: noop, setSeatsCount: noop, setMaxChoices: noop, fetchElections: noop, toast: () => { notified = true; },

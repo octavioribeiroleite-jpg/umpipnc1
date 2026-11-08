@@ -18,8 +18,8 @@ import { startSystemTheme } from "./lib/system-theme";
 
 const stopSystemTheme = startSystemTheme();
 
-// registerSW restores any update route during module initialization. The PWA
-// launch policy takes precedence before the app can render a private route.
+// Preserve restored rooms across app switches. AuthProvider validates access
+// before private content is mounted.
 const resumeHome = startAppResumeHome(window, navigator);
 const root = document.getElementById("root")!;
 const splash = document.getElementById("ipnc-opening");

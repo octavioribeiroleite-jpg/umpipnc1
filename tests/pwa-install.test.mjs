@@ -149,7 +149,7 @@ test('every installed display-mode transition closes invitations and teardown re
 test('manifest preserves identity and declares actual PNG dimensions', () => {
   const manifest = JSON.parse(readFileSync(new URL('../public/manifest.json', import.meta.url)));
   assert.equal(manifest.id, '/'); assert.equal(manifest.start_url, '/auth?home=1'); assert.equal(manifest.display, 'standalone');
-  assert.deepEqual(manifest.launch_handler, { client_mode: 'navigate-existing' });
+  assert.deepEqual(manifest.launch_handler, { client_mode: 'focus-existing' });
   assert.equal(manifest.scope, '/'); assert.equal(manifest.orientation, 'portrait-primary');
   assert.deepEqual(manifest.display_override, ['fullscreen', 'standalone']);
   assert.equal(manifest.theme_color, '#f7fbf8');

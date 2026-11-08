@@ -52,8 +52,10 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const [voteCount, setVoteCount] = useState(0);
   const [electedCount, setElectedCount] = useState(0);
   const [tieAlert, setTieAlert] = useState<string[]>([]);
-  const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'reset' | 'finish' | 'personal' | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const modeChangeRef = useRef(false);
+  const actionRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [selectedMode, setSelectedMode] = useState(votingMode || 'shared');
   const [qrExpanded, setQrExpanded] = useState(false);
@@ -75,7 +77,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const seatsCount = election?.seats_count || 1;
   const currentRound = election?.current_round || 1;
   const majorityRule = election?.majority_rule || 'simple';
-  const isMultiSeat = seatsCount > 1;
+  const isCargoElection = election?.type !== 'camisa';
 
   const showDevices = selectedMode === 'both' || selectedMode === 'shared';
   const needsDevices = showDevices && devices.length === 0;
@@ -352,16 +354,42 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   }, [diff, currentRound, electionId, majorityRule, seatsCount, electedCount]);
 
   const handleModeChange = async (mode: string) => {
-    setSelectedMode(mode);
-    await supabase.from('elections' as any).update({ voting_mode: mode } as any).eq('id', electionId);
+    if (modeChangeRef.current) return false;
+    modeChangeRef.current = true;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.from('elections').update({ voting_mode: mode })
+        .eq('id', electionId).eq('status', status).select('id').single();
+      if (error || !data) throw error || new Error('Votação indisponível');
+      setSelectedMode(mode);
+      onRefresh();
+      return true;
+    } catch {
+      toast({ title: 'Não foi possível alterar o modo de votação', description: 'Confira a conexão e tente novamente.', variant: 'destructive' });
+      return false;
+    } finally {
+      modeChangeRef.current = false;
+      setLoading(false);
+    }
+  };
+
+  const handleEnablePersonalVote = async () => {
+    if (await handleModeChange('both')) setConfirmAction(null);
   };
 
   const handleStartVoting = async () => {
+    if (actionRef.current || modeChangeRef.current || !canStart) return;
+    actionRef.current = true;
     setLoading(true);
-    await supabase.from('elections' as any).update({ status: 'open', voting_mode: selectedMode } as any).eq('id', electionId);
-    toast({ title: 'Votação iniciada!' });
-    setLoading(false);
-    onRefresh();
+    try {
+      const { data, error } = await supabase.from('elections').update({ status: 'open', voting_mode: selectedMode })
+        .eq('id', electionId).eq('status', 'draft').select('id').single();
+      if (error || !data) throw error || new Error('A votação foi alterada');
+      toast({ title: 'Votação iniciada!' });
+      onRefresh();
+    } catch {
+      toast({ title: 'Não foi possível iniciar a votação', description: 'Confira a conexão e tente novamente.', variant: 'destructive' });
+    } finally { actionRef.current = false; setLoading(false); }
   };
 
   const handleReset = async () => {
@@ -374,17 +402,26 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   };
 
   const handleFinish = async () => {
+    if (actionRef.current) return;
+    actionRef.current = true;
     setLoading(true);
-    await supabase.from('elections' as any).update({ status: 'finished' } as any).eq('id', electionId);
-    toast({ title: 'Votação concluída!' });
-    setLoading(false);
-    setConfirmAction(null);
-    onRefresh();
+    try {
+      const { data, error } = await supabase.from('elections').update({ status: 'finished' })
+        .eq('id', electionId).eq('status', 'open').eq('current_round', currentRound).select('id').single();
+      if (error || !data) throw error || new Error('A votação foi alterada');
+      toast({ title: 'Votação concluída!' });
+      setConfirmAction(null);
+      onRefresh();
+    } catch {
+      toast({ title: 'Não foi possível concluir a votação', description: 'Confira a conexão e tente novamente.', variant: 'destructive' });
+    } finally { actionRef.current = false; setLoading(false); }
   };
 
-
   const handleNextRound = async () => {
+    if (actionRef.current || loading || currentRound >= 3 || status !== 'open') return;
+    actionRef.current = true;
     setLoading(true);
+    try {
 
     // Ao avançar do 1º para o 2º escrutínio, calcular e salvar os top 2
     // candidatos não eleitos do 1º escrutínio para limitar quem aparece na urna.
@@ -394,10 +431,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     };
 
     if (currentRound === 1) {
-      const { data: voteRows } = await supabase
+      const { data: voteRows, error: votesError } = await supabase
         .from('election_votes' as any)
         .select('candidate_id, ballot_id, is_blank, round_number')
         .eq('election_id', electionId);
+      if (votesError || !voteRows) throw votesError || new Error('Votos indisponíveis');
       const votes = (voteRows as any[]) || [];
       const round1Votes = votes.filter((v) => (v.round_number || 1) === 1);
       const totalBallots1 = new Set(round1Votes.map((v) => v.ballot_id)).size;
@@ -430,19 +468,23 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       // Top N+1 (= número de vagas restantes + 1; mínimo 2) não eleitos
       const vagasRestantes = Math.max(0, seatsCount - electedR1.size);
       const topCount = Math.max(2, vagasRestantes + 1);
-      const top = Object.entries(counts)
-        .filter(([id]) => !electedR1.has(id))
-        .sort((a, b) => (b[1] as number) - (a[1] as number))
-        .slice(0, topCount)
-        .map(([id]) => id);
+      const remaining = candidates.filter(candidate => !electedR1.has(candidate.id))
+        .map(candidate => [candidate.id, counts[candidate.id] || 0] as const)
+        .sort((a, b) => b[1] - a[1]);
+      const cutoff = remaining[topCount - 1]?.[1] ?? 0;
+      const top = remaining.filter(([, count], index) => index < topCount || count === cutoff).map(([id]) => id);
 
       updatePayload.round2_candidate_ids = top;
     }
 
-    await supabase.from('elections' as any).update(updatePayload as any).eq('id', electionId);
+    const { data, error } = await supabase.from('elections').update(updatePayload)
+      .eq('id', electionId).eq('status', 'open').eq('current_round', currentRound).select('id').single();
+    if (error || !data) throw error || new Error('A votação foi alterada');
     toast({ title: `${currentRound + 1}º escrutínio iniciado` });
-    setLoading(false);
     onRefresh();
+    } catch {
+      toast({ title: 'Não foi possível iniciar o próximo escrutínio', description: 'Confira a conexão e tente novamente.', variant: 'destructive' });
+    } finally { actionRef.current = false; setLoading(false); }
   };
 
   const copyLink = () => {
@@ -486,6 +528,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           <p className="text-xs font-medium">Modo de votação:</p>
           <div className="grid grid-cols-3 gap-2">
             <button
+              disabled={loading}
               onClick={() => handleModeChange('shared')}
               className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-xs ${
                 selectedMode === 'shared'
@@ -498,6 +541,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               <span className="text-xs text-muted-foreground text-center">Um dispositivo</span>
             </button>
             <button
+              disabled={loading}
               onClick={() => handleModeChange('individual')}
               className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-xs ${
                 selectedMode === 'individual'
@@ -510,6 +554,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               <span className="text-xs text-muted-foreground text-center">Cada um no seu</span>
             </button>
             <button
+              disabled={loading}
               onClick={() => handleModeChange('both')}
               className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-xs ${
                 selectedMode === 'both'
@@ -554,13 +599,13 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         {/* Mode label */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            {votingMode === 'individual' ? (
+            {selectedMode === 'individual' ? (
               <Smartphone className="h-4 w-4 text-muted-foreground shrink-0" />
             ) : (
               <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
             )}
             <span className="text-sm font-medium text-muted-foreground truncate">
-              Modo: {votingMode === 'individual' ? 'Voto Individual' : votingMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
+              Modo: {selectedMode === 'individual' ? 'Voto Individual' : selectedMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
             </span>
           </div>
           <Button
@@ -572,7 +617,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <Pencil className="h-3 w-3 mr-1" /> Editar configuração
           </Button>
         </div>
-        {isMultiSeat && (
+        {isCargoElection && (
           <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm">
             <p className="font-semibold text-foreground">{currentRound}º escrutínio</p>
             {voteCount >= totalPresent ? (
@@ -603,7 +648,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         )}
 
         {/* FASE: APURANDO — mostra resultado parcial */}
-        {voteCount >= totalPresent && phase === 'apurando' && partialRows.length > 0 && (
+        {voteCount >= totalPresent && phase === 'apurando' && (
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -721,6 +766,17 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             </p>
           </div>
         )}
+
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+          <p className="text-sm font-semibold">Seu voto como participante</p>
+          <p className="text-xs text-muted-foreground">Um voto por navegador neste escrutínio. Você pode copiar o link e abri-lo no Chrome; a sala permanece aberta aqui.</p>
+          {selectedMode === 'individual' || selectedMode === 'both' ? (
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm"><a href={voteUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4 mr-2" />Dar meu voto</a></Button>
+              <Button size="sm" variant="outline" onClick={copyLink}><Copy className="h-4 w-4 mr-2" />Copiar link de voto</Button>
+            </div>
+          ) : <Button size="sm" disabled={loading} onClick={() => setConfirmAction('personal')}>Habilitar meu voto e manter as urnas</Button>}
+        </div>
 
         {/* Progress */}
         <div className="space-y-1">
@@ -842,20 +898,14 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Button>
 
-          {phase === 'resultado' && isMultiSeat && electedCount < seatsCount && currentRound < 3 && (
-            tieAlert.length > 0 ? (
-              <Button variant="outline" disabled className="text-warning border-warning/40">
-                ⚠️ Empate — resolva antes de avançar
-              </Button>
-            ) : (
-              <Button onClick={handleNextRound} disabled={loading} className="bg-primary">
-                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {currentRound + 1}º escrutínio →
-              </Button>
-            )
+          {phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound < 3 && (
+            <Button onClick={handleNextRound} disabled={loading} className="bg-primary">
+              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {currentRound + 1}º escrutínio →
+            </Button>
           )}
 
-          {phase === 'resultado' && isMultiSeat && electedCount < seatsCount && currentRound >= 3 && (
+          {phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound >= 3 && (
             <div className="rounded-lg border border-warning/40 bg-warning/10 p-3">
               <p className="text-xs font-semibold text-warning mb-1">
                 ⚠️ Máximo de escrutínios atingido
@@ -906,12 +956,12 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         )}
 
         {/* QR Code & Link */}
-        {votingMode === 'both' ? (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="celular" className="text-xs gap-1">
+        {selectedMode !== 'individual' ? (
+          <Tabs value={selectedMode === 'shared' ? 'urna' : activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className={`w-full grid ${selectedMode === 'both' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {selectedMode === 'both' && <TabsTrigger value="celular" className="text-xs gap-1">
                 <Smartphone className="h-3.5 w-3.5" /> Celular
-              </TabsTrigger>
+              </TabsTrigger>}
               <TabsTrigger value="urna" className="text-xs gap-1">
                 <Monitor className="h-3.5 w-3.5" /> Urna Fixa ({devices.length})
               </TabsTrigger>
@@ -994,7 +1044,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             </div>
             <div className="flex-1 min-w-0 space-y-1.5">
               <p className="text-xs font-medium flex items-center gap-1">
-                <LinkIcon className="h-3 w-3" /> Link da Urna
+                <LinkIcon className="h-3 w-3" /> Link de voto individual
               </p>
               <code className="text-xs bg-muted p-1.5 rounded block break-all leading-tight">{voteUrl}</code>
               <div className="flex flex-wrap gap-1.5">
@@ -1043,17 +1093,18 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmAction === 'reset' ? 'Reiniciar votação?' : 'Concluir votação?'}
+              {confirmAction === 'reset' ? 'Reiniciar votação?' : confirmAction === 'personal' ? 'Habilitar voto individual?' : 'Concluir votação?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmAction === 'reset'
                 ? 'Todos os votos serão apagados. Presença e candidatos serão mantidos.'
+                : confirmAction === 'personal' ? 'O modo passa a Urna + Celular. As urnas continuam disponíveis e o link individual permite um voto por navegador em cada escrutínio. A chamada e o total de presentes permanecem os mesmos.'
                 : 'A votação será encerrada e o resultado será exibido.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmAction === 'reset' ? handleReset : handleFinish}>
+            <AlertDialogAction disabled={loading} onClick={event => { if (confirmAction === 'personal') { event.preventDefault(); void handleEnablePersonalVote(); } else { void (confirmAction === 'reset' ? handleReset() : handleFinish()); } }}>
               {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
               Confirmar
             </AlertDialogAction>

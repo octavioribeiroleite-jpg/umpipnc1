@@ -56,7 +56,7 @@ data.membership_payments = [{...base,id:'payment',member_id:'member',amount:25,s
 data.settings = Object.entries({pix_key:'chave-ficticia@example.test',pix_key_type:'email',pix_beneficiary:'IGREJA FICTÍCIA — PRÉVIA',pix_instructions:displayText}).map(([key,value])=>({key,value}));
 data.aniversariantes[0] = {...data.aniversariantes[0],dia:today.getDate(),mes:today.getMonth()+1};
 const electionState = fixtureParams.get('election') || (location.pathname.includes('/vote/')?'open':'draft');
-data.elections[0] = {...data.elections[0],status:electionState,total_present:20,show_result:electionState==='finished'&&fixtureParams.get('result')!=='hidden',voting_mode:fixtureParams.get('mode')==='urna'?'shared':'both',type:fixtureParams.get('kind')==='camisa'?'camisa':'cargo'};
+data.elections[0] = {...data.elections[0],status:electionState,total_present:20,show_result:electionState==='finished'&&fixtureParams.get('result')!=='hidden',voting_mode:fixtureParams.get('voting_mode') || (fixtureParams.get('mode')==='urna'?'shared':'both'),type:fixtureParams.get('kind')==='camisa'?'camisa':'cargo'};
 if(electionState==='missing')data.elections=[];
 const portrait='/tests/fixtures/diretoria/portrait.svg';
 data.election_candidates = Array.from({length:fixtureState==='long'?18:3},(_,index)=>({...data.election_candidates[0],id:`candidate-${index+1}`,name:`Candidato Fictício ${index+1}${fixtureState==='long'?' — Nome muito extenso para verificar quebra em várias linhas':''}`,photo_url:portrait,photo_urls:Array.from({length:fixtureState==='long'?8:2},(_,photo)=>`${portrait}?candidate=${index}&photo=${photo}`),display_order:index}));
@@ -88,7 +88,11 @@ function query(table:string){
   const count=rows.length;
   rows=rows.slice(offset,offset+limit);
   if(operation!=='select'){
-   if(operation==='insert'||operation==='upsert'){rows=(Array.isArray(payload)?payload:[payload]).map((p:any)=>({...base,id:crypto.randomUUID(),...p}));data[table]=[...(data[table]||[]),...rows];}
+   if(operation==='insert'||operation==='upsert'){
+    rows=(Array.isArray(payload)?payload:[payload]).map((p:any)=>({...base,id:crypto.randomUUID(),...p}));
+    data[table] ||= [];
+    for(const row of rows){const existing=data[table].find(entry=>entry.id===row.id);if(existing&&operation==='upsert')Object.assign(existing,row);else data[table].push(row);}
+   }
    if(operation==='update')rows.forEach(r=>Object.assign(r,payload));
    if(operation==='delete')data[table]=(data[table]||[]).filter(r=>!rows.includes(r));
   }
@@ -115,7 +119,7 @@ async function invoke(name:string,options:{body?:Record<string,any>}={}){
  if(name==='election-vote'){
   if(fixtureParams.get('read_error')===body.action && !failedVoteReads.has(body.action)){failedVoteReads.add(body.action);return failure();}
   if(body.action==='history')return {data:{votes:data.election_votes},error:null};
-  if(body.action==='already')return {data:{count:fixtureParams.get('voted')==='1'?1:ballots.size},error:null};
+  if(body.action==='already')return {data:{count:fixtureParams.get('voted')==='1'?1:data.election_votes.filter(vote=>vote.election_id===body.election_id&&vote.device_id===body.device_id&&vote.round_number===(data.elections.find(election=>election.id===body.election_id)?.current_round||1)).length},error:null};
   if(body.action==='device')return {data:{device:body.token==='fixture-urna'?{id:'device',label:'Urna FICTÍCIA'}:null},error:null};
   if(body.action==='cast'){
    fixtureVoteCalls.push({ballot_id:body.ballot_id,round_number:body.round_number,choices:[...(body.choices||[])]});
@@ -124,7 +128,7 @@ async function invoke(name:string,options:{body?:Record<string,any>}={}){
    if(fixtureVoteCalls.length===1 && simulatedError==='network')return failure();
    if(fixtureVoteCalls.length===1 && simulatedError==='throw')throw new Error('Conexão FICTÍCIA interrompida');
    // Memory only, enough for the success screen. Does not emulate database rules.
-   if(!ballots.has(body.ballot_id)){ballots.add(body.ballot_id);for(const candidate_id of body.choices||[])data.election_votes.push({id:crypto.randomUUID(),election_id:body.election_id,candidate_id,round_number:body.round_number});}
+   if(!ballots.has(body.ballot_id)){ballots.add(body.ballot_id);for(const candidate_id of body.choices||[])data.election_votes.push({id:crypto.randomUUID(),election_id:body.election_id,candidate_id,round_number:body.round_number,device_id:body.device_id||null,ballot_id:body.ballot_id});}
    return {data:{success:true},error:null};
   }
  }

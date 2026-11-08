@@ -1,6 +1,6 @@
 import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { QueryErrorState } from '@/components/ui/query-error-state';
-import { useCallback, useId, useState, useEffect } from 'react';
+import { useCallback, useId, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -25,6 +25,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { createUmpSequence, UMP_POSITIONS, type ElectionSequence } from '@/lib/election-sequence';
+import { saveNextElection } from '@/lib/next-election';
 import { ElectionCard } from '@/components/eleicoes/ElectionCard';
 
 interface Election {
@@ -49,6 +51,9 @@ export default function Eleicoes() {
   const formId = useId();
   const [elections, setElections] = useState<Election[]>([]);
   const [societies, setSocieties] = useState<Society[]>([]);
+  const [template, setTemplate] = useState<'single' | 'ump'>('single');
+  const sequenceRef = useRef<ElectionSequence | null>(null);
+  const creatingRef = useRef(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -108,7 +113,7 @@ export default function Eleicoes() {
   useEffect(() => { void fetchElections(); }, [fetchElections]);
 
   const handleCreate = async () => {
-    if (!canCreate) return;
+    if (!canCreate || creatingRef.current) return;
     if (!name.trim() || !position.trim()) {
       toast({ title: 'Preencha nome e cargo', variant: 'destructive' });
       return;
@@ -124,6 +129,23 @@ export default function Eleicoes() {
       : ownSocietyId;
     const normalizedSeats = electionType === 'cargo' ? seats : 1;
     const normalizedChoices = electionType === 'cargo' ? normalizedSeats : 1;
+    if (template === 'ump') {
+      creatingRef.current = true;
+      try {
+        sequenceRef.current ??= createUmpSequence(user!.id, name, normalizedSocietyId || null);
+        const sequence = sequenceRef.current;
+        const id = await saveNextElection(supabase, { election: {
+          id: sequence.electionIds[0], name: sequence.name, position: UMP_POSITIONS[0], society_id: sequence.societyId,
+          created_by: user!.id, type: 'cargo', voting_mode: 'both', status: 'draft', current_round: 1,
+          seats_count: 1, max_choices_per_ballot: 1, majority_rule: 'absolute_50', total_present: 0, show_result: false,
+        }, attendance: [] });
+        setDialogOpen(false);
+        navigate(`/eleicoes/${id}`);
+      } catch (cause) {
+        toast({ title: 'Não foi possível criar o roteiro', description: cause instanceof Error ? cause.message : 'Tente novamente para continuar a mesma criação.', variant: 'destructive' });
+      } finally { creatingRef.current = false; setCreating(false); }
+      return;
+    }
     const { error } = await supabase.from('elections' as any).insert({
       name: name.trim(),
       position: position.trim(),
@@ -201,15 +223,30 @@ export default function Eleicoes() {
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      <Dialog open={dialogOpen} onOpenChange={open => { if (!creating) setDialogOpen(open); }}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{electionType === 'camisa' ? 'Nova Votação de Camisa' : 'Nova Eleição'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
+              <Label htmlFor={`${formId}-template`}>Formato</Label>
+              <Select disabled={creating || !!sequenceRef.current} value={template} onValueChange={value => {
+                setTemplate(value as 'single' | 'ump');
+                if (value === 'ump') { setElectionType('cargo'); setName('Diretoria UMP'); setPosition(UMP_POSITIONS[0]); setSeatsCount('1'); }
+                else { setName(''); setPosition(''); }
+              }}>
+                <SelectTrigger id={`${formId}-template`}><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="single">Votação avulsa</SelectItem><SelectItem value="ump">Diretoria UMP — 5 cargos</SelectItem></SelectContent>
+              </Select>
+            </div>
+            {template === 'ump' && <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2 text-sm">
+              <p>{UMP_POSITIONS.join(' → ')}</p>
+              <p className="text-xs text-muted-foreground">Confirme a chamada no primeiro cargo e reaproveite as presenças nos seguintes. Cada cargo tem candidatos e resultado próprios. O roteiro fica salvo neste navegador; as votações ficam na lista da sociedade.</p>
+            </div>}
+            <div>
               <Label htmlFor={`${formId}-type`}>Tipo</Label>
-              <Select value={electionType} onValueChange={(v) => setElectionType(v as 'cargo' | 'camisa')}>
+              <Select disabled={creating || template === 'ump' || !!sequenceRef.current} value={electionType} onValueChange={(v) => setElectionType(v as 'cargo' | 'camisa')}>
                 <SelectTrigger id={`${formId}-type`}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cargo">Eleição de Cargo</SelectItem>
@@ -220,18 +257,19 @@ export default function Eleicoes() {
             <div>
               <Label htmlFor={`${formId}-name`}>{electionType === 'camisa' ? 'Nome da Votação' : 'Nome da Eleição'}</Label>
               <Input
-                id={`${formId}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Camisa UMP 2025' : 'Ex: Eleição Diretoria 2025'} />
+                disabled={creating || !!sequenceRef.current} id={`${formId}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Camisa UMP 2025' : 'Ex: Eleição Diretoria 2025'} />
             </div>
             <div>
               <Label htmlFor={`${formId}-position`}>{electionType === 'camisa' ? 'Descrição' : 'Cargo'}</Label>
               <Input
-                id={`${formId}-position`} value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
+                disabled={creating || template === 'ump' || !!sequenceRef.current} id={`${formId}-position`} value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
             </div>
             {electionType === 'cargo' && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor={`${formId}-seats`}>Quantidade de vagas</Label>
                   <Input
+                    disabled={creating || template === 'ump' || !!sequenceRef.current}
                     id={`${formId}-seats`}
                     type="number"
                     inputMode="numeric"
@@ -278,7 +316,7 @@ export default function Eleicoes() {
             )}
             {churchWide ? <div>
               <Label htmlFor={`${formId}-society`}>Sociedade {electionType === 'cargo' ? '(opcional)' : ''}</Label>
-              <Select value={societyId} onValueChange={setSocietyId}>
+              <Select disabled={creating || !!sequenceRef.current} value={societyId} onValueChange={setSocietyId}>
                 <SelectTrigger id={`${formId}-society`}><SelectValue placeholder="Geral (toda a igreja)" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="general">Geral (toda a igreja)</SelectItem>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { withBrowserBallotLock } from '@/lib/browser-ballot-lock';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, Loader2, UserCheck, Vote, XCircle, ShieldCheck, Monitor, LogIn, ChevronLeft, ChevronRight, Circle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -287,7 +288,9 @@ export default function VotePublic() {
   const audioReadyRef = useRef<Promise<AudioBuffer | null> | null>(null);
   const resetTimeoutRef = useRef<number | null>(null);
   const isSharedBehavior = isUrnaMode && urnaAuthenticated;
-  const isIndividual = !isSharedBehavior && (election?.voting_mode === 'individual' || election?.voting_mode === 'both');
+  // Repeated votes are reserved for a validated, token-bearing shared urn.
+  const isIndividual = !isUrnaMode;
+  const loadedRoundRef = useRef<string | null>(null);
   const ballotRequestRef = useRef<string | null>(null);
   const readVotes = useCallback(async () => {
     const { data, error } = await supabase.functions.invoke('election-vote', { body: { action: 'history', election_id: electionId } });
@@ -374,6 +377,20 @@ export default function VotePublic() {
           hasPreviousVote = count > 0;
         }
         if (!active) return;
+        const loadedRound = `${electionId}:${elData.current_round || 1}`;
+        if (loadedRoundRef.current !== null && loadedRoundRef.current !== loadedRound) {
+          if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
+          setVoteSuccess(false);
+          setReadyToVote(false);
+          setSelectedCandidates([]);
+          setConfirmCandidate(null);
+          setConfirmBlank(false);
+          setConfirmSelection(false);
+          setShowNullWarning(false);
+          setVoteError('');
+          ballotRequestRef.current = null;
+        }
+        loadedRoundRef.current = loadedRound;
         setElection(elData);
         setCandidates(candidatesData);
         setAllVotes(voteRows);
@@ -389,83 +406,39 @@ export default function VotePublic() {
     return () => { active = false; };
   }, [electionId, isUrnaMode, urnaToken, readRevision, readVotes, checkPreviousVote]);
 
-  // Realtime: sincroniza urna com ações do admin (avanço de escrutínio / encerramento)
+  // Mobile browsers may suspend Realtime while Chrome or another app is open.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') setReadRevision(value => value + 1);
+    };
+    const otherTabVoted = (event: StorageEvent) => {
+      if (isIndividual && event.key === `voted_${electionId}_${currentRound}` && event.newValue === 'true') {
+        setAlreadyVoted(true);
+      }
+    };
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('pageshow', refresh);
+    window.addEventListener('storage', otherTabVoted);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('pageshow', refresh);
+      window.removeEventListener('storage', otherTabVoted);
+    };
+  }, [electionId, currentRound, isIndividual]);
+
+  // All live updates use the same validated snapshot as foreground recovery.
+  // Realtime old records may contain only an ID, so never infer a new round
+  // from payload.old or clear the browser's receipt from that payload.
   useEffect(() => {
     if (!electionId) return;
-    let active = true;
-
     const channel = supabase
       .channel(`vote-public-election-${electionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'elections',
-          filter: `id=eq.${electionId}`,
-        },
-        async (payload: any) => {
-          const updated = payload.new;
-          const previous = payload.old;
-          if (!active || !updated || updated.id !== electionId) return;
-
-          // Eleição encerrada → mostra tela de encerramento
-          if (updated.status === 'finished' && previous.status !== 'finished') {
-            setElection(updated);
-            return;
-          }
-
-          // Avançou para novo escrutínio → reseta urna e recarrega dados
-          if (updated.current_round !== previous.current_round) {
-            setElection(updated);
-
-            setLoading(true);
-            let votesData: any[];
-            try {
-              const { data: voteRows, error: historyError } = await readVotes();
-              if (historyError) throw historyError;
-              if (!active) return;
-              votesData = voteRows;
-              setReadError('');
-            } catch {
-              if (active) setReadError('Não foi possível consultar o novo escrutínio. Tente novamente antes de votar.');
-              return;
-            } finally { if (active) setLoading(false); }
-            if (!active) return;
-            setAllVotes(votesData);
-            setElectedIds(
-              computeElectedIds(
-                votesData,
-                updated.seats_count || 1,
-                updated.current_round || 1,
-                updated.majority_rule || 'simple',
-                candidates,
-              ),
-            );
-
-            setVoteSuccess(false);
-            setReadyToVote(false);
-            setSelectedCandidates([]);
-            setConfirmCandidate(null);
-            setConfirmBlank(false);
-            setConfirmSelection(false);
-            setShowNullWarning(false);
-            setAlreadyVoted(false);
-            setVoteError('');
-            ballotRequestRef.current = null;
-            return;
-          }
-
-          setElection(updated);
-        },
-      )
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'elections', filter: `id=eq.${electionId}`,
+      }, () => setReadRevision(value => value + 1))
       .subscribe();
-
-    return () => {
-      active = false;
-      supabase.removeChannel(channel);
-    };
-  }, [electionId, candidates, readVotes]);
+    return () => { void supabase.removeChannel(channel); };
+  }, [electionId]);
 
   // (handleUrnaAuth removido — urna agora é ativada automaticamente pelo QR Code.)
 
@@ -599,28 +572,30 @@ export default function VotePublic() {
   const handleVote = async () => {
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
     const blanksToRecord = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? autoBlankSlots : 0);
-    if (voteInFlightRef.current || (!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
+    if (readError || loading || (isIndividual && election?.voting_mode !== 'individual' && election?.voting_mode !== 'both') || voteInFlightRef.current || (!confirmBlank && choices.length === 0 && blanksToRecord === 0) || !electionId) return;
     voteInFlightRef.current = true;
     const audioWarmup = ensureAudioContext();
     setVoting(true);
     setVoteError('');
     const ballotId = ballotRequestRef.current ??= crypto.randomUUID();
     try {
+      const submit = async () => {
+      const deviceId = isIndividual ? getDeviceId() : null;
       if (isIndividual) {
-        const deviceId = getDeviceId();
-        const { count, error } = await checkPreviousVote(deviceId);
+        const { count, error } = await checkPreviousVote(deviceId!);
         if (error) throw error;
         if (count && count > 0) { setAlreadyVoted(true); setConfirmCandidate(null); setConfirmBlank(false); return; }
       }
       const response = await supabase.functions.invoke('election-vote', { body: {
         action: 'cast', election_id: electionId, token: isUrnaMode ? urnaToken : null,
-        device_id: isIndividual ? getDeviceId() : null, ballot_id: ballotId, round_number: currentRound,
+        device_id: deviceId, ballot_id: ballotId, round_number: currentRound,
         choices: choices.map(c => c.id), blanks: blanksToRecord,
       } });
       if (!isBallotConfirmed(response)) throw new Error('Voto não confirmado');
       if (isIndividual) localStorage.setItem(`voted_${electionId}_${currentRound}`, 'true');
       await audioWarmup;
       await playUrnaSound();
+      if (loadedRoundRef.current !== `${electionId}:${currentRound}`) return;
       setConfirmCandidate(null);
       setSelectedCandidates([]);
       setConfirmBlank(false);
@@ -628,13 +603,19 @@ export default function VotePublic() {
       setShowNullWarning(false);
       ballotRequestRef.current = null;
       setVoteSuccess(true);
-      if (isSharedBehavior || (!isIndividual && !isUrnaMode)) {
+      if (isSharedBehavior) {
         if (resetTimeoutRef.current) window.clearTimeout(resetTimeoutRef.current);
         resetTimeoutRef.current = window.setTimeout(() => {
           setVoteSuccess(false);
           setReadyToVote(false);
           setConfirmCandidate(null);
         }, 1500);
+      }
+      };
+      if (isIndividual) {
+        await withBrowserBallotLock(`ipnc-ballot:${electionId}:${currentRound}`, submit);
+      } else {
+        await submit();
       }
     } catch {
       setVoteError('Não foi possível confirmar o voto. Tente novamente. Sua seleção foi mantida.');
@@ -684,6 +665,15 @@ export default function VotePublic() {
     );
   }
 
+  if (isIndividual && election.voting_mode !== 'individual' && election.voting_mode !== 'both') {
+    return <main className="min-h-dvh flex flex-col items-center justify-center bg-background p-6 text-center gap-4">
+      <Monitor className="h-16 w-16 text-muted-foreground" />
+      <h1 className="text-2xl font-bold">Votação por urna fixa</h1>
+      <p className="max-w-md text-muted-foreground">Use o QR Code da urna cadastrada ou peça ao organizador para habilitar o voto individual.</p>
+      <Button variant="outline" onClick={() => setReadRevision(value => value + 1)}>Verificar novamente</Button>
+    </main>;
+  }
+
   if (!isCamisa && currentRound > MAX_ROUNDS) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center bg-background p-6 text-center">
@@ -704,7 +694,7 @@ export default function VotePublic() {
         <div className="animate-fade-up">
           <ShieldCheck className="h-24 w-24 text-primary mx-auto mb-6" />
           <h1 className="text-3xl font-bold mb-2">Você já votou</h1>
-          <p className="text-muted-foreground text-lg">Seu voto já foi computado nesta eleição.</p>
+          <p className="text-muted-foreground text-lg">Este navegador já registrou um voto neste escrutínio.</p>
         </div>
       </div>
     );

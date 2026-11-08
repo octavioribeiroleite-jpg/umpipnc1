@@ -15,6 +15,9 @@ import { ElectionStepper, StepDef } from '@/components/eleicoes/ElectionStepper'
 import { ElectionStepCard } from '@/components/eleicoes/ElectionStepCard';
 import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useSnapshotRead } from '@/hooks/useSnapshotRead';
+import { useAuth } from '@/contexts/AuthContext';
+import { findElectionSequence, UMP_POSITIONS } from '@/lib/election-sequence';
+import { NextElectionDialog } from '@/components/eleicoes/NextElectionDialog';
 
 interface Election {
   id: string;
@@ -36,6 +39,7 @@ interface Candidate { id: string; name: string; photo_url: string | null; displa
 interface Device { id: string; label: string; token: string; activated: boolean; }
 
 export default function EleicaoDetalhe() {
+  const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -90,6 +94,8 @@ export default function EleicaoDetalhe() {
       supabase.removeChannel(channel);
     };
   }, [id]);
+
+  const sequenceStep = user && id ? findElectionSequence(user.id, id) : null;
 
   const votingMode = (election as any)?.voting_mode || 'shared';
   const showDevices = votingMode === 'both' || votingMode === 'shared';
@@ -283,8 +289,17 @@ export default function EleicaoDetalhe() {
       )}
 
       {/* Result */}
+      {sequenceStep && <section className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+        <p className="font-semibold">Diretoria UMP · Cargo {sequenceStep.index + 1} de {UMP_POSITIONS.length}</p>
+        <ol className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          {UMP_POSITIONS.map((position, index) => <li key={position} className={index === sequenceStep.index ? 'font-bold text-primary' : 'text-muted-foreground'}>{index + 1}. {position}</li>)}
+        </ol>
+        <p className="text-xs text-muted-foreground">Roteiro salvo neste navegador. Cada resultado fica preservado na lista de eleições.</p>
+      </section>}
+
       {election.status === 'finished' && (
         <div className="rounded-2xl bg-card border border-border shadow-sm p-4">
+          <div className="mb-4"><NextElectionDialog key={election.id} election={election} attendance={attendance} /></div>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-warning" />
