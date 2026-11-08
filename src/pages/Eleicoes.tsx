@@ -3,20 +3,17 @@ import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useCallback, useId, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Vote, Loader2, Shirt, ListChecks, ArrowRight } from 'lucide-react';
-import { FAB } from '@/components/ui/fab';
+import { Plus, Vote, Loader2, Shirt, ArrowRight, UsersRound, Search, ClipboardCheck, ChartNoAxesCombined } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -64,6 +61,8 @@ export default function Eleicoes() {
   const [maxChoices, setMaxChoices] = useState('1');
   const [creating, setCreating] = useState(false);
   const [activeTab, setActiveTab] = useState<'cargo' | 'camisa'>('cargo');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
   const { user, isAdmin, isManagement, isPastor, rolesLoaded, profile } = useAuth();
   const churchWide = isAdmin || isPastor;
@@ -180,71 +179,92 @@ export default function Eleicoes() {
     setDeleteId(null);
   };
 
-  const filtered = elections.filter(e => (e.type || 'cargo') === activeTab);
+  const categoryElections = elections.filter(e => (e.type || 'cargo') === activeTab);
+  const normalizedSearch = search.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+  const filtered = categoryElections.filter(e => (statusFilter === 'all' || e.status === statusFilter)
+    && `${e.name} ${e.position}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').includes(normalizedSearch));
+  const canPrepare = canCreate && hasSnapshot && !readError;
+  const chooseFormat = (format: 'single' | 'ump') => {
+    if (creating || sequenceRef.current) return;
+    setTemplate(format);
+    if (format === 'ump') { setElectionType('cargo'); setName('Diretoria UMP'); setPosition(UMP_POSITIONS[0]); setSeatsCount('1'); }
+    else { setName(''); setPosition(''); setElectionType(activeTab); }
+  };
+  const openCreate = (format?: 'single' | 'ump') => {
+    if (!canPrepare) return;
+    const desiredType = format === 'ump' ? 'cargo' : activeTab;
+    if (!sequenceRef.current && ((format && format !== template) || (format !== 'ump' && electionType !== desiredType))) chooseFormat(format || 'single');
+    setDialogOpen(true);
+  };
 
   return (
     <AppLayout width="wide">
-      <PageHeader
-        title="Eleições"
-        description="Prepare a chamada, conduza os votos e acompanhe os resultados."
-        action={
-          <Button disabled={!canCreate || !hasSnapshot || readError} onClick={() => setDialogOpen(true)} className="hidden min-h-12 rounded-xl md:inline-flex">
-            <Plus className="h-4 w-4 mr-2" /> Nova votação
-          </Button>
-        }
-      />
+      <div className="mx-auto w-full max-w-6xl space-y-5 pb-2">
+      <header className="flex min-w-0 flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary"><Vote className="h-6 w-6" /></span>
+          <div className="min-w-0"><p className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary">Mesa de votação</p><h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">Eleições</h1><p className="mt-1 text-sm leading-relaxed text-muted-foreground">Da chamada ao resultado, uma etapa de cada vez.</p></div>
+        </div>
+        <Button disabled={!canPrepare} onClick={() => openCreate()} className="min-h-12 shrink-0 rounded-xl px-5"><Plus className="mr-2 h-4 w-4" />Nova votação</Button>
+      </header>
 
-      <FAB disabled={!canCreate || !hasSnapshot || readError} aria-label="Nova eleição" onClick={() => setDialogOpen(true)} />
-
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'cargo' | 'camisa')} className="mb-5">
-        <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl p-1 sm:max-w-md">
-          <TabsTrigger className="min-h-[48px] whitespace-normal" value="cargo"><Vote className="h-4 w-4 mr-1.5" /> Cargos</TabsTrigger>
-          <TabsTrigger className="min-h-[48px] whitespace-normal" value="camisa"><Shirt className="h-4 w-4 mr-1.5" /> Camisas</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {hasSnapshot && <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">{filtered.length} {filtered.length === 1 ? 'votação' : 'votações'} · {filtered.filter(row => row.status === 'open').length} abertas</p>
-        <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ListChecks className="h-4 w-4" /> Chamada → candidatos → votação → resultado</span>
-      </div>}
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <Tabs value={activeTab} onValueChange={v => { setActiveTab(v as 'cargo' | 'camisa'); setSearch(''); setStatusFilter('all'); }}>
+          <TabsList className="h-auto rounded-xl border border-border bg-card p-1">
+            <TabsTrigger className="min-h-11 min-w-28 gap-2 rounded-lg px-4" value="cargo"><Vote className="h-4 w-4" />Cargos</TabsTrigger>
+            <TabsTrigger className="min-h-11 min-w-28 gap-2 rounded-lg px-4" value="camisa"><Shirt className="h-4 w-4" />Camisas</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {hasSnapshot && categoryElections.length > 0 && <p className="text-sm text-muted-foreground">{categoryElections.length} {categoryElections.length === 1 ? 'votação registrada' : 'votações registradas'}</p>}
+      </div>
       {readError && <QueryErrorState message="Não foi possível consultar as eleições e suas contagens." onRetry={() => void fetchElections()} retrying={loading} hasPreviousData={hasSnapshot} />}
       {!hasSnapshot ? (loading ? (
         <div className="space-y-3">
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
         </div>
-      ) : null) : filtered.length === 0 ? (
-        <EmptyState
-          icon={activeTab === 'camisa' ? <Shirt className="h-12 w-12" /> : <Vote className="h-12 w-12" />}
-          title={activeTab === 'camisa' ? 'Nenhuma votação de camisa' : 'Nenhuma eleição registrada'}
-          description={activeTab === 'camisa' ? 'Crie uma votação para escolher o modelo da camisa.' : 'Crie uma nova eleição para começar.'}
-        />
-      ) : (
-        <div className="grid gap-4 min-[900px]:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((e) => (
-            <ElectionCard key={e.id} election={e} onClick={() => navigate(`/eleicoes/${e.id}`)} onDelete={(id) => setDeleteId(id)} />
-          ))}
+      ) : null) : categoryElections.length === 0 ? (
+        <section className="space-y-4" aria-label="Começar uma votação">
+          <div><h2 className="text-lg font-semibold">Como deseja começar?</h2><p className="mt-1 text-sm text-muted-foreground">Escolha o formato. Você prepara os nomes e controla quando os votos começam.</p></div>
+          <div className={`grid auto-rows-fr items-stretch gap-4 ${activeTab === 'cargo' ? 'md:grid-cols-2' : ''}`}>
+            {activeTab === 'cargo' && <article className="flex min-w-0 flex-col rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-card p-5 sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground"><UsersRound className="h-5 w-5" /></span><span className="rounded-full border border-primary/20 bg-card px-3 py-1 text-xs font-semibold text-primary">5 cargos em sequência</span></div>
+              <h3 className="text-xl font-semibold tracking-tight">Diretoria UMP</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">Uma chamada, uma sala para os participantes e um resultado para cada cargo.</p>
+              <p className="my-4 text-sm leading-relaxed text-foreground/85">Presidente · Vice-presidente · 1º secretário · 2º secretário · Tesoureiro</p>
+              <Button disabled={!canPrepare} onClick={() => openCreate('ump')} className="mt-auto min-h-12 w-full justify-between rounded-xl">Preparar diretoria<ArrowRight className="h-4 w-4 shrink-0" /></Button>
+            </article>}
+            <article className="flex min-w-0 flex-col rounded-2xl border border-border bg-card p-5 sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-primary">{activeTab === 'camisa' ? <Shirt className="h-5 w-5" /> : <Vote className="h-5 w-5" />}</span><span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">{activeTab === 'camisa' ? 'Escolha de modelo' : 'Um cargo por vez'}</span></div>
+              <h3 className="text-xl font-semibold tracking-tight">{activeTab === 'camisa' ? 'Votação de camisa' : 'Votação avulsa'}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{activeTab === 'camisa' ? 'Reúna os modelos, compartilhe o QR Code e acompanhe a escolha do grupo.' : 'Prepare uma eleição para um cargo, com a quantidade de vagas que você definir.'}</p>
+              <p className="my-4 text-sm leading-relaxed text-foreground/85">{activeTab === 'camisa' ? 'Fotos dos modelos · Voto pelo celular · Resultado conferido' : 'Chamada · Indicações · Escrutínios · Relatório'}</p>
+              <Button variant="outline" disabled={!canPrepare} onClick={() => openCreate('single')} className="mt-auto min-h-12 w-full justify-between rounded-xl">{activeTab === 'camisa' ? 'Preparar votação de camisa' : 'Criar votação avulsa'}<ArrowRight className="h-4 w-4 shrink-0" /></Button>
+            </article>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4 sm:p-5"><p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Você conduz cada etapa</p><ol className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[{ title: 'Chamada', Icon: ClipboardCheck }, { title: 'Indicações', Icon: UsersRound }, { title: 'Votação', Icon: Vote }, { title: 'Resultado', Icon: ChartNoAxesCombined }].map(({ title, Icon }, index) => <li key={title} className="flex min-w-0 items-center gap-2 text-sm"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-primary"><Icon className="h-4 w-4" /></span><span><span className="mr-1 text-muted-foreground">{index + 1}.</span>{title}</span></li>)}</ol></div>
+        </section>
+      ) : <section className="space-y-4" aria-label="Suas votações">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 className="text-lg font-semibold">Suas votações</h2><p className="mt-1 text-sm text-muted-foreground">Continue a preparação, abra a mesa ou consulte um resultado.</p></div><span className="text-xs text-muted-foreground">{filtered.length} {filtered.length === 1 ? 'encontrada' : 'encontradas'}</span></div>
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[minmax(0,1fr)_200px]">
+          <div className="relative"><Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Buscar votação" value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar por nome ou cargo" className="min-h-11 pl-9" /></div>
+          <select aria-label="Filtrar por situação" value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="min-h-11 min-w-0 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><option value="all">Todas as situações</option><option value="draft">Em preparação</option><option value="open">Em andamento</option><option value="finished">Concluídas</option></select>
         </div>
-      )}
+        {filtered.length ? <div className="grid items-stretch gap-4 min-[900px]:grid-cols-2 xl:grid-cols-3">{filtered.map(e => <ElectionCard key={e.id} election={e} onClick={() => navigate(`/eleicoes/${e.id}`)} onDelete={id => setDeleteId(id)} />)}</div>
+          : <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-center"><Search className="mx-auto mb-3 h-6 w-6 text-muted-foreground" /><h3 className="font-semibold">Nenhuma votação com esses filtros</h3><p className="mt-1 text-sm text-muted-foreground">Tente outro nome ou veja todas as situações.</p><Button variant="outline" className="mt-4 min-h-11" onClick={() => { setSearch(''); setStatusFilter('all'); }}>Limpar filtros</Button></div>}
+      </section>}
 
       <Dialog open={dialogOpen} onOpenChange={open => { if (!creating) setDialogOpen(open); }}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-2xl sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="text-xl">{electionType === 'camisa' ? 'Nova votação de camisa' : 'Nova votação'}</DialogTitle>
-            <p className="text-sm text-muted-foreground">Defina o formato. A chamada e os candidatos vêm na próxima etapa.</p>
+            <DialogDescription>Escolha o formato e identifique a votação. Depois você prepara a chamada e as indicações.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor={`${formId}-template`}>Formato</Label>
-              <Select disabled={creating || !!sequenceRef.current} value={template} onValueChange={value => {
-                setTemplate(value as 'single' | 'ump');
-                if (value === 'ump') { setElectionType('cargo'); setName('Diretoria UMP'); setPosition(UMP_POSITIONS[0]); setSeatsCount('1'); }
-                else { setName(''); setPosition(''); }
-              }}>
-                <SelectTrigger id={`${formId}-template`}><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="single">Votação avulsa</SelectItem><SelectItem value="ump">Diretoria UMP — 5 cargos</SelectItem></SelectContent>
-              </Select>
-            </div>
+            <fieldset>
+              <legend className="text-sm font-medium">Formato</legend>
+              <div id={`${formId}-template`} className="mt-2 grid grid-cols-2 gap-2">
+                {([{ value: 'single', title: 'Avulsa', description: 'Um cargo ou modelo', Icon: Vote }, { value: 'ump', title: 'Diretoria UMP', description: 'Roteiro com 5 cargos', Icon: UsersRound }] as const).map(({ value, title, description, Icon }) => <label key={value} className="relative min-w-0 cursor-pointer"><input type="radio" name={`${formId}-format`} value={value} checked={template === value} disabled={creating || !!sequenceRef.current} onChange={() => chooseFormat(value)} className="peer sr-only" aria-label={value === 'ump' ? 'Diretoria UMP — 5 cargos' : 'Votação avulsa'} /><span className="flex h-full flex-col gap-1 rounded-xl border border-border bg-card p-3 peer-checked:border-primary peer-checked:bg-primary/5 peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-disabled:cursor-not-allowed peer-disabled:opacity-60"><Icon className="mb-1 h-5 w-5 text-primary" /><span className="text-sm font-semibold">{title}</span><span className="text-xs leading-relaxed text-muted-foreground">{description}</span></span></label>)}
+              </div>
+            </fieldset>
             {template === 'ump' && <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
               <p className="mb-3 font-semibold text-primary">Um roteiro, cinco cargos</p>
               <ol className="grid gap-2 sm:grid-cols-2">{UMP_POSITIONS.map((cargo, index) => <li key={cargo} className="flex items-center gap-2"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{index + 1}</span>{cargo}</li>)}</ol>
@@ -334,7 +354,7 @@ export default function Eleicoes() {
             </div> : <p className="text-sm text-muted-foreground">Sociedade: {societies[0]?.name || 'Nenhuma sociedade vinculada'}</p>}
           </div>
           <DialogFooter>
-            <Button onClick={handleCreate} disabled={creating || !canCreate}>
+            <Button className="min-h-12 rounded-xl" onClick={handleCreate} disabled={creating || !canCreate}>
               {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {template === 'ump' ? 'Criar roteiro' : 'Criar votação'} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -354,6 +374,7 @@ export default function Eleicoes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </AppLayout>
   );
 }
