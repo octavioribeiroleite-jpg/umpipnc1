@@ -344,8 +344,9 @@ export default function VotePublic() {
     let active = true;
     const fetchData = async () => {
       if (!electionId) { setReadError('A eleição está indisponível.'); setLoading(false); return; }
-      setLoading(true);
-      setReadError('');
+      // Keep an already loaded ballot/confirmation mounted during background
+      // refresh. A different election still gets its initial loading screen.
+      if (!loadedRoundRef.current?.startsWith(`${electionId}:`)) setLoading(true);
       try {
         if (isUrnaMode) {
           if (!urnaToken) { if (active) setInvalidToken(true); return; }
@@ -391,6 +392,7 @@ export default function VotePublic() {
           ballotRequestRef.current = null;
         }
         loadedRoundRef.current = loadedRound;
+        setReadError('');
         setElection(elData);
         setCandidates(candidatesData);
         setAllVotes(voteRows);

@@ -43,12 +43,12 @@ test('fixture blocks foreign/API transports before mounting the application', as
   assert.deepEqual(calls.map(item => item[0]), ['fetch', 'xhr', 'socket']);
 });
 
-function loadFixtureBackend(params = '') {
+function loadFixtureBackend(params = '', globals = {}) {
   const source = readFileSync(new URL('./fixtures/diretoria/backend.ts', import.meta.url), 'utf8');
   const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
   const exports = {};
   vm.runInNewContext(compiled, {
-    exports, URLSearchParams, crypto, location: { pathname: '/__diretoria/financas' },
+    exports, URLSearchParams, crypto, location: { pathname: '/__diretoria/financas' }, ...globals,
     require(name) {
       assert.equal(name, './options');
       return { fixtureParams: new URLSearchParams(params), fixtureRole: 'admin', fixtureState: 'normal', fixturePause: async () => {} };
@@ -211,4 +211,34 @@ test('isolated rejected candidate writes keep the seeded candidates intact', asy
   assert.ok(rejected.error);
   const after = await supabase.from('election_candidates').select('*');
   assert.deepEqual(after.data, before.data);
+});
+
+test('opt-in election fixture persists popup ballots, serializes duplicate-browser casts and survives reload without crossing namespaces',async()=>{
+ const storage=new Map(),windows=[],queues=new Map();
+ function tab(namespace){
+  const window=new EventTarget();windows.push(window);
+  const localStorage={getItem:key=>storage.get(key)??null,setItem(key,value){storage.set(key,value);for(const other of windows)if(other!==window){const event=new Event('storage');event.key=key;other.dispatchEvent(event);}}};
+  const navigator={locks:{request(key,_options,work){const pending=(queues.get(key)||Promise.resolve()).then(work);queues.set(key,pending.catch(()=>{}));return pending;}}};
+  return loadFixtureBackend(`namespace=${namespace}`,{window,localStorage,navigator}).supabase;
+ }
+ const admin=tab('cross-tab'),voter=tab('cross-tab');let notifications=0;
+ admin.channel('election').on('postgres_changes',{table:'election_votes'},()=>notifications++).subscribe();
+ const election_id='synthetic-new-election';
+ assert.equal((await admin.from('elections').insert({id:election_id,name:'Synthetic',voting_mode:'individual'})).error,null);
+ await admin.from('election_attendance').insert({id:'synthetic-person',election_id,name:'Synthetic person',present:true});
+ assert.equal((await admin.from('elections').update({total_present:1,status:'open'}).eq('id',election_id)).error,null);
+ assert.ok((await admin.from('elections').update({status:'finished'}).eq('id',election_id)).error,'missing ballot must block closing');
+ const body={action:'cast',election_id,ballot_id:'synthetic-ballot',round_number:1,device_id:'synthetic-browser',choices:['a','b'],blanks:0};
+ const results=await Promise.all([voter.functions.invoke('election-vote',{body}),admin.functions.invoke('election-vote',{body:{...body,ballot_id:'different-ballot'}})]);
+ assert.equal(results.filter(result=>result.data?.success).length,1,'shared fixture lock must serialize both writes');
+ const after=await admin.from('election_votes').select('*').eq('election_id',election_id);
+ assert.equal(after.data.length,2);assert.equal(new Set(after.data.map(row=>row.ballot_id)).size,1,'two marks are one ballot');
+ assert.ok(notifications>0,'popup storage writes must notify existing admin subscriptions');
+ assert.equal((await voter.functions.invoke('election-vote',{body})).data.success,true,'same UUID retry is idempotent');
+ assert.equal((await admin.from('elections').update({status:'finished'}).eq('id',election_id)).error,null);
+ const reload=tab('cross-tab');assert.equal((await reload.from('elections').select('*').eq('id',election_id).single()).data.status,'finished');
+ assert.equal((await reload.functions.invoke('election-vote',{body:{action:'already',election_id,device_id:body.device_id}})).data.count,2);
+ assert.ok((await reload.functions.invoke('election-vote',{body:{...body,ballot_id:'late-ballot',device_id:'other-browser'}})).error);
+ assert.equal((await tab('other-namespace').from('elections').select('*').eq('id',election_id)).data.length,0);
+ assert.ok([...storage.keys()].every(key=>key.startsWith('ipnc-fixture:elections:v1:')));
 });

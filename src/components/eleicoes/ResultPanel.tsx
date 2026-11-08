@@ -43,7 +43,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election, pr
     return () => { supabase.removeChannel(channel); };
   }, [electionId, fetchResults]);
 
-  const countVerified = !!countSnapshot?.exact && !readError && !loading && countSnapshot.election.current_round === (current_round || 1) && countSnapshot.election.total_present === totalPresent;
+  const countVerified = !!countSnapshot?.exact && !readError && countSnapshot.election.current_round === (current_round || 1) && countSnapshot.election.total_present === totalPresent;
   const allElected = countVerified ? roundResults.flatMap((r) => r.electedIds) : [];
   const seatsCount = election?.seats_count || 1;
   const isValid = roundResults.length > 0 && allElected.length >= seatsCount;
@@ -54,7 +54,7 @@ export function ResultPanel({ electionId, totalPresent, candidates, election, pr
   return (
     <div className={presentation ? 'min-w-0 space-y-6 text-lg' : 'min-w-0 space-y-4'}>
       {readFailure}
-      {!countVerified && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{loading ? 'Conferindo chamada e votos…' : readError ? 'Contagem não conferida. O resultado aguarda uma leitura válida.' : countSnapshot?.issue || 'A votação mudou. Confira a sala antes de validar o resultado.'}</p>}
+      {!countVerified && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{loading && !hasSnapshot ? 'Conferindo chamada e votos…' : readError ? 'Contagem não conferida. O resultado aguarda uma leitura válida.' : countSnapshot?.issue || 'A votação mudou. Confira a sala antes de validar o resultado.'}</p>}
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">

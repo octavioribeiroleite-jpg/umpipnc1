@@ -77,7 +77,7 @@ test('next cargo rechecks a finished source and creates no draft on missing, sur
   for(const result of ['missing','extra','error']){
     let planned=false,saved=false,error='';
     await handler('src/components/eleicoes/NextElectionDialog.tsx','create',{
-      inFlight:{current:false},user:{id:'organizer'},setBusy(){},setError:value=>{error=value;},setCount(){},setCountError(){},
+      readRevision:{current:0},setChecking(){},inFlight:{current:false},user:{id:'organizer'},setBusy(){},setError:value=>{error=value;},setCount(){},setCountError(){},
       readElectionCount:async()=>{if(result==='error')throw new Error('isolated read failure');const fresh=snapshot(result==='missing'?15:17);fresh.election.status='finished';return fresh;},
       requireElectionCount,election:{...election,status:'finished'},plan:{current:null},sourceIds:{current:[]},planNextElection(){planned=true;},saveNextElection(){saved=true;},supabase:{},
     })();
@@ -85,11 +85,11 @@ test('next cargo rechecks a finished source and creates no draft on missing, sur
   }
 });
 
-test('historical result badges require verified counts and never label a divergent or stale snapshot elected', () => {
+test('historical result badges retain a verified snapshot during refresh and reject divergence or failed reads', () => {
   const resultFile='src/components/eleicoes/ResultPanel.tsx';
   for(const [count,readError,loading] of [[15,false,false],[17,false,false],[16,true,false],[16,false,true],[16,false,false]]){
     const countVerified=handler(resultFile,'countVerified',{countSnapshot:snapshot(count),readError,loading,current_round:1,totalPresent:16});
-    assert.equal(countVerified,count===16&&!readError&&!loading);
+    assert.equal(countVerified,count===16&&!readError);
     const roundResults=[{electedIds:['candidate-fictional']}];
     const elected=handler(resultFile,'allElected',{countVerified,roundResults});
     assert.equal(elected.length,countVerified?1:0);assert.deepEqual(roundResults,[{electedIds:['candidate-fictional']}]);

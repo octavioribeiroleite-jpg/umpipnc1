@@ -186,7 +186,7 @@ test('five UMP cargos advance with the real handler, persist across reload/retry
       db.tables.election_votes.push(...[1,2].map(n => ({id: `${source.id}-vote-${n}`, ballot_id: `${source.id}-ballot-${n}`, election_id: source.id, round_number: 1, is_blank: true, candidate_id: null})));
       const sourceBefore = structuredClone(source); const step = findElectionSequence('organizer', source.id);
       let destination, failure;
-      const context = { readElectionCount, requireElectionCount, sourceIds: { current: [] }, setCount() {}, setCountError() {}, inFlight: { current: false }, user: { id: 'organizer' }, setBusy() {}, setError: value => { failure = value; },
+      const context = { readElectionCount, requireElectionCount, readRevision: { current: 0 }, setChecking() {}, sourceIds: { current: [] }, setCount() {}, setCountError() {}, inFlight: { current: false }, user: { id: 'organizer' }, setBusy() {}, setError: value => { failure = value; },
         plan: { current: null }, planNextElection, election: source, attendance, name: sequence.name, position: UMP_POSITIONS[index + 1], seats: '1',
         withBrowserBallotLock, step, nextPosition: UMP_POSITIONS[index + 1], reserveSequenceAttendance, saveNextElection, supabase: db,
         navigate: value => { destination = value; },

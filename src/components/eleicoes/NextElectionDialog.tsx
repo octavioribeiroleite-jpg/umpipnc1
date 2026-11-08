@@ -29,19 +29,23 @@ export function NextElectionDialog({ election, attendance }: {
   const [countError, setCountError] = useState('');
   const [checking, setChecking] = useState(true);
   const sourceIds = useRef<string[]>([]);
+  const readRevision = useRef(0);
   const plan = useRef<NextElectionPlan | null>(null);
   const inFlight = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     let active = true;
+    let running = false;
     const check = async () => {
-      if (active) setChecking(true);
+      if (running || inFlight.current) return;
+      running = true;
+      const revision = ++readRevision.current;
       try {
         const fresh = await readElectionCount(supabase, election.id);
-        if (active) { setCount(fresh); setCountError(''); }
-      } catch { if (active) setCountError('Não foi possível conferir a chamada e os votos. O avanço está bloqueado.'); }
-      finally { if (active) setChecking(false); }
+        if (active && revision === readRevision.current) { setCount(fresh); setCountError(''); }
+      } catch { if (active && revision === readRevision.current) setCountError('Não foi possível conferir a chamada e os votos. O avanço está bloqueado.'); }
+      finally { running = false; if (active && revision === readRevision.current) setChecking(false); }
     };
     void check();
     const timer = window.setInterval(() => { void check(); }, 3000);
@@ -49,16 +53,21 @@ export function NextElectionDialog({ election, attendance }: {
     document.addEventListener('visibilitychange', refresh);
     return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
   }, [election.id]);
-  const canContinue = !checking && !countError && !!count?.exact && count.election.status === 'finished' && count.election.current_round === (election.current_round || 1);
+  const canContinue = !countError && !!count?.exact && count.election.status === 'finished' && count.election.current_round === (election.current_round || 1);
 
   const create = async () => {
     if (inFlight.current || !user) return;
     inFlight.current = true;
     setBusy(true); setError('');
+    ++readRevision.current;
     try {
-      const fresh = await readElectionCount(supabase, election.id);
+      let fresh: ElectionCountSnapshot;
+      try {
+      fresh = await readElectionCount(supabase, election.id);
       setCount(fresh); setCountError('');
       requireElectionCount(fresh, { status: 'finished', round: election.current_round || 1 });
+      } catch (cause) { setCountError(cause instanceof Error ? cause.message : 'Não foi possível conferir a votação.'); throw cause; }
+      finally { setChecking(false); }
       if (!plan.current) {
         plan.current = planNextElection(fresh.election, fresh.attendance, { userId: user.id, name, position, seats: Number(seats) });
         sourceIds.current = fresh.attendance.map(person => person.id);
@@ -74,18 +83,21 @@ export function NextElectionDialog({ election, attendance }: {
       });
       navigate(`/eleicoes/${id}`);
     } catch (cause) {
-      setCountError(cause instanceof Error ? cause.message : 'Confira a chamada e os votos.');
       setError(cause instanceof Error ? cause.message : 'Não foi possível concluir a nova votação. Tente novamente; o mesmo rascunho será utilizado.');
     } finally { inFlight.current = false; setBusy(false); }
   };
 
-  const blockingMessage = checking ? 'Conferindo chamada e votos…' : countError || count?.issue || (!canContinue ? 'A votação mudou. Atualize a sala.' : '');
-  if (!canContinue && !open) return <div className="space-y-2"><p role="alert" className="text-sm text-destructive">{blockingMessage}</p><Button disabled>{nextPosition ? `Próximo cargo: ${nextPosition}` : 'Nova votação com esta chamada'}</Button></div>;
-
-  if (step && !nextPosition) return <p className="rounded-xl border border-success/30 bg-success/5 p-4 text-sm font-medium">Diretoria UMP concluída. Os cinco cargos e seus resultados permanecem na lista de eleições.</p>;
+  const blockingMessage = !count && checking ? 'Conferindo chamada e votos…' : countError || count?.issue || (!canContinue ? 'A votação mudou. Atualize a sala.' : '');
+  if (step && !nextPosition) return <div className="space-y-2">
+    {canContinue ? <p className="rounded-xl border border-success/30 bg-success/5 p-4 text-sm font-medium">Diretoria UMP concluída. Os cinco cargos e seus resultados permanecem na lista de eleições.</p>
+      : <p role="alert" className="text-sm text-destructive">{blockingMessage}</p>}
+  </div>;
 
   return <Dialog open={open} onOpenChange={next => { if (!busy) setOpen(next); }}>
-    <DialogTrigger asChild><Button disabled={!canContinue} className="h-auto min-h-11 max-w-full whitespace-normal"><Plus className="h-4 w-4 mr-2 shrink-0" />{nextPosition ? `Próximo cargo: ${nextPosition}` : 'Nova votação com esta chamada'}</Button></DialogTrigger>
+    <div className="space-y-2">
+      <DialogTrigger asChild><Button disabled={!canContinue} className="h-auto min-h-11 max-w-full whitespace-normal"><Plus className="h-4 w-4 mr-2 shrink-0" />{nextPosition ? `Próximo cargo: ${nextPosition}` : 'Nova votação com esta chamada'}</Button></DialogTrigger>
+      {blockingMessage && !open && <p role="status" className="text-sm text-destructive">{blockingMessage}</p>}
+    </div>
     <DialogContent className="max-h-[90dvh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{nextPosition ? `Próximo cargo: ${nextPosition}` : 'Nova votação com esta chamada'}</DialogTitle>

@@ -81,6 +81,54 @@ export async function emitFixtureRealtime() {
 data.settings.push(...['saf','ucp','ump','upa','uph','pastor'].map((slug,index)=>({key:`diretoria_pin_${slug}`,value:`65432${index}`})));
 const keepWhenEmpty=new Set(['societies','profiles','user_roles','settings','elections']);
 const failure=()=>({data:null,error:{message:'Falha simulada de conexão — dados fictícios'},count:null});
+// Opt-in local store for complete, multi-tab election rehearsals. Only these
+// synthetic tables are persisted, under an explicit fixture namespace.
+const namespaceValue = fixtureParams.get('namespace') || '';
+const sharedKey = /^[a-zA-Z0-9_-]{1,64}$/.test(namespaceValue) && typeof localStorage !== 'undefined'
+ ? `ipnc-fixture:elections:v1:${namespaceValue}` : null;
+const sharedTables = ['elections','election_attendance','election_candidates','election_devices','election_votes'];
+function reloadShared() {
+ if (!sharedKey) return;
+ const raw = localStorage.getItem(sharedKey);
+ if (!raw) return;
+ const saved = JSON.parse(raw);
+ if (saved.kind !== 'ipnc-isolated-election-fixture-v1') throw new Error('Invalid fixture store');
+ for (const table of sharedTables) if (Array.isArray(saved.tables?.[table])) data[table] = saved.tables[table];
+}
+function persistShared() {
+ if (!sharedKey) return;
+ localStorage.setItem(sharedKey, JSON.stringify({kind:'ipnc-isolated-election-fixture-v1',tables:Object.fromEntries(sharedTables.map(table=>[table,data[table]]))}));
+ void emitFixtureRealtime();
+}
+async function sharedOperation<T>(write:boolean, work:()=>T):Promise<T> {
+ const run=()=>{reloadShared();const result=work();if(write && !(result as any)?.error)persistShared();return result;};
+ if(sharedKey && write && typeof navigator!=='undefined' && navigator.locks?.request)return navigator.locks.request(sharedKey,{mode:'exclusive'},run);
+ return run();
+}
+if(sharedKey){
+ if(localStorage.getItem(sharedKey))reloadShared();else persistShared();
+ if(typeof window!=='undefined')window.addEventListener('storage',event=>{if(event.key===sharedKey){reloadShared();void emitFixtureRealtime();}});
+}
+function sharedElectionWriteAllowed(table:string,operation:string,rows:any[],payload:any) {
+ if(!sharedKey)return true;
+ if(table==='election_attendance'&&operation!=='select'){
+  const affected=operation==='insert'||operation==='upsert'?(Array.isArray(payload)?payload:[payload]):rows;
+  return affected.every(row=>data.elections.find(e=>e.id===row.election_id)?.status==='draft');
+ }
+ if(table==='elections'&&operation==='update')return rows.every(old=>{
+  const next={...old,...payload};
+  const present=data.election_attendance.filter(person=>person.election_id===old.id&&person.present).length;
+  const votes=data.election_votes.filter(vote=>vote.election_id===old.id);
+  const count=new Set(votes.filter(vote=>vote.round_number===old.current_round).map(vote=>vote.ballot_id)).size;
+  if(old.status!=='draft'&&next.total_present!==old.total_present)return false;
+  if(old.status==='finished'&&(next.status!==old.status||next.current_round!==old.current_round))return false;
+  if(next.total_present!==old.total_present&&next.total_present!==present)return false;
+  if(old.status==='draft'&&next.status==='open')return next.total_present===present&&present>0&&votes.length===0;
+  if((next.status==='finished'&&old.status!=='finished')||next.current_round!==old.current_round)return present>0&&old.total_present===present&&count===present;
+  return true;
+ });
+ return true;
+}
 function ilikePattern(pattern:string) {
  return new RegExp(`^${Array.from(pattern).map(char=>char==='%'?'.*':char==='_'?'.':char.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('')}$`,'isu');
 }
@@ -92,12 +140,14 @@ function query(table:string){
   await fixturePause();
   if(operation==='select' && readsFail)return failure();
   if(operation!=='select' && (mode==='error'||(table==='election_candidates'&&(fixtureParams.get('candidate_error')==='1'||fixtureParams.get('photo_error')==='update'))))return failure();
+  return sharedOperation(operation!=='select',()=>{
   let rows=(mode==='empty'&&!keepWhenEmpty.has(table)?[]:data[table]||[]).filter(r=>filters.every(f=>f(r)));
   const count=rows.length;
   rows=rows.slice(offset,offset+limit);
+  if(!sharedElectionWriteAllowed(table,operation,rows,payload))return failure();
   if(operation!=='select'){
    if(operation==='insert'||operation==='upsert'){
-    rows=(Array.isArray(payload)?payload:[payload]).map((p:any)=>({...base,id:crypto.randomUUID(),...p}));
+    rows=(Array.isArray(payload)?payload:[payload]).map((p:any)=>({...base,...(table==='elections'?{status:'draft',current_round:1,total_present:0,voting_mode:'shared',type:'cargo',seats_count:1,max_choices_per_ballot:1,show_result:false}:{}),id:crypto.randomUUID(),...p}));
     data[table] ||= [];
     for(const row of rows){const existing=data[table].find(entry=>entry.id===row.id);if(existing&&operation==='upsert')Object.assign(existing,row);else data[table].push(row);}
    }
@@ -105,6 +155,7 @@ function query(table:string){
    if(operation==='delete')data[table]=(data[table]||[]).filter(r=>!rows.includes(r));
   }
   return {data:one?rows[0]??null:rows,error:null,count:operation==='select'?count:rows.length};
+  });
  };
  const chain:any={select:()=>chain,order:()=>chain,range:(from:number,to:number)=>{offset=from;limit=to-from+1;return chain},abortSignal:()=>chain,limit:(n:number)=>{limit=n;return chain},single:()=>{one=true;return chain},maybeSingle:()=>{one=true;return chain},eq:(k:string,v:any)=>{filters.push(r=>r[k]===v);return chain},neq:(k:string,v:any)=>{filters.push(r=>r[k]!==v);return chain},gte:()=>chain,lte:()=>chain,gt:()=>chain,lt:()=>chain,is:()=>chain,in:(k:string,v:any[])=>{filters.push(r=>v.includes(r[k]));return chain},
  like:(key:string,pattern:string)=>{const matcher=ilikePattern(pattern);filters.push(row=>row[key]!=null&&matcher.test(String(row[key])));return chain},
@@ -124,6 +175,24 @@ async function invoke(name:string,options:{body?:Record<string,any>}={}){
  await fixturePause();
  if(mode==='error'||fixtureParams.get('auth')==='deny')return failure();
  const body=options.body||{};
+ if(name==='election-vote'&&sharedKey)return sharedOperation(body.action==='cast'||body.action==='device',()=>{
+  const election=data.elections.find(row=>row.id===body.election_id);
+  if(!election||readsFail)return failure();
+  const rows=data.election_votes.filter(vote=>vote.election_id===body.election_id);
+  if(body.action==='history')return {data:{votes:rows.filter(vote=>election.show_result||vote.round_number<election.current_round)},error:null};
+  if(body.action==='already')return {data:{count:rows.filter(vote=>vote.device_id===body.device_id&&vote.round_number===election.current_round).length},error:null};
+  const device=body.token?data.election_devices.find(row=>row.election_id===body.election_id&&row.token===body.token):null;
+  if(body.action==='device'){if(!device)return failure();device.activated=true;return {data:{device},error:null};}
+  if(body.action!=='cast'||election.status!=='open'||body.round_number!==election.current_round)return failure();
+  if(rows.some(vote=>vote.ballot_id===body.ballot_id))return {data:{success:true},error:null};
+  if(body.token&&!device)return failure();
+  if(!device&&(!body.device_id||rows.some(vote=>vote.device_id===body.device_id&&vote.round_number===body.round_number)))return failure();
+  fixtureVoteCalls.push({ballot_id:body.ballot_id,round_number:body.round_number,choices:[...(body.choices||[])]});
+  const marks=[...(body.choices||[]),...Array.from({length:body.blanks||0},()=>null)];
+  if(!marks.length)return failure();
+  for(const candidate_id of marks)data.election_votes.push({id:crypto.randomUUID(),election_id:body.election_id,candidate_id,is_blank:!candidate_id,round_number:body.round_number,device_id:device?null:body.device_id,ballot_id:body.ballot_id});
+  return {data:{success:true},error:null};
+ });
  if(name==='election-vote'){
   if(fixtureParams.get('read_error')===body.action && !failedVoteReads.has(body.action)){failedVoteReads.add(body.action);return failure();}
   if(body.action==='history')return {data:{votes:data.election_votes},error:null};

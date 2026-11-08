@@ -73,6 +73,8 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const { toast } = useToast();
   const inFlightRef = useRef(false);
   const pendingRef = useRef(false);
+  const readScopeRef = useRef(0);
+  const readVersionRef = useRef(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const voteUrl = `${window.location.origin}/vote/${electionId}`;
@@ -87,20 +89,25 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   const showDevices = selectedMode === 'both' || selectedMode === 'shared';
   const needsDevices = showDevices && devices.length === 0;
   const countCurrent = countSnapshot?.election.current_round === currentRound && countSnapshot?.election.status === status && countSnapshot?.election.total_present === totalPresent;
-  const countExact = !!countSnapshot?.exact && countCurrent && !countError;
-  const canProceed = countExact && !checkingCount;
-  const canStart = candidates.length > 0 && !!countSnapshot?.attendanceConfirmed && countCurrent && !countError && !checkingCount && !countSnapshot?.votes.length && !needsDevices;
+  const countDisplayExact = !!countSnapshot?.exact && countCurrent;
+  const countExact = countDisplayExact && !countError;
+  const canProceed = countExact;
+  const canStart = candidates.length > 0 && !!countSnapshot?.attendanceConfirmed && countCurrent && !countError && !countSnapshot?.votes.length && !needsDevices;
 
   const fetchVoteCount = async () => {
+    if (actionRef.current) return;
     if (inFlightRef.current) {
       pendingRef.current = true;
       return;
     }
 
     inFlightRef.current = true;
+    const scope = readScopeRef.current;
+    const version = ++readVersionRef.current;
     try {
       setCheckingCount(true);
       const snapshot = await readElectionCount(supabase, electionId);
+      if (scope !== readScopeRef.current || version !== readVersionRef.current) return;
       setCountSnapshot(snapshot);
       setCountError('');
       const rows = snapshot.votes;
@@ -218,13 +225,15 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         }
       }
     } catch {
-      setCountError('Não foi possível conferir a chamada e os votos. Tente novamente antes de continuar.');
+      if (scope === readScopeRef.current && version === readVersionRef.current) setCountError('Não foi possível conferir a chamada e os votos. Tente novamente antes de continuar.');
     } finally {
-      setCheckingCount(false);
-      inFlightRef.current = false;
-      if (pendingRef.current) {
-        pendingRef.current = false;
-        void fetchVoteCount();
+      if (scope === readScopeRef.current) {
+        setCheckingCount(false);
+        inFlightRef.current = false;
+        if (pendingRef.current) {
+          pendingRef.current = false;
+          void fetchVoteCount();
+        }
       }
     }
   };
@@ -239,6 +248,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   }, [currentRound]);
 
   useEffect(() => {
+    const scope = readScopeRef.current;
     fetchVoteCount();
 
     const channel = supabase
@@ -263,24 +273,25 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
     }, 3000);
 
     return () => {
+      readScopeRef.current = scope + 1;
       clearInterval(interval);
       supabase.removeChannel(channel);
       inFlightRef.current = false;
       pendingRef.current = false;
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [electionId, currentRound, seatsCount, majorityRule]);
+  }, [electionId, currentRound, seatsCount, majorityRule, status]);
 
   useEffect(() => {
     const refresh = () => { if (document.visibilityState === 'visible') void fetchVoteCount(); };
     document.addEventListener('visibilitychange', refresh);
     window.addEventListener('pageshow', refresh);
     return () => { document.removeEventListener('visibilitychange', refresh); window.removeEventListener('pageshow', refresh); };
-  }, [electionId, currentRound, seatsCount, majorityRule]);
+  }, [electionId, currentRound, seatsCount, majorityRule, status]);
 
   useEffect(() => {
-    if (!countExact) setPhase('voting');
-  }, [countExact]);
+    if (countSnapshot && !countDisplayExact) setPhase('voting');
+  }, [countSnapshot, countDisplayExact]);
 
   useEffect(() => {
     if (!countExact || !electionId) {
@@ -356,6 +367,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   };
 
   const checkCurrentCount = async (action: 'start' | 'complete' = 'complete') => {
+    ++readVersionRef.current;
     try {
       const snapshot = await readElectionCount(supabase, electionId);
       setCountSnapshot(snapshot); setCountError(''); setVoteCount(snapshot.ballots); setLiveVotes(snapshot.votes);
@@ -630,7 +642,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         )}
 
         {/* FASE: VOTING — todos votaram, aguardando apuração */}
-        {countExact && phase === 'voting' && (
+        {countDisplayExact && phase === 'voting' && (
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center">
             <CheckCircle className="w-8 h-8 text-primary mx-auto mb-2" />
             <p className="text-sm font-semibold mb-1">Todos os votos foram recebidos</p>
@@ -645,7 +657,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         )}
 
         {/* FASE: APURANDO — mostra resultado parcial */}
-        {countExact && phase === 'apurando' && (
+        {countDisplayExact && phase === 'apurando' && (
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -754,7 +766,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         )}
 
         {/* FASE: RESULTADO — ações finais */}
-        {countExact && phase === 'resultado' && (
+        {countDisplayExact && phase === 'resultado' && (
           <div className="rounded-lg border border-border bg-muted/20 p-3 mb-2">
             <p className="text-xs font-semibold mb-2">
               {electedCount >= seatsCount
@@ -776,7 +788,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         </div>
 
         <div role={countError || !countExact ? 'alert' : 'status'} className={`rounded-lg border p-3 text-sm ${countExact ? 'border-success/30 bg-success/5' : 'border-destructive/30 bg-destructive/5'}`}>
-          <p>{checkingCount ? 'Conferindo chamada e votos…' : countError || (!countCurrent ? 'A sala mudou. Atualize a votação antes de continuar.' : countSnapshot?.issue) || '100% conferido: uma cédula por presente neste escrutínio.'}</p>
+          <p>{checkingCount && (!countSnapshot || !countCurrent) ? 'Conferindo chamada e votos…' : countError || (!countCurrent ? 'A sala mudou. Atualize a votação antes de continuar.' : countSnapshot?.issue) || '100% conferido: uma cédula por presente neste escrutínio.'}</p>
           <p className="mt-1 text-xs">Chamada: {countedPresent} · Confirmados: {countSnapshot?.election.total_present ?? totalPresent} · Cédulas: {voteCount}</p>
           {(countError || !countCurrent) && <Button className="mt-2" variant="outline" size="sm" disabled={checkingCount} onClick={() => { void fetchVoteCount(); onRefresh(); }}>Conferir novamente</Button>}
         </div>
@@ -901,14 +913,14 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Button>
 
-          {canProceed && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound < 3 && (
+          {countDisplayExact && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound < 3 && (
             <Button onClick={handleNextRound} disabled={loading || !canProceed} className="bg-primary">
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {currentRound + 1}º escrutínio →
             </Button>
           )}
 
-          {canProceed && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound >= 3 && (
+          {countDisplayExact && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound >= 3 && (
             <div className="rounded-lg border border-warning/40 bg-warning/10 p-3">
               <p className="text-xs font-semibold text-warning mb-1">
                 ⚠️ Máximo de escrutínios atingido
@@ -920,7 +932,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             </div>
           )}
 
-          {canProceed && phase === 'resultado' && electedCount >= seatsCount && (
+          {countDisplayExact && phase === 'resultado' && electedCount >= seatsCount && (
             <Button disabled={loading || !canProceed} onClick={() => setConfirmAction('finish')} className="bg-success hover:bg-success/90">
               <CheckCircle className="w-4 h-4 mr-2" />
               Concluir

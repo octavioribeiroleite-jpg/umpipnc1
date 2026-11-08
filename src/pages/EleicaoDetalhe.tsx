@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,8 @@ export default function EleicaoDetalhe() {
   const [devices, setDevices] = useState<Device[]>([]);
   const read = useSnapshotRead(id || 'missing');
   const [activeStep, setActiveStep] = useState<string | null>(null);
+  const [changingMode, setChangingMode] = useState(false);
+  const modeInFlight = useRef(false);
 
   const fetchAll = () => read.run(async () => {
     if (!id) throw new Error('Eleição indisponível');
@@ -126,6 +128,16 @@ export default function EleicaoDetalhe() {
     return idx === -1 ? steps.length - 1 : idx;
   }, [steps, completion]);
 
+  // Choose an initial step once per election. Saving the first candidate must
+  // not navigate away from a form where the organizer is adding more names.
+  useEffect(() => {
+    if (!read.hasSnapshot || !election?.id) return;
+    setActiveStep(previous => {
+      const index = steps.findIndex(step => step.key === previous);
+      return index >= 0 && index <= autoCurrentIndex ? previous : steps[autoCurrentIndex]?.key || null;
+    });
+  }, [id, read.hasSnapshot, election?.id, steps, autoCurrentIndex]);
+
   const selectedIndex = steps.findIndex(step => step.key === activeStep);
   const currentStepKey = selectedIndex >= 0 && selectedIndex <= autoCurrentIndex
     ? activeStep : steps[autoCurrentIndex]?.key;
@@ -167,6 +179,20 @@ export default function EleicaoDetalhe() {
     votacao: 'Iniciar Votação',
   };
 
+  const handlePersonalDevices = async () => {
+    if (modeInFlight.current || !isDraft) return;
+    modeInFlight.current = true; setChangingMode(true);
+    try {
+      const { data, error } = await supabase.from('elections').update({ voting_mode: 'individual' })
+        .eq('id', election.id).eq('status', 'draft').select('id').single();
+      if (error || !data) throw error || new Error('A votação mudou.');
+      await fetchAll();
+      setActiveStep('votacao');
+    } catch {
+      toast({ title: 'Não foi possível mudar o modo de votação', description: 'Tente novamente antes de continuar.', variant: 'destructive' });
+    } finally { modeInFlight.current = false; setChangingMode(false); }
+  };
+
   const renderStepContent = (key: string) => {
     switch (key) {
       case 'candidatos':
@@ -191,16 +217,20 @@ export default function EleicaoDetalhe() {
         );
       case 'dispositivos':
         return (
+          <div className="space-y-4">
+          {isDraft && <div className="rounded-lg border border-border p-3 space-y-2"><p className="text-sm">Se cada participante votar pelo próprio navegador, não é necessário cadastrar uma urna fixa.</p><Button variant="outline" className="h-auto min-h-11 whitespace-normal" disabled={changingMode} onClick={() => void handlePersonalDevices()}>{changingMode && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Usar apenas celulares</Button></div>}
           <DeviceRegistration
             electionId={election.id}
             devices={devices}
             onRefresh={fetchAll}
-            disabled={devicesLocked}
+            disabled={devicesLocked || changingMode}
           />
+          </div>
         );
       case 'votacao':
         return (
           <VotingPanel
+            key={`${election.id}:${election.current_round || 1}`}
             electionId={election.id}
             electionName={election.name}
             status={election.status}

@@ -1,9 +1,9 @@
 import { MemberAccessUnavailable } from '@/components/MemberAccessUnavailable';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { emitFixtureRealtime, setFixtureReadFailure } from './backend';
 import { StableRefreshBoundary } from '@/components/ui/stable-refresh-boundary';
 import {createRoot} from 'react-dom/client';
-import {BrowserRouter,Routes,Route} from 'react-router-dom';
+import {BrowserRouter,Routes,Route,useLocation,useNavigate} from 'react-router-dom';
 import {QueryClientProvider,QueryClient} from '@tanstack/react-query';
 import {TooltipProvider} from '@/components/ui/tooltip';
 import {AuthProvider} from '@/contexts/AuthContext';
@@ -61,6 +61,34 @@ import Aniversariantes from '@/pages/Aniversariantes';
 import PastorSugestoes from '@/pages/PastorSugestoes';
 import '../../../src/mobile-app-shell.css';
 applyFixtureSafeAreas(fixtureParams);
+// This standalone fixture entry mounts the app; it is not a component export module.
+// eslint-disable-next-line react-refresh/only-export-components
+function FixtureNamespace() {
+ const route=useLocation(),navigate=useNavigate();
+ const namespace=fixtureParams.get('namespace');
+ useEffect(()=>{
+  if(!namespace||!/^[a-zA-Z0-9_-]{1,64}$/.test(namespace))return;
+  const params=new URLSearchParams(route.search);
+  if(params.get('namespace')===namespace)return;
+  params.set('namespace',namespace);params.set('role',fixtureRole);
+  if(fixtureParams.has('delay'))params.set('delay',fixtureParams.get('delay')!);
+  navigate({pathname:route.pathname,search:params.toString()},{replace:true});
+ },[route.pathname,route.search,navigate,namespace]);
+ useEffect(()=>{
+  if(!namespace)return;
+  const openedLink=(event:MouseEvent)=>{
+   const anchor=(event.target as Element)?.closest?.('a[target="_blank"]');
+   if(!(anchor instanceof HTMLAnchorElement))return;
+   const url=new URL(anchor.href,location.href);
+   if(url.origin!==location.origin||!/^\/(?:__diretoria\/)?(?:vote|eleicao)\//.test(url.pathname))return;
+   url.searchParams.set('namespace',namespace);url.searchParams.set('role',fixtureRole);
+   if(fixtureParams.has('delay'))url.searchParams.set('delay',fixtureParams.get('delay')!);
+   anchor.href=url.href;
+  };
+  document.addEventListener('click',openedLink,true);return()=>document.removeEventListener('click',openedLink,true);
+ },[namespace]);
+ return null;
+}
 function BoundaryFixture(){const [pending,setPending]=useState(false);const [draft,setDraft]=useState('Rascunho fictício preservado');return <main className="p-6 space-y-4"><h1>Fixture de atualização visual</h1><p data-qa-browser>{navigator.userAgent}</p><button onClick={()=>setPending(value=>!value)}>{pending?'Concluir atualização':'Simular atualização'}</button><StableRefreshBoundary><label htmlFor="fixture-draft">Rascunho</label><input id="fixture-draft" name="draft" value={draft} onChange={event=>setDraft(event.target.value)}/><button>Botão da superfície</button>{pending&&<span className="animate-spin">Consultando</span>}</StableRefreshBoundary></main>;}
 function FixtureControls(){
  const [readFailure,setReadFailure] = useState(fixtureState === 'error');
@@ -74,7 +102,7 @@ const unavailable=<main className="p-6"><h1>Prévia separada</h1><p>EBD e tesour
 const root = document.getElementById('root')!;
 const opening = startAppOpening({ root, splash: document.getElementById('ipnc-opening')! });
 if (import.meta.hot) import.meta.hot.dispose(() => opening.stop());
-createRoot(root).render(<AppShell><PageErrorBoundary><QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><TooltipProvider><BrowserRouter basename="/__diretoria"><AuthProvider><DiretoriaSessionProvider><MembroSessionProvider><Routes>
+createRoot(root).render(<AppShell><PageErrorBoundary><QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><TooltipProvider><BrowserRouter basename="/__diretoria"><AuthProvider><FixtureNamespace/><DiretoriaSessionProvider><MembroSessionProvider><Routes>
 <Route path="/__boundary" element={<BoundaryFixture/>}/>
 <Route path="/__identity" element={<IdentityFixture/>}/>
 <Route path="/" element={<Index/>}/>
