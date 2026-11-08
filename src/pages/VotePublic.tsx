@@ -31,7 +31,7 @@ function getPhotoUrls(c: Candidate): string[] {
 
 function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name: string; size?: 'md' | 'lg' }) {
   const [current, setCurrent] = useState(0);
-  const sizeClass = size === 'lg' ? 'w-[192px] h-[192px] max-w-full' : 'w-[144px] h-[144px] max-w-full';
+  const sizeClass = size === 'lg' ? 'h-40 w-40 max-w-full sm:h-48 sm:w-48' : 'h-24 w-24 max-w-full sm:h-36 sm:w-36';
 
   if (photos.length === 0) {
     return (
@@ -66,7 +66,7 @@ function CandidatePhotos({ photos, name, size = 'md' }: { photos: string[]; name
           <ChevronRight className="h-4 w-4 text-white" />
         </button>
       </div>
-      <div className="flex max-w-full flex-wrap justify-center gap-1">
+      <div className="flex max-w-full flex-wrap justify-center gap-0">
         {photos.map((_, i) => (
           <button
             key={i}
@@ -223,23 +223,24 @@ function getTopForNextRound(
   return remaining.slice(0, end);
 }
 
-function SuccessScreen({ autoReset }: { autoReset: boolean }) {
+function SuccessScreen({ autoReset, position, round }: { autoReset: boolean; position: string; round: number }) {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-muted/30 p-4 sm:p-6 text-center">
       <div className="animate-fade-up w-full max-w-xl rounded-2xl bg-card border border-border shadow-sm px-5 py-8 sm:px-10 sm:py-12 md:px-14 md:py-16">
-        <div className="relative mx-auto mb-8 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40">
+        <div className="relative mx-auto mb-6 h-20 w-20 sm:h-24 sm:w-24">
           <div className="absolute inset-0 rounded-full bg-success/10 animate-ping" />
           <div className="absolute inset-3 rounded-full bg-success/10" />
           <div className="relative w-full h-full rounded-full bg-success flex items-center justify-center shadow-xl ring-8 ring-success/15">
-            <CheckCircle className="h-14 w-14 sm:h-20 sm:w-20 md:h-24 md:w-24 text-success-foreground" strokeWidth={2.5} />
+            <CheckCircle className="h-12 w-12 sm:h-14 sm:w-14 text-success-foreground" strokeWidth={2.5} />
           </div>
         </div>
-        <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold text-foreground mb-4 tracking-tight leading-none">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-4 tracking-tight leading-none">
           VOTO CONFIRMADO
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground font-semibold">
           Seu voto foi registrado com sucesso!
         </p>
+        <p className="mt-3 text-sm text-muted-foreground [overflow-wrap:anywhere]">{position} · {round}º escrutínio</p>
         {autoReset ? (
           <p className="mt-8 inline-flex items-center justify-center rounded-full bg-muted px-5 py-2.5 text-base sm:text-lg font-medium text-foreground">
             Aguarde o próximo votante
@@ -629,8 +630,9 @@ export default function VotePublic() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="min-h-dvh flex flex-col gap-3 items-center justify-center bg-background" role="status">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Preparando a votação…</p>
       </div>
     );
   }
@@ -705,7 +707,7 @@ export default function VotePublic() {
   if (voteSuccess) {
     const isAutoReset = isSharedBehavior || !isIndividual;
     return (
-      <SuccessScreen autoReset={isAutoReset} />
+      <SuccessScreen autoReset={isAutoReset} position={election.position} round={currentRound} />
     );
   }
 
@@ -785,8 +787,9 @@ export default function VotePublic() {
     const choices = confirmBlank ? [] : (isMultiSeat ? selectedCandidates : (confirmCandidate ? [confirmCandidate] : []));
     const confirmationBlankSlots = confirmBlank ? (isMultiSeat ? maxChoices : 1) : (isMultiSeat ? autoBlankSlots : 0);
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center bg-background p-6">
-        <div className="max-w-[760px] w-full text-center space-y-6">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-muted/25 p-4 sm:p-6">
+        <div className="max-w-xl w-full rounded-2xl border border-border bg-card p-5 text-center space-y-5 shadow-sm sm:p-8">
+          <p className="text-sm font-medium text-muted-foreground [overflow-wrap:anywhere]">{election.position} · {currentRound}º escrutínio</p>
           <h2 className="text-xl font-bold">{confirmBlank ? 'Confirma seu voto Branco / Nulo?' : isMultiSeat ? 'Confirma seu voto em:' : isCamisa ? 'Confirma seu voto neste modelo:' : 'Confirma seu voto em:'}</h2>
           {confirmBlank ? (
             <div className="rounded-2xl border-2 border-border bg-muted/40 p-8">
@@ -817,7 +820,7 @@ export default function VotePublic() {
           {voteError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-base text-destructive">{voteError}</p>}
           <div className="flex flex-col gap-3 min-[700px]:flex-row">
             <button disabled={voting} onClick={() => { setConfirmCandidate(null); setConfirmBlank(false); setConfirmSelection(false); setVoteError(''); }} className="min-h-[52px] min-w-0 flex-1 px-4 py-4 rounded-xl border-2 border-border text-lg font-semibold hover:bg-muted transition-colors disabled:opacity-50">
-              Cancelar
+              Voltar e corrigir
             </button>
             <button onClick={() => { void primeAudio(); void handleVote(); }} disabled={voting} className="min-h-[52px] min-w-0 flex-1 px-4 py-4 rounded-xl bg-primary text-primary-foreground text-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
               {voting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'CONFIRMAR'}
@@ -838,8 +841,9 @@ export default function VotePublic() {
           </div>
           <div className="space-y-2">
             <p className="text-xs font-bold uppercase tracking-wide text-primary">Urna pronta</p>
-            <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">{election.name}</h1>
-            <p className="text-sm font-medium text-muted-foreground sm:text-base">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
+            <h1 className="text-2xl font-bold leading-tight text-foreground [overflow-wrap:anywhere] sm:text-3xl">{election.position}</h1>
+            <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">{election.name}</p>
+            <p className="text-sm font-semibold text-primary">{currentRound}º escrutínio</p>
             {isSharedBehavior && (
               <p className="mx-auto mt-3 inline-flex items-center justify-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                 <Monitor className="h-3 w-3" /> Urna Fixa Ativada
@@ -850,7 +854,7 @@ export default function VotePublic() {
           <div className="my-6 rounded-2xl border border-border/70 bg-muted/30 px-4 py-5">
             <p className="text-sm font-semibold text-foreground">{isMultiSeat
               ? `Até ${maxChoices} voto(s) neste escrutínio • ${currentRound}º escrutínio`
-              : 'Votação segura'}</p>
+              : 'Seu voto é sigiloso'}</p>
             <p className="mt-1 text-xs text-muted-foreground">Os nomes e fotos aparecem somente depois de iniciar o voto.</p>
           </div>
 
@@ -864,11 +868,12 @@ export default function VotePublic() {
 
   // Main voting screen
   return (
-    <div className="min-h-dvh bg-background p-3 sm:p-4 md:p-8">
+    <div className="min-h-dvh bg-muted/25 p-4 pb-8 sm:p-6 md:p-8">
       <div className="max-w-[960px] mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="break-words text-2xl md:text-3xl font-bold">{election.name}</h1>
-          <p className="text-lg text-muted-foreground mt-1">{isCamisa ? election.position : `Cargo: ${election.position}`}</p>
+        <div className="mb-6 text-center">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary">{currentRound}º escrutínio · escolha</p>
+          <h1 className="break-words text-2xl font-bold md:text-3xl">{election.position}</h1>
+          <p className="mt-1 text-sm text-muted-foreground [overflow-wrap:anywhere]">{election.name}</p>
           <p className="text-sm text-muted-foreground mt-1">
             {isCamisa ? 'Escolha o modelo' : isMultiSeat ? `Preencha até ${maxChoices} voto(s) • ${totalSelectedMarks}/${maxChoices}` : 'Escolha seu candidato'}
           </p>
@@ -882,23 +887,23 @@ export default function VotePublic() {
             return (
               <article
                 key={c.id}
-                className={`relative flex min-w-0 min-h-[240px] flex-col items-center justify-between gap-4 rounded-2xl border-2 bg-card p-[16px] shadow-sm min-[700px]:p-[20px] ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
+                className={`relative grid min-w-0 grid-cols-[96px_minmax(0,1fr)] items-center gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex sm:min-h-[260px] sm:flex-col sm:justify-between sm:gap-4 sm:p-5 ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
               >
                 {isMultiSeat && selected && (
                   <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-sm">
                     {selectedIndex + 1}
                   </span>
                 )}
-                <CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} />
-                <h2 className="w-full [overflow-wrap:anywhere] text-[1.125rem] leading-snug font-semibold text-center">{c.name}</h2>
+                <div className="row-span-2 min-w-0"><CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} /></div>
+                <h2 className="w-full [overflow-wrap:anywhere] text-lg leading-snug font-semibold text-left sm:text-center">{c.name}</h2>
                 <button type="button" aria-pressed={isMultiSeat ? selected : undefined} disabled={isMultiSeat && !selected && selectedCandidates.length >= maxChoices} onClick={() => {
                   void primeAudio(); setVoteError('');
                   if (!isMultiSeat) { setConfirmCandidate(c); return; }
                   setSelectedCandidates(current => current.some(candidate => candidate.id === c.id)
                     ? current.filter(candidate => candidate.id !== c.id)
                     : current.length >= maxChoices ? current : [...current, c]);
-                }} aria-label={`${isMultiSeat ? (selected ? 'Desmarcar' : 'Selecionar') : 'Votar em'} ${c.name}`} className="min-h-[52px] w-full rounded-xl bg-primary px-3 py-3 text-base font-bold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50">
-                  {isMultiSeat ? (selected ? 'SELECIONADO' : 'SELECIONAR') : 'VOTAR'}
+                }} aria-label={`${isMultiSeat ? (selected ? 'Desmarcar' : 'Selecionar') : 'Votar em'} ${c.name}`} className="min-h-[48px] w-full rounded-xl bg-primary px-3 py-3 text-base font-bold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50">
+                  {isMultiSeat ? (selected ? 'Selecionado' : 'Selecionar') : 'Votar'}
                 </button>
               </article>
             );

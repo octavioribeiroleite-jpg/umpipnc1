@@ -137,13 +137,13 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
         </div>
       )}
 
-      <div className="grid min-w-0 grid-cols-1 gap-4 min-[700px]:grid-cols-2 min-[1200px]:grid-cols-3">
+      <div className={`grid min-w-0 grid-cols-1 gap-3 ${isCamisa ? 'min-[700px]:grid-cols-2 min-[1200px]:grid-cols-3' : 'min-[1100px]:grid-cols-2'}`}>
         {candidates.map((c) => {
           const photos = getPhotoUrls(c);
           return (
-            <div key={c.id} className="flex flex-col items-center min-w-0 gap-4 p-[16px] border border-border bg-card shadow-sm rounded-2xl">
+            <div key={c.id} className={`flex min-w-0 items-center gap-3 rounded-xl border border-border bg-muted/10 p-3 ${isCamisa ? 'flex-col p-4' : 'flex-wrap'}`}>
               {/* Photo display */}
-              <div className="relative w-full aspect-square max-h-[240px] rounded-xl overflow-hidden bg-muted flex items-center justify-center">
+              <div className={`relative flex shrink-0 items-center justify-center overflow-hidden bg-muted ${isCamisa ? 'aspect-square w-full max-h-[240px] rounded-xl' : 'h-16 w-16 rounded-full'}`}>
                 {photos.length > 0 ? (
                   <img src={photos[0]} alt={c.name} className="w-full h-full object-contain" />
                 ) : (
@@ -174,10 +174,10 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
                 </div>
               )}
 
-              <span className="w-full [overflow-wrap:anywhere] text-[1.125rem] font-semibold text-center leading-snug">{c.name}</span>
+              <span className={`min-w-0 [overflow-wrap:anywhere] text-base font-semibold leading-snug ${isCamisa ? 'w-full text-center' : 'flex-1'}`}>{c.name}</span>
               
               {!disabled && (
-                <div className="mt-auto flex flex-wrap justify-center gap-2">
+                <div className={`flex flex-wrap gap-1 ${isCamisa ? 'mt-auto justify-center' : 'ml-auto'}`}>
                   <label className="cursor-pointer rounded-lg" role="button" aria-label={`Enviar foto de ${c.name}`} tabIndex={uploading === c.id ? -1 : 0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click(); } }}>
                     <input
                       type="file"

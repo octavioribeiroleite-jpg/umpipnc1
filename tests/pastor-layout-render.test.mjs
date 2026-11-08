@@ -68,7 +68,7 @@ test('guarded roles, guests and auth loading do not render pastoral page content
 test('eight candidate photos retain all 48px targets in a wrapping, width-bounded group', () => {
   const html = renderPhotos(Array.from({length: 8}, (_, index) => `test-only-${index}.png`));
   assert.equal((html.match(/aria-label="Ver foto \d+ de Somente teste"/g) || []).length, 8);
-  assert.match(html, /class="flex max-w-full flex-wrap justify-center gap-1"/);
+  assert.match(html, /class="flex max-w-full flex-wrap justify-center gap-[01]"/);
   assert.equal((html.match(/class="h-\[48px\] w-\[48px\] rounded-full/g) || []).length, 8);
   assert.match(html, /aria-label="Foto anterior de Somente teste"/);
   assert.match(html, /aria-label="Próxima foto de Somente teste"/);

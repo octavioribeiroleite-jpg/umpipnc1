@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy, Monitor, Pencil, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, UserCheck, Vote, Trophy, Monitor, Pencil, ExternalLink, Eye, EyeOff, ListChecks, Check, Lock, ArrowRight } from 'lucide-react';
 import { AttendanceList } from '@/components/eleicoes/AttendanceList';
 import { CandidateForm } from '@/components/eleicoes/CandidateForm';
 import { VotingPanel } from '@/components/eleicoes/VotingPanel';
 import { ResultPanel } from '@/components/eleicoes/ResultPanel';
 import { DeviceRegistration } from '@/components/eleicoes/DeviceRegistration';
-import { ElectionStepper, StepDef } from '@/components/eleicoes/ElectionStepper';
+import { StepDef } from '@/components/eleicoes/ElectionStepper';
 import { ElectionStepCard } from '@/components/eleicoes/ElectionStepCard';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useSnapshotRead } from '@/hooks/useSnapshotRead';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,8 +50,11 @@ export default function EleicaoDetalhe() {
   const [devices, setDevices] = useState<Device[]>([]);
   const read = useSnapshotRead(id || 'missing');
   const [activeStep, setActiveStep] = useState<string | null>(null);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const [changingMode, setChangingMode] = useState(false);
   const modeInFlight = useRef(false);
+  const stepContentRef = useRef<HTMLDivElement>(null);
+  const previousStepRef = useRef<string | null>(null);
 
   const fetchAll = () => read.run(async () => {
     if (!id) throw new Error('Eleição indisponível');
@@ -143,6 +147,15 @@ export default function EleicaoDetalhe() {
     ? activeStep : steps[autoCurrentIndex]?.key;
   const currentIndex = steps.findIndex((s) => s.key === currentStepKey);
 
+  useEffect(() => {
+    if (!read.hasSnapshot || !currentStepKey) return;
+    if (previousStepRef.current && previousStepRef.current !== currentStepKey) {
+      stepContentRef.current?.focus({ preventScroll: true });
+      stepContentRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
+    previousStepRef.current = currentStepKey;
+  }, [currentStepKey, read.hasSnapshot]);
+
   if (!read.hasSnapshot || !election) {
     return (
       <AppLayout width="wide">
@@ -156,13 +169,12 @@ export default function EleicaoDetalhe() {
   const statusLabel: Record<string, string> = { draft: 'Rascunho', open: 'Em Votação', finished: 'Finalizada' };
   const isDraft = election.status === 'draft';
   const devicesLocked = election.status === 'finished';
-  const presentCount = attendance.filter((a) => a.present).length;
 
   const summaries: Record<string, string> = {
     candidatos: `${candidates.length} ${electionType === 'camisa' ? 'modelo(s)' : 'candidato(s)'} cadastrado(s)`,
-    presenca: `${election.total_present} presente(s) confirmado(s)`,
+    presenca: `${attendance.filter(person => person.present).length} de ${attendance.length} presentes${completion.presenca ? ' · chamada confirmada' : ''}`,
     dispositivos: `${devices.length} dispositivo(s) cadastrado(s)`,
-    votacao: election.status === 'finished' ? 'Votação concluída' : 'Votação em andamento',
+    votacao: election.status === 'finished' ? 'Votação concluída' : election.status === 'open' ? 'Votação em andamento' : 'Confira tudo e abra a votação',
   };
 
   const stepIcons: Record<string, JSX.Element> = {
@@ -176,7 +188,7 @@ export default function EleicaoDetalhe() {
     candidatos: electionType === 'camisa' ? 'Modelos' : 'Candidatos',
     presenca: 'Chamada de Presença',
     dispositivos: 'Dispositivos Fixos',
-    votacao: 'Iniciar Votação',
+    votacao: election.status === 'open' ? 'Votação em andamento' : 'Iniciar Votação',
   };
 
   const handlePersonalDevices = async () => {
@@ -252,83 +264,75 @@ export default function EleicaoDetalhe() {
   return (
     <AppLayout width="wide">
       {read.error && <QueryErrorState message="Não foi possível atualizar a eleição e suas etapas." onRetry={fetchAll} retrying={read.loading} hasPreviousData />}
-      {/* Header */}
-      <div className="rounded-2xl bg-card border border-border shadow-sm p-[16px] min-[700px]:p-[20px] mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Button variant="ghost" size="icon" className="min-h-[48px] min-w-[48px] shrink-0" aria-label="Voltar às eleições" onClick={() => navigate('/eleicoes')}>
+      <header className="mb-4 space-y-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
+        <div className="flex items-start gap-3">
+          <Button variant="outline" size="icon" className="shrink-0" aria-label="Voltar às eleições" onClick={() => navigate('/eleicoes')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-page-title font-semibold min-w-0 whitespace-normal break-words">{election.name}</h1>
-              <Badge
-                variant={election.status === 'open' ? 'default' : 'secondary'}
-                className="shrink-0 gap-1"
-              >
-                {election.status === 'draft' && <Pencil className="h-3 w-3" />}
-                {statusLabel[election.status]}
-              </Badge>
-            </div>
-            <p className="text-base text-muted-foreground [overflow-wrap:anywhere]">{election.position}</p>
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">{sequenceStep ? `Diretoria UMP · Cargo ${sequenceStep.index + 1} de ${UMP_POSITIONS.length}` : 'Sala de votação'}</p>
+            <h1 className="break-words text-2xl font-bold leading-tight tracking-tight sm:text-3xl">{election.position}</h1>
           </div>
+          <Badge variant={election.status === 'open' ? 'default' : 'secondary'} className="shrink-0 gap-1 self-start">
+            {election.status === 'draft' && <Pencil className="h-3 w-3" />}{statusLabel[election.status]}
+          </Badge>
         </div>
+        <p className="text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{election.name}</p>
 
-        {election.status !== 'finished' && (
-          <>
-            <ElectionStepper
-              steps={steps}
-              currentIndex={currentIndex >= 0 ? currentIndex : autoCurrentIndex}
-              maxAvailableIndex={autoCurrentIndex}
-              completed={completion as any}
-              onStepClick={handleStepClick}
-            />
-            <p className="text-xs text-muted-foreground text-center mt-1">
-              Etapa {(currentIndex >= 0 ? currentIndex : autoCurrentIndex) + 1} de {steps.length}: {stepTitles[currentStepKey || '']}
-            </p>
-          </>
-        )}
-      </div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border pt-3">
+          <p className="min-w-0 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+            {election.status === 'finished' ? 'Votação concluída' : election.status === 'open'
+              ? `${election.current_round || 1}º escrutínio · ${election.total_present} presentes`
+              : <><span className="font-semibold text-foreground">Etapa {(currentIndex >= 0 ? currentIndex : autoCurrentIndex) + 1} de {steps.length}</span> · {stepTitles[currentStepKey || '']}</>}
+          </p>
+          <Dialog open={optionsOpen} onOpenChange={setOptionsOpen}>
+            <DialogTrigger asChild><Button variant="outline" className="gap-2 px-3 text-xs sm:text-sm"><ListChecks className="h-4 w-4" />Etapas e opções</Button></DialogTrigger>
+            <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Etapas e opções</DialogTitle>
+                <DialogDescription>{election.status === 'finished' ? 'Consulte a chamada, os candidatos e as urnas desta votação.' : 'Consulte ou revise uma etapa disponível. A votação mantém os dados já salvos.'}</DialogDescription>
+              </DialogHeader>
+              <nav aria-label="Etapas da eleição" className="space-y-2">
+                {steps.filter(step => election.status !== 'finished' || step.key !== 'votacao').map((step, index) => {
+                  const done = completion[step.key as keyof typeof completion];
+                  const available = election.status === 'finished' || index <= autoCurrentIndex;
+                  const selected = step.key === currentStepKey;
+                  return <button key={step.key} type="button" disabled={!available} aria-current={selected ? 'step' : undefined}
+                    onClick={() => { handleStepClick(index); if (election.status !== 'finished') setOptionsOpen(false); }}
+                    className={`flex min-h-16 w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors motion-reduce:transition-none disabled:opacity-50 ${selected ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'}`}>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${done ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>{done ? <Check className="h-4 w-4" /> : available ? stepIcons[step.key] : <Lock className="h-4 w-4" />}</span>
+                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{stepTitles[step.key]}</span><span className="block text-xs leading-relaxed text-muted-foreground">{done ? summaries[step.key] : selected ? 'Etapa atual' : 'Pendente'}</span></span>
+                    {available && <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                  </button>;
+                })}
+              </nav>
+              {election.status === 'finished' && currentStepKey && currentStepKey !== 'votacao' && <section className="border-t border-border pt-4" aria-label={`Consulta: ${stepTitles[currentStepKey]}`}>{renderStepContent(currentStepKey)}</section>}
+              {sequenceStep && <section className="space-y-3 border-t border-border pt-4" aria-label="Roteiro da diretoria UMP">
+                <h3 className="text-sm font-semibold">Diretoria UMP · 5 cargos</h3>
+                <ol className="space-y-2 text-sm">{UMP_POSITIONS.map((position, index) => <li key={position} className={`flex items-center gap-2 ${index === sequenceStep.index ? 'font-semibold text-primary' : 'text-muted-foreground'}`}><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs">{index + 1}</span>{position}</li>)}</ol>
+                <p className="text-xs leading-relaxed text-muted-foreground">Roteiro salvo neste navegador. Os resultados permanecem na lista de eleições.</p>
+              </section>}
+            </DialogContent>
+          </Dialog>
+        </div>
+      </header>
 
-      {/* Step cards */}
-      {election.status !== 'finished' && (
-        <div className="space-y-2">
-          {steps.map((step) => {
-            const isDone = completion[step.key as keyof typeof completion];
-            const isActive = step.key === currentStepKey;
-            const state: 'done' | 'active' | 'pending' = isActive ? 'active' : isDone ? 'done' : 'pending';
-            const stepIdx = steps.findIndex((s) => s.key === step.key);
-            const canOpen = stepIdx <= autoCurrentIndex;
-            const isLast = stepIdx === steps.length - 1;
-            const nextStep = steps[stepIdx + 1];
-
-            return (
-              <ElectionStepCard
-                key={step.key}
-                state={state}
-                icon={stepIcons[step.key]}
-                title={stepTitles[step.key]}
-                summary={isDone || isActive ? summaries[step.key] : 'Pendente'}
-                onToggle={!isActive && canOpen ? () => setActiveStep(step.key) : undefined}
-                onAdvance={isActive && nextStep ? () => setActiveStep(nextStep.key) : undefined}
-                canAdvance={isDone}
-                advanceLabel={nextStep ? `Avançar: ${stepTitles[nextStep.key]}` : undefined}
-                isLastStep={isLast}
-              >
-                {isActive && renderStepContent(step.key)}
-              </ElectionStepCard>
-            );
-          })}
+      {election.status !== 'finished' && currentStepKey && (
+        <div ref={stepContentRef} tabIndex={-1} aria-label={stepTitles[currentStepKey]} className="scroll-mt-4 focus:outline-none">
+        <ElectionStepCard
+          state="active"
+          icon={stepIcons[currentStepKey]}
+          title={stepTitles[currentStepKey]}
+          summary={currentStepKey === 'votacao' ? undefined : summaries[currentStepKey]}
+          onAdvance={steps[currentIndex + 1] ? () => setActiveStep(steps[currentIndex + 1].key) : undefined}
+          canAdvance={completion[currentStepKey as keyof typeof completion]}
+          advanceLabel={steps[currentIndex + 1] ? `Avançar: ${stepTitles[steps[currentIndex + 1].key]}` : undefined}
+          isLastStep={currentIndex === steps.length - 1}
+        >
+          {renderStepContent(currentStepKey)}
+        </ElectionStepCard>
         </div>
       )}
-
-      {/* Result */}
-      {sequenceStep && <section className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
-        <p className="font-semibold">Diretoria UMP · Cargo {sequenceStep.index + 1} de {UMP_POSITIONS.length}</p>
-        <ol className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-          {UMP_POSITIONS.map((position, index) => <li key={position} className={index === sequenceStep.index ? 'font-bold text-primary' : 'text-muted-foreground'}>{index + 1}. {position}</li>)}
-        </ol>
-        <p className="text-xs text-muted-foreground">Roteiro salvo neste navegador. Cada resultado fica preservado na lista de eleições.</p>
-      </section>}
 
       {election.status === 'finished' && (
         <div className="rounded-2xl bg-card border border-border shadow-sm p-4">

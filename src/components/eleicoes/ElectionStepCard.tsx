@@ -21,22 +21,24 @@ interface Props {
 export function ElectionStepCard({ state, icon, title, summary, onToggle, onAdvance, canAdvance, advanceLabel, isLastStep, children }: Props) {
   if (state === 'active') {
     return (
-      <div className="rounded-2xl bg-card border border-primary shadow-sm p-[16px] min-[700px]:p-[20px] transition-all">
-        <div className="flex flex-wrap items-center gap-3 mb-3">
-          <div className="text-primary">{icon}</div>
+      <section className="rounded-2xl bg-card border border-border shadow-sm p-4 sm:p-5">
+        <div className="flex items-start gap-3 mb-5 border-b border-border pb-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">{icon}</div>
+          <div className="min-w-0 flex-1 space-y-1">
           <h2 className="min-w-0 break-words text-base font-semibold flex-1 text-foreground">{title}</h2>
-          <span className="text-xs font-semibold text-primary-foreground bg-primary px-2 py-0.5 rounded-full uppercase tracking-wide">Etapa atual</span>
+          {summary && <p className="text-sm leading-relaxed text-muted-foreground">{summary}</p>}
+          </div>
         </div>
         {children}
         {onAdvance && !isLastStep && (
           <div className="mt-4 pt-3 border-t border-primary/20 flex justify-end">
-            <Button onClick={onAdvance} disabled={!canAdvance} size="sm" className="w-full sm:w-auto gap-1.5">
+            <Button onClick={onAdvance} disabled={!canAdvance} className="w-full sm:w-auto gap-2">
               {advanceLabel || 'Avançar'}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         )}
-      </div>
+      </section>
     );
   }
 

@@ -101,7 +101,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
               onClick={handleAdd}
               disabled={adding || !label.trim()}
               size="sm"
-              className="shrink-0"
+              className="min-h-12 shrink-0"
             >
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
               Adicionar
@@ -120,7 +120,7 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
       ) : (
         <div className="space-y-2">
           {devices.map((d) => (
-            <div key={d.id} className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-2">
+            <div key={d.id} className="rounded-xl border border-border bg-muted/10 p-3 space-y-3 sm:p-4">
               <div className="flex items-center gap-2">
                 <Monitor className="h-4 w-4 text-primary shrink-0" />
                 <span className="min-w-0 [overflow-wrap:anywhere] text-base font-semibold text-foreground flex-1">{d.label}</span>
@@ -134,15 +134,15 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="min-h-[48px] text-base" onClick={() => setSelectedDevice(d)}>
+              <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+                <Button variant="outline" size="sm" className="min-h-12 text-sm" onClick={() => setSelectedDevice(d)}>
                   <QrCode className="h-3.5 w-3.5 mr-1" /> Mostrar QR Code
                 </Button>
-                <Button variant="outline" size="sm" className="min-h-[48px] text-base" onClick={() => copyDeviceLink(d)}>
+                <Button variant="outline" size="sm" className="min-h-12 text-sm" onClick={() => copyDeviceLink(d)}>
                   <Copy className="h-3.5 w-3.5 mr-1" /> Copiar link
                 </Button>
                 {!disabled && (
-                  <Button variant="ghost" size="sm" className="min-h-[48px] text-base text-destructive hover:text-destructive" onClick={() => handleRemove(d.id)}>
+                  <Button variant="ghost" size="sm" className="min-h-12 text-sm text-destructive hover:text-destructive" onClick={() => handleRemove(d.id)}>
                     <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover
                   </Button>
                 )}

@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Vote, Loader2, Shirt } from 'lucide-react';
+import { Plus, Vote, Loader2, Shirt, ListChecks, ArrowRight } from 'lucide-react';
 import { FAB } from '@/components/ui/fab';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -186,23 +186,27 @@ export default function Eleicoes() {
     <AppLayout width="wide">
       <PageHeader
         title="Eleições"
-        description="Organize eleições e acompanhe cada etapa da votação"
+        description="Prepare a chamada, conduza os votos e acompanhe os resultados."
         action={
-          <Button disabled={!canCreate || !hasSnapshot || readError} onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
-            <Plus className="h-4 w-4 mr-2" /> Nova Eleição
+          <Button disabled={!canCreate || !hasSnapshot || readError} onClick={() => setDialogOpen(true)} className="hidden min-h-12 rounded-xl md:inline-flex">
+            <Plus className="h-4 w-4 mr-2" /> Nova votação
           </Button>
         }
       />
 
       <FAB disabled={!canCreate || !hasSnapshot || readError} aria-label="Nova eleição" onClick={() => setDialogOpen(true)} />
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'cargo' | 'camisa')} className="mb-4">
-        <TabsList className="grid h-auto w-full grid-cols-2">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'cargo' | 'camisa')} className="mb-5">
+        <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl p-1 sm:max-w-md">
           <TabsTrigger className="min-h-[48px] whitespace-normal" value="cargo"><Vote className="h-4 w-4 mr-1.5" /> Cargos</TabsTrigger>
           <TabsTrigger className="min-h-[48px] whitespace-normal" value="camisa"><Shirt className="h-4 w-4 mr-1.5" /> Camisas</TabsTrigger>
         </TabsList>
       </Tabs>
 
+      {hasSnapshot && <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">{filtered.length} {filtered.length === 1 ? 'votação' : 'votações'} · {filtered.filter(row => row.status === 'open').length} abertas</p>
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><ListChecks className="h-4 w-4" /> Chamada → candidatos → votação → resultado</span>
+      </div>}
       {readError && <QueryErrorState message="Não foi possível consultar as eleições e suas contagens." onRetry={() => void fetchElections()} retrying={loading} hasPreviousData={hasSnapshot} />}
       {!hasSnapshot ? (loading ? (
         <div className="space-y-3">
@@ -216,7 +220,7 @@ export default function Eleicoes() {
           description={activeTab === 'camisa' ? 'Crie uma votação para escolher o modelo da camisa.' : 'Crie uma nova eleição para começar.'}
         />
       ) : (
-        <div className="grid gap-4 min-[900px]:grid-cols-2">
+        <div className="grid gap-4 min-[900px]:grid-cols-2 xl:grid-cols-3">
           {filtered.map((e) => (
             <ElectionCard key={e.id} election={e} onClick={() => navigate(`/eleicoes/${e.id}`)} onDelete={(id) => setDeleteId(id)} />
           ))}
@@ -224,9 +228,10 @@ export default function Eleicoes() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={open => { if (!creating) setDialogOpen(open); }}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>{electionType === 'camisa' ? 'Nova Votação de Camisa' : 'Nova Eleição'}</DialogTitle>
+            <DialogTitle className="text-xl">{electionType === 'camisa' ? 'Nova votação de camisa' : 'Nova votação'}</DialogTitle>
+            <p className="text-sm text-muted-foreground">Defina o formato. A chamada e os candidatos vêm na próxima etapa.</p>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -240,36 +245,37 @@ export default function Eleicoes() {
                 <SelectContent><SelectItem value="single">Votação avulsa</SelectItem><SelectItem value="ump">Diretoria UMP — 5 cargos</SelectItem></SelectContent>
               </Select>
             </div>
-            {template === 'ump' && <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2 text-sm">
-              <p>{UMP_POSITIONS.join(' → ')}</p>
-              <p className="text-xs text-muted-foreground">Confirme a chamada no primeiro cargo e reaproveite as presenças nos seguintes. Cada cargo tem candidatos e resultado próprios. O roteiro fica salvo neste navegador; as votações ficam na lista da sociedade.</p>
+            {template === 'ump' && <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+              <p className="mb-3 font-semibold text-primary">Um roteiro, cinco cargos</p>
+              <ol className="grid gap-2 sm:grid-cols-2">{UMP_POSITIONS.map((cargo, index) => <li key={cargo} className="flex items-center gap-2"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{index + 1}</span>{cargo}</li>)}</ol>
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">A chamada do primeiro cargo pode ser reaproveitada. Cada cargo tem candidatos e resultado próprios. Roteiro salvo neste navegador.</p>
             </div>}
-            <div>
+            {template === 'single' && <div>
               <Label htmlFor={`${formId}-type`}>Tipo</Label>
-              <Select disabled={creating || template === 'ump' || !!sequenceRef.current} value={electionType} onValueChange={(v) => setElectionType(v as 'cargo' | 'camisa')}>
+              <Select disabled={creating || !!sequenceRef.current} value={electionType} onValueChange={(v) => setElectionType(v as 'cargo' | 'camisa')}>
                 <SelectTrigger id={`${formId}-type`}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cargo">Eleição de Cargo</SelectItem>
                   <SelectItem value="camisa">Votação de Camisa</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div>}
             <div>
               <Label htmlFor={`${formId}-name`}>{electionType === 'camisa' ? 'Nome da Votação' : 'Nome da Eleição'}</Label>
               <Input
-                disabled={creating || !!sequenceRef.current} id={`${formId}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Camisa UMP 2025' : 'Ex: Eleição Diretoria 2025'} />
+                disabled={creating || !!sequenceRef.current} id={`${formId}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Camisa UMP' : 'Ex: Diretoria UMP'} />
             </div>
-            <div>
+            {template === 'single' && <div>
               <Label htmlFor={`${formId}-position`}>{electionType === 'camisa' ? 'Descrição' : 'Cargo'}</Label>
               <Input
-                disabled={creating || template === 'ump' || !!sequenceRef.current} id={`${formId}-position`} value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
-            </div>
-            {electionType === 'cargo' && (
+                disabled={creating || !!sequenceRef.current} id={`${formId}-position`} value={position} onChange={(e) => setPosition(e.target.value)} placeholder={electionType === 'camisa' ? 'Ex: Escolha do modelo' : 'Ex: Presidente'} />
+            </div>}
+            {electionType === 'cargo' && template === 'single' && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor={`${formId}-seats`}>Quantidade de vagas</Label>
                   <Input
-                    disabled={creating || template === 'ump' || !!sequenceRef.current}
+                    disabled={creating || !!sequenceRef.current}
                     id={`${formId}-seats`}
                     type="number"
                     inputMode="numeric"
@@ -280,7 +286,7 @@ export default function Eleicoes() {
                   />
                   {Number(seatsCount) > 1 && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      ℹ️ Cadastre pelo menos {Number(seatsCount) + 1} candidatos para garantir disputa real.
+                      Cadastre pelo menos {Number(seatsCount) + 1} candidatos para garantir disputa real.
                     </p>
                   )}
                 </div>
@@ -296,21 +302,21 @@ export default function Eleicoes() {
                     className="bg-muted text-muted-foreground cursor-not-allowed"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    ℹ️ Preenchido automaticamente igual à quantidade de vagas.
+                    Cada cédula permite uma escolha por vaga.
                   </p>
                 </div>
               </div>
             )}
-            {electionType === 'cargo' && (
+            {electionType === 'cargo' && template === 'single' && (
               <div className="flex flex-col gap-1">
                 <Label>Regra de maioria</Label>
                 <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
                   {Number(seatsCount) > 1
-                    ? '✅ Maioria Absoluta (>50% das cédulas) — obrigatório para múltiplas vagas'
-                    : '✅ Maioria Absoluta (>50% das cédulas)'}
+                    ? 'Maioria absoluta: mais de 50% das cédulas'
+                    : 'Maioria absoluta: mais de 50% das cédulas'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  ℹ️ Para eleição de diáconos, a regra é sempre Maioria Absoluta no 1º escrutínio.
+                  Regra do primeiro escrutínio. O segundo usa maioria simples.
                 </p>
               </div>
             )}
@@ -330,7 +336,7 @@ export default function Eleicoes() {
           <DialogFooter>
             <Button onClick={handleCreate} disabled={creating || !canCreate}>
               {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Criar
+              {template === 'ump' ? 'Criar roteiro' : 'Criar votação'} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </DialogFooter>
         </DialogContent>

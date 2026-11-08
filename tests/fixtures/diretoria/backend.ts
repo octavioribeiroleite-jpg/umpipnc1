@@ -69,6 +69,23 @@ if (fixtureParams.has('ballot_count') || fixtureParams.has('attendance_present')
  data.election_attendance=Array.from({length:present},(_,index)=>({id:`attendance-${String(index).padStart(5,'0')}`,election_id:'election',name:`Pessoa FICTÍCIA ${index+1}`,present:true}));
  data.election_votes=Array.from({length:ballotCount},(_,ballot)=>Array.from({length:choices},(_,choice)=>({id:`vote-${String(ballot).padStart(5,'0')}-${choice}`,election_id:'election',candidate_id:`candidate-${choice+1}`,ballot_id:`ballot-${ballot}`,round_number:1,is_blank:false}))).flat();
 }
+// Optional, non-production visual QA scenarios. Defaults and persisted rehearsals
+// remain unchanged when these query parameters are absent.
+if (fixtureParams.get('majority_rule') === 'absolute_50' || fixtureParams.get('majority_rule') === 'simple') {
+ data.elections[0].majority_rule = fixtureParams.get('majority_rule');
+}
+const requestedRound = Number(fixtureParams.get('current_round'));
+if (Number.isSafeInteger(requestedRound) && requestedRound >= 1 && requestedRound <= 3) data.elections[0].current_round = requestedRound;
+const requestedDistribution = fixtureParams.get('distribution');
+if (requestedDistribution && /^\d{1,4}(,\d{1,4}){0,17}$/.test(requestedDistribution)) {
+ const distribution = requestedDistribution.split(',').map(Number);
+ const total = distribution.reduce((sum, count) => sum + count, 0);
+ if (total <= 2000 && distribution.length <= data.election_candidates.length) {
+  data.election_votes = distribution.flatMap((count, index) => Array.from({length:count}, (_, vote) => ({id:`qa-vote-${index}-${vote}`,election_id:'election',candidate_id:`candidate-${index+1}`,ballot_id:`qa-ballot-${index}-${vote}`,round_number:requestedRound >= 1 && requestedRound <= 3 ? requestedRound : 1,is_blank:false})));
+  data.elections[0].total_present = total;
+  data.election_attendance = Array.from({length:total}, (_, index) => ({id:`qa-attendance-${index}`,election_id:'election',name:`Pessoa FICTÍCIA ${index+1}`,present:true}));
+ }
+}
 const mode=fixtureState;
 let readsFail = mode === 'error';
 export function setFixtureReadFailure(failed:boolean) { readsFail = failed; }

@@ -88,16 +88,16 @@ export default function EleicaoApresentar() {
   const pct = totalPresent > 0 ? Math.min(100, (displayedCount / totalPresent) * 100) : 0;
 
   return (
-    <div className="min-h-dvh bg-background flex flex-col">
+    <div className="min-h-dvh bg-muted/25 flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="max-w-[1600px] mx-auto px-[16px] min-[700px]:px-[32px] py-[24px] flex flex-wrap items-center justify-between gap-4">
+        <div className="max-w-[1600px] mx-auto px-[16px] min-[700px]:px-[32px] py-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 lg:gap-4 min-w-0">
             <img src={logo} alt="Marca IPNC" className="h-10 lg:h-14 w-auto shrink-0 rounded-lg bg-white p-1 object-contain" />
             <div className="min-w-0">
-              <h1 className="text-[clamp(2.5rem,4vw,3.5rem)] leading-tight font-bold min-w-0 whitespace-normal [overflow-wrap:anywhere]">{election.name}</h1>
-              <p className="text-lg text-muted-foreground min-w-0 whitespace-normal [overflow-wrap:anywhere]">
-                {election.position}
+              <h1 className="text-[clamp(1.5rem,3vw,2.75rem)] leading-tight font-bold min-w-0 whitespace-normal [overflow-wrap:anywhere]">{election.position}</h1>
+              <p className="text-sm sm:text-base text-muted-foreground min-w-0 whitespace-normal [overflow-wrap:anywhere]">
+                {election.name} · {election.current_round || 1}º escrutínio
               </p>
             </div>
           </div>
@@ -122,11 +122,11 @@ export default function EleicaoApresentar() {
         ) : (
           /* PROGRESS VIEW (anonymous) */
           <div className="w-full min-w-0">
-            <div className="rounded-2xl bg-sidebar text-sidebar-foreground border border-sidebar-border p-[24px] min-[700px]:p-[32px] min-h-[420px] flex flex-col justify-center text-center gap-8">
+            <div className="rounded-2xl bg-sidebar text-sidebar-foreground border border-sidebar-border p-[24px] min-[700px]:p-[32px] min-h-[360px] flex flex-col justify-center text-center gap-8">
               {countError && <QueryErrorState message="Não foi possível atualizar a contagem de votos." onRetry={retryCount} retrying={countLoading} hasPreviousData={hasCountSnapshot} />}
               {!hasCountSnapshot ? <p role="status" className="text-lg text-sidebar-foreground/80">{countError ? 'Contagem indisponível' : 'Consultando contagem…'}</p> : <>
               {/* Status amigável */}
-              <p className="text-lg min-[700px]:text-2xl font-medium text-sidebar-foreground tracking-wide">
+              <p className="text-base min-[700px]:text-xl font-medium text-sidebar-foreground tracking-wide">
                 {finished
                   ? 'Votação encerrada'
                   : displayedCount === 0
@@ -146,8 +146,8 @@ export default function EleicaoApresentar() {
                 >
                   {displayedCount}
                 </p>
-                <p className="text-xl min-[700px]:text-3xl font-semibold text-sidebar-foreground/80 tabular-nums">
-                  de {totalPresent}
+                <p className="text-lg min-[700px]:text-2xl font-semibold text-sidebar-foreground/80 tabular-nums">
+                  de {totalPresent} votos esperados
                 </p>
               </div>
 

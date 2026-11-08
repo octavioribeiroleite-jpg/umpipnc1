@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { calculateElectionRounds } from '@/lib/election-results';
 import { readElectionCount, requireElectionCount, type ElectionCountSnapshot } from '@/lib/election-completion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -404,12 +405,26 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
   };
 
   const handleReset = async () => {
+    if (actionRef.current || loading || status !== 'open') return;
+    actionRef.current = true;
     setLoading(true);
-    await supabase.from('election_votes' as any).delete().eq('election_id', electionId);
-    toast({ title: 'Votação reiniciada — votos apagados' });
-    setLoading(false);
-    setConfirmAction(null);
-    fetchVoteCount();
+    try {
+      const before = await readElectionCount(supabase, electionId);
+      if (before.election.status !== 'open' || before.election.current_round !== currentRound) throw new Error('A votação mudou. Atualize a sala antes de reiniciar.');
+      const { error } = await supabase.from('election_votes' as any).delete().eq('election_id', electionId);
+      if (error) throw error;
+      const after = await readElectionCount(supabase, electionId);
+      if (after.votes.length > 0) throw new Error('Ainda há votos registrados. Confira a sala antes de tentar novamente.');
+      setPhase('voting');
+      setConfirmAction(null);
+      toast({ title: 'Votos apagados', description: `O ${currentRound}º escrutínio permanece aberto. Chamada, candidatos e urnas foram mantidos.` });
+    } catch (cause) {
+      toast({ title: 'Não foi possível confirmar o reinício', description: cause instanceof Error ? cause.message : 'Confira a conexão e tente novamente.', variant: 'destructive' });
+    } finally {
+      actionRef.current = false;
+      setLoading(false);
+      void fetchVoteCount();
+    }
   };
 
   const handleFinish = async () => {
@@ -514,12 +529,13 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
       acc[v.candidate_id] = (acc[v.candidate_id] || 0) + 1;
       return acc;
     }, {});
+  const liveElectedIds = countExact ? new Set(calculateElectionRounds(liveVotes, candidates, { seats_count: seatsCount, current_round: currentRound, majority_rule: majorityRule }).flatMap(round => round.electedIds)) : new Set<string>();
   const liveRankedCandidates = (candidates || [])
     .map(c => ({
       ...c,
       votes: liveVoteCounts[c.id] || 0,
       pct: liveTotalBallots > 0 ? Math.round(((liveVoteCounts[c.id] || 0) / liveTotalBallots) * 100) : 0,
-      elected: countExact && (liveVoteCounts[c.id] || 0) >= liveNeeded && liveTotalBallots > 0,
+      elected: liveElectedIds.has(c.id),
     }))
     .sort((a, b) => b.votes - a.votes);
   const liveBlankCount = liveVotes.filter(v => (v.round_number || 1) === liveCurrentRound && v.is_blank).length;
@@ -604,42 +620,85 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-background p-4 shadow-sm space-y-4">
-        {/* Mode label */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            {selectedMode === 'individual' ? (
-              <Smartphone className="h-4 w-4 text-muted-foreground shrink-0" />
-            ) : (
-              <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
-            )}
-            <span className="text-sm font-medium text-muted-foreground truncate">
-              Modo: {selectedMode === 'individual' ? 'Voto Individual' : selectedMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
-            </span>
+      <div className="min-w-0 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-semibold">{currentRound}º escrutínio</p>
+          <Badge variant="secondary">{selectedMode === 'individual' ? 'Voto individual' : selectedMode === 'both' ? 'Urna + celular' : 'Urna compartilhada'}</Badge>
+        </div>
+        <div role={countError || !countExact ? 'alert' : 'status'} className={`rounded-xl border p-3 text-sm ${countExact ? 'border-success/30 bg-success/5' : countError || !countCurrent ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-muted/20'}`}>
+          <p>{checkingCount && (!countSnapshot || !countCurrent) ? 'Conferindo chamada e votos…' : countError || (!countCurrent ? 'A sala mudou. Atualize a votação antes de continuar.' : countSnapshot?.issue) || '100% conferido: uma cédula por presente neste escrutínio.'}</p>
+          <p className="mt-1 text-xs">Chamada: {countedPresent} · Confirmados: {countSnapshot?.election.total_present ?? totalPresent} · Cédulas: {voteCount}</p>
+          {(countError || !countCurrent) && <Button className="mt-2" variant="outline" size="sm" disabled={checkingCount} onClick={() => { void fetchVoteCount(); onRefresh(); }}>Conferir novamente</Button>}
+        </div>
+
+        {/* Progress */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Progresso</span>
+            <span className="font-semibold">{voteCount}/{countedPresent}</span>
           </div>
+          <Progress value={countedPresent > 0 ? Math.min(100, (voteCount / countedPresent) * 100) : 0} className="h-2" />
+        </div>
+
+        {/* Compact counters */}
+        <div className="grid grid-cols-3 gap-2 text-center tabular-nums">
+          <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
+            <p className="text-2xl font-bold tracking-tight text-foreground">{countedPresent}</p>
+            <p className="text-xs text-muted-foreground">Presentes</p>
+          </div>
+          <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
+            <p className="text-2xl font-bold tracking-tight text-foreground">{voteCount}</p>
+            <p className="text-xs text-muted-foreground">Cédulas</p>
+          </div>
+          <div className={`p-2 rounded-lg border shadow-sm ${countExact ? 'border-success/50 bg-success/5' : 'border-warning/50 bg-warning/10'}`}>
+            <p className={`text-lg font-bold ${countExact ? 'text-success' : 'text-warning'}`}>
+              {countError || !countSnapshot?.attendanceConfirmed ? '—' : Math.abs(diff)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {countError ? 'Conferir contagem' : !countSnapshot?.attendanceConfirmed ? 'Conferir chamada' : countExact ? 'Contagem exata' : diff < 0 ? 'Votos excedentes' : 'Votos faltantes'}
+            </p>
+          </div>
+        </div>
+
+        {/* Botões principais — só aparecem na fase correta */}
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs shrink-0"
-            onClick={() => setEditOpen(true)}
+            onClick={() => window.open(`/eleicao/${electionId}/apresentar`, '_blank', 'noopener')}
+            className="min-h-12 gap-2"
           >
-            <Pencil className="h-3 w-3 mr-1" /> Editar configuração
+            <Monitor className="w-4 h-4" />
+            Abrir tela de apresentação
+            <ExternalLink className="h-3 w-3 opacity-60" />
           </Button>
+
+          {countDisplayExact && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound < 3 && (
+            <Button onClick={handleNextRound} disabled={loading || !canProceed} className="bg-primary">
+              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {currentRound + 1}º escrutínio →
+            </Button>
+          )}
+
+          {countDisplayExact && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound >= 3 && (
+            <div className="rounded-lg border border-warning/40 bg-warning/10 p-3">
+              <p className="text-xs font-semibold text-warning mb-1">
+                ⚠️ Máximo de escrutínios atingido
+              </p>
+              <p className="text-xs text-muted-foreground">
+                O desempate foi aplicado automaticamente pelo critério de idade (mais velho eleito).
+                Caso não haja birth_date cadastrado, o Conselho deve decidir conforme o regimento.
+              </p>
+            </div>
+          )}
+
+          {countDisplayExact && phase === 'resultado' && electedCount >= seatsCount && (
+            <Button disabled={loading || !canProceed} onClick={() => setConfirmAction('finish')} className="bg-success hover:bg-success/90">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Concluir
+            </Button>
+          )}
         </div>
-        {isCargoElection && (
-          <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm">
-            <p className="font-semibold text-foreground">{currentRound}º escrutínio</p>
-            {countExact ? (
-              <p className="text-xs text-muted-foreground">
-                {electedCount}/{seatsCount} vaga(s) preenchida(s). Restam {Math.max(0, seatsCount - electedCount)}.
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Aguardando todos os votos para apurar resultado.
-              </p>
-            )}
-          </div>
-        )}
 
         {/* FASE: VOTING — todos votaram, aguardando apuração */}
         {countDisplayExact && phase === 'voting' && (
@@ -659,7 +718,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         {/* FASE: APURANDO — mostra resultado parcial */}
         {countDisplayExact && phase === 'apurando' && (
           <div className="rounded-lg border border-border bg-muted/30 p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm font-semibold">
@@ -668,7 +727,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               </div>
               <span className="text-xs text-muted-foreground">
                 {currentRound === 1
-                  ? `Maioria necessária: ${partialNeeded} votos (50%+1)`
+                  ? majorityRule === 'absolute_50' ? `Maioria necessária: ${partialNeeded} votos (50%+1)` : '1º escrutínio — maioria simples'
                   : currentRound === 2
                   ? `2º escrutínio — maioria simples entre os top ${Math.max(0, seatsCount - electedCount) + 1}`
                   : `3º escrutínio final — empate desfeito pelo mais velho`}
@@ -689,7 +748,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                   >
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        {i === 0 && !isTied && <Medal className="w-3 h-3 text-warning" />}
+                        {r.elected && !isTied && <Medal className="w-3 h-3 text-success" />}
                         <span className={r.elected ? 'font-bold text-success' : i === 0 ? 'font-semibold' : 'text-muted-foreground'}>
                           {candidate?.name || 'Desconhecido'}
                         </span>
@@ -776,62 +835,16 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         )}
 
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
-          <p className="text-sm font-semibold">Seu voto como participante</p>
-          <p className="text-xs text-muted-foreground">Um voto por navegador neste escrutínio. Você pode copiar o link e abri-lo no Chrome; a sala permanece aberta aqui.</p>
-          {selectedMode === 'individual' || selectedMode === 'both' ? (
-            <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm"><a href={voteUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4 mr-2" />Dar meu voto</a></Button>
-              <Button size="sm" variant="outline" onClick={copyLink}><Copy className="h-4 w-4 mr-2" />Copiar link de voto</Button>
-            </div>
-          ) : <Button size="sm" disabled={loading} onClick={() => setConfirmAction('personal')}>Habilitar meu voto e manter as urnas</Button>}
-        </div>
-
-        <div role={countError || !countExact ? 'alert' : 'status'} className={`rounded-lg border p-3 text-sm ${countExact ? 'border-success/30 bg-success/5' : 'border-destructive/30 bg-destructive/5'}`}>
-          <p>{checkingCount && (!countSnapshot || !countCurrent) ? 'Conferindo chamada e votos…' : countError || (!countCurrent ? 'A sala mudou. Atualize a votação antes de continuar.' : countSnapshot?.issue) || '100% conferido: uma cédula por presente neste escrutínio.'}</p>
-          <p className="mt-1 text-xs">Chamada: {countedPresent} · Confirmados: {countSnapshot?.election.total_present ?? totalPresent} · Cédulas: {voteCount}</p>
-          {(countError || !countCurrent) && <Button className="mt-2" variant="outline" size="sm" disabled={checkingCount} onClick={() => { void fetchVoteCount(); onRefresh(); }}>Conferir novamente</Button>}
-        </div>
-
-        {/* Progress */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Progresso</span>
-            <span className="font-semibold">{voteCount}/{countedPresent}</span>
-          </div>
-          <Progress value={countedPresent > 0 ? Math.min(100, (voteCount / countedPresent) * 100) : 0} className="h-2" />
-        </div>
-
-        {/* Compact counters */}
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
-            <p className="text-lg font-bold text-foreground">{countedPresent}</p>
-            <p className="text-xs text-muted-foreground">Presentes na chamada</p>
-          </div>
-          <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
-            <p className="text-lg font-bold text-foreground">{voteCount}</p>
-            <p className="text-xs text-muted-foreground">Cédulas</p>
-          </div>
-          <div className={`p-2 rounded-lg border shadow-sm ${countExact ? 'border-success/50 bg-success/5' : 'border-warning/50 bg-warning/10'}`}>
-            <p className={`text-lg font-bold ${countExact ? 'text-success' : 'text-warning'}`}>
-              {countError || !countSnapshot?.attendanceConfirmed ? '—' : Math.abs(diff)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {countError ? 'Conferir contagem' : !countSnapshot?.attendanceConfirmed ? 'Conferir chamada' : countExact ? 'Contagem exata' : diff < 0 ? 'Votos excedentes' : 'Votos faltantes'}
-            </p>
-          </div>
-        </div>
-
         {/* Ranking ao vivo dos candidatos */}
         {liveRankedCandidates.length > 0 && (
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {liveCurrentRound}º Escrutínio — {countExact ? 'Apuração ao vivo' : 'Prévia de votos'}
+                {liveCurrentRound}º escrutínio · {countExact ? 'Votos conferidos' : 'Prévia de votos'}
               </p>
               {liveTotalBallots > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Maioria: <strong>{liveNeeded} votos</strong>
+                  {currentRound === 1 && majorityRule === 'absolute_50' ? <>Maioria: <strong>{liveNeeded} votos</strong></> : 'Maioria simples'}
                 </p>
               )}
             </div>
@@ -839,21 +852,21 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <div className="space-y-2">
               {liveRankedCandidates.map((c, index) => {
                 const photo = getCandidatePhoto(c);
-                const posEmoji = ['🥇','🥈','🥉'][index] || `${index + 1}`;
+                const positionLabel = `${index + 1}`;
                 return (
                   <div
                     key={c.id}
-                    className={`relative flex items-center gap-3 rounded-xl border-2 p-3 transition-all ${
+                    className={`relative flex flex-wrap items-center gap-3 rounded-xl border p-3 transition-colors motion-reduce:transition-none ${
                       c.elected
-                        ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
+                        ? 'border-success/40 bg-success/5'
                         : index === 0 && liveTotalBallots > 0
                         ? 'border-primary/50 bg-primary/5'
                         : 'border-border bg-background'
                     }`}
                   >
-                    <span className="text-xl shrink-0">{posEmoji}</span>
+                    <span className="w-4 shrink-0 text-center text-xs font-semibold tabular-nums text-muted-foreground">{positionLabel}</span>
                     <div className={`h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 shadow ${
-                      c.elected ? 'border-yellow-400' : 'border-border'
+                      c.elected ? 'border-success/40' : 'border-border'
                     }`}>
                       {photo ? (
                         <img src={photo} alt={c.name} className="h-full w-full object-cover" />
@@ -865,7 +878,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                        <p className="min-w-0 break-words text-sm font-bold text-foreground">{c.name}</p>
+                        <p className="min-w-0 break-words text-sm font-bold text-foreground">{c.name}{index === 0 && liveTotalBallots > 0 && !c.elected && <span className="ml-2 text-xs font-medium text-muted-foreground">Líder</span>}</p>
                         <div className="flex items-center gap-1 shrink-0">
                           <span className="text-sm font-extrabold text-foreground">{c.votes}</span>
                           <span className="text-xs text-muted-foreground">votos</span>
@@ -874,15 +887,15 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            c.elected ? 'bg-yellow-400' : index === 0 ? 'bg-primary' : 'bg-muted-foreground/40'
+                          className={`h-2 rounded-full transition-[width] duration-300 motion-reduce:transition-none ${
+                            c.elected ? 'bg-success' : index === 0 ? 'bg-primary' : 'bg-muted-foreground/40'
                           }`}
                           style={{ width: liveTotalBallots > 0 ? `${c.pct}%` : '0%' }}
                         />
                       </div>
                     </div>
                     {c.elected && (
-                      <span className="shrink-0 rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-extrabold text-yellow-900 shadow">
+                      <span className="shrink-0 rounded-full bg-success/10 px-2 py-1 text-xs font-semibold text-success">
                         ✓ ELEITO
                       </span>
                     )}
@@ -900,61 +913,44 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
           </div>
         )}
 
-        {/* Botões principais — só aparecem na fase correta */}
-        <div className="flex gap-2 flex-wrap">
+        <details className="group rounded-xl border border-border bg-muted/10">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted/40 motion-reduce:transition-none [&::-webkit-details-marker]:hidden">Configuração, urnas e links<span className="text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true">⌄</span></summary>
+          <div className="space-y-4 border-t border-border p-3 sm:p-4">
+        {/* Mode label */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {selectedMode === 'individual' ? (
+              <Smartphone className="h-4 w-4 text-muted-foreground shrink-0" />
+            ) : (
+              <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
+            )}
+            <span className="text-sm font-medium text-muted-foreground truncate">
+              Modo: {selectedMode === 'individual' ? 'Voto Individual' : selectedMode === 'both' ? 'Urna + Celular' : 'Urna Compartilhada'}
+            </span>
+          </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.open(`/eleicao/${electionId}/apresentar`, '_blank', 'noopener')}
-            className="flex items-center gap-2"
+            className="min-h-12 text-sm shrink-0"
+            onClick={() => setEditOpen(true)}
           >
-            <Monitor className="w-4 h-4" />
-            Abrir tela de apresentação
-            <ExternalLink className="h-3 w-3 opacity-60" />
+            <Pencil className="h-3 w-3 mr-1" /> Editar configuração
           </Button>
-
-          {countDisplayExact && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound < 3 && (
-            <Button onClick={handleNextRound} disabled={loading || !canProceed} className="bg-primary">
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {currentRound + 1}º escrutínio →
-            </Button>
-          )}
-
-          {countDisplayExact && phase === 'resultado' && isCargoElection && electedCount < seatsCount && currentRound >= 3 && (
-            <div className="rounded-lg border border-warning/40 bg-warning/10 p-3">
-              <p className="text-xs font-semibold text-warning mb-1">
-                ⚠️ Máximo de escrutínios atingido
-              </p>
-              <p className="text-xs text-muted-foreground">
-                O desempate foi aplicado automaticamente pelo critério de idade (mais velho eleito).
-                Caso não haja birth_date cadastrado, o Conselho deve decidir conforme o regimento.
-              </p>
-            </div>
-          )}
-
-          {countDisplayExact && phase === 'resultado' && electedCount >= seatsCount && (
-            <Button disabled={loading || !canProceed} onClick={() => setConfirmAction('finish')} className="bg-success hover:bg-success/90">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Concluir
-            </Button>
-          )}
         </div>
-
-        {/* Botão Reiniciar separado, discreto */}
-        <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-destructive text-xs"
-            onClick={() => setConfirmAction('reset')}
-          >
-            <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar votação
-          </Button>
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+          <p className="text-sm font-semibold">Seu voto como participante</p>
+          <p className="text-xs text-muted-foreground">Um voto por navegador neste escrutínio. Você pode copiar o link e abri-lo no Chrome; a sala permanece aberta aqui.</p>
+          {selectedMode === 'individual' || selectedMode === 'both' ? (
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm"><a href={voteUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4 mr-2" />Dar meu voto</a></Button>
+              <Button size="sm" variant="outline" onClick={copyLink}><Copy className="h-4 w-4 mr-2" />Copiar link de voto</Button>
+            </div>
+          ) : <Button size="sm" disabled={loading} onClick={() => setConfirmAction('personal')}>Habilitar meu voto e manter as urnas</Button>}
         </div>
 
         {showDevices && (
           <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                 <Monitor className="h-4 w-4 text-muted-foreground" /> Urnas conectadas
               </p>
@@ -1072,7 +1068,20 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
               </div>
             </div>
           </div>
-        )}
+        )}        {/* Botão Reiniciar separado, discreto */}
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive text-xs"
+            onClick={() => setConfirmAction('reset')}
+          >
+            <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar votação
+          </Button>
+        </div>
+
+          </div>
+        </details>
       </div>
 
       {/* QR dialog fits short mobile viewports and remains scrollable. */}
@@ -1108,11 +1117,11 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmAction === 'reset' ? 'Reiniciar votação?' : confirmAction === 'personal' ? 'Habilitar voto individual?' : 'Concluir votação?'}
+              {confirmAction === 'reset' ? 'Apagar todos os votos desta eleição?' : confirmAction === 'personal' ? 'Habilitar voto individual?' : 'Concluir votação?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmAction === 'reset'
-                ? 'Todos os votos serão apagados. Presença e candidatos serão mantidos.'
+                ? `Todos os votos desta eleição, inclusive os de escrutínios anteriores, serão apagados. O ${currentRound}º escrutínio continuará aberto para votar novamente. Presença, candidatos e urnas serão mantidos. Esta ação não pode ser desfeita.`
                 : confirmAction === 'personal' ? 'O modo passa a Urna + Celular. As urnas continuam disponíveis e o link individual permite um voto por navegador em cada escrutínio. A chamada e o total de presentes permanecem os mesmos.'
                 : 'A votação será encerrada e o resultado será exibido.'}
             </AlertDialogDescription>

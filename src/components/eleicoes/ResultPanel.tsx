@@ -5,7 +5,7 @@ import { readElectionCount, type ElectionCountSnapshot } from '@/lib/election-co
 import { calculateElectionRounds, type ElectionRoundResult } from '@/lib/election-results';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Trophy, CheckCircle, Medal, Users, FileX, AlertTriangle } from 'lucide-react';
+import { BarChart3, CheckCircle, Users, AlertTriangle, ChevronDown } from 'lucide-react';
 
 interface ResultPanelProps {
   electionId: string;
@@ -52,241 +52,85 @@ export function ResultPanel({ electionId, totalPresent, candidates, election, pr
   if (!hasSnapshot) return readFailure || <p role="status" className="py-8 text-center text-muted-foreground">Consultando resultado…</p>;
 
   return (
-    <div className={presentation ? 'min-w-0 space-y-6 text-lg' : 'min-w-0 space-y-4'}>
+    <section className={`min-w-0 ${presentation ? 'space-y-6 text-lg' : 'space-y-4'}`} aria-label="Resultado da eleição">
       {readFailure}
-      {!countVerified && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{loading && !hasSnapshot ? 'Conferindo chamada e votos…' : readError ? 'Contagem não conferida. O resultado aguarda uma leitura válida.' : countSnapshot?.issue || 'A votação mudou. Confira a sala antes de validar o resultado.'}</p>}
-      {/* Cabeçalho */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Trophy className="h-5 w-5 text-warning" />
-          <h3 className={presentation ? 'text-2xl font-semibold text-foreground' : 'font-semibold text-foreground'}>Resultado da Eleição</h3>
+      {!countVerified && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{readError ? 'Contagem não conferida. O resultado aguarda uma leitura válida.' : countSnapshot?.issue || 'A votação mudou. Confira a sala antes de validar o resultado.'}</p>}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><BarChart3 className="h-5 w-5" /></span>
+          <div>
+            <h3 className={presentation ? 'text-2xl font-semibold' : 'text-lg font-semibold'}>Resultado da eleição</h3>
+            <p className="text-sm text-muted-foreground">{allElected.length} de {seatsCount} {seatsCount === 1 ? 'vaga preenchida' : 'vagas preenchidas'}</p>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {allElected.length}/{seatsCount} vaga(s) preenchida(s)
-          </span>
-          {isValid ? (
-            <Badge className="bg-success text-success-foreground gap-1">
-              <CheckCircle className="h-3 w-3" /> Válido
-            </Badge>
-          ) : (
-            <Badge variant="destructive">{countVerified ? 'Vagas pendentes' : 'Contagem não conferida'}</Badge>
-          )}
-        </div>
+        <Badge variant="outline" className={isValid ? 'border-success/30 bg-success/10 text-success' : 'border-warning/40 bg-warning/10 text-foreground'}>
+          {isValid ? 'Vagas preenchidas' : countVerified ? 'Apuração com vagas pendentes' : 'Aguardando conferência'}
+        </Badge>
       </div>
 
-      {/* Eleitos em destaque — Cards grandes */}
-      {allElected.length > 0 && (
-        <div className="rounded-2xl border-2 border-success/50 bg-gradient-to-b from-success/10 to-success/5 p-5 shadow-md">
-          <div className="flex items-center justify-center gap-2 mb-5">
-            <Trophy className="h-6 w-6 text-warning" />
-            <h3 className="text-lg font-extrabold text-foreground tracking-tight">
-              {allElected.length === 1 ? 'Eleito' : `${allElected.length} Eleitos`}
-            </h3>
-            <Trophy className="h-6 w-6 text-warning" />
-          </div>
-
-          <div className={`grid gap-4 ${allElected.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' : allElected.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'}`}>
-            {allElected.map((id, index) => {
-              const c = candidates.find((x) => x.id === id);
-              const photo = c ? getCandidatePhoto(c) : null;
-
-              const positionConfig = [
-                { icon: '🥇', label: '1º Eleito', ring: 'ring-warning/40', bg: 'bg-warning/10', border: 'border-warning' },
-                { icon: '🥈', label: '2º Eleito', ring: 'ring-muted-foreground/30', bg: 'bg-muted/40', border: 'border-muted-foreground/40' },
-                { icon: '🥉', label: '3º Eleito', ring: 'ring-warning/30', bg: 'bg-warning/5', border: 'border-warning/60' },
-              ];
-              const pos = positionConfig[index] || { icon: '✅', label: `${index + 1}º Eleito`, ring: 'ring-success/30', bg: 'bg-success/10', border: 'border-success' };
-
-              const roundWithElected = roundResults.find((r) => r.electedIds.includes(id));
-              const voteRow = roundWithElected?.rows.find((r) => r.candidate_id === id);
-              const voteCount = voteRow?.count ?? null;
-              const votePct = roundWithElected && roundWithElected.totalBallots > 0 && voteCount !== null
-                ? Math.round((voteCount / roundWithElected.totalBallots) * 100)
-                : null;
-
-              return (
-                <div
-                  key={id}
-                  className={`flex flex-col items-center gap-3 rounded-2xl border-2 ${pos.border} ${pos.bg} p-4 shadow-sm ring-2 ${pos.ring} transition-all`}
-                >
-                  <span className="text-3xl">{pos.icon}</span>
-
-                  <div className={`h-24 w-24 overflow-hidden rounded-full border-4 ${pos.border} shadow-lg ring-4 ${pos.ring}`}>
-                    {photo ? (
-                      <img src={photo} alt={c?.name} className="h-full w-full object-contain" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted">
-                        <CheckCircle className="h-10 w-10 text-success" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="text-center">
-                    <p className={`${presentation ? 'text-[2rem]' : 'text-base'} [overflow-wrap:anywhere] font-extrabold text-foreground leading-tight`}>
-                      {c?.name || 'Desconhecido'}
-                    </p>
-                    <p className="text-xs font-semibold text-muted-foreground mt-0.5">{pos.label}</p>
-                  </div>
-
-                  {voteCount !== null && (
-                    <div className="flex items-center gap-2 rounded-full bg-background/80 border border-border px-3 py-1 shadow-sm">
-                      <span className="text-sm font-bold text-foreground">{voteCount} votos</span>
-                      {votePct !== null && (
-                        <span className="text-xs text-muted-foreground">({votePct}%)</span>
-                      )}
-                    </div>
-                  )}
-
-                  <span className="rounded-full bg-success px-3 py-1 text-xs font-bold text-success-foreground shadow">
-                    ✓ ELEITO
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Escrutínios */}
-      <div className="space-y-3">
-        {roundResults.map((roundResult) => {
-          const needed = Math.floor(roundResult.totalBallots / 2) + 1;
-          const isCurrentRound = roundResult.round === (election?.current_round || 1);
-          return (
-            <div
-              key={roundResult.round}
-              className={`space-y-3 rounded-2xl border border-border/60 bg-card ${presentation ? 'p-[24px] min-[700px]:p-[32px]' : 'p-[16px]'}`}
-            >
-              {/* Header do escrutínio */}
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-foreground">
-                    {roundResult.round}º Escrutínio
-                  </span>
-                  {isCurrentRound && (
-                    <Badge variant="secondary" className="text-xs">
-                      Atual
-                    </Badge>
-                  )}
-                </div>
-                <div className={`flex flex-wrap items-center gap-3 text-muted-foreground ${presentation ? 'text-base' : 'text-sm'}`}>
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {roundResult.totalBallots} cédulas
-                  </span>
-                  <span>
-                    {roundResult.round === 1
-                      ? `Maioria necessária: ${needed} votos (50%+1)`
-                      : roundResult.round === 2
-                      ? `2º escrutínio — maioria simples entre os top candidatos do 1º`
-                      : `3º escrutínio final — empate desfeito pelo mais velho`}
-                  </span>
-                </div>
-              </div>
-
-              {/* Candidatos */}
-              <div className="space-y-2">
-                {roundResult.rows.map((r, i) => {
-                  const candidate = candidates.find((c) => c.id === r.candidate_id);
-                  const pct = roundResult.totalBallots > 0
-                    ? Math.round((r.count / roundResult.totalBallots) * 100)
-                    : 0;
-                  const elected = countVerified && roundResult.electedIds.includes(r.candidate_id);
-                  const isLeading = i === 0;
-                  return (
-                    <div key={r.candidate_id} className="space-y-1">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-2 min-w-0">
-                          {elected ? (
-                            <CheckCircle className="h-4 w-4 text-success shrink-0" />
-                          ) : isLeading ? (
-                            <Medal className="h-4 w-4 text-warning shrink-0" />
-                          ) : (
-                            <span className="w-4 text-center text-xs text-muted-foreground shrink-0">
-                              {i + 1}
-                            </span>
-                          )}
-                          <span
-                            className={`min-w-0 [overflow-wrap:anywhere] ${presentation ? 'text-2xl' : 'text-base'} ${
-                              elected || isLeading ? 'font-semibold text-foreground' : 'text-muted-foreground'
-                            }`}
-                          >
-                            {candidate?.name || 'Desconhecido'}
-                          </span>
-                          {elected && (
-                            <span className="text-xs font-medium text-success bg-success/15 px-1.5 py-0.5 rounded-full shrink-0">
-                              ✓ Eleito
-                            </span>
-                          )}
-                        </div>
-                        <div className={`flex flex-wrap items-center gap-2 ${presentation ? 'text-xl' : 'text-sm'}`}>
-                          <span className="font-semibold text-foreground tabular-nums">
-                            {r.count} votos
-                          </span>
-                          <span className="text-muted-foreground tabular-nums">
-                            {pct}%
-                          </span>
-                        </div>
-                      </div>
-                      {/* Barra de progresso */}
-                      <div className="w-full bg-muted rounded-full h-1.5">
-                        <div
-                          className={`h-1.5 rounded-full transition-all ${
-                            elected
-                              ? 'bg-success'
-                              : isLeading
-                              ? 'bg-primary'
-                              : 'bg-muted-foreground/40'
-                          }`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Votos em branco */}
-              {roundResult.blankVotes > 0 && (
-                <div className="flex items-center justify-between text-sm text-muted-foreground border-t pt-2 mt-2">
-                  <span>Votos em branco</span>
-                  <span className="font-medium">{roundResult.blankVotes}</span>
-                </div>
-              )}
-
-              {/* Empate */}
-              {roundResult.hasTie && (
-                <div className="flex items-center gap-2 rounded-lg border border-warning/50 bg-warning/10 p-2.5 text-xs">
-                  <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-                  <span className="text-foreground font-medium">
-                    {roundResult.round < 3
-                      ? 'Empate — será resolvido no próximo escrutínio'
-                      : 'Empate no 3º escrutínio — desempate aplicado pelo critério de idade (mais velho eleito)'}
-                  </span>
-                </div>
-              )}
+      {allElected.length > 0 && <div className="grid gap-3 sm:grid-cols-2">
+        {allElected.map(id => {
+          const candidate = candidates.find(row => row.id === id);
+          const photo = candidate ? getCandidatePhoto(candidate) : null;
+          const electedRound = roundResults.find(round => round.electedIds.includes(id));
+          const count = electedRound?.rows.find(row => row.candidate_id === id)?.count;
+          return <div key={id} aria-label={`Eleito: ${candidate?.name || 'Desconhecido'}`} className="flex min-w-0 items-center gap-4 rounded-2xl border border-success/30 bg-success/5 p-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-card ring-1 ring-success/20">
+              {photo ? <img src={photo} alt={candidate?.name} className="h-full w-full object-contain" /> : <CheckCircle className="h-8 w-8 text-success" />}
             </div>
-          );
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-success">Eleito · {electedRound?.round}º escrutínio</p>
+              <p className={`[overflow-wrap:anywhere] font-semibold ${presentation ? 'text-2xl' : 'text-lg'}`}>{candidate?.name || 'Desconhecido'}</p>
+              {count !== undefined && <p className="text-sm text-muted-foreground">{count} votos{electedRound && electedRound.totalBallots > 0 ? ` · ${Math.round(count / electedRound.totalBallots * 100)}% das cédulas` : ''}</p>}
+            </div>
+          </div>;
+        })}
+      </div>}
+
+      <div className="space-y-3">
+        {[...roundResults].reverse().map(roundResult => {
+          const needed = Math.floor(roundResult.totalBallots / 2) + 1;
+          const isCurrentRound = roundResult.round === (current_round || 1);
+          const belowMajority = countVerified && roundResult.round === 1 && majority_rule === 'absolute_50' && roundResult.rows.length > 0 && roundResult.rows[0].count < needed;
+          return <details key={`${electionId}:${roundResult.round}`} open={isCurrentRound} className="group min-w-0 rounded-2xl border border-border bg-card">
+            <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 rounded-2xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden sm:p-5">
+              <span className="flex flex-wrap items-center gap-2 font-semibold">{roundResult.round}º escrutínio {isCurrentRound && <Badge variant="secondary">Atual</Badge>}</span>
+              <span className="flex items-center gap-3 text-sm text-muted-foreground"><Users className="h-4 w-4" />{roundResult.totalBallots} cédulas<ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></span>
+            </summary>
+            <div className="space-y-4 border-t border-border px-4 py-4 sm:px-5">
+              <p className="text-sm text-muted-foreground">{roundResult.round === 1
+                ? majority_rule === 'absolute_50' ? `Maioria absoluta: pelo menos ${needed} ${needed === 1 ? 'voto' : 'votos'}, mais de 50% das cédulas.` : 'Maioria simples: os mais votados preenchem as vagas.'
+                : roundResult.round === 2 ? 'Maioria simples entre os candidatos classificados.' : 'Último escrutínio. Em caso de empate, aplica-se o critério de idade.'}</p>
+              {belowMajority && <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" /><p><strong>Líder sem maioria absoluta.</strong> Ninguém atingiu os {needed} votos necessários neste escrutínio. A liderança não significa eleição.</p></div>}
+              <div className="space-y-4">
+                {roundResult.rows.map((row, index) => {
+                  const candidate = candidates.find(candidate => candidate.id === row.candidate_id);
+                  const pct = roundResult.totalBallots > 0 ? Math.round(row.count / roundResult.totalBallots * 100) : 0;
+                  const elected = countVerified && roundResult.electedIds.includes(row.candidate_id);
+                  return <div key={row.candidate_id} className="space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${elected ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>{elected ? <CheckCircle className="h-4 w-4" /> : index + 1}</span>
+                        <span className={`min-w-0 [overflow-wrap:anywhere] font-semibold ${presentation ? 'text-xl sm:text-2xl' : 'text-base'}`}>{candidate?.name || 'Desconhecido'}</span>
+                        {elected ? <Badge variant="outline" className="border-success/30 text-success">Eleito</Badge> : index === 0 && <Badge variant="secondary">Líder</Badge>}
+                      </div>
+                      <span className="flex items-baseline gap-3 tabular-nums"><strong>{row.count} <span className="text-sm font-normal text-muted-foreground">votos</span></strong><span className="min-w-10 text-right text-sm text-muted-foreground">{pct}%</span></span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${candidate?.name || 'Candidato'}: ${pct}% das cédulas`}><div className={`h-full rounded-full ${elected ? 'bg-success' : index === 0 ? 'bg-primary' : 'bg-primary/35'}`} style={{ width: `${pct}%` }} /></div>
+                  </div>;
+                })}
+                {roundResult.rows.length === 0 && <p className="py-3 text-center text-sm text-muted-foreground">Nenhum voto em candidato neste escrutínio.</p>}
+              </div>
+              {roundResult.blankVotes > 0 && <div className="flex items-center justify-between border-t border-border pt-3 text-sm text-muted-foreground"><span>Branco / Nulo</span><strong className="tabular-nums">{roundResult.blankVotes}</strong></div>}
+              {roundResult.hasTie && <div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" /><p>{roundResult.round < 3 ? 'Empate na classificação. A definição depende do próximo escrutínio.' : 'Empate no último escrutínio. Aplicado o critério de idade (mais velho eleito).'}</p></div>}
+            </div>
+          </details>;
         })}
       </div>
-
-      {/* Rodapé */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border/50 text-xs">
-        <span className="text-foreground">
-          Total presentes: <strong>{totalPresent}</strong>
-        </span>
-        {roundResults.reduce((sum, r) => sum + r.blankVotes, 0) > 0 && (
-          <span className="text-muted-foreground text-sm">
-            Total de votos em branco: <strong>{roundResults.reduce((sum, r) => sum + r.blankVotes, 0)}</strong>
-          </span>
-        )}
-        <span className={allElected.length >= seatsCount ? 'text-success font-medium' : 'text-warning font-medium'}>
-          {!countVerified ? 'Resultado aguardando conferência' : allElected.length >= seatsCount
-            ? '✅ Todas as vagas preenchidas'
-            : `⚠️ ${seatsCount - allElected.length} vaga(s) em aberto`}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-sm text-muted-foreground">
+        <span>{totalPresent} presentes na chamada</span>
+        <span className={isValid ? 'font-medium text-success' : 'font-medium text-foreground'}>{!countVerified ? 'Resultado aguardando conferência' : isValid ? 'Todas as vagas preenchidas' : `${seatsCount - allElected.length} ${seatsCount - allElected.length === 1 ? 'vaga em aberto' : 'vagas em aberto'}`}</span>
       </div>
-    </div>
+    </section>
   );
 }

@@ -57,12 +57,12 @@ test('mounted result cards keep their verified winner while a realtime refresh i
  const env=mountedEnvironment({modules:{'@/lib/election-completion':{readElectionCount:()=>request()}}});
  const Component=env.load('src/components/eleicoes/ResultPanel.tsx').ResultPanel;let tree;
  await act(async()=>{tree=TestRenderer.create(React.createElement(Component,{electionId:'fixture',totalPresent:1,candidates,election:{current_round:1,seats_count:1,majority_rule:'simple'}}));await flush();});
- const winner=tree.root.findAllByType('span').find(node=>textOf(node).trim()==='✓ ELEITO');assert.ok(winner);
+ const winner=tree.root.findAllByProps({'aria-label':'Eleito: Candidato fictício'})[0];assert.ok(winner);
  const pending=deferred();request=()=>pending.promise;
  await act(async()=>{env.channels[0].handlers[0].callback();await flush();});
- assert.equal(tree.root.findAllByType('span').find(node=>textOf(node).trim()==='✓ ELEITO'),winner);
+ assert.equal(tree.root.findAllByProps({'aria-label':'Eleito: Candidato fictício'})[0],winner);
  await act(async()=>{pending.reject(new Error('offline fixture'));await flush();});
- assert.equal(tree.root.findAllByType('span').some(node=>textOf(node).trim()==='✓ ELEITO'),false);
+ assert.equal(tree.root.findAllByProps({'aria-label':'Eleito: Candidato fictício'}).length > 0,false);
  assert.match(textOf(tree.root),/Contagem não conferida/);
  await act(async()=>tree.unmount());
 });
@@ -123,4 +123,25 @@ test('mounted voting panel ignores a previous round response delivered after a n
  await act(async()=>{old.resolve(count('open'));await flush();});
  assert.match(textOf(tree.root),/Falta/);assert.doesNotMatch(textOf(tree.root),/A sala mudou/);assert.equal(button(tree,'Apurar resultado'),undefined);
  await act(async()=>tree.unmount());assert.equal(env.timerCount(),0);
+});
+
+
+test('result presentation distinguishes a 40 percent first-round leader from a second-round simple-majority winner', async () => {
+ const voters=Array.from({length:20},(_,index)=>({id:`person-${index}`,name:`Pessoa fictícia ${index}`,present:true}));
+ const candidateRows=[{id:'a',name:'Alfa',photo_url:null},{id:'b',name:'Beta',photo_url:null},{id:'c',name:'Gama',photo_url:null}];
+ let round=1;
+ const votes=()=>[8,7,5].flatMap((total,index)=>Array.from({length:total},(_,vote)=>({id:`vote-${index}-${vote}`,ballot_id:`ballot-${index}-${vote}`,candidate_id:candidateRows[index].id,round_number:round,is_blank:false})));
+ const snapshot=()=>reconcileElectionCount({...count().election,total_present:20,current_round:round},voters,votes());
+ const env=mountedEnvironment({modules:{'@/lib/election-completion':{readElectionCount:async()=>snapshot()}}});
+ const Component=env.load('src/components/eleicoes/ResultPanel.tsx').ResultPanel;
+ const props=()=>({electionId:'fixture',totalPresent:20,candidates:candidateRows,election:{current_round:round,seats_count:1,majority_rule:'absolute_50'}});
+ let tree; await act(async()=>{tree=TestRenderer.create(React.createElement(Component,props()));await flush();});
+ assert.match(textOf(tree.root),/Líder sem maioria absoluta/);
+ assert.equal(tree.root.findAllByProps({'aria-label':'Eleito: Alfa'}).length,0);
+ assert.match(textOf(tree.root),/11 votos/);
+ round=2;await act(async()=>{tree.update(React.createElement(Component,props()));await flush();});
+ assert.equal(tree.root.findAllByProps({'aria-label':'Eleito: Alfa'}).length,1);
+ assert.match(textOf(tree.root),/Maioria simples entre os candidatos classificados/);
+ assert.doesNotMatch(textOf(tree.root),/Líder sem maioria absoluta/);
+ await act(async()=>tree.unmount());
 });
