@@ -16,6 +16,7 @@ import { PullToRefresh } from './PullToRefresh';
 import { TabletNavigationRail } from './TabletNavigationRail';
 import {
   adminNavigationItems,
+  electionNavigationItems,
   isNavigationPathActive,
   primaryNavigationItems,
   secondaryNavigationItems,
@@ -30,7 +31,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, width = 'standard', variant = 'default', header }: AppLayoutProps) {
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, isManagement, isPastor, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [exitOpen, setExitOpen] = useState(false);
@@ -56,6 +57,7 @@ export function AppLayout({ children, width = 'standard', variant = 'default', h
   const mainItems = primaryNavigationItems.map(toBottomItem);
   const moreItems: BottomNavItem[] = [
     ...secondaryNavigationItems.map(toBottomItem),
+    ...(isManagement || isPastor ? electionNavigationItems.map(toBottomItem) : []),
     ...(isAdmin ? adminNavigationItems.map(toBottomItem) : []),
     {
       key: 'sair',

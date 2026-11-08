@@ -48,16 +48,20 @@ export const secondaryNavigationItems: AppNavigationItem[] = [
   { key: 'configuracoes', icon: Settings, label: 'Configurações', path: '/configuracoes' },
 ];
 
+export const electionNavigationItems: AppNavigationItem[] = [
+  { key: 'eleicoes', icon: Vote, label: 'Eleições', path: '/eleicoes' },
+];
+
 export const adminNavigationItems: AppNavigationItem[] = [
-  { key: 'eleicoes', icon: Vote, label: 'Eleições', path: '/eleicoes', adminOnly: true },
   { key: 'usuarios', icon: UserCheck, label: 'Usuários', path: '/usuarios', adminOnly: true },
   { key: 'sugestoes', icon: MessageSquare, label: 'Sugestões do Pastor', path: '/sugestoes', adminOnly: true },
 ];
 
-export function getAppNavigationItems(isAdmin: boolean) {
+export function getAppNavigationItems(isAdmin: boolean, canManageElections = isAdmin) {
   return [
     ...primaryNavigationItems,
     ...secondaryNavigationItems,
+    ...(canManageElections ? electionNavigationItems : []),
     ...(isAdmin ? adminNavigationItems : []),
   ];
 }

@@ -60,13 +60,17 @@ export default function Eleicoes() {
   const [creating, setCreating] = useState(false);
   const [activeTab, setActiveTab] = useState<'cargo' | 'camisa'>('cargo');
   const { toast } = useToast();
-  const { user, isAdmin, isPastor } = useAuth();
-  const { loading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(user?.id || "anonymous");
+  const { user, isAdmin, isManagement, isPastor, rolesLoaded, profile } = useAuth();
+  const churchWide = isAdmin || isPastor;
+  const canAccess = !!user && (isManagement || isPastor);
+  const ownSocietyId = profile?.society_id;
+  const canCreate = canAccess && (churchWide || !!ownSocietyId);
+  const { loading, hasSnapshot, error: readError, run: runRead } = useSnapshotRead(`${user?.id || 'anonymous'}:${churchWide ? 'all' : ownSocietyId || 'none'}`);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAdmin && !isPastor) navigate('/');
-  }, [isAdmin, isPastor, navigate]);
+    if (rolesLoaded && !canAccess) navigate('/');
+  }, [rolesLoaded, canAccess, navigate]);
 
   useEffect(() => {
     if (electionType === 'cargo') {
@@ -75,9 +79,18 @@ export default function Eleicoes() {
   }, [seatsCount, electionType]);
 
   const fetchElections = useCallback(() => runRead(async () => {
+    if (!rolesLoaded || !canAccess || (!churchWide && !ownSocietyId)) {
+      return () => { setElections([]); setSocieties([]); };
+    }
+    let electionQuery = supabase.from('elections').select('*').order('created_at', { ascending: false });
+    let societyQuery = supabase.from('societies').select('id, name').eq('active', true);
+    if (!churchWide) {
+      electionQuery = electionQuery.eq('society_id', ownSocietyId!);
+      societyQuery = societyQuery.eq('id', ownSocietyId!);
+    }
     const [electionsResult, societiesResult] = await Promise.all([
-      supabase.from('elections').select('*').order('created_at', { ascending: false }),
-      supabase.from('societies').select('id, name').eq('active', true),
+      electionQuery,
+      societyQuery,
     ]);
     if (electionsResult.error) throw electionsResult.error;
     if (societiesResult.error) throw societiesResult.error;
@@ -90,11 +103,12 @@ export default function Eleicoes() {
       setElections(withCounts);
       setSocieties(societiesResult.data || []);
     };
-  }), [runRead]);
+  }), [runRead, rolesLoaded, canAccess, churchWide, ownSocietyId]);
 
   useEffect(() => { void fetchElections(); }, [fetchElections]);
 
   const handleCreate = async () => {
+    if (!canCreate) return;
     if (!name.trim() || !position.trim()) {
       toast({ title: 'Preencha nome e cargo', variant: 'destructive' });
       return;
@@ -104,7 +118,9 @@ export default function Eleicoes() {
       return;
     }
     setCreating(true);
-    const normalizedSocietyId = societyId && societyId !== 'general' ? societyId : null;
+    const normalizedSocietyId = churchWide
+      ? (societyId && societyId !== 'general' ? societyId : null)
+      : ownSocietyId;
     const normalizedSeats = electionType === 'cargo' ? Math.max(1, seatsCount) : 1;
     const normalizedChoices = electionType === 'cargo' ? Math.min(Math.max(1, maxChoices), normalizedSeats) : 1;
     const { error } = await supabase.from('elections' as any).insert({
@@ -149,13 +165,13 @@ export default function Eleicoes() {
         title="Eleições"
         description="Organize eleições e acompanhe cada etapa da votação"
         action={
-          <Button disabled={!hasSnapshot || readError} onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
+          <Button disabled={!canCreate || !hasSnapshot || readError} onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
             <Plus className="h-4 w-4 mr-2" /> Nova Eleição
           </Button>
         }
       />
 
-      <FAB disabled={!hasSnapshot || readError} aria-label="Nova eleição" onClick={() => setDialogOpen(true)} />
+      <FAB disabled={!canCreate || !hasSnapshot || readError} aria-label="Nova eleição" onClick={() => setDialogOpen(true)} />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'cargo' | 'camisa')} className="mb-4">
         <TabsList className="grid h-auto w-full grid-cols-2">
@@ -261,7 +277,7 @@ export default function Eleicoes() {
                 </p>
               </div>
             )}
-            <div>
+            {churchWide ? <div>
               <Label htmlFor={`${formId}-society`}>Sociedade {electionType === 'cargo' ? '(opcional)' : ''}</Label>
               <Select value={societyId} onValueChange={setSocietyId}>
                 <SelectTrigger id={`${formId}-society`}><SelectValue placeholder="Geral (toda a igreja)" /></SelectTrigger>
@@ -272,10 +288,10 @@ export default function Eleicoes() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> : <p className="text-sm text-muted-foreground">Sociedade: {societies[0]?.name || 'Nenhuma sociedade vinculada'}</p>}
           </div>
           <DialogFooter>
-            <Button onClick={handleCreate} disabled={creating}>
+            <Button onClick={handleCreate} disabled={creating || !canCreate}>
               {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Criar
             </Button>

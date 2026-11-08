@@ -7,9 +7,9 @@ import { NavigationSidebar } from './WorkspaceNavigation';
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, signOut, isAdmin } = useAuth();
+  const { profile, signOut, isAdmin, isManagement, isPastor } = useAuth();
   const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
-  const items = getAppNavigationItems(isAdmin).map(item => ({
+  const items = getAppNavigationItems(isAdmin, isManagement || isPastor).map(item => ({
     ...item,
     active: isNavigationPathActive(location.pathname, item.path),
     onClick: () => navigate(item.path),

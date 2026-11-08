@@ -7,9 +7,9 @@ import { NavigationRail } from './WorkspaceNavigation';
 export function TabletNavigationRail() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, isManagement, isPastor, signOut } = useAuth();
   const { showConfirm, setShowConfirm, requestExit } = useExitConfirm();
-  const items = getAppNavigationItems(isAdmin).map(item => ({
+  const items = getAppNavigationItems(isAdmin, isManagement || isPastor).map(item => ({
     ...item,
     active: isNavigationPathActive(location.pathname, item.path),
     onClick: () => navigate(item.path),
