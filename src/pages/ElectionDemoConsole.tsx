@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { electionRoomRpc } from '@/lib/election-room-client';
-import { parseElectionRoomSnapshot, type ElectionRoomSnapshot } from '@/lib/election-room';
+import { parseElectionRoomSnapshot, type ElectionRoomSnapshot, type RoomPublishedResult } from '@/lib/election-room';
 import { AttendanceList } from '@/components/eleicoes/AttendanceList';
 import { CandidateForm } from '@/components/eleicoes/CandidateForm';
 import { ElectionStepCard } from '@/components/eleicoes/ElectionStepCard';
@@ -17,6 +17,7 @@ import { ElectionReportDownload } from '@/components/eleicoes/ElectionReportDown
 export default function ElectionDemoConsole() {
   const { adminToken } = useParams<{ adminToken: string }>();
   const [snapshot, setSnapshot] = useState<ElectionRoomSnapshot | null>(null);
+  const [liveResult, setLiveResult] = useState<RoomPublishedResult | null>(null);
   const [roomToken, setRoomToken] = useState('');
   const [urnToken, setUrnToken] = useState('');
   const [busy, setBusy] = useState(false);
@@ -45,6 +46,8 @@ export default function ElectionDemoConsole() {
     const candidates = Array.isArray(object.current_candidates) ? object.current_candidates : [];
     if (attendance.some(person => !person || typeof person !== 'object' || typeof person.id !== 'string' || typeof person.name !== 'string' || typeof person.present !== 'boolean') || candidates.some(candidate => !candidate || typeof candidate !== 'object' || typeof candidate.id !== 'string' || typeof candidate.name !== 'string')) throw new Error('Preparação do ensaio indisponível.');
     setPreparation({ attendance: attendance as { id: string; name: string; present: boolean }[], confirmed: object.attendance_confirmed === true, candidates: candidates.map((candidate, index) => ({ id: candidate.id as string, name: candidate.name as string, photo_url: typeof candidate.photo_url === 'string' ? candidate.photo_url : null, display_order: index })) });
+    const live = object.admin_live_result == null ? null : parseElectionRoomSnapshot({ ...next, phase: 'waiting', published_result: object.admin_live_result }).published_result;
+    setLiveResult(live);
     setSnapshot(next);
   }, []);
   useEffect(() => {
@@ -150,6 +153,7 @@ export default function ElectionDemoConsole() {
           <Button variant="outline" disabled={locked || election?.status !== 'finished' || snapshot.phase === 'finished'} onClick={() => void command('complete')}>Encerrar a sessão</Button>
         </div>
         </div>}
+        {!preparing && !error && liveResult && <section aria-label="Prévia privada dos votos" className="space-y-4 border-t border-border pt-4"><div className="space-y-1"><h3 className="font-semibold">Votos por candidato · prévia do mesário</h3><p className="text-xs leading-relaxed text-muted-foreground">Acompanhamento privado. A prévia não declara eleitos nem libera o resultado aos participantes.</p></div>{liveResult.rounds.filter(round => round.round === election?.current_round).map(round => <div key={round.round} className="space-y-3"><div className="flex flex-wrap justify-between gap-2 text-sm"><span>{round.round}º escrutínio</span><span className="tabular-nums">{round.totalBallots} cédulas recebidas</span></div><ul className="space-y-2">{[...round.rows].sort((a, b) => b.count - a.count).map(row => <li key={row.candidate_id} className="space-y-2 rounded-xl border border-border bg-muted/20 p-3"><div className="flex flex-wrap justify-between gap-2 text-sm"><span className="min-w-0 break-words font-medium">{liveResult.candidates.find(candidate => candidate.id === row.candidate_id)?.name || 'Candidato'}</span><span className="tabular-nums"><strong>{row.count} votos</strong> · {round.totalBallots > 0 ? Math.round(row.count / round.totalBallots * 100) : 0}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${round.totalBallots > 0 ? Math.min(100, row.count / round.totalBallots * 100) : 0}%` }} /></div></li>)}</ul>{round.blankVotes > 0 && <p className="text-sm text-muted-foreground">Brancos / nulos: {round.blankVotes}</p>}</div>)}</section>}
         {snapshot.published_result && <section aria-label="Resultado do ensaio" className="space-y-3 border-t border-border pt-4"><h3 className="font-semibold">Resultado liberado</h3>{rounds.map(round => <div key={round.round} className="space-y-2"><p className="text-sm font-medium">{round.round}º escrutínio · {round.totalBallots} cédulas</p>{round.rows.map(row => <p key={row.candidate_id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-muted/20 p-2 text-sm"><span>{snapshot.published_result!.candidates.find(candidate => candidate.id === row.candidate_id)?.name || 'Candidato'}{round.electedIds.includes(row.candidate_id) ? ' · Eleito' : ''}</span><strong>{row.count} votos</strong></p>)}</div>)}</section>}
         {election?.status === 'finished' && snapshot.phase !== 'finished' && <section className="space-y-3 border-t border-border pt-4"><Label htmlFor="demo-next-position">Próximo cargo</Label><Input id="demo-next-position" value={position} onChange={event => setPosition(event.target.value)} placeholder="Ex.: Vice-presidente" disabled={locked} /><Button variant="outline" disabled={locked || !position.trim()} onClick={() => void command('next_election', { position: position.trim() })}>Preparar próximo cargo</Button></section>}
       </section>

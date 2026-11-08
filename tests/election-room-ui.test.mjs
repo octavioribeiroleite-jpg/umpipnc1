@@ -101,7 +101,7 @@ test('demo console only reads on load, keeps admin capability out of the partici
   let current = snapshot();
   const Page = load('src/pages/ElectionDemoConsole.tsx', {
     'react-router-dom': { useParams: () => ({ adminToken: 'test-admin-only' }) },
-    '@/lib/election-room-client': { electionRoomRpc: async (_, args) => { calls.push(args); if (args.p_action === 'start') current = { ...current, revision: '2', phase: 'voting', activeElection: { ...current.activeElection, status: 'open' } }; return { data: { ...current, room_token: 'test-public-only', urn_token: 'test-shared-urn', attendance: [{ id: 'p1', name: 'Fictício', present: true }], attendance_confirmed: true, current_candidates: [candidate] }, error: null }; } },
+    '@/lib/election-room-client': { electionRoomRpc: async (_, args) => { calls.push(args); if (args.p_action === 'start') current = { ...current, revision: '2', phase: 'voting', activeElection: { ...current.activeElection, status: 'open' } }; return { data: { ...current, admin_live_result: { candidates: [candidate], rounds: [{ round: 1, totalBallots: 1, blankVotes: 0, rows: [{ candidate_id: candidate.id, count: 1 }], electedIds: [candidate.id], hasTie: false }] }, room_token: 'test-public-only', urn_token: 'test-shared-urn', attendance: [{ id: 'p1', name: 'Fictício', present: true }], attendance_confirmed: true, current_candidates: [candidate] }, error: null }; } },
     '@/lib/election-room': { parseElectionRoomSnapshot }, '@/components/ui/button': button,
     '@/components/ui/input': { Input: props => React.createElement('input', props) }, '@/components/ui/label': { Label: ({ children, ...props }) => React.createElement('label', props, children) },
     'qrcode.react': { QRCodeSVG: ({ value }) => React.createElement('svg', { 'data-qr-url': value }) },
@@ -119,13 +119,20 @@ test('demo console only reads on load, keeps admin capability out of the partici
   await act(async () => { interval(); });
   assert.equal(calls[2].p_action, 'snapshot');
   assert.match(JSON.stringify(tree.toJSON()), /Aberto/);
+  const preview = tree.root.findByProps({ 'aria-label': 'Prévia privada dos votos' });
+  assert.equal(preview.findAllByType('span').some(node => node.children.includes('Alfa fictício')), true);
+  assert.match(JSON.stringify(tree.toJSON()), /prévia do mesário/);
+  assert.equal(preview.findAllByType('li').length, 1);
+  assert.equal(preview.findAllByType('strong')[0].children.join(''), '1 votos');
+  assert.equal(preview.findAllByType('span').some(node => node.children.includes('Eleito')), false);
+
   const publish = tree.root.findAllByType('button').find(node => node.children.includes('Apurar e liberar resultado'));
   assert.equal(publish.props.disabled, true, 'inexact count remains blocked');
   await act(async () => tree.unmount());
 });
 
-test('public panel only follows counts and released results; it never mounts a ballot or consumes a shared urn token', async () => {
-  let current = snapshot({ phase: 'voting', activeElection: { ...snapshot().activeElection, status: 'open', total_present: 15 }, count: { ballots: 1, present: 15, confirmed: 15, exact: false } });
+test('public panel only follows counts and never reveals released results; it never mounts a ballot or consumes a shared urn token', async () => {
+  let current = snapshot({ phase: 'voting', candidates: [candidate], activeElection: { ...snapshot().activeElection, status: 'open', total_present: 15 }, count: { ballots: 1, present: 15, confirmed: 15, exact: false } });
   let identityReads = 0, ballotMounts = 0; const timers = [];
   const Page = load('src/pages/VoteRoomPublic.tsx', {
     'react-router-dom': { useParams: () => ({ roomToken: 'public-panel' }), useSearchParams: () => [new URLSearchParams('painel=1&urna=must-not-be-used')] },
@@ -133,6 +140,7 @@ test('public panel only follows counts and released results; it never mounts a b
     '@/hooks/useElectionRoom': { useElectionRoom: (_, deviceId) => { assert.equal(deviceId, 'ephemeral-panel-id'); return { snapshot: current, error: '', refresh() {} }; } },
     '@/components/ui/button': button,
     './VotePublic': { default: () => { ballotMounts++; throw new Error('Panel must never mount voting controls'); } },
+    '@/components/eleicoes/ElectionReportDownload': { ElectionReportDownload: () => { throw new Error('Panel must never load reports'); } },
   }, { crypto: { randomUUID: () => 'ephemeral-panel-id' }, window: { setTimeout: (fn, delay) => { timers.push({ fn, delay }); return timers.length; }, clearTimeout() {} } }).default;
   let tree; await act(async () => { tree = TestRenderer.create(React.createElement(Page)); });
   assert.equal(identityReads, 0); assert.equal(ballotMounts, 0);
@@ -141,8 +149,12 @@ test('public panel only follows counts and released results; it never mounts a b
   assert.doesNotMatch(JSON.stringify(tree.toJSON()), /Votar em|CONFIRMAR|must-not-be-used/);
   current = { ...current, phase: 'result', revision: '2', activeElection: { ...current.activeElection, show_result: true }, count: { ballots: 15, present: 15, confirmed: 15, exact: true }, published_result: { candidates: [candidate], rounds: [{ round: 1, totalBallots: 15, blankVotes: 0, rows: [{ candidate_id: candidate.id, count: 15 }], electedIds: [candidate.id], hasTie: false }] } };
   await act(async () => tree.update(React.createElement(Page)));
-  assert.match(JSON.stringify(tree.toJSON()), /Alfa fictício/);
-  assert.equal(timers.some(timer => timer.delay === 10000), false, 'projection keeps the result visible until the mesário changes it');
+  assert.doesNotMatch(JSON.stringify(tree.toJSON()), /Alfa fictício|Eleito|Resultado liberado|Baixar relatório/);
+  assert.equal(tree.root.findByProps({ role: 'progressbar' }).props['aria-valuenow'], 15);
+  assert.equal(timers.some(timer => timer.delay === 10000), false);
+  current = { ...current, phase: 'finished' };
+  await act(async () => tree.update(React.createElement(Page)));
+  assert.doesNotMatch(JSON.stringify(tree.toJSON()), /Alfa fictício|Eleito|Resultado liberado|Baixar relatório/);
   current = { ...current, phase: 'nominations', revision: '3', activeElection: { ...current.activeElection, current_round: 2, nominations_open: true, show_result: false }, count: { ballots: 0, present: 15, confirmed: 15, exact: false }, published_result: null };
   await act(async () => tree.update(React.createElement(Page)));
   assert.equal(tree.root.findByProps({ role: 'progressbar' }).props['aria-valuenow'], 0);
