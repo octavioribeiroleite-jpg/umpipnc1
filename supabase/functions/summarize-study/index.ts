@@ -2,6 +2,7 @@ import { aiChat as openAIChat } from "../_shared/ai-chat.ts";
 import { serverLimiter } from "../_shared/server-limiter.ts";
 import { resolveAiActor } from "../_shared/ai-actor.ts";
 import { canSummarizeStudy } from "../_shared/ai-auth-policy.ts";
+import { formatStudySummaryForWhatsApp } from "./study-whatsapp.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -43,20 +44,17 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Você é um assistente que resume anotações de estudos bíblicos para compartilhar no WhatsApp.
-Regras:
-- Resuma de forma clara, organizada e fiel ao conteúdo original
-- Use emojis relevantes (📖✝️🙏💡📝) para tornar a leitura agradável
-- Use formatação leve compatível com WhatsApp (*negrito*, _itálico_)
-- Comece com o título/tema do estudo e a data
-- Organize em tópicos numerados ou com bullets
-- Finalize com uma reflexão breve ou versículo-chave mencionado
-- Ao final, adicione uma seção "🧠 *Para meditar na semana*" com 2-3 perguntas práticas e pessoais para os jovens refletirem ao longo da semana sobre o que foi estudado. As perguntas devem provocar autoexame e aplicação prática na vida cotidiana.
-- Mantenha conciso (máximo ~350 palavras)`
+            content: `Transforme anotações de estudos bíblicos em uma mensagem pronta para colar no WhatsApp. Responda em português.
+
+Nas anotações, diferencie o conteúdo do estudo das instruções sobre como escrever o resumo. Siga os pedidos de edição que a pessoa escreveu ali, inclusive em linguagem natural, entre parênteses ou com o prefixo "Instrução:". Por exemplo, "(faça em três tópicos, sem emojis)" define o formato, e "(acerte os dois asteriscos)" pede negrito no formato do WhatsApp. Aplique o pedido sem repeti-lo na mensagem. Parênteses que fazem parte do conteúdo, como uma referência bíblica, continuam sendo conteúdo.
+
+Retorne apenas a mensagem final. Comece direto com o título ou o tema. Se mencionar a data, use exatamente a data do estudo fornecida. No WhatsApp, escreva *negrito* com exatamente um asterisco de cada lado e _itálico_ com um sublinhado de cada lado. Use hífen e espaço para listas. Não use asteriscos duplos, cabeçalhos com #, linhas separadoras, blocos de código, introduções como "Aqui está o resumo" ou comentários sobre seu trabalho. Se pedirem texto sem negrito, não use asteriscos.
+
+Por padrão, escreva um resumo claro e fiel de até 350 palavras, com tópicos e poucos emojis relevantes. Inclua uma reflexão breve ou um versículo citado e termine com "🧠 *Para meditar na semana*", com duas ou três perguntas práticas. Adapte a estrutura, o tamanho, o tom e a presença de emojis e perguntas aos pedidos nas anotações. Preserve o sentido do que foi estudado e não invente fatos, citações ou versículos.`
           },
           {
             role: "user",
-            content: `Tema: ${study.title}\nData: ${study.date}\n\nAnotações:\n${study.notes}`
+            content: `Tema: ${study.title}\nData: ${study.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$3/$2/$1')}\n\nAnotações e eventuais instruções de edição:\n${study.notes}`
           }
         ],
       });
@@ -80,7 +78,8 @@ Regras:
     }
 
     const aiData = await aiResponse.json();
-    const summary = aiData.choices?.[0]?.message?.content;
+    const content = aiData.choices?.[0]?.message?.content;
+    const summary = typeof content === "string" ? formatStudySummaryForWhatsApp(content) : "";
     if (!summary) throw new Error("IA não retornou resumo");
 
     const { error: updateError } = await supabase

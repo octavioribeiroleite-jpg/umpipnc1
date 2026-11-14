@@ -14,10 +14,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Plus, BookOpen, Sparkles, Copy, ArrowLeft, Loader2, Check, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { formatStudySummaryForWhatsApp } from '../../supabase/functions/summarize-study/study-whatsapp';
 
 interface StudyNote {
   id: string;
@@ -45,7 +46,8 @@ export default function Estudos() {
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const notesRef = useRef<string>('');
+  const pendingSave = useRef<Promise<boolean>>(Promise.resolve(true));
+  const whatsappSummary = formatStudySummaryForWhatsApp(selectedStudy?.ai_summary ?? '');
 
   // Yearly report state
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -112,19 +114,31 @@ export default function Estudos() {
     setCreating(false);
   };
 
-  const saveNotes = useCallback(async (studyId: string, notes: string) => {
+  const saveNotes = useCallback((studyId: string, notes: string) => {
     setSaving(true);
-    const { error } = await supabase
-      .from('study_notes')
-      .update({ notes } as any)
-      .eq('id', studyId);
-    if (error) toast.error('Erro ao salvar');
-    setSaving(false);
+    // Finish an in-flight autosave before writing newer notes for the summary.
+    const save = pendingSave.current.then(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('study_notes')
+          .update({ notes })
+          .eq('id', studyId)
+          .select('id')
+          .single();
+        if (!error && data) return true;
+      } catch {
+        // Keep the editor open with the unsaved text so the user can retry.
+      }
+      toast.error('Não foi possível salvar as anotações. Tente novamente.');
+      return false;
+    });
+    pendingSave.current = save;
+    void save.then(() => { if (pendingSave.current === save) setSaving(false); });
+    return save;
   }, []);
 
   const handleNotesChange = (value: string) => {
     if (!selectedStudy) return;
-    notesRef.current = value;
     setSelectedStudy(prev => prev ? { ...prev, notes: value } : null);
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => {
@@ -134,25 +148,40 @@ export default function Estudos() {
 
   const handleSummarize = async () => {
     if (!selectedStudy) return;
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    await saveNotes(selectedStudy.id, selectedStudy.notes);
     setSummarizing(true);
-    const { data, error } = await supabase.functions.invoke('summarize-study', {
-      body: { studyId: selectedStudy.id },
-    });
-    if (error || data?.error) {
-      toast.error(data?.error || error?.message || 'Erro ao gerar resumo');
-    } else {
-      setSelectedStudy(prev => prev ? { ...prev, ai_summary: data.summary } : null);
-      setStudies(prev => prev.map(s => s.id === selectedStudy.id ? { ...s, ai_summary: data.summary } : s));
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    try {
+      if (!await saveNotes(selectedStudy.id, selectedStudy.notes)) return;
+      const { data, error } = await supabase.functions.invoke('summarize-study', {
+        body: { studyId: selectedStudy.id },
+      });
+      if (error || data?.error || typeof data?.summary !== 'string') {
+        toast.error(data?.error || error?.message || 'Erro ao gerar resumo');
+        return;
+      }
+      const summary = formatStudySummaryForWhatsApp(data.summary);
+      if (!summary) {
+        toast.error('A IA não retornou um resumo. Tente novamente.');
+        return;
+      }
+      setSelectedStudy(prev => prev?.id === selectedStudy.id ? { ...prev, ai_summary: summary } : prev);
+      setStudies(prev => prev.map(s => s.id === selectedStudy.id ? { ...s, ai_summary: summary } : s));
       toast.success('Resumo gerado!');
+    } catch {
+      toast.error('Erro ao gerar resumo. Tente novamente.');
+    } finally {
+      setSummarizing(false);
     }
-    setSummarizing(false);
   };
 
   const handleCopy = async () => {
-    if (!selectedStudy?.ai_summary) return;
-    await navigator.clipboard.writeText(selectedStudy.ai_summary);
+    if (!whatsappSummary) return;
+    try {
+      await navigator.clipboard.writeText(whatsappSummary);
+    } catch {
+      toast.error('Não foi possível copiar. Selecione e copie o texto do resumo.');
+      return;
+    }
     setCopied(true);
     toast.success('Copiado para a área de transferência!');
     setTimeout(() => setCopied(false), 2000);
@@ -161,7 +190,7 @@ export default function Estudos() {
   const handleBack = async () => {
     if (autoSaveTimer.current) {
       clearTimeout(autoSaveTimer.current);
-      await saveNotes(selectedStudy!.id, selectedStudy!.notes);
+      if (!await saveNotes(selectedStudy!.id, selectedStudy!.notes)) return;
     }
     setSelectedStudy(null);
     fetchStudies();
@@ -200,13 +229,13 @@ export default function Estudos() {
       <AppLayout>
         <div className="min-w-0 space-y-4 max-w-[760px] mx-auto">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Voltar à lista de estudos" onClick={handleBack}>
+            <Button variant="ghost" size="icon" aria-label="Voltar à lista de estudos" onClick={handleBack} disabled={summarizing}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold min-w-0 whitespace-normal break-words">{selectedStudy.title}</h1>
               <p className="text-sm text-muted-foreground">
-                {format(new Date(selectedStudy.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                {format(parseISO(selectedStudy.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </p>
             </div>
             {saving && <Badge variant="secondary" className="text-xs">Salvando...</Badge>}
@@ -224,8 +253,12 @@ export default function Estudos() {
                 placeholder="Anote aqui os pontos do estudo bíblico..."
                 value={selectedStudy.notes}
                 onChange={(e) => handleNotesChange(e.target.value)}
-                aria-label="Anotações do estudo" className="min-h-[250px]"
+                aria-label="Anotações do estudo" aria-describedby="study-summary-instructions"
+                readOnly={summarizing} className="min-h-[250px]"
               />
+              <p id="study-summary-instructions" className="mt-2 text-sm text-muted-foreground">
+                Para orientar a IA, escreva nas anotações: “Instrução: resuma em 3 tópicos, sem emojis”.
+              </p>
             </CardContent>
           </Card>
 
@@ -237,7 +270,7 @@ export default function Estudos() {
             )}
           </Button>
 
-          {selectedStudy.ai_summary && (
+          {whatsappSummary && (
             <Card className="border-primary/20 bg-primary/5">
               <CardHeader className="pb-2">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -253,7 +286,7 @@ export default function Estudos() {
               </CardHeader>
               <CardContent>
                 <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] text-base font-sans leading-[1.625]">
-                  {selectedStudy.ai_summary}
+                  {whatsappSummary}
                 </pre>
               </CardContent>
             </Card>
@@ -390,15 +423,15 @@ export default function Estudos() {
                 key={study.id}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedStudy(study); notesRef.current = study.notes; } }}
+                onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedStudy(study); } }}
                 variant="interactive"
-                onClick={() => { setSelectedStudy(study); notesRef.current = study.notes; }}
+                onClick={() => setSelectedStudy(study)}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold min-w-0 whitespace-normal break-words">{study.title}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(study.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      {format(parseISO(study.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
