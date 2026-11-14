@@ -275,11 +275,11 @@ function MeetingWorkspace({ id }: { id?: string }) {
       <header className="meeting-cover rounded-xl px-3 py-2.5 sm:px-5 sm:py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
           <h1 className="meeting-cover__title min-w-0">{meeting.title}</h1>
-          <span data-closed={isClosed} className="meeting-cover__status rounded-full px-2 py-0.5 text-xs font-semibold">
+          <span data-closed={isClosed} className="meeting-cover__status mobile-reading-meta rounded-full px-2 py-0.5 text-xs font-semibold">
             {isClosed ? 'Finalizada' : 'Aberta'}
           </span>
         </div>
-        <div className="meeting-cover__meta mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+        <div className="meeting-cover__meta mobile-reading-meta mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <time dateTime={meeting.date}>{meetingDate.format(date)} · {meetingTime.format(date)}</time>
           {participantsCount !== null && <span>{participantsCount} {participantsCount === 1 ? 'participante' : 'participantes'}</span>}
         </div>

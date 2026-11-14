@@ -135,21 +135,6 @@
   font-size: 0.8125rem !important;
 }
 
-/* Renomeia visualmente alguns rótulos sem alterar os dados */
-.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:first-of-type > .grid > div:nth-child(3) p.text-sm,
-.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div:first-child p.text-sm {
-  font-size: 0 !important;
-}
-
-.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:first-of-type > .grid > div:nth-child(3) p.text-sm::after {
-  content: "Custo do lote";
-  font-size: 0.8125rem;
-}
-
-.shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3:nth-of-type(2) > .grid:first-of-type > div:first-child p.text-sm::after {
-  content: "Disponíveis";
-  font-size: 0.8125rem;
-}
 
 @media (max-width: 767px) {
   .shirts-page .finance-tab-panel [role="tabpanel"] > .space-y-3 .grid.grid-cols-2 > div > div > .flex {

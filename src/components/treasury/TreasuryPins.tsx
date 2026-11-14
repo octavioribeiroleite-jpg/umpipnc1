@@ -41,7 +41,7 @@ export function TreasuryPins({ funds }: { funds: TreasuryFund[] }) {
     <div className="tr-review-list">{funds.map(item => {
       const state = status.data?.find(row => row.fund_id === item.id);
       return <div className="tr-manager-row" key={item.id}>
-        <span><strong>{item.abbreviation}</strong> · {status.isPending ? 'Consultando…' : status.error ? 'Indisponível' : !state?.configured ? 'PIN não definido' : state.active ? 'Acesso ativo' : 'Acesso desativado'}</span>
+        <span className="mobile-reading"><strong>{item.abbreviation}</strong> · {status.isPending ? 'Consultando…' : status.error ? 'Indisponível' : !state?.configured ? 'PIN não definido' : state.active ? 'Acesso ativo' : 'Acesso desativado'}</span>
         <div className="flex min-w-0 flex-wrap gap-2">
           <button className="tr-button" disabled={busy || status.isPending || Boolean(status.error)} onClick={() => {clear();setFund(item.id);}}>{state?.configured ? 'Trocar PIN' : 'Definir PIN'}</button>
           {state?.active && <ConfirmActionButton label={`Desativar ${item.abbreviation}`} title={`Desativar o PIN da ${item.abbreviation}?`} description="O acesso por PIN será bloqueado e as sessões anteriores perderão a autorização. Será preciso definir um novo PIN para voltar a entrar." onConfirm={() => save(item.id,false)} variant="outline" />}

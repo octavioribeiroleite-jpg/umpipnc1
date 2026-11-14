@@ -535,7 +535,7 @@ export function CamisasTab() {
                     <ShoppingCart className="h-5 w-5 text-destructive" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Gastos das camisas</p>
+                    <p className="text-sm text-muted-foreground">Custo do lote</p>
                     <p className="text-xl font-bold">{formatCurrency(realShirtCosts)}</p>
                     {giftQty > 0 && (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -574,7 +574,7 @@ export function CamisasTab() {
                     <Package className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Em Estoque</p>
+                    <p className="text-sm text-muted-foreground">Disponíveis</p>
                     <p className="text-xl font-bold">{totalStock}</p>
                   </div>
                 </div>

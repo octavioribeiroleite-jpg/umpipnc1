@@ -1,0 +1,67 @@
+/* A leitura no celular segue a ata: 14/20 no conteúdo e nos títulos,
+   com o peso do título e a cor do texto de apoio formando a hierarquia. */
+@media (width < 700px), (width < 1100px) and (pointer: coarse) {
+  :root {
+    --mobile-reading-size: .875rem;
+    --mobile-reading-line: 1.25rem;
+    --mobile-meta-size: .75rem;
+    --mobile-meta-line: 1rem;
+  }
+
+  body {
+    --font-page-title: var(--mobile-reading-size) !important;
+    --font-section-title: var(--mobile-reading-size) !important;
+    --font-card-title: var(--mobile-reading-size) !important;
+    --font-body-responsive: var(--mobile-reading-size) !important;
+    font-size: var(--mobile-reading-size) !important;
+    line-height: var(--mobile-reading-line) !important;
+  }
+
+  /* As telas antigas usam utilitários, regras por módulo e estilos inline.
+     A escala prevalece sobre eles sem mudar dimensões, ícones ou estados. */
+  body :is(
+    h1, h2, h3, h4, h5, h6, p, li, dt, dd, label, legend, th, td, caption, cite,
+    summary, a, button, input, textarea, select, option, output, strong, b, small, time, code, pre,
+    [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"],
+    [role="option"], [role="combobox"], [role="tooltip"], [role="heading"],
+    [data-sonner-toast], [data-sonner-toast] :is([data-title], [data-description]),
+    [class*="text-xs"], [class*="text-sm"], [class*="text-base"],
+    [class*="text-lg"], [class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"],
+    [class*="text-4xl"], [class*="text-5xl"], [class*="text-6xl"],
+    [class*="text-7xl"], [class*="text-8xl"], [class*="text-9xl"], [class*="text-["],
+    [style*="font-size"], .mobile-reading, .mobile-reading-title,
+    .summary-label, .summary-value, .summary-meta, .auth-access-card span,
+    .ebd-status, .ebd-menu-copy > span, .ebd-access__profile-title, .ebd-access__profile-description,
+    .identity-confirmation-question, .identity-confirmation-name, .identity-confirmation-meta,
+    .tr-fund-badge, .tr-fund-label, .tr-fund-footer, .tr-count, .tr-total-detail,
+    .tr-chart-legend, .tr-month-column > span, .tr-entry-description > span,
+    .tr-table-fund, .tr-review-status, .tr-statement-totals,
+    .treasury-form-eyebrow, .treasury-receipt-fund
+  ):not(svg *, .sr-only) {
+    font-size: var(--mobile-reading-size) !important;
+    line-height: var(--mobile-reading-line) !important;
+  }
+
+  body :is(h1, h2, h3, h4, h5, h6, legend, [role="heading"], .mobile-reading-title):not(svg *, .sr-only) {
+    font-weight: 650 !important;
+    letter-spacing: normal;
+  }
+
+  body :is(
+    .mobile-reading-meta, .mobile-reading-meta :is(time, span),
+    .ipnc-bottom-nav button :is(span, small), .dashboard-account-copy > span,
+    .dashboard-footer > span, .ebd-access__footer > span
+  ) {
+    font-size: var(--mobile-meta-size) !important;
+    line-height: var(--mobile-meta-line) !important;
+  }
+
+  .tr-table td::before {
+    font-size: var(--mobile-meta-size);
+    line-height: var(--mobile-meta-line);
+  }
+
+  body :is(svg text, svg tspan) {
+    font-size: var(--mobile-reading-size) !important;
+  }
+}

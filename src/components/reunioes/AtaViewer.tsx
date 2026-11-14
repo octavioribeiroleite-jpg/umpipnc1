@@ -5,10 +5,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 // Helper function to format minutes display with proper styling
-function formatMinutesDisplay(text: string, largeText: boolean) {
+function formatMinutesDisplay(text: string) {
   const cleaned = text.replace(/\*\*/g, '').replace(/\*/g, '');
   
   // Split into lines
@@ -39,7 +38,7 @@ function formatMinutesDisplay(text: string, largeText: boolean) {
   ];
   
   return (
-    <div className={cn('meeting-minutes space-y-1.5 break-words border-t pt-2', largeText ? 'text-base leading-6' : 'text-sm leading-5 sm:text-base sm:leading-6')}>
+    <div className="meeting-minutes space-y-1.5 break-words border-t pt-2 text-sm leading-5 sm:text-base sm:leading-6">
       {bodyLines.map((trimmedLine, index) => {
         if (!trimmedLine || /^ATA (DA|DE) REUNIÃO$/i.test(trimmedLine)) return null;
         if (/^---+$/.test(trimmedLine)) return <hr key={index} className="border-border" />;
@@ -80,7 +79,7 @@ function formatMinutesDisplay(text: string, largeText: boolean) {
       })}
       {hasMeetingMetadata && (
         <details className="border-t text-xs text-muted-foreground">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center font-semibold text-primary [&::-webkit-details-marker]:hidden">
+          <summary className="mobile-reading flex min-h-12 cursor-pointer list-none items-center font-semibold text-primary [&::-webkit-details-marker]:hidden">
             Dados originais da ata
           </summary>
           <div className="space-y-1">
@@ -148,7 +147,6 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
   const [savingEdit, setSavingEdit] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [editedMinutes, setEditedMinutes] = useState('');
-  const [largeText, setLargeText] = useState(false);
 
   useEffect(() => {
     if (!editable) {
@@ -325,19 +323,14 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
       <Card className="meeting-panel rounded-xl shadow-none">
         <CardHeader className="min-h-12 flex-row flex-wrap items-center justify-between gap-x-2 space-y-0 px-3 py-0 sm:space-y-0 md:px-4 md:py-0">
           <h2 className="text-base font-semibold">Ata da reunião</h2>
-          {!isEditing && (
-            <div className="-mr-2 flex items-center gap-0.5">
-              <Button variant="ghost" size="sm" className="px-2 text-xs text-primary sm:hidden" aria-pressed={largeText} onClick={() => setLargeText(previous => !previous)}>
-                Texto maior
-              </Button>
-              {canManage && <Button variant="ghost" size="sm" className="min-w-12 px-2 text-[.8125rem] text-primary" onClick={handleStartEdit}>
-                Editar
-              </Button>}
-            </div>
+          {canManage && !isEditing && (
+            <Button variant="ghost" size="sm" className="-mr-2 min-w-12 px-2 text-[.8125rem] text-primary" onClick={handleStartEdit}>
+              Editar
+            </Button>
           )}
         </CardHeader>
         <CardContent className="px-3 pb-3 md:px-4 md:pb-4">
-          {meeting.status !== 'fechada' && <p className="pb-2 text-xs text-muted-foreground">Rascunho da ata. Revise antes de finalizar e compartilhar.</p>}
+          {meeting.status !== 'fechada' && <p className="mobile-reading-meta pb-2 text-xs text-muted-foreground">Rascunho da ata. Revise antes de finalizar e compartilhar.</p>}
           {saveError && <p role="alert" className="mb-4 text-destructive">{saveError}</p>}
           
           {isEditing ? (
@@ -359,7 +352,7 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
               </div>
             </div>
           ) : (
-            formatMinutesDisplay(meeting.final_minutes, largeText)
+            formatMinutesDisplay(meeting.final_minutes)
           )}
         </CardContent>
       </Card>

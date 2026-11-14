@@ -143,7 +143,7 @@ export function MembrosTab() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
               <Users className="h-5 w-5" />
-              <span className="font-medium">{activeCount} membros ativos</span>
+              <span className="mobile-reading font-medium">{activeCount} membros ativos</span>
               <span className="text-sm">/ {members.length} total</span>
             </div>
             {isManagement && (
@@ -189,7 +189,7 @@ export function MembrosTab() {
                     member.active ? 'bg-green-500' : 'bg-muted-foreground/40'
                   }`}
                 />
-                <span className={`break-words font-medium ${!member.active ? 'text-muted-foreground line-through' : ''}`}>
+                <span className={`mobile-reading break-words font-medium ${!member.active ? 'text-muted-foreground line-through' : ''}`}>
                   {member.name}
                   <span className="block text-sm font-normal text-muted-foreground">{member.active ? 'Ativo' : 'Inativo'}</span>
                 </span>

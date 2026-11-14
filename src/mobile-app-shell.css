@@ -1,3 +1,5 @@
+@import './mobile-typography.css' layer(ipnc-mobile-reading);
+
 /* One mobile/PWA contract. Backgrounds reach the physical edges; only content
    reserves insets. Route families opt into managed bars, future pages inherit
    the default safe content stage automatically. */
