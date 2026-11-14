@@ -45,6 +45,18 @@ html, body { padding: 0; background-color: var(--app-edge-background); }
     padding-top: max(1.5rem, var(--safe-top)); padding-bottom: max(1.5rem, var(--safe-bottom));
   }
 }
+/* An unfolded phone uses the same bottom navigation as its cover screen.
+   The compact sidebar remains available in a desktop window of the same width. */
+@media (700px <= width < 1100px) and (pointer: coarse) {
+  .ipnc-diretoria-layout .ipnc-diretoria-rail { display: none; }
+  .ipnc-diretoria-layout .ipnc-diretoria-bottom { display: block; }
+  .ipnc-navigation-layout.ipnc-diretoria-layout {
+    --bottom-nav-height: calc(var(--mobile-nav-content-height) + var(--safe-bottom));
+  }
+  .ipnc-navigation-layout.ipnc-diretoria-layout #main-content {
+    padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+  }
+}
 @media (min-width: 768px) { .ipnc-membro-layout { --bottom-nav-height: 0px; } .ipnc-membro-layout .safe-bottom-content { padding-bottom: max(1rem, var(--safe-bottom)); } }
 
 /* Entry compositions keep their approved artwork at the edge. */

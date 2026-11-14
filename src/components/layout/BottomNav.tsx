@@ -17,8 +17,15 @@ interface BottomNavProps {
   mainItems: BottomNavItem[];
   moreItems: BottomNavItem[];
   moreTitle?: string;
-  desktopBreakpoint?: 'md' | 'lg' | '700';
+  desktopBreakpoint?: 'md' | 'lg' | '700' | 'container';
 }
+
+const hideAboveBreakpoint = {
+  md: 'md:hidden',
+  lg: 'lg:hidden',
+  '700': 'min-[700px]:hidden',
+  container: '',
+};
 
 export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', desktopBreakpoint = 'md' }: BottomNavProps) {
   const [open, setOpen] = useState(false);
@@ -36,7 +43,7 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', d
   return (
     <nav aria-label="Navegação principal" className={cn(
       'ipnc-bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 shadow-[0_-4px_16px_rgba(0,0,0,0.035)] backdrop-blur-md dark:border-border/40',
-      desktopBreakpoint === 'lg' ? 'lg:hidden' : desktopBreakpoint === '700' ? 'min-[700px]:hidden' : 'md:hidden',
+      hideAboveBreakpoint[desktopBreakpoint],
     )}>
       <div ref={navContentRef} className="ipnc-bottom-nav-content ipnc-safe-page-x mx-auto grid min-h-16 max-w-reading items-stretch gap-1" style={{ gridTemplateColumns: `repeat(${visibleItems.length + 1}, minmax(0, 1fr))` }}>
         {visibleItems.map((item) => (
