@@ -280,7 +280,7 @@ export function TaskDialog({
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="grid grid-cols-2 gap-3 pt-4 sm:flex sm:justify-end">
               <Button
                 type="button"
                 variant="outline"

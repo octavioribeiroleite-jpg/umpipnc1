@@ -523,7 +523,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         {/* Voting mode selector */}
         {!nominationsOpen && <div className="space-y-2">
           <p className="text-xs font-medium">Modo de votação:</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-3">
             <button
               disabled={loading}
               onClick={() => handleModeChange('shared')}
@@ -616,7 +616,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
         </div>
 
         {/* Compact counters */}
-        <div className="grid grid-cols-3 gap-2 text-center tabular-nums">
+        <div className="grid grid-cols-2 gap-2 text-center tabular-nums sm:grid-cols-3">
           <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
             <p className="text-2xl font-bold tracking-tight text-foreground">{countedPresent}</p>
             <p className="text-xs text-muted-foreground">Presentes</p>
@@ -625,7 +625,7 @@ export function VotingPanel({ electionId, electionName, status, totalPresent, vo
             <p className="text-2xl font-bold tracking-tight text-foreground">{voteCount}</p>
             <p className="text-xs text-muted-foreground">Cédulas</p>
           </div>
-          <div className={`p-2 rounded-lg border shadow-sm ${countExact ? 'border-success/50 bg-success/5' : 'border-warning/50 bg-warning/10'}`}>
+          <div className={`col-span-2 p-2 rounded-lg border shadow-sm sm:col-span-1 ${countExact ? 'border-success/50 bg-success/5' : 'border-warning/50 bg-warning/10'}`}>
             <p className={`text-lg font-bold ${countExact ? 'text-success' : 'text-warning'}`}>
               {countError || !countSnapshot?.attendanceConfirmed ? '—' : Math.abs(diff)}
             </p>

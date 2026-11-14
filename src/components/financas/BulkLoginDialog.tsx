@@ -203,8 +203,22 @@ export function BulkLoginDialog({ members, onComplete }: BulkLoginDialogProps) {
               {results && `${results.filter(r => r.success).length} sucesso(s), ${results.filter(r => !r.success).length} falha(s)`}
             </DialogDescription>
           </DialogHeader>
+          {results && <div className="space-y-3 min-[700px]:hidden">
+            {results.map((result, index) => (
+              <article key={index} className="min-w-0 space-y-3 rounded-xl border border-border p-3">
+                <div className="space-y-1">
+                  <h3 className="break-words font-semibold">{result.name}</h3>
+                  <p className={result.success ? 'text-success' : 'text-destructive'}>{result.success ? 'Conta criada' : 'Não criada'}</p>
+                </div>
+                <dl className="space-y-2 border-t border-border pt-3">
+                  <div><dt className="text-muted-foreground">Usuário</dt><dd className="mt-1 break-all font-mono">{result.username}</dd></div>
+                  <div><dt className="text-muted-foreground">{result.success ? 'Senha' : 'Motivo'}</dt><dd className="mt-1 break-all font-mono">{result.success ? result.password : result.error}</dd></div>
+                </dl>
+              </article>
+            ))}
+          </div>}
           {results && (
-            <Table>
+            <div className="hidden min-w-0 min-[700px]:block"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Status</TableHead>
@@ -229,7 +243,7 @@ export function BulkLoginDialog({ members, onComplete }: BulkLoginDialogProps) {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
           <DialogFooter>
             <Button onClick={copyAllCredentials} className="gap-2">

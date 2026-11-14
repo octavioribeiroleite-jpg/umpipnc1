@@ -167,7 +167,7 @@ export function ComprovantesTab() {
         submissions.map((sub) => (
           <Card key={sub.id}>
             <CardContent className="p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+              <div className="finance-record-heading mb-2">
                 <div>
                   <p className="font-medium text-base break-words">{sub.member_name}</p>
                   <p className="text-[13px] text-muted-foreground">
@@ -185,7 +185,7 @@ export function ComprovantesTab() {
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 mt-4">
+              <div className="finance-record-actions">
                 <Button
                   variant="outline"
                   size="sm"

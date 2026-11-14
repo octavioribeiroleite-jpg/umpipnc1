@@ -23,6 +23,10 @@
 .shirt-order-row > button { height: auto; min-height: 56px; padding: .75rem; white-space: normal; }
 .shirt-order-row > div:last-child { display: flex; flex-wrap: wrap; gap: .5rem; }
 .shirt-order-row > div:last-child button { min-width: 48px; min-height: 48px; }
+.shirt-item-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(4.5rem, .65fr); align-items: end; gap: .5rem; }
+.shirt-item-form > div { width: 100%; min-width: 0; }
+.shirt-item-form > div:first-child { grid-column: 1 / -1; }
+.shirt-item-form > button { grid-column: 1 / -1; justify-self: end; }
 @media (min-width: 768px) {
   .shirt-order-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .shirt-order-row > div:first-child { grid-column: 1 / -1; }
@@ -37,4 +41,16 @@
   .shirts-summary-section { padding: .875rem; }
   .shirt-campaign-actions { flex-direction: column; }
   .shirt-campaign-actions > button { width: 100%; }
+}
+
+@media (max-width: 699px) {
+  .shirt-campaign-identity > h4,
+  .shirt-order-identity > p { flex-basis: 100%; }
+  .shirt-campaign-metrics { gap: .75rem; padding-block: .75rem; margin-top: .75rem; }
+  .shirt-campaign-costs { grid-template-columns: 1fr; gap: .5rem; }
+  .shirt-campaign-costs > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem .75rem; }
+  .shirt-campaign-costs p { margin: 0; }
+  .shirt-order-row { gap: .75rem; }
+  .shirt-order-actions { padding-top: .5rem; border-top: 1px solid hsl(var(--border)); }
+  .shirt-order-actions > button { flex: 1; }
 }

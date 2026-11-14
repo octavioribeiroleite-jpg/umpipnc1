@@ -180,10 +180,10 @@ export default function Plenarias() {
                     key={p.id}
                     className="min-h-20"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-2">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold min-w-0 whitespace-normal break-words"><button className="min-h-12 text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded" onClick={() => navigate(`/plenarias/${p.id}`)}>{p.title}</button></h3>
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
+                        <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-border pt-2 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
                             {format(new Date(p.date), "dd/MM/yyyy", { locale: ptBR })}
@@ -194,16 +194,16 @@ export default function Plenarias() {
                               {p.present_count}/{p.total_count} ({pct}%)
                             </span>
                           )}
-                        </div>
-                      </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive shrink-0" aria-label={`Excluir plenária ${p.title}`}
+                        className="ml-auto text-destructive shrink-0" aria-label={`Excluir plenária ${p.title}`}
                         onClick={(e) => { e.stopPropagation(); setDeleteId(p.id); }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
+                        </div>
+                      </div>
                     </div>
                   </AppCard>
                 );

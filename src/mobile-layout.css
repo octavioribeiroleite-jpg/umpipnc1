@@ -1,0 +1,47 @@
+/* Mobile composition complements the shared 14/20 reading scale.
+   Keep these rules on semantic components, not every flex/grid in the app. */
+@media (max-width: 699px) {
+  .ui-card-title, .ui-card-description, .ui-card-header, .ui-card-footer {
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+  .ui-card-footer { flex-wrap: wrap; gap: .5rem; }
+
+  /* A tab label is one phrase. More tabs scroll inside the strip instead of
+     breaking words or creating uneven rows of navigation. Explicitly hidden
+     strips stay hidden when a module provides a mobile section selector. */
+  .ui-tabs-list:not(.hidden) {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    scroll-padding-inline: .25rem;
+  }
+  .ui-tabs-list .ui-tabs-trigger {
+    flex: 1 0 auto;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+    gap: .375rem;
+  }
+  .ui-tabs-trigger svg { flex-shrink: 0; }
+
+  /* Administrative tables become named records on a phone. The same controls
+     and handlers are reused, so permissions and save behavior are unchanged. */
+  .settings-users-table { display: block; min-width: 0 !important; width: 100%; }
+  .settings-users-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .settings-users-table tbody { display: block; }
+  .settings-users-table tr { display: grid; gap: .5rem; padding: .875rem; }
+  .settings-users-table td { display: block; min-width: 0 !important; max-width: none !important; padding: 0; text-align: left; overflow-wrap: anywhere; }
+  .settings-users-table td[data-label]::before { content: attr(data-label); display: block; margin-bottom: .25rem; color: hsl(var(--muted-foreground)); font-size: .75rem; line-height: 1rem; }
+  .settings-users-table td:last-child { padding-top: .75rem; margin-top: .25rem; border-top: 1px solid hsl(var(--border)); }
+  .settings-users-table td:last-child > div { justify-content: flex-start; flex-wrap: wrap; }
+  .settings-users-table td:last-child [role='combobox'] { flex: 1; width: auto; min-width: 9rem; }
+  .settings-table-hint { display: none; }
+
+  /* Dialogs retain their own padding (including QR and command surfaces). */
+  .app-dialog-content :is(.ui-card, .ui-app-card) { box-shadow: none; }
+}

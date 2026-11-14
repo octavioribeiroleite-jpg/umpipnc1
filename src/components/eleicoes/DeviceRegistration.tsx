@@ -121,9 +121,9 @@ export function DeviceRegistration({ electionId, devices, onRefresh, disabled }:
         <div className="space-y-2">
           {devices.map((d) => (
             <div key={d.id} className="rounded-xl border border-border bg-muted/10 p-3 space-y-3 sm:p-4">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Monitor className="h-4 w-4 text-primary shrink-0" />
-                <span className="min-w-0 [overflow-wrap:anywhere] text-base font-semibold text-foreground flex-1">{d.label}</span>
+                <span className="min-w-0 [overflow-wrap:anywhere] text-base font-semibold text-foreground flex-1 basis-[calc(100%-2rem)]">{d.label}</span>
                 {d.activated ? (
                   <span className="flex items-center gap-1 text-xs font-medium text-success bg-success/15 px-2 py-0.5 rounded-full">
                     <CheckCircle className="w-3 h-3" /> Online

@@ -18,7 +18,6 @@ import {
   Users,
   AlertTriangle,
   ChevronLeft,
-  FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -829,13 +828,13 @@ export default function PlanilhaAlunosTab({
             {filteredStudents.map((s) => (
               <Card data-ebd-card key={s.id}>
                 <CardContent data-ebd-content className="p-3 space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-start gap-2">
                     <Checkbox className="ebd-student-select"
                       aria-label={`Selecionar ${s.name}`} checked={selectedIds.has(s.id)}
                       onCheckedChange={() => toggleSelectOne(s.id)}
                     />
                     {editingId === s.id ? (
-                      <div className="flex items-center gap-1 flex-1">
+                      <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-1">
                         <Input
                           autoFocus
                           aria-label="Nome do aluno"
@@ -845,7 +844,7 @@ export default function PlanilhaAlunosTab({
                             if (e.key === 'Enter') handleSaveEdit(s.id);
                             if (e.key === 'Escape') setEditingId(null);
                           }}
-                          className="h-8"
+                          className="h-8 min-w-0"
                         />
                         <Button
                           size="icon"
@@ -890,7 +889,7 @@ export default function PlanilhaAlunosTab({
                     </Button>
                   </div>
                   <p className="text-[.8125rem] text-muted-foreground">Cadastro: {s.created_at ? new Date(s.created_at).toLocaleDateString('pt-BR') : 'Não informado'}</p>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="space-y-2">
                     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                       <Badge
                         variant={s.active ? 'default' : 'secondary'}
@@ -907,7 +906,7 @@ export default function PlanilhaAlunosTab({
                         </Badge>
                       )}
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap justify-end gap-1 border-t border-border pt-2">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -1000,10 +999,8 @@ export default function PlanilhaAlunosTab({
       >
         <DialogContent className="max-w-3xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileSpreadsheet className="h-5 w-5" />
-              Importar alunos via CSV — Passo {importStep + 1} de 3
-            </DialogTitle>
+            <DialogTitle>Importar alunos</DialogTitle>
+            <p className="text-sm text-muted-foreground">Arquivo CSV · Passo {importStep + 1} de 3</p>
           </DialogHeader>
 
           {/* Step 0 — upload */}

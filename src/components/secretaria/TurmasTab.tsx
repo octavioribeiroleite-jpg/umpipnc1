@@ -484,8 +484,8 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                 <div key={student.id} className="rounded-lg border border-border bg-card p-2.5">
                   <div className="ebd-class-row ebd-student-row">
                     <div className="ebd-student-info min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="min-w-0 whitespace-normal break-words text-sm font-medium">{student.name}</span>
+                      <p className="min-w-0 whitespace-normal break-words text-sm font-medium">{student.name}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
                         {age != null && (
                           <Badge variant="outline" className="text-xs">{age} anos</Badge>
                         )}
@@ -505,6 +505,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                       )}
                     </div>
 
+                    <div className="ebd-student-actions">
                     <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Editar nascimento de ${student.name}`} onClick={() => startBirthDateEdit(student)}>
                       <CalendarDays className="h-3.5 w-3.5" />
                     </Button>
@@ -512,6 +513,7 @@ export default function TurmasTab({ classes, allStudents, onRefresh }: TurmasTab
                       <ArrowRightLeft className="h-3.5 w-3.5" />
                     </Button>
                     <ConfirmActionButton label={student.active ? 'Inativar' : 'Reativar'} title={`${student.active ? 'Inativar' : 'Reativar'} ${student.name}?`} description={student.active ? 'O aluno deixará de aparecer nas próximas chamadas. O histórico será preservado.' : 'O aluno voltará a aparecer nas chamadas da turma.'} onConfirm={() => handleToggleActive(student)} />
+                    </div>
                   </div>
 
                   {editingBirthDateId === student.id && (

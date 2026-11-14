@@ -51,7 +51,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
     <AppCard colorStripe={eventColor} className="min-h-[72px]">
       {/* Row 1: Title + Society badge */}
       <div className="flex flex-wrap items-start justify-between gap-2 mb-1.5">
-        <h4 className="min-w-0 text-base font-semibold text-foreground [overflow-wrap:anywhere] leading-relaxed">
+        <h4 className="w-full min-w-0 text-base font-semibold text-foreground [overflow-wrap:anywhere] leading-relaxed">
           {event.title}
         </h4>
         <Badge
@@ -83,7 +83,7 @@ export function PastorEventCard({ event, onUpdateStatus, isUpdating }: Props) {
 
       {/* Row 3: Actions or status badge */}
       {isAwaiting && onUpdateStatus && (
-        <div className="flex items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <Button
             variant="outline"
             size="sm"

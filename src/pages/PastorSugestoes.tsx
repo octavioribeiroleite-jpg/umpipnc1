@@ -178,8 +178,19 @@ export default function PastorSugestoes() {
                 <span>{formatDistanceToNow(new Date(f.created_at), { addSuffix: true, locale: ptBR })}</span>
               </div>
             </div>
+
+          </div>
+          <div className="mt-4 space-y-3">
+              <p className="whitespace-pre-wrap break-words text-base leading-6">{f.message}</p>
+              {f.response && (
+                <div className="mt-3 p-3 bg-muted rounded-lg">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Resposta:</p>
+                  <p className="whitespace-pre-wrap break-words text-base leading-6">{f.response}</p>
+                </div>
+              )}
+          </div>
             <TooltipProvider delayDuration={300}>
-              <div className="ml-auto flex items-center gap-1 flex-shrink-0">
+              <div className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2">
                 {isUnread && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -208,16 +219,6 @@ export default function PastorSugestoes() {
                 </Tooltip>
               </div>
             </TooltipProvider>
-          </div>
-          <div className="mt-4 space-y-3">
-              <p className="whitespace-pre-wrap break-words text-base leading-6">{f.message}</p>
-              {f.response && (
-                <div className="mt-3 p-3 bg-muted rounded-lg">
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Resposta:</p>
-                  <p className="whitespace-pre-wrap break-words text-base leading-6">{f.response}</p>
-                </div>
-              )}
-          </div>
           {respondingTo === f.id && (
             <div className="mt-2 space-y-2 border-t pt-2 sm:ml-10">
               <Label htmlFor={`feedback-response-${f.id}`}>Resposta à sugestão</Label>

@@ -1,4 +1,4 @@
-import { FileText, Image, Download, Trash2, MoreVertical, File } from 'lucide-react';
+import { Download, Trash2, MoreVertical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,18 +33,6 @@ const categoryColors: Record<string, string> = {
   geral: 'bg-muted text-muted-foreground',
 };
 
-function getFileIcon(type: string | null) {
-  if (!type) return <File className="h-6 w-6 text-muted-foreground" />;
-
-  if (type.includes('pdf')) {
-    return <FileText className="h-6 w-6 text-destructive" />;
-  }
-  if (type.includes('image') || type.includes('png') || type.includes('jpg') || type.includes('jpeg') || type.includes('webp')) {
-    return <Image className="h-6 w-6 text-info" />;
-  }
-  return <File className="h-6 w-6 text-muted-foreground" />;
-}
-
 function formatFileSize(bytes: number | null) {
   if (!bytes) return '';
   if (bytes < 1024) return `${bytes} B`;
@@ -78,32 +66,11 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
         </div>
       )}
 
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          {!isImage && (
-            <div className="h-12 w-12 rounded-lg flex items-center justify-center bg-muted shrink-0">
-              {getFileIcon(file.type)}
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0">
-            <button type="button" onClick={(event) => { event.stopPropagation(); onView(file); }} className="min-h-12 min-w-0 text-left text-base font-medium [overflow-wrap:anywhere] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{file.name}</button>
-            <div className="flex flex-wrap items-center gap-2 mt-1">
-              <Badge
-                variant="secondary"
-                className={`text-xs ${categoryColors[category] || categoryColors.geral}`}
-              >
-                {categoryLabels[category] || category}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                {formatFileSize(file.size)}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {new Date(file.created_at).toLocaleDateString('pt-BR')}
-            </p>
-          </div>
-
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <Badge variant="secondary" className={`text-xs ${categoryColors[category] || categoryColors.geral}`}>
+            {categoryLabels[category] || category}
+          </Badge>
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button
@@ -128,6 +95,13 @@ export function FileCard({ file, onDownload, onDelete, onView }: FileCardProps) 
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+        <button type="button" onClick={(event) => { event.stopPropagation(); onView(file); }} className="min-h-12 w-full min-w-0 text-left text-base font-semibold [overflow-wrap:anywhere] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          {file.name}
+        </button>
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-2 text-sm text-muted-foreground">
+          {file.size != null && <><span>{formatFileSize(file.size)}</span><span aria-hidden="true">·</span></>}
+          <time dateTime={file.created_at}>{new Date(file.created_at).toLocaleDateString('pt-BR')}</time>
         </div>
       </CardContent>
     </Card>

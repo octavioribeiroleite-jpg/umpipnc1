@@ -530,11 +530,11 @@ function PlenaryWorkspace({ id }: { id?: string }) {
     <AppLayout>
       <div className="mx-auto max-w-[1120px] space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 mb-5 rounded-2xl border border-border bg-card p-4">
-        <Button variant="ghost" size="icon" aria-label="Voltar às plenárias" onClick={() => navigate('/plenarias')}>
-          <ArrowLeft className="h-5 w-5" />
+      <div className="grid grid-cols-[1fr_auto] items-center gap-3 mb-5 rounded-xl border border-border bg-card p-3 sm:p-4">
+        <Button variant="ghost" className="justify-self-start px-2" aria-label="Voltar às plenárias" onClick={() => navigate('/plenarias')}>
+          <ArrowLeft className="h-4 w-4" /> Plenárias
         </Button>
-        <div className="flex-1 min-w-0">
+        <div className="col-span-2 row-start-2 min-w-0">
           <h1 className="text-2xl font-bold min-w-0 whitespace-normal break-words">{plenary.title}</h1>
           <p className="text-sm text-muted-foreground">
             {format(new Date(plenary.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
@@ -561,7 +561,7 @@ function PlenaryWorkspace({ id }: { id?: string }) {
               Chamada de Presença
             </CardTitle>
             {attendance.length > 0 && (
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-1">
                 {canManage && (
                   <Button
                     variant="ghost"

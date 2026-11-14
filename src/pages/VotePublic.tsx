@@ -897,14 +897,14 @@ export default function VotePublic({ roomSession }: { roomSession?: RoomVoteSess
             return (
               <article
                 key={c.id}
-                className={`relative grid min-w-0 grid-cols-[96px_minmax(0,1fr)] items-center gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex sm:min-h-[260px] sm:flex-col sm:justify-between sm:gap-4 sm:p-5 ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
+                className={`relative grid min-w-0 ${isCamisa ? 'grid-cols-1' : 'grid-cols-[96px_minmax(0,1fr)]'} items-center gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex sm:min-h-[260px] sm:flex-col sm:justify-between sm:gap-4 sm:p-5 ${selected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
               >
                 {isMultiSeat && selected && (
                   <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-sm">
                     {selectedIndex + 1}
                   </span>
                 )}
-                <div className="row-span-2 min-w-0"><CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} /></div>
+                <div className={`min-w-0 ${isCamisa ? 'mx-auto' : ''}`}><CandidatePhotos photos={photos} name={c.name} size={isCamisa ? 'lg' : 'md'} /></div>
                 <h2 className="w-full [overflow-wrap:anywhere] text-lg leading-snug font-semibold text-left sm:text-center">{c.name}</h2>
                 <button type="button" aria-pressed={isMultiSeat ? selected : undefined} disabled={isMultiSeat && !selected && selectedCandidates.length >= maxChoices} onClick={() => {
                   void primeAudio(); setVoteError('');
@@ -912,7 +912,7 @@ export default function VotePublic({ roomSession }: { roomSession?: RoomVoteSess
                   setSelectedCandidates(current => current.some(candidate => candidate.id === c.id)
                     ? current.filter(candidate => candidate.id !== c.id)
                     : current.length >= maxChoices ? current : [...current, c]);
-                }} aria-label={`${isMultiSeat ? (selected ? 'Desmarcar' : 'Selecionar') : 'Votar em'} ${c.name}`} className="min-h-[48px] w-full rounded-xl bg-primary px-3 py-3 text-base font-bold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50">
+                }} aria-label={`${isMultiSeat ? (selected ? 'Desmarcar' : 'Selecionar') : 'Votar em'} ${c.name}`} className="col-span-full min-h-[48px] w-full rounded-xl bg-primary px-3 py-3 text-base font-bold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50">
                   {isMultiSeat ? (selected ? 'Selecionado' : 'Selecionar') : 'Votar'}
                 </button>
               </article>

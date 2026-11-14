@@ -79,7 +79,7 @@ export function BottomNav({ mainItems, moreItems, moreTitle = 'Mais opções', d
             <SheetHeader className="text-left">
               <SheetTitle>{moreTitle}</SheetTitle>
             </SheetHeader>
-            <div className="grid grid-cols-3 gap-2 py-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 py-3 min-[400px]:grid-cols-3 sm:grid-cols-4">
               {overflowItems.map((item) => (
                 <button
                   key={item.key}

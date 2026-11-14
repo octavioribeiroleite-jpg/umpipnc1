@@ -55,3 +55,21 @@ html.dark .tr-composition,
 html.dark .tr-attachments { border-color: hsl(var(--border)); }
 html.dark .tr-reserve { background: hsl(var(--warning) / .1); border-color: hsl(var(--warning) / .35); }
 html.dark .tr-reserve strong { color: hsl(var(--foreground)); }
+
+@media (max-width: 699px) {
+  .tr-workflow { gap: 1rem; margin-block: 1rem; }
+  .tr-workflow .tr-panel { padding: 1rem; }
+  .tr-review-item { flex-direction: column; gap: .75rem; padding: 1rem; }
+  .tr-review-item > div:last-child { width: 100%; max-width: none; align-items: stretch; text-align: left; flex-direction: column; gap: .75rem; padding-top: .75rem; border-top: 1px solid hsl(var(--border)); }
+  .tr-review-item > div:last-child > .tr-button { width: 100%; }
+  .tr-review-status { max-width: 100%; overflow-wrap: anywhere; }
+  .tr-bank-values { width: 100%; }
+  .tr-bank-values > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; }
+  .tr-bank-values dd { text-align: right; }
+  .tr-manager-row { flex-direction: column; align-items: stretch; gap: .75rem; }
+  .tr-manager-row > div { width: 100%; }
+  .tr-manager-row > div > button { flex: 1 1 8rem; }
+  .tr-manager-row > button { width: 100%; }
+  .tr-admin-navigation { display: flex; flex-wrap: nowrap; gap: .5rem; overflow-x: auto; padding-bottom: .25rem; overscroll-behavior-inline: contain; }
+  .tr-admin-navigation > a { flex: 0 0 auto; white-space: nowrap; }
+}

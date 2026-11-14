@@ -175,6 +175,15 @@ html.dark .treasury-fund-preview-badge { color: color-mix(in srgb, var(--fund-co
   .treasury-receipt-dialog .treasury-payment-option { gap: 6px; padding: 10px; font-size: 0.8125rem; }
 }
 
+@media (max-width: 699px) {
+  .treasury-form-heading { padding-right: 4rem; }
+  .treasury-form-heading h2 { padding-right: 0; }
+  .treasury-receipt-dialog .treasury-form-heading { padding-right: 4rem; }
+  .treasury-receipt-dialog .treasury-form-heading h2 { padding-right: 0; }
+  .treasury-form-actions { flex-wrap: wrap; }
+  .treasury-form-actions > button { flex: 1 1 8rem; white-space: normal; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .treasury-spinner { animation: none; }
   .treasury-field input, .treasury-field select, .treasury-field textarea { transition: none; }

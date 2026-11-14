@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Upload, X, FileIcon } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -95,22 +95,21 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
         `}
       >
         {file ? (
-          <div className="flex items-center justify-center gap-3">
-            <FileIcon className="h-8 w-8 text-muted-foreground" />
-            <div className="min-w-0 flex-1 text-left">
+          <div className="space-y-3 text-left">
+            <div className="min-w-0">
               <p className="font-medium [overflow-wrap:anywhere]">{file.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {(file.size / 1024).toFixed(1)} KB
-              </p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon" aria-label="Remover arquivo selecionado"
-              disabled={uploadMutation.isPending}
-              onClick={() => setFile(null)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
+              <p className="text-sm text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+              <Button
+                variant="ghost"
+                size="icon" aria-label="Remover arquivo selecionado"
+                disabled={uploadMutation.isPending}
+                onClick={() => setFile(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ) : (
           <>
@@ -153,7 +152,7 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
 
       <p role={error ? "alert" : undefined} className="min-h-6 text-base text-destructive">{error}</p>
       {/* Actions */}
-      <div className="flex flex-wrap gap-3 justify-end">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:justify-end">
         <Button variant="outline" disabled={uploadMutation.isPending} onClick={handleClose}>
           Cancelar
         </Button>

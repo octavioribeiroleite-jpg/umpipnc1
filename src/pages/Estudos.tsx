@@ -628,7 +628,7 @@ export default function Estudos() {
                             </Badge>
                           )}
                         </span>
-                        {excerpt && <span className="truncate text-sm text-muted-foreground">{excerpt}</span>}
+                        {excerpt && <span className="line-clamp-2 break-words text-sm text-muted-foreground">{excerpt}</span>}
                       </span>
                       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                     </button>

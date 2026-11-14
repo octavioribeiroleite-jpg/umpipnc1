@@ -35,7 +35,7 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
 
   return (
     <AppCard noPadding className="group flex h-full flex-col overflow-hidden rounded-2xl border-border shadow-none transition-shadow motion-reduce:transition-none hover:shadow-md">
-      <div className="flex items-start justify-between gap-3 px-5 pt-5">
+      <div className="flex items-start justify-between gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
         <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${election.status === 'open' && !election.nominations_open ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}><Icon className="h-5 w-5" /></span>
         <div className="ml-auto flex items-center gap-1"><Badge variant={status.variant} className="max-w-full text-xs">{status.label}</Badge>
           <DropdownMenu>
@@ -44,10 +44,10 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
           </DropdownMenu>
         </div>
       </div>
-      <div className="flex flex-1 items-start gap-3 px-5 pb-4 pt-3">
+      <div className="flex flex-1 items-start gap-3 px-4 pb-4 pt-3 sm:px-5">
         <div className="flex-1 min-w-0">
           <h3 className="mb-1 text-xl font-semibold leading-tight [overflow-wrap:anywhere]">{election.position}</h3>
-          <p className="mb-4 text-sm text-muted-foreground [overflow-wrap:anywhere]">{election.name}</p>
+          <p className="mb-3 text-sm text-muted-foreground [overflow-wrap:anywhere]">{election.name}</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             {election.total_present >= 0 && (
               <span className="flex items-center gap-1">
@@ -62,7 +62,7 @@ export function ElectionCard({ election, onClick, onDelete }: ElectionCardProps)
               </span>
             )}
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{hint}</p>
+          <p className="mt-3 hidden text-xs leading-relaxed text-muted-foreground sm:block">{hint}</p>
         </div>
       </div>
       <div className="border-t border-border/70 bg-muted/20 px-4 py-3 sm:px-5">

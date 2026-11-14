@@ -219,7 +219,7 @@ export function GastosTab() {
               Nenhum gasto registrado.
             </p>
           ) : (
-            <Table>
+            <Table className="finance-mobile-records">
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -231,10 +231,10 @@ export function GastosTab() {
               <TableBody>
                 {transactions.map((tx) => (
                   <TableRow key={tx.id}>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell data-label="Data" className="text-muted-foreground">
                       {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell data-label="Descrição" data-primary className="font-medium">
                       <div className="flex items-center gap-2">
                         {tx.receipt_url && (
                           <ReceiptLink
@@ -247,10 +247,10 @@ export function GastosTab() {
                         {tx.description}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right font-medium text-destructive">
+                    <TableCell data-label="Valor" className="text-right font-medium text-destructive">
                       -R$ {tx.amount.toFixed(2).replace('.', ',')}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell data-label="Ações" data-actions className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" aria-label="Editar gasto" onClick={() => openEditDialog(tx)}>
                           <Edit className="h-4 w-4" />

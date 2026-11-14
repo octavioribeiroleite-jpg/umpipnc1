@@ -631,7 +631,7 @@ export function CamisasTab() {
               {purchases.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">Nenhuma compra registrada</p>
               ) : (
-                <Table>
+                <Table className="finance-mobile-records">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Data</TableHead>
@@ -645,16 +645,17 @@ export function CamisasTab() {
                   <TableBody>
                     {purchases.map(p => (
                       <TableRow key={p.id}>
-                        <TableCell>{new Date(p.date).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{p.supplier || '-'}</TableCell>
-                        <TableCell>{p.total_quantity}</TableCell>
-                        <TableCell>{formatCurrency(p.total_cost)}</TableCell>
-                        <TableCell>{formatCurrency(p.unit_cost || 0)}</TableCell>
-                        <TableCell>
+                        <TableCell data-label="Data">{new Date(p.date).toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell data-label="Fornecedor" data-primary>{p.supplier || 'Fornecedor não informado'}</TableCell>
+                        <TableCell data-label="Quantidade">{p.total_quantity}</TableCell>
+                        <TableCell data-label="Custo total">{formatCurrency(p.total_cost)}</TableCell>
+                        <TableCell data-label="Custo unitário">{formatCurrency(p.unit_cost || 0)}</TableCell>
+                        <TableCell data-actions className="text-right">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-11 w-11 text-destructive hover:text-destructive"
+                            aria-label={`Excluir compra de ${p.supplier || 'fornecedor não informado'}`}
                             onClick={() => {
                               setItemToDelete({ id: p.id, type: 'purchase', transactionId: p.transaction_id || undefined });
                               setDeleteDialogOpen(true);
@@ -690,7 +691,7 @@ export function CamisasTab() {
               {sales.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">Nenhuma venda registrada</p>
               ) : (
-                <Table>
+                <Table className="finance-mobile-records">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Data</TableHead>
@@ -704,16 +705,17 @@ export function CamisasTab() {
                   <TableBody>
                     {sales.map(s => (
                       <TableRow key={s.id}>
-                        <TableCell>{new Date(s.date).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{s.buyer_name || '-'}</TableCell>
-                        <TableCell><Badge variant="outline">{s.size}</Badge></TableCell>
-                        <TableCell>{s.quantity}</TableCell>
-                        <TableCell>{formatCurrency(s.total_price || 0)}</TableCell>
-                        <TableCell>
+                        <TableCell data-label="Data">{new Date(s.date).toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell data-label="Comprador" data-primary>{s.buyer_name || 'Comprador não informado'}</TableCell>
+                        <TableCell data-label="Tamanho"><Badge variant="outline">{s.size}</Badge></TableCell>
+                        <TableCell data-label="Quantidade">{s.quantity}</TableCell>
+                        <TableCell data-label="Valor">{formatCurrency(s.total_price || 0)}</TableCell>
+                        <TableCell data-actions className="text-right">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-11 w-11 text-destructive hover:text-destructive"
+                            aria-label={`Excluir venda de ${s.buyer_name || 'comprador não informado'}`}
                             onClick={() => {
                               setItemToDelete({ id: s.id, type: 'sale', transactionId: s.transaction_id || undefined });
                               setDeleteDialogOpen(true);

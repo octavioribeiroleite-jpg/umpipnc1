@@ -178,7 +178,7 @@ export function DizimosTab() {
 
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Chave PIX:</p>
-                <div className="flex items-center gap-2 bg-background rounded-lg border p-3">
+                <div className="finance-pix-key bg-background rounded-lg border p-3">
                   <code className="min-w-0 flex-1 text-base font-mono break-all">{pixKey}</code>
                   <Button variant="outline" size="sm" aria-label={copied ? "Chave PIX copiada" : "Copiar chave PIX"} onClick={handleCopyPreview}>
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}

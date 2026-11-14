@@ -23,7 +23,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
   };
 
   return (
-    <div data-ebd-birthday className={`flex flex-wrap items-center gap-3 p-4 rounded-2xl border transition-colors ${
+    <div data-ebd-birthday className={`grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 p-4 rounded-2xl border transition-colors ${
       highlight === 'today' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' :
       highlight === 'week' ? 'bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-800' :
       'bg-card border-border'
@@ -40,7 +40,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
         }`} />
       </div>
 
-      <div className="min-w-0 basis-[10rem] flex-1">
+      <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-base min-w-0 whitespace-normal break-words">{birthday.nome}</span>
           {birthday.pendente_revisao && (
@@ -61,7 +61,7 @@ export function BirthdayCard({ birthday, showActions, highlight = 'none', onEdit
         </div>
       </div>
 
-      <div className="ebd-row-actions ml-auto flex flex-wrap items-center gap-1">
+      <div className="ebd-row-actions col-span-2 mt-1 flex w-full flex-wrap items-center justify-end gap-1 border-t border-border/60 pt-2 empty:hidden">
         {highlight === 'today' && (
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={handleCopy} title="Copiar mensagem" aria-label={`Copiar mensagem para ${birthday.nome}`}>
             <Copy className="h-4 w-4" />

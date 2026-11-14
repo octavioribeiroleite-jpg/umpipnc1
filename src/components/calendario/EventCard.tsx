@@ -59,14 +59,11 @@ export function EventCard({ event, onClick, compact = false }: EventCardProps) {
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-start gap-3 p-3 text-left rounded-xl border border-border/50 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'flex w-full items-start gap-3 border-l-[3px] p-3 text-left rounded-xl border border-border/50 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         event.status === 'cancelado' && 'opacity-60'
       )}
+      style={{ borderLeftColor: event.color || 'hsl(var(--primary))' }}
     >
-      <div
-        className="w-1 h-full min-h-[50px] rounded-full flex-shrink-0"
-        style={{ backgroundColor: event.color || '#10b981' }}
-      />
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-start justify-between gap-2">
           <p

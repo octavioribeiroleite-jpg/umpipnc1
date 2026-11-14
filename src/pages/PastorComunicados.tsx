@@ -264,7 +264,7 @@ export default function PastorComunicados() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="break-words font-semibold text-lg">{a.title}</p>
+                          <p className="w-full break-words font-semibold text-lg">{a.title}</p>
                           {a.priority === 'urgente' && (
                             <Badge variant="destructive" className="text-xs">Urgente</Badge>
                           )}

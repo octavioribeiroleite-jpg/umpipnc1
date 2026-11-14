@@ -186,7 +186,7 @@ export function CandidateForm({ electionId, candidates, onRefresh, disabled, typ
               <span className={`min-w-0 [overflow-wrap:anywhere] text-base font-semibold leading-snug ${isCamisa ? 'w-full text-center' : 'flex-1'}`}>{c.name}</span>
               
               {!disabled && (
-                <div className={`flex flex-wrap gap-1 ${isCamisa ? 'mt-auto justify-center' : 'ml-auto'}`}>
+                <div className={`flex flex-wrap gap-1 ${isCamisa ? 'mt-auto justify-center' : 'mt-1 w-full justify-end border-t border-border pt-2 sm:mt-0 sm:ml-auto sm:w-auto sm:border-0 sm:pt-0'}`}>
                   {allowPhotos && <label className="cursor-pointer rounded-lg" role="button" aria-label={`Enviar foto de ${c.name}`} tabIndex={uploading === c.id ? -1 : 0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click(); } }}>
                     <input
                       type="file"

@@ -234,8 +234,8 @@ export default function Visitantes() {
       ) : (
         <div className="space-y-6">
           {/* Day summary cards */}
-          <div className="grid grid-cols-1 gap-4 min-[700px]:grid-cols-3">
-            <AppCard variant="stat">
+          <div className="grid grid-cols-2 gap-3 min-[700px]:grid-cols-3">
+            <AppCard variant="stat" className="col-span-2 min-[700px]:col-span-1">
                 <p className="break-words text-2xl font-bold tabular-nums text-center">{dayStats.total}</p>
                 <p className="text-xs text-muted-foreground text-center">Total de pessoas</p>
             </AppCard>
@@ -288,7 +288,23 @@ export default function Visitantes() {
               {visibleDayVisitors.length === 0 ? (
                 <p className="text-center text-muted-foreground py-6 text-sm">{visitorSearch.trim() ? 'Nenhuma pessoa com esse nome neste dia.' : 'Nenhuma pessoa neste dia.'}</p>
               ) : (
-                <div className="w-full overflow-x-auto rounded-xl border border-border" role="region" aria-label="Pessoas do dia — deslize para ver todas as colunas" tabIndex={0}>
+                <>
+                <div className="space-y-2 md:hidden" aria-label="Pessoas do dia">
+                  {visibleDayVisitors.map(v => {
+                    const isFirstAccess = deviceFirstSeen.get(v.device_id) === v.id;
+                    const society = v.society_id ? societies[v.society_id] : null;
+                    return <article key={v.id} className="min-w-0 rounded-xl border border-border p-3">
+                      <h4 className="break-words font-semibold">{v.full_name}</h4>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <span>{v.is_visitor ? 'Visitante' : society?.name || 'Sem sociedade'}</span>
+                        <span aria-hidden="true">·</span>
+                        <time dateTime={v.created_at}>{format(new Date(v.created_at), 'HH:mm')}</time>
+                        <Badge variant={isFirstAccess ? 'outline' : 'secondary'} className="ml-auto">{isFirstAccess ? 'Novo' : 'Retornou'}</Badge>
+                      </div>
+                    </article>;
+                  })}
+                </div>
+                <div className="hidden w-full overflow-x-auto rounded-xl border border-border md:block" role="region" aria-label="Pessoas do dia — deslize para ver todas as colunas" tabIndex={0}>
                   <div className="min-w-[680px]">
                     <Table className="text-base">
                       <TableHeader>
@@ -332,6 +348,7 @@ export default function Visitantes() {
                     </Table>
                   </div>
                 </div>
+                </>
               )}
           </AppCard>
 

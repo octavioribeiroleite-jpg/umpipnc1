@@ -26,8 +26,17 @@ test('financial amounts wrap instead of being replaced by ellipses', () => {
   assert.match(css, /\.finance-summary-grid\s*\{[^}]*minmax\(min\(100%, 13\.5rem\), 1fr\)/);
 });
 
-test('shirt item form can wrap fields and names keep their available width', () => {
+test('shirt item form keeps color full width and size beside quantity without competing display utilities', () => {
   const form = source('src/components/financas/EncomendasTab.tsx');
-  assert.match(form, /flex flex-wrap items-end/);
-  assert.match(form, /basis-\[8rem\]/);
+  const css = source('src/camisas.css');
+  const itemClasses = form.match(/className="(shirt-item-form[^"\n]*)"/)?.[1];
+  assert.ok(itemClasses, 'order items use the shared semantic layout');
+  assert.doesNotMatch(itemClasses, /(?:^|\s)(?:flex|inline-flex|block|inline-block|grid)(?:\s|$)/,
+    'a display utility must not replace the item layout depending on CSS import order');
+  const layout = css.match(/\.shirt-item-form\s*\{([^}]+)\}/)?.[1];
+  assert.ok(layout, 'the semantic item layout is defined');
+  assert.match(layout, /display:\s*grid/);
+  assert.match(layout, /grid-template-columns:\s*minmax\([^)]+\)\s+minmax\([^)]+\)/);
+  assert.match(css, /\.shirt-item-form > div\s*\{[^}]*min-width:\s*0/);
+  assert.match(css, /\.shirt-item-form > div:first-child\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/);
 });

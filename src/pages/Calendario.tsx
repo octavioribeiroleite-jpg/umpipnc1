@@ -373,7 +373,6 @@ export default function Calendario() {
                   <div className="space-y-2">
                     {dayEvents.map(event => {
                       const societyName = getSocietyNameByColor(event.color);
-                      const dotClass = getEventDotClass(event.color);
                       return (
                         <button
                           type="button"
@@ -382,9 +381,6 @@ export default function Calendario() {
                           className="flex w-full gap-3 p-3 text-left rounded-xl border border-border/50 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           style={{ borderLeftWidth: '3px', borderLeftColor: event.color || '#6b7280' }}
                         >
-                          <div className="flex flex-col items-center pt-0.5">
-                            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${dotClass}`} />
-                          </div>
                           <div className="flex-1 min-w-0 space-y-0.5">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium text-sm min-w-0 whitespace-normal break-words">{event.title}</span>

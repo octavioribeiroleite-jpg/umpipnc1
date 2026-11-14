@@ -85,9 +85,9 @@ function TaskDetailPopup({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {task.title}
-            {isOverdue && <AlertCircle className="h-4 w-4 text-destructive" />}
+          <DialogTitle className="flex items-start gap-2">
+            <span className="min-w-0 flex-1 break-words">{task.title}</span>
+            {isOverdue && <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />}
           </DialogTitle>
         </DialogHeader>
 
@@ -123,7 +123,7 @@ function TaskDetailPopup({
           )}
 
           {/* Action buttons */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t">
+          <div className="grid grid-cols-2 gap-2 pt-3 border-t sm:flex sm:flex-wrap">
             {task.status !== 'done' && (
               <Button
                 size="sm"
@@ -154,7 +154,7 @@ function TaskDetailPopup({
                 disabled={updateStatus.isPending}
               >
                 <ArrowRight className="h-4 w-4 mr-1" />
-                <span className="min-w-0 [overflow-wrap:anywhere]">Em andamento</span>
+                <span className="min-w-0 [overflow-wrap:anywhere]">Andamento</span>
               </Button>
             )}
             {task.status === 'in_progress' && (
@@ -246,7 +246,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
               return <span className={cn('text-xs', className)}>{text}</span>;
             })()}
             {task.assignee && (
-              <span className="ml-auto flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+              <span className="flex w-full min-w-0 items-center gap-2 text-sm text-muted-foreground">
                 <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>
                 <span className="min-w-0 break-words">{task.assignee.full_name}</span>
               </span>
@@ -312,7 +312,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
               );
             })()}
             {task.assignee && (
-              <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground ml-auto">
+              <span className="flex w-full min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                 <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                   {initials}
                 </span>
@@ -324,7 +324,7 @@ export function TaskCard({ task, onEdit, onDelete, variant = 'full' }: TaskCardP
       </div>
 
       {/* Action buttons - below content */}
-      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/50">
+      <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-border/50 sm:flex sm:flex-wrap">
         {task.status !== 'done' && (
           <Button
             size="sm"

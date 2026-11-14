@@ -559,7 +559,7 @@ export function CobrancasTab() {
                 status === 'isento' && 'border-l-4 border-l-muted bg-muted/30 opacity-75'
               )}>
                 <CardContent className="p-3 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="finance-record-heading">
                     <div className="min-w-0">
                       <h4 className="font-semibold min-w-0 whitespace-normal break-words">{member.name}</h4>
                       <p className="text-xs text-muted-foreground">
@@ -582,7 +582,7 @@ export function CobrancasTab() {
                       <p className={remaining > 0 ? 'font-bold text-destructive' : 'font-bold'}>{formatCurrency(remaining)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="finance-record-footer">
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <CalendarDays className="h-3 w-3" />
                       {new Date(charge.due_date + 'T12:00:00').toLocaleDateString('pt-BR')}

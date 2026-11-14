@@ -204,7 +204,7 @@ export function EventDialog({
           <DialogHeader>
             <DialogTitle className="flex items-start gap-2 break-words">
               <Calendar className="h-5 w-5 shrink-0" />
-              {event.title}
+              <span className="min-w-0 flex-1 break-words">{event.title}</span>
             </DialogTitle>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge variant={event.origem === 'reuniao' ? 'secondary' : 'outline'}>
@@ -234,11 +234,11 @@ export function EventDialog({
             {event.location && (
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span>{event.location}</span>
+                <span className="min-w-0 break-words">{event.location}</span>
               </div>
             )}
             {event.description && (
-              <div className="text-sm text-muted-foreground pt-1 border-t border-border/50">
+              <div className="break-words whitespace-pre-wrap text-sm text-muted-foreground pt-2 border-t border-border/50">
                 {event.description}
               </div>
             )}

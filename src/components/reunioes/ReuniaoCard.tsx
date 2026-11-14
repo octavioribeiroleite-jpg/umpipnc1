@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
@@ -58,6 +58,8 @@ export function ReuniaoCard({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsId = useId();
 
   const getAiStatusText = () => {
     switch (progress.aiStatus) {
@@ -132,40 +134,29 @@ export function ReuniaoCard({
   return (
     <Card className="rounded-xl shadow-none" data-meeting-open={isOpen}>
       <CardContent className="meeting-list-row">
-        <time dateTime={date} aria-label={format(meetingDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          className="meeting-list-row__date meeting-tint grid min-h-11 min-w-9 place-content-center justify-items-center rounded-lg px-1.5 leading-none">
-          <strong className="text-base tabular-nums">{format(meetingDate, 'dd')}</strong>
-          <span className="mt-0.5 text-[0.6875rem] font-semibold uppercase">{format(meetingDate, 'MMM', { locale: ptBR }).replace('.', '')}</span>
-        </time>
-        <div className="meeting-list-row__main min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-semibold', isOpen ? 'meeting-tint' : 'bg-muted text-muted-foreground')}>
-              {isOpen ? 'Aberta' : 'Finalizada'}
-            </span>
-          </div>
-          <h3 className="mt-0.5 break-words text-sm font-semibold leading-snug">{title}</h3>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-            <span>{format(meetingDate, 'HH:mm')}</span>
-            <span>
-              {participantsCount} {participantsCount === 1 ? 'participante' : 'participantes'}
-            </span>
-            <span className="min-w-0 break-words">Moderador: {moderatorName}</span>
-          </div>
-        </div>
-        <div className="meeting-list-row__progress flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            {progress.pautaComplete ? 'Pauta registrada' : 'Pauta incompleta'}
-          </span>
-          <span className="inline-flex flex-wrap items-center gap-x-1">
-            Contribuições: {progress.finalizedContributions}/{progress.totalContributions}
-            {progress.contributionsRevealed && ' · Reveladas'}
-          </span>
-          <span className={cn('inline-flex items-center gap-1', getAiStatusColor())}>
-            IA: {getAiStatusText()}
+        <div className="meeting-list-row__heading">
+          <time dateTime={date} aria-label={format(meetingDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} className="text-sm font-medium text-muted-foreground">
+            {format(meetingDate, "dd 'de' MMM", { locale: ptBR })}
+          </time>
+          <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold', isOpen ? 'meeting-tint' : 'bg-muted text-muted-foreground')}>
+            {isOpen ? 'Aberta' : 'Finalizada'}
           </span>
         </div>
-        <div className="meeting-list-row__actions flex flex-wrap justify-end gap-0.5">
-          <Button variant="ghost" className="min-w-12 whitespace-nowrap px-1.5 text-[.8125rem] text-primary" aria-label={`${actionLabel}: ${title}`} onClick={() => navigate(target)}>
+        <h3 className="meeting-list-row__title break-words text-sm font-semibold">
+          <button type="button" className="w-full text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded" onClick={() => navigate(target)}>
+            {title}
+          </button>
+        </h3>
+        <p className="meeting-list-row__meta flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <span>{format(meetingDate, 'HH:mm')}</span>
+          <span aria-hidden="true">·</span>
+          <span>{participantsCount} {participantsCount === 1 ? 'participante' : 'participantes'}</span>
+        </p>
+        <div className="meeting-list-row__actions">
+          <Button variant="ghost" className="meeting-list-row__details px-2 text-muted-foreground" aria-expanded={detailsOpen} aria-controls={detailsId} onClick={() => setDetailsOpen(open => !open)}>
+            {detailsOpen ? 'Menos detalhes' : 'Detalhes'}
+          </Button>
+          <Button variant="outline" className="px-3 text-primary" aria-label={`${actionLabel}: ${title}`} onClick={() => navigate(target)}>
             {canViewMinutes ? actionLabel : 'Abrir'}
           </Button>
           {((isOpen && canManage) || onDelete) && (
@@ -186,6 +177,12 @@ export function ReuniaoCard({
             </DropdownMenu>
           )}
         </div>
+        {detailsOpen && <dl id={detailsId} className="meeting-list-row__progress text-sm">
+          <div><dt>Moderador</dt><dd>{moderatorName}</dd></div>
+          <div><dt>Pauta</dt><dd>{progress.pautaComplete ? 'Registrada' : 'Incompleta'}</dd></div>
+          <div><dt>Contribuições</dt><dd>{progress.finalizedContributions}/{progress.totalContributions}{progress.contributionsRevealed && ' · Reveladas'}</dd></div>
+          <div><dt>Resumo IA</dt><dd className={getAiStatusColor()}>{getAiStatusText()}</dd></div>
+        </dl>}
         {onDelete && (
           <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
             <AlertDialogContent>

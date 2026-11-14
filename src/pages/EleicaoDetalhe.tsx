@@ -296,7 +296,7 @@ export default function EleicaoDetalhe() {
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{election.name}</p>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border pt-3">
+        <div className="grid grid-cols-1 items-center gap-3 border-t border-border pt-3 sm:grid-cols-[minmax(0,1fr)_auto]">
           <p className="min-w-0 text-xs leading-relaxed text-muted-foreground sm:text-sm">
             {nominationsOpen ? `${currentRound}º escrutínio · indicações abertas · votos fechados` : election.status === 'finished' ? 'Votação concluída' : election.status === 'open'
               ? `${election.current_round || 1}º escrutínio · ${election.total_present} presentes`

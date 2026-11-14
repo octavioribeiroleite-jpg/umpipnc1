@@ -100,7 +100,7 @@ export function FileDetailsDialog({ file, open, onOpenChange, onDownload, onDele
           <p className="font-medium break-all">{file.name}</p>
         </div>
 
-        <div className="flex gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <p className="text-sm text-muted-foreground">Categoria</p>
             <Badge variant="secondary" className="mt-1">
@@ -129,13 +129,13 @@ export function FileDetailsDialog({ file, open, onOpenChange, onDownload, onDele
         {file.type && (
           <div>
             <p className="text-sm text-muted-foreground">Tipo</p>
-            <p className="font-medium">{file.type}</p>
+            <p className="font-medium break-words">{file.type}</p>
           </div>
         )}
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-2 pt-2">
+      <div className="grid grid-cols-2 gap-2 border-t border-border pt-3">
         <Button onClick={() => onDownload(file)} className="flex-1">
           <Download className="h-4 w-4 mr-2" />
           Download
@@ -180,11 +180,11 @@ export function FileDetailsDialog({ file, open, onOpenChange, onDownload, onDele
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent>
+        <DrawerContent className="max-h-[90dvh]">
           <DrawerHeader>
             <DrawerTitle>Detalhes do arquivo</DrawerTitle>
           </DrawerHeader>
-          <div className="p-4 pb-8">
+          <div className="overflow-y-auto p-4 pb-8">
             {content}
           </div>
         </DrawerContent>

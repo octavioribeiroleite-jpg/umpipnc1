@@ -565,7 +565,7 @@ export function RelatoriosTab() {
               <EmptyBlock icon={ArrowUpCircle} text="Nenhuma receita registrada" />
             ) : (
               <div className="overflow-x-auto">
-                <Table>
+                <Table className="finance-mobile-records">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Data</TableHead>
@@ -576,9 +576,9 @@ export function RelatoriosTab() {
                   <TableBody>
                     {receitasTransactions.map(tx => (
                       <TableRow key={tx.id}>
-                        <TableCell className="text-muted-foreground">{formatDate(tx.date)}</TableCell>
-                        <TableCell>{tx.description}</TableCell>
-                        <TableCell className="text-right font-medium text-success">{formatCurrency(tx.amount)}</TableCell>
+                        <TableCell data-label="Data" className="text-muted-foreground">{formatDate(tx.date)}</TableCell>
+                        <TableCell data-label="Descrição" data-primary>{tx.description}</TableCell>
+                        <TableCell data-label="Valor" className="text-right font-medium text-success">{formatCurrency(tx.amount)}</TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-muted/50 font-bold">
@@ -601,7 +601,7 @@ export function RelatoriosTab() {
               <EmptyBlock icon={ArrowDownCircle} text="Nenhum gasto registrado" />
             ) : (
               <div className="overflow-x-auto">
-                <Table>
+                <Table className="finance-mobile-records">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Data</TableHead>
@@ -613,14 +613,14 @@ export function RelatoriosTab() {
                   <TableBody>
                     {despesasTransactions.map(tx => (
                       <TableRow key={tx.id}>
-                        <TableCell className="text-muted-foreground">{formatDate(tx.date)}</TableCell>
-                        <TableCell>{tx.description}</TableCell>
-                        <TableCell>
+                        <TableCell data-label="Data" className="text-muted-foreground">{formatDate(tx.date)}</TableCell>
+                        <TableCell data-label="Descrição" data-primary>{tx.description}</TableCell>
+                        <TableCell data-label="Categoria">
                           <Badge variant="secondary" style={{ backgroundColor: `${tx.category_color}20`, color: tx.category_color }}>
                             {tx.category_name}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right font-medium text-destructive">{formatCurrency(tx.amount)}</TableCell>
+                        <TableCell data-label="Valor" className="text-right font-medium text-destructive">{formatCurrency(tx.amount)}</TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-muted/50 font-bold">
@@ -651,7 +651,7 @@ export function RelatoriosTab() {
                   className="text-left border rounded-md overflow-hidden bg-background hover:bg-muted/30 transition-colors"
                   onClick={() => handleViewReceipt(tx.receipt_url!)}
                 >
-                  <div className="border-b px-3 py-2 flex items-center justify-between gap-2 bg-muted/30">
+                  <div className="finance-receipt-heading border-b px-3 py-2 flex items-center justify-between gap-2 bg-muted/30">
                     <div className="min-w-0">
                       <p className="text-sm font-medium min-w-0 whitespace-normal break-words">{tx.description}</p>
                       <p className="text-xs text-muted-foreground">{formatDate(tx.date)}</p>

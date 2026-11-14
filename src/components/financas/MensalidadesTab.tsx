@@ -387,7 +387,7 @@ export function MensalidadesTab() {
               Nenhum membro ativo. Cadastre membros na aba "Membros".
             </p>
           ) : (
-            <Table>
+            <Table className="finance-mobile-records">
               <TableHeader>
                 <TableRow>
                   <TableHead>Membro</TableHead>
@@ -404,21 +404,21 @@ export function MensalidadesTab() {
 
                   return (
                     <TableRow key={member.id}>
-                      <TableCell className="font-medium">{member.name}</TableCell>
-                      <TableCell>
+                      <TableCell data-label="Membro" data-primary className="font-medium">{member.name}</TableCell>
+                      <TableCell data-label="Valor">
                         {payment ? `R$ ${payment.amount.toFixed(2).replace('.', ',')}` : '-'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Situação">
                         <Badge variant={isPaid ? 'default' : 'destructive'} className={isPaid ? 'bg-success' : ''}>
                           {isPaid ? 'Pago' : 'Pendente'}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Pagamento">
                         {payment?.paid_at
                           ? new Date(payment.paid_at).toLocaleDateString('pt-BR')
                           : '-'}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell data-label="Ações" data-actions className="text-right">
                         <div className="flex justify-end gap-1">
                           {isPaid && payment && (
                             <>
@@ -471,7 +471,7 @@ export function MensalidadesTab() {
               Nenhuma receita registrada neste período.
             </p>
           ) : (
-            <Table>
+            <Table className="finance-mobile-records">
               <TableHeader>
                 <TableRow>
                   <TableHead>Descrição</TableHead>
@@ -485,21 +485,21 @@ export function MensalidadesTab() {
               <TableBody>
                 {transactions.map((transaction) => (
                   <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">{transaction.description}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Descrição" data-primary className="font-medium">{transaction.description}</TableCell>
+                    <TableCell data-label="Origem">
                       <div className="flex items-center gap-2">
                         {getOriginIcon(transaction.origin, transaction.reference_type)}
                         <span className="text-sm">{getOriginLabel(transaction.origin, transaction.reference_type)}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{getMemberName(transaction.member_id) || '-'}</TableCell>
-                    <TableCell className="text-success font-medium">
+                    <TableCell data-label="Membro">{getMemberName(transaction.member_id) || '-'}</TableCell>
+                    <TableCell data-label="Valor" className="text-success font-medium">
                       R$ {Number(transaction.amount).toFixed(2).replace('.', ',')}
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Data">
                       {new Date(transaction.date).toLocaleDateString('pt-BR')}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell data-label="Ações" data-actions className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button
                           variant="ghost"

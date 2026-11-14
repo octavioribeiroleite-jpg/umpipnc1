@@ -353,9 +353,9 @@ export default function Configuracoes() {
                           Aguardando Aprovação ({users.filter(u => u.role === null).length})
                         </h3>
                       </div>
-                      <p className="mb-2 text-xs text-muted-foreground">Deslize a tabela para consultar todas as colunas e ações.</p>
+                      <p className="settings-table-hint mb-2 text-xs text-muted-foreground">Deslize a tabela para consultar todas as colunas e ações.</p>
                       <div role="region" aria-label="Cadastros aguardando aprovação" tabIndex={0} className="overflow-x-auto rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&>div]:overflow-visible">
-                      <Table className="min-w-[720px]">
+                      <Table className="settings-users-table min-w-[720px]">
                         <TableHeader>
                           <TableRow>
                             <TableHead>Nome</TableHead>
@@ -366,8 +366,8 @@ export default function Configuracoes() {
                         <TableBody>
                           {users.filter(u => u.role === null).map((userItem) => (
                             <TableRow key={userItem.id}>
-                              <TableCell className="min-w-[10rem] max-w-[18rem] whitespace-normal break-words font-medium">{userItem.full_name}</TableCell>
-                              <TableCell className="min-w-[12rem] max-w-[20rem] break-words text-muted-foreground">{userItem.email}</TableCell>
+                              <TableCell data-label="Nome" className="min-w-[10rem] max-w-[18rem] whitespace-normal break-words font-medium">{userItem.full_name}</TableCell>
+                              <TableCell data-label="E-mail" className="min-w-[12rem] max-w-[20rem] break-words text-muted-foreground">{userItem.email}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
                                   <Select 
@@ -456,9 +456,9 @@ export default function Configuracoes() {
                           Usuários Ativos ({users.filter(u => u.role !== null).length})
                         </h3>
                       </div>
-                      <p className="mb-2 text-xs text-muted-foreground">Deslize a tabela para consultar todas as colunas e ações.</p>
+                      <p className="settings-table-hint mb-2 text-xs text-muted-foreground">Deslize a tabela para consultar todas as colunas e ações.</p>
                       <div role="region" aria-label="Usuários aprovados" tabIndex={0} className="overflow-x-auto rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&>div]:overflow-visible">
-                      <Table className="min-w-[720px]">
+                      <Table className="settings-users-table min-w-[720px]">
                         <TableHeader>
                           <TableRow>
                             <TableHead>Nome</TableHead>
@@ -470,7 +470,7 @@ export default function Configuracoes() {
                         <TableBody>
                           {users.filter(u => u.role !== null).map((userItem) => (
                             <TableRow key={userItem.id}>
-                              <TableCell className="min-w-[10rem] max-w-[18rem] whitespace-normal break-words font-medium">
+                              <TableCell data-label="Nome" className="min-w-[10rem] max-w-[18rem] whitespace-normal break-words font-medium">
                                 {userItem.full_name}
                                 {userItem.user_id === user?.id && (
                                   <Badge variant="outline" className="ml-2 text-xs">
@@ -478,8 +478,8 @@ export default function Configuracoes() {
                                   </Badge>
                                 )}
                               </TableCell>
-                              <TableCell className="min-w-[12rem] max-w-[20rem] break-words text-muted-foreground">{userItem.email}</TableCell>
-                              <TableCell>
+                              <TableCell data-label="E-mail" className="min-w-[12rem] max-w-[20rem] break-words text-muted-foreground">{userItem.email}</TableCell>
+                              <TableCell data-label="Cargo">
                                 <Badge className={roleColors[userItem.role || 'pending']}>
                                   {roleLabels[userItem.role || 'pending']}
                                 </Badge>

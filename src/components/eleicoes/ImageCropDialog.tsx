@@ -83,7 +83,7 @@ export function ImageCropDialog({ open, onOpenChange, imageSrc, aspect = 1, onCr
           <DialogTitle>Ajustar imagem</DialogTitle>
         </DialogHeader>
 
-        <div className="relative w-full h-72 bg-muted rounded-lg overflow-hidden">
+        <div className="relative w-full h-[min(18rem,40dvh)] min-h-40 bg-muted rounded-lg overflow-hidden">
           {imageSrc && (
             <Cropper
               image={imageSrc}

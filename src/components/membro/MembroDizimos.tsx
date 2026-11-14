@@ -84,8 +84,8 @@ export function MembroDizimos() {
           {/* PIX Key with Copy */}
           <div>
             <p className="text-sm text-muted-foreground mb-2">Chave PIX:</p>
-            <div className="flex items-center gap-2 bg-muted rounded-lg border p-3">
-              <code className="flex-1 text-sm font-mono break-all font-semibold">
+            <div className="finance-pix-key bg-muted rounded-lg border p-3">
+              <code className="min-w-0 flex-1 text-sm font-mono break-all font-semibold">
                 {pixKey}
               </code>
               <Button

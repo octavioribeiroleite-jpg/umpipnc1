@@ -104,6 +104,18 @@ if (requestedDistribution && /^\d{1,4}(,\d{1,4}){0,17}$/.test(requestedDistribut
   data.election_attendance = Array.from({length:total}, (_, index) => ({id:`qa-attendance-${index}`,election_id:'election',name:`Pessoa FICTÍCIA ${index+1}`,present:true}));
  }
 }
+// Opt-in mobile card inspection with long, entirely fictional content.
+if (fixtureParams.get('layout') === 'stress') {
+ data.meetings[0].title = 'Reunião de alinhamento da programação de encerramento e planejamento dos próximos encontros';
+ data.files[0].name = 'Relatório anual de atividades e planejamento dos próximos encontros da sociedade — exemplo fictício.pdf';
+ data.shirt_purchases = [{...base,id:'purchase-fixture',date:isoDay,supplier:'Fornecedor fictício para encontro da sociedade',total_quantity:10,total_cost:250,unit_cost:25,notes:'Compra fictícia para vistoria.',transaction_id:null}];
+ data.shirt_sales = [{...base,id:'sale-fixture',date:isoDay,buyer_name:member.name,size:'M',quantity:1,unit_price:45,total_price:45,payment_method:'pix',transaction_id:null}];
+ data.transactions.push({...base,id:'expense-fixture',description:'Materiais para o encontro da sociedade — exemplo fictício',amount:150,type:'saida',date:isoDay,category:'Materiais',payment_method:'pix',status:'paid'});
+
+ data.study_notes[0].ai_summary = '*Comunhão e serviço*\n\n*1. O que aprendemos*\nEste é um resumo inteiramente fictício para conferir a leitura.\n\n*2. Aplicação*\nOrganizar as atividades e servir em comunidade.';
+ data.portal_visitors[0].created_at = `${isoDay}T12:00:00Z`;
+ data.portal_visitors[0].visit_date = isoDay;
+}
 const mode=fixtureState;
 let readsFail = mode === 'error';
 export function setFixtureReadFailure(failed:boolean) { readsFail = failed; }

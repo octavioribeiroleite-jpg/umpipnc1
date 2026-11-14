@@ -351,7 +351,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="shirt-campaign-identity flex flex-wrap items-center gap-2">
                         <h4 className="min-w-0 whitespace-normal break-words text-lg font-semibold">{campaign.name}</h4>
                         <Badge variant="secondary" className="font-medium">{shortage ? 'Estoque insuficiente' : soldOut ? 'Esgotada' : 'Ativa'}</Badge>
                         <Badge variant="outline" className="font-medium">
@@ -478,7 +478,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                   <p className="text-sm font-semibold">Adicionar quantidade</p>
                   <p className="text-xs text-muted-foreground">Opcional. A quantidade será registrada como um novo lote e somada ao total.</p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="finance-form-pair grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor={`${formId}-edit-quantity`}>Quantidade adicional</Label>
                     <Input
@@ -492,7 +492,7 @@ export function CampanhasCamisasTab({ selectedCampaignId, onSelectCampaign, onDa
                 </div>
                 {Number(editForm.additionalQuantity || 0) > 0 && (
                   <div className="mt-3 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="finance-form-pair grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor={`${formId}-edit-date`}>Data da compra</Label>
                         <Input

@@ -476,7 +476,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
                 <CardContent className="p-3">
                   <div className="shirt-order-row">
                     <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <div className="shirt-order-identity mb-2 flex flex-wrap items-center gap-2">
                         <p className="min-w-0 whitespace-normal break-words font-bold">{order.buyer_name}</p>
                         {order.lot_id && <Badge variant="outline" className="gap-1"><Layers3 className="h-3 w-3" />{lotLabel(order.lot_id)}</Badge>}
                         {finished && <Badge className="bg-success text-success-foreground"><CheckCircle2 className="mr-1 h-3 w-3" />Finalizado</Badge>}
@@ -503,7 +503,7 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
                       {delivered ? <Check className="h-4 w-4" /> : <Truck className="h-4 w-4" />}
                     </Button>
 
-                    <div className="flex justify-end gap-1"><Button variant="ghost" size="icon" title="Editar" onClick={() => openEdit(order)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" title="Excluir" onClick={() => requestDelete(order)}><Trash2 className="h-4 w-4" /></Button></div>
+                    <div className="shirt-order-actions flex justify-end gap-1"><Button variant="ghost" size="sm" aria-label={`Editar encomenda de ${order.buyer_name}`} onClick={() => openEdit(order)}><Pencil className="mr-2 h-4 w-4" />Editar</Button><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" aria-label={`Excluir encomenda de ${order.buyer_name}`} onClick={() => requestDelete(order)}><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></div>
                   </div>
                 </CardContent>
               </Card>
@@ -524,10 +524,10 @@ export function EncomendasTab({ onDataChange, selectedCampaignId }: Props) {
             <div className="space-y-2">
               <div className="flex items-center justify-between"><Label>Camisas</Label><Button type="button" variant="outline" size="sm" onClick={() => setItems([...items, emptyItem()])}><Plus className="mr-1 h-3 w-3" />Item</Button></div>
               {items.map((item, index) => (
-                <div key={index} className="flex flex-wrap items-end gap-2 rounded-lg border p-3">
-                  <div className="min-w-0 basis-[8rem] flex-1 space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-color-${index}`}>Cor</Label><Select value={item.color} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, color: value } : current))}><SelectTrigger id={`${formId}-order-color-${index}`} aria-label={`Cor do item ${index + 1}`}><SelectValue /></SelectTrigger><SelectContent>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="w-32 space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-size-${index}`}>Tamanho</Label><Select value={item.size} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, size: value } : current))}><SelectTrigger id={`${formId}-order-size-${index}`} aria-label={`Tamanho do item ${index + 1}`}><SelectValue /></SelectTrigger><SelectContent className="max-h-72">{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="w-20 space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-quantity-${index}`}>Qtd.</Label><Input id={`${formId}-order-quantity-${index}`} aria-label={`Quantidade do item ${index + 1}`} type="number" min="1" value={item.qty} onChange={(event) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, qty: Number(event.target.value) || 0 } : current))} /></div>
+                <div key={index} className="shirt-item-form rounded-lg border p-3">
+                  <div className="space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-color-${index}`}>Cor</Label><Select value={item.color} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, color: value } : current))}><SelectTrigger id={`${formId}-order-color-${index}`} aria-label={`Cor do item ${index + 1}`}><SelectValue /></SelectTrigger><SelectContent>{COLORS.map((color) => <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-size-${index}`}>Tamanho</Label><Select value={item.size} onValueChange={(value) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, size: value } : current))}><SelectTrigger id={`${formId}-order-size-${index}`} aria-label={`Tamanho do item ${index + 1}`}><SelectValue /></SelectTrigger><SelectContent className="max-h-72">{SIZES.map((size) => <SelectItem key={size} value={size}>{SIZE_LABEL[size]}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1"><Label className="text-xs" htmlFor={`${formId}-order-quantity-${index}`}>Qtd.</Label><Input id={`${formId}-order-quantity-${index}`} aria-label={`Quantidade do item ${index + 1}`} type="number" min="1" value={item.qty} onChange={(event) => setItems(items.map((current, itemIndex) => itemIndex === index ? { ...current, qty: Number(event.target.value) || 0 } : current))} /></div>
                   <Button type="button" variant="ghost" size="icon" className="ml-auto shrink-0 text-destructive" aria-label={`Remover item ${index + 1}`} disabled={items.length === 1} onClick={() => setItems(items.filter((_, itemIndex) => itemIndex !== index))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               ))}

@@ -62,10 +62,10 @@ export function EventCompletionList({
   return (
     <Card className="bg-card/70 backdrop-blur-sm rounded-xl">
       <CardHeader className="pb-2 pt-3 px-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-primary" />
-            {title}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="min-w-0 text-sm flex items-start gap-2">
+            <Calendar className="h-4 w-4 shrink-0 text-primary" />
+            <span className="min-w-0 break-words">{title}</span>
           </CardTitle>
           {onViewCalendar && (
             <Button variant="ghost" size="sm" className="text-sm min-h-11 px-3" onClick={onViewCalendar}>
@@ -79,7 +79,7 @@ export function EventCompletionList({
         {pendingResolution.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-xs font-medium text-amber-600 uppercase tracking-wider">
-              ⚠ Aguardando conclusão ({pendingResolution.length})
+              Aguardando conclusão ({pendingResolution.length})
             </p>
             {pendingResolution.map(event => (
               <EventRow
@@ -164,7 +164,7 @@ function EventRow({
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
         <div className="min-w-0 flex-[1_1_200px]">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-medium text-sm break-words">{event.title}</span>
+            <span className="min-w-0 w-full font-medium text-sm break-words">{event.title}</span>
             {societyName && (
               <span
                 className="text-xs font-semibold px-1.5 py-0.5 rounded-full"
@@ -183,9 +183,9 @@ function EventRow({
               }
             </span>
             {event.location && (
-              <span className="flex items-center gap-1 break-words">
-                <MapPin className="h-3 w-3 flex-shrink-0" />
-                {event.location}
+              <span className="flex min-w-0 items-start gap-1">
+                <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                <span className="min-w-0 break-words">{event.location}</span>
               </span>
             )}
           </div>

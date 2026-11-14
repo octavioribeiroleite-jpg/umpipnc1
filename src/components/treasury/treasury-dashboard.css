@@ -166,7 +166,7 @@ html.dark .tr-fund-badge { color: color-mix(in srgb, var(--fund-color) 45%, hsl(
   .tr-filters > label:nth-child(2) { grid-column: 1 / -1; }
   .tr-clear { grid-column: 1 / -1; justify-self: end; }
 }
-@media (max-width: 639px) {
+@media (max-width: 699px) {
   .treasury-workspace { --tr-page-padding: 16px; --tr-topbar-padding: 12px; }
   .tr-title-row h1 { font-size: 1.5rem; }
   .tr-eyebrow, .tr-title-row > div > p:last-child { display: none; }
@@ -219,4 +219,28 @@ html.dark .tr-fund-badge { color: color-mix(in srgb, var(--fund-color) 45%, hsl(
 
 @media (max-width: 699px) {
   .tr-workspace-header { padding: max(12px, var(--safe-top)) max(16px, var(--safe-right)) 0 max(16px, var(--safe-left)); }
+  .tr-heading-actions { display: grid; width: 100%; grid-template-columns: 1fr; }
+  .tr-heading-actions .tr-primary { grid-row: 1; }
+  .tr-stats { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: .75rem; }
+  .tr-total { grid-column: 1 / -1; padding: 1rem; }
+  .tr-stat { display: flex; flex-direction: column; gap: .25rem; padding: 1rem; }
+  .tr-stat-icon { display: none; }
+  .tr-section-heading { margin-bottom: 1rem; gap: .5rem; }
+  .tr-section-heading > div { flex: 1 1 12rem; }
+  .tr-section-heading > button { flex-basis: 100%; }
+  .tr-panel { padding: 1rem; }
+  .tr-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: .75rem; padding: 1rem; border: 1px solid var(--tr-line); border-radius: .875rem; }
+  .tr-table td:first-child,
+  .tr-table .tr-entry-description,
+  .tr-table .tr-edit-cell { grid-column: 1 / -1; }
+  .tr-table .tr-entry-description { grid-row: 1; min-width: 0; }
+  .tr-table .tr-entry-description::before { display: none; }
+  .tr-table .tr-edit-cell { border-top: 1px solid var(--tr-line); padding-top: .5rem; }
+  .tr-table td::before { margin-bottom: .25rem; }
+  .tr-statement-totals { display: grid; grid-template-columns: 1fr; gap: .5rem; }
+  .tr-statement-totals > span { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem .75rem; }
+  .tr-pagination { align-items: stretch; }
+  .tr-pagination > p,
+  .tr-pagination > div { width: 100%; }
+  .tr-pagination > div > button { flex: 1; }
 }

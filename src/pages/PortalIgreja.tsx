@@ -539,7 +539,7 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
                   )}
                 </div>
                 {nextEvent.location && (
-                  <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                  <p className="flex min-w-0 items-start gap-1 break-words text-xs text-muted-foreground mt-1">
                     <MapPin className="h-3 w-3" />
                     {nextEvent.location}
                   </p>
@@ -567,7 +567,7 @@ function InicioTab({ visitor, onTabChange }: { visitor: VisitorData; onTabChange
                 <Bell className="h-5 w-5 text-amber-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
                   <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Último Aviso</p>
                   {lastAnnouncement.priority === 'urgente' && (
                     <Badge variant="destructive" className="text-xs py-0">Urgente</Badge>
@@ -794,8 +794,8 @@ function ProgramacoesTab() {
                   <div className="h-1" style={{ backgroundColor: event.color || 'hsl(var(--primary))' }} />
                   <CardContent className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                      <h3 className="min-w-0 [overflow-wrap:anywhere] font-semibold text-base">{event.title}</h3>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <h3 className="w-full min-w-0 [overflow-wrap:anywhere] font-semibold text-base">{event.title}</h3>
+                      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                         {soc && (
                           <Badge variant="outline" className="text-xs" style={{ borderColor: soc.color, color: soc.color }}>
                             {soc.name}
@@ -821,7 +821,7 @@ function ProgramacoesTab() {
                       {event.all_day && <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Dia inteiro</span>}
                     </div>
                     {event.location && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1.5">
+                      <div className="flex min-w-0 items-start gap-1 break-words text-xs text-muted-foreground mt-1.5">
                         <MapPin className="h-3 w-3" />
                         {event.location}
                       </div>
@@ -885,7 +885,7 @@ function AvisosTab() {
       {announcements.map((a: any) => (
         <Card key={a.id} className={a.priority === 'urgente' ? 'border-destructive/50' : ''}>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between">
               <h3 className="[overflow-wrap:anywhere] text-base font-semibold">{a.title}</h3>
               {a.priority === 'urgente' && <Badge variant="destructive" className="text-xs">Urgente</Badge>}
             </div>

@@ -170,6 +170,7 @@ export default function Financas() {
   const [societySummary, setSocietySummary] = useState<SocietySummary[]>([]);
   const [recentMovements, setRecentMovements] = useState<RecentMovement[]>([]);
   const [extratoType, setExtratoType] = useState<ExtratoType | null>(null);
+  const [overviewOpen, setOverviewOpen] = useState(() => typeof window === 'undefined' || !window.matchMedia('(max-width: 699px)').matches);
   const monthWindow = getMonthWindow();
   const isCentralScope = (isAdmin || isPastor) && !selectedSocietyId;
   const selectedScopeLabel = selectedSocietyId
@@ -178,6 +179,13 @@ export default function Financas() {
       ? 'Geral'
       : society?.name || 'Sociedade';
   const roleLabel = isCentralScope ? 'Visão geral das sociedades' : `Gestão da ${selectedScopeLabel}`;
+
+  useEffect(() => {
+    const viewport = window.matchMedia('(max-width: 699px)');
+    const updateOverview = () => setOverviewOpen(!viewport.matches);
+    viewport.addEventListener('change', updateOverview);
+    return () => viewport.removeEventListener('change', updateOverview);
+  }, []);
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
@@ -498,6 +506,9 @@ export default function Financas() {
 
         <ExtratoDialog type={extratoType} onClose={() => setExtratoType(null)} />
 
+        <details className="finance-overview" open={overviewOpen} onToggle={event => setOverviewOpen(event.currentTarget.open)}>
+          <summary>{isCentralScope ? 'Visão geral das sociedades' : 'Visão geral financeira'}</summary>
+          <div className="finance-overview-content">
         <AppCard className="mb-4 rounded-2xl p-4 md:mb-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -549,7 +560,7 @@ export default function Financas() {
               <Button type="button" variant="link" className="min-h-11 px-1" onClick={() => handleTabChange('relatorios')}>Ver relatório</Button>
             </div>
             {societySummary.length > 0 ? (
-              <Table>
+              <Table className="finance-mobile-records">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Sociedade</TableHead>
@@ -563,12 +574,12 @@ export default function Financas() {
                 <TableBody>
                   {societySummary.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-semibold">{item.name}</TableCell>
-                      <TableCell className={item.saldo >= 0 ? 'font-medium text-foreground' : 'font-medium text-destructive'}>{formatCurrency(item.saldo)}</TableCell>
-                      <TableCell className=" text-success">{formatCurrency(item.entradasMes)}</TableCell>
-                      <TableCell className=" text-destructive">{formatCurrency(item.saidasMes)}</TableCell>
-                      <TableCell>{item.pendencias}</TableCell>
-                      <TableCell>
+                      <TableCell data-label="Sociedade" data-primary className="font-semibold">{item.name}</TableCell>
+                      <TableCell data-label="Saldo" className={item.saldo >= 0 ? 'font-medium text-foreground' : 'font-medium text-destructive'}>{formatCurrency(item.saldo)}</TableCell>
+                      <TableCell data-label="Entradas" className=" text-success">{formatCurrency(item.entradasMes)}</TableCell>
+                      <TableCell data-label="Saídas" className=" text-destructive">{formatCurrency(item.saidasMes)}</TableCell>
+                      <TableCell data-label="Pendências">{item.pendencias}</TableCell>
+                      <TableCell data-label="Fechamento">
                         <Badge variant="outline" className={statusBadgeClass(item.fechamento)}>{item.fechamento}</Badge>
                       </TableCell>
                     </TableRow>
@@ -595,7 +606,7 @@ export default function Financas() {
             <Button type="button" variant="link" className="min-h-11 px-1" onClick={() => setExtratoType('all')}>Ver todas</Button>
           </div>
           {recentMovements.length > 0 ? (
-            <Table>
+            <Table className="finance-mobile-records">
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -609,12 +620,12 @@ export default function Financas() {
               <TableBody>
                 {recentMovements.map((movement) => (
                   <TableRow key={movement.id}>
-                    <TableCell>{formatDate(movement.date)}</TableCell>
-                    <TableCell className="font-medium">{movement.society}</TableCell>
-                    <TableCell className={movement.type === 'Entrada' ? 'font-medium text-success' : 'font-medium text-destructive'}>{movement.type}</TableCell>
-                    <TableCell className="min-w-[180px]">{movement.description}</TableCell>
-                    <TableCell>{formatCurrency(movement.amount)}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Data">{formatDate(movement.date)}</TableCell>
+                    <TableCell data-label="Sociedade" className="font-medium">{movement.society}</TableCell>
+                    <TableCell data-label="Tipo" className={movement.type === 'Entrada' ? 'font-medium text-success' : 'font-medium text-destructive'}>{movement.type}</TableCell>
+                    <TableCell data-label="Descrição" data-primary>{movement.description}</TableCell>
+                    <TableCell data-label="Valor">{formatCurrency(movement.amount)}</TableCell>
+                    <TableCell data-label="Situação">
                       <Badge variant="outline" className={statusBadgeClass(movement.status)}>{movement.status}</Badge>
                     </TableCell>
                   </TableRow>
@@ -673,8 +684,8 @@ export default function Financas() {
             </div>
           </AppCard>
         </div>
-
-
+          </div>
+        </details>
       </div>
     </AppLayout>
   );
