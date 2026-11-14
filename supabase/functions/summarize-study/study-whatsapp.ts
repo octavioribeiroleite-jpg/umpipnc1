@@ -28,7 +28,7 @@ export function formatStudySummaryForWhatsApp(summary: string): string {
     lines.shift();
   }
 
-  return lines
+  const formattedLines = lines
     .map(line => line
       .replace(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/, '')
       .replace(/^\s{0,3}#{1,6}[ \t]+/, '')
@@ -36,7 +36,15 @@ export function formatStudySummaryForWhatsApp(summary: string): string {
       .replace(/\*{2,3}([^*\n]+?)\*{2,3}|__([^_\n]+?)__/g, (_, bold, underlined) => {
         const content = (bold ?? underlined).trim();
         return content ? `*${content}*` : '';
-      }))
+      }));
+
+  const topicOrQuestion = /^\s*(?:[-•][ \t]+|\d+[.)][ \t]+|\d\ufe0f?\u20e3|(?:\S+\s+)?\*\d+[.)][ \t]+)/u;
+  const section = /^\s*(?:\S+\s+)?\*(?:pontos principais|versículo[- ]chave|reflexão|aplicação prática|conclusão|para meditar na semana)\b/iu;
+  return formattedLines
+    .map((line, index) => {
+      const startsBlock = topicOrQuestion.test(line) || section.test(line);
+      return startsBlock && formattedLines[index - 1]?.trim() ? `\n${line}` : line;
+    })
     .join('\n')
     .replace(/\n(?:[ \t]*\n){2,}/g, '\n\n')
     .trim();

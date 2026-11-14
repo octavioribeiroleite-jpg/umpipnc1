@@ -52,20 +52,17 @@ serve(async (req) => {
 
 Use o campo "anotacoes" como fonte do conteúdo. O campo "orientacoes" contém o que a pessoa escreveu entre parênteses. Interprete essas orientações como pedidos de edição, mesmo se estiverem em forma de pergunta ou comentário. Aplique os pedidos em ordem e não os reproduza no resumo. Uma anotação antiga que comece com "Instrução:" também é um pedido de edição. Quando alguém pedir "meu modelo", "o modelo de sempre" ou perguntar pelos emojis, use o modelo padrão abaixo. Mantenha as partes do modelo que a orientação não pediu para alterar.
 
-Modelo padrão para o WhatsApp:
-📖 *Estudo Bíblico: [tema]*
-📅 *Data:* [data do estudo fornecida]
+Siga o estilo dos estudos anteriores, com linguagem próxima dos jovens e ideias bem desenvolvidas:
+- Abra com “📖 *Estudo Bíblico: [tema]*” e “📅 *Data:* [data fornecida]”. Quando houver uma passagem, identifique o texto-base na abertura ou na introdução.
+- Escreva uma introdução que situe a passagem e apresente o assunto central. Pode usar “No estudo de hoje...” ou “Hoje refletimos sobre...”, sem repetir mecanicamente essas aberturas.
+- Apresente os pontos em ordem, com títulos que digam o que cada um ensina. Os estudos anteriores costumam ter de três a cinco pontos. Use a quantidade que as anotações pedirem para preservar todas as ideias importantes.
+- Comece cada ponto em sua própria linha, como “1️⃣ *[título do ponto]*”. Na linha seguinte, desenvolva a ideia em um parágrafo com a explicação, a ligação com o texto bíblico e os exemplos ou aplicações que as anotações trouxerem. Deixe uma linha em branco antes do próximo tópico. Use emojis para guiar a leitura, sem substituir a explicação.
+- Use “📝 *Versículo-chave:*” quando houver um versículo citado. Use “🙏 *Reflexão:*” ou “🙏 *Aplicação prática:*” para ligar o estudo à vida cotidiana.
+- Termine com “🧠 *Para meditar na semana*” e três perguntas concretas de aplicação pessoal. Coloque uma pergunta em cada linha numerada e deixe uma linha em branco entre elas.
 
-[Breve introdução ao texto bíblico, quando mencionado]
+Desenvolva o conteúdo na medida das anotações, com a profundidade dos estudos anteriores. Preserve os exemplos, as ligações com a passagem e as aplicações relevantes. A linha em branco serve para separar as ideias. Não imponha um limite de palavras nem resuma cada ponto a uma frase. Não invente fatos, citações ou versículos.
 
-[Pontos principais em lista com hífen e espaço ou numeração. Use subtítulos em negrito quando úteis e emojis pertinentes como 💡, ✝️, 🙏 ou 📝.]
-
-🙏 *Reflexão:* [reflexão breve ou versículo citado nas anotações]
-
-🧠 *Para meditar na semana*
-[Duas ou três perguntas práticas e pessoais para os jovens]
-
-Retorne apenas a mensagem final, com até 350 palavras por padrão. Use *um asterisco de cada lado* para negrito e _um sublinhado de cada lado_ para itálico. Não use asteriscos duplos, cabeçalhos com #, linhas separadoras, blocos de código ou preâmbulo. Preserve o sentido das anotações e não invente fatos, citações ou versículos.`
+Retorne apenas a mensagem final. Use *um asterisco de cada lado* para negrito e _um sublinhado de cada lado_ para itálico. Não use asteriscos duplos, cabeçalhos com #, linhas separadoras, blocos de código ou preâmbulo.`
           },
           {
             role: "user",
