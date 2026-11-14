@@ -1,3 +1,25 @@
+export function splitStudyNotes(notes: string): { content: string; instructions: string[] } {
+  const instructions: string[] = [];
+  let content = '';
+  let start = 0;
+  let cursor = 0;
+  let depth = 0;
+
+  for (const match of notes.matchAll(/[()]/g)) {
+    if (match[0] === '(') {
+      if (depth === 0) start = match.index;
+      depth++;
+    } else if (depth > 0 && --depth === 0) {
+      const instruction = notes.slice(start + 1, match.index).trim();
+      if (instruction) instructions.push(instruction);
+      content += notes.slice(cursor, start);
+      cursor = match.index + 1;
+    }
+  }
+
+  return { content: (content + notes.slice(cursor)).trim(), instructions };
+}
+
 // Use the same format for new responses and summaries already saved in Markdown.
 export function formatStudySummaryForWhatsApp(summary: string): string {
   const text = summary.trim().replace(/^```(?:\w+)?[ \t]*\r?\n([\s\S]*?)\r?\n```$/, '$1');

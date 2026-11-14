@@ -257,7 +257,7 @@ export default function Estudos() {
                 readOnly={summarizing} className="min-h-[250px]"
               />
               <p id="study-summary-instructions" className="mt-2 text-sm text-muted-foreground">
-                Para orientar a IA, escreva nas anotações: “Instrução: resuma em 3 tópicos, sem emojis”.
+                Escreva as orientações para a IA entre parênteses, como (dê mais destaque à reflexão final).
               </p>
             </CardContent>
           </Card>
