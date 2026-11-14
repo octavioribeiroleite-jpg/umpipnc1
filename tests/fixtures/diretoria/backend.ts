@@ -237,6 +237,14 @@ async function invoke(name:string,options:{body?:Record<string,any>}={}){
   }
  }
  if(name==='summarize-for-pastor')return {data:{summaries:{geral:displayText,financas:displayText,tarefas:displayText,destaques:[displayText]},generated_at:now,from_cache:true},error:null};
+ if(name==='summarize-study'){
+  const study=data.study_notes.find(row=>row.id===body.studyId);
+  if(!study?.notes.trim())return failure();
+  const expectedGuidance=fixtureParams.get('study_guidance');
+  if(expectedGuidance && study.summary_guidance!==expectedGuidance)return failure();
+  study.ai_summary='📖 *Estudo Bíblico: Comunhão e serviço*\n\n1. *Sirva com alegria*\nApoie quem precisa de ajuda.\n\n2. *Caminhe em comunhão*\nReserve tempo para ouvir.';
+  return {data:{summary:study.ai_summary},error:null};
+ }
  if(name==='validate-diretoria-pin'){const configured=data.settings.find(row=>row.key===`diretoria_pin_${body.society_slug}`);return configured?.value===body.pin?{data:{success:true,session:fakeSession},error:null}:{data:{success:false,error:'PIN incorreto'},error:null};}
  if(name==='treasury-pin-login')return {data:{session:fakeSession},error:null};
  if(name==='member-list')return {data:{members:mode==='empty'?[]:data.members},error:null};

@@ -50,7 +50,7 @@ serve(async (req) => {
             role: "system",
             content: `Transforme anotações de estudos bíblicos em uma mensagem pronta para colar no WhatsApp. Responda em português.
 
-Use o campo "anotacoes" como fonte do conteúdo. O campo "orientacoes" contém o que a pessoa escreveu entre parênteses. Interprete essas orientações como pedidos de edição, mesmo se estiverem em forma de pergunta ou comentário. Aplique os pedidos em ordem e não os reproduza no resumo. Uma anotação antiga que comece com "Instrução:" também é um pedido de edição. Quando alguém pedir "meu modelo", "o modelo de sempre" ou perguntar pelos emojis, use o modelo padrão abaixo. Mantenha as partes do modelo que a orientação não pediu para alterar.
+Use o campo "anotacoes" como fonte do conteúdo. O campo "orientacoes" contém pedidos escritos entre parênteses e, ao final, o texto do campo opcional "Orientações para a IA". Interprete esses pedidos de edição mesmo quando forem perguntas ou comentários. Aplique os pedidos em ordem e não os reproduza no resumo. Uma anotação antiga que comece com "Instrução:" também é um pedido de edição. Quando alguém pedir "meu modelo", "o modelo de sempre" ou perguntar pelos emojis, use o modelo padrão abaixo. Mantenha as partes do modelo que a orientação não pediu para alterar.
 
 Siga o estilo dos estudos anteriores, com linguagem próxima dos jovens e ideias bem desenvolvidas:
 - Abra com “📖 *Estudo Bíblico: [tema]*” e “📅 *Data:* [data fornecida]”. Quando houver uma passagem, identifique o texto-base na abertura ou na introdução.
@@ -70,7 +70,7 @@ Retorne apenas a mensagem final. Use *um asterisco de cada lado* para negrito e 
               tema: study.title,
               data: study.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$3/$2/$1'),
               anotacoes: notes,
-              orientacoes: instructions,
+              orientacoes: [...instructions, study.summary_guidance?.trim()].filter(Boolean),
             }),
           }
         ],

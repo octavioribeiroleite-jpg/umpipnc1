@@ -2080,6 +2080,7 @@ export type Database = {
           id: string
           notes: string
           society_id: string | null
+          summary_guidance: string
           title: string
           updated_at: string
         }
@@ -2091,6 +2092,7 @@ export type Database = {
           id?: string
           notes?: string
           society_id?: string | null
+          summary_guidance?: string
           title: string
           updated_at?: string
         }
@@ -2102,6 +2104,7 @@ export type Database = {
           id?: string
           notes?: string
           society_id?: string | null
+          summary_guidance?: string
           title?: string
           updated_at?: string
         }
