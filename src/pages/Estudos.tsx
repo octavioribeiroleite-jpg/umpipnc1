@@ -3,22 +3,22 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Plus, BookOpen, Sparkles, Copy, ArrowLeft, Loader2, Check, FileText, Search, ChevronRight, PenLine, MessageSquare, SlidersHorizontal } from 'lucide-react';
+import { Plus, BookOpen, Sparkles, Copy, ArrowLeft, Loader2, Check, FileText, Search, ChevronRight, PenLine, MessageSquare, SlidersHorizontal, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatStudySummaryForWhatsApp, splitStudyNotes } from '../../supabase/functions/summarize-study/study-whatsapp';
 import { StudyWhatsAppPreview } from '@/components/estudos/StudyWhatsAppPreview';
+import { buildStudyRetrospective, studyDateLabel, studyRetrospectiveMessage, type SavedStudySummary, type StudyRetrospective } from '@/lib/study-retrospective';
 
 interface StudyNote {
   id: string;
@@ -42,7 +42,7 @@ function searchableText(value: string) {
 }
 
 export default function Estudos() {
-  const { profile } = useAuth();
+  const { profile, effectiveSocietyId, isManagement, isPastor } = useAuth();
   const [studies, setStudies] = useState<StudyNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -76,9 +76,26 @@ export default function Estudos() {
   // Yearly report state
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportYear, setReportYear] = useState(String(new Date().getFullYear()));
-  const [report, setReport] = useState<string | null>(null);
+  const [report, setReport] = useState<StudyRetrospective | null>(null);
+  const [reportError, setReportError] = useState('');
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState(false);
   const [reportCopied, setReportCopied] = useState(false);
+  const [reportCopyText, setReportCopyText] = useState(false);
+  const reportRequest = useRef(0);
+  const reportSocietyId = effectiveSocietyId ?? profile?.society_id;
+  const canReadReport = isManagement || isPastor;
+  const reportEntries = report?.entries.filter(entry => entry.paragraphs.length) ?? [];
+  const missingEntries = report?.entries.filter(entry => !entry.paragraphs.length) ?? [];
+
+  useEffect(() => {
+    reportRequest.current++;
+    setReport(null);
+    setReportError('');
+    setReportCopied(false);
+    setReportCopyText(false);
+    setGeneratingReport(false);
+  }, [reportSocietyId, canReadReport]);
 
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 5 }, (_, i) => String(currentYear - i));
@@ -261,30 +278,66 @@ export default function Estudos() {
   };
 
   const handleGenerateReport = async () => {
-    if (!profile?.society_id) {
-      toast.error('Sociedade não encontrada');
+    if (!canReadReport || !reportSocietyId) {
+      setReportError('Selecione uma sociedade para gerar a retrospectiva.');
       return;
     }
+    const request = ++reportRequest.current;
+    const year = Number(reportYear);
     setGeneratingReport(true);
     setReport(null);
-    const { data, error } = await supabase.functions.invoke('summarize-yearly-studies', {
-      body: { year: parseInt(reportYear), society_id: profile.society_id },
-    });
-    if (error || data?.error) {
-      toast.error(data?.error || error?.message || 'Erro ao gerar relatório');
-    } else {
-      setReport(data.report);
-      toast.success(`Relatório gerado com ${data.totalStudies} estudos!`);
+    setReportError('');
+    setReportCopied(false);
+    setReportCopyText(false);
+    try {
+      const rows: SavedStudySummary[] = [];
+      const batch = 100;
+      for (let offset = 0; ; offset += batch) {
+        const { data, error } = await supabase.from('study_notes')
+          .select('id,date,title,ai_summary')
+          .eq('society_id', reportSocietyId)
+          .gte('date', year + '-01-01')
+          .lt('date', (year + 1) + '-01-01')
+          .order('date', { ascending: true })
+          .order('id', { ascending: true })
+          .range(offset, offset + batch - 1);
+        if (reportRequest.current !== request) return;
+        if (error || !data) throw error ?? new Error('Consulta sem resultado');
+        rows.push(...data);
+        if (data.length < batch) break;
+      }
+      setReport(buildStudyRetrospective(year, rows));
+    } catch {
+      if (reportRequest.current === request) {
+        setReportError('Não foi possível consultar os estudos. Tente novamente.');
+      }
+    } finally {
+      if (reportRequest.current === request) setGeneratingReport(false);
     }
-    setGeneratingReport(false);
   };
 
   const handleCopyReport = async () => {
     if (!report) return;
-    await navigator.clipboard.writeText(report);
-    setReportCopied(true);
-    toast.success('Relatório copiado!');
-    setTimeout(() => setReportCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(studyRetrospectiveMessage(report));
+      setReportCopied(true);
+      setReportCopyText(false);
+    } catch {
+      setReportCopyText(true);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    if (!report || downloadingReport) return;
+    setDownloadingReport(true);
+    try {
+      const { buildStudyRetrospectivePdf } = await import('@/lib/study-retrospective-pdf');
+      buildStudyRetrospectivePdf(report).save('retrospectiva-estudos-' + report.year + '.pdf');
+    } catch {
+      toast.error('Não foi possível baixar o PDF. Tente novamente.');
+    } finally {
+      setDownloadingReport(false);
+    }
   };
 
   // Study detail view
@@ -436,7 +489,15 @@ export default function Estudos() {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={reportDialogOpen} onOpenChange={(open) => { setReportDialogOpen(open); if (!open) { setReport(null); } }}>
+          {canReadReport && <Dialog open={reportDialogOpen} onOpenChange={open => {
+            setReportDialogOpen(open);
+            if (!open) {
+              reportRequest.current++;
+              setGeneratingReport(false);
+              setReport(null);
+              setReportError('');
+            }
+          }}>
             <DialogTrigger asChild>
               <Button variant="outline" className="min-h-11 min-w-0 whitespace-normal bg-card px-2 sm:px-4">
                 <FileText className="h-4 w-4 mr-2" /> Relatório do Ano
@@ -446,14 +507,19 @@ export default function Estudos() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  Relatório Anual dos Estudos
+                  Retrospectiva dos estudos
                 </DialogTitle>
+                <DialogDescription>Relembre cada encontro a partir do resumo salvo naquela aula.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <div className="w-full min-w-0 sm:flex-1">
                     <label htmlFor="study-report-year" className="text-sm font-medium mb-1 block">Ano</label>
-                    <Select value={reportYear} onValueChange={setReportYear}>
+                    <Select value={reportYear} disabled={generatingReport} onValueChange={year => {
+                      setReportYear(year);
+                      setReport(null);
+                      setReportError('');
+                    }}>
                       <SelectTrigger id="study-report-year">
                         <SelectValue />
                       </SelectTrigger>
@@ -468,35 +534,54 @@ export default function Estudos() {
                     {generatingReport ? (
                       <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando...</>
                     ) : (
-                      <><Sparkles className="h-4 w-4 mr-2" /> Gerar Relatório</>
+                      <><FileText className="h-4 w-4 mr-2" /> Gerar retrospectiva</>
                     )}
                   </Button>
                 </div>
 
+                {reportError && <p role="alert" className="text-sm text-destructive">{reportError}</p>}
                 {report && (
-                  <Card className="border-primary/20 bg-primary/5">
-                    <CardHeader className="pb-2">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-primary" />
-                          Relatório {reportYear}
-                        </CardTitle>
-                        <Button variant="outline" size="sm" onClick={handleCopyReport}>
+                  <section className="space-y-4" aria-labelledby="study-report-title">
+                    <div className="space-y-2 border-b border-border pb-3">
+                      <h2 id="study-report-title" className="font-semibold">O que estudamos em {report.year}</h2>
+                      <p className="text-sm text-muted-foreground" role="status">
+                        {report.entries.length ? reportEntries.length + ' de ' + report.entries.length + ' encontros com resumo salvo.' : 'Nenhum estudo cadastrado para este ano.'}
+                      </p>
+                      {!!reportEntries.length && <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={handleCopyReport}>
                           {reportCopied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                           {reportCopied ? 'Copiado!' : 'Copiar'}
                         </Button>
+                        <Button onClick={handleDownloadReport} disabled={downloadingReport}>
+                          {downloadingReport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                          Baixar PDF
+                        </Button>
+                      </div>}
+                    </div>
+                    {reportCopyText && <div className="space-y-2">
+                      <label htmlFor="annual-copy-text" className="text-sm font-medium">Selecione o texto para copiar</label>
+                      <Textarea id="annual-copy-text" rows={8} readOnly value={studyRetrospectiveMessage(report)} />
+                    </div>}
+                    {reportEntries.map(entry => (
+                      <section key={entry.id} className="space-y-2">
+                        <p className="text-sm font-medium text-primary">{studyDateLabel(entry.date)}</p>
+                        <h3 className="break-words font-semibold">{entry.title}</h3>
+                        <StudyWhatsAppPreview message={entry.paragraphs.join('\n\n')} />
+                      </section>
+                    ))}
+                    {!!missingEntries.length && (
+                      <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+                        <h3 className="text-sm font-semibold">Encontros sem resumo salvo</h3>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          {missingEntries.map(entry => <li key={entry.id}>{studyDateLabel(entry.date)} · {entry.title}</li>)}
+                        </ul>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] text-base font-sans leading-[1.625]">
-                        {report}
-                      </pre>
-                    </CardContent>
-                  </Card>
+                    )}
+                  </section>
                 )}
               </div>
             </DialogContent>
-          </Dialog>
+          </Dialog>}
         </div>
 
         <div className="relative">
