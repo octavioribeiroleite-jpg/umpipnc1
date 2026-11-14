@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Eye, CheckCircle, Circle, Brain, FileText, Trash2, CalendarCheck, Loader2 } from 'lucide-react';
+import { ArrowRight, Users, CircleCheck, ListChecks, Sparkles, FileText, Trash2, CalendarCheck, Loader2, Ellipsis } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -13,7 +16,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +35,7 @@ interface ReuniaoCardProps {
   moderatorName: string;
   status: 'aberta' | 'fechada';
   participantsCount: number;
+  hasMinutes: boolean;
   progress: MeetingProgress;
   onDelete?: (id: string) => Promise<{ success: boolean; error?: string }>;
   onFinalize?: () => void;
@@ -46,12 +49,14 @@ export function ReuniaoCard({
   moderatorName,
   status,
   participantsCount,
+  hasMinutes,
   progress,
   onDelete,
   onFinalize,
   canManage = false,
 }: ReuniaoCardProps) {
   const navigate = useNavigate();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -119,124 +124,92 @@ export function ReuniaoCard({
     }
   };
 
-  return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex flex-col gap-3 md:gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 md:gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h3 className="break-words text-base font-semibold">{title}</h3>
-                <Badge
-                  variant={status === 'aberta' ? 'default' : 'secondary'}
-                  className={status === 'aberta' ? 'bg-success hover:bg-success/90' : ''}
-                >
-                  {status === 'aberta' ? '🟢 Aberta' : '⚪ Fechada'}
-                </Badge>
-              </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {new Date(date).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {participantsCount} participantes
-                </span>
-                <span>Moderador: {moderatorName}</span>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/reunioes/${id}`)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                {status === 'aberta' ? 'Acessar' : 'Ver Ata'}
-              </Button>
-              
-              {status === 'aberta' && canManage && (
-                <Button
-                  size="sm"
-                  onClick={handleFinalize}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processando...
-                    </>
-                  ) : (
-                    <>
-                      <CalendarCheck className="h-4 w-4 mr-2" />
-                      Finalizar
-                    </>
-                  )}
-                </Button>
-              )}
-              
-              {onDelete && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label={`Excluir reunião ${title}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Excluir reunião?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. Todos os dados relacionados a esta reunião serão excluídos permanentemente, incluindo pauta, contribuições, sugestões da IA e tarefas.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDelete}
-                        disabled={isDeleting}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        {isDeleting ? 'Excluindo...' : 'Excluir'}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
-          </div>
+  const isOpen = status === 'aberta';
+  const canViewMinutes = !isOpen && hasMinutes;
+  const meetingDate = new Date(date);
+  const target = `/reunioes/${id}${canViewMinutes ? '?secao=ata' : ''}`;
+  const actionLabel = canViewMinutes ? 'Ver ata' : 'Abrir reunião';
 
-          {/* Progress Indicators */}
-          <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs border-t pt-2 md:pt-3">
-            <span className="flex items-center gap-1">
-              {progress.pautaComplete ? (
-                <CheckCircle className="h-3.5 w-3.5 text-success" />
-              ) : (
-                <Circle className="h-3.5 w-3.5 text-muted-foreground" />
-              )}
-              Pauta: {progress.pautaComplete ? '✔️' : 'incompleta'}
+  return (
+    <Card className={cn('rounded-2xl transition-shadow hover:shadow-sm', isOpen && 'border-l-[3px] border-l-primary')}>
+      <CardContent className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 p-3.5 sm:gap-x-4 sm:p-4">
+        <time dateTime={date} aria-label={format(meetingDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+          className="meeting-tint grid min-h-14 min-w-12 place-content-center justify-items-center rounded-xl px-2 leading-none">
+          <strong className="text-xl tabular-nums">{format(meetingDate, 'dd')}</strong>
+          <span className="mt-1 text-[0.68rem] font-semibold uppercase">{format(meetingDate, 'MMM', { locale: ptBR }).replace('.', '')}</span>
+        </time>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold', isOpen ? 'meeting-tint' : 'bg-muted text-muted-foreground')}>
+              <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />{isOpen ? 'Aberta' : 'Finalizada'}
             </span>
-            <span className="flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" />
-              Contribuições: {progress.finalizedContributions}/{progress.totalContributions}
-              {progress.contributionsRevealed && ' | Reveladas ✔️'}
+          </div>
+          <h3 className="mt-1 break-words text-base font-semibold leading-snug">{title}</h3>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+            <span>{format(meetingDate, 'HH:mm')}</span>
+            <span className="inline-flex items-center gap-1.5"><Users aria-hidden="true" className="size-3.5" />
+              {participantsCount} {participantsCount === 1 ? 'participante' : 'participantes'}
             </span>
-            <span className={`flex items-center gap-1 ${getAiStatusColor()}`}>
-              <Brain className="h-3.5 w-3.5" />
-              IA: {getAiStatusText()}
-            </span>
+            <span className="min-w-0 break-words">Moderador: {moderatorName}</span>
           </div>
         </div>
+        <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t pt-2.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              {progress.pautaComplete ? <CircleCheck aria-hidden="true" className="size-3.5 shrink-0 text-success" /> : <ListChecks aria-hidden="true" className="size-3.5 shrink-0" />}
+              {progress.pautaComplete ? 'Pauta registrada' : 'Pauta incompleta'}
+            </span>
+            <span className="inline-flex flex-wrap items-center gap-x-1">
+              <Users aria-hidden="true" className="size-3.5 shrink-0" /> Contribuições: {progress.finalizedContributions}/{progress.totalContributions}
+              {progress.contributionsRevealed && ' · Reveladas'}
+            </span>
+            <span className={cn('inline-flex items-center gap-1', getAiStatusColor())}>
+              <Sparkles aria-hidden="true" className="size-3.5 shrink-0" /> IA: {getAiStatusText()}
+            </span>
+          </div>
+          <div className="ml-auto flex items-center gap-1.5">
+            <Button variant="outline" className="min-h-11 gap-2 rounded-xl" aria-label={`${actionLabel}: ${title}`} onClick={() => navigate(target)}>
+              {canViewMinutes && <FileText aria-hidden="true" className="size-4" />}
+              {actionLabel}{!canViewMinutes && <ArrowRight aria-hidden="true" className="size-4" />}
+            </Button>
+            {((isOpen && canManage) || onDelete) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="size-11 rounded-xl" aria-label={`Ações de ${title}`} disabled={isProcessing}>
+                    {isProcessing ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <Ellipsis aria-hidden="true" className="size-5" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isOpen && canManage && <DropdownMenuItem className="min-h-10 gap-2" onSelect={() => void handleFinalize()}>
+                    <CalendarCheck aria-hidden="true" className="size-4" /> Finalizar reunião
+                  </DropdownMenuItem>}
+                  {onDelete && <DropdownMenuItem className="min-h-10 gap-2 text-destructive" onSelect={() => setDeleteOpen(true)}>
+                    <Trash2 aria-hidden="true" className="size-4" /> Excluir reunião
+                  </DropdownMenuItem>}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </div>
+        {onDelete && (
+          <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir reunião?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não pode ser desfeita. Todos os dados relacionados a esta reunião serão excluídos permanentemente, incluindo pauta, contribuições, sugestões da IA e tarefas.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  {isDeleting ? 'Excluindo...' : 'Excluir'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </CardContent>
     </Card>
   );

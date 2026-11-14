@@ -1,74 +1,53 @@
-import { useState } from 'react';
+import { CalendarDays, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Search } from 'lucide-react';
+
+export type MeetingStatusFilter = 'all' | 'aberta' | 'fechada';
 
 interface ReuniaoFiltersProps {
-  onStatusChange: (status: string) => void;
+  status: MeetingStatusFilter;
+  month: string;
+  search: string;
+  months: { value: string; label: string }[];
+  onStatusChange: (status: MeetingStatusFilter) => void;
   onMonthChange: (month: string) => void;
   onSearchChange: (search: string) => void;
 }
 
-export function ReuniaoFilters({ onStatusChange, onMonthChange, onSearchChange }: ReuniaoFiltersProps) {
-  const [search, setSearch] = useState('');
-  const [statusValue, setStatusValue] = useState('all');
-  const [monthValue, setMonthValue] = useState('all');
+const statusOptions = [
+  { value: 'all', label: 'Todas' },
+  { value: 'aberta', label: 'Abertas' },
+  { value: 'fechada', label: 'Finalizadas' },
+] as const;
 
-  const currentYear = new Date().getFullYear();
-  const months = [
-    { value: 'all', label: 'Todos os meses' },
-    { value: `${currentYear}-01`, label: 'Janeiro' },
-    { value: `${currentYear}-02`, label: 'Fevereiro' },
-    { value: `${currentYear}-03`, label: 'Março' },
-    { value: `${currentYear}-04`, label: 'Abril' },
-    { value: `${currentYear}-05`, label: 'Maio' },
-    { value: `${currentYear}-06`, label: 'Junho' },
-    { value: `${currentYear}-07`, label: 'Julho' },
-    { value: `${currentYear}-08`, label: 'Agosto' },
-    { value: `${currentYear}-09`, label: 'Setembro' },
-    { value: `${currentYear}-10`, label: 'Outubro' },
-    { value: `${currentYear}-11`, label: 'Novembro' },
-    { value: `${currentYear}-12`, label: 'Dezembro' },
-  ];
-
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    onSearchChange(value);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatusValue(value);
-    onStatusChange(value);
-  };
-
-  const handleMonthChange = (value: string) => {
-    setMonthValue(value);
-    onMonthChange(value);
-  };
-
+export function ReuniaoFilters({ status, month, search, months, onStatusChange, onMonthChange, onSearchChange }: ReuniaoFiltersProps) {
   return (
-    <div className="mb-6 grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)_minmax(0,200px)]">
-      <div className="space-y-2">
-        <Label htmlFor="meeting-search">Buscar reuniões</Label>
+    <div className="space-y-2.5">
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input id="meeting-search" placeholder="Buscar por título…" value={search} onChange={event => handleSearchChange(event.target.value)} className="pl-9" />
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input type="search" aria-label="Buscar reuniões por título" placeholder="Buscar reunião" value={search}
+            onChange={event => onSearchChange(event.target.value)} className="h-11 rounded-xl bg-card pl-10" />
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="meeting-status">Situação</Label>
-        <Select onValueChange={handleStatusChange} value={statusValue}>
-          <SelectTrigger id="meeting-status"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="all">Todas</SelectItem><SelectItem value="aberta">Abertas</SelectItem><SelectItem value="fechada">Fechadas</SelectItem></SelectContent>
+        <Select onValueChange={onMonthChange} value={month}>
+          <SelectTrigger aria-label="Filtrar por mês" className="h-11 gap-2 rounded-xl bg-card">
+            <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate text-left"><SelectValue /></span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os meses</SelectItem>
+            {months.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+          </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="meeting-month">Mês</Label>
-        <Select onValueChange={handleMonthChange} value={monthValue}>
-          <SelectTrigger id="meeting-month"><SelectValue /></SelectTrigger>
-          <SelectContent>{months.map(month => <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>)}</SelectContent>
-        </Select>
+      <div role="group" aria-label="Situação das reuniões" className="flex flex-wrap gap-1">
+        {statusOptions.map(option => (
+          <button key={option.value} type="button" aria-pressed={status === option.value}
+            onClick={() => onStatusChange(option.value)}
+            className="meeting-filter-tab min-h-11 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+            {option.label}
+          </button>
+        ))}
       </div>
     </div>
   );

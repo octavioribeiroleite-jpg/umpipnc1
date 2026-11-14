@@ -1,59 +1,26 @@
-import { useState } from 'react';
-import { Folder, FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { type ReactNode, useState } from 'react';
+import { ChevronDown, CircleDot, FolderOpen } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
 
-interface ReuniaoPastaDataProps {
-  date: string;
+export function ReuniaoPastaData({ label, count, active, children }: {
+  label: string;
   count: number;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}
-
-export function ReuniaoPastaData({ date, count, children, defaultOpen = true }: ReuniaoPastaDataProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  const formattedDate = format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-
+  active: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(true);
+  const Icon = active ? CircleDot : FolderOpen;
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="w-full">
-        <div className={cn(
-          "flex min-h-12 flex-wrap items-center gap-2 p-3 rounded-xl text-left transition-colors",
-          "bg-muted/50 hover:bg-muted cursor-pointer",
-          "border border-border/50"
-        )}>
-          {isOpen ? (
-            <FolderOpen className="h-5 w-5 text-primary" />
-          ) : (
-            <Folder className="h-5 w-5 text-muted-foreground" />
-          )}
-          
-          <span className="min-w-0 break-words text-sm font-medium text-foreground">
-            {formattedDate}
-          </span>
-          
-          <span className="text-sm text-muted-foreground">
-            ({count} {count === 1 ? 'reunião' : 'reuniões'})
-          </span>
-          
-          <div className="ml-auto">
-            {isOpen ? (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
-        </div>
-      </CollapsibleTrigger>
-      
-      <CollapsibleContent>
-        <div className="mt-3 space-y-3 sm:ml-2 sm:pl-4 sm:border-l-2 sm:border-border/50">
-          {children}
-        </div>
-      </CollapsibleContent>
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <h2>
+        <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-2 rounded-lg px-1 text-left text-sm font-semibold text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+          <Icon aria-hidden="true" className="size-4 shrink-0 text-primary" />
+          <span>{label}</span>
+          <span className="rounded-full bg-muted px-2 text-xs font-medium" aria-label={count === 1 ? '1 reunião' : `${count} reuniões`}>{count}</span>
+          <ChevronDown aria-hidden="true" className="ml-auto size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+        </CollapsibleTrigger>
+      </h2>
+      <CollapsibleContent className="space-y-2.5">{children}</CollapsibleContent>
     </Collapsible>
   );
 }

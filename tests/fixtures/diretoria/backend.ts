@@ -49,6 +49,15 @@ if (fixtureState === 'long' || fixtureParams.get('processed') === '1') {
  data.ai_suggestions = ['decisoes','tarefas','pendencias','datas_prazos','observacoes','pontos_discutidos','eventos_sugeridos'].map((category,index)=>({...base,id:`suggestion-${index}`,meeting_id:'meeting',category,original_content:displayText,edited_content:null,status:'accepted',suggested_event_title:category==='eventos_sugeridos'?'Evento fictício de demonstração':null,suggested_event_date:category==='eventos_sugeridos'?isoDay:null}));
  data.contributions = [{...base,id:'contribution-fixture',meeting_id:'meeting',user_id:uid,agenda_item_id:'agenda',content:displayText,status:'revealed'}];
 }
+if (fixtureParams.get('meetings-demo') === '1') {
+ data.meetings.push({
+  ...data.meetings[0], id:'meeting-closed', title:'Revisão das atividades de encerramento',
+  date:'2025-12-16T19:30:00', status:'fechada', final_minutes:'Ata fictícia para conferir a abertura pelo histórico.',
+  contributions_revealed:true, ai_organized:true,
+ });
+ data.agenda_items.push({...data.agenda_items[0],id:'agenda-2',title:'Confirmar os próximos prazos',order_index:1});
+ if (fixtureRole === 'unauthorized') data.meetings[0].moderator_id = 'outro-moderador-ficticio';
+}
 data.pastor_announcements = ['church','society'].map((scope,index)=>({...data.pastor_announcements[0],id:`announcement-${index}`,scope,target:'all',priority:index?'normal':'alta',message:displayText,content:displayText}));
 data.pastor_feedback[0] = {...data.pastor_feedback[0],section:'geral',read:false,response:null,message:displayText};
 data.study_notes[0] = {...data.study_notes[0],notes:displayText};
@@ -202,6 +211,18 @@ async function invoke(name:string,options:{body?:Record<string,any>}={}){
  await fixturePause();
  if(mode==='error'||fixtureParams.get('auth')==='deny')return failure();
  const body=options.body||{};
+ if(name==='auto-process-meeting'&&fixtureParams.get('meetings-demo')==='1'){
+  const meeting=data.meetings.find(row=>row.id===body.meetingId);
+  if(!meeting?.meeting_notes?.trim())return failure();
+  meeting.ai_organized=true;
+  meeting.final_minutes=meeting.meeting_notes;
+  meeting.whatsapp_message=meeting.meeting_notes;
+  data.ai_suggestions=(data.ai_suggestions||[]).filter(row=>row.meeting_id!==meeting.id);
+  for(const [category,original_content] of [
+   ['decisoes',meeting.meeting_notes],['tarefas','Confirmar os responsáveis.'],['pendencias','Definir a data.'],
+  ])data.ai_suggestions.push({...base,id:`suggestion-${category}`,meeting_id:meeting.id,category,original_content,status:'accepted'});
+  return {data:{eventsCreated:0,tasksCreated:0},error:null};
+ }
  if(name==='election-vote'&&sharedKey)return sharedOperation(body.action==='cast'||body.action==='device',()=>{
   const election=data.elections.find(row=>row.id===body.election_id);
   if(!election||readsFail)return failure();

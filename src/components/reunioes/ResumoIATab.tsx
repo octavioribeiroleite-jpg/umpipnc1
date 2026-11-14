@@ -108,9 +108,9 @@ export function ResumoIATab({ meetingId, isProcessed, revision = 0 }: ResumoIATa
       <Card>
         <CardContent className="py-12 text-center">
           <Info className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="font-semibold mb-2">Ainda não processado</h3>
+          <h3 className="font-semibold mb-2">Resumo ainda não preparado</h3>
           <p className="text-sm text-muted-foreground">
-            Escreva o registro da reunião e clique em "Processar Reunião" para que a IA organize o conteúdo.
+            Escreva o registro da reunião e use “Preparar resumo” para organizar o conteúdo.
           </p>
         </CardContent>
       </Card>

@@ -1,18 +1,21 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { ResponsiveSectionNavigation } from '@/components/layout/ResponsiveSectionNavigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowLeft, Loader2, Lock, RotateCcw, Trash2, Pencil,
-  FileText, ListChecks
+  FileText, ListChecks, CalendarDays, Users, NotebookPen, Sparkles, MessageCircle,
+  Settings2, ChevronDown, ArrowRight,
 } from 'lucide-react';
 import { PautaEditor } from '@/components/reunioes/PautaEditor';
 import { RegistroReuniaoEditor } from '@/components/reunioes/RegistroReuniaoEditor';
@@ -20,6 +23,7 @@ import { ResumoIATab } from '@/components/reunioes/ResumoIATab';
 import { AtaViewer } from '@/components/reunioes/AtaViewer';
 import { ComunicacaoTab } from '@/components/reunioes/ComunicacaoTab';
 import { EditMeetingDialog } from '@/components/reunioes/EditMeetingDialog';
+import '@/components/reunioes/reunioes.css';
 
 interface Meeting {
   id: string;
@@ -42,7 +46,15 @@ interface AgendaItem {
   order_index: number;
 }
 
-type SheetType = 'registro' | 'resumo' | 'ata' | 'whatsapp' | 'pauta' | 'acoes';
+type SheetType = 'registro' | 'resumo' | 'ata' | 'whatsapp' | 'pauta';
+
+const sections = [
+  { value: 'registro', label: 'Registro', Icon: NotebookPen },
+  { value: 'pauta', label: 'Pauta', Icon: ListChecks },
+  { value: 'resumo', label: 'Resumo IA', Icon: Sparkles },
+  { value: 'ata', label: 'Ata', Icon: FileText },
+  { value: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle },
+] as const;
 
 export default function ReuniaoDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -51,18 +63,23 @@ export default function ReuniaoDetalhe() {
 
 function MeetingWorkspace({ id }: { id?: string }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialSection = searchParams.get('secao') === 'ata' ? 'ata' : 'registro';
   const { toast } = useToast();
   const { user, isManagement, loading: authLoading } = useAuth();
 
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
+  const [participantsCount, setParticipantsCount] = useState<number | null>(null);
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const [processDialogOpen, setProcessDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [processedRevision, setProcessedRevision] = useState(0);
   const [processingStep, setProcessingStep] = useState('');
   const [isModerator, setIsModerator] = useState(false);
-  const [openSheet, setOpenSheet] = useState<SheetType>('registro');
-  const [visited, setVisited] = useState<Set<SheetType>>(() => new Set(['registro']));
+  const [openSheet, setOpenSheet] = useState<SheetType>(initialSection);
+  const [visited, setVisited] = useState<Set<SheetType>>(() => new Set(['registro', initialSection]));
   const selectSection = (value: string) => {
     const section = value as SheetType;
     setVisited(previous => new Set([...previous, section]));
@@ -70,17 +87,21 @@ function MeetingWorkspace({ id }: { id?: string }) {
   };
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const fetchMeeting = async () => {
-    if (!id || !user) return;
+  const userId = user?.id;
+  const fetchMeeting = useCallback(async () => {
+    if (!id || !userId) return;
     try {
       const { data: meetingData, error: meetingError } = await supabase
         .from('meetings').select('*').eq('id', id).single();
       if (meetingError) throw meetingError;
       setMeeting({ ...meetingData, status: meetingData.status as 'aberta' | 'fechada' });
-      setIsModerator(meetingData.moderator_id === user?.id);
-      const { data: agendaData, error: agendaError } = await supabase
-        .from('agenda_items').select('*').eq('meeting_id', id).order('order_index');
+      setIsModerator(meetingData.moderator_id === userId);
+      const [{ data: agendaData, error: agendaError }, { count }] = await Promise.all([
+        supabase.from('agenda_items').select('*').eq('meeting_id', id).order('order_index'),
+        supabase.from('meeting_participants').select('meeting_id', { count: 'exact', head: true }).eq('meeting_id', id),
+      ]);
       if (!agendaError) setAgendaItems(agendaData || []);
+      setParticipantsCount(count);
     } catch (err) {
       console.error('Error fetching meeting:', err);
       toast({ title: 'Erro', description: 'Erro ao carregar reunião.', variant: 'destructive' });
@@ -88,18 +109,14 @@ function MeetingWorkspace({ id }: { id?: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, userId, navigate, toast]);
 
   useEffect(() => {
-    if (!authLoading) fetchMeeting();
-  }, [id, user, authLoading]);
+    if (!authLoading) void fetchMeeting();
+  }, [authLoading, fetchMeeting]);
 
   const handleProcessMeeting = async () => {
     if (!meeting || !id) return;
-    const confirmed = window.confirm(
-      'A IA irá organizar o registro e gerar a ata e mensagem de WhatsApp automaticamente.\n\nApós revisar, você poderá finalizar a reunião.\n\nDeseja continuar?'
-    );
-    if (!confirmed) return;
     setProcessing(true);
     setProcessingStep('saving');
     try {
@@ -237,46 +254,73 @@ function MeetingWorkspace({ id }: { id?: string }) {
   const hasContent = !!meeting.final_minutes;
   const canManage = isModerator || isManagement;
 
-  const sections: { value: SheetType; label: string }[] = [
-    { value: 'registro', label: 'Registro' }, { value: 'pauta', label: 'Pauta' },
-    { value: 'resumo', label: 'Resumo IA' }, { value: 'ata', label: 'Ata' },
-    { value: 'whatsapp', label: 'WhatsApp' },
-    ...(canManage ? [{ value: 'acoes' as const, label: 'Ações' }] : []),
-  ];
+  const agendaHeading = <>
+    <span className="meeting-tint inline-grid size-8 shrink-0 place-items-center rounded-lg"><ListChecks aria-hidden="true" className="size-4" /></span>
+    <span className="min-w-0">
+      <span className="font-semibold">Pauta</span>
+      <span className="ml-2 text-xs font-medium text-muted-foreground">{agendaItems.length} {agendaItems.length === 1 ? 'tópico' : 'tópicos'}</span>
+    </span>
+  </>;
   const emptyGenerated = <div className="rounded-xl border border-dashed bg-muted/30 p-6 space-y-3">
-    <p>Este conteúdo ainda não foi gerado. Registre a reunião e processe o texto para preparar a revisão.</p>
+    <p>Este conteúdo fica disponível depois de usar “Preparar resumo” no registro.</p>
     <Button variant="outline" onClick={() => selectSection('registro')}>Ir ao registro</Button>
   </div>;
 
   return <AppLayout>
-    <div className="mx-auto w-full max-w-[1120px] space-y-6">
-      <header className="space-y-3">
-        <Button variant="ghost" onClick={() => navigate('/reunioes')}><ArrowLeft className="mr-2 h-4 w-4" />Reuniões</Button>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-semibold break-words">{meeting.title}</h1>
-            <p className="text-sm text-muted-foreground">{new Date(meeting.date).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</p>
-          </div>
-          <Badge variant={isClosed ? 'secondary' : 'outline'}>{isClosed ? 'Finalizada' : 'Aberta'}</Badge>
+    <div className="meetings-workspace mx-auto w-full max-w-[56rem] space-y-4 sm:space-y-5">
+      <Button variant="ghost" onClick={() => navigate('/reunioes')} className="-ml-2 min-h-11 gap-2 px-2 text-primary"><ArrowLeft aria-hidden="true" className="size-4" />Reuniões</Button>
+      <header className="meeting-cover rounded-[1.25rem] p-5 sm:p-7">
+        <span data-closed={isClosed} className="meeting-cover__status inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />{isClosed ? 'Finalizada' : 'Aberta'}
+        </span>
+        <h1 className="meeting-cover__title my-2.5 max-w-[25ch]">{meeting.title}</h1>
+        <div className="meeting-cover__meta flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <span className="inline-flex items-center gap-2"><CalendarDays aria-hidden="true" className="size-4 shrink-0" />
+            <time dateTime={meeting.date}>{new Date(meeting.date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</time>
+          </span>
+          {participantsCount !== null && <span className="inline-flex items-center gap-2"><Users aria-hidden="true" className="size-4 shrink-0" />
+            {participantsCount} {participantsCount === 1 ? 'participante' : 'participantes'}
+          </span>}
         </div>
       </header>
       {isClosed && <Alert><Lock className="h-4 w-4" /><AlertDescription>Reunião finalizada. O registro e a pauta estão em modo de leitura.</AlertDescription></Alert>}
-      <Tabs value={openSheet} onValueChange={selectSection} className="space-y-6">
-        <ResponsiveSectionNavigation label="Seção da reunião" value={openSheet} onChange={selectSection} options={sections} />
+      <Tabs value={openSheet} onValueChange={selectSection} className="space-y-3">
+        <TabsList aria-label="Seções da reunião" className="meeting-section-tabs grid w-full rounded-[0.9rem] bg-card">
+          {sections.map(({ value, label, Icon }) => (
+            <TabsTrigger key={value} value={value} className="meeting-section-tab gap-1.5 px-2 leading-tight data-[state=active]:shadow-none">
+              <Icon aria-hidden="true" className="size-4 shrink-0" />{label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         <TabsContent forceMount value="registro" className="data-[state=inactive]:hidden">
-          <div className="grid items-start gap-6 min-[1100px]:grid-cols-[minmax(0,760px)_280px]">
-            <Card className="min-w-0"><CardContent className="p-4 sm:p-6">
-              <h2 className="mb-3 flex items-center gap-2 text-xl font-semibold"><FileText className="h-5 w-5" />Registro da reunião</h2>
+          <div className="meeting-record-grid grid items-start gap-3 sm:gap-4">
+            <aside aria-label="Pauta de apoio" className="meeting-agenda min-w-0 rounded-2xl border bg-card shadow-sm">
+              <h2 className="meeting-agenda__heading min-h-14 items-center gap-2.5 px-3.5">{agendaHeading}</h2>
+              <button type="button" aria-expanded={agendaOpen} aria-controls="meeting-agenda-preview"
+                className="meeting-agenda__toggle flex min-h-14 w-full items-center gap-2.5 rounded-2xl px-3.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                onClick={() => setAgendaOpen(previous => !previous)}>
+                {agendaHeading}<ChevronDown aria-hidden="true" className="meeting-agenda__chevron ml-auto size-4 shrink-0 text-muted-foreground" />
+              </button>
+              <div id="meeting-agenda-preview" className="meeting-agenda__content px-3.5 pb-1.5">
+                {agendaItems.length ? (
+                  <ol>{agendaItems.map((item, index) => (
+                    <li key={item.id} className="flex items-baseline gap-2 border-t py-2.5 text-sm leading-snug">
+                      <span aria-hidden="true" className="shrink-0 text-xs font-bold tabular-nums text-primary">{String(index + 1).padStart(2, '0')}</span>
+                      <span className="min-w-0 break-words">{item.title}</span>
+                    </li>
+                  ))}</ol>
+                ) : <p className="border-t py-2.5 text-sm text-muted-foreground">Nenhum tópico na pauta.</p>}
+                <Button variant="ghost" className="-ml-2 min-h-11 gap-1.5 px-2 text-sm text-primary" onClick={() => selectSection('pauta')}>
+                  Ver pauta completa <ArrowRight aria-hidden="true" className="size-4" />
+                </Button>
+              </div>
+            </aside>
+            <Card className="meeting-editor min-w-0 rounded-2xl shadow-sm">
               <RegistroReuniaoEditor meetingId={meeting.id} meetingNotes={meeting.meeting_notes}
                 isProcessed={isProcessed} canManage={canManage} readOnly={isClosed} isProcessing={processing}
-                processingStep={processingStep} onProcess={handleProcessMeeting} onFinalize={handleFinalizeMeeting}
-                onNotesChange={handleNotesChange} embedded />
-            </CardContent></Card>
-            <aside className="rounded-2xl border bg-card p-4 space-y-4">
-              <h2 className="flex items-center gap-2 text-lg font-semibold"><ListChecks className="h-5 w-5" />Pauta</h2>
-              {agendaItems.length ? <ol className="list-decimal space-y-3 pl-5">{agendaItems.map(item => <li key={item.id} className="break-words">{item.title}</li>)}</ol> : <p className="text-muted-foreground">Nenhum item de pauta.</p>}
-              <Button variant="outline" className="w-full" onClick={() => selectSection('pauta')}>Ver pauta</Button>
-            </aside>
+                processingStep={processingStep} onProcess={() => setProcessDialogOpen(true)} onFinalize={handleFinalizeMeeting}
+                onNotesChange={handleNotesChange} />
+            </Card>
           </div>
         </TabsContent>
         {/* Visited editors stay mounted when navigation or viewport changes. */}
@@ -290,16 +334,32 @@ function MeetingWorkspace({ id }: { id?: string }) {
         {visited.has('whatsapp') && <TabsContent forceMount value="whatsapp" className="max-w-[760px] data-[state=inactive]:hidden">
           {hasContent ? <ComunicacaoTab meetingId={meeting.id} canManage={canManage} whatsappMessage={meeting.whatsapp_message} hasFinalMinutes={hasContent} onMessageUpdated={message => setMeeting(previous => previous ? { ...previous, whatsapp_message: message } : previous)} /> : emptyGenerated}
         </TabsContent>}
-        {canManage && visited.has('acoes') && <TabsContent forceMount value="acoes" className="max-w-[760px] data-[state=inactive]:hidden">
-          <Card><CardContent className="p-4 sm:p-6 space-y-4">
-            <h2 className="text-xl font-semibold">Gerenciar reunião</h2>
-            {!isClosed && <Button variant="outline" className="w-full justify-start" onClick={() => setEditDialogOpen(true)}><Pencil className="mr-2 h-4 w-4" />Editar título e data</Button>}
-            {isClosed && <Button variant="outline" className="w-full justify-start" onClick={handleReopenMeeting}><RotateCcw className="mr-2 h-4 w-4" />Reabrir reunião</Button>}
-            {hasContent && <Button variant="outline" className="w-full justify-start text-destructive" onClick={handleDeleteMinutes}><Trash2 className="mr-2 h-4 w-4" />Excluir ata e reprocessar</Button>}
-          </CardContent></Card>
-        </TabsContent>}
       </Tabs>
+      {canManage && <details className="group rounded-xl">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl px-2 text-sm font-semibold text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+          <Settings2 aria-hidden="true" className="size-4" /> Gerenciar reunião <ChevronDown aria-hidden="true" className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <Card><CardContent className="space-y-3 p-4">
+          {!isClosed && <Button variant="outline" className="w-full justify-start" onClick={() => setEditDialogOpen(true)}><Pencil className="mr-2 h-4 w-4" />Editar título e data</Button>}
+          {isClosed && <Button variant="outline" className="w-full justify-start" onClick={handleReopenMeeting}><RotateCcw className="mr-2 h-4 w-4" />Reabrir reunião</Button>}
+          {hasContent && <Button variant="outline" className="w-full justify-start text-destructive" onClick={handleDeleteMinutes}><Trash2 className="mr-2 h-4 w-4" />Excluir ata e reprocessar</Button>}
+        </CardContent></Card>
+      </details>}
       <EditMeetingDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} meeting={meeting} onUpdate={handleUpdateMeeting} />
+      <AlertDialog open={processDialogOpen} onOpenChange={setProcessDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Preparar resumo da reunião?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A IA organizará o registro e preparará a ata e a mensagem para WhatsApp. Tarefas e eventos identificados podem ser criados no aplicativo. Você poderá revisar o resultado antes de finalizar a reunião.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void handleProcessMeeting()}>Preparar resumo</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   </AppLayout>;
 }

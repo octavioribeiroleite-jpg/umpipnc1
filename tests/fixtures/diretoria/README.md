@@ -62,6 +62,7 @@ Todos os exemplos começam em `http://127.0.0.1:8083`:
 - `/__diretoria/eleicao/election/apresentar?election=finished` — apresentação/resultado fictício.
 - `/__diretoria/membro` — mesmo aviso de indisponibilidade; funcionalidade não liberada.
 - `/__diretoria/reunioes/meeting?state=long` — reunião processada com conteúdo extenso para Registro/Resumo/Ata/WhatsApp; `?processed=1` mantém textos curtos.
+- `/__diretoria/reunioes?meetings-demo=1` — reunião aberta e ata finalizada em outro ano. O resumo usa só a memória da fixture; `&role=unauthorized` também remove a moderação da reunião aberta para conferir as ações visíveis.
 - `/__diretoria/rota-inexistente` — componente real 404.
 
 Rotas anteriores continuam disponíveis sob `/__diretoria`: `/`, `/reunioes`, `/reunioes/nova`, `/reunioes/meeting`, `/tarefas`, `/calendario`, `/financas`, `/camisas`, `/arquivos`, `/configuracoes`, `/usuarios`, `/plenarias`, `/plenarias/plenary`, `/comunicados`, `/eleicoes`, `/eleicoes/election`, `/dizimos`, `/visitantes`, `/estudos`, `/aniversariantes`. A fixture ainda não monta o wrapper `FinancialRoute`, portanto não prova sua guarda de acesso.

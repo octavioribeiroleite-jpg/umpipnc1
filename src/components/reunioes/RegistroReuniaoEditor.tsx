@@ -1,9 +1,9 @@
+import { useId } from 'react';
 import { usePersistedTextDraft } from './usePersistedTextDraft';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Wand2, Check, FileText, Lock } from 'lucide-react';
+import { Loader2, Save, Sparkles, Check, PenLine, Lock } from 'lucide-react';
 
 interface RegistroReuniaoEditorProps {
   meetingId: string;
@@ -15,7 +15,6 @@ interface RegistroReuniaoEditorProps {
   onProcess: () => void;
   onFinalize: () => void;
   onNotesChange: (notes: string) => void;
-  embedded?: boolean;
   readOnly?: boolean;
 }
 
@@ -29,10 +28,9 @@ export function RegistroReuniaoEditor({
   onProcess,
   onFinalize,
   onNotesChange,
-  embedded = false,
   readOnly = false,
 }: RegistroReuniaoEditorProps) {
-  const { value: notes, setValue: handleChange, saving: isSaving, lastSaved,
+  const { value: notes, setValue: handleChange, saving: isSaving,
     dirty: hasUnsavedChanges, error, save: saveNotes } = usePersistedTextDraft({
     initialValue: meetingNotes || '', enabled: !readOnly && !isProcessing, delay: 5000,
     persist: async (content) => {
@@ -41,6 +39,7 @@ export function RegistroReuniaoEditor({
     },
     onSaved: onNotesChange,
   });
+  const fieldId = useId();
   const handleManualSave = () => { void saveNotes(); };
   const handleProcess = async () => { if (await saveNotes()) onProcess(); };
   const handleFinalize = async () => { if (await saveNotes()) onFinalize(); };
@@ -55,69 +54,22 @@ export function RegistroReuniaoEditor({
 
   return (
     <>
-      {!embedded && (
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-          <div className="min-w-0">
-            <h3 className="flex items-center gap-2 text-base font-semibold">
-              <FileText className="h-5 w-5 shrink-0" />
-              Registro da Reunião
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Escreva livremente o que foi discutido. Use títulos para organizar as seções.
-            </p>
-          </div>
-          <div role="status" aria-live="polite" className="flex items-center gap-2">
-            {isSaving ? (
-              <Badge variant="secondary" className="gap-1">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Salvando...
-              </Badge>
-            ) : hasUnsavedChanges ? (
-              <Badge variant="outline" className="gap-1">
-                Não salvo
-              </Badge>
-            ) : lastSaved ? (
-              <Badge variant="secondary" className="gap-1 bg-success/10 text-success border-success/20">
-                <Check className="h-3 w-3" />
-                Salvo
-              </Badge>
-            ) : null}
-          </div>
-        </div>
-      )}
-
-      {embedded && (
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-          <p className="text-sm text-muted-foreground">
-            Escreva livremente o que foi discutido. Use títulos para organizar as seções.
-          </p>
-          <div role="status" aria-live="polite" className="flex items-center gap-2">
-            {isSaving ? (
-              <Badge variant="secondary" className="gap-1">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Salvando...
-              </Badge>
-            ) : hasUnsavedChanges ? (
-              <Badge variant="outline" className="gap-1">
-                Não salvo
-              </Badge>
-            ) : lastSaved ? (
-              <Badge variant="secondary" className="gap-1 bg-success/10 text-success border-success/20">
-                <Check className="h-3 w-3" />
-                Salvo
-              </Badge>
-            ) : null}
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {error && <p role="alert" className="text-destructive">{error}</p>}
-        {readOnly && <p className="text-sm text-muted-foreground">Registro em modo de leitura. Reabra a reunião para editar.</p>}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-3 sm:px-4">
+        <h2 className="flex items-center gap-2.5 font-semibold">
+          <span className="meeting-tint inline-grid size-8 shrink-0 place-items-center rounded-lg"><PenLine aria-hidden="true" className="size-4" /></span>
+          <label htmlFor={fieldId}>Registro da reunião</label>
+        </h2>
+        <span role="status" className={`inline-flex items-center gap-1.5 text-xs font-medium ${hasUnsavedChanges && !isSaving && !readOnly ? 'text-warning' : 'text-muted-foreground'}`}>
+          {isSaving ? <Loader2 aria-hidden="true" className="size-3 animate-spin" /> : <span aria-hidden="true" className={`size-1.5 rounded-full bg-current ${!hasUnsavedChanges && !readOnly && notes ? 'text-success' : ''}`} />}
+          {readOnly ? 'Somente leitura' : isSaving ? 'Salvando…' : hasUnsavedChanges ? 'Alterações pendentes' : notes ? 'Salvo' : 'Sem registro'}
+        </span>
+      </div>
+      <div className="space-y-3 pb-2 has-[button]:pb-0">
+        {error && <p role="alert" className="px-3.5 text-sm text-destructive sm:px-4">{error}</p>}
         {isProcessing ? (
-          <div className="space-y-4 py-8">
+          <div className="space-y-4 px-4 py-8">
             <p className="text-center text-muted-foreground mb-6">
-              Processando reunião automaticamente...
+              Preparando o resumo da reunião…
             </p>
             <div className="space-y-3 max-w-md mx-auto">
               {processingSteps.map((step, index) => (
@@ -145,78 +97,35 @@ export function RegistroReuniaoEditor({
           </div>
         ) : (
           <>
-            <Textarea aria-label="Registro da reunião"
-              placeholder="Escreva aqui tudo o que foi discutido na reunião...
-
-Exemplo:
-DECISÕES
-- Aprovado o orçamento para o evento de Páscoa
-- Definida a data do retiro: 15 a 17 de março
-
-TAREFAS
-- João: preparar a programação do evento
-- Maria: entrar em contato com o palestrante
-
-OBSERVAÇÕES
-- Próxima reunião será dia 20/01 às 19h"
-              value={notes}
-              onChange={(e) => handleChange(e.target.value)}
-              readOnly={readOnly}
-              className="min-h-[320px] text-base leading-6 resize-y w-full"
-            />
-
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleManualSave}
-                disabled={readOnly || !hasUnsavedChanges || isSaving}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Salvar
-              </Button>
-
-              {canManage && !readOnly && (
-                <div className="flex flex-wrap gap-2">
-                  {isProcessed && (
-                    <Button
-                      variant="outline"
-                      onClick={handleProcess}
-                      disabled={!notes.trim() || isProcessing || isSaving}
-                      className="gap-2"
-                    >
-                      <Wand2 className="h-4 w-4" />
-                      Reprocessar
-                    </Button>
-                  )}
-
-                  {isProcessed ? (
-                    <Button
-                      onClick={handleFinalize}
-                      disabled={isSaving}
-                      className="gap-2"
-                    >
-                      <Lock className="h-4 w-4" />
-                      Finalizar
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={handleProcess}
-                      disabled={!notes.trim() || isProcessing || isSaving}
-                      className="gap-2"
-                    >
-                      <Wand2 className="h-4 w-4" />
-                      Processar
-                    </Button>
-                  )}
-                </div>
-              )}
+            <div className="px-3.5 pb-1 sm:px-4">
+              <Textarea id={fieldId}
+                placeholder={readOnly ? 'Nenhum registro nesta reunião.' : 'Anote as decisões, tarefas, prazos e observações da reunião.'}
+                value={notes}
+                onChange={(e) => handleChange(e.target.value)}
+                readOnly={readOnly}
+                className="meeting-editor__field min-h-52 w-full resize-y rounded-xl border-border p-3 text-base leading-relaxed sm:min-h-60 sm:p-4"
+                rows={7}
+              />
             </div>
-
-            {!notes.trim() && canManage && (
-              <p className="text-sm text-muted-foreground text-center">
-                Escreva o registro da reunião para poder processar e gerar a ata automaticamente.
-              </p>
+            {!readOnly && (
+              <div className="flex flex-wrap items-center justify-end gap-2 border-t px-3.5 py-2.5 sm:px-4">
+                <Button variant="ghost" onClick={handleManualSave} disabled={!hasUnsavedChanges || isSaving} className="min-h-11 gap-2 px-2 text-primary">
+                  <Save aria-hidden="true" className="size-4" /> Salvar
+                </Button>
+                {canManage && (
+                  <>
+                    <Button variant={isProcessed ? 'outline' : 'default'} onClick={handleProcess} disabled={!notes.trim() || isSaving}
+                      className="min-h-11 gap-2 rounded-xl">
+                      <Sparkles aria-hidden="true" className="size-4" />{isProcessed ? 'Preparar novamente' : 'Preparar resumo'}
+                    </Button>
+                    {isProcessed && (
+                      <Button onClick={handleFinalize} disabled={isSaving} className="min-h-11 gap-2 rounded-xl">
+                        <Lock aria-hidden="true" className="size-4" /> Finalizar
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
             )}
           </>
         )}
