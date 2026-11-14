@@ -1,22 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  ArrowLeft, Loader2, Lock, RotateCcw, Trash2, Pencil,
-  FileText, ListChecks, CalendarDays, Users, NotebookPen, Sparkles, MessageCircle,
-  Settings2, ChevronDown, ArrowRight,
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { PautaEditor } from '@/components/reunioes/PautaEditor';
 import { RegistroReuniaoEditor } from '@/components/reunioes/RegistroReuniaoEditor';
 import { ResumoIATab } from '@/components/reunioes/ResumoIATab';
@@ -49,12 +46,18 @@ interface AgendaItem {
 type SheetType = 'registro' | 'resumo' | 'ata' | 'whatsapp' | 'pauta';
 
 const sections = [
-  { value: 'registro', label: 'Registro', Icon: NotebookPen },
-  { value: 'pauta', label: 'Pauta', Icon: ListChecks },
-  { value: 'resumo', label: 'Resumo IA', Icon: Sparkles },
-  { value: 'ata', label: 'Ata', Icon: FileText },
-  { value: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle },
+  { value: 'ata', label: 'Ata' },
+  { value: 'registro', label: 'Registro' },
+  { value: 'pauta', label: 'Pauta' },
 ] as const;
+const extraSections = [
+  { value: 'resumo', label: 'Resumo IA' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+] as const;
+const meetingsBack = { path: '/reunioes', label: 'Reuniões' };
+const meetingHeader = <DashboardHeader hasNotifications={false} textOnly backTo={meetingsBack} />;
+const meetingDate = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+const meetingTime = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
 export default function ReuniaoDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -230,7 +233,7 @@ function MeetingWorkspace({ id }: { id?: string }) {
 
   if (loading || authLoading) {
     return (
-      <AppLayout>
+      <AppLayout header={meetingHeader}>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -240,7 +243,7 @@ function MeetingWorkspace({ id }: { id?: string }) {
 
   if (!meeting) {
     return (
-      <AppLayout>
+      <AppLayout header={meetingHeader}>
         <div className="text-center py-12">
           <p className="text-muted-foreground">Reunião não encontrada.</p>
           <Button variant="outline" onClick={() => navigate('/reunioes')} className="mt-4">Voltar para Reuniões</Button>
@@ -253,11 +256,12 @@ function MeetingWorkspace({ id }: { id?: string }) {
   const isProcessed = meeting.contributions_revealed && meeting.ai_organized;
   const hasContent = !!meeting.final_minutes;
   const canManage = isModerator || isManagement;
+  const activeExtraSection = extraSections.find(section => section.value === openSheet);
+  const date = new Date(meeting.date);
 
   const agendaHeading = <>
-    <span className="meeting-tint inline-grid size-8 shrink-0 place-items-center rounded-lg"><ListChecks aria-hidden="true" className="size-4" /></span>
     <span className="min-w-0">
-      <span className="font-semibold">Pauta</span>
+      <span className="font-semibold">Pauta de apoio</span>
       <span className="ml-2 text-xs font-medium text-muted-foreground">{agendaItems.length} {agendaItems.length === 1 ? 'tópico' : 'tópicos'}</span>
     </span>
   </>;
@@ -266,40 +270,51 @@ function MeetingWorkspace({ id }: { id?: string }) {
     <Button variant="outline" onClick={() => selectSection('registro')}>Ir ao registro</Button>
   </div>;
 
-  return <AppLayout>
-    <div className="meetings-workspace mx-auto w-full max-w-[56rem] space-y-4 sm:space-y-5">
-      <Button variant="ghost" onClick={() => navigate('/reunioes')} className="-ml-2 min-h-11 gap-2 px-2 text-primary"><ArrowLeft aria-hidden="true" className="size-4" />Reuniões</Button>
-      <header className="meeting-cover rounded-[1.25rem] p-5 sm:p-7">
-        <span data-closed={isClosed} className="meeting-cover__status inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
-          <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />{isClosed ? 'Finalizada' : 'Aberta'}
-        </span>
-        <h1 className="meeting-cover__title my-2.5 max-w-[25ch]">{meeting.title}</h1>
-        <div className="meeting-cover__meta flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-          <span className="inline-flex items-center gap-2"><CalendarDays aria-hidden="true" className="size-4 shrink-0" />
-            <time dateTime={meeting.date}>{new Date(meeting.date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</time>
+  return <AppLayout header={meetingHeader}>
+    <div className="meetings-workspace mx-auto w-full max-w-[56rem] space-y-2">
+      <header className="meeting-cover rounded-xl px-3 py-2.5 sm:px-5 sm:py-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+          <h1 className="meeting-cover__title min-w-0">{meeting.title}</h1>
+          <span data-closed={isClosed} className="meeting-cover__status rounded-full px-2 py-0.5 text-xs font-semibold">
+            {isClosed ? 'Finalizada' : 'Aberta'}
           </span>
-          {participantsCount !== null && <span className="inline-flex items-center gap-2"><Users aria-hidden="true" className="size-4 shrink-0" />
-            {participantsCount} {participantsCount === 1 ? 'participante' : 'participantes'}
-          </span>}
+        </div>
+        <div className="meeting-cover__meta mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          <time dateTime={meeting.date}>{meetingDate.format(date)} · {meetingTime.format(date)}</time>
+          {participantsCount !== null && <span>{participantsCount} {participantsCount === 1 ? 'participante' : 'participantes'}</span>}
         </div>
       </header>
-      {isClosed && <Alert><Lock className="h-4 w-4" /><AlertDescription>Reunião finalizada. O registro e a pauta estão em modo de leitura.</AlertDescription></Alert>}
-      <Tabs value={openSheet} onValueChange={selectSection} className="space-y-3">
-        <TabsList aria-label="Seções da reunião" className="meeting-section-tabs grid w-full rounded-[0.9rem] bg-card">
-          {sections.map(({ value, label, Icon }) => (
-            <TabsTrigger key={value} value={value} className="meeting-section-tab gap-1.5 px-2 leading-tight data-[state=active]:shadow-none">
-              <Icon aria-hidden="true" className="size-4 shrink-0" />{label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        <TabsContent forceMount value="registro" className="data-[state=inactive]:hidden">
+      <Tabs value={openSheet} onValueChange={selectSection}>
+        <div className="meeting-section-bar">
+          <TabsList aria-label="Seções da reunião" className="grid min-w-0 grid-cols-3 gap-0 rounded-none border-0 bg-transparent p-0">
+            {sections.map(({ value, label }) => (
+              <TabsTrigger key={value} value={value} className="meeting-section-tab">{label}</TabsTrigger>
+            ))}
+          </TabsList>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="meeting-section-tab" data-active={!!activeExtraSection}
+                aria-label={activeExtraSection ? `Seções. Atual: ${activeExtraSection.label}` : 'Seções'}>
+                {activeExtraSection?.label ?? 'Seções'}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {extraSections.map(({ value, label }) => (
+                <DropdownMenuItem key={value} onSelect={() => selectSection(value)} aria-current={openSheet === value ? 'true' : undefined}>
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <TabsContent forceMount value="registro" className="mt-2 data-[state=inactive]:hidden">
           <div className="meeting-record-grid grid items-start gap-3 sm:gap-4">
-            <aside aria-label="Pauta de apoio" className="meeting-agenda min-w-0 rounded-2xl border bg-card shadow-sm">
-              <h2 className="meeting-agenda__heading min-h-14 items-center gap-2.5 px-3.5">{agendaHeading}</h2>
+            <aside aria-label="Pauta de apoio" className="meeting-agenda min-w-0 rounded-xl border bg-card">
+              <h2 className="meeting-agenda__heading min-h-12 items-center px-3 text-sm">{agendaHeading}</h2>
               <button type="button" aria-expanded={agendaOpen} aria-controls="meeting-agenda-preview"
-                className="meeting-agenda__toggle flex min-h-14 w-full items-center gap-2.5 rounded-2xl px-3.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                className="meeting-agenda__toggle flex min-h-12 w-full items-center justify-between gap-2 rounded-xl px-3 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
                 onClick={() => setAgendaOpen(previous => !previous)}>
-                {agendaHeading}<ChevronDown aria-hidden="true" className="meeting-agenda__chevron ml-auto size-4 shrink-0 text-muted-foreground" />
+                {agendaHeading}<span className="text-xs font-semibold text-primary">{agendaOpen ? 'Fechar' : 'Ver'}</span>
               </button>
               <div id="meeting-agenda-preview" className="meeting-agenda__content px-3.5 pb-1.5">
                 {agendaItems.length ? (
@@ -311,11 +326,11 @@ function MeetingWorkspace({ id }: { id?: string }) {
                   ))}</ol>
                 ) : <p className="border-t py-2.5 text-sm text-muted-foreground">Nenhum tópico na pauta.</p>}
                 <Button variant="ghost" className="-ml-2 min-h-11 gap-1.5 px-2 text-sm text-primary" onClick={() => selectSection('pauta')}>
-                  Ver pauta completa <ArrowRight aria-hidden="true" className="size-4" />
+                  Ver pauta completa
                 </Button>
               </div>
             </aside>
-            <Card className="meeting-editor min-w-0 rounded-2xl shadow-sm">
+            <Card className="meeting-editor min-w-0 rounded-xl shadow-none">
               <RegistroReuniaoEditor meetingId={meeting.id} meetingNotes={meeting.meeting_notes}
                 isProcessed={isProcessed} canManage={canManage} readOnly={isClosed} isProcessing={processing}
                 processingStep={processingStep} onProcess={() => setProcessDialogOpen(true)} onFinalize={handleFinalizeMeeting}
@@ -324,25 +339,25 @@ function MeetingWorkspace({ id }: { id?: string }) {
           </div>
         </TabsContent>
         {/* Visited editors stay mounted when navigation or viewport changes. */}
-        {visited.has('pauta') && <TabsContent forceMount value="pauta" className="max-w-[760px] data-[state=inactive]:hidden">
+        {visited.has('pauta') && <TabsContent forceMount value="pauta" className="mt-2 max-w-[760px] data-[state=inactive]:hidden">
           <PautaEditor meetingId={meeting.id} agendaItems={agendaItems} onUpdate={fetchMeeting} disabled={isClosed} canManage={canManage} />
         </TabsContent>}
-        {visited.has('resumo') && <TabsContent forceMount value="resumo" className="max-w-[760px] data-[state=inactive]:hidden"><ResumoIATab meetingId={meeting.id} isProcessed={isProcessed} revision={processedRevision} /></TabsContent>}
-        {visited.has('ata') && <TabsContent forceMount value="ata" className="max-w-[760px] data-[state=inactive]:hidden">
+        {visited.has('resumo') && <section hidden={openSheet !== 'resumo'} aria-label="Resumo IA" className="mt-2 max-w-[760px]"><ResumoIATab meetingId={meeting.id} isProcessed={isProcessed} revision={processedRevision} /></section>}
+        {visited.has('ata') && <TabsContent forceMount value="ata" className="mt-2 max-w-[760px] data-[state=inactive]:hidden">
           {hasContent ? <AtaViewer meeting={meeting} agendaItems={agendaItems} canManage={canManage} onUpdateMinutes={handleUpdateMinutes} /> : emptyGenerated}
         </TabsContent>}
-        {visited.has('whatsapp') && <TabsContent forceMount value="whatsapp" className="max-w-[760px] data-[state=inactive]:hidden">
+        {visited.has('whatsapp') && <section hidden={openSheet !== 'whatsapp'} aria-label="WhatsApp" className="mt-2 max-w-[760px]">
           {hasContent ? <ComunicacaoTab meetingId={meeting.id} canManage={canManage} whatsappMessage={meeting.whatsapp_message} hasFinalMinutes={hasContent} onMessageUpdated={message => setMeeting(previous => previous ? { ...previous, whatsapp_message: message } : previous)} /> : emptyGenerated}
-        </TabsContent>}
+        </section>}
       </Tabs>
       {canManage && <details className="group rounded-xl">
         <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl px-2 text-sm font-semibold text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
-          <Settings2 aria-hidden="true" className="size-4" /> Gerenciar reunião <ChevronDown aria-hidden="true" className="size-4 transition-transform group-open:rotate-180" />
+          Gerenciar reunião
         </summary>
         <Card><CardContent className="space-y-3 p-4">
-          {!isClosed && <Button variant="outline" className="w-full justify-start" onClick={() => setEditDialogOpen(true)}><Pencil className="mr-2 h-4 w-4" />Editar título e data</Button>}
-          {isClosed && <Button variant="outline" className="w-full justify-start" onClick={handleReopenMeeting}><RotateCcw className="mr-2 h-4 w-4" />Reabrir reunião</Button>}
-          {hasContent && <Button variant="outline" className="w-full justify-start text-destructive" onClick={handleDeleteMinutes}><Trash2 className="mr-2 h-4 w-4" />Excluir ata e reprocessar</Button>}
+          {!isClosed && <Button variant="outline" className="w-full justify-start" onClick={() => setEditDialogOpen(true)}>Editar título e data</Button>}
+          {isClosed && <Button variant="outline" className="w-full justify-start" onClick={handleReopenMeeting}>Reabrir reunião</Button>}
+          {hasContent && <Button variant="outline" className="w-full justify-start text-destructive" onClick={handleDeleteMinutes}>Excluir ata e reprocessar</Button>}
         </CardContent></Card>
       </details>}
       <EditMeetingDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} meeting={meeting} onUpdate={handleUpdateMeeting} />

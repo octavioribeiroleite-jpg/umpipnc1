@@ -52,7 +52,8 @@ if (fixtureState === 'long' || fixtureParams.get('processed') === '1') {
 if (fixtureParams.get('meetings-demo') === '1') {
  data.meetings.push({
   ...data.meetings[0], id:'meeting-closed', title:'Revisão das atividades de encerramento',
-  date:'2025-12-16T19:30:00', status:'fechada', final_minutes:'Ata fictícia para conferir a abertura pelo histórico.',
+  date:'2025-12-16T19:30:00', status:'fechada',
+  final_minutes:'ATA DE REUNIÃO\n\nPAUTA\nReunião: Revisão das atividades de encerramento\nData: 16 de dezembro de 2025 às 22:30\nParticipantes: Participante fictício\n\nDELIBERAÇÕES\nAta fictícia para conferir a abertura pelo histórico.',
   contributions_revealed:true, ai_organized:true,
  });
  data.agenda_items.push({...data.agenda_items[0],id:'agenda-2',title:'Confirmar os próximos prazos',order_index:1});

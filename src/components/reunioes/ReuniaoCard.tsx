@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Users, CircleCheck, ListChecks, Sparkles, FileText, Trash2, CalendarCheck, Loader2, Ellipsis } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -131,65 +130,61 @@ export function ReuniaoCard({
   const actionLabel = canViewMinutes ? 'Ver ata' : 'Abrir reunião';
 
   return (
-    <Card className={cn('rounded-2xl transition-shadow hover:shadow-sm', isOpen && 'border-l-[3px] border-l-primary')}>
-      <CardContent className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 p-3.5 sm:gap-x-4 sm:p-4">
+    <Card className="rounded-xl shadow-none" data-meeting-open={isOpen}>
+      <CardContent className="meeting-list-row">
         <time dateTime={date} aria-label={format(meetingDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          className="meeting-tint grid min-h-14 min-w-12 place-content-center justify-items-center rounded-xl px-2 leading-none">
-          <strong className="text-xl tabular-nums">{format(meetingDate, 'dd')}</strong>
-          <span className="mt-1 text-[0.68rem] font-semibold uppercase">{format(meetingDate, 'MMM', { locale: ptBR }).replace('.', '')}</span>
+          className="meeting-list-row__date meeting-tint grid min-h-11 min-w-9 place-content-center justify-items-center rounded-lg px-1.5 leading-none">
+          <strong className="text-base tabular-nums">{format(meetingDate, 'dd')}</strong>
+          <span className="mt-0.5 text-[0.6875rem] font-semibold uppercase">{format(meetingDate, 'MMM', { locale: ptBR }).replace('.', '')}</span>
         </time>
-        <div className="min-w-0">
+        <div className="meeting-list-row__main min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold', isOpen ? 'meeting-tint' : 'bg-muted text-muted-foreground')}>
-              <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />{isOpen ? 'Aberta' : 'Finalizada'}
+            <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-semibold', isOpen ? 'meeting-tint' : 'bg-muted text-muted-foreground')}>
+              {isOpen ? 'Aberta' : 'Finalizada'}
             </span>
           </div>
-          <h3 className="mt-1 break-words text-base font-semibold leading-snug">{title}</h3>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+          <h3 className="mt-0.5 break-words text-sm font-semibold leading-snug">{title}</h3>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
             <span>{format(meetingDate, 'HH:mm')}</span>
-            <span className="inline-flex items-center gap-1.5"><Users aria-hidden="true" className="size-3.5" />
+            <span>
               {participantsCount} {participantsCount === 1 ? 'participante' : 'participantes'}
             </span>
             <span className="min-w-0 break-words">Moderador: {moderatorName}</span>
           </div>
         </div>
-        <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t pt-2.5">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              {progress.pautaComplete ? <CircleCheck aria-hidden="true" className="size-3.5 shrink-0 text-success" /> : <ListChecks aria-hidden="true" className="size-3.5 shrink-0" />}
-              {progress.pautaComplete ? 'Pauta registrada' : 'Pauta incompleta'}
-            </span>
-            <span className="inline-flex flex-wrap items-center gap-x-1">
-              <Users aria-hidden="true" className="size-3.5 shrink-0" /> Contribuições: {progress.finalizedContributions}/{progress.totalContributions}
-              {progress.contributionsRevealed && ' · Reveladas'}
-            </span>
-            <span className={cn('inline-flex items-center gap-1', getAiStatusColor())}>
-              <Sparkles aria-hidden="true" className="size-3.5 shrink-0" /> IA: {getAiStatusText()}
-            </span>
-          </div>
-          <div className="ml-auto flex items-center gap-1.5">
-            <Button variant="outline" className="min-h-11 gap-2 rounded-xl" aria-label={`${actionLabel}: ${title}`} onClick={() => navigate(target)}>
-              {canViewMinutes && <FileText aria-hidden="true" className="size-4" />}
-              {actionLabel}{!canViewMinutes && <ArrowRight aria-hidden="true" className="size-4" />}
-            </Button>
-            {((isOpen && canManage) || onDelete) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-11 rounded-xl" aria-label={`Ações de ${title}`} disabled={isProcessing}>
-                    {isProcessing ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <Ellipsis aria-hidden="true" className="size-5" />}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {isOpen && canManage && <DropdownMenuItem className="min-h-10 gap-2" onSelect={() => void handleFinalize()}>
-                    <CalendarCheck aria-hidden="true" className="size-4" /> Finalizar reunião
-                  </DropdownMenuItem>}
-                  {onDelete && <DropdownMenuItem className="min-h-10 gap-2 text-destructive" onSelect={() => setDeleteOpen(true)}>
-                    <Trash2 aria-hidden="true" className="size-4" /> Excluir reunião
-                  </DropdownMenuItem>}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
+        <div className="meeting-list-row__progress flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            {progress.pautaComplete ? 'Pauta registrada' : 'Pauta incompleta'}
+          </span>
+          <span className="inline-flex flex-wrap items-center gap-x-1">
+            Contribuições: {progress.finalizedContributions}/{progress.totalContributions}
+            {progress.contributionsRevealed && ' · Reveladas'}
+          </span>
+          <span className={cn('inline-flex items-center gap-1', getAiStatusColor())}>
+            IA: {getAiStatusText()}
+          </span>
+        </div>
+        <div className="meeting-list-row__actions flex flex-wrap justify-end gap-0.5">
+          <Button variant="ghost" className="min-w-12 whitespace-nowrap px-1.5 text-[.8125rem] text-primary" aria-label={`${actionLabel}: ${title}`} onClick={() => navigate(target)}>
+            {canViewMinutes ? actionLabel : 'Abrir'}
+          </Button>
+          {((isOpen && canManage) || onDelete) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="min-w-12 px-1.5 text-xs text-muted-foreground" aria-label={`Ações de ${title}`} disabled={isProcessing}>
+                  {isProcessing ? 'Finalizando…' : 'Ações'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isOpen && canManage && <DropdownMenuItem className="min-h-10 gap-2" onSelect={() => void handleFinalize()}>
+                  Finalizar reunião
+                </DropdownMenuItem>}
+                {onDelete && <DropdownMenuItem className="min-h-10 gap-2 text-destructive" onSelect={() => setDeleteOpen(true)}>
+                  Excluir reunião
+                </DropdownMenuItem>}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         {onDelete && (
           <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

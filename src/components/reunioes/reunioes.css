@@ -22,7 +22,6 @@
   overflow: hidden;
   color: var(--meeting-ink);
   background: linear-gradient(110deg, var(--meeting-forest), var(--meeting-forest-edge));
-  box-shadow: 0 8px 22px #102f2324;
 }
 .meeting-cover::before {
   position: absolute;
@@ -37,10 +36,32 @@
   transform: rotate(-16deg);
   content: '';
 }
-.meeting-cover__title {
-  font: 500 clamp(1.95rem, 5.4cqi, 3rem)/1.08 Georgia, serif;
-  letter-spacing: -.035em;
+.meetings-workspace .meeting-cover h1 {
+  font-size: clamp(1.25rem, 3.5cqi, 1.625rem);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -.025em;
   overflow-wrap: anywhere;
+}
+.meetings-workspace .ui-card h2 {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.meetings-workspace .ui-card {
+  border-radius: .75rem;
+}
+.meetings-workspace .meeting-panel > .ui-card-header {
+  padding: 0 .75rem;
+}
+.meetings-workspace .meeting-panel > .ui-card-header + .ui-card-content {
+  padding: 0 .75rem .75rem;
+}
+.meetings-workspace .ui-card:has(.meeting-list-row) {
+  border-inline-start-width: 3px;
+  border-inline-start-color: transparent;
+}
+.meetings-workspace .ui-card[data-meeting-open="true"] {
+  border-inline-start-color: hsl(var(--primary));
 }
 .meeting-cover__meta { color: var(--meeting-muted-ink); }
 .meeting-cover__status {
@@ -64,19 +85,66 @@
 }
 .meeting-editor__field { background-color: var(--meeting-sheet); }
 .meeting-agenda__toggle[aria-expanded="false"] ~ .meeting-agenda__content { display: none; }
-.meeting-agenda__toggle[aria-expanded="true"] .meeting-agenda__chevron { transform: rotate(180deg); }
 .meeting-agenda__heading { display: none; }
-.meeting-section-tab[data-state="active"],
 .meeting-filter-tab[aria-pressed="true"] {
   background: var(--meeting-tint);
   color: var(--meeting-tint-ink);
 }
-.meeting-section-tabs {
-  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+.meeting-section-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(4.5rem, 1fr);
+  border-bottom: 1px solid hsl(var(--border));
 }
-@container meetings (max-width: 420px) {
-  .meeting-section-tabs { grid-template-columns: repeat(5,minmax(0,1fr)); }
-  .meeting-section-tab { flex-direction: column; padding-inline: 2px; font-size: .6875rem; line-height: 1.2; }
+.meeting-section-bar .meeting-section-tab {
+  min-height: 3rem;
+  min-width: 0;
+  padding: .25rem .125rem;
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: .75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.meeting-section-bar .meeting-section-tab:is([data-state="active"], [data-active="true"]) {
+  border-color: hsl(var(--primary));
+  background: transparent;
+  color: hsl(var(--primary));
+  box-shadow: none;
+}
+.meeting-section-tab:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -2px;
+}
+.meeting-minutes h3 {
+  font-size: .875rem;
+  font-weight: 650;
+  color: hsl(var(--primary));
+}
+.meetings-workspace .meeting-list-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: .25rem .5rem;
+  padding: .375rem .5rem;
+}
+.meeting-list-row__progress { grid-column: 2 / -1; }
+.meeting-list-row__actions { grid-column: 3; grid-row: 1; }
+.meeting-list-row__date { grid-column: 1; grid-row: 1; }
+.meeting-list-row__main { grid-column: 2; grid-row: 1; }
+@container meetings (min-width: 36rem) {
+  .meeting-section-bar .meeting-section-tab { font-size: .875rem; }
+}
+@container meetings (max-width: 19rem) {
+  .meetings-workspace .meeting-list-row { grid-template-columns: auto minmax(0, 1fr); }
+  .meeting-list-row__actions { grid-column: 2; grid-row: auto; justify-self: start; }
+}
+@container meetings (max-width: 13.5rem) {
+  .meeting-section-bar { grid-template-columns: minmax(0, 1fr); }
+  .meeting-section-bar > button { justify-self: start; padding-inline: .5rem; }
 }
 @container meetings (min-width: 36rem) {
   .meeting-record-grid { grid-template-columns: minmax(0, 2fr) minmax(12rem, 1fr); }

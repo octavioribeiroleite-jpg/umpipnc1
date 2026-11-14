@@ -3,7 +3,7 @@ import { usePersistedTextDraft } from './usePersistedTextDraft';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Sparkles, Check, PenLine, Lock } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 
 interface RegistroReuniaoEditorProps {
   meetingId: string;
@@ -54,13 +54,11 @@ export function RegistroReuniaoEditor({
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-3 sm:px-4">
-        <h2 className="flex items-center gap-2.5 font-semibold">
-          <span className="meeting-tint inline-grid size-8 shrink-0 place-items-center rounded-lg"><PenLine aria-hidden="true" className="size-4" /></span>
+      <div className="flex min-h-12 flex-wrap items-center justify-between gap-2 px-3 sm:px-4">
+        <h2 className="text-base font-semibold">
           <label htmlFor={fieldId}>Registro da reunião</label>
         </h2>
         <span role="status" className={`inline-flex items-center gap-1.5 text-xs font-medium ${hasUnsavedChanges && !isSaving && !readOnly ? 'text-warning' : 'text-muted-foreground'}`}>
-          {isSaving ? <Loader2 aria-hidden="true" className="size-3 animate-spin" /> : <span aria-hidden="true" className={`size-1.5 rounded-full bg-current ${!hasUnsavedChanges && !readOnly && notes ? 'text-success' : ''}`} />}
           {readOnly ? 'Somente leitura' : isSaving ? 'Salvando…' : hasUnsavedChanges ? 'Alterações pendentes' : notes ? 'Salvo' : 'Sem registro'}
         </span>
       </div>
@@ -97,30 +95,30 @@ export function RegistroReuniaoEditor({
           </div>
         ) : (
           <>
-            <div className="px-3.5 pb-1 sm:px-4">
+            <div className="px-3 pb-1 sm:px-4">
               <Textarea id={fieldId}
                 placeholder={readOnly ? 'Nenhum registro nesta reunião.' : 'Anote as decisões, tarefas, prazos e observações da reunião.'}
                 value={notes}
                 onChange={(e) => handleChange(e.target.value)}
                 readOnly={readOnly}
-                className="meeting-editor__field min-h-52 w-full resize-y rounded-xl border-border p-3 text-base leading-relaxed sm:min-h-60 sm:p-4"
-                rows={7}
+                className="meeting-editor__field min-h-36 w-full resize-y rounded-lg border-border p-2.5 text-base leading-6 sm:min-h-52"
+                rows={6}
               />
             </div>
             {!readOnly && (
-              <div className="flex flex-wrap items-center justify-end gap-2 border-t px-3.5 py-2.5 sm:px-4">
-                <Button variant="ghost" onClick={handleManualSave} disabled={!hasUnsavedChanges || isSaving} className="min-h-11 gap-2 px-2 text-primary">
-                  <Save aria-hidden="true" className="size-4" /> Salvar
+              <div className="flex flex-wrap items-center justify-end gap-2 border-t px-3 py-1.5 sm:px-4">
+                <Button variant="ghost" onClick={handleManualSave} disabled={!hasUnsavedChanges || isSaving} className="px-2 text-[.8125rem] text-primary">
+                  Salvar
                 </Button>
                 {canManage && (
                   <>
                     <Button variant={isProcessed ? 'outline' : 'default'} onClick={handleProcess} disabled={!notes.trim() || isSaving}
-                      className="min-h-11 gap-2 rounded-xl">
-                      <Sparkles aria-hidden="true" className="size-4" />{isProcessed ? 'Preparar novamente' : 'Preparar resumo'}
+                      className="px-3 text-[.8125rem]">
+                      {isProcessed ? 'Preparar novamente' : 'Preparar resumo'}
                     </Button>
                     {isProcessed && (
-                      <Button onClick={handleFinalize} disabled={isSaving} className="min-h-11 gap-2 rounded-xl">
-                        <Lock aria-hidden="true" className="size-4" /> Finalizar
+                      <Button onClick={handleFinalize} disabled={isSaving} className="px-3 text-[.8125rem]">
+                        Finalizar
                       </Button>
                     )}
                   </>

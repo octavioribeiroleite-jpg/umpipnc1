@@ -2,10 +2,11 @@ import { QueryErrorState } from '@/components/ui/query-error-state';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Plus, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMeetings } from '@/hooks/useMeetings';
@@ -62,15 +63,15 @@ export default function Reunioes() {
   };
 
   return (
-    <AppLayout>
-      <div className="meetings-workspace mx-auto w-full max-w-[56rem] space-y-4 sm:space-y-5">
-        <header className="meeting-cover flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] p-5 sm:p-7">
+    <AppLayout header={<DashboardHeader hasNotifications={false} textOnly />}>
+      <div className="meetings-workspace mx-auto w-full max-w-[56rem] space-y-2.5 sm:space-y-3">
+        <header className="meeting-cover flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-2.5 sm:px-5 sm:py-4">
           <div className="min-w-0">
             <h1 className="meeting-cover__title">Reuniões</h1>
-            <p className="meeting-cover__meta mt-1 text-sm">Pautas, registros e atas da diretoria.</p>
+            <p className="meeting-cover__meta mt-1 text-xs">Pautas, registros e atas da diretoria.</p>
           </div>
-          <Button onClick={() => navigate('/reunioes/nova')} className="meeting-cover__new min-h-11 gap-2 rounded-xl focus-visible:ring-white">
-            <Plus aria-hidden="true" className="size-4" /> Nova reunião
+          <Button onClick={() => navigate('/reunioes/nova')} className="meeting-cover__new px-3 text-[.8125rem] focus-visible:ring-white">
+            Nova reunião
           </Button>
         </header>
 
@@ -107,7 +108,7 @@ export default function Reunioes() {
             />
           )) : (
             groupedMeetings.map(([key, meetingsInDate]) => (
-              <ReuniaoPastaData key={key} label={key === 'open' ? 'Abertas' : monthLabel(key)} active={key === 'open'} count={meetingsInDate.length}>
+              <ReuniaoPastaData key={key} label={key === 'open' ? 'Abertas' : monthLabel(key)} count={meetingsInDate.length}>
                 {meetingsInDate.map((meeting) => (
                   <ReuniaoCard
                     key={meeting.id}

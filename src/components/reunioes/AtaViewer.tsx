@@ -1,23 +1,33 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Calendar, Users, Loader2, Edit, Save, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Helper function to format minutes display with proper styling
-function formatMinutesDisplay(text: string) {
-  // Remove any remaining markdown asterisks
+function formatMinutesDisplay(text: string, largeText: boolean) {
   const cleaned = text.replace(/\*\*/g, '').replace(/\*/g, '');
   
   // Split into lines
-  const lines = cleaned.split('\n');
+  const lines = cleaned.split('\n').map(line => line.trim().replace(/^#{1,6}\s+/, ''));
+  const archivedFields = new Map<string, string>();
+  const indexedFields = new Set<number>();
+  // O cabeçalho de atas antigas também pode aparecer logo abaixo de PAUTA.
+  for (const [index, line] of lines.entries()) {
+    if (!line || /^---+$|^ATA (DA|DE) REUNIÃO$|^PAUTA:?$/i.test(line) || /^Moderador:/i.test(line)) continue;
+    const field = /^(Reunião|Data|Participantes):\s*\S/i.exec(line)?.[1].toLowerCase();
+    if (!field || archivedFields.has(field)) break;
+    archivedFields.set(field, line);
+    indexedFields.add(index);
+  }
+  const hasMeetingMetadata = archivedFields.has('reunião') || archivedFields.size > 1;
+  const bodyLines = hasMeetingMetadata ? lines.filter((_, index) => !indexedFields.has(index)) : lines;
   
   // Known section headers
   const sectionHeaders = [
-    'ATA DE REUNIÃO',
     'PAUTA',
     'DELIBERAÇÕES',
     'ENCAMINHAMENTOS',
@@ -29,14 +39,10 @@ function formatMinutesDisplay(text: string) {
   ];
   
   return (
-    <div className="space-y-2">
-      {lines.map((line, index) => {
-        const trimmedLine = line.trim();
-        
-        // Empty line = spacer
-        if (!trimmedLine) {
-          return <div key={index} className="h-2" />;
-        }
+    <div className={cn('meeting-minutes space-y-1.5 break-words border-t pt-2', largeText ? 'text-base leading-6' : 'text-sm leading-5 sm:text-base sm:leading-6')}>
+      {bodyLines.map((trimmedLine, index) => {
+        if (!trimmedLine || /^ATA (DA|DE) REUNIÃO$/i.test(trimmedLine)) return null;
+        if (/^---+$/.test(trimmedLine)) return <hr key={index} className="border-border" />;
         
         // Check if it's a known section header (exact match or starts with)
         const isHeader = sectionHeaders.some(header => 
@@ -51,14 +57,13 @@ function formatMinutesDisplay(text: string) {
         
         if (isHeader || isAllCaps) {
           return (
-            <h3 key={index} className="font-semibold text-foreground text-base mt-4 mb-2 border-b border-border pb-1">
+            <h3 key={index} className="border-t border-border pt-2 first:border-t-0 first:pt-0">
               {trimmedLine}
             </h3>
           );
         }
         
-        // Check for info lines (Reunião:, Data:, Moderador:, etc.)
-        if (/^(Reunião|Data|Moderador|Participantes):/i.test(trimmedLine)) {
+        if (/^Moderador:/i.test(trimmedLine)) {
           return (
             <p key={index} className="text-sm text-muted-foreground">
               {trimmedLine}
@@ -68,11 +73,21 @@ function formatMinutesDisplay(text: string) {
         
         // Regular content
         return (
-          <p key={index} className="text-base leading-6">
+          <p key={index}>
             {trimmedLine}
           </p>
         );
       })}
+      {hasMeetingMetadata && (
+        <details className="border-t text-xs text-muted-foreground">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center font-semibold text-primary [&::-webkit-details-marker]:hidden">
+            Dados originais da ata
+          </summary>
+          <div className="space-y-1">
+            {[...archivedFields].map(([field, line]) => <p key={field}>{line}</p>)}
+          </div>
+        </details>
+      )}
     </div>
   );
 }
@@ -126,15 +141,20 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [moderatorName, setModeratorName] = useState('');
   const [participantNames, setParticipantNames] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!editable);
   const [finalMinutes, setFinalMinutes] = useState(meeting.final_minutes || '');
   const [generating, setGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [editedMinutes, setEditedMinutes] = useState('');
+  const [largeText, setLargeText] = useState(false);
 
   useEffect(() => {
+    if (!editable) {
+      setLoading(false);
+      return;
+    }
     const fetchData = async () => {
       try {
         // Fetch accepted suggestions
@@ -185,7 +205,7 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
     };
 
     fetchData();
-  }, [meeting.id, meeting.moderator_id, meeting.contributions_revealed, meeting.ai_organized]);
+  }, [editable, meeting.id, meeting.moderator_id, meeting.contributions_revealed, meeting.ai_organized]);
 
   const generateMinutes = () => {
     const lines: string[] = [];
@@ -302,34 +322,22 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
     };
 
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center justify-between gap-3">
-            <span className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Ata da Reunião
-            </span>
-            {canManage && !isEditing && (
-              <Button variant="outline" size="sm" onClick={handleStartEdit}>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Ata
+      <Card className="meeting-panel rounded-xl shadow-none">
+        <CardHeader className="min-h-12 flex-row flex-wrap items-center justify-between gap-x-2 space-y-0 px-3 py-0 sm:space-y-0 md:px-4 md:py-0">
+          <h2 className="text-base font-semibold">Ata da reunião</h2>
+          {!isEditing && (
+            <div className="-mr-2 flex items-center gap-0.5">
+              <Button variant="ghost" size="sm" className="px-2 text-xs text-primary sm:hidden" aria-pressed={largeText} onClick={() => setLargeText(previous => !previous)}>
+                Texto maior
               </Button>
-            )}
-          </CardTitle>
+              {canManage && <Button variant="ghost" size="sm" className="min-w-12 px-2 text-[.8125rem] text-primary" onClick={handleStartEdit}>
+                Editar
+              </Button>}
+            </div>
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 mb-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              {new Date(meeting.date).toLocaleDateString('pt-BR')}
-            </span>
-            <span className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              {participantNames.length} participantes
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground">{meeting.status === 'fechada' ? 'Ata da reunião finalizada.' : 'Rascunho da ata. Revise o texto antes de finalizar e compartilhar.'}</p>
-          <Separator className="my-4" />
+        <CardContent className="px-3 pb-3 md:px-4 md:pb-4">
+          {meeting.status !== 'fechada' && <p className="pb-2 text-xs text-muted-foreground">Rascunho da ata. Revise antes de finalizar e compartilhar.</p>}
           {saveError && <p role="alert" className="mb-4 text-destructive">{saveError}</p>}
           
           {isEditing ? (
@@ -338,24 +346,20 @@ export function AtaViewer({ meeting, agendaItems, editable, canManage, onClose, 
                 disabled={savingEdit}
                 value={editedMinutes}
                 onChange={(e) => setEditedMinutes(e.target.value)}
-                rows={20}
+                rows={10}
                 className="text-base leading-6"
               />
               <div className="flex flex-wrap justify-end gap-2">
                 <Button variant="outline" onClick={handleCancelEdit} disabled={savingEdit}>
-                  <X className="h-4 w-4 mr-2" />
                   Cancelar
                 </Button>
                 <Button onClick={handleSaveEdit} disabled={savingEdit || !editedMinutes.trim()}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Alterações
+                  Salvar ata
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="prose prose-base break-words max-w-none dark:prose-invert">
-              {formatMinutesDisplay(meeting.final_minutes || '')}
-            </div>
+            formatMinutesDisplay(meeting.final_minutes, largeText)
           )}
         </CardContent>
       </Card>

@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Loader2, Copy, Check, Info, RefreshCw } from 'lucide-react';
 
 interface ComunicacaoTabProps {
   meetingId: string;
@@ -54,11 +53,11 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
       });
 
       if (response.error) {
-        const errorData = response.error as any;
-        if (errorData?.context?.status === 429) {
+        const status = (response.error as { context?: { status?: number } }).context?.status;
+        if (status === 429) {
           throw new Error('Limite de requisições excedido. Aguarde alguns minutos.');
         }
-        if (errorData?.context?.status === 402) {
+        if (status === 402) {
           throw new Error('Créditos de IA insuficientes.');
         }
         throw response.error;
@@ -86,11 +85,11 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
       });
 
       if (onMessageUpdated) onMessageUpdated(newMessage);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error regenerating WhatsApp message:', err);
       toast({
         title: 'Erro',
-        description: err.message || 'Erro ao regenerar mensagem.',
+        description: err instanceof Error && err.message ? err.message : 'Erro ao regenerar mensagem.',
         variant: 'destructive',
       });
     } finally {
@@ -101,7 +100,6 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
   if (!hasFinalMinutes) {
     return (
       <Alert>
-        <Info className="h-4 w-4" />
         <AlertDescription>
           A ata final precisa ser gerada antes de criar a mensagem para os membros. Revele as contribuições primeiro.
         </AlertDescription>
@@ -113,18 +111,12 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
     return (
       <Card>
         <CardContent className="py-8 text-center">
-          <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h3 className="font-semibold mb-2">Mensagem não disponível</h3>
           <p className="text-sm text-muted-foreground mb-4">
             A mensagem de WhatsApp ainda não foi gerada ou ocorreu um erro.
           </p>
           {canManage && (
             <Button onClick={handleRegenerate} disabled={regenerating}>
-              {regenerating ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4 mr-2" />
-              )}
               {regenerating ? 'Gerando...' : 'Gerar Mensagem'}
             </Button>
           )}
@@ -134,48 +126,24 @@ export function ComunicacaoTab({ meetingId, canManage, whatsappMessage, hasFinal
   }
 
   return (
-    <div className="space-y-4">
-      <Alert className="border-primary/50 bg-primary/5">
-        <MessageSquare className="h-4 w-4" />
-        <AlertDescription>
-          Rascunho gerado com base na ata. Revise nomes, decisões e prazos antes de copiar e compartilhar no WhatsApp.
-        </AlertDescription>
-      </Alert>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex flex-wrap items-center justify-between gap-3">
-            <span className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Mensagem para WhatsApp
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleCopy}>
-                {copied ? (
-                  <Check className="h-4 w-4 mr-1 text-green-600" />
-                ) : (
-                  <Copy className="h-4 w-4 mr-1" />
-                )}
-                {copied ? 'Copiado!' : 'Copiar'}
-              </Button>
-              {canManage && (
-                <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={regenerating}>
-                  {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
-                  Regerar
-                </Button>
-              )}
-            </div>
-          </CardTitle>
-          <CardDescription>
-            Prévia para revisão
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-muted/50 rounded-lg p-6 border">
-            <p className="break-words text-base leading-6 whitespace-pre-wrap">{localMessage}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="meeting-panel rounded-xl shadow-none">
+      <CardHeader className="min-h-12 flex-row flex-wrap items-center justify-between gap-x-2 space-y-0 px-3 py-0 sm:space-y-0 md:px-4 md:py-0">
+        <h2 className="text-base font-semibold">WhatsApp</h2>
+        <div className="-mr-2 flex flex-wrap items-center gap-0.5">
+          <Button variant="ghost" size="sm" className="px-2 text-[.8125rem] text-primary" onClick={handleCopy}>
+            {copied ? 'Copiado!' : 'Copiar'}
+          </Button>
+          {canManage && (
+            <Button variant="ghost" size="sm" className="px-2 text-[.8125rem] text-primary" onClick={handleRegenerate} disabled={regenerating}>
+              {regenerating ? 'Gerando…' : 'Regerar'}
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2 px-3 pb-3 md:px-4 md:pb-4">
+        <p className="text-xs text-muted-foreground">Revise nomes, decisões e prazos antes de compartilhar.</p>
+        <p className="whitespace-pre-wrap break-words rounded-lg bg-muted/50 p-3 text-sm leading-5 sm:text-base sm:leading-6">{localMessage}</p>
+      </CardContent>
+    </Card>
   );
 }

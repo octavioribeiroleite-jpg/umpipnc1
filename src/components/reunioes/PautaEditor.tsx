@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, GripVertical, Trash2, Save, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2 } from 'lucide-react';
 
 interface AgendaItem {
   id: string;
@@ -141,24 +141,24 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Pauta da Reunião</CardTitle>
+    <Card className="meeting-panel rounded-xl shadow-none">
+      <CardHeader className="min-h-12 flex-row flex-wrap items-center justify-between gap-x-2 space-y-0 px-3 py-0 sm:space-y-0 md:px-4 md:py-0">
+        <h2 className="text-base font-semibold">Pauta da reunião</h2>
+        {disabled && <span className="text-xs text-muted-foreground">Somente leitura</span>}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 px-3 pb-3 md:px-4 md:pb-4">
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
             Nenhum item de pauta adicionado.
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="divide-y divide-border border-t">
             {items.map((item, index) => (
               <div
                 key={item.id}
-                className="flex flex-wrap items-start gap-3 p-4 border rounded-xl bg-card"
+                className="flex flex-wrap items-start gap-2 py-2"
               >
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <GripVertical className="h-4 w-4" />
                   <span className="font-medium text-sm">{index + 1}.</span>
                 </div>
                 <div className="min-w-0 flex-1 basis-[75%] space-y-2 sm:basis-0">
@@ -191,7 +191,7 @@ export function PautaEditor({ meetingId, agendaItems, onUpdate, disabled, canMan
                     <>
                       <p className="break-words font-medium">{item.title}</p>
                       {item.description && (
-                        <p className="break-words text-base leading-6 text-muted-foreground">{item.description}</p>
+                        <p className="break-words text-sm leading-5 text-muted-foreground">{item.description}</p>
                       )}
                     </>
                   )}

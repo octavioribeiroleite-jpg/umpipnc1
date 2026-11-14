@@ -16,6 +16,23 @@
 .ipnc-workspace-header__mobile-title { display: none; }
 .ipnc-workspace-header__back { display: grid; place-items: center; width: 44px; min-height: 44px; flex-shrink: 0; border-radius: 12px; color: hsl(var(--primary)); }
 .ipnc-workspace-header__back:hover { background: hsl(var(--primary) / .08); }
+.ipnc-workspace-header.ipnc-workspace-header--text {
+  flex-wrap: wrap;
+  gap: 0 8px;
+  min-height: 48px;
+  margin-bottom: 8px;
+  font-size: .8125rem;
+  font-weight: 600;
+}
+.ipnc-workspace-header.ipnc-workspace-header--text .dashboard-topbar-actions { flex-wrap: wrap; gap: 0; }
+.ipnc-workspace-header.ipnc-workspace-header--text :is(.ipnc-workspace-header__back, .dashboard-notifications, .dashboard-account) {
+  min-width: 48px;
+  min-height: 48px;
+  width: auto;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+.ipnc-workspace-header--text .ipnc-workspace-header__back { margin-inline-start: -8px; }
 @media (max-width: 699px) {
   .ipnc-workspace-header { gap: 8px; min-height: 64px; margin-bottom: 12px; }
   .ipnc-workspace-header__heading { gap: 4px; flex: 1; }
